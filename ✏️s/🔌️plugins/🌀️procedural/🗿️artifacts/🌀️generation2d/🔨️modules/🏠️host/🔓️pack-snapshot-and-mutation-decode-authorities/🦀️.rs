@@ -179,7 +179,9 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority 
         Ok(usize::from(!self.terminal))
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
+        let result = (|| -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         if self.terminal {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
@@ -189,6 +191,8 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority 
         }
         self.terminal = true;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+    })();
+        store::os_store::owned_schema_decode::artifact_envelope_close_settle(effect, result.map_err(Into::into))
     }
 
     fn terminal_is_empty(&self) -> bool {

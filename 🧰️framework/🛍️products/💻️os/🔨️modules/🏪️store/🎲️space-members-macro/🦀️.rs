@@ -144,8 +144,8 @@ macro_rules! space_members {
             fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &::std::sync::Arc<$crate::os_vcs::ArtifactGroupVisibility>, snapshot: $crate::os_store::snapshot_read::ErasedSnapshotRead, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::RetainedCloneStep, (::semio_framework_value::ValueError, $crate::os_store::snapshot_read::ErasedSnapshotRead)> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::return_prepared_snapshot_read_erased(m.as_ref(), publication, visibility, snapshot, grant)),+ }
             }
-            fn abort_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, original:&mut ::semio_framework_value::OriginalRetirementCloseLoan<'_>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::abort_one_item_publication(m.as_mut(), publication, original,grant)),+ }
+            fn abort_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, original:&mut ::semio_framework_value::OriginalRetirementCloseLoan<'_>, effect: &mut ::semio_framework_value::RetainedAllocationEffect<'_>) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::RetirementPollExit> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::abort_one_item_publication(m.as_mut(), publication, original,effect)),+ }
             }
             fn snapshot_read_erased_now(&self) -> Result<$crate::os_store::snapshot_read::ErasedSnapshotRead, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased_now(m.as_ref())),+ }
@@ -153,11 +153,11 @@ macro_rules! space_members {
             async fn snapshot_read_erased(&self) -> Result<$crate::os_store::snapshot_read::ErasedSnapshotRead, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased(m.as_ref()).await),+ }
             }
-            fn retire_snapshot_read_erased(&mut self, snapshot: &mut Option<$crate::os_store::snapshot_read::ErasedSnapshotRead>, grant: $crate::os_store::RetainedCloneGrant) -> Result<(Option<Box<dyn $crate::os_store::ErasedSnapshotRetirement>>, $crate::os_store::RetainedCloneProgress), ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::retire_snapshot_read_erased(m.as_mut(), snapshot, grant)),+ }
+            fn retire_snapshot_read_erased(&mut self, snapshot: &mut Option<$crate::os_store::snapshot_read::ErasedSnapshotRead>, effect: &mut ::semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<Box<dyn $crate::os_store::ErasedSnapshotRetirement>>, $crate::os_store::RetainedCloneProgress), ::semio_framework_value::ValueError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::retire_snapshot_read_erased(m.as_mut(), snapshot, effect)),+ }
             }
-            fn take_returned_snapshot_read_retirement(&mut self, grant: $crate::os_store::RetainedCloneGrant) -> Result<(Option<Box<dyn $crate::os_store::ErasedSnapshotRetirement>>, $crate::os_store::RetainedCloneProgress), ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::take_returned_snapshot_read_retirement(m.as_mut(), grant)),+ }
+            fn take_returned_snapshot_read_retirement(&mut self, effect: &mut ::semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<Box<dyn $crate::os_store::ErasedSnapshotRetirement>>, $crate::os_store::RetainedCloneProgress), ::semio_framework_value::ValueError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::take_returned_snapshot_read_retirement(m.as_mut(), effect)),+ }
             }
             fn snapshot_read_retirement_demand(&self) -> ::semio_framework_value::RetirementDemand {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_retirement_demand(m.as_ref())),+ }
@@ -168,8 +168,8 @@ macro_rules! space_members {
             fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_leases_terminal_is_empty(m.as_ref())),+ }
             }
-            fn close_owned_step(&mut self, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_step(m.as_mut(), grant)),+ }
+            fn close_owned_step(&mut self, effect: &mut ::semio_framework_value::RetainedAllocationEffect<'_>) -> ::semio_framework_value::OriginalRetirementPoll {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_step(m.as_mut(), effect)),+ }
             }
             fn close_owned_terminal_is_empty(&self) -> bool {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_terminal_is_empty(m.as_ref())),+ }

@@ -1,6 +1,6 @@
 //! 🪣️ Bounded four-connected RGBA coverage with retained workspace and explicit retirement.
 use super::{validate_extent,PixelEditError};
-use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneClose,retained_clone_grant_admits}};
+use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedAllocationEffect,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,OriginalRetirementPoll,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneClose,retained_clone_grant_admits}};
 use std::mem::{ManuallyDrop,size_of};
 
 pub const FLOOD_PAGE_PIXELS:usize=4096;
@@ -54,17 +54,19 @@ impl FloodRegionCursor{
   Ok(FloodProgress{work,completed:self.initialized+self.head,total:self.count*2,done:self.done(),progress})
   })();
   if work!=0{progress.copied_items=1;progress.copied_bytes+=size_of::<Self>()*2;}
-  RetainedWorkOutcome{result:result.map(|mut step|{step.progress=progress;step}).map_err(|error|error.with_retained_progress(progress)),work}
+  RetainedWorkOutcome{result:result.map(|mut step|{step.progress=progress;step}).map_err(|error|error.with_retained_progress(progress)),work:work.into()}
  }
  pub fn result(&self)->Result<FloodMask<'_>,PixelEditError>{if !self.done(){return Err(if self.cancelled{PixelEditError::Cancelled}else{PixelEditError::Incomplete})}Ok(FloodMask{pages:self.mask.as_ref().unwrap(),length:self.count})}
  pub fn begin_close(&mut self){self.phase=4;}
  pub fn terminal_is_empty(&self)->bool{self.seen.is_none()&&self.mask.is_none()&&self.queue.is_none()&&self.retirement.is_empty()&&self.held==0}
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{let body=body.max(size_of::<Self>()*2);if self.phase!=4{return Err(invalid("flood close has not begun"))}if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.queue.is_some(){return self.retirement.next_owner_demands::<Vec<Vec<u32>>>(true,&None,body)}if self.mask.is_some()||self.seen.is_some(){return self.retirement.next_owner_demands::<Vec<Vec<u8>>>(true,&None,body)}Ok(Default::default())}
- fn account_close(&mut self,turn:RetainedWorkOutcome)->RetainedWorkOutcome{let progress=match &turn.result{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>*progress,Err(error)=>error.retained_progress()};self.held+=progress.retained_capacity_bytes;self.held=self.held.checked_sub(progress.released_bytes).expect("flood close releases only retained capacity");turn}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
-  if self.phase!=4{return RetainedWorkOutcome{result:Err(invalid("flood close has not begun")),work:0}}if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if grant.maximum_items==0||!retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if !self.retirement.is_empty(){let turn=match self.retirement.select(grant.maximum_copy_bytes){Ok(selected)=>selected.step(grant),Err(error)=>RetainedWorkOutcome{result:Err(error),work:0}};return self.account_close(turn)}
-  let turn=if self.queue.is_some(){self.retirement.begin_granted(&mut self.queue,grant)}else if self.mask.is_some(){self.retirement.begin_granted(&mut self.mask,grant)}else if self.seen.is_some(){self.retirement.begin_granted(&mut self.seen,grant)}else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
-  self.account_close(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work})
+ fn account_close(&mut self,poll:OriginalRetirementPoll)->OriginalRetirementPoll{if let RetainedWorkPoll::Complete(turn)=&poll{let progress=match &turn.result{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>*progress,Err(error)=>error.retained_progress()};self.held+=progress.retained_capacity_bytes;match self.held.checked_sub(progress.released_bytes){Some(held)=>self.held=held,None=>{self.held=0;return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"flood close released more than it retained").into()),work:turn.work})}}}poll}
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+  let grant=effect.grant();let early=|result:Result<RetainedCloneStep,ValueError>|RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map_err(Into::into),work:0});
+  if self.phase!=4{return early(Err(invalid("flood close has not begun")))}if self.terminal_is_empty(){return early(Ok(RetainedCloneStep::Complete(Default::default())))}let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return early(Err(error))};if grant.maximum_items==0||!retained_clone_grant_admits(grant,demand){return early(Ok(RetainedCloneStep::Progress(Default::default())))}
+  if !self.retirement.is_empty(){let poll=match self.retirement.select(grant.maximum_copy_bytes){Ok(selected)=>selected.step(effect),Err(error)=>return early(Err(error))};return self.account_close(poll)}
+  let turn=if self.queue.is_some(){self.retirement.begin_granted(&mut self.queue,effect)}else if self.mask.is_some(){self.retirement.begin_granted(&mut self.mask,effect)}else if self.seen.is_some(){self.retirement.begin_granted(&mut self.seen,effect)}else{return early(Ok(RetainedCloneStep::Complete(Default::default())))};
+  let poll=RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work});self.account_close(poll)
  }
 }
 fn allocation()->ValueError{ValueError::literal(ValueRefusalKind::AllocationFailed,"Flood allocation refused")}

@@ -13,9 +13,6 @@ pub use snapshot::{NativeSnapshotEncodeOwner,NativeSnapshotEncodeSettlement};
 /// 🎫️ Holds an original physical quote and one reserved native action until the caller posts its effect.
 #[must_use]
 pub struct NativeSnapshotDecodeEffectQuote<'a,'control>{grant:RetainedCloneGrant,body:&'a mut NativeSnapshotBodyWallet,native:&'a mut NativeDecodeControl<'control>}
-/// 🛫️ Holds one encoder physical quote and reserved native action.
-#[must_use]
-pub struct NativeSnapshotEncodeEffectQuote<'a,'control>{grant:RetainedCloneGrant,body:&'a mut NativeSnapshotBodyWallet,native:&'a mut NativeEncodeControl<'control>}
 impl<'a,'control> NativeSnapshotDecodeEffectQuote<'a,'control>{
  /// 🛬️ Quotes the original decoder construction recipient and reserves one action before mutation.
  pub fn decode(body:&'a mut NativeSnapshotBodyWallet,native:&'a mut NativeDecodeControl<'control>,demand:RetainedCloneGrant)->Result<Self,NativeSnapshotFailure>{
@@ -25,38 +22,17 @@ impl<'a,'control> NativeSnapshotDecodeEffectQuote<'a,'control>{
  pub fn post_decode(self,progress:RetainedCloneProgress,operation:Result<(),ValueError>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
   let body=self.body;let native=self.native;let work=native.commit_work(1);let local=body.record_progress(progress);let receipt=if progress==RetainedCloneProgress::default(){Ok(())}else{native.submit_constructed_progress(self.grant,progress)};effect_outcome(operation,work,local,receipt,body.progress)
  }
- pub fn run_native(mut self,progress:&mut NativeSnapshotEffectProgress,unwind_failure:&mut Option<NativeSnapshotFailure>,effect:&mut impl FnMut(&mut NativeDecodeControl<'_>,&mut bool,&mut RetainedCloneProgress)->Result<(),ValueError>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
-  if progress.performed||progress.physical!=RetainedCloneProgress::default()||progress.attempted_work.is_some()||progress.settlement.is_some()||unwind_failure.is_some(){let primary=ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot effect requires empty retained marker and failure slots");let result=match self.cancel_decode(){Ok(())=>NativeSnapshotFailure::from(primary),Err(work)=>NativeSnapshotFailure::primary_with_work(primary,work)};return RetainedWorkOutcome{work:0,result:Err(result)}}
-  let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||effect(&mut *self.native,&mut progress.performed,&mut progress.physical)));let performed=progress.performed||progress.physical!=RetainedCloneProgress::default();
+ pub fn run_native(self,progress:&mut NativeSnapshotEffectProgress,unwind_failure:&mut Option<NativeSnapshotFailure>,effect:&mut impl FnMut(&mut NativeDecodeControl<'_>,&mut bool,&mut RetainedCloneProgress)->Result<(),ValueError>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
+  if progress.state.performed||progress.state.physical!=RetainedCloneProgress::default()||progress.state.attempted_work.is_some()||progress.state.settlement.is_some()||unwind_failure.is_some(){let primary=ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot effect requires empty retained marker and failure slots");let result=match self.cancel_decode(){Ok(())=>NativeSnapshotFailure::from(primary),Err(work)=>NativeSnapshotFailure::primary_with_work(primary,work)};return RetainedWorkOutcome{work:0,result:Err(result)}}
+  let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||effect(&mut *self.native,&mut progress.state.performed,&mut progress.state.physical)));let performed=progress.state.performed||progress.state.physical!=RetainedCloneProgress::default();
   match result{
-   Ok(operation)=>if performed{self.post_decode(progress.physical,operation)}else{let canceled=self.cancel_decode();let result=match(operation,canceled){(Ok(()),Ok(()))=>Ok(()),(Err(primary),Ok(()))=>Err(primary.into()),(Ok(()),Err(work))=>Err(NativeSnapshotFailure::work_post(work)),(Err(primary),Err(work))=>Err(NativeSnapshotFailure::primary_with_work(primary,work))};RetainedWorkOutcome{work:0,result}},
-   Err(payload)=>{*unwind_failure=if performed{self.post_decode(progress.physical,Ok(())).result.err()}else{self.cancel_decode().err().map(NativeSnapshotFailure::work_post)};std::panic::resume_unwind(payload)}
+   Ok(operation)=>if performed{self.post_decode(progress.state.physical,operation)}else{let canceled=self.cancel_decode();let result=match(operation,canceled){(Ok(()),Ok(()))=>Ok(()),(Err(primary),Ok(()))=>Err(primary.into()),(Ok(()),Err(work))=>Err(NativeSnapshotFailure::work_post(work)),(Err(primary),Err(work))=>Err(NativeSnapshotFailure::primary_with_work(primary,work))};RetainedWorkOutcome{work:0,result}},
+   Err(payload)=>{*unwind_failure=if performed{self.post_decode(progress.state.physical,Ok(())).result.err()}else{self.cancel_decode().err().map(NativeSnapshotFailure::work_post)};std::panic::resume_unwind(payload)}
   }
  }
  /// ↩️ Cancels an unused decoder action without posting a physical effect.
  pub fn cancel_decode(self)->Result<(),ValueError>{self.native.cancel_work()}
 
-}
-impl<'a,'control> NativeSnapshotEncodeEffectQuote<'a,'control>{
- /// 🛫️ Quotes the original encoder construction recipient and reserves one action before mutation.
- pub fn encode(body:&'a mut NativeSnapshotBodyWallet,native:&'a mut NativeEncodeControl<'control>,demand:RetainedCloneGrant)->Result<Self,NativeSnapshotFailure>{
-  native.checkpoint()?;let grant=body.admit_encoded(native,demand)?;if !native.prepare_work(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot effect requires original encoder work").into())}Ok(Self{grant,body,native})
- }
- /// 📤️ Posts the actual encoder effect to the same original work and construction recipients.
- pub fn post_encode(self,progress:RetainedCloneProgress,operation:Result<(),ValueError>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
-  let body=self.body;let native=self.native;let work=native.commit_work(1);let local=body.record_progress(progress);let receipt=if progress==RetainedCloneProgress::default(){Ok(())}else{native.submit_constructed_progress(self.grant,progress)};effect_outcome(operation,work,local,receipt,body.progress)
- }
- /// 🧾️ Runs one quoted effect with the same original native control and retained unwind slots.
- pub fn run_native(mut self,progress:&mut NativeSnapshotEffectProgress,unwind_failure:&mut Option<NativeSnapshotFailure>,effect:&mut impl FnMut(&mut NativeEncodeControl<'_>,&mut bool,&mut RetainedCloneProgress)->Result<(),ValueError>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
-  if progress.performed||progress.physical!=RetainedCloneProgress::default()||progress.attempted_work.is_some()||unwind_failure.is_some(){let primary=ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot effect requires empty retained marker and failure slots");let result=match self.cancel_encode(){Ok(())=>NativeSnapshotFailure::from(primary),Err(work)=>NativeSnapshotFailure::primary_with_work(primary,work)};return RetainedWorkOutcome{work:0,result:Err(result)}}
-  let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||effect(&mut *self.native,&mut progress.performed,&mut progress.physical)));let performed=progress.performed||progress.physical!=RetainedCloneProgress::default();
-  match result{
-   Ok(operation)=>if performed{self.post_encode(progress.physical,operation)}else{let canceled=self.cancel_encode();let result=match(operation,canceled){(Ok(()),Ok(()))=>Ok(()),(Err(primary),Ok(()))=>Err(primary.into()),(Ok(()),Err(work))=>Err(NativeSnapshotFailure::work_post(work)),(Err(primary),Err(work))=>Err(NativeSnapshotFailure::primary_with_work(primary,work))};RetainedWorkOutcome{work:0,result}},
-   Err(payload)=>{*unwind_failure=if performed{self.post_encode(progress.physical,Ok(())).result.err()}else{self.cancel_encode().err().map(NativeSnapshotFailure::work_post)};std::panic::resume_unwind(payload)}
-  }
- }
- /// ↩️ Cancels an unused encoder action without posting a physical effect.
- pub fn cancel_encode(self)->Result<(),ValueError>{self.native.cancel_work()}
 }
 /// 🎟️ Holds one original decoder work reservation for a caller-retained effect.
 #[must_use]
@@ -74,7 +50,7 @@ macro_rules! snapshot_work_quote{
     if *performed||unwind_failure.is_some(){let primary=ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot work effect requires empty retained marker and failure slots");let failure=match self.native.cancel_work(){Ok(())=>NativeSnapshotFailure::from(primary),Err(work)=>NativeSnapshotFailure::primary_with_work(primary,work)};return RetainedWorkOutcome{work:0,result:Err(failure)}}
     let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||effect(performed)));
     match result{
-     Ok(operation)=>{let post=if *performed{self.native.commit_work(1)}else{self.native.cancel_work()};let work=u64::from(*performed);let result=match(operation,post){(Ok(()),Ok(()))=>Ok(()),(Err(primary),Ok(()))=>Err(primary.into()),(Ok(()),Err(post))=>Err(NativeSnapshotFailure::work_post(post)),(Err(primary),Err(post))=>Err(NativeSnapshotFailure::primary_with_work(primary,post))};RetainedWorkOutcome{work,result}},
+     Ok(operation)=>{let post=if *performed{self.native.commit_work(1)}else{self.native.cancel_work()};let work=u128::from(*performed);let result=match(operation,post){(Ok(()),Ok(()))=>Ok(()),(Err(primary),Ok(()))=>Err(primary.into()),(Ok(()),Err(post))=>Err(NativeSnapshotFailure::work_post(post)),(Err(primary),Err(post))=>Err(NativeSnapshotFailure::primary_with_work(primary,post))};RetainedWorkOutcome{work,result}},
      Err(payload)=>{let post=if *performed{self.native.commit_work(1)}else{self.native.cancel_work()};*unwind_failure=post.err().map(NativeSnapshotFailure::work_post);std::panic::resume_unwind(payload)}
     }
    }
@@ -83,18 +59,16 @@ macro_rules! snapshot_work_quote{
 }
 snapshot_work_quote!(NativeSnapshotDecodeWorkQuote,NativeDecodeControl,"snapshot decoder effect requires original work authority");
 snapshot_work_quote!(NativeSnapshotEncodeWorkQuote,NativeEncodeControl,"snapshot encoder effect requires original work authority");
-/// 🛫️ Retains original encoder allocation markers and independent refused outcomes.
+/// 🛫️ Retains the original encoder effect state and independent refusals of one allocating action.
 #[derive(Default,semio_framework_value::RetireOwned)]
-pub struct NativeSnapshotEncodeAllocation { pub expected:Option<usize>, pub actual:Option<usize>, pub unwind:Option<semio_framework_value::native_encoding::NativeEncodeAllocationProgress>, pub outcome:Option<semio_framework_value::native_encoding::NativeEncodeAllocationOutcome>, pub effect_unwind:Option<semio_framework_value::native_encoding::NativeEncodeEffectFailure>, pub pending:Option<NativeSnapshotAllocationFailure>, pub collision:Option<NativeSnapshotAllocationFailure> }
+pub struct NativeSnapshotEncodeAllocation { pub state:semio_framework_value::native_encoding::NativeEncodeEffectState, pub failure:Option<semio_framework_value::native_encoding::NativeEncodeEffectFailure> }
 impl NativeSnapshotEncodeAllocation{
  /// 🔭️ Borrows the canonical outcome status without moving an original allocation refusal.
- pub fn allocation_status(&self)->semio_framework_value::native_encoding::NativeEncodeAllocationOutcomeStatus{semio_framework_value::native_encoding::native_encode_allocation_outcome_status(&self.outcome)}
+ pub fn allocation_status(&self)->semio_framework_value::native_encoding::NativeEncodeAllocationOutcomeStatus{self.state.allocation_status()}
  /// 🧾️ Reports every retained original allocation or lower effect refusal.
- pub fn is_unsettled(&self)->bool{self.expected.is_some()||self.actual.is_some()||self.unwind.is_some()||self.outcome.is_some()||self.effect_unwind.is_some()||self.pending.is_some()||self.collision.is_some()}
- /// 📥️ Retains a refused allocation outcome without replacing an occupied original owner.
- pub fn capture(&mut self,outcome:semio_framework_value::native_encoding::NativeEncodeAllocationOutcome,expected:usize)->Result<bool,NativeSnapshotAllocationFailure>{let failed=!outcome.admitted||outcome.primary.is_some()||outcome.forwarded_quote.is_some()||outcome.scoped_quote.is_some()||outcome.extent_refusal.is_some()||outcome.forwarded_refusal.is_some()||outcome.scoped_refusal.is_some()||outcome.actual!=Some(expected)||self.actual!=outcome.actual;let outcome=NativeSnapshotAllocationFailure::Encode(outcome);if self.pending.is_some()||self.unwind.is_some()||self.outcome.is_some()||self.effect_unwind.is_some()||self.collision.is_some(){return Err(outcome)}if failed{self.expected=Some(expected);self.pending=Some(outcome);Ok(false)}else{self.expected=None;self.actual=None;Ok(true)}}
- /// 🧾️ Combines a completed native effect with its independent original allocation outcome.
- pub fn finish(&mut self,result:Result<(),NativeSnapshotFailure>)->Result<(),NativeSnapshotFailure>{match(result,self.pending.take()){(result,None)=>result,(Ok(()),Some(allocation))=>Err(NativeSnapshotFailure::from_allocation(allocation)),(Err(error),Some(allocation))=>match error.with_allocation(allocation){Ok(error)=>Err(error),Err((error,allocation))=>{self.pending=Some(allocation);Err(error)}}}}
+ pub fn is_unsettled(&self)->bool{self.state.actual.is_some()||self.state.allocation.is_some()||self.state.outcome.is_some()||self.state.settlement.is_some()||self.failure.is_some()||!semio_framework_value::retirement::RetireOwned::retirement_ready(&self.state)}
+ /// 🧹️ Releases a completed allocating action only after every original owner left the carrier.
+ pub fn reset_completed(&mut self)->Result<(),ValueError>{if self.state.allocation.is_some()||self.state.outcome.is_some()||self.state.settlement.is_some()||self.failure.is_some()||!semio_framework_value::retirement::RetireOwned::retirement_ready(&self.state){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot allocation retains its original encoder state"))}self.state=Default::default();Ok(())}
 }
 /// 🛬️ Retains original decoder allocation markers and independent refused outcomes.
 #[derive(Default,semio_framework_value::RetireOwned)]
@@ -118,32 +92,33 @@ impl NativeSnapshotAllocation{
  /// 🛬️ Lends only an actual original decoder allocation frame.
  pub fn decode_mut(&mut self)->Result<&mut NativeSnapshotDecodeAllocation,ValueError>{match self{Self::Decode(value)=>Ok(value),Self::Encode(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot allocation direction is not decode"))}}
 }
-/// 🧭️ A caller-owned marker retains the actual selected action and physical prefix.
+/// 🧭️ A caller-owned marker retains the actual selected action, physical prefix and original encoder state.
 #[derive(Default,semio_framework_value::RetireOwned)]
-pub struct NativeSnapshotEffectProgress{pub performed:bool,pub physical:RetainedCloneProgress,pub attempted_work:Option<u64>,pub settlement:Option<semio_framework_value::native_encoding::NativeEncodeEffectSettlement>}
+pub struct NativeSnapshotEffectProgress{pub state:semio_framework_value::native_encoding::NativeEncodeEffectState,pub failure:Option<semio_framework_value::native_encoding::NativeEncodeEffectFailure>}
+impl std::ops::Deref for NativeSnapshotEffectProgress{type Target=semio_framework_value::native_encoding::NativeEncodeEffectState;fn deref(&self)->&Self::Target{&self.state}}
+impl std::ops::DerefMut for NativeSnapshotEffectProgress{fn deref_mut(&mut self)->&mut Self::Target{&mut self.state}}
 impl NativeSnapshotEffectProgress{
  /// 🔭️ Borrows the canonical original encoder settlement status without moving its causes.
- pub fn encode_settlement_status(&self)->semio_framework_value::native_encoding::NativeEncodeEffectSettlementStatus{semio_framework_value::native_encoding::native_encode_effect_settlement_status(&self.settlement)}
+ pub fn encode_settlement_status(&self)->semio_framework_value::native_encoding::NativeEncodeEffectSettlementStatus{self.state.settlement_status()}
  /// 🧹️ Resets a completed marker only after its original settlement leaves the caller slot.
- pub fn reset_completed(&mut self)->Result<(),ValueError>{if self.settlement.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"snapshot effect retains its original encoder settlement"))}self.performed=false;self.physical=RetainedCloneProgress::default();self.attempted_work=None;Ok(())}
+ pub fn reset_completed(&mut self)->Result<(),ValueError>{if self.state.settlement.is_some()||self.state.allocation.is_some()||self.state.outcome.is_some()||self.failure.is_some()||!semio_framework_value::retirement::RetireOwned::retirement_ready(&self.state){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"snapshot effect retains its original encoder settlement"))}self.state=Default::default();Ok(())}
 }
 macro_rules! run_snapshot_effect{
  ($quote:ident,$post:ident,$cancel:ident)=>{
   impl $quote<'_,'_>{
    /// 🧾️ Runs one borrowed effect, posting its recorded prefix before returning or resuming unwind.
    pub fn run(self,progress:&mut NativeSnapshotEffectProgress,unwind_failure:&mut Option<NativeSnapshotFailure>,effect:&mut impl FnMut(&mut bool,&mut RetainedCloneProgress)->Result<(),ValueError>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
-    if progress.performed||progress.physical!=RetainedCloneProgress::default()||progress.attempted_work.is_some()||unwind_failure.is_some(){let primary=ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot effect requires empty retained marker and failure slots");let result=match self.$cancel(){Ok(())=>NativeSnapshotFailure::from(primary),Err(work)=>NativeSnapshotFailure::primary_with_work(primary,work)};return RetainedWorkOutcome{work:0,result:Err(result)}}
-    let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||effect(&mut progress.performed,&mut progress.physical)));let performed=progress.performed||progress.physical!=RetainedCloneProgress::default();
+    if progress.state.performed||progress.state.physical!=RetainedCloneProgress::default()||progress.state.attempted_work.is_some()||unwind_failure.is_some(){let primary=ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot effect requires empty retained marker and failure slots");let result=match self.$cancel(){Ok(())=>NativeSnapshotFailure::from(primary),Err(work)=>NativeSnapshotFailure::primary_with_work(primary,work)};return RetainedWorkOutcome{work:0,result:Err(result)}}
+    let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||effect(&mut progress.state.performed,&mut progress.state.physical)));let performed=progress.state.performed||progress.state.physical!=RetainedCloneProgress::default();
     match result{
-     Ok(operation)=>if performed{self.$post(progress.physical,operation)}else{let canceled=self.$cancel();let result=match(operation,canceled){(Ok(()),Ok(()))=>Ok(()),(Err(primary),Ok(()))=>Err(primary.into()),(Ok(()),Err(work))=>Err(NativeSnapshotFailure::work_post(work)),(Err(primary),Err(work))=>Err(NativeSnapshotFailure::primary_with_work(primary,work))};RetainedWorkOutcome{work:0,result}},
-     Err(payload)=>{*unwind_failure=if performed{self.$post(progress.physical,Ok(())).result.err()}else{self.$cancel().err().map(NativeSnapshotFailure::work_post)};std::panic::resume_unwind(payload)}
+     Ok(operation)=>if performed{self.$post(progress.state.physical,operation)}else{let canceled=self.$cancel();let result=match(operation,canceled){(Ok(()),Ok(()))=>Ok(()),(Err(primary),Ok(()))=>Err(primary.into()),(Ok(()),Err(work))=>Err(NativeSnapshotFailure::work_post(work)),(Err(primary),Err(work))=>Err(NativeSnapshotFailure::primary_with_work(primary,work))};RetainedWorkOutcome{work:0,result}},
+     Err(payload)=>{*unwind_failure=if performed{self.$post(progress.state.physical,Ok(())).result.err()}else{self.$cancel().err().map(NativeSnapshotFailure::work_post)};std::panic::resume_unwind(payload)}
     }
    }
   }
  };
 }
 run_snapshot_effect!(NativeSnapshotDecodeEffectQuote,post_decode,cancel_decode);
-run_snapshot_effect!(NativeSnapshotEncodeEffectQuote,post_encode,cancel_encode);
 fn effect_outcome(operation:Result<(),ValueError>,work:Result<(),ValueError>,local:Result<(),ValueError>,receipt:Result<(),ValueError>,progress:RetainedCloneProgress)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
  let cause=operation.err().map(NativeSnapshotCause::Value);let work_refusal=work.err();let settlement_refusal=local.err();let receipt_refusal=receipt.err();let result=if cause.is_none()&&work_refusal.is_none()&&settlement_refusal.is_none()&&receipt_refusal.is_none(){Ok(())}else{Err(NativeSnapshotFailure::from_effect_parts(cause,work_refusal,settlement_refusal,receipt_refusal,progress))};RetainedWorkOutcome{result,work:1}
 }
@@ -188,27 +163,22 @@ impl NativeSnapshotBodyWallet{
   let grant=self.admit_constructed(native,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<Vec<T>>(),maximum_capacity_bytes:bytes,maximum_depth:depth,..Default::default()})?;
   match native.allocate_vec(count){Ok(value)=>{*output=value;self.finish_constructed(native,grant,RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Vec<T>>(),retained_capacity_bytes:output.capacity()*size_of::<T>(),released_bytes:0},None)},Err(error)=>Err(error.into())}
  }
- /// 🛫️ Quotes the original encoder construction recipient and remaining body wallet.
- pub fn admit_encoded(&self,native:&mut NativeEncodeControl<'_>,requested:RetainedCloneGrant)->Result<RetainedCloneGrant,NativeSnapshotFailure>{
-  self.admit_frontier(requested)?;
-  let demand=semio_framework_value::RetirementDemand{copy_bytes:requested.maximum_copy_bytes,capacity_bytes:requested.maximum_capacity_bytes,release_bytes:requested.maximum_release_bytes,depth:requested.maximum_depth};
-  let grant=native.construction_grant(demand)?;
-  if grant.maximum_items<requested.maximum_items||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot encoder body exceeds original recipient quote").into())}Ok(grant)
- }
  /// 🧵️ Copies into the original encoded destination and posts its exact retained prefix.
- pub fn copy_text_encoded(&mut self,native:&mut NativeEncodeControl<'_>,text:&str,output:&mut String,marker:&mut NativeSnapshotEffectProgress,unwind:&mut Option<NativeSnapshotFailure>,allocation:&mut NativeSnapshotEncodeAllocation,depth:usize)->Result<(),NativeSnapshotFailure>{
-  if !output.is_empty()||output.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot encoded text slot must be empty").into())}
-  if allocation.is_unsettled(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot encoded allocation state is unsettled").into())}
-  native.scoped_stage(|native|{
-   native.begin_stage(text.len())?;if text.is_empty(){return Ok(())}
-   let layout=std::alloc::Layout::array::<u8>(text.len()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot encoded text extent overflow"))?;
-   let quote=NativeSnapshotEncodeEffectQuote::encode(self,native,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<String>(),maximum_capacity_bytes:text.len(),maximum_depth:depth,..Default::default()})?;
-   let turn=quote.run_native(marker,unwind,&mut |native,performed,physical|{let outcome=native.allocate_effect(text.len(),&mut allocation.actual,&mut allocation.unwind,&mut |actual|{*performed=true;*actual=Some(0);let pointer=unsafe{std::alloc::alloc(layout)};if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"snapshot encoded text allocation failed"))}*output=unsafe{String::from_raw_parts(pointer,0,text.len())};*actual=Some(text.len());*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<String>(),retained_capacity_bytes:text.len(),..Default::default()};Ok(())});match allocation.capture(outcome,text.len()){Ok(true)=>Ok(()),Ok(false)=>Ok(()),Err(outcome)=>{allocation.collision=Some(outcome);Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot encoded allocation custody is occupied"))}}});
-   allocation.finish(turn.result).map_err(|error|error.with_retained_progress(self.progress()))?;marker.reset_completed()?;
-   let mut position=0;while position<text.len(){let mut end=position.saturating_add(65536).min(text.len());while !text.is_char_boundary(end){end-=1;}let bytes=end-position;
-    let quote=NativeSnapshotEncodeEffectQuote::encode(self,native,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:depth,..Default::default()})?;
-    let turn=quote.run(marker,unwind,&mut |performed,physical|{output.push_str(&text[position..end]);*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};Ok(())});turn.result?;marker.reset_completed()?;native.advance(bytes)?;position=end;
-   }Ok(())
+ pub fn copy_text_encoded(&mut self,native:&mut NativeEncodeControl<'_>,text:&str,output:&mut String,marker:&mut NativeSnapshotEffectProgress,unwind:&mut Option<NativeSnapshotFailure>,allocation:&mut NativeSnapshotEncodeAllocation,depth:usize)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
+  native_snapshot_turn(|work|{
+   if !output.is_empty()||output.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot encoded text slot must be empty").into())}
+   if allocation.is_unsettled()||unwind.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot encoded allocation state is unsettled").into())}
+   native.scoped_stage(|native|{
+    native.begin_stage(text.len())?;if text.is_empty(){return Ok(())}
+    let layout=std::alloc::Layout::array::<u8>(text.len()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot encoded text extent overflow"))?;
+    let demand=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<String>(),maximum_capacity_bytes:text.len(),maximum_depth:depth,..Default::default()};
+    work.take(self.encode_effect(native,demand,Some(text.len()),marker,unwind,allocation,&mut |performed,physical,actual|{*performed=true;*actual=Some(0);let pointer=unsafe{std::alloc::alloc(layout)};if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"snapshot encoded text allocation failed"))}*output=unsafe{String::from_raw_parts(pointer,0,text.len())};*actual=Some(text.len());*physical=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<String>(),retained_capacity_bytes:text.len(),..Default::default()};Ok(())}))?;
+    allocation.reset_completed()?;
+    let mut position=0;while position<text.len(){let mut end=position.saturating_add(65536).min(text.len());while !text.is_char_boundary(end){end-=1;}let bytes=end-position;
+     let demand=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:depth,..Default::default()};
+     work.take(self.encode_effect(native,demand,None,marker,unwind,allocation,&mut |performed,physical,_|{output.push_str(&text[position..end]);*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};Ok(())}))?;marker.reset_completed()?;native.advance(bytes)?;position=end;
+    }Ok(())
+   })
   })
  }
  /// 📊️ Reports accepted actual producer receipts independently of native allocation counters.

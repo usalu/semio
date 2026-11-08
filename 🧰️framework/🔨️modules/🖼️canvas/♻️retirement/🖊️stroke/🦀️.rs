@@ -40,7 +40,8 @@ impl CanvasStrokeRetirement {
 impl ErasedSnapshotRetirement for CanvasStrokeRetirement {
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if self.needs_dash_transfer(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<Vec<f64>>(),depth:2,..Default::default()})}if let Some(active)=self.active.as_ref().filter(|active|!active.terminal_is_empty()){let mut demand=active.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"Canvas Stroke child depth overflow"))?;return Ok(demand)}Ok(semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<Self>(),depth:1,..Default::default()})}
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        let grant = effect.grant();let mut delegated = None;
         let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -59,14 +60,16 @@ impl ErasedSnapshotRetirement for CanvasStrokeRetirement {
         }
         if let Some(active) = self.active.as_mut().filter(|active| !active.terminal_is_empty()) {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            return active.step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
+            delegated = Some(active.step(&mut effect.nested(child)));
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
         drop(self.active.take());
         drop(self.original.take());
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..empty }))
         })();
         let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != RetainedCloneProgress::default()));
-        RetainedWorkOutcome { result, work }
+        if let Some(poll) = delegated { return poll.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        semio_framework_value::RetainedWorkPoll::Complete(RetainedWorkOutcome { result: result.map_err(Into::into), work: work.into() })
     }
     fn terminal_is_empty(&self) -> bool { self.original.is_none() && self.active.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> {

@@ -195,7 +195,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
         if grant.maximum_depth < demand.depth { return Err(plugin_sdk_fault("private row close exceeds admitted owner depth").into()); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if !self.input.terminal_is_empty() { return self.input.close_granted(child).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from); }
+        if !self.input.terminal_is_empty() { return self.input.close_granted(cx, child).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from); }
         if let Some(request) = self.request.as_mut() {
             if request.terminal_is_empty() { self.request.take(); return Ok(group_structural()); }
             let step = request.close_step(child).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
@@ -216,14 +216,14 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(source) = self.source.as_mut() {
-            let step = source.close_granted(child).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+            let step = semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx, child, |effect| source.close_step(effect)).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child, step, source.terminal_is_empty(), "private row source").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
             if source.terminal_is_empty() { self.source.take(); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(member) = self.member.as_mut() {
             if !member.close_owned_terminal_is_empty() {
-                let step = member.close_owned_step(child).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+                let step = semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx, child, |effect| semio_plugin_ownership::bounded_ownership::plugin_settle_value(member.close_owned_step(effect))).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
                 semio_framework_value::retained_clone::admit_retained_clone_close(child, step, member.close_owned_terminal_is_empty(), "private row member").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
@@ -705,7 +705,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: Self::row_birth_bytes(), ..empty }));
         }
         if let Some(batch) = self.parent_source.as_mut() {
-            let step = batch.close_granted(child).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+            let step = semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx, child, |effect| batch.close_granted(effect)).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child, step, batch.terminal_is_empty(), "private group parent batch").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
             if batch.terminal_is_empty() { self.parent_source.take(); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
@@ -713,7 +713,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         if let Some(sources) = self.sources.as_mut() {
             if let Some(source) = sources.front_mut() {
                 let source_grant = RetainedCloneGrant { maximum_depth: child.maximum_depth - 1, ..child };
-                let step = source.close_granted(source_grant).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+                let step = semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx, source_grant, |effect| source.close_step(effect)).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
                 semio_framework_value::retained_clone::admit_retained_clone_close(source_grant, step, source.terminal_is_empty(), "private group deque source").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
                 if source.terminal_is_empty() { sources.pop_front(); }
                 return Ok(RetainedCloneStep::Progress(step.progress()));

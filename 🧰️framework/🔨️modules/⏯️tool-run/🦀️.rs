@@ -22,6 +22,39 @@ use semio_ui_locale::LocalizedLabel;
 mod receiving_limits;
 pub use receiving_limits::{ToolRunRecordReadLimits,ToolRunHistoryReadLimits,ToolRunReceivingLimits};
 
+/// 🧱️ Reserves one exact vector backing as the single allocation attempt of this effect and records its genuine size.
+pub(crate) fn reserve_vec<T>(count:usize,effect:&mut semio_framework_value::retained_clone::RetainedAllocationEffect<'_>)->Result<Vec<T>,semio_framework_value::ValueError>{
+    use semio_framework_value::{ValueError,ValueRefusalKind};
+    let actual=effect.actual();
+    if actual.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"tool run allocation attempt is occupied"));}
+    let mut vector=Vec::new();let reserved=vector.try_reserve_exact(count);*actual=Some(if reserved.is_ok(){vector.capacity()*size_of::<T>()}else{0});
+    reserved.map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"tool run backing allocation failed"))?;Ok(vector)
+}
+
+/// ⛽️ Records one turn's work on the surrounding effect; a refused debit is a fault of the owner.
+pub(crate) fn record_work(effect:&mut semio_framework_value::retained_clone::RetainedAllocationEffect<'_>,work:u128)->Result<(),semio_framework_value::ValueError>{
+    use semio_framework_value::{ValueError,ValueRefusalKind};
+    let work=u64::try_from(work).map_err(|_|ValueError::invariant("tool run work exceeds a turn"))?;
+    if effect.performed(work)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"tool run work is not funded"))}
+}
+
+/// 🏷️ Admits one sealed original under its quoted work; a refused quote hands the value back, surplus beyond the quote is debited, and a refused surplus rolls the fresh admission back to its value.
+pub(crate) fn admit_sealed<T:semio_framework_value::retirement::RetireOwned+Send+Sync+'static>(value:T,effect:&mut semio_framework_value::retained_clone::RetainedAllocationEffect<'_>)->Result<(semio_framework_value::shared_issuance::SealedShared<T>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,T)>{
+    use semio_framework_value::shared_issuance::{SealedShared,SharedIssuer};
+    let quote=u128::from(SealedShared::<T>::birth_work_demand());
+    if let Err(error)=record_work(effect,quote){return Err((error,value));}
+    let turn=SealedShared::admit(value,SharedIssuer::owned(),effect.grant(),effect.actual());
+    let surplus=turn.work.saturating_sub(quote);
+    if surplus>0{if let Err(error)=record_work(effect,surplus){return Err((error,match turn.result{Err((_,value))=>value,Ok((sealed,_))=>semio_framework_value::shared_issuance::cold_take_exclusive(sealed)}));}}
+    turn.result
+}
+
+/// 🏁️ Settles one finished retirement poll into its physical receipt; a refused or suspended close is a fault of the owner.
+pub(crate) fn settle_close(poll:semio_framework_value::OriginalRetirementPoll)->Result<semio_framework_value::retained_clone::RetainedCloneProgress,semio_framework_value::ValueError>{
+    use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::RetainedWorkPoll};
+    match poll{RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>Ok(step.progress()),Err(failure)=>{let progress=failure.retained_progress();drop(failure);Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"tool run close was refused").with_retained_progress(progress))}},RetainedWorkPoll::Pending{..}=>Err(ValueError::invariant("tool run close stayed pending"))}
+}
+
 #[path="📊️progress/📸️clone/🦀️.rs"]
 pub mod progress_clone;
 #[path="📊️progress/💍️steps/➕️insert/🦀️.rs"]

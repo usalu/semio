@@ -200,13 +200,13 @@ fn diagnostic(error: RetainedSprDiagnostic) -> MemberOpenDiagnostic {
     }
 }
 
-fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    semio_os_store_read::retirement_owner_close(request, grant).result
+fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+    semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(request, effect))
 }
 
 impl ErasedSnapshotRetirement for MemberHistoryVerification {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -218,8 +218,8 @@ impl ErasedSnapshotRetirement for MemberHistoryVerification {
             self.pending = None;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
         }
-        close_request(&mut self.request, grant)
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+        close_request(&mut self.request, effect)
+    })(); let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()))); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work }) }
     fn terminal_is_empty(&self) -> bool { self.request.is_none() && self.scanner.is_none() && self.span.is_none() && self.pending.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
@@ -235,15 +235,15 @@ impl MemberHistoryVerification {
 
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryInput {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         if grant.maximum_depth < self.next_depth_demand()? { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "verified history retirement exceeds admitted depth")); }
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
         if self.span.take().is_some() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty })); }
-        close_request(&mut self.request, grant)
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+        close_request(&mut self.request, effect)
+    })(); let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()))); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work }) }
     fn terminal_is_empty(&self) -> bool { self.request.is_none() && self.span.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }

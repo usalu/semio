@@ -58,7 +58,7 @@ where P:pack::snapshot::ArtifactPackMetadata+ArtifactStoreSnapshot+'static,
 pub fn artifact_codec<P, Mutation>(schema: impl Into<String>) -> ArtifactCodec
 where
     P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + ArtifactSqliteSnapshotHost + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + semio_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+    Mutation: Clone + semio_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree + pack::OpBinaryReceiving,
 {
     let mut codec = bare_artifact_codec::<P, Mutation>(schema);
     codec.snapshot_sqlite = Some(P::sqlite_codec());
@@ -75,7 +75,7 @@ where
 pub fn bare_artifact_codec<P, Mutation>(schema: impl Into<String>) -> ArtifactCodec
 where
     P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + semio_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+    Mutation: Clone + semio_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree + pack::OpBinaryReceiving,
 {
     bare_artifact_codec_with_owners::<P, Mutation, BoundedArtifactCodecOwners>(schema)
 }
@@ -84,7 +84,7 @@ where
 pub fn bare_artifact_codec_with_owners<P, Mutation, Source>(schema: impl Into<String>) -> ArtifactCodec
 where
     P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + semio_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+    Mutation: Clone + semio_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree + pack::OpBinaryReceiving,
     Source: ArtifactCodecOwnerSource<P,Mutation>+Send+Sync+'static,
 {
     /// 🕰️`'static`, not `'a`. These items are coerced to `for<'a> fn(..) -> ..` pointers, so a
@@ -147,7 +147,7 @@ where
     fn apply_ops_binary_impl<'a, 'b, P, Mutation, Source>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8], identity: &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>
     where
         P: Clone + FromValue + ToValue + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-        Mutation: Clone + semio_os_spr::ColdMutation<P> + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+        Mutation: Clone + semio_os_spr::ColdMutation<P> + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree + pack::OpBinaryReceiving,
         Source: ArtifactCodecOwnerSource<P,Mutation>+Send+Sync+'static,
         {
         Box::pin(async move {
@@ -206,7 +206,7 @@ where
     fn replay_envelopes_impl<'a, P, Mutation, Source>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
     where
         P: Clone + FromValue + ToValue + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-        Mutation: semio_os_spr::ColdMutation<P> + Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+        Mutation: semio_os_spr::ColdMutation<P> + Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree + pack::OpBinaryReceiving,
         Source: ArtifactCodecOwnerSource<P,Mutation>+Send+Sync+'static,
         {
         Box::pin(async move {
@@ -217,7 +217,7 @@ where
 
     fn edit_text_from_envelope_impl<'a, P, Mutation>(envelope: &'a semio_os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>
     where
-        Mutation: semio_os_spr::ColdMutation<P> + OpText + OpBinary,
+        Mutation: semio_os_spr::ColdMutation<P> + OpText + OpBinary + pack::OpBinaryReceiving,
     {
         Box::pin(async move {
             let edit = edit_from_operation_envelope_cold::<Mutation>(envelope).await?;
@@ -259,7 +259,7 @@ where
 {
     let mut closed = Err(VcsError::ValidationFailed("artifact codec store did not reach terminal emptiness within its bounded close budget".into()));
     for _ in 0..ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS {
-        let step = store.close_owned_demands(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).and_then(|demand| store.close_owned_step(artifact_retirement_self_grant(demand, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)));
+        let step = store.close_owned_demands(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).and_then(|demand| store.close_owned_step_cold(artifact_retirement_self_grant(demand, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)));
         match step {
             Ok(RetainedCloneStep::Complete(_)) => {
                 closed = if store.close_owned_terminal_is_empty() { Ok(()) } else { Err(VcsError::ValidationFailed("artifact codec store reported close completion without terminal emptiness".into())) };

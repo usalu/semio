@@ -6,7 +6,7 @@
 //! ended press leaves zero trace). The drive itself is pinned by the tool-machine corpus
 //! (`🧫️gesture-drive-law`: `rows`, `hostEvents`, `slots`).
 #[cfg(test)]
-use semio_plugin_tool_run::tool_jobs_tool_machine::gesture_emit;
+use semio_plugin_tool_machine::gesture_emit;
 #[cfg(test)]
 use semio_plugin_decl_views::gesture_contract::GestureSlot;
 

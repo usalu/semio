@@ -65,10 +65,7 @@ impl ArtifactStoreBackboneRetirement {
         let release_bytes = if let Some(bytes) = self.bytes.as_ref() { bytes.capacity() }
         else if let Some(message) = self.message.as_ref() { Self::message_release(message) }
         else if let Some(queue) = self.queue.as_ref() { if queue.is_empty() { queue.capacity() * size_of::<BackboneMessage>() } else { 0 } }
-        else if let Some(wake) = self.wake.as_ref() {
-            if wake.get().is_some() { return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "backbone wake callback has no admitted retirement authority")); }
-            shared_retirement_allocation_bytes::<Wake>()
-        } else if let Some(backbone) = self.backbone.as_ref() {
+        else if let Some(wake) = self.wake.as_ref() { Self::wake_release_bytes(wake) } else if let Some(backbone) = self.backbone.as_ref() {
             match backbone {
                 Backbones::Port(value) if value.uri.capacity() == 0 && value.channel.is_some() => return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "external backbone channel has no admitted retirement authority")),
                 Backbones::Memory(value) if value.uri.capacity() == 0 && (value.inbox.is_some() || value.outbox.is_some()) => shared_retirement_allocation_bytes::<Queue>(),
@@ -77,6 +74,10 @@ impl ArtifactStoreBackboneRetirement {
             }
         } else { 0 };
         Ok(RetirementDemand { release_bytes, depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
+    }
+    fn wake_release_bytes(wake: &Wake) -> usize {
+        let callback = wake.get().filter(|callback| Arc::strong_count(callback) == 1).map_or(0, |callback| std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::for_value(&**callback)).map_or(0, |(layout, _)| layout.pad_to_align().size()));
+        shared_retirement_allocation_bytes::<Wake>() + callback
     }
     fn detach_queue(owner: &mut Option<Arc<Queue>>) -> Option<VecDeque<BackboneMessage>> {
         let queue = owner.as_ref()?;
@@ -90,13 +91,14 @@ impl ArtifactStoreBackboneRetirement {
 
 impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { if let Some(outbox)=self.outbox.as_ref().filter(|owner|!owner.terminal_is_empty()){outbox.close_demands(body)}else if let Some(paged)=self.paged.as_ref().filter(|owner|!owner.terminal_is_empty()){paged.next_demand(body)}else{self.demands()} }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
-        let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        let grant = effect.grant();
+        let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        if let Some(outbox)=self.outbox.as_mut(){if !outbox.terminal_is_empty(){return outbox.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}let demand=self.demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty))}self.outbox.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
-        if let Some(paged)=self.paged.as_mut(){let d=if paged.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<Option<PagedRetirement>>(),depth:1,..Default::default()}}else{paged.next_demand(grant.maximum_copy_bytes)?};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(empty))}if !paged.terminal_is_empty(){return paged.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}self.paged.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+        if let Some(outbox)=self.outbox.as_mut(){if !outbox.terminal_is_empty(){return outbox.close_step(effect).map(|step|RetainedCloneStep::Progress(step.progress()))}let demand=self.demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty))}self.outbox.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
+        if let Some(paged)=self.paged.as_mut(){let d=if paged.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<Option<PagedRetirement>>(),depth:1,..Default::default()}}else{paged.next_demand(grant.maximum_copy_bytes)?};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(empty))}if !paged.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(paged.step(effect)).map(|step|RetainedCloneStep::Progress(step.progress()))}self.paged.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
         let demand = self.demands()?;
         if grant.maximum_copy_bytes<demand.copy_bytes{return Ok(RetainedCloneStep::Progress(empty))}
         if grant.maximum_depth < demand.depth || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -122,7 +124,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
             if let Some(message) = queue.pop_front() { *self.message = Some(message); }
             else { drop(self.queue.take()); }
         } else if let Some(wake) = self.wake.as_ref() {
-            if Arc::strong_count(wake) != 1 { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
+            if Arc::strong_count(wake) != 1 || Self::wake_release_bytes(wake) != demand.release_bytes { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
             match Arc::try_unwrap(self.wake.take().unwrap()) {
                 Ok(wake) => drop(wake),
                 Err(wake) => { *self.wake = Some(wake); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
@@ -146,8 +148,11 @@ impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
         }
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
     })();
-        let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()));
-        semio_framework_value::RetainedWorkOutcome { result, work }
+        semio_framework_value::RetirementPollExit::settle(effect, result)
+    }
+    fn next_computational_work(&self, body: usize) -> Result<u64, ValueError> {
+        if self.terminal_is_empty() { return Ok(0); }
+        match self.paged.as_ref().filter(|paged| !paged.terminal_is_empty()) { Some(paged) => paged.next_computational_work(body).map(|work| work.max(1)), None => Ok(1) }
     }
     fn terminal_is_empty(&self) -> bool { self.outbox.is_none() && self.paged.is_none() && self.backbone.is_none() && self.queue.is_none() && self.message.is_none() && self.bytes.is_none() && self.wake.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands()?.copy_bytes) }

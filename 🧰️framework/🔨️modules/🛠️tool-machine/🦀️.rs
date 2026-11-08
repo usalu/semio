@@ -473,7 +473,8 @@ pub use typing_tool::*;
 
 
 impl<M:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for ToolTransaction<M>{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let Self{reference,entries,..}=self;semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(reference),semio_framework_value::retirement::deferred(entries)])}
+ type RetirementCursor=semio_framework_value::retirement_fields_type!(TransactionRef,Vec<(String,M)>);
+ fn retirement_seed(self)->Self::RetirementCursor{let Self{reference,entries,..}=self;semio_framework_value::retirement_fields_seed!(reference,entries)}
  fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.reference),deferred_birth_bytes_for(&self.entries)])}
  fn controlled_retirement_supported()->bool{M::controlled_retirement_supported()}
 }
@@ -481,7 +482,8 @@ impl<M:semio_framework_value::retirement::RetireOwned> semio_framework_value::re
 
 impl<T:ToolMachine+'static,H:Host<T>+semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for ToolMachineRunner<T,H>
 where T::Input:semio_framework_value::retirement::RetireOwned,Snapshot<T>:semio_framework_value::retirement::RetireOwned,ToolTransaction<T::Mutation>:semio_framework_value::retirement::RetireOwned{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let Self{host,tool,actor,input,snapshot,transaction}=self;semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(host),semio_framework_value::retirement::deferred(tool),semio_framework_value::retirement::deferred(actor),semio_framework_value::retirement::deferred(input),semio_framework_value::retirement::deferred(snapshot),semio_framework_value::retirement::deferred(transaction)])}
+ type RetirementCursor=semio_framework_value::retirement_fields_type!(H,String,ActorId,T::Input,Snapshot<T>,Option<ToolTransaction<T::Mutation>>);
+ fn retirement_seed(self)->Self::RetirementCursor{let Self{host,tool,actor,input,snapshot,transaction}=self;semio_framework_value::retirement_fields_seed!(host,tool,actor,input,snapshot,transaction)}
  fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.host),deferred_birth_bytes_for(&self.tool),deferred_birth_bytes_for(&self.actor),deferred_birth_bytes_for(&self.input),deferred_birth_bytes_for(&self.snapshot),deferred_birth_bytes_for(&self.transaction)])}
  fn controlled_retirement_supported()->bool{H::controlled_retirement_supported()&&T::Input::controlled_retirement_supported()&&<Snapshot<T> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()&&<ToolTransaction<T::Mutation> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }

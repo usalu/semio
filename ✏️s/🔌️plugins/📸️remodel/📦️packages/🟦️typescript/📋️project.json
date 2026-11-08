@@ -7,6 +7,16 @@
       "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🧪️tests/🎚️config/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🧪️tests/🌐️browser/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/**/*.{ts,tsx,json,semio,png,absent,rs}"
+    ],
+    "reads": [
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/🧰️framework/**/*.{ts,tsx,json}",
+      "{workspaceRoot}/✏️s/**/*.{ts,tsx,json}",
+      {
+        "externalDependencies": [
+          "typescript"
+        ]
+      }
     ]
   },
   "targets": {

@@ -110,9 +110,9 @@ impl SpaceHistoryDiff {
 impl SpaceHistoryStep {
     /// ↩️ The steps that undo `self`, read from `base` or from the rows of `earlier` steps of the same diff; the active alternative
     /// before `self` is the last earlier `SetActive` row, else the base's. Nothing is applied.
-    fn undo_rows(&self, base: &SpaceHistorySnapshot, earlier: &[SpaceHistoryStep]) -> Vec<SpaceHistoryStep> {
-        let active = || earlier.iter().rev().find_map(|step| if let Self::SetActive { alternative_id } = step { Some(alternative_id.clone()) } else { None }).unwrap_or_else(|| base.active_alternative_id.clone());
-        let length = || (base.checkpoints.len() + earlier.iter().filter(|step| matches!(step, Self::AddCheckpoint { .. })).count()).saturating_sub(earlier.iter().filter(|step| matches!(step, Self::RemoveCheckpoint { .. })).count()) as u64;
+    fn undo_rows(&self, base: &SpaceHistorySnapshot, earlier: &[SpaceHistoryStep], active: &Option<String>, length: u64) -> Vec<SpaceHistoryStep> {
+        let active = || active.clone();
+        let length = || length;
         match self {
             Self::AddCheckpoint { checkpoint, index } => vec![Self::RemoveCheckpoint { checkpoint_id: checkpoint.id.clone(), index: index.unwrap_or_else(length) }],
             Self::RemoveCheckpoint { checkpoint_id, index } => base
@@ -167,6 +167,9 @@ impl SpaceHistoryStep {
                     return Err(semio_os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("alternative {alternative_id} does not exist")).at(["alternatives", alternative_id.as_str()]));
                 }
                 next.alternatives.retain(|alternative| alternative.id != *alternative_id);
+                if next.active_alternative_id.as_ref() == Some(alternative_id) {
+                    next.active_alternative_id = None;
+                }
             }
             Self::SetActive { alternative_id } => {
                 if let Some(alternative_id) = alternative_id {
@@ -189,7 +192,18 @@ impl semio_os_spr::DiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
 
 impl semio_os_spr::ColdDiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Self {
-        let rows: Vec<Vec<SpaceHistoryStep>> = self.steps.iter().enumerate().map(|(index, step)| step.undo_rows(base, &self.steps[..index])).collect();
+        let (mut active, mut length) = (base.active_alternative_id.clone(), base.checkpoints.len() as u64);
+        let mut rows: Vec<Vec<SpaceHistoryStep>> = Vec::with_capacity(self.steps.len());
+        for (index, step) in self.steps.iter().enumerate() {
+            rows.push(step.undo_rows(base, &self.steps[..index], &active, length));
+            match step {
+                SpaceHistoryStep::SetActive { alternative_id } => active = alternative_id.clone(),
+                SpaceHistoryStep::RemoveAlternative { alternative_id } if active.as_ref() == Some(alternative_id) => active = None,
+                SpaceHistoryStep::AddCheckpoint { .. } => length += 1,
+                SpaceHistoryStep::RemoveCheckpoint { .. } => length = length.saturating_sub(1),
+                _ => {}
+            }
+        }
         Self { steps: rows.into_iter().rev().flatten().collect() }
     }
 }
@@ -221,13 +235,16 @@ impl DiffRegions for SpaceHistoryDiff {
     fn touches(&self) -> TouchedPaths {
         let mut regions = Vec::new();
         for step in &self.steps {
-            let region = match step {
-                SpaceHistoryStep::AddCheckpoint { .. } | SpaceHistoryStep::RemoveCheckpoint { .. } => "checkpoints",
-                SpaceHistoryStep::AddAlternative(_) | SpaceHistoryStep::RemoveAlternative { .. } => "alternatives",
-                SpaceHistoryStep::SetActive { .. } => "activeAlternativeId",
+            let touched: &[&str] = match step {
+                SpaceHistoryStep::AddCheckpoint { .. } | SpaceHistoryStep::RemoveCheckpoint { .. } => &["checkpoints"],
+                SpaceHistoryStep::AddAlternative(_) => &["alternatives"],
+                SpaceHistoryStep::RemoveAlternative { .. } => &["alternatives", "activeAlternativeId"],
+                SpaceHistoryStep::SetActive { .. } => &["activeAlternativeId"],
             };
-            if !regions.contains(&region) {
-                regions.push(region);
+            for region in touched {
+                if !regions.contains(region) {
+                    regions.push(*region);
+                }
             }
         }
         TouchedPaths::new(regions)

@@ -170,7 +170,7 @@ impl UiNativeResourceLoans {
             self.rows.pop();
             return Ok(Mesh3dOwnershipStep { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() }, ..Default::default() });
         }
-        let step = self.rows.release_empty_page(grant.maximum_release_bytes).map_err(UiNativeResourceFailure::Storage)?;
+        let step = self.rows.release_empty_page_leased(grant.maximum_release_bytes).map_err(UiNativeResourceFailure::Storage)?;
         Ok(Mesh3dOwnershipStep { complete: self.terminal_is_empty(), progress: RetainedCloneProgress { copied_items: usize::from(step.progressed), released_bytes: step.released_allocation_bytes, ..Default::default() } })
     }
 

@@ -39,7 +39,7 @@ pub trait ArtifactEnvelopeCompletedRecordTarget<P, Mutation> {
 /// 🎁️ Exact completed envelope owner retained by the app until one consumer takes it or close retires it.
 pub trait ArtifactEnvelopeCompletedRecord<P, Mutation>: Send {
     fn try_publish_to(&mut self, target: &mut dyn ArtifactEnvelopeCompletedRecordTarget<P, Mutation>) -> bool;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll;
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, ValueError>;
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError>;
@@ -79,15 +79,17 @@ where
         }
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit<ValueError>> {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.ownership_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "completed record exceeds admitted depth")); }
+        if grant.maximum_depth < demand.depth { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "completed record exceeds admitted depth")).into()); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         if self.retirement.is_some() {
-            let step = retirement_owner_close(&mut self.retirement, grant).result?;
+            let step = artifact_envelope_close_resume_with(retirement_owner_close(&mut self.retirement, effect), artifact_envelope_failure_error)?;
             return Ok(if self.ownership_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
         }
         if self.envelope.is_some() {
@@ -110,13 +112,15 @@ where
         for index in 0..self.factory_retirement.len() {
             if let Some(factory) = self.factory_retirement[index].as_mut() {
                 let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-                let step = factory.step(child).result?;
+                let step = artifact_envelope_close_resume_with(factory.step(&mut effect.nested(child)), artifact_envelope_failure_error)?;
                 semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "completed original factory")?;
                 if factory.terminal_is_empty() { self.factory_retirement[index] = None; }
                 return Ok(if self.ownership_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
             }
         }
         Ok(RetainedCloneStep::Complete(empty))
+        })();
+        artifact_envelope_retirement_settle(effect, result)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.copy_bytes) }

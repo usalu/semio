@@ -16,13 +16,13 @@ fn grant_node(grant:semio_framework_value::RetainedCloneGrant,path:&[usize])->Re
 mod tests{
  use super::*;
  use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
- use semio_framework_value::{RetainedCloneGrant,RetainedWorkOutcome};
+ use semio_framework_value::RetainedCloneGrant;
  use semio_framework_value::retirement::controlled::ControlledRetirement;
  fn clock()->Option<u64>{Some(1000)}
  #[test]
  fn exact_scoped_budget_view_matches_serde_without_projected_heap(){
   let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let budget:semio_framework_actor::OriginalJobBudget=serde_json::from_value(law["budget"].clone()).unwrap();assert_eq!(serde_json::to_string(&budget).unwrap(),law["expectedBudget"].as_str().unwrap());let grant=RetainedCloneGrant{maximum_items:10000,maximum_copy_bytes:1048576,maximum_capacity_bytes:4194304,maximum_release_bytes:4194304,maximum_depth:64};let mut caller=OriginalJobFixtureCaller::admit(OperationId(71),Generation(3),grant,clock,1000000,1000000);let mut encoder=SourceJsonEncoder::new();let mut output=None;for epoch in 1..law["maximumSlices"].as_u64().unwrap(){if caller.turn(grant,|cx|{cx.bind_original_source_epoch(epoch)?;encoder.advance(&OriginalJobBudgetJson(budget),&mut output,cx)}).unwrap(){break}}assert_eq!(std::str::from_utf8(output.as_ref().unwrap()).unwrap(),law["expectedBudget"].as_str().unwrap());
-  let mut output=ControlledRetirement::retain(output.take().unwrap());for _ in 0..4096{if caller.turn(grant,|cx|{let result=output.step(cx.retained_grant());let work=output.last_turn_work();semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome{result,work}).map(|step|matches!(step,semio_framework_value::RetainedCloneStep::Complete(_)))}).unwrap(){break}}assert!(output.terminal_is_empty());for _ in 0..4096{if caller.turn(grant,|cx|encoder.close_step(cx)).unwrap(){break}}assert!(encoder.terminal_is_empty());caller.retire(grant);
+  let mut output=ControlledRetirement::retain(output.take().unwrap());for _ in 0..4096{if caller.turn(grant,|cx|{let grant=cx.retained_grant();let Some((poll,_))=cx.with_original_effect(grant,|_,effect|output.step(effect))? else{return Ok(false)};let turn=semio_framework_value::RetirementPollExit::settled(poll).ok().unwrap();semio_framework_job::receive_original_retained_work(cx,turn).map(|step|matches!(step,semio_framework_value::RetainedCloneStep::Complete(_)))}).unwrap(){break}}assert!(output.terminal_is_empty());for _ in 0..4096{if caller.turn(grant,|cx|encoder.close_step(cx)).unwrap(){break}}assert!(encoder.terminal_is_empty());caller.retire(grant);
  }
 
 }

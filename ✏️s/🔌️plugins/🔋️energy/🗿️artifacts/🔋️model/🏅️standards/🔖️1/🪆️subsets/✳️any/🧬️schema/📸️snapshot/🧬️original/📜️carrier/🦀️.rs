@@ -37,14 +37,11 @@ impl EnergyModelSnapshot{
  pub fn from_model(model:&crate::model::Model)->Result<Self,ValueError>{Self::from_document(Self::document_value(model))}
 }
 
-/// 🌱️ The canonical empty engine model is the real empty document.
-impl Default for EnergyModelSnapshot{
- fn default()->Self{Self::from_model(&crate::model::Model::default()).expect("the canonical empty model is admissible")}
-}
-
-impl semio_framework_value::FromValue for EnergyModelSnapshot{
- fn from_value(value:DslValue)->Result<Self,ValueError>{receive_stepped(value)}
- fn retire_decoded(self){let _=retire_stepped(self);}
+impl EnergyModelSnapshot{
+ /// 🌱️ Constructs the canonical empty engine model as the real empty document; a refused construction is a typed failure, never a panic.
+ pub fn empty()->Result<Self,ValueError>{Self::from_model(&crate::model::Model::default())}
+ /// 📥️ Receives one document value into the native persistent owner in bounded paid steps.
+ pub fn from_value(value:DslValue)->Result<Self,ValueError>{receive_stepped(value)}
 }
 
 impl EnergyModelSnapshot{

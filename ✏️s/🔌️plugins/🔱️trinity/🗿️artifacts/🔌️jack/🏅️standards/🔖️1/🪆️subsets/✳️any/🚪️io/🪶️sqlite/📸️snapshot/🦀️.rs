@@ -419,7 +419,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for JackSnapshot
             payload,
             <Self as pack::snapshot::ArtifactDsl>::envelope_id(),
             crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(),
-            |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+            |record,snapshot_output,native| { let constructed: Result<_, ValueError> = (|| {
                 let flat = crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_from_record_controlled(record, native)?;
                 flat.admit_rows(max_rows, native)?;
                 flat.into_snapshot_controlled(native)
@@ -430,19 +430,17 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for JackSnapshot
         forecast(value.get(), c, SqliteSnapshotPhase::DecodeNative)?;
         Ok(value.take())
     })}
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {if let Err(error)=(||->Result<(),semio_framework_value::ValueError>{
         validate(self)?;
-        forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;
-        work.take(store::encode_sqlite_snapshot_record_native(
+        forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;Ok(())})(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}store::encode_sqlite_snapshot_record_native(
             encoding,
             <Self as pack::snapshot::ArtifactDsl>::envelope_id(),
-            crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(),
-            |native| {
+            crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(), &mut |native| {
                 let flat = crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::from_snapshot_controlled(self, native)?;
                 flat.__dsl_to_record_controlled(native)
             },
             c,
-        native_owner))})}
+        native_owner,output)}
     fn retire_sqlite_snapshot(self) {
         retire_snapshot(self)
     }

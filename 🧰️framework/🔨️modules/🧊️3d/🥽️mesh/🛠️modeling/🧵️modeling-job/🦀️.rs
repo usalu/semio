@@ -10,6 +10,7 @@ pub struct MeshModelingJob {
     pub(super) retired: bool,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 pub(super) enum Work {
     Bevel(Box<Bevel>),
     Decimate(Box<Decimate>),
@@ -74,20 +75,26 @@ impl MeshModelingJob {
     /// 🧹️ Moves the same modeling Work payload into bounded typed retirement.
     pub fn retirement_birth_bytes(&self)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<Work>()}
     /// 🧾️ Carries the actual owned-payload admission work through either original result branch.
-    pub fn into_original_retirement(self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::ValueError,Self)>{
-        let Self{work,progress,cancelled,retired}=self;let turn=semio_framework_value::retirement::admit_owned_retirement(work,grant);semio_framework_value::RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(|(error,work)|(error,Self{work,progress,cancelled,retired}))}
+    pub fn into_original_retirement(self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::ValueError,Option<Self>)>{
+        let Self{work,progress,cancelled,retired}=self;let mut slot=Some(work);let turn=semio_framework_value::retirement::admit_owned_retirement(&mut slot,effect);
+        let restore=|work:Option<Work>|work.map(|work|Self{work,progress,cancelled,retired});
+        let result=match turn.result{Ok(Some(admitted))=>Ok(admitted),Ok(None)=>Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"mesh modeling retirement quote was not admitted"),restore(slot))),Err(error)=>Err((error,restore(slot)))};
+        semio_framework_value::RetainedWorkOutcome{work:turn.work,result}
     }
-    pub fn into_retirement(self,grant:RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::ValueError,Self)>{self.into_original_retirement(grant).result}
+    pub fn into_retirement(self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::ValueError,Option<Self>)>{self.into_original_retirement(effect).result}
 
     pub fn cancel(&mut self) {
         if !self.retired { self.cancelled = true; }
     }
 
     pub(in super::super) fn finish_with_progress(mut self, mut progress: impl FnMut(f32) -> bool) -> MeshResult<HalfedgeMesh> {
+        let mut wallet=semio_framework_value::AuthoringWallet::new(RetainedCloneGrant {maximum_items:1<<30,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:1<<10},1_000_000_000_000);
         loop {
             let value = self.progress();
             if !progress(value.units_done as f32 / value.units_total as f32) { return Err(MeshKernelError::InvalidInput("operation cancelled".into())); }
-            match self.step(256,RetainedCloneGrant {maximum_items:256,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut RetainedCloneProgress::default())? {
+            let grant=RetainedCloneGrant {maximum_items:256,maximum_copy_bytes:128,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:1<<10};
+            let Some(done)=wallet.run(grant,1<<20,|effect|self.step(256,effect,&mut RetainedCloneProgress::default())).map_err(MeshKernelError::Retained)? else {return Err(MeshKernelError::InvalidInput("modeling quote refused".into()))};
+            match done.output? {
                 MeshModelingStep::Working(_) => {},
                 MeshModelingStep::Done(mesh) => {
                     if !progress(1.0) { return Err(MeshKernelError::InvalidInput("operation cancelled".into())); }
@@ -98,8 +105,8 @@ impl MeshModelingJob {
         }
     }
 
-    pub fn step(&mut self, budget: usize,grant:RetainedCloneGrant,tessellation_progress:&mut RetainedCloneProgress) -> MeshResult<MeshModelingStep> {
-        *tessellation_progress=Default::default();
+    pub fn step(&mut self, budget: usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,tessellation_progress:&mut RetainedCloneProgress) -> MeshResult<MeshModelingStep> {
+        let grant=effect.grant();*tessellation_progress=Default::default();
         if grant.maximum_items==0{return Ok(MeshModelingStep::Working(self.progress));}
         if self.retired { return Err(MeshKernelError::InvalidInput("modeling job already retired".into())); }
         if self.cancelled { return Ok(MeshModelingStep::Cancelled(self.progress)); }
@@ -150,13 +157,13 @@ impl MeshModelingJob {
                 Work::Decimate(work) => work.advance(),
                 Work::Mirror(work) => work.advance(),
                 Work::Merge(work) => work.advance(),
-                Work::Subdivide(work) => work.advance(grant,tessellation_progress),
+                Work::Subdivide(work) => work.advance(effect,tessellation_progress),
                 Work::LoopCut(work) => work.advance(),
                 Work::Orient(work) => work.advance(grant,tessellation_progress),
                 Work::FillHoles(work) => work.advance(),
                 Work::Inflate(work) => work.advance(),
                 Work::Import(work) => work.advance(),
-                Work::Knife(work) => work.advance(grant,tessellation_progress),
+                Work::Knife(work) => work.advance(effect,tessellation_progress),
                 Work::Transform(work) => work.advance(),
             };
             let output = match result {
@@ -233,7 +240,14 @@ impl MeshModelingJob {
     }
 }
 
-pub(super) fn close_tessellation_handoff(owner:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<MeshTessellationJob>>,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->MeshResult<bool> {
-    let Some(current)=owner.as_mut()else{return Ok(true)};let result=current.step(grant);*receipt=current.step_progress();result.map_err(MeshKernelError::Retained)?;
+/// 🧪️ Drives one modeling step for cold synchronous callers under an explicit authoring stock.
+pub(super) fn modeling_step(job:&mut MeshModelingJob)->MeshResult<MeshModelingStep> {
+    let grant=RetainedCloneGrant {maximum_items:256,maximum_copy_bytes:128,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:1<<10};
+    let mut wallet=semio_framework_value::AuthoringWallet::new(grant,1_000_000_000_000);
+    match wallet.run(grant,1<<20,|effect|job.step(256,effect,&mut RetainedCloneProgress::default())).map_err(MeshKernelError::Retained)? {Some(done)=>done.output,None=>Err(MeshKernelError::InvalidInput("modeling quote refused".into()))}
+}
+
+pub(super) fn close_tessellation_handoff(owner:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<MeshTessellationJob>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,receipt:&mut RetainedCloneProgress)->MeshResult<bool> {
+    let Some(current)=owner.as_mut()else{return Ok(true)};let poll=current.step(effect);*receipt=current.step_progress();if let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll{turn.result.map_err(|failure|MeshKernelError::Retained(failure.into_value_error()))?;}
     if current.terminal_is_empty(){owner.take();Ok(true)}else{Ok(false)}
 }

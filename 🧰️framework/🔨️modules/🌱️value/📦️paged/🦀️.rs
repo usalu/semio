@@ -35,19 +35,19 @@ impl<const N: usize> PagedBytes<N> {
     /// 📐️ Quotes one actual backing frontier before a subsequent reserved octet placement.
     pub fn byte_backing_demand(&self)->Result<crate::RetirementDemand,ValueError>{if self.bytes.has_reserved_slot(){return Ok(Default::default())}Ok(crate::RetirementDemand{copy_bytes:self.bytes.next_reserve_copy_byte_demand().map_err(ValueError::from)?,capacity_bytes:self.bytes.next_allocation_bytes().map_err(ValueError::from)?,depth:self.bytes.next_reserve_depth_demand().map_err(ValueError::from)?,..Default::default()})}
     /// 🎟️ Reserves one page under all original structural currencies without moving an input byte.
-    pub fn reserve_byte_backing(&mut self,grant:crate::RetainedCloneGrant)->Result<crate::RetainedCloneProgress,ValueError>{self.bytes.reserve_one_funded(grant).map_err(|e|ValueError::from(e.refusal()))}
+    pub fn reserve_byte_backing(&mut self,grant:crate::RetainedCloneGrant)->Result<crate::RetainedCloneProgress,ValueError>{let p=self.bytes.reserve_one_cold(grant.maximum_capacity_bytes).map_err(|e|ValueError::from(e.refusal()))?;Ok(crate::RetainedCloneProgress{copied_items:usize::from(p.progressed),retained_capacity_bytes:p.allocated_bytes,released_bytes:p.released_allocation_bytes,..Default::default()})}
     /// 🫳️ Places an octet only into already admitted canonical storage.
     pub fn push_reserved_byte(&mut self,byte:u8)->Result<(),ValueError>{self.bytes.push_reserved(byte).map_err(|_|ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"octet has no original admitted backing"))}
     /// 🪜️ Admits one encoded backing page while leaving the input octet untouched for its next turn.
-    pub fn reserve_encoded_backing(&mut self,control:&mut crate::NativeEncodeControl<'_>)->Result<bool,ValueError>{if self.bytes.has_reserved_slot(){return Ok(false)}let capacity=self.bytes.next_allocation_bytes().map_err(ValueError::from)?;control.charge(capacity)?;self.bytes.reserve_one(capacity).map_err(|e|ValueError::from(e.refusal()))?;Ok(true)}
+    pub fn reserve_encoded_backing(&mut self,control:&mut crate::NativeEncodeControl<'_>)->Result<bool,ValueError>{if self.bytes.has_reserved_slot(){return Ok(false)}let capacity=self.bytes.next_allocation_bytes().map_err(ValueError::from)?;control.charge(capacity)?;self.bytes.reserve_one_cold(capacity).map_err(|e|ValueError::from(e.refusal()))?;Ok(true)}
     /// 🧱️ Places one encoded octet only after each actual backing allocation is charged to its original control.
     pub fn push_encoded(&mut self,byte:u8,control:&mut crate::NativeEncodeControl<'_>)->Result<(),ValueError>{
-        while !self.bytes.has_reserved_slot(){control.checkpoint()?;let capacity=self.bytes.next_allocation_bytes().map_err(ValueError::from)?;control.charge(capacity)?;self.bytes.reserve_one(capacity).map_err(|e|ValueError::from(e.refusal()))?;}
+        while !self.bytes.has_reserved_slot(){control.checkpoint()?;let capacity=self.bytes.next_allocation_bytes().map_err(ValueError::from)?;control.charge(capacity)?;self.bytes.reserve_one_cold(capacity).map_err(|e|ValueError::from(e.refusal()))?;}
         self.bytes.push_reserved(byte).map_err(|_|ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"encoded octet lost its reserved page"))
     }
     /// 🧱️ Places one decoded octet under the same original decoder and cumulative physical charge.
     pub fn push_decoded(&mut self,byte:u8,control:&mut crate::NativeDecodeControl<'_>)->Result<(),ValueError>{
-        while !self.bytes.has_reserved_slot(){control.checkpoint()?;let capacity=self.bytes.next_allocation_bytes().map_err(ValueError::from)?;control.charge(capacity)?;self.bytes.reserve_one(capacity).map_err(|e|ValueError::from(e.refusal()))?;}
+        while !self.bytes.has_reserved_slot(){control.checkpoint()?;let capacity=self.bytes.next_allocation_bytes().map_err(ValueError::from)?;control.charge(capacity)?;self.bytes.reserve_one_cold(capacity).map_err(|e|ValueError::from(e.refusal()))?;}
         self.bytes.push_reserved(byte).map_err(|_|ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"decoded octet lost its reserved page"))
     }
     /// 🛫️ Projects a borrowed octet source into canonical pages through its actual output control.
@@ -232,7 +232,7 @@ impl<const N: usize> PagedUtf8<N> {
                 while !output.chunks.has_reserved_slot() {
                     let required = output.chunks.next_allocation_bytes()?;
                     control.charge(required)?;
-                    let progress = output.chunks.reserve_one(required).map_err(|error| ValueError::from(error.refusal()))?;
+                    let progress = output.chunks.reserve_one_cold(required).map_err(|error| ValueError::from(error.refusal()))?;
                     if !progress.progressed {
                         return Err(ValueError::new(crate::ValueRefusalKind::InvariantViolated, "paged UTF-8 controlled allocation did not progress"));
                     }
@@ -276,7 +276,7 @@ impl<const N: usize> PagedUtf8<N> {
         self.byte_len.checked_add(value.len()).filter(|bytes|*bytes<=N).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"paged UTF-8 append exceeds its declared capacity"))?;
         if value.len()>PAGED_UTF8_CHUNK_BYTES{return Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"controlled text append requires one source chunk"));}
         control.checkpoint()?;
-        while !self.chunks.has_reserved_slot(){let bytes=self.chunks.next_allocation_bytes()?;control.charge(bytes)?;self.chunks.reserve_one(bytes).map_err(|error|ValueError::from(error.refusal()))?;}
+        while !self.chunks.has_reserved_slot(){let bytes=self.chunks.next_allocation_bytes()?;control.charge(bytes)?;self.chunks.reserve_one_cold(bytes).map_err(|error|ValueError::from(error.refusal()))?;}
         let owned=control.copy_text(value)?;let bytes=owned.len();
         self.chunks.push_reserved(owned).map_err(|_|ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"controlled native text lost its admitted slot"))?;self.byte_len+=bytes;Ok(())
     }

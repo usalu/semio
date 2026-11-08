@@ -97,30 +97,8 @@ pub(super) fn drawing_handle_from_key(key: semio_framework_2d_compute::EngineKey
     DrawingHandle(hex_encode(&key.0))
 }
 
-pub(super) fn compute_handle_for_drawing(handle: &DrawingHandle) -> Result<semio_framework_2d_compute::EngineHandle, semio_framework_2d::DrawingError> {
-    let bytes = hex_decode(handle.as_str()).map_err(|_| semio_framework_2d::DrawingError::InvalidInput("invalid drawing handle hex".into()))?;
-    if bytes.len() != 32 {
-        return Err(semio_framework_2d::DrawingError::InvalidInput("drawing handle length".into()));
-    }
-    let mut key = [0u8; 32];
-    key.copy_from_slice(&bytes);
-    Ok(semio_framework_2d_compute::EngineHandle { key: semio_framework_2d_compute::EngineKey(key), engine_id: DrawingEngine::ENGINE_ID.to_string() })
-}
-
 fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
-}
-
-fn hex_decode(text: &str) -> Result<Vec<u8>, ()> {
-    if !text.len().is_multiple_of(2) {
-        return Err(());
-    }
-    let mut out = Vec::with_capacity(text.len() / 2);
-    for index in (0..text.len()).step_by(2) {
-        let byte = u8::from_str_radix(&text[index..index + 2], 16).map_err(|_| ())?;
-        out.push(byte);
-    }
-    Ok(out)
 }
 // #endregion 🔖️Engine
 

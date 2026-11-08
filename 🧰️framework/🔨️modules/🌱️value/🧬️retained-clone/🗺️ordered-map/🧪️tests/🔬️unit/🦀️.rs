@@ -6,6 +6,10 @@ use serde::Deserialize;
 mod admit;
 use std::collections::BTreeMap;
 
+/// 📐️ The staged source birth bills its four header and workspace placements as copied bytes (80+80+40+48); the previous one-shot quote counted only the alias handoff, which is zero.
+const STAGED_BIRTH_PLACEMENT_COPY_BYTES:usize=248;
+/// 🎯️ Grants exactly the selected event's complete quote, the same demand the step itself admits.
+fn selected_grant<T:RetireOwned>(owner:&crate::retirement::controlled::ControlledRetirement<T>,body:usize)->RetainedCloneGrant{let d=owner.selected_demand(body).unwrap();RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn physical_grant(work:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work.max(65536),maximum_capacity_bytes:4096,maximum_release_bytes:65536,maximum_depth:64}}
 
 #[test]
@@ -25,25 +29,25 @@ fn ordered_map_clone_advance_quotes_balance_original_heap_and_refused_currencies
             let mut born=heap.0;let mut freed=heap.1;let mut output=None;let mut cursor=RetainedOrderedMap::<u64,()>::retained_clone_cursor();
             for turn in 0..10000{
                 if stop.is_some_and(|stop|turn>=stop){break;}
-                let demand=cursor.advance_demands(source.borrow(),body).unwrap();let grant=quote(demand);
+                let demand=cursor.advance_demands(source.borrow(),body,crate::retained_clone::effect::CPU).unwrap();let grant=quote(demand);
                 for axis in fixture["deniedAxes"].as_array().unwrap(){
                     let mut denied=grant;
                     match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"copy" if demand.copy_bytes>0=>denied.maximum_copy_bytes=demand.copy_bytes-1,"capacity" if demand.capacity_bytes>0=>denied.maximum_capacity_bytes=demand.capacity_bytes-1,"release" if demand.release_bytes>0=>denied.maximum_release_bytes=demand.release_bytes-1,"depth" if demand.depth>0=>denied.maximum_depth=demand.depth-1,_=>continue}
-                    let(result,heap)=crate::observe_retirement_allocations(||cursor.advance(source.borrow(), body, denied));
-                    assert_eq!(heap,(0,0));assert_eq!(result.work,0);match result.result{Ok(step)=>assert_eq!(step.progress(),Default::default()),Err(error)=>assert!(matches!(error.kind,crate::ValueRefusalKind::DepthLimit|crate::ValueRefusalKind::WorkLimit|crate::ValueRefusalKind::OwnershipLimit))};assert_eq!(cursor.advance_demands(source.borrow(),body).unwrap(),demand);
+                    let(result,heap)=crate::observe_retirement_allocations(||crate::retained_clone::effect::advance(&mut cursor,source.borrow(),body,crate::retained_clone::effect::CPU,denied));
+                    assert_eq!(heap,(0,0));assert_eq!(result.work,0);match result.result{Ok(step)=>assert_eq!(step.progress(),Default::default()),Err(error)=>assert!(matches!(error.into_value_error().kind,crate::ValueRefusalKind::DepthLimit|crate::ValueRefusalKind::WorkLimit|crate::ValueRefusalKind::OwnershipLimit))};assert_eq!(cursor.advance_demands(source.borrow(),body,crate::retained_clone::effect::CPU).unwrap(),demand);
                 }
-                let(step,heap)=crate::observe_retirement_allocations(||cursor.advance(source.borrow(), body, grant).result.unwrap());let receipt=step.progress();
+                let(step,heap)=crate::observe_retirement_allocations(||crate::retained_clone::effect::advance(&mut cursor,source.borrow(),body,crate::retained_clone::effect::CPU,grant).result.unwrap());let receipt=step.progress();
                 assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;
-                if matches!(step,RetainedCloneStep::Complete(_)){let take=quote(cursor.take_demand().unwrap());let(taken,heap)=crate::observe_retirement_allocations(||cursor.take(take).result.unwrap());let(value,p)=taken.expect("funded clone output");assert!(p.fits(take));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=heap.0;freed+=heap.1;output=Some(value);break;}
+                if matches!(step,RetainedCloneStep::Complete(_)){let take=quote(cursor.take_demand().unwrap());let(taken,heap)=crate::observe_retirement_allocations(||crate::retained_clone::effect::take(&mut cursor,take).result.unwrap());let(value,p)=taken.expect("funded clone output");assert!(p.fits(take));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=heap.0;freed+=heap.1;output=Some(value);break;}
             }
             if stop.is_none(){let output=output.as_ref().expect("funded clone completed");assert_eq!(output.iter().map(|(key,())|*key).collect::<Vec<_>>(),expected);}
             assert_eq!(source.borrow().get().iter().map(|(key,())|*key).collect::<Vec<_>>(),expected);
             let mut cursor=ControlledRetirement::new(cursor).unwrap_or_else(|_|panic!("original clone cursor controlled authority"));
-            for _ in 0..10000{if cursor.terminal_is_empty(){break;}let demand=cursor.selected_demand(body).unwrap();let grant=quote(demand);assert_eq!(cursor.selected_demand(grant.maximum_copy_bytes).unwrap(),demand);let(step,heap)=crate::observe_retirement_allocations(||cursor.step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}
+            for _ in 0..10000{if cursor.terminal_is_empty(){break;}let demand=cursor.selected_demand(body).unwrap();let grant=quote(demand);assert_eq!(cursor.selected_demand(grant.maximum_copy_bytes).unwrap(),demand);let(step,heap)=crate::observe_retirement_allocations(||crate::retained_clone::effect::settle(grant,|effect|cursor.step(effect)).result.unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}
             assert!(cursor.terminal_is_empty());
-            for _ in 0..10000{if source.terminal_is_empty(){break;}let demand=source.next_close_demand(body).unwrap();let grant=quote(demand);assert_eq!(source.next_close_demand(grant.maximum_copy_bytes).unwrap(),demand);let(step,heap)=crate::observe_retirement_allocations(||source.close_step(grant).result.unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}
+            for _ in 0..10000{if source.terminal_is_empty(){break;}let demand=source.next_close_demand(body).unwrap();let grant=quote(demand);assert_eq!(source.next_close_demand(grant.maximum_copy_bytes).unwrap(),demand);let(step,heap)=crate::observe_retirement_allocations(||crate::retained_clone::effect::settle(grant,|effect|source.close_step(effect)).result.unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}
             assert!(source.terminal_is_empty());
-            if let Some(output)=output{let mut owner=ControlledRetirement::new(output).unwrap_or_else(|_|panic!("numeric map controlled authority"));for _ in 0..10000{if owner.terminal_is_empty(){break;}let demand=owner.selected_demand(body).unwrap();let grant=quote(demand);assert_eq!(owner.selected_demand(grant.maximum_copy_bytes).unwrap(),demand);let(step,heap)=crate::observe_retirement_allocations(||owner.step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}assert!(owner.terminal_is_empty());}
+            if let Some(output)=output{let mut owner=ControlledRetirement::new(output).unwrap_or_else(|_|panic!("numeric map controlled authority"));for _ in 0..10000{if owner.terminal_is_empty(){break;}let demand=owner.selected_demand(body).unwrap();let grant=quote(demand);assert_eq!(owner.selected_demand(grant.maximum_copy_bytes).unwrap(),demand);let(step,heap)=crate::observe_retirement_allocations(||crate::retained_clone::effect::settle(grant,|effect|owner.step(effect)).result.unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}assert!(owner.terminal_is_empty());}
             let(_,heap)=crate::observe_retirement_allocations(||{drop(cursor);drop(source);});assert_eq!(heap,(0,0));assert_eq!(original.0+born,freed);
         }
     }
@@ -54,10 +58,10 @@ fn insert(map:RetainedOrderedMap<String,String>,key:String,value:String)->Retain
     assert_eq!((bytes,receipt),(0,Default::default()));cursor
 }
 fn close_insert(cursor:&mut RetainedOrderedMapInsertCursor<String,String>){
-    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let demand=cursor.close_demands(7).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),demand);assert!(cursor.close_step(grant).result.unwrap().progress().fits(grant));}assert!(cursor.terminal_is_empty());
+    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let demand=cursor.close_demands(7).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),demand);assert!(crate::retained_clone::effect::settle(grant,|effect|cursor.close_step(effect)).result.unwrap().progress().fits(grant));}assert!(cursor.terminal_is_empty());
 }
 fn close_comparator<K:BoundedOrd>(cursor:&mut K::Cursor){
-    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let demand=cursor.close_demands(7).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),demand);assert!(cursor.close_step(grant).result.unwrap().progress().fits(grant));}assert!(cursor.terminal_is_empty());
+    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let demand=cursor.close_demands(7).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),demand);assert!(crate::retained_clone::effect::settle(grant,|effect|cursor.close_step(effect)).result.unwrap().progress().fits(grant));}assert!(cursor.terminal_is_empty());
 }
 fn close_lookup<K:BoundedOrd>(cursor:&mut RetainedOrderedMapLookupCursor<K>){
     cursor.begin_close();
@@ -68,10 +72,10 @@ fn close_lookup<K:BoundedOrd>(cursor:&mut RetainedOrderedMapLookupCursor<K>){
         for axis in 0..5{
             if (axis==1&&minimum==0)||(axis==2&&grant.maximum_capacity_bytes==0)||(axis==3&&grant.maximum_release_bytes==0)||(axis==4&&grant.maximum_depth==0){continue;}
             let denied=match axis{0=>RetainedCloneGrant{maximum_items:0,..grant},1=>RetainedCloneGrant{maximum_copy_bytes:minimum-1,..grant},2=>RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant},3=>RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant},_=>RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}};
-            let(step,heap)=crate::observe_retirement_allocations(||cursor.close_step(denied).result.unwrap());
+            let(step,heap)=crate::observe_retirement_allocations(||crate::retained_clone::effect::settle(denied,|effect|cursor.close_step(effect)).result.unwrap());
             assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(cursor.next_close_copy_byte_demand().unwrap(),minimum);
         }
-        let(step,heap)=crate::observe_retirement_allocations(||cursor.close_step(grant).result.unwrap());
+        let(step,heap)=crate::observe_retirement_allocations(||crate::retained_clone::effect::settle(grant,|effect|cursor.close_step(effect)).result.unwrap());
         assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
         if matches!(step,RetainedCloneStep::Complete(_)){assert!(cursor.terminal_is_empty());}
     }
@@ -94,7 +98,7 @@ fn ordered_comparison_custody_refuses_unadmitted_constructor_and_closes_original
         let (admitted,heap)=crate::observe_retirement_allocations(||RetainedOrderedMapInsertCursor::admit(map,key,value,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedOrderedMapInsertCursor::<String,String>::constructor_copy_bytes(),maximum_depth:1,maximum_capacity_bytes:bytes,..Default::default()}));
         let (mut cursor,receipt)=admitted.result.unwrap_or_else(|_|panic!("admitted insertion constructor refused"));
         assert_eq!(receipt.retained_capacity_bytes,bytes);assert_eq!(heap,(bytes,0));cursor.begin_close();let mut born=bytes;let mut freed=0;
-        for _ in 0..10000 {if cursor.terminal_is_empty(){break;}let demand=cursor.close_demands(3).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),demand);let (step,heap)=crate::observe_retirement_allocations(||cursor.close_step(grant).result.unwrap());let p=step.progress();assert!(p.fits(grant));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=p.retained_capacity_bytes;freed+=p.released_bytes;}
+        for _ in 0..10000 {if cursor.terminal_is_empty(){break;}let demand=cursor.close_demands(3).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),demand);let (step,heap)=crate::observe_retirement_allocations(||crate::retained_clone::effect::settle(grant,|effect|cursor.close_step(effect)).result.unwrap());let p=step.progress();assert!(p.fits(grant));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=p.retained_capacity_bytes;freed+=p.released_bytes;}
         assert!(cursor.terminal_is_empty());assert_eq!(original+born,freed);
     }
 }
@@ -176,19 +180,19 @@ fn retained_map(source: &RetainedOrderedMap<String, String>) -> RetainedOrderedM
     let grant = RetainedCloneGrant { maximum_items: 2, maximum_copy_bytes: 64, maximum_capacity_bytes: 65_536, maximum_depth: 64, maximum_release_bytes: 65_536 };
     let mut cursor = RetainedOrderedMap::<String, String>::retained_clone_cursor();
     let output = loop {
-        let demand=cursor.advance_demands(source.borrow(),grant.maximum_copy_bytes).unwrap();
+        let demand=cursor.advance_demands(source.borrow(),grant.maximum_copy_bytes,crate::retained_clone::effect::CPU).unwrap();
         let grant=RetainedCloneGrant {maximum_copy_bytes:grant.maximum_copy_bytes.max(demand.copy_bytes),..grant};
-        let step = cursor.advance(source.borrow(), 64, grant).result.expect("retained ordered-map clone");
+        let step = crate::retained_clone::effect::advance(&mut cursor,source.borrow(),64,crate::retained_clone::effect::CPU,grant).result.expect("retained ordered-map clone");
         assert!(step.progress().fits(grant));
         if matches!(step, RetainedCloneStep::Complete(_)) {
-            let d=cursor.take_demand().unwrap();let take=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};break cursor.take(take).result.expect("retained ordered-map output take").expect("retained ordered-map output").0;
+            let d=cursor.take_demand().unwrap();let take=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};break crate::retained_clone::effect::take(&mut cursor,take).result.expect("retained ordered-map output take").expect("retained ordered-map output").0;
         }
     };
     cursor.begin_close();
     while !cursor.terminal_is_empty() {
         let bytes = cursor.next_close_release_byte_demand().unwrap();
         assert!(bytes <= grant.maximum_release_bytes);
-        let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(cursor.next_close_copy_byte_demand().unwrap()),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).result.expect("retained ordered-map cursor close");
+        let step = crate::retained_clone::effect::settle(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(cursor.next_close_copy_byte_demand().unwrap()),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64},|effect|cursor.close_step(effect)).result.expect("retained ordered-map cursor close");
         if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(cursor.terminal_is_empty());
         }
@@ -202,7 +206,7 @@ fn lookup(map: &RetainedOrderedMap<String, String>, key: &String, fixture: &Fixt
     let grant = BoundedOrdGrant { maximum_items: fixture.comparison_grant.maximum_items, maximum_bytes: fixture.comparison_grant.maximum_bytes };
     let mut cursor = RetainedOrderedMapLookupCursor::default();
     loop {
-        let (result, progress, retirement) = cursor.advance(map.borrow(), key.borrow(), grant,physical_grant(7)).result.expect("retained ordered-map lookup");
+        let (result, progress, retirement) = crate::retained_clone::effect::run(physical_grant(7),|effect|cursor.advance(map.borrow(),key.borrow(),grant,effect)).result.expect("retained ordered-map lookup");
         assert!(progress.fits(grant));
         assert!(retirement.fits(physical_grant(7)));
         if let Some(result) = result {
@@ -247,7 +251,7 @@ fn bounded_lookup_insert_and_duplicate_refusal_match_btree_oracle() {
                 let mut cursor = insert(map, operation.key.clone(), value.clone());
                 let grant = RetainedOrderedMapInsertGrant { retirement:physical_grant(7), comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }, maximum_moved_items: 32, maximum_moved_bytes: 4_096, maximum_capacity_bytes: 65_536 };
                 let ordinal = loop {
-                    match cursor.advance(grant).result.expect("bounded insertion") {
+                    match crate::retained_clone::effect::run(grant.retirement,|effect|cursor.advance(grant,effect)).result.expect("bounded insertion") {
                         RetainedOrderedMapInsertStep::Progress(progress) => assert!(progress.fits(grant)),
                         RetainedOrderedMapInsertStep::Complete { ordinal, progress } => {
                             assert!(progress.fits(grant));
@@ -270,7 +274,7 @@ fn bounded_lookup_insert_and_duplicate_refusal_match_btree_oracle() {
                 let mut cursor = insert(map, operation.key.clone(), operation.value.clone().expect("duplicate value"));
                 let grant = RetainedOrderedMapInsertGrant { retirement:physical_grant(7), comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }, maximum_moved_items: 1, maximum_moved_bytes: 7, maximum_capacity_bytes: 65_536 };
                 let error = loop {
-                    match cursor.advance(grant).result {
+                    match crate::retained_clone::effect::run(grant.retirement,|effect|cursor.advance(grant,effect)).result {
                         Ok(RetainedOrderedMapInsertStep::Progress(progress)) => assert!(progress.fits(grant)),
                         Ok(RetainedOrderedMapInsertStep::Complete { .. }) => panic!("duplicate insertion completed"),
                         Err(error) => break error,
@@ -285,7 +289,7 @@ fn bounded_lookup_insert_and_duplicate_refusal_match_btree_oracle() {
                 while !cursor.terminal_is_empty() {
                     let bytes = cursor.next_close_release_byte_demand().unwrap();
                     assert!(bytes <= 65_536);
-                    let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(cursor.next_close_copy_byte_demand().unwrap()),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).result.expect("duplicate cursor close");
+                    let step = crate::retained_clone::effect::settle(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(cursor.next_close_copy_byte_demand().unwrap()),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64},|effect|cursor.close_step(effect)).result.expect("duplicate cursor close");
                     if matches!(step, RetainedCloneStep::Complete(_)) {
                         assert!(cursor.terminal_is_empty());
                     }
@@ -310,7 +314,7 @@ fn long_string_comparison_is_byte_paged_and_shape_pinned() {
     let mut turns = 0usize;
     loop {
         turns += 1;
-        match cursor.compare(left_source.borrow(), right_source.borrow(), grant,physical_grant(7)).result.expect("bounded string comparison") {
+        match crate::retained_clone::effect::run(physical_grant(7),|effect|cursor.compare(left_source.borrow(),right_source.borrow(),grant,effect)).result.expect("bounded string comparison") {
             BoundedOrdStep::Authority(progress) => assert!(progress.fits(physical_grant(7))),
             BoundedOrdStep::Progress(progress) => assert!(progress.fits(grant)),
             BoundedOrdStep::Complete { ordering, progress } => {
@@ -327,8 +331,8 @@ fn long_string_comparison_is_byte_paged_and_shape_pinned() {
     let replacement = RetainedCloneSource::from_owner(format!("{}x", &left[..left.len() - 1]));
     let right = RetainedCloneSource::from_owner(right);
     let mut cursor = String::admit_bounded_ord_cursor(physical_grant(7)).result.unwrap().unwrap().0;
-    cursor.compare(changed.borrow(), right.borrow(), grant,physical_grant(7)).result.expect("comparison initialization");
-    assert!(cursor.compare(replacement.borrow(), right.borrow(), grant,physical_grant(7)).result.expect_err("changed comparison source must fail").message.contains("projected path changed"));
+    crate::retained_clone::effect::run(physical_grant(7),|effect|cursor.compare(changed.borrow(),right.borrow(),grant,effect)).result.expect("comparison initialization");
+    assert!(crate::retained_clone::effect::run(physical_grant(7),|effect|cursor.compare(replacement.borrow(),right.borrow(),grant,effect)).result.expect_err("changed comparison source must fail").message.contains("projected path changed"));
     close_comparator::<String>(&mut cursor);
 }
 
@@ -341,16 +345,16 @@ fn immutable_lookup_target_and_repeated_directory_growth_match_btree_oracle() {
     let target = RetainedCloneSource::from_owner(external_target.clone());
     let grant = BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 };
     let mut lookup = RetainedOrderedMapLookupCursor::default();
-    lookup.advance(source.borrow(), target.borrow(), grant,physical_grant(7)).result.expect("lookup initialization");
+    crate::retained_clone::effect::run(physical_grant(7),|effect|lookup.advance(source.borrow(),target.borrow(),grant,effect)).result.expect("lookup initialization");
     external_target = fixture.immutable_lookup.external_after_capture.clone();
     let result = loop {
-        if let (Some(result), progress, retirement) = lookup.advance(source.borrow(), target.borrow(), grant,physical_grant(7)).result.expect("captured lookup") {
+        if let (Some(result), progress, retirement) = crate::retained_clone::effect::run(physical_grant(7),|effect|lookup.advance(source.borrow(),target.borrow(),grant,effect)).result.expect("captured lookup") {
             assert!(progress.fits(grant));
             break result;
         }
     };
     let changed=RetainedCloneSource::from_owner(external_target.clone());
-    assert!(lookup.advance(source.borrow(),changed.borrow(),grant,physical_grant(7)).result.expect_err("cached lookup must retain the captured target authority").message.contains("projected path changed"));
+    assert!(crate::retained_clone::effect::run(physical_grant(7),|effect|lookup.advance(source.borrow(),changed.borrow(),grant,effect)).result.expect_err("cached lookup must retain the captured target authority").message.contains("projected path changed"));
     close_lookup(&mut lookup);
     assert_eq!(result, RetainedOrderedMapLookup::Missing(fixture.immutable_lookup.expected_ordinal));
     assert_ne!(external_target, fixture.immutable_lookup.captured_target);
@@ -365,7 +369,7 @@ fn immutable_lookup_target_and_repeated_directory_growth_match_btree_oracle() {
         let value = format!("{}insert-{ordinal}", growth.value_prefix);
         let mut cursor = insert(map, key.clone(), value.clone());
         loop {
-            match cursor.advance(grant).result.expect("repeated map growth") {
+            match crate::retained_clone::effect::run(grant.retirement,|effect|cursor.advance(grant,effect)).result.expect("repeated map growth") {
                 RetainedOrderedMapInsertStep::Progress(progress) => assert!(progress.fits(grant)),
                 RetainedOrderedMapInsertStep::Complete { progress, .. } => {
                     assert!(progress.fits(grant));
@@ -379,7 +383,7 @@ fn immutable_lookup_target_and_repeated_directory_growth_match_btree_oracle() {
         while !cursor.terminal_is_empty() {
             let bytes = cursor.next_close_release_byte_demand().unwrap();
                     assert!(bytes <= 65_536);
-                    let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(cursor.next_close_copy_byte_demand().unwrap()),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).result.expect("grown insertion close");
+                    let step = crate::retained_clone::effect::settle(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(cursor.next_close_copy_byte_demand().unwrap()),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64},|effect|cursor.close_step(effect)).result.expect("grown insertion close");
             if matches!(step, RetainedCloneStep::Complete(_)) {
                 assert!(cursor.terminal_is_empty());
             }
@@ -409,7 +413,7 @@ fn insertion_reports_comparison_movement_and_capacity_independently() {
     let mut moved_bytes = 0usize;
     let mut retained_capacity_bytes = 0usize;
     loop {
-        let step = cursor.advance(grant).result.expect("long-key bounded insertion");
+        let step = crate::retained_clone::effect::run(grant.retirement,|effect|cursor.advance(grant,effect)).result.expect("long-key bounded insertion");
         let (progress, complete) = match step {
             RetainedOrderedMapInsertStep::Progress(progress) => (progress, false),
             RetainedOrderedMapInsertStep::Complete { progress, .. } => (progress, true),
@@ -445,7 +449,7 @@ fn cancelled_partial_insertion_retires_candidate_and_shifted_workspace() {
     let grant = RetainedOrderedMapInsertGrant { retirement:physical_grant(7), comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 }, maximum_moved_items: 32, maximum_moved_bytes: 4_096, maximum_capacity_bytes: 65_536 };
     let mut turns = 0usize;
     while cursor.state.map.as_ref().is_none_or(|map|map.pages.iter().map(Vec::len).eq(original_pages.iter().copied())) {
-        assert!(matches!(cursor.advance(grant).result.expect("partial insertion"), RetainedOrderedMapInsertStep::Progress(_)));
+        assert!(matches!(crate::retained_clone::effect::run(grant.retirement,|effect|cursor.advance(grant,effect)).result.expect("partial insertion"), RetainedOrderedMapInsertStep::Progress(_)));
         turns += 1;
         assert!(turns < 1_000);
     }
@@ -455,7 +459,7 @@ fn cancelled_partial_insertion_retires_candidate_and_shifted_workspace() {
     while !cursor.terminal_is_empty() {
         let bytes = cursor.next_close_release_byte_demand().unwrap();
                     assert!(bytes <= 65_536);
-                    let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(cursor.next_close_copy_byte_demand().unwrap()),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).result.expect("cancelled insertion cursor close");
+                    let step = crate::retained_clone::effect::settle(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(cursor.next_close_copy_byte_demand().unwrap()),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64},|effect|cursor.close_step(effect)).result.expect("cancelled insertion cursor close");
         if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(cursor.terminal_is_empty());
         }
@@ -490,10 +494,8 @@ fn ordered_wire_cold_context_map_matches_serde_and_bun() {
     let mut allocated=birth;let mut released=0;
     for _ in 0..10000 {
         if retirement.terminal_is_empty(){break;}
-        let copy=retirement.next_copy_byte_demand().unwrap().min(7);
-        let release=retirement.next_release_byte_demand().unwrap();
-        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:retirement.next_depth_demand().unwrap()};
-        let (step,heap)=crate::observe_retirement_allocations(||retirement.step(grant).unwrap());
+        let grant=selected_grant(&retirement,7);
+        let (step,heap)=crate::observe_retirement_allocations(||crate::retained_clone::effect::settle(grant,|effect|retirement.step(effect)).result.unwrap());
         let progress=step.progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));allocated+=heap.0;released+=heap.1;
     }
     assert!(retirement.terminal_is_empty());assert_eq!(original+allocated,released);
@@ -517,7 +519,7 @@ fn insertion_next_action_quotes_every_page_directory_and_move_receipt() {
         let mut output = None;
         for _ in 0..10000 {
             let grant = cursor.next_advance_demands(128).unwrap();
-            let (step, heap) = crate::observe_retirement_allocations(|| cursor.advance(grant).result.unwrap());
+            let (step, heap) = crate::observe_retirement_allocations(|| crate::retained_clone::effect::run(grant.retirement,|effect|cursor.advance(grant,effect)).result.unwrap());
             let progress = match step { RetainedOrderedMapInsertStep::Progress(progress) | RetainedOrderedMapInsertStep::Complete { progress, .. } => progress };
             assert!(progress.fits(grant));
             assert_eq!(heap, (progress.retained_capacity_bytes + progress.retirement.retained_capacity_bytes, progress.retirement.released_bytes));
@@ -529,7 +531,7 @@ fn insertion_next_action_quotes_every_page_directory_and_move_receipt() {
             if cursor.terminal_is_empty() { break; }
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: cursor.next_close_copy_byte_demand().unwrap().max(128),
                 maximum_capacity_bytes: cursor.next_close_capacity_byte_demand(128).unwrap(), maximum_release_bytes: cursor.next_close_release_byte_demand().unwrap(), maximum_depth: cursor.next_close_depth_demand().unwrap() };
-            cursor.close_step(grant).result.unwrap();
+            crate::retained_clone::effect::settle(grant,|effect|cursor.close_step(effect)).result.unwrap();
         }
         assert!(cursor.terminal_is_empty());
     }
@@ -546,11 +548,11 @@ fn staged_insert_authority_birth_charges_exactly_the_previous_one_shot_quote(){
     while !cursor.birth_complete(){
         let d=cursor.advance_retirement_demands(0).unwrap();
         let g=RetainedOrderedMapInsertGrant{retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth},comparison:Default::default(),maximum_moved_items:32,maximum_moved_bytes:4096,maximum_capacity_bytes:4096};
-        let(step,heap)=crate::observe_retirement_allocations(||cursor.advance(g).result.unwrap());
+        let(step,heap)=crate::observe_retirement_allocations(||crate::retained_clone::effect::run(g.retirement,|effect|cursor.advance(g,effect)).result.unwrap());
         let p=match step{RetainedOrderedMapInsertStep::Progress(p)|RetainedOrderedMapInsertStep::Complete{progress:p,..}=>p}.retirement;
         assert!(p.fits(g.retirement));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));capacity+=p.retained_capacity_bytes;copy+=p.copied_bytes;turns+=1;assert!(turns<64);
     }
-    assert_eq!((capacity,copy),quote);
-    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let d=cursor.close_demands(7).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert!(cursor.close_step(g).result.unwrap().progress().fits(g));}
+    assert_eq!(capacity,quote.0);assert_eq!(copy,quote.1+STAGED_BIRTH_PLACEMENT_COPY_BYTES);
+    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let d=cursor.close_demands(7).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert!(crate::retained_clone::effect::settle(g,|effect|cursor.close_step(effect)).result.unwrap().progress().fits(g));}
     assert!(cursor.terminal_is_empty());
 }

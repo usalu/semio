@@ -191,76 +191,81 @@ impl<T: Send + 'static> OwnedSchemaBoundedArrayAuthority<T> {
         self.values.take()
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
-        use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_close};
-        let diagnostic = OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-close-authority", offset: 0, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
-        let empty = RetainedCloneProgress::default();
-        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        let demand = self.close_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(diagnostic); }
-        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        self.state = OwnedSchemaBoundedArrayState::Closing;
-        if let Some(owner) = self.active_decoder.as_mut() {
-            if owner.terminal_is_empty() {
-                drop(self.active_decoder.take());
-                self.entry_depth = 0;
-                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty }));
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll {
+        let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit> {
+            use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_close};
+            let grant = effect.grant();
+            let diagnostic = OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-close-authority", offset: 0, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
+            let empty = RetainedCloneProgress::default();
+            if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+            if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+            let demand = self.close_demands(grant.maximum_copy_bytes)?;
+            if grant.maximum_depth < demand.depth { return Err(diagnostic.into()); }
+            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+            self.state = OwnedSchemaBoundedArrayState::Closing;
+            if let Some(owner) = self.active_decoder.as_mut() {
+                if owner.terminal_is_empty() {
+                    drop(self.active_decoder.take());
+                    self.entry_depth = 0;
+                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty }));
+                }
+                let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+                let step = artifact_envelope_close_resume(owner.close_step(&mut effect.nested(child)))?;
+                admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original schema history entry decoder").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
+                return Ok(RetainedCloneStep::Progress(step.progress()));
             }
-            let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = owner.close_step(child)?;
-            admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original schema history entry decoder").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
-            return Ok(RetainedCloneStep::Progress(step.progress()));
-        }
-        if self.active_retirement.is_some() { return artifact_retirement_box_close_step(&mut self.active_retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (diagnostic).with_native(error)); }
-        if self.reservation.is_some() {
-            let values = self.values.as_mut().ok_or(diagnostic)?;
-            let reservation = self.reservation.take().expect("observed live history reservation");
-            if let Err(reservation) = values.cancel_reservation(reservation) {
-                self.reservation = Some(reservation);
-                return Err(diagnostic);
+            if self.active_retirement.is_some() { return artifact_envelope_close_resume_with(artifact_retirement_box_close_step(&mut self.active_retirement, effect), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure)).map(|step| RetainedCloneStep::Progress(step.progress())); }
+            if self.reservation.is_some() {
+                let values = self.values.as_mut().ok_or(diagnostic)?;
+                let reservation = self.reservation.take().expect("observed live history reservation");
+                if let Err(reservation) = values.cancel_reservation(reservation) {
+                    self.reservation = Some(reservation);
+                    return Err(diagnostic.into());
+                }
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
             }
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
-        }
-        if let Some(value) = self.rejected.take() {
-            let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.retirement_factory.as_ref().ok_or_else(||diagnostic.with_native(semio_framework_value::ValueError::invariant("history entry factory is absent")))?.retire_owned(value, child).result {
-                Ok((owner, progress)) => { *self.active_retirement = Some(owner); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(diagnostic.with_progress(progress)); } Ok(RetainedCloneStep::Progress(progress)) }
-                Err((error, value)) => { *self.rejected = Some(value); Err(diagnostic.with_native(error)) }
-            };
-        }
-        if let Some(values) = self.values.take() {
-            *self.ledger_retirement = Some(ArtifactStoreHistoryLedgerRetirement::new(values, Arc::clone(self.retirement_factory.as_ref().expect("original ledger retains its entry factory"))));
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
-        }
-        if let Some(owner) = self.ledger_retirement.as_mut() {
-            let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = owner.close_step(child).result.map_err(|error| (diagnostic).with_native(error))?;
-            admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original schema history ledger").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
-            if owner.terminal_is_empty() { drop(self.ledger_retirement.take()); }
-            return Ok(RetainedCloneStep::Progress(step.progress()));
-        }
-        if let Some(factory) = self.retirement_factory.take() {
-            let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
-            self.factories_close[0] = Some(semio_framework_value::FactoryAuthority::new(factory));
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
-        }
-        if let Some(factory) = self.decoder.take() {
-            let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
-            self.factories_close[1] = Some(semio_framework_value::FactoryAuthority::new(factory));
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
-        }
-        if let Some(slot) = self.factories_close.iter_mut().find(|slot| slot.is_some()) {
-            let owner = slot.as_mut().expect("observed original schema factory");
-            let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = owner.step(child).result.map_err(|error| (diagnostic).with_native(error))?;
-            admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original schema history factory").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
-            if owner.terminal_is_empty() { drop(slot.take()); }
-            self.taken = self.factories_close.iter().all(Option::is_none);
-            return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
-        }
-        self.taken = true;
-        Ok(RetainedCloneStep::Complete(empty))
+            if self.rejected.is_some() {
+                let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+                let factory = self.retirement_factory.as_ref().ok_or_else(||diagnostic.with_native(semio_framework_value::ValueError::invariant("history entry factory is absent")))?;
+                let (owner, progress) = artifact_envelope_close_resume_with(artifact_envelope_factory_retire(factory.as_ref(), &mut *self.rejected, &mut effect.nested(child)), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure))?;
+                *self.active_retirement = Some(owner);
+                if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(diagnostic.with_progress(progress).into()); }
+                return Ok(RetainedCloneStep::Progress(progress));
+            }
+            if let Some(values) = self.values.take() {
+                *self.ledger_retirement = Some(ArtifactStoreHistoryLedgerRetirement::new(values, Arc::clone(self.retirement_factory.as_ref().expect("original ledger retains its entry factory"))));
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
+            }
+            if let Some(owner) = self.ledger_retirement.as_mut() {
+                let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+                let step = artifact_envelope_close_resume_with(owner.close_step(&mut effect.nested(child)), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure))?;
+                admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original schema history ledger").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
+                if owner.terminal_is_empty() { drop(self.ledger_retirement.take()); }
+                return Ok(RetainedCloneStep::Progress(step.progress()));
+            }
+            if let Some(factory) = self.retirement_factory.take() {
+                let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
+                self.factories_close[0] = Some(semio_framework_value::FactoryAuthority::new(factory));
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
+            }
+            if let Some(factory) = self.decoder.take() {
+                let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
+                self.factories_close[1] = Some(semio_framework_value::FactoryAuthority::new(factory));
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
+            }
+            if let Some(slot) = self.factories_close.iter_mut().find(|slot| slot.is_some()) {
+                let owner = slot.as_mut().expect("observed original schema factory");
+                let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+                let step = artifact_envelope_close_resume_with(owner.step(&mut effect.nested(child)), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure))?;
+                admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original schema history factory").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
+                if owner.terminal_is_empty() { drop(slot.take()); }
+                self.taken = self.factories_close.iter().all(Option::is_none);
+                return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
+            }
+            self.taken = true;
+            Ok(RetainedCloneStep::Complete(empty))
+        })();
+        artifact_envelope_close_settle(effect, result)
     }
 
     pub fn terminal_is_empty(&self) -> bool {

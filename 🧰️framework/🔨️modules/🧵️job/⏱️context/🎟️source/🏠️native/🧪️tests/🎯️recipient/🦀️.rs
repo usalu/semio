@@ -4,7 +4,7 @@ use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
 static CLOSES:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
 struct Leaf{closed:bool,visits:usize}
 impl OriginalNativeRetirement for Leaf{fn close_on_source(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if cx.retirement_should_yield(){return Ok(false)}cx.consume_retained(semio_framework_job_context::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<bool>(),..Default::default()})?;cx.consume_fuel(1);self.closed=true;CLOSES.fetch_add(1,std::sync::atomic::Ordering::Relaxed);Ok(true)}fn terminal_is_empty(&self)->bool{self.closed}}
-impl Drop for Leaf{fn drop(&mut self){assert!(self.closed)}}
+impl Drop for Leaf{fn drop(&mut self){assert!(std::thread::panicking()||self.closed)}}
 fn clock()->Option<u64>{Some(1)}
 #[test]
 fn producer_target_and_retained_root_keep_actual_source_custody(){

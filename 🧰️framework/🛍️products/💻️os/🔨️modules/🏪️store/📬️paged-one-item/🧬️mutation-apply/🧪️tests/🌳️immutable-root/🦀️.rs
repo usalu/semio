@@ -23,13 +23,13 @@ impl ImmutableRootProjection for Document{
         Ok(RetirementDemand{copy_bytes:size_of::<Self>()*2+size_of::<SealedShared<String>>()+PersistentList::<Node>::projection_demand().copy_bytes,depth:1,..Default::default()})
     }
     fn root_projection_work_demand(_original:RetainedCloneRef<'_,Self>)->Result<u64,ValueError>{Ok(2)}
-    fn project_root(original:RetainedCloneRef<'_,Self>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
-        let mut work=0;let result=(||->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
+    fn project_root(original:RetainedCloneRef<'_,Self>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
+        let grant=effect.grant();let mut work=0;let result=(||->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
         let demand=Self::root_projection_demand(original)?;
         if !retained_clone_grant_admits(grant,demand){return Ok(None);}
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Self>()*2,..grant};
-        let turn=PersistentList::project(original.project(0,|document|&document.nodes),child);work+=turn.work;let Some((nodes,_))=turn.result?else{return Ok(None);};
-        let turn=original.get().title.try_duplicate(child);work+=turn.work;let(title,_)=turn.result?;
+        let turn=PersistentList::project(original.project(0,|document|&document.nodes),&mut effect.nested(child));work+=turn.work;let Some((nodes,_))=turn.result?else{return Ok(None);};
+        let turn=original.get().title.try_duplicate(&mut effect.nested(child));work+=turn.work;let(title,_)=turn.result?;
         Ok(Some((Self{title,nodes},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
         })();
         semio_framework_value::RetainedWorkOutcome{work,result}
@@ -37,15 +37,15 @@ impl ImmutableRootProjection for Document{
 }
 
 pub(super) fn fixture_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}
-pub(super) fn seal_text(value:String)->SealedShared<String>{SealedShared::admit(value,SharedIssuer::owned(),fixture_grant()).result.unwrap_or_else(|_|panic!("paid fixture string birth")).0}
+pub(super) fn seal_text(value:String)->SealedShared<String>{SealedShared::admit(value,SharedIssuer::owned(),fixture_grant(),&mut None).result.unwrap_or_else(|_|panic!("paid fixture string birth")).0}
 pub(super) fn node_owned(id:String,text:String)->Node{Node{id:seal_text(id),text:seal_text(text)}}
 pub(super) fn list_owned(rows:Vec<Node>)->PersistentList<Node>{
     let mut rows=rows.into_iter();let mut pages=Vec::new();
     loop{
         let mut count=0;
-        let leaf=std::array::from_fn(|_|rows.next().map(|row|{count+=1;SealedShared::admit(row,SharedIssuer::owned(),fixture_grant()).result.unwrap_or_else(|_|panic!("paid fixture row birth")).0}));
+        let leaf=std::array::from_fn(|_|rows.next().map(|row|{count+=1;SealedShared::admit(row,SharedIssuer::owned(),fixture_grant(),&mut None).result.unwrap_or_else(|_|panic!("paid fixture row birth")).0}));
         if count==0{break;}
-        pages.push(PersistentList::admit_leaf(leaf,count,fixture_grant()).result.unwrap_or_else(|_|panic!("paid fixture leaf birth")).0);
+        pages.push(PersistentList::admit_leaf(leaf,count,fixture_grant(),&mut None).result.unwrap_or_else(|_|panic!("paid fixture leaf birth")).0);
     }
     while pages.len()>1{
         let mut originals=pages.into_iter();let mut parents=Vec::new();
@@ -53,7 +53,7 @@ pub(super) fn list_owned(rows:Vec<Node>)->PersistentList<Node>{
             let mut count=0;
             let children=std::array::from_fn(|_|originals.next().inspect(|_|count+=1));
             if count==0{break;}
-            parents.push(PersistentList::admit_branch(children,fixture_grant()).result.unwrap_or_else(|_|panic!("paid fixture branch birth")).0);
+            parents.push(PersistentList::admit_branch(children,fixture_grant(),&mut None).result.unwrap_or_else(|_|panic!("paid fixture branch birth")).0);
         }
         pages=parents;
     }
@@ -108,7 +108,7 @@ pub(super) fn drain_fixture<T:RetireOwned>(original:T){
         if owner.terminal_is_empty(){return;}
         let copy=owner.next_copy_byte_demand().unwrap();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy.max(4096),maximum_capacity_bytes:owner.next_capacity_byte_demand(copy.max(4096)).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
-        let step=owner.step(grant).unwrap();assert!(step.progress().fits(grant));assert!(step.progress()!=RetainedCloneProgress::default()||owner.terminal_is_empty());
+        let step=super::effect::settled(super::effect::with_effect(grant,super::effect::CPU,|effect|owner.step(effect)).0).result.unwrap();assert!(step.progress().fits(grant));assert!(step.progress()!=RetainedCloneProgress::default()||owner.terminal_is_empty());
     }
     panic!("fixture originals retained beyond exact close budget");
 }

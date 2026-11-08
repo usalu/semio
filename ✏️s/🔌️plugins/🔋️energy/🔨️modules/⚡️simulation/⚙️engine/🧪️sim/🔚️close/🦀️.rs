@@ -56,9 +56,10 @@ impl EnergyJobAuthority {
         Ok(ENERGY_RUNG_DEMAND)
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
         self.closing = true;
-        if authority_inputs_are_retired(self){return self.retire_retained_tail(grant)}
+        if authority_inputs_are_retired(self){return self.retire_retained_tail(effect)}
         if authority_is_terminal_empty(self) {
             return Ok(energy_done());
         }
@@ -130,12 +131,12 @@ impl EnergyJobAuthority {
             return Ok(energy_one());
         }
         if !self.precompute_close.is_empty() {
-            return self.precompute_close.step_granted(grant).result.map(|step| InteractiveJobCloseStep::Pending { progress: step.progress() });
+            return crate::retirement::energy_poll(self.precompute_close.step_granted(effect)).map(|step| InteractiveJobCloseStep::Pending { progress: step.map(|step| step.progress()).unwrap_or_default() });
         }
-        if let Some(step) = self.precompute_close.begin_granted(&mut self.precompute, grant).result? {
+        if let Some(step) = crate::retirement::energy_begin(self.precompute_close.begin_granted(&mut self.precompute, effect))? {
             return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
         }
-        if let Some(step) = self.precompute_close.begin_granted(&mut self.pre, grant).result? {
+        if let Some(step) = crate::retirement::energy_begin(self.precompute_close.begin_granted(&mut self.pre, effect))? {
             return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
         }
         if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
@@ -329,13 +330,13 @@ impl InteractiveJob for EnergyJob {
         self.begin_close();
         if self.authority.is_none(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
         let demand=self.original_close_demands()?;
-        let step=crate::retirement::energy_retained_step(context,demand,|grant|{
+        let step=crate::retirement::energy_effect_step(context,demand,|effect|{
             if self.authority.as_deref().is_some_and(authority_is_terminal_empty){
                 drop(self.authority.take());
                 release_energy_abandonment_slot(self.abandonment_slot);
                 return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}));
             }
-            let step=self.authority.as_deref_mut().expect("original Energy authority remains retained").close_step(grant)?;
+            let step=self.authority.as_deref_mut().expect("original Energy authority remains retained").close_step(effect)?;
             Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress()))
         })?;
         Ok(match step{InteractiveJobCloseStep::Pending{progress}if self.authority.is_none()=>InteractiveJobCloseStep::Complete{progress},step=>step})

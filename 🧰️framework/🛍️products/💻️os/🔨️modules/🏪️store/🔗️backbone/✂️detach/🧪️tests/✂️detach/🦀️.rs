@@ -74,7 +74,7 @@ async fn observe_refusal(case_id: &str) {
             break;
         }
         let grant = cleanup_grant("store");
-        let step = SpaceMember::close_owned_step(&mut store, grant).expect("close original Store before assertions");
+        let step = SpaceMember::close_owned_step_cold(&mut store, grant).expect("close original Store before assertions");
         assert!(step.progress().fits(grant));
     }
     assert!(SpaceMember::close_owned_terminal_is_empty(&store));

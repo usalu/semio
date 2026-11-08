@@ -85,10 +85,10 @@
         presence.install_peer_retirement_factory(<KeyedTestApp as ArtifactApp>::build_presence_peer_retirement_factory().expect("presence peer factory")).expect("presence peer factory installs once");
         let mut presence_disposer = <KeyedTestApp as ArtifactApp>::build_presence_store_disposer().expect("presence disposer");
         let presence_grant = fixture_close_grant(presence_disposer.retirement_demands(&presence, page).expect("quoted presence demand"));
-        assert_eq!(presence_disposer.close_step(&mut presence, RetainedCloneGrant { maximum_items: 0, ..presence_grant }).expect("zero grant"), PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
+        assert_eq!(presence_disposer.close_step_cold(&mut presence, RetainedCloneGrant { maximum_items: 0, ..presence_grant }).expect("zero grant"), PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
         for _ in 0..8 {
             let grant = fixture_close_grant(presence_disposer.retirement_demands(&presence, page).expect("quoted presence demand"));
-            let step = presence_disposer.close_step(&mut presence, grant).expect("presence close");
+            let step = presence_disposer.close_step_cold(&mut presence, grant).expect("presence close");
             assert!(step.progress().expect("presence close receipt").fits(grant));
             if matches!(step, PluginLifecycleStep::Complete(_)) {
                 break;
@@ -104,7 +104,7 @@
         let original_transient_generation = transient.generation_now();
         let quoted = transient_disposer.retirement_demands(&transient, page).expect("quoted transient demand");
         let exact_grant = fixture_close_grant(quoted);
-        assert_eq!(transient_disposer.close_step(&mut transient, RetainedCloneGrant { maximum_items: 0, ..exact_grant }).expect("zero grant"), PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
+        assert_eq!(transient_disposer.close_step_cold(&mut transient, RetainedCloneGrant { maximum_items: 0, ..exact_grant }).expect("zero grant"), PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
         assert!(!transient_disposer.terminal_is_empty(&transient));
         for starved in [
             (quoted.copy_bytes != 0).then(|| RetainedCloneGrant { maximum_copy_bytes: quoted.copy_bytes - 1, ..exact_grant }),
@@ -114,7 +114,7 @@
         .into_iter()
         .flatten()
         {
-            assert_eq!(transient_disposer.close_step(&mut transient, starved).expect("short transient grant"), PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
+            assert_eq!(transient_disposer.close_step_cold(&mut transient, starved).expect("short transient grant"), PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
             assert_eq!(transient.generation_now(), original_transient_generation);
             assert!(std::sync::Arc::ptr_eq(&original_transient_root, &transient.current_root()));
         }
@@ -123,7 +123,7 @@
                 break;
             }
             let grant = fixture_close_grant(transient_disposer.retirement_demands(&transient, page).expect("quoted transient demand"));
-            let step = transient_disposer.close_step(&mut transient, grant).expect("transient owned-store retirement");
+            let step = transient_disposer.close_step_cold(&mut transient, grant).expect("transient owned-store retirement");
             assert!(step.progress().expect("transient receipt").fits(grant));
         }
         assert_eq!(transient.generation_now(), 0);
@@ -135,15 +135,15 @@
                 break;
             }
             let grant = fixture_close_grant(transient_disposer.retirement_demands(&transient, page).expect("quoted transient demand"));
-            let step = transient_disposer.close_step(&mut transient, grant).expect("transient terminal completion");
+            let step = transient_disposer.close_step_cold(&mut transient, grant).expect("transient terminal completion");
             assert!(step.progress().expect("transient receipt").fits(grant));
         }
         assert!(transient_disposer.terminal_is_empty(&transient));
         let repeated = fixture_close_grant(transient_disposer.retirement_demands(&transient, page).expect("quoted terminal demand"));
-        assert!(matches!(transient_disposer.close_step(&mut transient, repeated).expect("transient repeated complete"), PluginLifecycleStep::Complete(progress) if progress == RetainedCloneProgress::default()));
+        assert!(matches!(transient_disposer.close_step_cold(&mut transient, repeated).expect("transient repeated complete"), PluginLifecycleStep::Complete(progress) if progress == RetainedCloneProgress::default()));
         transient = store::TransientStore::new(NoTransient::default());
         let drifted_transient_root = transient.current_root();
         assert!(!transient_disposer.terminal_is_empty(&transient));
-        assert!(transient_disposer.close_step(&mut transient, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).is_err(), "transient terminal witness rejects owner drift");
+        assert!(transient_disposer.close_step_cold(&mut transient, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).is_err(), "transient terminal witness rejects owner drift");
         assert!(std::sync::Arc::ptr_eq(&drifted_transient_root, &transient.current_root()));
     }

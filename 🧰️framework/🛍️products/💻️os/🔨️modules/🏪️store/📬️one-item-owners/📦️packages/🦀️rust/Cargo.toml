@@ -22,14 +22,15 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-durable-group-testing = ["semio-os-store-one-item-publication/durable-group-testing"]
-test-support = []
+durable-group-testing = ["semio-os-store-one-item-publication/durable-group-testing", "semio-os-store-paged-one-item/durable-group-testing"]
+test-support = ["semio-os-store-paged-one-item/test-support"]
 
 [[test]]
 name = "mutation_apply"
 path = "../../../📬️paged-one-item/🧬️mutation-apply/🧪️tests/🦀️.rs"
 
 [dependencies]
+semio-os-store-paged-one-item = { path = "../../../📬️paged-one-item/📦️packages/🦀️rust" }
 semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-os-store-ledger = { path = "../../../📒️ledger/📦️packages/🦀️rust" }
 semio-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
@@ -52,6 +53,7 @@ semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modu
 semio-framework-value-factory = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-os-store-ephemeral = { path = "../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }

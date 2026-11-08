@@ -9,7 +9,7 @@ pub use set_n::SetN;
 mod assign_n;
 pub use assign_n::AssignN;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, semio_framework_value_derive::RetireOwned, FromValue, semio_os_dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, semio_framework_value_derive::RetireOwned, FromValue, semio_os_dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
@@ -18,3 +18,7 @@ pub enum ValidatedMutation {
     SetN(SetN),
     AssignN(AssignN),
 }
+
+semio_os_dsl::original_ordinal_operation_receiving!(ValidatedMutation);
+
+semio_os_store_one_item_publication::artifact_persisted_binary_operation!(ValidatedMutation);

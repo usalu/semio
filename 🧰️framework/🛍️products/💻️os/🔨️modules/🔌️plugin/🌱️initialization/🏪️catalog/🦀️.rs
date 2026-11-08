@@ -33,11 +33,12 @@ Mu: 'static + protocol::StoreMutationFor<P> {
   if self.original.as_ref().is_some_and(|original|matches!(original,Err(error)if matches!(error.error.message,std::borrow::Cow::Owned(_)))){return Some(Ok(RetirementDemand{depth:1,..Default::default()}))}
   None
  }
- fn close_refusal(&mut self,grant:RetainedCloneGrant)->Option<Result<RetainedCloneProgress,ValueError>>{
+  fn close_refusal(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Option<Result<RetainedCloneProgress,ValueError>>{
+  let grant=effect.grant();
   let demand=match self.refusal_demands(grant.maximum_copy_bytes)?{Ok(demand)=>demand,Err(error)=>return Some(Err(error))};
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Some(Ok(Default::default()))}
-  if self.refusal_close.is_some(){return Some(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.refusal_close,grant).result.map(|step|step.progress()))}
-  if self.refusal.as_ref().is_some_and(|error|matches!(error.message,std::borrow::Cow::Owned(_))){return Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.refusal,&mut self.refusal_close,grant).result.map(|step|step.progress()))}
+  if self.refusal_close.is_some(){return Some(store::os_store::snapshot_read::settle_close_poll(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.refusal_close,effect)).map(|step|step.progress()))}
+  if self.refusal.as_ref().is_some_and(|error|matches!(error.message,std::borrow::Cow::Owned(_))){return Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.refusal,&mut self.refusal_close,effect).result.map(|step|step.progress()))}
   let Some(Err(original))=self.original.as_mut()else{unreachable!()};
   *self.refusal=Some(std::mem::replace(&mut original.error,ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original constructor refusal is retiring")));
   Some(Ok(RetainedCloneProgress{copied_items:1,..Default::default()}))
@@ -51,12 +52,13 @@ Mu: 'static + protocol::StoreMutationFor<P> {
   Ok(RetirementDemand{copy_bytes:parent.checked_add(child.copy_bytes).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"catalog source quote copy overflow"))?,capacity_bytes:child.capacity_bytes,release_bytes:child.release_bytes,depth:child.depth.max(1).checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"catalog quote depth overflow"))?})
  }
  #[doc(hidden)]
- pub fn advance(&mut self,store:&mut ArtifactStore<P,Mu>,grant:RetainedCloneGrant,build:impl FnOnce(RetainedCloneGrant)->Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<P,Mu>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P,Mu>>>)->Result<RetainedCloneProgress,ValueError>{
+ pub fn advance(&mut self,store:&mut ArtifactStore<P,Mu>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,build:impl FnOnce(RetainedCloneGrant)->Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<P,Mu>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P,Mu>>>)->Result<RetainedCloneProgress,ValueError>{
   if self.done{return Ok(Default::default())}
+  let grant=effect.grant();
   let parent=0usize;
   if grant.maximum_items==0||grant.maximum_copy_bytes<parent||grant.maximum_depth<2{return Ok(Default::default())}
   let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent,maximum_depth:grant.maximum_depth-1,..grant};
-  if let Some(result)=self.close_refusal(child){return result}
+  if let Some(result)=self.close_refusal(&mut effect.nested(child)){return result}
   if self.refusal.as_ref().is_some_and(|error|matches!(error.message,std::borrow::Cow::Borrowed(_))){*self.refusal=None;return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:parent,..Default::default()})}
   if self.original.as_ref().is_some_and(|original|matches!(original,Err(error)if error.owners.is_none()&&matches!(error.error.message,std::borrow::Cow::Borrowed(_)))){*self.original=None;return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:parent,..Default::default()})}
   let mut receipt=if self.original.is_none(){
@@ -66,7 +68,7 @@ Mu: 'static + protocol::StoreMutationFor<P> {
    if owners.constructor_is_complete(){
     let Some(Ok(owners))=self.original.take()else{unreachable!()};
     match store.install_document_store_owners_exact(owners){Ok(())=>self.done=true,Err((error,owners))=>*self.original=Some(Err(store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError{error,owners:Some(owners),progress:Default::default()}))}RetainedCloneProgress{copied_items:1,..Default::default()}
-   }else{let demand=owners.constructor_demands(child.maximum_copy_bytes)?;if child.maximum_copy_bytes<demand.copy_bytes||child.maximum_capacity_bytes<demand.capacity_bytes||child.maximum_release_bytes<demand.release_bytes||child.maximum_depth<demand.depth{return Ok(Default::default())}match owners.admit_constructor(child){Ok(receipt)=>receipt,Err((error,mut receipt))=>{*self.refusal=Some(error);receipt.copied_items=1;receipt}}}
+   }else{let demand=owners.constructor_demands(child.maximum_copy_bytes)?;if child.maximum_copy_bytes<demand.copy_bytes||child.maximum_capacity_bytes<demand.capacity_bytes||child.maximum_release_bytes<demand.release_bytes||child.maximum_depth<demand.depth{return Ok(Default::default())}match owners.admit_constructor(&mut effect.nested(child)){Ok(receipt)=>receipt,Err((error,mut receipt))=>{*self.refusal=Some(error);receipt.copied_items=1;receipt}}}
   };
   if receipt==Default::default(){return Ok(receipt)}
   if !receipt.fits(child){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original catalog ticket exceeded caller authority"))}
@@ -76,15 +78,16 @@ Mu: 'static + protocol::StoreMutationFor<P> {
  #[doc(hidden)]
  pub fn terminal_is_empty(&self)->bool{self.done&&self.original.is_none()&&self.refusal.is_none()&&self.refusal_close.is_none()}
  #[doc(hidden)]
- pub fn close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+ pub fn close(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
   if self.terminal_is_empty(){return Ok(Default::default())}
+  let grant=effect.grant();
   let parent=0usize;
   if grant.maximum_items==0||grant.maximum_copy_bytes<parent||grant.maximum_depth<2{return Ok(Default::default())}
   let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent,maximum_depth:grant.maximum_depth-1,..grant};
-  if let Some(result)=self.close_refusal(child){return result}
+  if let Some(result)=self.close_refusal(&mut effect.nested(child)){return result}
   let owner=self.original.as_mut().and_then(|original|match original{Ok(owner)=>Some(owner),Err(error)=>error.owners.as_mut()});
   if let Some(owner)=owner{
-   if !owner.uninstalled_owners_terminal_is_empty(){let demand=owner.uninstalled_owners_demands(child.maximum_copy_bytes)?;if child.maximum_copy_bytes<demand.copy_bytes||child.maximum_capacity_bytes<demand.capacity_bytes||child.maximum_release_bytes<demand.release_bytes||child.maximum_depth<demand.depth{return Ok(Default::default())}let step=owner.close_uninstalled_owners_step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.uninstalled_owners_terminal_is_empty(),"original staged catalog")?;let mut receipt=step.progress();if receipt==Default::default(){return Ok(receipt)}receipt.copied_bytes+=parent;return Ok(receipt)}
+   if !owner.uninstalled_owners_terminal_is_empty(){let demand=owner.uninstalled_owners_demands(child.maximum_copy_bytes)?;if child.maximum_copy_bytes<demand.copy_bytes||child.maximum_capacity_bytes<demand.capacity_bytes||child.maximum_release_bytes<demand.release_bytes||child.maximum_depth<demand.depth{return Ok(Default::default())}let step=owner.close_uninstalled_owners_step(&mut effect.nested(child))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.uninstalled_owners_terminal_is_empty(),"original staged catalog")?;let mut receipt=step.progress();if receipt==Default::default(){return Ok(receipt)}receipt.copied_bytes+=parent;return Ok(receipt)}
   }
   *self.original=None;*self.refusal=None;self.done=true;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:parent,..Default::default()})
  }

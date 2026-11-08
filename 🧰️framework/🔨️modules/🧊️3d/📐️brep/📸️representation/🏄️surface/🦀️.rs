@@ -28,7 +28,7 @@ use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 
 /// 🗺️ A parametric surface `S(u, v)`. Domain and periodicity are documented per variant; as with
 /// [`semio_framework_3d_brep_curve::Curve3`], a face's *used* trim domain is stored by the topology layer, not here.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(crate = "::semio_framework_value")]
 pub enum Surface {
     /// 🗺️ `frame.origin + u·frame.x + v·frame.y`. Domain `(-∞, ∞) × (-∞, ∞)`.
@@ -50,7 +50,6 @@ pub enum Surface {
     Nurbs { u_knots: KnotVector, v_knots: KnotVector, controls: Vec<Vec<Pnt3>>, weights: Vec<Vec<f64>> },
 }
 
-semio_framework_3d_brep_vector::retire_geometry_variants!(Surface {Plane {frame},Cylinder {frame,radius},Cone {frame,half_angle},Sphere {frame,radius},Torus {frame,major_radius,minor_radius},Nurbs {u_knots,v_knots,controls,weights}});
 
 /// 🗺️ First/second partial derivatives at a surface point, the common input to normal and
 /// curvature computations.

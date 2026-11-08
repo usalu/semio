@@ -39,7 +39,7 @@ impl OwnedWriterStore {
         while !self.0.close_owned_terminal_is_empty() {
             let demand = self.0.close_owned_demands(WRITER_ENVELOPE_FIELD_BYTES).expect("the Writer document store quotes its close");
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(WRITER_ENVELOPE_FIELD_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            self.0.close_owned_step(grant).expect("Writer document store closes through its exact bounded owners");
+            self.0.close_owned_step_cold(grant).expect("Writer document store closes through its exact bounded owners");
         }
     }
 }

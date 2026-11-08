@@ -117,7 +117,7 @@ pub trait OperatorJob: Send {
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError>;
     fn next_close_depth_demand(&self)->Result<usize,ValueError>;
     /// 🧾️ Returns the actual child work even when its original close refuses.
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome;
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll;
     fn terminal_is_empty(&self)->bool;
 
 }
@@ -148,8 +148,8 @@ pub trait Operator: Send + Sync {
     fn next_retire_release_byte_demand(&self)->Result<usize,ValueError> {if self.retirement_is_empty(){Ok(0)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator release ownership is not declared"))}}
     fn next_retire_depth_demand(&self)->Result<usize,ValueError> {if self.retirement_is_empty(){Ok(0)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator depth ownership is not declared"))}}
     /// 🧹️ Retires or transfers actual fields while preserving the original dynamic operator shell.
-    fn retire_step(&mut self,_grant:RetainedCloneGrant,_values:&mut ValueRetirement)->Result<RetainedCloneStep,ValueError> {
-        if self.retirement_is_empty(){Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator retained ownership is not declared"))}
+    fn retire_step(&mut self,_effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,_values:&mut ValueRetirement)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit> {
+        if self.retirement_is_empty(){Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator retained ownership is not declared").into())}
     }
     /// 🧊️ Explicit cold registry teardown; implementations owning neural domains retire those fields here.
     fn retire_cold(self: Box<Self>) { drop(self); }

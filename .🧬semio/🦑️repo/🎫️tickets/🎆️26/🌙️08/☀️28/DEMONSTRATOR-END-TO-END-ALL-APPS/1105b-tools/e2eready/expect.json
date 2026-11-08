@@ -92,7 +92,7 @@
           "cad-play-energy",
           "cad-play-structure-classic"
         ],
-        "rowText": "Box \\d+"
+        "rowText": { "en": "Box \\d+", "de": "Quader \\d+" }
       }
     },
     {

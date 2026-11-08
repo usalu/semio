@@ -321,7 +321,7 @@ impl DrawList {
         let border_limit = self.shared_borders.len().checked_add(items).ok_or(RetainedOutputError::Capacity)?;
         while self.shared_borders.capacity() < border_limit {
             let bytes = self.shared_borders.next_capacity_allocation_bytes(border_limit).map_err(|_| RetainedOutputError::Capacity)?.ok_or(RetainedOutputError::Capacity)?;
-            self.shared_borders.reserve_capacity_one(border_limit, bytes).map_err(|_| RetainedOutputError::Allocation)?;
+            self.shared_borders.reserve_exact_capacity_one_cold(border_limit, bytes).map_err(|_| RetainedOutputError::Allocation)?;
         }
         let vertices = items.checked_mul(6).ok_or(RetainedOutputError::Capacity)?;
         let layer = self.layers.last_mut().ok_or(RetainedOutputError::Capacity)?;
@@ -344,12 +344,12 @@ impl DrawList {
         let layer_limit = self.layers.len().checked_add(item_limit).ok_or(RetainedOutputError::Capacity)?;
         while self.layers.capacity() < layer_limit {
             let bytes = self.layers.next_capacity_allocation_bytes(layer_limit).map_err(|_| RetainedOutputError::Capacity)?.ok_or(RetainedOutputError::Capacity)?;
-            self.layers.reserve_capacity_one(layer_limit, bytes).map_err(|_| RetainedOutputError::Allocation)?;
+            self.layers.reserve_exact_capacity_one_cold(layer_limit, bytes).map_err(|_| RetainedOutputError::Allocation)?;
         }
         let glass_limit = self.glass_regions.len().checked_add(item_limit).ok_or(RetainedOutputError::Capacity)?;
         while self.glass_regions.capacity() < glass_limit {
             let bytes = self.glass_regions.next_capacity_allocation_bytes(glass_limit).map_err(|_| RetainedOutputError::Capacity)?.ok_or(RetainedOutputError::Capacity)?;
-            self.glass_regions.reserve_capacity_one(glass_limit, bytes).map_err(|_| RetainedOutputError::Allocation)?;
+            self.glass_regions.reserve_exact_capacity_one_cold(glass_limit, bytes).map_err(|_| RetainedOutputError::Allocation)?;
         }
         self.scissor_stack.try_reserve_exact(item_limit).map_err(|_| RetainedOutputError::Allocation)?;
         self.glass_content_stack.try_reserve_exact(item_limit).map_err(|_| RetainedOutputError::Allocation)?;
@@ -481,7 +481,7 @@ impl DrawList {
             result.map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"append cancellation failed").with_retained_progress(progress))?;
             return Ok(if self.retirement_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}})
         }
-        let complete=self.retire_step();let progress=RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes};
+        let complete=self.retire_step_checked().map_err(|error|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,error.reason))?;let progress=RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes};
         Ok(if complete{Step::Complete{progress}}else{Step::Pending{progress}})
     }
 

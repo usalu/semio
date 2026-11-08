@@ -16,16 +16,14 @@ impl NativeDecodeRetirementRecipient{
     pub fn identity(&self)->u64{self.funding.identity}
     /// 🧺️ Reports whether this original recipient holds a prepaid collision node.
     pub fn has_failure_storage(&self)->bool{!self.funding.failure_pool.is_empty()}
-    /// 🚦️ Observes the original failure-storage allocation callback boundary.
-    pub fn failure_allocation_phase(&self)->Option<crate::NativeAllocationTransactionPhase>{self.funding.failure_allocation.as_ref().map(crate::NativeAllocationTransaction::phase)}
     /// 📏️ Quotes transfer of an original protocol refusal that exceeded Birth custody.
     pub fn failure_protocol_refusal_demand(&self)->crate::RetirementDemand{if self.funding.failure_protocol_refusal.is_none(){return Default::default()}crate::RetirementDemand{copy_bytes:2*std::mem::size_of::<Option<ValueError>>(),depth:1,..Default::default()}}
-    /// 📬️ Transfers the exact overflow refusal only through the caller’s selected effect.
-    pub fn take_failure_protocol_refusal(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<(ValueError,crate::RetainedCloneProgress)>>{let demand=self.failure_protocol_refusal_demand();if self.funding.failure_protocol_refusal.is_none()||effect.maximum_work_units()<1||!crate::retained_clone::retained_clone_grant_admits(effect.grant(),demand){return RetainedWorkOutcome{result:Ok(None),work:0}}let error=self.funding.failure_protocol_refusal.take().expect("observed original protocol refusal");RetainedWorkOutcome{result:Ok(Some((error,crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))),work:1}}
     /// 📏️ Quotes this recipient’s selected spare-node release without borrowing a control.
     pub fn failure_storage_release_demand(&self)->crate::RetirementDemand{semio_framework_value_retirement::original_failure_storage_release_demand(&self.funding.failure_pool)}
     /// 👓️ Reports retained ownership without borrowing or transferring the actual owner.
     pub fn has_owner(&self)->bool{!self.terminal_is_empty()}
+    /// 🚧️ Reports a returned owner, reserved slot or unsettled failure birth that still needs closing, excluding idle spare failure custody.
+    pub fn has_pending_close(&self)->bool{self.funding.reserved||self.owner.is_some()||self.pending_failure()}
     /// 🔒️ Reserves the empty slot before any construction can create a partial owner.
     /// 🔒️ Reports an active reserved slot that a nested producer may settle through a child recipient.
     pub fn is_reserved(&self)->bool{self.funding.reserved}

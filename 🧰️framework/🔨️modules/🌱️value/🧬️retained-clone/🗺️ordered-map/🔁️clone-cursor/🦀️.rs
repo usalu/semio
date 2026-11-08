@@ -43,6 +43,8 @@ impl<K: RetainedClone, V: RetainedClone> Default for RetainedOrderedMapCloneCurs
 }
 
 impl<K: RetainedClone, V: RetainedClone> RetainedOrderedMapCloneCursor<K, V> {
+    /// 🚦️ Marks close intent once so retirement can drive the cursor's funded closure.
+    pub fn begin_close(&mut self)->bool{let started=!self.closing;self.closing=true;started}
     fn progress_from_close(step: RetainedCloneStep, terminal_is_empty: bool, grant: RetainedCloneGrant, context: &'static str) -> Result<RetainedCloneStep, ValueError> {
         let progress = admit_retained_clone_close(grant, step, terminal_is_empty, context)?.progress();
         Ok(RetainedCloneStep::Progress(progress))
@@ -64,6 +66,16 @@ impl<K:RetainedClone,V:RetainedClone> RetainedOrderedMapCloneCursor<K,V>{
 }
 impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<K, V>> for RetainedOrderedMapCloneCursor<K, V> {
     fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{RetainedOrderedMapCloneCursor::<K,V>::close_demands(self,body)}
+    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+        if !self.closing||self.terminal_is_empty(){return Ok(0);}
+        if !self.key_cursor.terminal_is_empty(){return if self.key_cursor.close_started(){self.key_cursor.close_work_demand(body)}else{self.key_cursor.begin_close_work_demand()};}
+        if !self.value_cursor.terminal_is_empty(){return if self.value_cursor.close_started(){self.value_cursor.close_work_demand(body)}else{self.value_cursor.begin_close_work_demand()};}
+        if self.key.is_some(){return self.close.next_owner_work::<K>(true,&self.source,body);}
+        if self.value.is_some(){return self.close.next_owner_work::<V>(true,&self.source,body);}
+        if self.page_output.is_some(){return self.close.next_owner_work::<Vec<(K,V)>>(true,&self.source,body);}
+        if !self.pages.is_empty()||self.pages.capacity()!=0{return self.close.next_owner_work::<Vec<Vec<(K,V)>>>(true,&self.source,body);}
+        self.close.next_owner_work::<RetainedOrderedMap<K,V>>(self.output.is_some(),&self.source,body)
+    }
     fn begin_close_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_close_start_demand(self.closing))}
 fn begin_close_work_demand(&self)->Result<u64,crate::ValueError>{Ok(crate::retained_clone::retained_close_start_work_demand(self.closing))}
 fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<crate::retained_clone::RetainedCloneProgress>{crate::retained_clone::start_retained_close(&mut self.closing,effect)}
@@ -101,7 +113,7 @@ fn output_ready(&self)->bool{self.output.is_some()}
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
-        if let Some(progress)={let turn=source.bind(&mut self.source,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
+        if let Some(progress)={let turn=source.bind(&mut self.source,effect);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
         let source_value = source.get();
         match self.phase {
             0 => {
@@ -159,20 +171,20 @@ fn output_ready(&self)->bool{self.output.is_some()}
             }
             2 => {
                 if self.key_cursor.output_ready() {
-                    let nested=nested_retained_clone_grant(grant)?;let turn=self.key_cursor.take(nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.key=Some(value);
+                    let nested=nested_retained_clone_grant(grant)?;let Some(progress)=take_child_output(&mut self.key_cursor,&mut self.key,nested,effect)? else{return Ok(RetainedCloneStep::Progress(Default::default()))};work+=1;
                     self.phase=3;
                     return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"ordered map key take")?));
                 }
                 let ordinal=self.page*RETAINED_ORDERED_MAP_PAGE_CAPACITY+self.entry;
                 let nested=nested_retained_clone_grant(grant)?;
-                let step={let turn=self.key_cursor.advance(source.project(ordinal*2+1,|map|&map.pages[self.page][self.entry].0),body,maximum_work_units,&mut effect.reborrow(nested,maximum_work_units)?);work+=turn.work;turn.result}?;
+                let step={let turn=self.key_cursor.advance(source.project(ordinal*2+1,|map|&map.pages[self.page][self.entry].0),body,maximum_work_units,&mut effect.nested_within(nested,maximum_work_units));work+=turn.work;turn.result}?;
                 Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,step.progress(),"ordered map key")?))
             }
             3 => {
                 if !self.key_cursor.terminal_is_empty() {
-                    if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-let step = {let turn=self.key_cursor.close_step(nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;
-                    return Self::progress_from_close(step, self.key_cursor.terminal_is_empty(), grant, "retained ordered-map key scaffold close");
+                    if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+let step = {let turn=settle_child_close(self.key_cursor.close_step(&mut effect.nested(nested_retained_clone_grant(grant)?)));work+=turn.work;turn.result}?;
+                    return Self::progress_from_close(step, self.key_cursor.terminal_is_empty(), grant, "retained ordered-map key scaffold close").map_err(Into::into);
                 }
                 if grant.maximum_items == 0 {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
@@ -183,20 +195,20 @@ let step = {let turn=self.key_cursor.close_step(nested_retained_clone_grant(gran
             }
             4 => {
                 if self.value_cursor.output_ready() {
-                    let nested=nested_retained_clone_grant(grant)?;let turn=self.value_cursor.take(nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.value=Some(value);
+                    let nested=nested_retained_clone_grant(grant)?;let Some(progress)=take_child_output(&mut self.value_cursor,&mut self.value,nested,effect)? else{return Ok(RetainedCloneStep::Progress(Default::default()))};work+=1;
                     self.phase=5;
                     return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"ordered map value take")?));
                 }
                 let ordinal=self.page*RETAINED_ORDERED_MAP_PAGE_CAPACITY+self.entry;
                 let nested=nested_retained_clone_grant(grant)?;
-                let step={let turn=self.value_cursor.advance(source.project(ordinal*2+2,|map|&map.pages[self.page][self.entry].1),body,maximum_work_units,&mut effect.reborrow(nested,maximum_work_units)?);work+=turn.work;turn.result}?;
+                let step={let turn=self.value_cursor.advance(source.project(ordinal*2+2,|map|&map.pages[self.page][self.entry].1),body,maximum_work_units,&mut effect.nested_within(nested,maximum_work_units));work+=turn.work;turn.result}?;
                 Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,step.progress(),"ordered map value")?))
             }
             5 => {
                 if !self.value_cursor.terminal_is_empty() {
-                    if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-let step = {let turn=self.value_cursor.close_step(nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;
-                    return Self::progress_from_close(step, self.value_cursor.terminal_is_empty(), grant, "retained ordered-map value scaffold close");
+                    if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+let step = {let turn=settle_child_close(self.value_cursor.close_step(&mut effect.nested(nested_retained_clone_grant(grant)?)));work+=turn.work;turn.result}?;
+                    return Self::progress_from_close(step, self.value_cursor.terminal_is_empty(), grant, "retained ordered-map value scaffold close").map_err(Into::into);
                 }
                 if grant.maximum_items == 0 {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
@@ -229,23 +241,23 @@ let step = {let turn=self.value_cursor.close_step(nested_retained_clone_grant(gr
 
     
 
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result=(||{
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.closing { return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered map must begin close before granted retirement")); }
+        if !self.closing { return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered map must begin close before granted retirement").into()); }
                 if !retained_clone_grant_admits(grant,retained_clone_close_demands::<RetainedOrderedMap<K,V>>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
 if !self.key_cursor.terminal_is_empty() {
-            if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-            if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-let step = {let turn=self.key_cursor.close_step(&mut effect.reborrow(nested_retained_clone_grant(grant)?,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result}?;
+            if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+            if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+let step = {let turn=crate::RetirementPollExit::settled(self.key_cursor.close_step(&mut effect.nested(nested_retained_clone_grant(grant)?)))?;work+=turn.work;turn.result}?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.key_cursor.terminal_is_empty(), "retained ordered-map key close")?.progress()));
         }
         if !self.value_cursor.terminal_is_empty() {
-            if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-            if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-let step = {let turn=self.value_cursor.close_step(&mut effect.reborrow(nested_retained_clone_grant(grant)?,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result}?;
+            if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+            if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+let step = {let turn=crate::RetirementPollExit::settled(self.value_cursor.close_step(&mut effect.nested(nested_retained_clone_grant(grant)?)))?;work+=turn.work;turn.result}?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.value_cursor.terminal_is_empty(), "retained ordered-map value close")?.progress()));
         }
-        if !self.close.is_empty() { return {let turn=self.close.step_granted(effect);work+=turn.work;turn.result}; }
+        if !self.close.is_empty() { return {let turn=crate::RetirementPollExit::settled(self.close.step_granted(effect))?;work+=turn.work;turn.result.map_err(Into::into)}; }
         if let Some(step) = {let turn=self.close.begin_granted(&mut self.key,effect);work+=turn.work;turn.result}? { return Ok(step); }
         if let Some(step) = {let turn=self.close.begin_granted(&mut self.value,effect);work+=turn.work;turn.result}? { return Ok(step); }
         if let Some(step) = {let turn=self.close.begin_granted(&mut self.page_output,effect);work+=turn.work;turn.result}? { return Ok(step); }
@@ -253,8 +265,8 @@ let step = {let turn=self.value_cursor.close_step(&mut effect.reborrow(nested_re
             if let Some(step) = {let turn=self.close.begin_empty_granted(&mut self.pages,effect);work+=turn.work;turn.result}? { return Ok(step); }
         }
         if let Some(step) = {let turn=self.close.begin_granted(&mut self.output,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        {let turn=close_retained_binding(&mut self.source,effect);work+=turn.work;turn.result}
-    })();crate::RetainedWorkOutcome{result,work}}
+        {let turn=crate::RetirementPollExit::settled(close_retained_binding(&mut self.source,effect))?;work+=turn.work;turn.result.map_err(Into::into)}
+    })();crate::RetirementPollExit::finish(result,work)}
 
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}

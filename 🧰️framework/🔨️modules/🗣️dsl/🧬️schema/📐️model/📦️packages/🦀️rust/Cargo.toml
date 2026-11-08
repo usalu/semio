@@ -29,6 +29,7 @@ semio-framework-value-ordered = { path = "../../../../../🌱️value/🗂️ord
 semio-framework-value-paged-text = { path = "../../../../../🌱️value/📝️text/📦️paged/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-value-native-receiving-original = { path = "../../../../../🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-framework-dsl = { path="../../../../📦️packages/🦀️rust" }
 semio-framework-pack-json = { path="../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-io-control = { path="../../../../../🚪️io/⏱️control/📦️packages/🦀️rust" }

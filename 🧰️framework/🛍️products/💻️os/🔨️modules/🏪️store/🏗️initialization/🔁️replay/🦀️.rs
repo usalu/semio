@@ -8,8 +8,16 @@ pub mod tests;
 #[path = "../🤝️authority/🦀️.rs"]
 pub mod initialization_authority;
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
-fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
+fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,failure:&mut Option<semio_framework_job::OriginalConstructionFailure>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    use semio_framework_job::OriginalConstructionStatus as Status;
+    match semio_framework_job::admit_original_construction(cx,output,admission,demand,1,|_,_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})?{
+        Status::Pending=>Ok(false),
+        Status::Ready=>admission.reset_step(cx),
+        Status::Failed=>{admission.take_failure_into_step(failure,cx)?;Err(semio_framework_value::ValueError::invariant("original construction failed; its complete causes are retained").into())}
+    }
+}
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
+fn retired_effect(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_effect_step(cx,demand,|effect|{let result=advance(effect);let work=effect.performed_work();semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:result.map_err(semio_framework_value::OriginalRetirementFailure::from),work})})}
 use semio_os_spr::{ActorId, Edit, Mutation, MutationId, OpBinary, OpText};
 use semio_os_store_space_schema::ArtifactEnvelope;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, FromValue, ToValue};
@@ -97,6 +105,13 @@ where
     pub producer:PhantomData<fn()->C>,
     native:native::NativeInitializationFold<P,M>,
     supersession_native:native_supersession::NativeSupersessionFold,
+    construction:semio_framework_job::OriginalConstructionAdmission,
+    construction_failure:ManuallyDrop<Option<semio_framework_job::OriginalConstructionFailure>>,
+    edit_out:Option<ArtifactStoreInitializationEditAdmission>,
+    checkpoint_out:Option<Option<String>>,
+    unit_out:Option<()>,
+    phase_out:Option<Phase>,
+    commit_out:Option<bool>,
     digest:native_digest::NativeEditDigest,
     effective_digest:native_digest::NativeEffectiveDigest,
     commit_ready:bool,
@@ -149,11 +164,11 @@ where
     }
 
     /// 🧳️ Retains the real actor and initializer authority before its original envelope is constructed.
-    fn awaiting_envelope(schema:&'static str,operation:OperationId,generation:Generation,actor:ActorId)->Self{
+    pub fn awaiting_envelope(schema:&'static str,operation:OperationId,generation:Generation,actor:ActorId)->Self{
         Self {
             producer:PhantomData,
             native:Default::default(),
-            supersession_native:Default::default(),digest:Default::default(),effective_digest:Default::default(),commit_ready:false,
+            supersession_native:Default::default(),construction:Default::default(),construction_failure:ManuallyDrop::new(None),edit_out:None,checkpoint_out:None,unit_out:None,phase_out:None,commit_out:None,digest:Default::default(),effective_digest:Default::default(),commit_ready:false,
             operation,
             generation,
             replacement: None,
@@ -187,14 +202,14 @@ where
     pub fn awaiting_envelope_birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+size_of::<Option<ActorId>>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
 
     /// 🌱️ Admits the original empty envelope recipient before payload construction under the same caller.
-    pub fn admit_awaiting_envelope(actor:&mut Option<ActorId>,schema:&'static str,cx:&mut StepContext<'_>,output:&mut Option<Box<Self>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn admit_awaiting_envelope(actor:&mut Option<ActorId>,schema:&'static str,cx:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,failure:&mut Option<semio_framework_job::OriginalConstructionFailure>,output:&mut Option<Box<Self>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if actor.is_none()||output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original initializer birth requires its actor and empty output").into())}
         let d=Self::awaiting_envelope_birth_demands();let operation=cx.operation();let generation=cx.generation();
-        built(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:d.depth},||{
+        let ready=built(cx,admission,failure,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:d.depth},||{
             let storage=Box::<Self>::new_uninit();
             let owner=Box::write(storage,Self::awaiting_envelope(schema,operation,generation,actor.take().unwrap()));
             Ok((owner,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))
-        })?;Ok(output.is_some())
+        })?;Ok(ready&&output.is_some())
     }
 
     /// 🧷️ Borrows the explicit original envelope admission frontier.
@@ -229,7 +244,7 @@ where
     }
 
     fn receive_digest_turn(&mut self,cx:&mut StepContext<'_>,turn:semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress>)->Turn{
-        cx.consume_fuel(turn.work);
+        cx.consume_fuel(u64::try_from(turn.work).unwrap_or(u64::MAX));
         match turn.result{
             Ok(progress)=>{if let Err(receipt)=cx.consume_retained(progress){self.original_failure=Some(receipt.into());self.phase=Phase::RetireFault}Turn::Yield},
             Err(primary)=>{let receipt=cx.consume_retained(primary.retained_progress());let mut failure=semio_framework_job::OriginalTurnFailure::from(primary);failure.receipt_refusal=receipt.err();failure.effects=Default::default();self.original_failure=Some(failure);self.phase=Phase::RetireFault;Turn::Yield}
@@ -261,16 +276,18 @@ where
 
     fn settle(&mut self, cx: &mut StepContext<'_>) -> bool {
         let Some(runtime) = self.runtime.as_mut() else { return false };
-        match runtime.settle_current_retirement_step(cx.retained_grant()) {
-            Ok(RetainedCloneStep::Complete(progress)) if progress == RetainedCloneProgress::default() => false,
-            Ok(step) => {
-                self.spend(cx, step.progress());
+        let grant = cx.retained_grant();
+        match cx.with_original_effect(grant, |_, effect| runtime.settle_current_retirement_step(effect)) {
+            Ok(Some((Ok(RetainedCloneStep::Complete(progress)), _))) if progress == RetainedCloneProgress::default() => false,
+            Ok(Some((Ok(step), performed))) => {
+                if cx.consume_retained(step.progress()).is_ok() { cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX).max(1)); } else { self.fail("replay.receipt"); }
                 true
             }
-            Err(error) => {
+            Ok(Some((Err(error), _))) | Err(error) => {
                 self.refuse(cx, error);
                 true
             }
+            Ok(None) => true,
         }
     }
 
@@ -304,9 +321,9 @@ where
             }
             Phase::ValidateEdit { index } => {
                 let envelope = self.envelope.as_ref().expect("validated replay envelope remains retained");
-                let demand=match self.edit_index.admission_demands(&envelope.vcs.edits,index,ARTIFACT_STORE_REPLAY_FIELD_BYTES){Ok(value)=>value,Err(error)=>return self.refuse(cx,error)};let mut result=None;
-                let admitted=built(cx,&mut result,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||self.edit_index.admit(&envelope.vcs.edits,index,ARTIFACT_STORE_REPLAY_FIELD_BYTES,grant));
-                if let Err(error)=admitted{self.index_open=true;self.original_failure=Some(error);self.phase=Phase::RetireFault;return Turn::Yield}let Some(admission)=result else{return Turn::Yield};self.index_open=true;
+                let demand=match self.edit_index.admission_demands(&envelope.vcs.edits,index,ARTIFACT_STORE_REPLAY_FIELD_BYTES){Ok(value)=>value,Err(error)=>return self.refuse(cx,error)};
+                let admitted=built(cx,&mut self.construction,&mut self.construction_failure,&mut self.edit_out,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||self.edit_index.admit(&envelope.vcs.edits,index,ARTIFACT_STORE_REPLAY_FIELD_BYTES,grant));
+                match admitted{Ok(true)=>{},Ok(false)=>{self.index_open=true;return Turn::Yield},Err(error)=>{self.index_open=true;self.original_failure=Some(error);self.phase=Phase::RetireFault;return Turn::Yield}}let Some(admission)=self.edit_out.take() else{return Turn::Yield};self.index_open=true;
                 match admission {
                     ArtifactStoreInitializationEditAdmission::Pending=>return Turn::Yield,
                     ArtifactStoreInitializationEditAdmission::Complete => self.phase = Phase::AdmitOwners,
@@ -343,9 +360,9 @@ where
             }
             Phase::FindApplied { position } => {
                 let Some(id) = self.applied_id(position) else {
-                    let checkpoint=self.envelope.as_ref().and_then(|envelope|envelope.cursor.as_ref().and_then(|cursor|cursor.checkpoint_id.as_deref()).or_else(||envelope.vcs.checkpoints.last().map(|checkpoint|checkpoint.id.as_str())));let length=checkpoint.map_or(0,str::len);let copy=length+size_of::<Option<String>>()+size_of::<Phase>();let mut output=None;
-                    let result=built(cx,&mut output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:length,release_bytes:0,depth:1},||Ok((checkpoint.map(str::to_owned),RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:length,..Default::default()})));
-                    match result{Ok(_)=>{if let Some(checkpoint)=output{self.runtime.as_mut().expect("original runtime").set_current_checkpoint_id(checkpoint);self.phase=Phase::FindRedo{position:0};}},Err(error)=>{self.original_failure=Some(error);self.phase=Phase::RetireFault;}}return Turn::Yield;
+                    let checkpoint=self.envelope.as_ref().and_then(|envelope|envelope.cursor.as_ref().and_then(|cursor|cursor.checkpoint_id.as_deref()).or_else(||envelope.vcs.checkpoints.last().map(|checkpoint|checkpoint.id.as_str())));let length=checkpoint.map_or(0,str::len);let copy=length+size_of::<Option<String>>()+size_of::<Phase>();
+                    let result=built(cx,&mut self.construction,&mut self.construction_failure,&mut self.checkpoint_out,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:length,release_bytes:0,depth:1},||Ok((checkpoint.map(str::to_owned),RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:length,..Default::default()})));
+                    match result{Ok(true)=>{if let Some(checkpoint)=self.checkpoint_out.take(){self.runtime.as_mut().expect("original runtime").set_current_checkpoint_id(checkpoint);self.phase=Phase::FindRedo{position:0};}},Ok(false)=>{},Err(error)=>{self.original_failure=Some(error);self.phase=Phase::RetireFault;}}return Turn::Yield;
                 };
                 let edit = self.edit_index.position(id).filter(|at| self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(*at)).is_some_and(|edit| edit.id == id));
                 match edit {
@@ -370,7 +387,11 @@ where
             }
             Phase::CommitRedo { position, edit } => self.commit(cx,position,edit,true),
             Phase::RetireIndex => {
-                match self.edit_index.retire_step(grant){Ok(step)=>{self.spend(cx,step.progress());if matches!(step,RetainedCloneStep::Complete(_)){self.index_open=false;self.phase=Phase::BuildCandidate;}Turn::Yield},Err(error)=>self.refuse(cx,error)}
+                match cx.with_original_effect(grant,|_,effect|self.edit_index.retire_step(effect)){
+                    Ok(Some((Ok(step),performed)))=>{if cx.consume_retained(step.progress()).is_ok(){cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX).max(1));if matches!(step,RetainedCloneStep::Complete(_)){self.index_open=false;self.phase=Phase::BuildCandidate;}}else{self.fail("replay.receipt");}Turn::Yield},
+                    Ok(Some((Err(error),_)))|Err(error)=>self.refuse(cx,error),
+                    Ok(None)=>Turn::Yield,
+                }
             }
             Phase::BuildCandidate => self.build_candidate(cx),
             Phase::Complete => Turn::Complete,
@@ -407,7 +428,11 @@ where
                     Ok(_) => return Turn::Yield,
                     Err(error) => return self.refuse(cx, error),
                 }
-                owners.admit_constructor(grant).map_err(|(error, progress)| error.with_retained_progress(progress))
+                match cx.with_original_effect(grant, |_, effect| owners.admit_constructor(effect)) {
+                    Ok(Some((result, performed))) => { cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX)); result.map_err(|(error, progress)| error.with_retained_progress(progress)) }
+                    Ok(None) => Ok(RetainedCloneProgress::default()),
+                    Err(error) => Err(error),
+                }
             }
             Some(_) => {
                 self.phase = Phase::AdmitCatalog;
@@ -442,7 +467,7 @@ where
     }
 
     fn bind_genesis(&mut self,cx:&mut StepContext<'_>)->Turn{
-        if !self.registry_birth.ready().unwrap_or(false){let grant=cx.retained_grant();let result=cx.with_native_receiving(|control|self.registry_birth.advance(grant,control));let progress=result.as_ref().map(|step|step.progress()).unwrap_or_else(|error|error.retained_progress());if let Some(issued)=cx.receiving_issued_grant(){if let Err(error)=cx.consume_receiving_retained(issued,progress){self.original_failure=Some(error.into());self.phase=Phase::RetireFault;return Turn::Yield}}cx.consume_fuel(progress.copied_items as u64);if let Err(error)=result{self.original_failure=Some(error.into());self.phase=Phase::RetireFault;}return Turn::Yield}
+        if !self.registry_birth.ready().unwrap_or(false){let grant=cx.retained_grant();let advanced=(||->Result<bool,semio_framework_job::OriginalTurnFailure>{let mut outcome=None;let mut stepped=None;if !cx.with_native_receiving(&mut outcome,|control,_|{stepped=Some(self.registry_birth.advance(grant,control));Ok(())})?{return Ok(false)}native::refuse_scope(outcome)?;native::post_receiving(cx,stepped.ok_or_else(native::invalid_scope)?,|step|step.progress())?;Ok(true)})();if let Err(error)=advanced{self.original_failure=Some(error);self.phase=Phase::RetireFault;}return Turn::Yield}
         let copy=size_of::<ArtifactStoreInitializationRuntime<P>>()+size_of::<ArtifactStoreInitializationOwnerCatalog>()+size_of::<ActorId>()+2*size_of::<Arc<P>>();let grant=cx.retained_grant();let d=RetirementDemand{copy_bytes:copy,depth:1,..Default::default()};if !permits(grant,d){return Turn::Yield}
         let (Some(envelope),Some(owners),Some(_))=(self.envelope.as_ref(),self.owners.as_ref(),self.actor.as_ref())else{self.fail("replay.genesis-owners-missing");return self.tick(cx)};
         let Some(factory)=owners.initial_snapshot_factory()else{self.fail("replay.initial-snapshot-factory-missing");return self.tick(cx)};
@@ -452,7 +477,7 @@ where
 
     fn seed_history(&mut self, cx: &mut StepContext<'_>, edit: usize, lane: u8, index: usize) -> Turn {
         let runtime=self.runtime.as_mut().expect("original causal runtime");let dag=runtime.dag.as_mut().expect("original causal owner");let demand=dag.backing_admission_demands();
-        if demand.capacity_bytes!=0{let grant=cx.retained_grant();let mut output=None;let result=built(cx,&mut output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||Ok(((),dag.admit_backing_step(grant))));if let Err(error)=result{self.original_failure=Some(error);self.phase=Phase::RetireFault;}return Turn::Yield}
+        self.unit_out=self.unit_out.filter(|_|demand.capacity_bytes!=0);if demand.capacity_bytes!=0{let grant=cx.retained_grant();let result=built(cx,&mut self.construction,&mut self.construction_failure,&mut self.unit_out,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||Ok(((),dag.admit_backing_step(grant))));if let Ok(true)=result{self.unit_out=None;}if let Err(error)=result{self.original_failure=Some(error);self.phase=Phase::RetireFault;}return Turn::Yield}
         let envelope = self.envelope.as_ref().expect("replay envelope remains retained while causal history is seeded");
         let Some(entry) = envelope.vcs.edits.get(edit) else {
             self.phase = Phase::FoldSupersessions { transition: 0 };
@@ -464,11 +489,11 @@ where
         let suffix=std::str::from_utf8(&digits[at..]).unwrap();
         let next=match lane{0=>Phase::SeedHistory{edit,lane:1,index:0},1 if index<entry.forwards.len()=>Phase::SeedHistory{edit,lane,index:index+1},1=>Phase::SeedHistory{edit,lane:2,index:0},2 if index<entry.mutation_meta.len()=>Phase::SeedHistory{edit,lane,index:index+1},_=>Phase::SeedHistory{edit:edit+1,lane:0,index:0}};
         let seeded=lane==0||(lane==1&&index<entry.forwards.len());let skipped=lane==1&&authored==Some(entry.id.as_str());
-        let length=if seeded&&!skipped{authored.map_or(entry.id.len()+1+suffix.len(),str::len)}else{0};let copy=size_of::<Phase>()+size_of::<String>()+length*if authored.is_some(){1}else{2};let d=semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:length,release_bytes:0,depth:1};let mut output=None;
-        let result=built(cx,&mut output,d,||{
+        let length=if seeded&&!skipped{authored.map_or(entry.id.len()+1+suffix.len(),str::len)}else{0};let copy=size_of::<Phase>()+size_of::<String>()+length*if authored.is_some(){1}else{2};let d=semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:length,release_bytes:0,depth:1};
+        let result=built(cx,&mut self.construction,&mut self.construction_failure,&mut self.phase_out,d,||{
             if seeded&&!skipped{let mut bytes=[0u8;256];if length>bytes.len(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original causal identity exceeds its declared byte bound"))}let text=if let Some(authored)=authored{authored}else{bytes[..entry.id.len()].copy_from_slice(entry.id.as_bytes());bytes[entry.id.len()]=b'#';bytes[entry.id.len()+1..length].copy_from_slice(suffix.as_bytes());std::str::from_utf8(&bytes[..length]).unwrap()};let dag=runtime.dag.as_mut().unwrap();if dag.validate_seed(text).is_err(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original causal identity is duplicate or outside its declaration").with_retained_progress(RetainedCloneProgress{copied_items:1,copied_bytes:length,..Default::default()}))}dag.seed_applied(MutationId(text.to_owned())).unwrap_or_else(|_|unreachable!("original causal seed validated before insertion"));}
             if lane==0{runtime.observe_sequence(entry.sequence_number);}if lane==2&&index<entry.mutation_meta.len(){runtime.observe_timestamp(entry.mutation_meta[index].timestamp);}Ok((next,RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:length,..Default::default()}))});
-        match result{Ok(_)=>{if let Some(next)=output{self.phase=next;}},Err(error)=>{self.original_failure=Some(error);self.phase=Phase::RetireFault;}}Turn::Yield
+        match result{Ok(true)=>{if let Some(next)=self.phase_out.take(){self.phase=next;}},Ok(false)=>{},Err(error)=>{self.original_failure=Some(error);self.phase=Phase::RetireFault;}}Turn::Yield
     }
 
     pub fn fold(&mut self,cx:&mut StepContext<'_>,_grant:RetainedCloneGrant,position:usize,edit:usize,mutation:usize)->Turn{
@@ -492,42 +517,52 @@ where
         let Some(digest)=self.effective_digest.digest()else{if cx.fuel_remaining()==0{return Turn::Yield}let turn=self.effective_digest.advance::<P,M>(entry,&self.runtime.as_ref().expect("original effective commit runtime").supersessions,digest,cx.retained_grant());return self.receive_digest_turn(cx,turn)};
         let key=envelope.vcs.edits.key_at(edit).expect("original commit ledger key");let runtime=self.runtime.as_mut().expect("original commit runtime");
         let demand=match runtime.commit_metadata_demands(entry,key,digest,redo){Ok(value)=>value,Err(error)=>return self.refuse(cx,error)};
-        let grant=cx.retained_grant();let mut complete=None;let result=built(cx,&mut complete,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||runtime.advance_commit_metadata(entry,key,digest,redo,grant));
-        match result{Ok(true)if complete==Some(true)=>{self.commit_ready=true;Turn::Yield},Ok(_)=>Turn::Yield,Err(error)=>{self.original_failure=Some(error);self.phase=Phase::RetireFault;Turn::Yield}}
+        let grant=cx.retained_grant();let result=built(cx,&mut self.construction,&mut self.construction_failure,&mut self.commit_out,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||runtime.advance_commit_metadata(entry,key,digest,redo,grant));
+        match result{Ok(true)=>{if self.commit_out.take()==Some(true){self.commit_ready=true;}Turn::Yield},Ok(false)=>Turn::Yield,Err(error)=>{self.original_failure=Some(error);self.phase=Phase::RetireFault;Turn::Yield}}
     }
 
     fn build_candidate(&mut self,cx:&mut StepContext<'_>)->Turn{
         let Some(candidate_generation)=self.generation.0.checked_add(1)else{self.fail("replay.generation-exhausted");return Turn::Yield};
         let Some(runtime)=self.runtime.as_ref()else{self.fail("replay.candidate-owners-missing");return Turn::Yield};let mut demand=match ArtifactStore::<P,M>::initialized_runtime_adoption_demands(self.envelope.as_ref().expect("original candidate envelope remains resident"),runtime){Ok(value)=>value,Err(error)=>return self.refuse(cx,error)};demand.copy_bytes=match demand.copy_bytes.checked_add(size_of::<Box<ArtifactStore<P,M>>>()){Some(bytes)=>bytes,None=>return self.refuse(cx,ValueError::literal(ValueRefusalKind::OwnershipLimit,"native candidate pointer extent overflow"))};demand.capacity_bytes=match demand.capacity_bytes.checked_add(size_of::<ArtifactStore<P,M>>()){Some(bytes)=>bytes,None=>return self.refuse(cx,ValueError::literal(ValueRefusalKind::OwnershipLimit,"native candidate allocation extent overflow"))};
-        let result=built(cx,&mut self.candidate,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||{let envelope=self.envelope.take().expect("original candidate envelope");let runtime=self.runtime.take().expect("original candidate runtime");let owners=self.owners.take().expect("original candidate owner catalog");drop(self.factory.take());let candidate=Box::new(ArtifactStore::from_initialized_runtime_with_owners(envelope,runtime,candidate_generation,owners));Ok((candidate,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))});
+        let result=built(cx,&mut self.construction,&mut self.construction_failure,&mut self.candidate,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||{let envelope=self.envelope.take().expect("original candidate envelope");let runtime=self.runtime.take().expect("original candidate runtime");let owners=self.owners.take().expect("original candidate owner catalog");drop(self.factory.take());let candidate=Box::new(ArtifactStore::from_initialized_runtime_with_owners(envelope,runtime,candidate_generation,owners));Ok((candidate,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))});
         match result{Ok(true)=>{self.phase=Phase::Complete;Turn::Complete},Ok(false)=>Turn::Yield,Err(error)=>{self.original_failure=Some(error);self.phase=Phase::RetireFault;Turn::Yield}}
     }
 
     fn retire_native(&mut self,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
+        if self.construction_failure.is_none()&&self.construction.has_failure(){match self.construction.take_failure_into_step(&mut self.construction_failure,cx){Ok(true)=>return Ok(false),Ok(false)=>{},Err(error)=>{self.original_failure=Some(error);return Ok(false)}}}
+        if !self.construction.terminal_is_empty(){match self.construction.close_step(cx){Ok(_)=>{},Err(error)=>{self.original_failure=Some(error);return Ok(false)}}if !self.construction.terminal_is_empty(){return Ok(false)}}
         if self.supersession_native.active(){match self.supersession_native.close(cx){Ok(true)=>{},Ok(false)=>return Ok(false),Err(error)=>{self.original_failure=Some(error);return Ok(false)}}}
 
         if !self.registry_birth.terminal_is_empty(){
             self.registry_birth.begin_close();let grant=cx.retained_grant();let quote=self.registry_birth.close_demands()?;
             if self.registry_birth.terminal_is_empty(){return Ok(false);}
             if !permits(grant,quote){return Ok(false);}
-            let result=cx.with_native_retirement(|control|self.registry_birth.close_step(grant,control));
-            let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64);result?;
+            let ledger=match cx.with_native_retirement(|control|Ok(control.ledger_identity())){Ok(ledger)=>ledger,Err(error)=>{self.original_failure=Some(error.into());return Ok(false)}};
+            let birth=&mut self.registry_birth;
+            let step=semio_framework_job::close_original_effect_step(cx,quote,|effect|{let turn=match birth.close_step(ledger,effect){Ok(step)=>semio_framework_value::RetainedWorkOutcome{result:Ok(step),work:birth.last_turn_work()},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:birth.last_turn_work()}};semio_framework_value::RetainedWorkPoll::Complete(turn)});
+            if let Err(failure)=step{self.original_failure=Some(failure);}
             return Ok(false);
         }
         if !self.native.active(){return Ok(true);}
         self.native.begin_close();
         let (Some(envelope),Some(runtime),Some(owners))=(self.envelope.as_mut(),self.runtime.as_mut(),self.owners.as_ref())else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native initialization close lost original owners"));};
-        let result=self.native.close(envelope,runtime,owners,cx);if let Some(error)=self.native.take_failure(){self.original_failure=Some(error);return Ok(false)}result
+        let result=self.native.close(envelope,runtime,owners,cx);if let Some(error)=self.native.take_failure(){self.original_failure=Some(error);return Ok(false)}match result{Ok(done)=>Ok(done),Err(failure)=>{self.original_failure=Some(failure);Ok(false)}}
     }
 
     pub fn retire(&mut self, cx: &mut StepContext<'_>) -> Turn {
         match self.retire_native(cx){Ok(true)=>{},Ok(false)=>return Turn::Yield,Err(error)=>{self.original_failure=Some(error.into());return Turn::Yield;}}
-        match self.close_original(cx.retained_grant()) {
-            Ok(step) => {
+        let grant = cx.retained_grant();
+        let closed = match cx.with_original_effect(grant, |_, effect| self.close_original(effect)) {
+            Ok(Some((result, performed))) => result.map(|step| (step, performed)),
+            Ok(None) => return Turn::Yield,
+            Err(error) => Err(error),
+        };
+        match closed {
+            Ok((step, performed)) => {
                 if cx.consume_retained(step.progress()).is_err() {
                     return Turn::Yield;
                 }
-                cx.consume_fuel(1);
+                cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX).max(1));
                 if !self.close_is_terminal() {
                     return Turn::Yield;
                 }
@@ -555,6 +590,9 @@ where
         if self.native.active(){let (Some(envelope),Some(runtime))=(self.envelope.as_ref(),self.runtime.as_ref())else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native initialization close lost original runtime"));};return self.native.close_demands(envelope,runtime,body);}
         if let Some(active) = self.active.as_ref() {
             return nested(artifact_retirement_box_demands(active, body)?);
+        }
+        if self.construction_failure.is_some() {
+            return nested(semio_os_store_read::artifact_retirement_owned_birth_demands(&self.construction_failure)?);
         }
         if let Some(runtime) = self.runtime.as_ref() {
             return nested(runtime.initialization_retirement_demands(body)?);
@@ -604,7 +642,8 @@ where
         Ok(Default::default())
     }
 
-    fn close_original(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_original(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.close_is_terminal() {
             return Ok(RetainedCloneStep::Complete(empty));
@@ -621,11 +660,14 @@ where
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
         if self.active.is_some() {
-            return artifact_retirement_box_close_step(&mut self.active, child).result.map(|step| RetainedCloneStep::Progress(step.progress()));
+            return semio_os_store_read::settle_close_poll(artifact_retirement_box_close_step(&mut self.active, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress()));
+        }
+        if self.construction_failure.is_some() {
+            return semio_os_store_read::artifact_retirement_admit_owned(&mut self.construction_failure, &mut self.active, &mut effect.nested(child)).result;
         }
         if let Some(runtime) = self.runtime.as_mut() {
             let factory = self.factory.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "replay runtime lost its snapshot factory"))?;
-            let step = runtime.close_step(factory, child)?;
+            let step = runtime.close_step(factory, &mut effect.nested(child))?;
             if runtime.terminal_is_empty() {
                 drop(self.runtime.take());
             }
@@ -645,12 +687,12 @@ where
         }
         if let Some(candidate) = self.candidate.as_mut() {
             if candidate.close_owned_store_terminal_is_empty(){drop(self.candidate.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..empty}));}
-            let step = candidate.close_owned_store_step(child)?;
+            let step = semio_os_store_read::settle_close_poll(candidate.close_owned_store_step(&mut effect.nested(child)))?;
             let step = admit_retained_clone_close(child, step, candidate.close_owned_store_terminal_is_empty(), "replay initializer candidate store")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.envelope_retirement.is_some() {
-            return artifact_retirement_box_close_step(&mut self.envelope_retirement, child).result.map(|step| RetainedCloneStep::Progress(step.progress()));
+            return semio_os_store_read::settle_close_poll(artifact_retirement_box_close_step(&mut self.envelope_retirement, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.envelope.is_some() {
             if self.owners.is_none() {
@@ -670,7 +712,7 @@ where
             }
             let owners = self.owners.as_mut().expect("replay initializer owner catalog");
             if !owners.constructor_is_complete() {
-                return owners.admit_constructor(child).map(RetainedCloneStep::Progress).map_err(|(error, progress)| error.with_retained_progress(progress));
+                return owners.admit_constructor(&mut effect.nested(child)).map(RetainedCloneStep::Progress).map_err(|(error, progress)| error.with_retained_progress(progress));
             }
             let placement = size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>();
             let child = RetainedCloneGrant { maximum_copy_bytes: child.maximum_copy_bytes - placement, ..child };
@@ -694,18 +736,18 @@ where
                 drop(self.owners.take());
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
             }
-            let step = owners.close_uninstalled_owners_step(child)?;
+            let step = owners.close_uninstalled_owners_step(&mut effect.nested(child))?;
             return admit_retained_clone_close(child, step, owners.uninstalled_owners_terminal_is_empty(), "replay initializer original catalog").map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.index_open {
-            let step=self.edit_index.retire_step(grant)?;self.index_open=!matches!(step,RetainedCloneStep::Complete(_));return Ok(RetainedCloneStep::Progress(step.progress()));
+            let step=self.edit_index.retire_step(&mut effect.nested(child))?;self.index_open=!matches!(step,RetainedCloneStep::Complete(_));return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(actor) = self.actor_close.as_mut() {
             if actor.terminal_is_empty() {
                 drop(self.actor_close.take());
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
             }
-            let step = actor.step(child)?;
+            let step = semio_os_store_read::settle_close_poll(actor.step(&mut effect.nested(child)))?;
             return admit_retained_clone_close(child, step, actor.terminal_is_empty(), "replay initializer original actor").map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(actor) = self.actor.take() {
@@ -796,9 +838,9 @@ where
         if !self.retire_native(cx)?{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.terminal_is_empty(){return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}
         let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=retired(cx,demand,|grant|{
+        let step=retired_effect(cx,demand,|effect|{
         self.begin_close();
-        let step = self.close_original(grant)?;
+        let step = self.close_original(effect)?;
         if self.close_is_terminal() {
             self.terminal_handoff = true;
             return Ok(RetainedCloneStep::Complete(step.progress()));
@@ -821,7 +863,7 @@ where
     C:DocumentStoreOwnerProducer<P,M>,
 {
     fn close_core_is_terminal(&self) -> bool {
-        self.supersession_native.terminal_is_empty() && self.registry_birth.terminal_is_empty() && self.native.terminal_is_empty() && self.envelope.is_none()
+        self.supersession_native.terminal_is_empty() && self.construction.terminal_is_empty() && self.construction_failure.is_none() && self.registry_birth.terminal_is_empty() && self.native.terminal_is_empty() && self.envelope.is_none()
             && self.owners.is_none()
             && self.catalog.is_none()
             && self.runtime.is_none()

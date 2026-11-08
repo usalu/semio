@@ -1,6 +1,6 @@
 //! 🧺️ Ranked fixed-width membership shares the original numeric page owner.
 use super::{NumericIndex,NumericInsertCursor};
-use crate::retirement::{RetireOwned,RetirementCursor};
+use crate::retirement::RetireOwned;
 
 pub struct NumericSet<K>{pub(super)index:NumericIndex<K,()>}
 impl<K> Default for NumericSet<K>{fn default()->Self{Self{index:NumericIndex::default()}}}
@@ -16,12 +16,12 @@ impl<K:Copy+Ord> NumericSet<K>{
  pub fn iter(&self)->NumericSetIter<'_,K>{NumericSetIter{set:self,front:0,back:self.len()}}
  pub fn key_at_rank(&self,rank:usize)->Option<&K>{self.index.entry_at_rank(rank).map(|(key,())|key)}
  pub fn begin_insert(&self,key:K)->NumericInsertCursor<K,()>{NumericInsertCursor::new(key,())}
- pub fn insert_step(&mut self,cursor:&mut NumericInsertCursor<K,()>,units:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<bool,crate::ValueError>{cursor.step(&mut self.index,units,control)}
+ pub fn insert_step(&mut self,cursor:&mut NumericInsertCursor<K,()>,units:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->Result<bool,crate::ValueError>{cursor.step(&mut self.index,units,control,effect)}
  pub fn terminal_is_empty(&self)->bool{self.index.terminal_is_empty()}
  pub fn insert_capacity_byte_demand(&self,cursor:&NumericInsertCursor<K,()>)->Result<usize,crate::ValueError>{cursor.next_capacity_byte_demand(&self.index)}
  pub fn insert_depth_demand(&self,cursor:&NumericInsertCursor<K,()>)->Result<usize,crate::ValueError>{cursor.next_depth_demand(&self.index)}
  pub fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value_persistent::list::PagedListError>{self.index.next_close_release_byte_demand()}
- pub fn close_copy_step(&mut self,maximum_items:usize,maximum_release_bytes:usize)->Result<semio_framework_value_persistent::list::PagedListProgress,semio_framework_value_persistent::list::PagedListError>{self.index.close_copy_step(maximum_items,maximum_release_bytes)}
+ pub fn close_copy_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<semio_framework_value_persistent::list::PagedListReleaseOutcome,semio_framework_value_persistent::list::PagedListReleaseFailure>{self.index.close_copy_step(effect)}
 }
 impl<K:Copy+Ord> Clone for NumericSet<K>{fn clone(&self)->Self{self.iter().copied().collect()}}
 impl<K:Copy+Ord+std::fmt::Debug> std::fmt::Debug for NumericSet<K>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_set().entries(self.iter()).finish()}}
@@ -35,4 +35,4 @@ pub struct NumericSetIter<'a,K>{set:&'a NumericSet<K>,front:usize,back:usize}
 impl<'a,K:Copy+Ord> Iterator for NumericSetIter<'a,K>{type Item=&'a K;fn next(&mut self)->Option<Self::Item>{if self.front==self.back{return None}let key=self.set.index.entry_at_rank(self.front).map(|(key,())|key);self.front+=1;key}fn size_hint(&self)->(usize,Option<usize>){let remaining=self.back-self.front;(remaining,Some(remaining))}}
 impl<K:Copy+Ord> DoubleEndedIterator for NumericSetIter<'_,K>{fn next_back(&mut self)->Option<Self::Item>{if self.front==self.back{return None}self.back-=1;self.set.index.entry_at_rank(self.back).map(|(key,())|key)}}
 impl<K:Copy+Ord> ExactSizeIterator for NumericSetIter<'_,K>{}
-impl<K:RetireOwned> RetireOwned for NumericSet<K>{fn retirement(self)->Box<dyn RetirementCursor>{self.index.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.index.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()}}
+impl<K:RetireOwned> RetireOwned for NumericSet<K>{type RetirementCursor=<NumericIndex<K,()> as RetireOwned>::RetirementCursor;fn retirement_seed(self)->Self::RetirementCursor{self.index.retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{self.index.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()}}

@@ -52,10 +52,11 @@ pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
 }
 
 /// 🧱️ One graph-backing retirement turn with current credit and physical release split.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GraphEngineBackingRetirementStep {
     Blocked,
     Pending { credited_bytes: usize, released_bytes: usize },
+    Refused(semio_framework_value::ValueError),
     Complete,
 }
 
@@ -160,7 +161,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     /// 🧹️ Releases one empty engine vector backing only when the caller grants its full retained capacity.
-    pub fn close_backing_page(&mut self, maximum_bytes: usize) -> GraphEngineBackingRetirementStep {
+    pub fn close_backing_page(&mut self, maximum_bytes: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> GraphEngineBackingRetirementStep {
         if !self.terminal_is_empty() {
             return GraphEngineBackingRetirementStep::Blocked;
         }
@@ -186,7 +187,18 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         retire_backing!(&mut self.area_screen_points, Point);
         for selection in [&mut self.selection,&mut self.preselect,&mut self.preselect_removed,&mut self.area_initial]{
             for values in [&mut selection.edge_ids,&mut selection.handle_ids,&mut selection.node_ids]{
-                if !values.terminal_is_empty(){let bytes=values.next_close_release_byte_demand().expect("finite numeric selection backing demand");let credited_bytes=maximum_bytes.min(bytes.saturating_sub(self.retirement_backing_credited_bytes));self.retirement_backing_credited_bytes+=credited_bytes;if self.retirement_backing_credited_bytes<bytes{return GraphEngineBackingRetirementStep::Pending{credited_bytes,released_bytes:0}}let progress=values.close_copy_step(1,self.retirement_backing_credited_bytes).expect("admitted numeric selection backing release");if progress.progressed{self.retirement_backing_credited_bytes=0;}return GraphEngineBackingRetirementStep::Pending{credited_bytes,released_bytes:progress.released_allocation_bytes};}
+                if !values.terminal_is_empty(){
+                    let bytes=match values.next_close_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return GraphEngineBackingRetirementStep::Refused(error.into())};
+                    let credited_bytes=maximum_bytes.min(bytes.saturating_sub(self.retirement_backing_credited_bytes));
+                    self.retirement_backing_credited_bytes+=credited_bytes;
+                    if self.retirement_backing_credited_bytes<bytes{return GraphEngineBackingRetirementStep::Pending{credited_bytes,released_bytes:0}}
+                    return match values.close_copy_step(effect).result{
+                        Ok(semio_framework_value::PagedListReleaseOutcome::Ready(progress))=>{if progress.progressed{self.retirement_backing_credited_bytes=0;}GraphEngineBackingRetirementStep::Pending{credited_bytes,released_bytes:progress.released_allocation_bytes}},
+                        Ok(semio_framework_value::PagedListReleaseOutcome::Denied)=>GraphEngineBackingRetirementStep::Pending{credited_bytes,released_bytes:0},
+                        Err(semio_framework_value::PagedListReleaseFailure::Work(error))=>GraphEngineBackingRetirementStep::Refused(error),
+                        Err(semio_framework_value::PagedListReleaseFailure::Release(error))=>GraphEngineBackingRetirementStep::Refused(error.into()),
+                    };
+                }
             }
         }
         debug_assert_eq!(self.retirement_backing_credited_bytes, 0);

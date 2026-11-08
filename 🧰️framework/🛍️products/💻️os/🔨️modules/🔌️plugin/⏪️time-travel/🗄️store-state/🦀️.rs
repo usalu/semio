@@ -20,8 +20,8 @@ pub trait TimeTravelOwners: Send {
     fn finalizing(&self)->bool;
     fn cancel_prepared_command(&mut self);
     fn requires_original_control(&self)->bool;
-    fn retire_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<Option<RetainedCloneStep>,Fault>;
-    fn retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, Fault>;
+    fn retire_step_controlled(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<Option<RetainedCloneStep>,Fault>;
+    fn retire_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<RetainedCloneStep>, Fault>;
     fn as_any(&self) -> &dyn std::any::Any;
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 }
@@ -51,7 +51,7 @@ pub  struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>+::protocol::Cold
     pub(super) preview_input: Option<protocol::InputReplacement>,
     pub(super) replay: Option<store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>>,
     pub(super) finished: Option<store::os_store::replay::EditReplayResult<P, Mu>>,
-    pub(super) commit_request:Option<store::HistoryFinalization>,pub(super) commit_publisher:Option<Box<semio_os_store_engine_replay::OriginalReplayPublication<P,Mu>>>,pub(super) commit_receipt:Option<semio_os_store_engine_replay::OriginalReplayPublicationReceipt>,pub(super) commit_outcome:Option<TimeTravelCommit>,pub(super) commit_failure:Option<semio_framework_job::OriginalTurnFailure>,pub(super) commit_request_close:semio_framework_value::retained_clone::RetainedCloneClose,pub(super) commit_stage:u8,pub(super) commit_closing:bool,
+    pub(super) commit_request:Option<store::HistoryFinalization>,pub(super) commit_resident:semio_os_store_engine_replay::OriginalReplayResident,commit_publisher:Option<Box<semio_os_store_engine_replay::OriginalReplayPublication<P,Mu>>>,pub(super) commit_receipt:Option<semio_os_store_engine_replay::OriginalReplayPublicationReceipt>,pub(super) commit_outcome:Option<TimeTravelCommit>,pub(super) commit_failure:Option<semio_framework_job::OriginalTurnFailure>,pub(super) commit_request_close:semio_framework_value::retained_clone::RetainedCloneClose,pub(super) commit_stage:u8,pub(super) commit_closing:bool,
     pub(super) head: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
     pub(super) snapshot_aliases: ManuallyDrop<[Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>; 8]>,
     pub(super) snapshot_issuers: ManuallyDrop<Option<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>>,
@@ -278,7 +278,7 @@ where
 
     /// 🏗️ Owners at rest, labelling the store's operations with `label_of`.
     pub fn new(label_of: fn(&Mu) -> LocalizedLabel) -> Self {
-        Self { discard_effects:None,label_of, staged: None, kind: None,kind_fallback:None,staged_fallback:None, preview: None, preview_job: None, preview_input: None, preview_base:None,preview_original:None,preview_source:None,preview_native_input:None,preview_derived:None,preview_input_close:None,preview_original_close:None,preview_cancelled:false,preview_job_closing:false,replay_cancelled:false,finished_cancelled:false,replay: None, finished: None, commit_request:None,commit_publisher:None,commit_receipt:None,commit_outcome:None,commit_failure:None,commit_request_close:Default::default(),commit_stage:0,commit_closing:false, head: None, snapshot_aliases: ManuallyDrop::new(std::array::from_fn(|_|None)), snapshot_issuers: ManuallyDrop::new(None), snapshot_close: ManuallyDrop::new(None), snapshot_issuer_close: std::array::from_fn(|_|None), retirements: VecDeque::new(), discarded: Vec::new(), discarded_pending: None, discarded_active: None, discarded_factory: None, discarded_factory_close: None }
+        Self { discard_effects:None,label_of, staged: None, kind: None,kind_fallback:None,staged_fallback:None, preview: None, preview_job: None, preview_input: None, preview_base:None,preview_original:None,preview_source:None,preview_native_input:None,preview_derived:None,preview_input_close:None,preview_original_close:None,preview_cancelled:false,preview_job_closing:false,replay_cancelled:false,finished_cancelled:false,replay: None, finished: None, commit_request:None,commit_resident:Default::default(),commit_publisher:None,commit_receipt:None,commit_outcome:None,commit_failure:None,commit_request_close:Default::default(),commit_stage:0,commit_closing:false, head: None, snapshot_aliases: ManuallyDrop::new(std::array::from_fn(|_|None)), snapshot_issuers: ManuallyDrop::new(None), snapshot_close: ManuallyDrop::new(None), snapshot_issuer_close: std::array::from_fn(|_|None), retirements: VecDeque::new(), discarded: Vec::new(), discarded_pending: None, discarded_active: None, discarded_factory: None, discarded_factory_close: None }
     }
 
     /// 🪞️ The snapshot the session shows at `stage`: the draft preview while editing; while replaying that preview — or,
@@ -406,7 +406,14 @@ where
                     Err(_) => TimeTravelStoreOutput::ReplayStarted(false),
                 }
             }
-            TimeTravelStoreCommand::CloseOriginalSources { grant } => {let needs=self.store_sources_require_original_control();let result=if let Some(cx)=receiving{let result=if needs{cx.with_native_retirement(|control|self.close_original_store_sources_with_control(store,grant,Some(control)))}else{self.close_original_store_sources_with_control(store,grant,None)};let work=self.preview_job.as_mut().and_then(|owner|owner.take_preparation_work()).or_else(||self.replay.as_mut().and_then(|owner|owner.take_preparation_work()));if let Some(work)=work{cx.consume_fuel(work)}result}else if needs{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history source closure requires its original Job decoder").into_fault())}else{self.close_original_store_sources_with_control(store,grant,None)};TimeTravelStoreOutput::OriginalProgress(result.map_err(ValueError::into_fault)?)},
+            TimeTravelStoreCommand::CloseOriginalSources { grant } => {
+                let cx=receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history source closure requires its original Job receiving context").into_fault())?;
+                let needs=self.store_sources_require_original_control();
+                let outcome=cx.with_original_effect(grant,|cx,effect|if needs{cx.with_native_retirement(|control|self.close_original_store_sources_with_control(store,effect,Some(control)))}else{self.close_original_store_sources_with_control(store,effect,None)}).map_err(ValueError::into_fault)?;
+                let work=self.preview_job.as_mut().and_then(|owner|owner.take_preparation_work()).or_else(||self.replay.as_mut().and_then(|owner|owner.take_preparation_work()));
+                let result=match outcome{Some((result,performed))=>{if performed==0{if let Some(work)=work{cx.consume_fuel(work)}}else{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX))}result},None=>Ok(Default::default())};
+                TimeTravelStoreOutput::OriginalProgress(result.map_err(ValueError::into_fault)?)
+            },
             TimeTravelStoreCommand::CancelReplay => {
                 self.cancel_replay(store)?;
                 TimeTravelStoreOutput::Done
@@ -500,12 +507,13 @@ where
 
     /// ♻️ Returns genuine history loans to the same Store ledger under original incoming cleanup grants.
     fn store_sources_require_original_control(&self)->bool{self.preview_job.as_ref().is_some_and(|preview|preview.history_source.is_some()||preview.derived_operation.as_ref().is_some_and(|owner|owner.requires_original_control()))||self.replay.as_ref().is_some_and(|replay|replay.history_source.is_some()||replay.replacement_operation.is_some()||replay.failed_operation.as_ref().is_some_and(|owner|owner.requires_original_control())||replay.replay.as_ref().is_some_and(|owner|owner.requires_original_control()))}
-    fn close_original_store_sources_with_control(&mut self,store:&mut ArtifactStore<P,Mu>,grant:RetainedCloneGrant,mut control:Option<&mut dyn semio_framework_value::OriginalRetirementControl>)->Result<RetainedCloneProgress,ValueError>{
+    fn close_original_store_sources_with_control(&mut self,store:&mut ArtifactStore<P,Mu>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,mut control:Option<&mut dyn semio_framework_value::OriginalRetirementControl>)->Result<RetainedCloneProgress,ValueError>{
+      let grant=effect.grant();
       let preview=(self.preview_cancelled||self.preview_job_closing)&&self.preview_job.is_some();let replay=self.replay_cancelled&&self.replay.is_some();let finished=self.finished_cancelled&&self.finished.is_some();if !preview&&!replay&&!finished{return Ok(Default::default())}
       if self.retirements.len()==self.retirements.capacity(){let capacity=(self.retirements.len()+1)*size_of::<Box<dyn ErasedSnapshotRetirement>>();let released=self.retirements.capacity()*size_of::<Box<dyn ErasedSnapshotRetirement>>();if grant.maximum_items==0||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<released||grant.maximum_depth==0{return Ok(Default::default())}self.retirements.try_reserve_exact(1).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"history cleanup queue allocation refused"))?;return Ok(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:self.retirements.capacity()*size_of::<Box<dyn ErasedSnapshotRetirement>>(),released_bytes:released,..Default::default()})}
       if finished{if let Some((owner,p))=store.retire_finished_history_replay(&mut self.finished,grant)?{self.retirements.push_back(owner);self.finished_cancelled=false;return Ok(p)}return Ok(Default::default())}
-      if preview{if let Some((owner,p))=match control.as_mut(){Some(control)=>store.retire_derived_history_preview_controlled(&mut self.preview_job,grant,*control),None=>store.retire_derived_history_preview(&mut self.preview_job,grant)}?{self.retirements.push_back(owner);return Ok(p)}return Ok(self.preview_job.as_mut().map_or(Default::default(),|owner|owner.take_preparation_receipt()))}
-      if let Some((owner,p))=match control.as_mut(){Some(control)=>store.retire_derived_report_replay_controlled(&mut self.replay,grant,*control),None=>store.retire_derived_report_replay(&mut self.replay,grant)}?{self.retirements.push_back(owner);return Ok(p)}Ok(self.replay.as_mut().map_or(Default::default(),|owner|owner.take_preparation_receipt()))
+      if preview{if let Some((owner,p))=match control.as_mut(){Some(control)=>store.retire_derived_history_preview_controlled(&mut self.preview_job,effect,*control),None=>store.retire_derived_history_preview(&mut self.preview_job,effect)}?{self.retirements.push_back(owner);return Ok(p)}return Ok(self.preview_job.as_mut().map_or(Default::default(),|owner|owner.take_preparation_receipt()))}
+      if let Some((owner,p))=match control.as_mut(){Some(control)=>store.retire_derived_report_replay_controlled(&mut self.replay,effect,*control),None=>store.retire_derived_report_replay(&mut self.replay,effect)}?{self.retirements.push_back(owner);return Ok(p)}Ok(self.replay.as_mut().map_or(Default::default(),|owner|owner.take_preparation_receipt()))
     }
     /// 🖼️ One bounded prefix slice; only a completed preview displaces the last complete projection.
     fn step_preview(&mut self,store:&mut ArtifactStore<P,Mu>,deadline_us:u64,clock:fn()->Option<u64>,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<TimeTravelPreviewStep,Fault>{

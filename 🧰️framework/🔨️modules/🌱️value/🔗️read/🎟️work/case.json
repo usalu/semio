@@ -21,6 +21,7 @@
   ],
   "deniedWork": 0,
   "cachedWork": 0,
+  "refusedSourceAttemptWork": 2,
   "readAliasReturnWork": 1,
   "closingChildHandoffWork": 1,
   "completedChildHeaderWork": 1,

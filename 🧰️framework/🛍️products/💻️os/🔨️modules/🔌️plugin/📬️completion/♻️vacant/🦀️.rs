@@ -1,5 +1,5 @@
 //! 📦️ Vacant opaque collection backing remains original until a granted physical release.
-use semio_framework_value::{retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::RetainedCloneGrant};
+use semio_framework_value::{retirement::{RetireOwned,RetirementCursor,RetirementStep},RetainedAllocationEffect};
 use std::{mem::ManuallyDrop,collections::VecDeque};
 pub struct VacantVec<T:Send+'static>(pub Vec<T>);
 pub struct VacantDeque<T:Send+'static>(pub VecDeque<T>);
@@ -12,13 +12,13 @@ struct Cursor<V:Vacant>{original:ManuallyDrop<Option<V>>}
 impl<V:Vacant> RetirementCursor for Cursor<V>{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;let Some(original)=self.original.as_ref()else{return Ok(Default::default())};if !original.empty(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"opaque collection retains live payloads"))}let release_bytes=original.bytes().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"opaque collection release overflow"))?;Ok(semio_framework_value::RetirementDemand{release_bytes,depth:1,..Default::default()})}
 
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let Some(original)=self.original.as_ref()else{return RetirementStep::Complete(0);};if !original.empty(){return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"opaque collection still retains original live payloads"),0);}let Some(bytes)=original.bytes()else{return RetirementStep::BudgetExhausted;};if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(self.original.take());RetirementStep::Bytes(bytes)}
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();let Some(original)=self.original.as_ref()else{return RetirementStep::Complete(0);};if !original.empty(){return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"opaque collection still retains original live payloads").into(),0);}let Some(bytes)=original.bytes()else{return RetirementStep::BudgetExhausted;};if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(self.original.take());RetirementStep::Bytes(bytes)}
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_close_byte_demand(&self)->Option<usize>{self.original.as_ref().map_or(Some(0),|value|if value.empty(){value.bytes()}else{None})}
  fn next_birth_bytes(&self,_copy:usize)->Option<usize>{Some(0)}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl<V:Vacant> Drop for Cursor<V>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"vacant opaque backing reached Drop before actual release");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.original);}}}}
-macro_rules! vacant{($type:ident)=>{impl<T:Send+'static> RetireOwned for $type<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor{original:ManuallyDrop::new(Some(self))})}fn retirement_birth_bytes(&self)->Option<usize>{self.empty().then_some(std::mem::size_of::<Cursor<Self>>())}fn controlled_retirement_supported()->bool{true}}};}
+macro_rules! vacant{($type:ident)=>{impl<T:Send+'static> RetireOwned for $type<T>{type RetirementCursor=Cursor<Self>;fn retirement_seed(self)->Self::RetirementCursor{Cursor{original:ManuallyDrop::new(Some(self))}}fn retirement_birth_bytes(&self)->Option<usize>{self.empty().then_some(std::mem::size_of::<Cursor<Self>>())}fn controlled_retirement_supported()->bool{true}}};}
 vacant!(VacantVec);vacant!(VacantDeque);
 

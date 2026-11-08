@@ -144,9 +144,9 @@ impl BooleanJob {
         let validation=self.validation.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original boolean result lost its validation producer"))?;
         let grant=cx.retained_grant();let demand=validation.funded_demands(body)?;
         if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(BooleanStep::Working(self.progress()))}
-        cx.consume_fuel(1);
-        let(receipt,units)=validation.step_funded(body,1,grant).map_err(|primary|semio_framework_job::OriginalTurnFailure::debit_original(primary,cx))?;
-        cx.consume_retained(receipt).map_err(|primary|semio_framework_job::OriginalTurnFailure::from(primary.with_retained_progress(receipt)))?;
+        let Some((outcome,performed))=cx.with_original_effect(grant,|_,effect|validation.step_funded(body,1,effect))?else{return Ok(BooleanStep::Working(self.progress()))};
+        let mut units=0;
+        semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result:outcome.map(|(receipt,step_units)|{units=step_units;semio_framework_value::retained_clone::RetainedCloneStep::Progress(receipt)}),work:performed.max(1)})?;
         self.units_done+=units;self.units_total=self.units_total.max(self.units_done.saturating_add(validation.progress().units_total.saturating_sub(validation.progress().units_done)));
         Ok(BooleanStep::Working(self.progress()))
     }

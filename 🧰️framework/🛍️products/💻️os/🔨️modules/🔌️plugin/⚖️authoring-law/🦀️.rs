@@ -31,7 +31,7 @@ where
         if store.close_owned_terminal_is_empty() { return; }
         let demand = store.close_owned_demands(grant.maximum_copy_bytes).expect("current independent store close frontier");
         let turn = RetainedCloneGrant { maximum_depth: demand.depth.max(grant.maximum_depth), ..grant };
-        let step = store.close_owned_step(turn).expect("a law store closes under its exact owner grant");
+        let step = store.close_owned_step_cold(turn).expect("a law store closes under its exact owner grant");
         assert!(step.progress().fits(turn));
         stalled = if step.progress() == RetainedCloneProgress::default() { stalled + 1 } else { 0 };
         assert!(stalled < 4096 || std::thread::panicking(), "law store close stalled on a fully funded turn");

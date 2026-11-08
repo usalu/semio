@@ -340,7 +340,13 @@ impl MountedState {
     /// 🧲️ Runs the `build csr` stage of `step`.
     fn stage_build_csr(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
         Ok({
-            match self.csr_build.as_mut().expect("CSR builder retained").step_one_funded(cx.retained_grant()).and_then(|(complete, progress)| {
+            let grant = cx.retained_grant();
+            let build = self.csr_build.as_mut().expect("CSR builder retained");
+            let stepped = match cx.with_original_effect(grant, |_, effect| build.step_one_in(effect))? {
+                None => Ok((false, Default::default())),
+                Some((result, performed)) => { semio_framework_job::receive_original_retained_work(cx, semio_framework_value::RetainedWorkOutcome { result: Ok::<_, semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(Default::default())), work: performed })?; result }
+            };
+            match stepped.and_then(|(complete, progress)| {
                 cx.consume_retained(progress).map_err(|_| b"fem2d.csr-grant" as &'static [u8])?;
                 Ok(complete)
             }) {

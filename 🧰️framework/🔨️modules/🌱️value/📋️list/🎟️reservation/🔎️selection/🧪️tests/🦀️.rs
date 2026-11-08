@@ -16,7 +16,7 @@ fn reservation_selection_zero_sized_payload_has_no_allocation_attempt(){
   let(p,heap)=observe(||owner.reserve_selected(&selected,g,selected.reserve_work_demand(),&mut actual).unwrap());assert!(p.progressed);assert_eq!(heap,(p.allocated_bytes,0));assert_eq!(actual,if d.capacity_bytes==0{None}else{Some(p.allocated_bytes)});
  }
  assert_eq!(owner.capacity(),1);
- while !owner.terminal_is_empty(){assert!(owner.release_empty_page(usize::MAX).unwrap().progressed);}
+ while !owner.terminal_is_empty(){assert!(owner.release_empty_page_granted(usize::MAX).unwrap().progressed);}
 }
 #[test]
 fn reservation_selection_execution_keeps_denied_and_stale_original_pages(){
@@ -33,7 +33,7 @@ fn reservation_selection_execution_keeps_denied_and_stale_original_pages(){
   let mut stale=None;let(p,heap)=observe(||owner.reserve_selected(&selection,g,work,&mut stale));assert_eq!(p.unwrap_err().kind,PagedListRefusalKind::InvariantViolated);assert_eq!(heap,(0,0));assert_eq!(stale,None);
  }
  assert_eq!(owner.capacity(),1);
- while !owner.terminal_is_empty(){assert!(owner.release_empty_page(usize::MAX).unwrap().progressed);}
+ while !owner.terminal_is_empty(){assert!(owner.release_empty_page_granted(usize::MAX).unwrap().progressed);}
 }
 fn observe<T>(run:impl FnOnce()->T)->(T,(usize,usize)){crate::observe_retirement_allocations(run)}
 #[test]
@@ -41,21 +41,21 @@ fn reservation_selection_matches_neutral_frontiers_and_work_refusals(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let mut owner=PagedList::<u64,4096>::with_page_items(1);
-  for value in 0..row["rows"].as_u64().unwrap(){while !owner.has_reserved_slot(){let bytes=owner.next_allocation_bytes().unwrap();owner.reserve_one(bytes,&mut None).unwrap();}owner.push_reserved(value).unwrap();}
-  for _ in 0..row["extraReserveSteps"].as_u64().unwrap(){let bytes=owner.next_allocation_bytes().unwrap();owner.reserve_one(bytes,&mut None).unwrap();}
+  for value in 0..row["rows"].as_u64().unwrap(){while !owner.has_reserved_slot(){let bytes=owner.next_allocation_bytes().unwrap();owner.reserve_one_granted(bytes,&mut None).unwrap();}owner.push_reserved(value).unwrap();}
+  for _ in 0..row["extraReserveSteps"].as_u64().unwrap(){let bytes=owner.next_allocation_bytes().unwrap();owner.reserve_one_granted(bytes,&mut None).unwrap();}
   let limit=row["limit"].as_u64().unwrap()as usize;let quote=PagedList::<u64,4096>::reservation_selection_work_demand();
   let before=(owner.len(),owner.capacity(),owner.allocated_bytes(),owner.root.as_ptr());
   for denied in [0,quote-1]{let(turn,heap)=observe(||owner.select_reservation(limit,denied));assert_eq!(heap,(0,0));assert_eq!(turn.work,0);assert!(turn.result.unwrap().is_none());assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes(),owner.root.as_ptr()),before);}
-  let(turn,heap)=observe(||owner.select_reservation(limit,quote));assert_eq!(heap,(0,0));assert!(turn.work<=quote);assert_eq!(turn.work,row["selectionWork"].as_u64().unwrap());let selected=turn.result.unwrap();
+  let(turn,heap)=observe(||owner.select_reservation(limit,quote));assert_eq!(heap,(0,0));assert!(turn.work<=u128::from(quote));assert_eq!(turn.work,u128::from(row["selectionWork"].as_u64().unwrap()));let selected=turn.result.unwrap();
   match selected{None=>assert_eq!(row["kind"],"none"),Some(selection)=>{assert!(turn.work>0);assert_eq!(selection.kind().as_str(),row["kind"]);assert_eq!(selection.demand().depth,row["depth"].as_u64().unwrap()as usize);assert_eq!(selection.demand().copy_bytes,0);assert_eq!(selection.demand().capacity_bytes,if row["kind"]=="payload"{size_of::<u64>()}else{size_of::<Page<u64>>()});}}
   let(header_turn,heap)=observe(||owner.inspect_selection_header(1));assert_eq!(heap,(0,0));assert_eq!(header_turn.work,1);let header=header_turn.result.unwrap().unwrap();let staged_quote=header.reservation_selection_work_demand(limit);
   for denied in [0,staged_quote-1]{let(turn,heap)=observe(||owner.select_reservation_from_header(&header,limit,denied));assert_eq!(heap,(0,0));assert_eq!(turn.work,0);assert!(turn.result.unwrap().is_none());}
-  let(staged,heap)=observe(||owner.select_reservation_from_header(&header,limit,staged_quote));assert_eq!(heap,(0,0));assert_eq!(staged.work,row["stagedSelectionWork"].as_u64().unwrap());assert!(staged.work<=staged_quote);
+  let(staged,heap)=observe(||owner.select_reservation_from_header(&header,limit,staged_quote));assert_eq!(heap,(0,0));assert_eq!(staged.work,u128::from(row["stagedSelectionWork"].as_u64().unwrap()));assert!(staged.work<=u128::from(staged_quote));
   match(selected,staged.result.unwrap()){(Some(a),Some(b))=>{assert_eq!(a.kind(),b.kind());assert_eq!(a.demand(),b.demand());assert_eq!(b.reserve_work_demand(),row["reserveWork"].as_u64().unwrap());},(None,None)=>{},_=>panic!("paid header changed selection")}
   assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes(),owner.root.as_ptr()),before);
   if let Some(selected)=selected{let d=selected.demand();let g=semio_framework_value_control_contract::RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:d.capacity_bytes,maximum_depth:d.depth,..Default::default()};let mut actual=None;let(p,heap)=observe(||owner.reserve_selected(&selected,g,selected.reserve_work_demand(),&mut actual).unwrap());assert!(p.progressed);assert_eq!(p.work,row["reserveWork"].as_u64().unwrap());assert_eq!(heap,(p.allocated_bytes,0));assert_eq!(actual,Some(p.allocated_bytes));}
   while !owner.is_empty(){owner.truncate_retired_last().unwrap();}
-  while !owner.terminal_is_empty(){assert!(owner.release_empty_page(usize::MAX).unwrap().progressed);}
+  while !owner.terminal_is_empty(){assert!(owner.release_empty_page_granted(usize::MAX).unwrap().progressed);}
  }
 }
 #[test]

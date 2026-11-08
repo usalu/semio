@@ -292,6 +292,7 @@ pub struct UnitSpec {
     pub dimension: Dimension,
     pub factor: f64,
 }
+semio_framework_value::artifact_retire_leaf!(&'static UnitSpec);
 
 pub const DIM_LENGTH: Dimension = Dimension { m: 1, kg: 0, s: 0, k: 0, a: 0, rad: 0 };
 pub const DIM_MASS: Dimension = Dimension { m: 0, kg: 1, s: 0, k: 0, a: 0, rad: 0 };

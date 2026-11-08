@@ -4,24 +4,11 @@ use super::{RetireOwned, RetirementCursor, RetirementStep};
 use crate::{ValueError, ValueRefusalKind, list::PagedList, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::ManuallyDrop;
 
-/// 🚦️ Keeps retained-owner exclusion inline and refuses contention without parking or allocating.
-pub struct RetainedOwnerGate<T> { occupied:std::sync::atomic::AtomicBool,value:std::cell::UnsafeCell<T> }
-unsafe impl<T:Send> Send for RetainedOwnerGate<T> {}
-unsafe impl<T:Send> Sync for RetainedOwnerGate<T> {}
-#[derive(Debug,Clone,Copy,PartialEq,Eq)]
-pub struct RetainedOwnerGateBusy;
-pub struct RetainedOwnerGateGuard<'a,T> {gate:&'a RetainedOwnerGate<T>,exclusive:std::marker::PhantomData<&'a mut T>}
-impl<T> RetainedOwnerGate<T> {
-    pub const fn new(value:T)->Self {Self{occupied:std::sync::atomic::AtomicBool::new(false),value:std::cell::UnsafeCell::new(value)}}
-    pub fn try_lock(&self)->Result<RetainedOwnerGateGuard<'_,T>,RetainedOwnerGateBusy> {
-        self.occupied.compare_exchange(false,true,std::sync::atomic::Ordering::Acquire,std::sync::atomic::Ordering::Relaxed).map(|_|RetainedOwnerGateGuard{gate:self,exclusive:std::marker::PhantomData}).map_err(|_|RetainedOwnerGateBusy)
-    }
-    pub fn get_mut(&mut self)->&mut T {self.value.get_mut()}
-    pub fn into_inner(self)->T {self.value.into_inner()}
-}
-impl<T> std::ops::Deref for RetainedOwnerGateGuard<'_,T> {type Target=T;fn deref(&self)->&T {unsafe{&*self.gate.value.get()}}}
-impl<T> std::ops::DerefMut for RetainedOwnerGateGuard<'_,T> {fn deref_mut(&mut self)->&mut T {unsafe{&mut*self.gate.value.get()}}}
-impl<T> Drop for RetainedOwnerGateGuard<'_,T> {fn drop(&mut self){self.gate.occupied.store(false,std::sync::atomic::Ordering::Release)}}
+pub use semio_framework_value_control_contract::{RetainedOwnerGate,RetainedOwnerGateBusy,RetainedOwnerGateGuard};
+
+thread_local! { static ABANDONING: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+/// 🛑️ True while an explicit abandon releases nested owners whose close protocol can no longer run, so their terminal asserts stand down.
+pub(crate) fn abandoning() -> bool { ABANDONING.with(|depth| depth.get() > 0) }
 
 /// 🏛️ Erases only the owner type while preserving each independent retirement authority.
 pub trait ErasedControlledRetirement: Send {
@@ -113,6 +100,14 @@ impl<T: RetireOwned> ControlledRetirement<T> {
     pub fn take_original(&mut self) -> Option<T> { if self.pending_cursor.is_none()&&self.cursors.terminal_is_empty() { self.value.take() } else { None } }
 
     pub fn terminal_is_empty(&self) -> bool { self.value.is_none() && self.pending_cursor.is_none() && self.cursors.terminal_is_empty() }
+    /// 🛑️ Releases a close that can no longer progress: the memory is dropped, never leaked, and the unbalanced retirement is the caller's typed refusal to report.
+    pub fn abandon(mut self) {
+        ABANDONING.with(|depth| depth.set(depth.get() + 1));
+        let released = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| unsafe { ManuallyDrop::drop(&mut self.value); ManuallyDrop::drop(&mut self.pending_cursor); ManuallyDrop::drop(&mut self.cursors); }));
+        ABANDONING.with(|depth| depth.set(depth.get() - 1));
+        std::mem::forget(self);
+        drop(released);
+    }
 
     fn cursor_reserve_demand(&self)->Result<crate::RetirementDemand,ValueError>{Ok(crate::RetirementDemand{copy_bytes:self.cursors.next_reserve_copy_byte_demand().map_err(ValueError::from)?,capacity_bytes:self.cursors.next_allocation_bytes().map_err(ValueError::from)?,depth:self.cursors.next_reserve_depth_demand().map_err(ValueError::from)?,..Default::default()})}
 
@@ -145,39 +140,22 @@ impl<T: RetireOwned> ControlledRetirement<T> {
     /// 🧷️ Loans the original typed frontier while its complete selected quote is admitted or refused.
     pub fn select(&mut self,body:usize)->Result<crate::RetirementSelection<'_,Self>,ValueError>{crate::select_retirement_cursor(self,body)}
 
-    /// 🧮️ Borrows the active payload work without charging future constructor movement as input copying.
-    pub fn next_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        if self.value.is_some() && !T::controlled_retirement_supported() { return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "typed owner has no controlled retirement authority")); }
-        if self.value.is_some() || self.cursors.is_empty() { return Ok(0); }
-        let cursor = self.cursors.get(self.cursors.len() - 1).unwrap();
-        if cursor.terminal_is_empty() { Ok(0) } else { cursor.next_work_byte_demand() }
-    }
+    /// 🧮️ Borrows the copy currency of the same selected quote as [`Self::next_demand`].
+    pub fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.next_demand(0).map(|demand| demand.copy_bytes) }
 
-    /// ⏭️ Exposes the next complete constructor allocation before the caller grants it.
-    pub fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError> {
-        if self.value.is_some()&&!T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"typed owner has no controlled retirement authority"))}
-        if self.terminal_is_empty() || (self.value.is_none() && (self.cursors.is_empty() || self.cursors.get(self.cursors.len() - 1).is_some_and(|cursor| cursor.terminal_is_empty()))) { return Ok(0); }
-        if !self.cursors.has_reserved_slot() { return self.cursors.next_allocation_bytes().map_err(ValueError::from); }
-        let demand = if let Some(value) = self.value.as_ref() { value.retirement_birth_bytes() } else { self.cursors.get(self.cursors.len() - 1).and_then(|cursor| cursor.next_birth_bytes(maximum_body_bytes)) };
-        demand.ok_or_else(|| refusal("retirement owner has no controlled birth authority"))
-    }
+    /// ⏭️ Borrows the capacity currency of the same selected quote as [`Self::next_demand`].
+    pub fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError> { self.next_demand(maximum_body_bytes).map(|demand| demand.capacity_bytes) }
 
-    /// 📦️ Exposes the next complete physical release before the caller grants it.
-    pub fn next_release_byte_demand(&self) -> Result<usize, ValueError> {
-        if self.value.is_some() || self.terminal_is_empty() { return Ok(0); }
-        if self.cursors.is_empty() { return self.cursors.next_release_allocation_bytes().map_err(ValueError::from); }
-        let cursor = self.cursors.get(self.cursors.len() - 1).unwrap();
-        if cursor.terminal_is_empty() { cursor.terminal_release_bytes().ok_or_else(|| refusal("retirement owner has no controlled terminal release authority")) }
-        else if !self.cursors.has_reserved_slot() { Ok(0) }
-        else { cursor.next_close_byte_demand().ok_or_else(||refusal("retirement owner has no controlled physical release demand")) }
-    }
+    /// 📦️ Borrows the release currency of the same selected quote as [`Self::next_demand`].
+    pub fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.next_demand(0).map(|demand| demand.release_bytes) }
 
     /// 🪆️ Borrows the per-turn nesting depth of the top cursor; the explicit paged frontier is heap-iterative and never counts as call depth.
     pub fn next_depth_demand(&self) -> Result<usize, ValueError> {
         if self.terminal_is_empty() { return Ok(0); }
-        if self.value.is_some() || self.cursors.is_empty() { return Ok(1); }
+        if self.value.is_some() || self.pending_cursor.is_some() || self.cursors.is_empty() { return self.next_demand(0).map(|demand| demand.depth); }
+        if !self.cursors.has_reserved_slot() { return self.cursor_reserve_demand().map(|demand| demand.depth).map_err(ValueError::from); }
         let cursor = self.cursors.get(self.cursors.len() - 1).unwrap();
-        let nested = if cursor.terminal_is_empty() { 0 } else { cursor.next_depth_demand()? };
+        let nested = if cursor.terminal_is_empty() { 0 } else { cursor.next_demand(0)?.depth };
         1usize.checked_add(nested).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "retirement frontier depth overflow"))
     }
 
@@ -243,8 +221,8 @@ impl<T: RetireOwned> ControlledRetirement<T> {
         let birth = demand.capacity_bytes;
         if work && body_bytes < minimum_work_bytes && (birth==0 || !self.cursors.get(index).unwrap().allows_admitted_narrow_work()) { return Ok(Some(RetainedCloneStep::Progress(empty))); }
         if birth > grant.maximum_capacity_bytes { return Ok(Some(RetainedCloneStep::Progress(empty))); }
-        let cursor_grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let cursor=self.cursors.get_mut(index).ok_or_else(||ValueError::invariant("get_mut target absent"))?;let maximum_work=effect.maximum_work_units();let mut child=effect.reborrow(cursor_grant,maximum_work)?;let step=invoke(cursor.as_mut(),&mut child);
+        let cursor_grant = RetainedCloneGrant { maximum_items: grant.maximum_items, maximum_capacity_bytes: birth, maximum_depth: grant.maximum_depth - 1, ..grant };
+        let cursor=self.cursors.get_mut(index).ok_or_else(||ValueError::invariant("get_mut target absent"))?;let mut child=effect.nested(cursor_grant);let step=invoke(cursor.as_mut(),&mut child);
         self.process_child_step(index,step,grant,cursor_grant,birth)
     }
     fn process_child_step(&mut self,index:usize,step:RetirementStep,grant:RetainedCloneGrant,cursor_grant:RetainedCloneGrant,birth:usize)->Result<Option<RetainedCloneStep>,crate::OriginalRetirementFailure>{
@@ -291,8 +269,8 @@ impl<T: RetireOwned> ErasedControlledRetirement for ControlledRetirement<T> {
     fn requires_original_birth(&self)->bool{ControlledRetirement::requires_original_birth(self)}
     fn step_original_birth(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{ControlledRetirement::step_original_birth(self,original,grant)}
     fn requires_original_control(&self)->bool{ControlledRetirement::requires_original_control(self)}
-    fn step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->crate::OriginalRetirementPoll{let grant=effect.grant();crate::ErasedSnapshotRetirement::close_step_controlled(self,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"),control)}
-    fn step_original(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();crate::ErasedSnapshotRetirement::close_original_step(self,original,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
+    fn step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->crate::OriginalRetirementPoll{let grant=effect.grant();crate::ErasedSnapshotRetirement::close_step_controlled(self,&mut effect.nested(grant),control)}
+    fn step_original(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();crate::ErasedSnapshotRetirement::close_original_step(self,original,&mut effect.nested(grant))}
     fn next_demand(&self, body: usize) -> Result<crate::RetirementDemand, ValueError> { ControlledRetirement::next_demand(self, body) }
     fn step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{ControlledRetirement::step(self,effect)}
     fn step_progress(&self) -> RetainedCloneProgress { ControlledRetirement::step_progress(self) }
@@ -317,8 +295,8 @@ impl<T: RetireOwned> RetireOwned for ControlledRetirement<T> {
 
 impl<T: RetireOwned> RetirementCursor for ControlledRetirement<T> {
     fn requires_original_control(&self)->bool{ControlledRetirement::requires_original_control(self)}
-    fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{let grant=effect.grant();super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_step_controlled(self,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"),control))}
-    fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_original_step(self,original,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect")))}
+    fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{let grant=effect.grant();super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_step_controlled(self,&mut effect.nested(grant),control))}
+    fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_original_step(self,original,&mut effect.nested(grant)))}
     fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{ControlledRetirement::next_computational_work(self,body)}
     fn next_demand(&self, body: usize) -> Result<crate::RetirementDemand, ValueError> { ControlledRetirement::next_demand(self, body) }
     fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{super::erased_cursor_turn(self.step(effect))}

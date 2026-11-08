@@ -75,7 +75,7 @@ impl Runner{
   while !issuer.close_owned_terminal_is_empty(){self.turn(true,|cx|{
    let demand=issuer.close_owned_demands(cx.retained_grant().maximum_copy_bytes)?;
    if !cx.retained_work_can_enter(demand){return Ok(())}
-   let result=issuer.close_owned_step(cx.retained_grant());let spent=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_retained(spent)?;cx.consume_fuel(1);result?;Ok(())
+   let grant=cx.retained_grant();let result=match cx.with_original_effect(grant,|_,effect|issuer.close_owned_step(effect))?{Some((semio_framework_value::RetainedWorkPoll::Complete(turn),_))=>turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),_=>Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()))};let spent=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_retained(spent)?;cx.consume_fuel(1);result?;Ok(())
   });}
  }
  fn finish(mut self){

@@ -1,12 +1,15 @@
 //! 🎟️ Native shared text stores its exact owner before reporting any original receipt refusal.
 use super::*;
-use semio_framework_value_native_owned::OriginalReceivingPrimary;
 impl SharedUtf8{
- pub fn receive_original(input:&mut Option<String>,output:&mut Option<Self>,native:&mut crate::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{
-  let admission=(||{if input.is_none()||output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native shared text requires its input and an empty output"))}let d=Self::admission_demand();if !crate::retained_clone::retained_clone_grant_admits(grant,d){return Ok(false)}if native.owned_bytes().checked_add(d.capacity_bytes).is_none_or(|n|n>native.maximum_bytes()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native shared text exceeds its original decoder ceiling"))}native.checkpoint()?;native.prepare_work(1)})();
-  match admission{Ok(true)=>{},Ok(false)=>return crate::RetainedWorkOutcome{result:Ok(Default::default()),work:0},Err(e)=>return crate::RetainedWorkOutcome{result:Err(e.into()),work:0}}
-  let turn=Self::admit(match input.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("input absent").into()),work:0}},grant);let result=match turn.result{Ok((owner,p))=>{*output=Some(owner);Ok(crate::RetainedCloneStep::Complete(p))},Err((error,original))=>{*input=Some(original);Err(error)}};
-  match native.commit_work(turn.work){Ok(v)=>v,Err(_)=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("one concrete shared text birth consumes only its held native work").into()),work:0}};let turn=native.receive_retained_work(grant,crate::RetainedWorkOutcome{result,work:turn.work});crate::RetainedWorkOutcome{result:turn.result.map(|s|s.progress()),work:turn.work}
+ pub fn receive_original(input:&mut Option<String>,output:&mut Option<Self>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{
+  let grant=effect.grant();
+  if input.is_none()||output.is_some(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native shared text requires its input and an empty output")),work:0}}
+  if !crate::retained_clone::retained_clone_grant_admits(grant,Self::admission_demand())||effect.maximum_work_units()==0{return crate::RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+  let before=effect.performed_work();let performed=effect.performed(1);let work=effect.performed_work().saturating_sub(before);
+  match performed{Ok(true)=>{},Ok(false)=>return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native shared text exceeded its original work")),work},Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work}}
+  let Some(text)=input.take()else{return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("native shared text input absent")),work}};
+  let turn=Self::admit(text,grant,effect.actual());
+  let result=match turn.result{Ok((owner,progress))=>{*output=Some(owner);Ok(progress)},Err((error,original))=>{*input=Some(original);Err(error)}};
+  crate::RetainedWorkOutcome{result,work}
  }
 }
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

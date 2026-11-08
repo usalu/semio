@@ -24,8 +24,10 @@ impl<O:WindowTransientOwner> OriginalWindowTransientOwnerRegistration<O>{
  pub fn step(&mut self,registry:&mut WindowTransientOwnerRegistry,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(registry,cx)?;if self.adopted{return Ok(true)}if self.closing{return Err(invalid("original transient registration is closing").into())}
   if self.owner.is_none(){let d=Self::owner_birth_demands();built(cx,&mut self.owner,d,||Ok((Some(Box::new(TypedWindowTransientStoreOwner::<O>{partitions:WindowRegistry::new(),owners:Some(O::build_owners()),factory_close:[None,None,None],partition_close_cursor:0,partition_open:0,partition_address:None})as Box<dyn ErasedWindowTransientStoreOwner>),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})))?;return Ok(false)}
-  let mut d=registry.owners.insert_original_demands()?;let header=3*size_of::<bool>()+size_of::<usize>();d.copy_bytes=d.copy_bytes.checked_add(header).ok_or_else(||invalid("transient registration publication header overflow"))?;let grant=cx.retained_grant();let mut done=None;
-  built(cx,&mut done,d,||{let(ready,mut p)=registry.owners.insert_original(&mut self.key,&mut self.owner,RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-header,..grant})?;self.inserting=!ready;self.adopted=ready;self.closing=ready;if ready{registry.owner_open+=1}p.copied_bytes+=header;Ok((ready,p))})?;Ok(self.adopted)
+  let header=3*size_of::<bool>()+size_of::<usize>();let grant=cx.retained_grant();
+  let Some(((turn,ready),_))=cx.with_original_effect(grant,|_,effect|{let result=registry.owners.insert_original(&mut self.key,&mut self.owner,&mut effect.nested(RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(header),..grant}));let work=effect.performed_work();let ready=result.as_ref().ok().map(|(ready,_)|*ready);(semio_framework_value::RetainedWorkOutcome{result:result.map(|(_,mut progress)|{progress.copied_bytes+=header;RetainedCloneStep::Progress(progress)}),work},ready)})?else{return Ok(false)};
+  semio_framework_job::receive_original_retained_work(cx,turn)?;
+  if let Some(ready)=ready{self.inserting=!ready;self.adopted=ready;self.closing=ready;if ready{registry.owner_open+=1}}Ok(self.adopted)
  }
  /// ♻️ Cancellation restores any insertion hole before retiring the same concrete factories and physical owner.
  pub fn close_step(&mut self,registry:&mut WindowTransientOwnerRegistry,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{

@@ -20,6 +20,7 @@ semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰�
 semio-os-store-operation-wire = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
 semio-s-artifact-energy-model-snapshot = { path = "../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-energy-model-mutations = { path = "../../../🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { workspace = true }
 
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }

@@ -25,7 +25,8 @@ impl<T:RetireOwned+Sync> OriginalErasedReadSource<T>{
 }
 impl<T:RetireOwned+Sync> Drop for OriginalErasedReadSource<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.read.is_none(),"original erased standalone read still requires its actual registry issuer");if self.read.is_none(){unsafe{ManuallyDrop::drop(&mut self.read);}}}}
 
-struct Cursor<S:Send+'static>{original:ManuallyDrop<S>}
+#[doc(hidden)]
+pub struct Cursor<S:Send+'static>{original:ManuallyDrop<S>}
 fn unsupported()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"standalone read registry graph still exposes raw Arc/Weak authority; original read remains retained")}
 impl<S:Send+'static> RetirementCursor for Cursor<S>{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{Err(unsupported())}
@@ -38,5 +39,5 @@ impl<S:Send+'static> RetirementCursor for Cursor<S>{
  fn terminal_release_bytes(&self)->Option<usize>{None}
 }
 impl<S:Send+'static> Drop for Cursor<S>{fn drop(&mut self){assert!(std::thread::panicking(),"original standalone read cursor remains retained until its issuer is available");}}
-impl<T:RetireOwned+Sync> RetireOwned for OriginalReadSource<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor{original:ManuallyDrop::new(self)})}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<Self>>())}fn controlled_retirement_supported()->bool{true}}
-impl<T:RetireOwned+Sync> RetireOwned for OriginalErasedReadSource<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor{original:ManuallyDrop::new(self)})}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<Self>>())}fn controlled_retirement_supported()->bool{true}}
+impl<T:RetireOwned+Sync> RetireOwned for OriginalReadSource<T>{type RetirementCursor=Cursor<Self>;fn retirement_seed(self)->Self::RetirementCursor{Cursor{original:ManuallyDrop::new(self)}}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<Self>>())}fn controlled_retirement_supported()->bool{true}}
+impl<T:RetireOwned+Sync> RetireOwned for OriginalErasedReadSource<T>{type RetirementCursor=Cursor<Self>;fn retirement_seed(self)->Self::RetirementCursor{Cursor{original:ManuallyDrop::new(self)}}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<Self>>())}fn controlled_retirement_supported()->bool{true}}

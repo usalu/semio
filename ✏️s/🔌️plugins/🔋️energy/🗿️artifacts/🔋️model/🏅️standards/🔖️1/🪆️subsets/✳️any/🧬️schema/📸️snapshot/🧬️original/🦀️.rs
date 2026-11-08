@@ -23,17 +23,19 @@ pub struct EnergyModelSnapshot{
 /// 🌳️ The fixed immutable root aliases each of its eleven sealed authorities without traversing a row.
 impl semio_framework_value_snapshot_projection::snapshot_projection::ImmutableRootProjection for EnergyModelSnapshot{
  fn root_projection_demand(_:semio_framework_value::RetainedCloneRef<'_,Self>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>(),depth:1,..Default::default()})}
- fn project_root(original:semio_framework_value::RetainedCloneRef<'_,Self>,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Self,semio_framework_value::RetainedCloneProgress)>>{
+ fn root_projection_work_demand(_:semio_framework_value::RetainedCloneRef<'_,Self>)->Result<u64,semio_framework_value::ValueError>{Ok(11)}
+ fn project_root(original:semio_framework_value::RetainedCloneRef<'_,Self>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Self,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{
+  let grant=effect.grant();let mut work=0u64;
   let result=(||{
   let demand=Self::root_projection_demand(original)?;
   if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(None);}
   let child=semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-demand.copy_bytes,..grant};
   let s=original.get();let m=&s.model;
-  macro_rules! alias{($field:expr)=>{$field.try_duplicate(child).result?.0}}
+  let mut child_effect=effect.nested(child);
+  macro_rules! alias{($field:expr)=>{{let turn=$field.try_duplicate(&mut child_effect);work+=turn.work;turn.result?.0}}}
   let root=Self{schema:alias!(s.schema),model:EnergyModelState{identity:alias!(m.identity),geometry:alias!(m.geometry),materials:alias!(m.materials),loads:alias!(m.loads),controls:alias!(m.controls),systems:alias!(m.systems),generation:alias!(m.generation),outputs:alias!(m.outputs)},referenced_model:alias!(s.referenced_model),weather_link:alias!(s.weather_link)};
   Ok(Some((root,semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
   })();
-  let work=u64::from(matches!(result,Ok(Some(_))));
   semio_framework_value::RetainedWorkOutcome{result,work}
  }
 }

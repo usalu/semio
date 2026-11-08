@@ -26,7 +26,7 @@ pub(super) fn worker_job_begin_close<J>(inner: &WorkerJobSessionInner<J>) -> Wor
     }
 }
 
-pub(super) fn worker_job_close_step<J:InteractiveJob>(inner:&WorkerJobSessionInner<J>,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}if inner.phase.compare_exchange(SESSION_CLOSE,SESSION_TRANSITION,Ordering::AcqRel,Ordering::Acquire).is_err(){{static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<10||n%50_000==0{eprintln!("[DEBUG] aggregator-gate C1 n={} close_step phase={} (CLOSE={} EMPTY={})",n,inner.phase(),SESSION_CLOSE,SESSION_EMPTY);}}return Ok(if inner.phase()==SESSION_EMPTY{WorkerJobCloseStep::Complete{progress:Default::default()}}else{WorkerJobCloseStep::Blocked})}let mut authority=unsafe{inner.take_authority()};let result=authority.close_step(cx);if matches!(result,Ok(WorkerJobCloseStep::Complete{..})){assert!(authority.terminal_is_empty());drop(authority);inner.phase.store(SESSION_EMPTY,Ordering::Release);inner.raise_wake()}else{unsafe{inner.put_authority(authority,SESSION_CLOSE)}}result}
+pub(super) fn worker_job_close_step<J:InteractiveJob>(inner:&WorkerJobSessionInner<J>,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}if inner.phase.compare_exchange(SESSION_CLOSE,SESSION_TRANSITION,Ordering::AcqRel,Ordering::Acquire).is_err(){return Ok(if inner.phase()==SESSION_EMPTY{WorkerJobCloseStep::Complete{progress:Default::default()}}else{WorkerJobCloseStep::Blocked})}let mut authority=unsafe{inner.take_authority()};let result=authority.close_step(cx);if matches!(result,Ok(WorkerJobCloseStep::Complete{..})){assert!(authority.terminal_is_empty());drop(authority);inner.phase.store(SESSION_EMPTY,Ordering::Release);inner.raise_wake()}else{unsafe{inner.put_authority(authority,SESSION_CLOSE)}}result}
 
 impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
     /// 📏️ Quotes the actual fixed storage births and initialized source/control writes before custody changes.
@@ -181,7 +181,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
 
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
         if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=cx.retained_progress();let grant=cx.retained_grant();if self.inner.0.is_none(){let step=self.release_retirement_slot(grant);return receive_original_worker_close_effects(cx,before,step)}
-        let step=match worker_job_close_step(&self.inner,cx)?{WorkerJobCloseStep::Complete{progress}if progress!=Default::default()=>WorkerJobCloseStep::Pending{progress},WorkerJobCloseStep::Complete{..}=>{let grant=cx.retained_grant();let result=self.close_original_session_arc(grant).map(|step|match step{WorkerJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},step=>step});return receive_original_worker_close_result(cx,before,result)},step=>step};receive_original_worker_close_effects(cx,before,step)
+        let step=match worker_job_close_step(&self.inner,cx)?{WorkerJobCloseStep::Complete{progress}if progress!=Default::default()=>WorkerJobCloseStep::Pending{progress},WorkerJobCloseStep::Complete{..}=>{let result=self.close_original_session_arc(cx).map(|step|match step{WorkerJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},step=>step});return receive_original_worker_close_result(cx,before,result)},step=>step};receive_original_worker_close_effects(cx,before,step)
     }
 
     pub(super) fn original_session_arc_demands(&self,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>{
@@ -190,12 +190,12 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         Ok(RetirementDemand{copy_bytes:0,release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<WorkerJobSessionInner<J>>(),depth:1,..Default::default()})
     }
 
-    fn close_original_session_arc(&mut self,grant:RetainedCloneGrant)->Result<WorkerJobCloseStep,ValueError>{
-        let demand=self.original_session_arc_demands(grant.maximum_copy_bytes)?;
+    fn close_original_session_arc(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,ValueError>{
+        let grant=cx.retained_grant();let demand=self.original_session_arc_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
         let original=self.inner.0.as_ref().expect("terminal session retains original Arc");
         if !original.is_unique()||unsafe{(&*original.waker.get()).is_some()}{return Ok(WorkerJobCloseStep::Blocked)}
-        if let Some(step)=worker_wake_retirement::close_session_retained_wake(original,grant)?{return Ok(step)}
+        if let Some(step)=worker_wake_retirement::close_session_retained_wake(original,cx)?{return Ok(step)}
         self.terminal_step_end_us=self.last_step_end_us();Ok(match self.inner.0.take().unwrap().try_return(){Ok(original)=>{drop(original);WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}}},Err(original)=>{self.inner.0=Some(original);WorkerJobCloseStep::Blocked}})
     }
 

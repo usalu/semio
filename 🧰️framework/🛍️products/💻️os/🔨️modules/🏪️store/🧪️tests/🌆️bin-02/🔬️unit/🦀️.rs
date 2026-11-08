@@ -97,7 +97,7 @@ async fn member_owned_batch_admission_defers_whole_source_census_and_retains_phy
         assert!(released >= backing, "original source backing must be physically returned under a whole same-turn grant");
         for _ in 0..1024 { if request.mutations.terminal_is_empty() { break; } assert!(request.mutations.close_granted(grant).unwrap().progress().fits(grant)); }
         assert!(request.mutations.terminal_is_empty());
-        for _ in 0..65_536 { if matches!(SpaceMember::close_owned_step(&mut member, physical_test_close_grant()).unwrap(), RetainedCloneStep::Complete(_)) { break; } }
+        for _ in 0..65_536 { if matches!(SpaceMember::close_owned_step_cold(&mut member, physical_test_close_grant()).unwrap(), RetainedCloneStep::Complete(_)) { break; } }
         assert!(SpaceMember::close_owned_terminal_is_empty(&member));
     }
 }
@@ -112,15 +112,15 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
     }
     impl<T: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement for Observed<T> {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.inner.next_demand(body) }
-        fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+        fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
             let depth = self.next_depth_demand()?;
             if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-            if grant.maximum_depth < depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "observed original owner depth is not funded")); }
+            if grant.maximum_depth < depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "observed original owner depth is not funded").into()); }
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - usize::from(!self.counted), ..grant };
             let step = self.inner.step(child)?;
             if self.inner.terminal_is_empty() && !self.counted { self.count.fetch_add(1, Ordering::SeqCst); self.counted = true; }
             Ok(step)
-        })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+        })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
         fn terminal_is_empty(&self) -> bool { self.counted && self.inner.terminal_is_empty() }
         fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.inner.next_copy_byte_demand() }
         fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { self.inner.next_capacity_byte_demand(body) }
@@ -539,7 +539,7 @@ async fn retained_member_common_root_copies_history_under_grant_and_publishes_th
             for member in &mut members {
                 let mut closed = false;
                 for _ in 0..262_144 {
-                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| member.close_owned_step(grant.retained_grant()).unwrap());
+                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| member.close_owned_step_cold(grant.retained_grant()).unwrap());
                     assert!(step.progress().fits(grant.retained_grant())); assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
                     if matches!(step, RetainedCloneStep::Complete(_)) { closed = true; break; }
                 }
@@ -759,7 +759,7 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     let mut preview=Some(preview);
     let mut preview_retirement=None;
     while preview.is_some(){
-        if let Some((owner,progress))=receiving_fixture.receive(|native|native.with_retirement(grant,|original|store.retire_derived_history_preview_controlled(&mut preview,grant,original))).expect("actual preview input close"){
+        if let Some((owner,progress))=receiving_fixture.receive(|native|native.with_effect(grant,64,|native,effect|native.with_retirement(grant,|original|store.retire_derived_history_preview_controlled(&mut preview,effect,original))).and_then(|done|done.unwrap_or(Ok(None)))).expect("actual preview input close"){
             assert!(progress.fits(grant));preview_retirement=Some(owner);
         }
     }
@@ -885,7 +885,7 @@ async fn store_close_waits_for_a_live_snapshot_read_then_retires_its_returned_ow
     let mut blocked = false;
     for _ in 0..4_096 {
         let grant = RetainedCloneGrant { maximum_copy_bytes: 512, ..physical_test_close_grant() };
-        match SpaceMember::close_owned_step(&mut store, grant).expect("store close advances to the reader boundary") {
+        match SpaceMember::close_owned_step_cold(&mut store, grant).expect("store close advances to the reader boundary") {
             RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => { blocked = true; break; }
             RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
             RetainedCloneStep::Complete(_) => panic!("a live snapshot read must retain its exact root"),
@@ -997,7 +997,7 @@ fn close_stalls_at_reader_boundary(store: &mut ArtifactStore<DemoSnapshot, DemoM
     for _ in 0..16_384 {
         store.close_owned_demands(copy).expect("current independent Store close frontier");
         let grant = physical_test_close_grant();
-        match store.close_owned_step(grant).expect("store close advances to the reader boundary") {
+        match store.close_owned_step_cold(grant).expect("store close advances to the reader boundary") {
             RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => {  return true },
             RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
             RetainedCloneStep::Complete(_) => panic!("a live snapshot read must retain its exact root"),

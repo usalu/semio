@@ -2,6 +2,14 @@ use super::*;
 use crate::{Cap};
 use semio_framework_trace_memory_testing::observe_backing;
 
+/// 🏦️ Closes one slot step under an authoring wallet equal to the granted stock (no job turn exists in this law) and reads the poll as the funded step.
+fn close<T: semio_framework_value::ErasedSnapshotRetirement + ?Sized>(slot: &mut Option<Box<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
+    match semio_framework_value::AuthoringWallet::new(grant, 1 << 20).run(grant, 1 << 16, |effect| semio_framework_value::close_factory_ticket(slot, effect)).unwrap().expect("work quote admitted").output {
+        semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
+        semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(RetainedCloneStep::Progress(Default::default())),
+    }
+}
+
 #[test]
 fn original_canvas_stroke_preserves_every_cancelled_dash_and_physical_receipt() {
     let example: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
@@ -31,43 +39,44 @@ fn original_canvas_stroke_preserves_every_cancelled_dash_and_physical_receipt() 
             let mut slot = Some(owner); let mut born = original_birth+allocated; let mut freed = 0;
             let first_copy = slot.as_ref().unwrap().next_copy_byte_demand().unwrap();
             for denied in [RetainedCloneGrant { maximum_copy_bytes: 0, ..policy }, RetainedCloneGrant { maximum_copy_bytes: first_copy-1, ..policy }] {
-                let (step,allocated,released)=observe_backing(||semio_framework_value::close_factory_ticket(&mut slot,denied).unwrap());
+                let (step,allocated,released)=observe_backing(||close(&mut slot,denied).unwrap());
                 assert_eq!(step.progress(),Default::default()); assert_eq!((allocated,released),(0,0)); let retained=slot.as_ref().unwrap().original_stroke().unwrap(); assert_eq!(retained.dash_pattern().as_ptr(),pointer); assert_eq!(retained.dash_capacity(),capacity); assert_eq!(retained.dash_pattern(),expected);
             }
             for _ in 0..cut.as_u64().unwrap() {
                 if slot.is_none(){break;}
-                let (step,allocated,released)=observe_backing(||semio_framework_value::close_factory_ticket(&mut slot,policy).unwrap());
+                let (step,allocated,released)=observe_backing(||close(&mut slot,policy).unwrap());
                 assert!(step.progress().fits(policy));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=allocated;freed+=released;
             }
             if let Some(owner)=slot.as_ref() {
                 if let Some(values)=owner.controlled_original() {assert_eq!(values.as_ptr(),pointer);assert_eq!(values.capacity(),capacity);assert_eq!(values.as_slice(),expected);}
                 let shell=owner.as_ref() as *const CanvasStrokeRetirement;
-                let (step,allocated,released)=observe_backing(||semio_framework_value::close_factory_ticket(&mut slot,RetainedCloneGrant{maximum_items:0,..policy}).unwrap());
+                let (step,allocated,released)=observe_backing(||close(&mut slot,RetainedCloneGrant{maximum_items:0,..policy}).unwrap());
                 assert_eq!(step.progress(),Default::default());assert_eq!((allocated,released),(0,0));assert_eq!(slot.as_ref().unwrap().as_ref() as *const CanvasStrokeRetirement,shell);
             }
             for _ in 0..128 {
                 if slot.is_none(){break;}
-                if slot.as_ref().unwrap().next_copy_byte_demand().unwrap()==size_of::<f64>() {
-                    for copy in [0,size_of::<f64>()-1] {
-                        let (step,allocated,released)=observe_backing(||semio_framework_value::close_factory_ticket(&mut slot,RetainedCloneGrant{maximum_copy_bytes:copy,..policy}).unwrap());
+                let quoted_copy=slot.as_ref().unwrap().next_copy_byte_demand().unwrap();
+                if quoted_copy!=0 {
+                    for copy in [0,quoted_copy-1] {
+                        let (step,allocated,released)=observe_backing(||close(&mut slot,RetainedCloneGrant{maximum_copy_bytes:copy,..policy}).unwrap());
                         assert_eq!(step.progress(),Default::default());assert_eq!((allocated,released),(0,0));
                     }
                 }
                 let owner=slot.as_ref().unwrap();let depth=owner.next_depth_demand().unwrap();
                 if depth!=0 {
-                    let (result,allocated,released)=observe_backing(||semio_framework_value::close_factory_ticket(&mut slot,RetainedCloneGrant{maximum_depth:depth-1,..policy}));
+                    let (result,allocated,released)=observe_backing(||close(&mut slot,RetainedCloneGrant{maximum_depth:depth-1,..policy}));
                     assert!(result.is_err());assert_eq!((allocated,released),(0,0));
                 }
                 let release=slot.as_ref().unwrap().next_release_byte_demand().unwrap();
                 if release!=0 {
-                    let (step,allocated,released)=observe_backing(||semio_framework_value::close_factory_ticket(&mut slot,RetainedCloneGrant{maximum_release_bytes:release-1,..policy}).unwrap());
+                    let (step,allocated,released)=observe_backing(||close(&mut slot,RetainedCloneGrant{maximum_release_bytes:release-1,..policy}).unwrap());
                     assert_eq!(step.progress(),Default::default());assert_eq!((allocated,released),(0,0));
                 }
                 if slot.as_ref().unwrap().terminal_is_empty() {
-                    let (step,allocated,released)=observe_backing(||semio_framework_value::close_factory_ticket(&mut slot,RetainedCloneGrant{maximum_release_bytes:size_of::<CanvasStrokeRetirement>()-1,..policy}).unwrap());
+                    let (step,allocated,released)=observe_backing(||close(&mut slot,RetainedCloneGrant{maximum_release_bytes:size_of::<CanvasStrokeRetirement>()-1,..policy}).unwrap());
                     assert_eq!(step.progress(),Default::default());assert_eq!((allocated,released),(0,0));
                 }
-                let (step,allocated,released)=observe_backing(||semio_framework_value::close_factory_ticket(&mut slot,policy).unwrap());
+                let (step,allocated,released)=observe_backing(||close(&mut slot,policy).unwrap());
                 assert!(step.progress().fits(policy));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_ne!(step.progress(),Default::default());born+=allocated;freed+=released;
             }
             assert!(slot.is_none());assert_eq!(born,freed);let(_,allocated,released)=observe_backing(||drop(slot));assert_eq!((allocated,released),(0,0));

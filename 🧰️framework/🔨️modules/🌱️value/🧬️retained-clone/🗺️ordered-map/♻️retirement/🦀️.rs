@@ -4,17 +4,21 @@ use super::*;
 use crate::retirement::{RetirementCursor,RetirementStep};
 use std::mem::ManuallyDrop;
 
-trait EditOwner:Send+'static {
+#[doc(hidden)]
+pub trait EditOwner:Send+'static {
  fn demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>;
  fn begin(&mut self);
- fn close(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome;
+ fn close(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll;
+ fn work(&self,body:usize)->Result<u64,ValueError>;
  fn empty(&self)->bool;
 }
-struct EditRetirement<C:EditOwner>{cursor:ManuallyDrop<C>}
+#[doc(hidden)]
+pub struct EditRetirement<C:EditOwner>{cursor:ManuallyDrop<C>}
 impl<C:EditOwner> RetirementCursor for EditRetirement<C> {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.cursor.demand(body)}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();let turn=self.cursor.close(grant);match turn.result{Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{crate::retirement::erased_cursor_turn(self.cursor.close(effect))}
  fn terminal_is_empty(&self)->bool{self.cursor.empty()}
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.cursor.demand(body)?;self.cursor.work(body)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.cursor.demand(0)?.depth)}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.cursor.demand(0)?.copy_bytes)}
  fn next_close_byte_demand(&self)->Option<usize>{self.cursor.demand(0).ok().map(|d|d.release_bytes)}
@@ -27,12 +31,14 @@ macro_rules! edit_owner {
  ($cursor:ident)=>{
   impl<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync> EditOwner for $cursor<K,V>{
    fn demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.close_demands(body)}
+   fn work(&self,body:usize)->Result<u64,crate::ValueError>{self.close_work_demand(body)}
    fn begin(&mut self){self.begin_close();}
-   fn close(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{self.close_step(grant)}
+   fn close(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{self.close_step(effect)}
    fn empty(&self)->bool{self.terminal_is_empty()}
   }
   impl<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync> RetireOwned for $cursor<K,V>{
-   fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin();Box::new(EditRetirement{cursor:ManuallyDrop::new(self)})}
+   type RetirementCursor=EditRetirement<Self>;
+   fn retirement_seed(mut self)->Self::RetirementCursor{self.begin();EditRetirement{cursor:ManuallyDrop::new(self)}}
    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<EditRetirement<Self>>())}
    fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
   }
@@ -43,12 +49,14 @@ edit_owner!(RetainedOrderedMapRemoveCursor);
 
 impl<K:RetainedClone,V:RetainedClone> EditOwner for RetainedOrderedMapCloneCursor<K,V>{
  fn demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.close_demands(body)}
+ fn work(&self,body:usize)->Result<u64,ValueError>{RetainedCloneCursor::close_work_demand(self,body)}
  fn begin(&mut self){self.begin_close();}
- fn close(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{self.close_step(grant)}
+ fn close(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{self.close_step(effect)}
  fn empty(&self)->bool{self.terminal_is_empty()}
 }
 impl<K:RetainedClone,V:RetainedClone> RetireOwned for RetainedOrderedMapCloneCursor<K,V>{
- fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin();Box::new(EditRetirement{cursor:ManuallyDrop::new(self)})}
+ type RetirementCursor=EditRetirement<Self>;
+ fn retirement_seed(mut self)->Self::RetirementCursor{self.begin();EditRetirement{cursor:ManuallyDrop::new(self)}}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<EditRetirement<Self>>())}
  fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }

@@ -260,7 +260,8 @@ impl RetainedPackCatalogCursor {
         Ok(Some(requested))
     }
 
-    pub fn reserve_allocation(&mut self, maximum_bytes: usize) -> Result<RetainedPackCatalogAllocationStep, RetainedPackCatalogAllocationError> {
+    pub fn reserve_allocation(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedPackCatalogAllocationStep, RetainedPackCatalogAllocationError> {
+        let maximum_bytes = effect.grant().maximum_capacity_bytes;
         let need = match self.allocation_need() {
             Ok(need) => need,
             Err(fault) => {
@@ -289,10 +290,10 @@ impl RetainedPackCatalogCursor {
             return Err(RetainedPackCatalogAllocationError { allocated_bytes: 0, fault });
         }
         let result = match owner {
-            RetainedPackCatalogAllocationOwner::SymbolSpans => self.symbols.symbols.reserve_capacity_one(target, maximum_bytes.min(remaining)),
-            RetainedPackCatalogAllocationOwner::SymbolScalars => self.symbols.scalars.reserve_capacity_one(target, maximum_bytes.min(remaining)),
-            RetainedPackCatalogAllocationOwner::Chunks => self.chunks.reserve_capacity_one(target, maximum_bytes.min(remaining)),
-            RetainedPackCatalogAllocationOwner::ObservedChunks => self.observed_chunks.reserve_capacity_one(target, maximum_bytes.min(remaining)),
+            RetainedPackCatalogAllocationOwner::SymbolSpans => crate::reserved(self.symbols.symbols.reserve_capacity_one(target, &mut effect.nested(semio_framework_value::RetainedCloneGrant { maximum_capacity_bytes: maximum_bytes.min(remaining), ..effect.grant() })), Default::default()),
+            RetainedPackCatalogAllocationOwner::SymbolScalars => crate::reserved(self.symbols.scalars.reserve_capacity_one(target, &mut effect.nested(semio_framework_value::RetainedCloneGrant { maximum_capacity_bytes: maximum_bytes.min(remaining), ..effect.grant() })), Default::default()),
+            RetainedPackCatalogAllocationOwner::Chunks => crate::reserved(self.chunks.reserve_capacity_one(target, &mut effect.nested(semio_framework_value::RetainedCloneGrant { maximum_capacity_bytes: maximum_bytes.min(remaining), ..effect.grant() })), Default::default()),
+            RetainedPackCatalogAllocationOwner::ObservedChunks => crate::reserved(self.observed_chunks.reserve_capacity_one(target, &mut effect.nested(semio_framework_value::RetainedCloneGrant { maximum_capacity_bytes: maximum_bytes.min(remaining), ..effect.grant() })), Default::default()),
         };
         let step = match result {
             Ok(step) => step,
@@ -569,7 +570,8 @@ impl RetainedPackCatalogCursor {
         Ok(None)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedPackCloseStep, PagedListError> {
+    pub fn close_step(&mut self, maximum_items: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedPackCloseStep, PagedListError> {
+        let maximum_bytes = effect.grant().maximum_release_bytes;
         if maximum_items == 0 && maximum_bytes == 0 {
             return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -611,7 +613,7 @@ impl RetainedPackCatalogCursor {
             return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if !self.symbols.terminal_is_empty() {
-            match self.symbols.close_step(maximum_items, maximum_bytes)? {
+            match self.symbols.close_step(maximum_items, &mut *effect)? {
                 RetainedPackCloseStep::Pending { released_items, released_bytes } => {
                     return Ok(RetainedPackCloseStep::Pending { released_items, released_bytes });
                 }
@@ -620,8 +622,8 @@ impl RetainedPackCatalogCursor {
         }
         for owner in [RetainedPackCatalogAllocationOwner::Chunks, RetainedPackCatalogAllocationOwner::ObservedChunks] {
             let (terminal, step) = match owner {
-                RetainedPackCatalogAllocationOwner::Chunks => (self.chunks.terminal_is_empty(), self.chunks.release_empty_page(maximum_bytes)),
-                RetainedPackCatalogAllocationOwner::ObservedChunks => (self.observed_chunks.terminal_is_empty(), self.observed_chunks.release_empty_page(maximum_bytes)),
+                RetainedPackCatalogAllocationOwner::Chunks => (self.chunks.terminal_is_empty(), crate::released(self.chunks.release_empty_page(&mut *effect))),
+                RetainedPackCatalogAllocationOwner::ObservedChunks => (self.observed_chunks.terminal_is_empty(), crate::released(self.observed_chunks.release_empty_page(&mut *effect))),
                 _ => unreachable!(),
             };
             if !terminal {

@@ -1,21 +1,21 @@
 //! 🧳️ Installed native operation codecs erase concrete receiver layout while preserving original typed sources.
 use super::ArtifactOperationWire;
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory,DslValue,RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedOwnedProjection,RetainedWorkOutcome};
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeRetirementDecodeControl,NativeReceive};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory,DslValue,OriginalRetirementPoll,RetirementDemand,ValueError,ValueRefusalKind,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedOwnedProjection,RetainedWorkOutcome,RetainedWorkPoll};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeRetirementDecodeControl,NativeReceive,OriginalReceivingPrimary};
 use semio_framework_pack_json::{OriginalJsonReceiving,ArtifactCanonicalJsonTree};
 use std::{mem::size_of,sync::Arc};
 /// 📬️ The concrete vocabulary keeps its native parser, typed receiver and issuer until explicit closure.
 pub trait ArtifactOriginalOperationReceiving<M>:Send{
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn advance(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome;
+ fn advance(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<RetainedCloneStep,OriginalReceivingPrimary>;
  fn ready(&self)->bool;
  fn owned_handoff_pending(&self)->bool;
  fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>> where M:Sync;
  fn take_owned_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn take_owned_into(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome;
+ fn take_owned_into(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome;
  fn begin_close(&mut self);
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,control:&mut dyn semio_framework_value::OriginalRetirementControl,grant:RetainedCloneGrant)->RetainedWorkOutcome;
+ fn close_step(&mut self,control:&mut dyn semio_framework_value::OriginalRetirementControl,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll;
  fn terminal_is_empty(&self)->bool;
  fn allocation_bytes(&self)->usize;
 }
@@ -24,15 +24,15 @@ impl<M> Copy for OriginalOperationReceivingAdmission<M>{}
 impl<M> Clone for OriginalOperationReceivingAdmission<M>{fn clone(&self)->Self{*self}}
 impl<M:NativeReceive<DslValue>+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactOriginalOperationReceiving<M> for OriginalJsonReceiving<M>{
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
- fn advance(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome{self.advance(control,body,grant)}
+ fn advance(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<RetainedCloneStep,OriginalReceivingPrimary>{self.advance(control,body,maximum_work_units,grant)}
  fn ready(&self)->bool{self.ready()}
  fn owned_handoff_pending(&self)->bool{self.owned_handoff_pending()}
  fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>>{self.take(grant)}
  fn take_owned_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.take_owned_demands(body)}
- fn take_owned_into(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome{self.take_owned_into(output,control,body,grant)}
+ fn take_owned_into(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.take_owned_into(output,control,body,effect)}
  fn begin_close(&mut self){self.begin_close()}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
- fn close_step(&mut self,control:&mut dyn semio_framework_value::OriginalRetirementControl,grant:RetainedCloneGrant)->RetainedWorkOutcome{self.close_step(control,grant)}
+ fn close_step(&mut self,control:&mut dyn semio_framework_value::OriginalRetirementControl,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.close_step(control,effect)}
  fn terminal_is_empty(&self)->bool{self.terminal_is_empty()}
  fn allocation_bytes(&self)->usize{size_of::<Self>()}
 }

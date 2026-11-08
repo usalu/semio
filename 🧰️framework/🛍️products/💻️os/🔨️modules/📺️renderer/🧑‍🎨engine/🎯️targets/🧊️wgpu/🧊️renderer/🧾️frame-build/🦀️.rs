@@ -380,7 +380,7 @@ impl FrameBuildCursor {
         if let Some(owner)=self.icon_upload.as_mut(){
             if !owner.terminal_is_empty(){
                 let demand=owner.next_close_demands(grant.maximum_copy_bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
-                return frame_original_primitive_close(cx,demand,|grant|{let step=owner.close_step(grant)?;step.admit(grant,owner.terminal_is_empty())});
+                return frame_prepared_close(cx,demand,|effect|owner.close_step(effect));
             }
             if let Some(step)=frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
             self.icon_upload=None;return frame_receive_close(frame_inline_progress(0),cx);
@@ -469,6 +469,12 @@ pub enum FrameBuildBoundaryStep {
 }
 
 /// 🧾️ Validates the original recovered frame owner's full close receipt before advancing.
+/// 🧹️ Closes one abandoned ui-prepared owner under the frame turn's own effect and reports whether the abandonment queue is drained.
+pub fn frame_prepared_effect_abandonment_complete(cx:&mut semio_framework_job::StepContext<'_>,quote:Result<RetainedCloneGrant,semio_framework_value::ValueError>,close:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_ui_prepared::retirement::PreparedClose)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let quote=quote.map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+    Ok(matches!(semio_ui_prepared::retirement::prepared_close_turn(cx,quote,close)?,InteractiveJobCloseStep::Complete{..}))
+}
+
 pub fn frame_prepared_abandonment_complete(grant:RetainedCloneGrant,step:Result<InteractiveJobCloseStep,semio_framework_value::ValueError>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     let step=step.and_then(|step|step.admit(grant,matches!(step,InteractiveJobCloseStep::Complete{..})));
     Ok(matches!(frame_receive_close(step,cx)?,InteractiveJobCloseStep::Complete{..}))
@@ -494,7 +500,7 @@ impl AppFrameAfterChrome {
         if let Some(owner)=self.upload_rejected.as_mut(){
             if !owner.terminal_is_empty(){
                 let demand=owner.next_close_demands(grant.maximum_copy_bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
-                return frame_original_primitive_close(cx,demand,|grant|{let step=owner.close_step(grant)?;step.admit(grant,owner.terminal_is_empty())});
+                return frame_prepared_close(cx,demand,|effect|owner.close_step(effect));
             }
             if let Some(step)=frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
             self.upload_rejected=None;return frame_receive_close(frame_inline_progress(0),cx);
@@ -502,7 +508,7 @@ impl AppFrameAfterChrome {
         if let Some(owner)=self.resource_input.as_mut(){
             if !owner.terminal_is_empty(){
                 let demand=owner.next_close_demands(grant.maximum_copy_bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
-                return frame_original_primitive_close(cx,demand,|grant|{let step=owner.close_step(grant)?;step.admit(grant,owner.terminal_is_empty())});
+                return frame_prepared_close(cx,demand,|effect|owner.close_step(effect));
             }
             if let Some(step)=frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
             self.resource_input=None;return frame_receive_close(frame_inline_progress(0),cx);
@@ -527,6 +533,11 @@ pub fn frame_unpriced_child() -> Result<InteractiveJobCloseStep,semio_framework_
 /// 🎟️ One quoted primitive debits the unchanged frame caller exactly once.
 fn frame_draw_retirement_demand(draw: &DrawList) -> Result<RetainedCloneGrant, semio_framework_value::ValueError> {
     Ok(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: draw.next_retirement_copy_byte_demand()?, maximum_capacity_bytes: draw.next_retirement_capacity_byte_demand()?, maximum_release_bytes: draw.next_retirement_release_byte_demand()?, maximum_depth: draw.next_retirement_depth_demand()? })
+}
+
+/// 🧾️ Closes one ui-prepared owner under the turn's own effect; a finished owner is observed by its terminal witness on the next call.
+fn frame_prepared_close(cx:&mut semio_framework_job::StepContext<'_>,quote:RetainedCloneGrant,close:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_ui_prepared::retirement::PreparedClose)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+    Ok(match semio_ui_prepared::retirement::prepared_close_turn(cx,quote,close)?{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})
 }
 
 fn frame_original_primitive_close(cx:&mut semio_framework_job::StepContext<'_>,quote:RetainedCloneGrant,advance:impl FnOnce(RetainedCloneGrant)->Result<InteractiveJobCloseStep,semio_framework_value::ValueError>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{

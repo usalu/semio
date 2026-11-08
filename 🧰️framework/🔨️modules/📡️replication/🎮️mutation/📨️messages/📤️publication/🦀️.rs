@@ -44,7 +44,8 @@ impl MutationMessagePublication {
         let source=if self.selection_index==0{self.original.retained_message_rows()}else{&self.copied};
         Ok(RetirementDemand{copy_bytes:cursor.next_copy_byte_demand(source),capacity_bytes:cursor.next_capacity_byte_demand(),release_bytes:cursor.next_release_byte_demand(source)?,depth:2})
     }
-    pub fn select(&mut self,edit_id_bytes:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn select(&mut self,edit_id_bytes:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
         let idle=RetainedCloneProgress::default();
         if self.closing||self.transferred{return Err(fault("diagnostic selection follows transfer or closure"));}
         if self.selection_context.is_some_and(|bytes|bytes!=edit_id_bytes){return Err(fault("diagnostic selection edit extent changed"));}
@@ -56,7 +57,7 @@ impl MutationMessagePublication {
         let cursor=self.selection[self.selection_index].as_mut().ok_or_else(||fault("diagnostic selection original cursor is absent"))?;
         if cursor.is_finished(){let rows=cursor.take().ok_or_else(||fault("diagnostic selected rows are absent"))?;if self.selection_index==0{*self.original.retained_message_rows_mut()=rows;self.index=self.original_messages().len();}else{*self.copied=rows;}self.selection[self.selection_index]=None;self.selection_index+=1;let receipt=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle};return Ok(if self.selection_ready(edit_id_bytes){RetainedCloneStep::Complete(receipt)}else{RetainedCloneStep::Progress(receipt)});}
         let source=if self.selection_index==0{self.original.retained_message_rows_mut()}else{&mut self.copied};
-        Ok(RetainedCloneStep::Progress(cursor.step(source,RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})?))
+        Ok(RetainedCloneStep::Progress(cursor.step(source,&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}))?))
     }
 
     /// 🪪️ Rebinds one original and copied row to the actual batch or transaction operation offset.
@@ -192,7 +193,7 @@ fn fault(message: &'static str) -> ValueError { ValueError::literal(ValueRefusal
 impl ErasedSnapshotRetirement for MutationMessagePublication {
     fn next_demand(&self, _: usize) -> Result<RetirementDemand, ValueError> { self.close_demands() }
     fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{self.close_work_demand()}
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome {let turn=Self::close_step(self,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}}
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{crate::replay_retirement::erased_close(effect,|grant|Self::close_step(self,grant))}
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands()?.copy_bytes) }
     fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(self.close_demands()?.capacity_bytes) }
@@ -268,7 +269,7 @@ impl MutationMessagePublicationBatch {
 impl ErasedSnapshotRetirement for MutationMessagePublicationBatch {
     fn next_demand(&self, _: usize) -> Result<RetirementDemand, ValueError> { self.close_demands() }
     fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{self.close_work_demand()}
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome {let turn=Self::close_step(self,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}}
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{crate::replay_retirement::erased_close(effect,|grant|Self::close_step(self,grant))}
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands()?.copy_bytes) }
     fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(self.close_demands()?.capacity_bytes) }

@@ -1,0 +1,73 @@
+//! 🧪️ Root native allocator custody creates and drains actual canonical source fixtures.
+use semio_framework_value_retirement::{RetainedAllocationEffect,RetireOwned,RetirementDemand,RetainedWorkOutcome,RetainedCloneProgress,RetainedCloneStep};
+#[path="../../../♻️retirement/🧪️tests/⏱️work/🦀️.rs"] mod work;
+use semio_framework_value_clone_source::{RetainedCloneSource,RetainedCloneGrant,RetainedCloneSourceAdmission,ValueError,ValueRefusalKind};
+const STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1048576,maximum_copy_bytes:16777216,maximum_capacity_bytes:16777216,maximum_release_bytes:33554432,maximum_depth:256};
+const CPU:u64=1048576;
+/// 🎟️ Drives one staged owned admission to its published source under one repeated grant, returning both inputs after any refusal.
+pub fn admit_owned<A:RetireOwned+Sync+'static,B:RetireOwned>(owner:A,authority:B,grant:RetainedCloneGrant)->RetainedWorkOutcome<(RetainedCloneSource<A>,RetainedCloneProgress),(ValueError,A,B)>{drive(RetainedCloneSource::admission_owned(owner,authority),grant)}
+/// 🎟️ Drives one staged borrowed admission to its published source under one repeated grant, returning the authority after any refusal.
+pub fn admit_borrowed<T:Sync+'static,A:RetireOwned+Sync>(authority:A,project:for<'a> fn(&'a A)->&'a T,grant:RetainedCloneGrant)->RetainedWorkOutcome<(RetainedCloneSource<T,A>,RetainedCloneProgress),(ValueError,A)>{
+ let turn=drive(RetainedCloneSource::admission_borrowed(authority,project),grant);
+ RetainedWorkOutcome{result:turn.result.map_err(|(error,authority,())|(error,authority)),work:turn.work}
+}
+fn unfunded<T:Sync+'static,A:RetireOwned+Sync,B:RetireOwned>(admission:&RetainedCloneSourceAdmission<T,A,B>,grant:RetainedCloneGrant)->ValueError{
+ let kind=match admission.next_demand().or_else(|_|admission.next_return_demand()){Ok(demand)=>if grant.maximum_items==0{ValueRefusalKind::WorkLimit}else if grant.maximum_depth<demand.depth{ValueRefusalKind::DepthLimit}else{ValueRefusalKind::OwnershipLimit},Err(_)=>ValueRefusalKind::OwnershipLimit};
+ ValueError::literal(kind,"original source admission is not funded")
+}
+fn drive<T:Sync+'static,A:RetireOwned+Sync,B:RetireOwned>(mut admission:RetainedCloneSourceAdmission<T,A,B>,grant:RetainedCloneGrant)->RetainedWorkOutcome<(RetainedCloneSource<T,A>,RetainedCloneProgress),(ValueError,A,B)>{
+ let mut total=RetainedCloneProgress::default();let mut work=0u64;
+ for _ in 0..64{
+  if admission.phase()=="ready"{break}
+  let turn=admission.advance(grant);work=work.saturating_add(turn.work);
+  match turn.result{
+   Ok(step)=>{let progress=step.progress();assert!(progress.fits(grant),"fixture admission stage exceeded its grant");total=total.checked_add(progress).expect("fixture admission receipt overflow");if progress==RetainedCloneProgress::default()&&turn.work==0{return {let error=unfunded(&admission,grant);refuse(admission,work,error)}}}
+   Err(error)=>return refuse(admission,work,error),
+  }
+ }
+ let mut output=None;let turn=admission.take_output(&mut output,grant);work=work.saturating_add(turn.work);
+ match turn.result{Ok(step)=>{total=total.checked_add(step.progress()).expect("fixture admission receipt overflow")},Err(error)=>return refuse(admission,work,error)}
+ match output{Some(source)=>RetainedWorkOutcome{result:Ok((source,total)),work},None=>{let error=unfunded(&admission,grant);refuse(admission,work,error)}}
+}
+fn refuse<T:Sync+'static,A:RetireOwned+Sync,B:RetireOwned,R>(mut admission:RetainedCloneSourceAdmission<T,A,B>,work:u64,error:ValueError)->RetainedWorkOutcome<R,(ValueError,A,B)>{
+ let release=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64};let mut inputs=None;
+ for _ in 0..256{admission.return_inputs(&mut inputs,release).result.expect("fixture admission returns its inputs");if inputs.is_some(){break}}
+ let(owner,authority)=inputs.expect("fixture admission returns both inputs");RetainedWorkOutcome{result:Err((error,owner,authority)),work}
+}
+/// 🔭️ Observes an enclosing fixture scope independently of its canonical inner receipt checks.
+pub fn observe_fixture_source_allocations<T>(operation:impl FnOnce()->T)->(T,(usize,usize)){
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(operation);assert!(!heap.overflowed,"fixture source observation overflow");(result,(heap.requested_bytes,heap.released_bytes))
+}
+fn selected_grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+pub struct FixtureSource<T:RetireOwned+Sync>{source:RetainedCloneSource<T>,remaining:RetainedCloneGrant,cpu:u64,actual:Option<usize>}
+impl<T:RetireOwned+Sync> std::ops::Deref for FixtureSource<T>{type Target=RetainedCloneSource<T>;fn deref(&self)->&Self::Target{&self.source}}
+fn grant(remaining:RetainedCloneGrant,cpu:u64,d:RetirementDemand)->RetainedCloneGrant{let g=selected_grant(d);assert!(remaining.maximum_items>0&&cpu>0,"fixture source exhausted its original lifetime controls");assert!(g.maximum_copy_bytes<=remaining.maximum_copy_bytes&&g.maximum_capacity_bytes<=remaining.maximum_capacity_bytes&&g.maximum_release_bytes<=remaining.maximum_release_bytes&&g.maximum_depth<=remaining.maximum_depth,"fixture source exhausted an original physical currency");g}
+trait FixtureFailure:std::fmt::Display{fn progress(&self)->RetainedCloneProgress;}
+impl FixtureFailure for semio_framework_value_clone_source::ValueError{fn progress(&self)->RetainedCloneProgress{self.retained_progress()}}
+impl FixtureFailure for semio_framework_value_clone_source::OriginalRetirementFailure{fn progress(&self)->RetainedCloneProgress{self.retained_progress()}}
+fn debit<E:FixtureFailure>(remaining:&mut RetainedCloneGrant,cpu:&mut u64,g:RetainedCloneGrant,turn:RetainedWorkOutcome<RetainedCloneStep,E>,heap:(usize,usize))->RetainedCloneStep{*cpu=cpu.checked_sub(turn.work).expect("fixture source exhausted original CPU");let p=match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.progress()};assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));remaining.maximum_items=remaining.maximum_items.checked_sub(p.copied_items).unwrap();remaining.maximum_copy_bytes=remaining.maximum_copy_bytes.checked_sub(p.copied_bytes).unwrap();remaining.maximum_capacity_bytes=remaining.maximum_capacity_bytes.checked_sub(p.retained_capacity_bytes).unwrap();remaining.maximum_release_bytes=remaining.maximum_release_bytes.checked_sub(p.released_bytes).unwrap();turn.result.unwrap_or_else(|error|panic!("original fixture source work refused: {error}"))}
+impl<T:RetireOwned+Sync> FixtureSource<T>{
+ /// 🎟️ Selects one actual close under this fixture's existing lifetime bank.
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_clone_source::OriginalRetirementOutcome{let g=effect.grant();
+  assert!(g.maximum_items<=self.remaining.maximum_items&&g.maximum_copy_bytes<=self.remaining.maximum_copy_bytes&&g.maximum_capacity_bytes<=self.remaining.maximum_capacity_bytes&&g.maximum_release_bytes<=self.remaining.maximum_release_bytes&&g.maximum_depth<=self.remaining.maximum_depth,"fixture selected close exceeds its existing stock");
+  let(turn,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||self.source.close_step(&mut effect.reborrow(g,effect.maximum_work_units()).expect("retirement child exceeds original effect")));let p=match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));self.cpu=self.cpu.checked_sub(turn.work).expect("same fixture CPU bank");self.remaining.maximum_items=self.remaining.maximum_items.checked_sub(p.copied_items).unwrap();self.remaining.maximum_copy_bytes=self.remaining.maximum_copy_bytes.checked_sub(p.copied_bytes).unwrap();self.remaining.maximum_capacity_bytes=self.remaining.maximum_capacity_bytes.checked_sub(p.retained_capacity_bytes).unwrap();self.remaining.maximum_release_bytes=self.remaining.maximum_release_bytes.checked_sub(p.released_bytes).unwrap();turn
+ }
+ fn drain(&mut self){let mut work=work::Work::new();while !self.source.terminal_is_empty(){let demand=self.source.next_close_demand(4096).unwrap();let g=grant(self.remaining,self.cpu,demand);assert_eq!(self.source.next_close_demand(g.maximum_copy_bytes).unwrap(),demand,"fixture source close quote must remain selected by its exact grant");let units=self.source.next_close_work_demand(4096).expect("actual fixture source close work");assert!(units<=self.cpu,"fixture source exhausted its existing CPU");assert!(self.actual.is_none(),"fixture source retains its original physical attempt");let(turn,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||self.source.close_step(&mut crate::RetainedAllocationEffect::new(g,units,&mut self.actual)));if let Some(actual)=self.actual{assert_eq!(actual,heap.0)}let step=debit(&mut self.remaining,&mut self.cpu,g,turn,heap);self.actual=None;let idle=step.progress()==Default::default()&&!self.source.terminal_is_empty()&&self.source.next_close_demand(4096).unwrap()==demand;work.observe(idle);}}
+}
+impl<T:RetireOwned+Sync> Drop for FixtureSource<T>{fn drop(&mut self){if !std::thread::panicking(){self.drain();}}}
+pub trait FixtureSourceBirth<T:RetireOwned+Sync>{fn from_owner(owner:T)->FixtureSource<T>;}
+impl<T:RetireOwned+Sync> FixtureSourceBirth<T> for RetainedCloneSource<T>{
+ fn from_owner(owner:T)->FixtureSource<T>{let(mut remaining,mut cpu)=(STOCK,CPU);let mut admission=Self::admission_owned(owner,());let mut output=None;let mut bound=work::Work::new();let mut allocation_actual=None;for _ in 0..STOCK.maximum_items{if admission.terminal_is_empty(){break}let phase=admission.phase();let g=grant(remaining,cpu,admission.next_demand().unwrap());let(turn,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||if admission.phase()=="ready"{admission.take_output(&mut output,g)}else{admission.advance(&mut crate::RetainedAllocationEffect::new(g,cpu,&mut allocation_actual))});let step=debit(&mut remaining,&mut cpu,g,turn,heap);if let Some(actual)=allocation_actual.take(){assert_eq!(actual,heap.0)}bound.observe(step.progress()==Default::default()&&!admission.terminal_is_empty()&&admission.phase()==phase);}assert!(admission.terminal_is_empty(),"fixture source admission exhausted its original turn bound");FixtureSource{source:output.expect("fixture source retained output"),remaining,cpu,actual:None}}
+}
+#[cfg(test)]
+mod tests{use super::*;#[test]fn source_close_funds_one_selected_event_without_independent_axes(){let _=work::Work::new();let(_,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(work::Work::new);assert_eq!(heap,(0,0));let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../♻️retirement/🧪️tests/⏱️work/🧫️fixtures/🔣️.json")).unwrap();for row in fixture["selectedClose"].as_array().unwrap(){let demand=RetirementDemand{copy_bytes:row["copyBytes"].as_u64().unwrap()as usize,capacity_bytes:row["capacityBytes"].as_u64().unwrap()as usize,release_bytes:row["releaseBytes"].as_u64().unwrap()as usize,depth:row["depth"].as_u64().unwrap()as usize};let grant=selected_grant(demand);assert_eq!(grant.maximum_items,1);assert_eq!((grant.maximum_copy_bytes,grant.maximum_capacity_bytes,grant.maximum_release_bytes,grant.maximum_depth),(demand.copy_bytes,demand.capacity_bytes,demand.release_bytes,demand.depth));assert!(semio_framework_value_clone_source::retained_clone_grant_admits(grant,demand));for denied in[RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:0,..grant},RetainedCloneGrant{maximum_capacity_bytes:0,..grant},RetainedCloneGrant{maximum_release_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let expected=denied.maximum_items>0&&denied.maximum_copy_bytes>=demand.copy_bytes&&denied.maximum_capacity_bytes>=demand.capacity_bytes&&denied.maximum_release_bytes>=demand.release_bytes&&denied.maximum_depth>=demand.depth;assert_eq!(semio_framework_value_clone_source::retained_clone_grant_admits(denied,demand),expected);}}}}
+
+#[cfg(test)]
+mod source_bank_tests{
+ use super::*;
+ #[test]
+ fn fixture_source_birth_and_paid_close_share_the_existing_neutral_lifetime_bank(){
+  let _=work::Work::new();let f:serde_json::Value=serde_json::from_str(include_str!("../🎟️work/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+  let original:RetainedCloneGrant=serde_json::from_value(f["stock"].clone()).unwrap();assert_eq!(STOCK,original);assert_eq!(CPU,f["maximumCpuWork"].as_u64().unwrap());let input=f["text"].as_str().unwrap().to_owned();let pointer=input.as_ptr();let capacity=input.capacity();let(mut source,birth_heap)=observe_fixture_source_allocations(||RetainedCloneSource::from_owner(input));assert!(birth_heap.0>0);assert_eq!(birth_heap.1,0);assert_eq!(source.borrow().get().as_ptr(),pointer);assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),f["text"]);assert_eq!(CPU-source.cpu,f["expected"]["birthCpu"].as_u64().unwrap());let admitted=STOCK.maximum_capacity_bytes-source.remaining.maximum_capacity_bytes;assert!(admitted>0);for _ in 0..STOCK.maximum_items{if source.terminal_is_empty(){break}let d=source.next_close_demand(4096).unwrap();let g=grant(source.remaining,source.cpu,d);let(turn,heap)=observe_fixture_source_allocations(||{let units=source.next_close_work_demand(4096).unwrap();let mut actual=None;let turn=source.close_step(&mut crate::RetainedAllocationEffect::new(g,units,&mut actual));if let Some(actual)=actual{assert_eq!(actual,match &turn.result{Ok(step)=>step.progress().retained_capacity_bytes,Err(error)=>error.retained_progress().retained_capacity_bytes})}turn});let p=turn.result.unwrap().progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));}assert!(source.terminal_is_empty());let born=STOCK.maximum_capacity_bytes-source.remaining.maximum_capacity_bytes;assert!(born>=admitted);assert_eq!(STOCK.maximum_release_bytes-source.remaining.maximum_release_bytes,born+capacity);let cpu=source.cpu;source.drain();assert_eq!(source.cpu,cpu);assert_eq!(semio_framework_value_testing_allocator::observe_retirement_allocations(||drop(source)).1,(0,0));
+ }
+}

@@ -561,7 +561,13 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         for entry in entries {
             let mut pending = PendingDocumentArchiveMember::new(entry).map_err(|(fault, _)| fault)?;
             while !pending.fill_one_page(store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES)? {}
-            while !matches!(pending.retire_source_step(RetainedCloneGrant { maximum_copy_bytes: store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES, ..plugin_demand_grant(pending.source_retirement_demands()) }), RetainedCloneStep::Complete(_)) {}
+            loop {
+                match pending.retire_source_step(RetainedCloneGrant { maximum_copy_bytes: store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES, ..plugin_demand_grant(pending.source_retirement_demands()) }) {
+                    RetainedCloneStep::Complete(_) => break,
+                    RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => return Err(plugin_sdk_fault("live store replacement member source retirement made no progress under its own demand")),
+                    RetainedCloneStep::Progress(_) => {}
+                }
+            }
             let ingress = pending.take_ingress(handle, stores.store.local_actor_id().clone()).map_err(|(fault, _)| fault)?;
             active.admit_member(ingress).map_err(|(fault, _)| fault)?;
         }

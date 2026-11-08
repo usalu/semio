@@ -6,7 +6,8 @@ pub use semio_ui_contract_text::{UiText,UiTextOriginalCopy,UI_TEXT_CLIP_MARK};
 pub use semio_ui_contract_identity::{UiNodeId,UiRevision,SurfaceId};
 pub const UI_VALUE_NONE:usize=usize::MAX;
 use semio_framework_value_persistent::list as fixed_list_storage;
-pub use fixed_list_storage::{PagedListAllocationError,PagedListError,PagedListProgress,PagedListRefusalKind};
+pub use fixed_list_storage::{PagedListAllocationError,PagedListError,PagedListProgress,PagedListRefusalKind,PagedListReleaseFailure,PagedListReleaseOutcome,PagedListReservationFailure,PagedListReservationOutcome};
+use semio_framework_value::{RetainedAllocationEffect,RetainedCloneProgress,RetainedWorkOutcome};
 
 #[path = "🔢️fixed-list/🦀️.rs"]
 mod fixed_list;

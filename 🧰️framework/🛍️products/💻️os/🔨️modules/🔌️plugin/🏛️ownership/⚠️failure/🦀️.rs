@@ -31,7 +31,7 @@ impl From<Fault> for PluginLifecycleFailure{fn from(primary:Fault)->Self{Self{ef
 impl From<ValueError> for PluginLifecycleFailure{fn from(primary:ValueError)->Self{Self{effects:primary.retained_progress(),primary:PluginLifecyclePrimary::Value(primary),receipt_refusal:None,context_refusal:None,work_refusal:None}}}
 impl From<semio_framework_value::OriginalRetirementFailure> for PluginLifecycleFailure{fn from(original:semio_framework_value::OriginalRetirementFailure)->Self{PluginLifecyclePrimary::Retirement(original).into()}}
 impl From<semio_framework_job::OriginalTurnFailure> for PluginLifecycleFailure{
- fn from(failure:semio_framework_job::OriginalTurnFailure)->Self{Self{effects:failure.effects,primary:match failure.primary{semio_framework_job::OriginalTurnPrimary::Value(error)=>PluginLifecyclePrimary::Value(error),semio_framework_job::OriginalTurnPrimary::Fault(fault)=>PluginLifecyclePrimary::Fault(fault),semio_framework_job::OriginalTurnPrimary::Domain(original)=>PluginLifecyclePrimary::Domain(original),semio_framework_job::OriginalTurnPrimary::Receiving(original)=>PluginLifecyclePrimary::Receiving(original),semio_framework_job::OriginalTurnPrimary::Retirement(original)=>PluginLifecyclePrimary::Retirement(original),semio_framework_job::OriginalTurnPrimary::RetirementReceiving(original)=>PluginLifecyclePrimary::RetirementReceiving(original)},receipt_refusal:failure.receipt_refusal,context_refusal:failure.context_refusal,work_refusal:failure.work_refusal}}
+ fn from(failure:semio_framework_job::OriginalTurnFailure)->Self{Self{effects:failure.effects,primary:match failure.primary{semio_framework_job::OriginalTurnPrimary::Value(error)=>PluginLifecyclePrimary::Value(error),semio_framework_job::OriginalTurnPrimary::Fault(fault)=>PluginLifecyclePrimary::Fault(fault),semio_framework_job::OriginalTurnPrimary::Domain(original)=>PluginLifecyclePrimary::Domain(original),semio_framework_job::OriginalTurnPrimary::Receiving(original)=>PluginLifecyclePrimary::Receiving(original),semio_framework_job::OriginalTurnPrimary::Retirement(original)=>PluginLifecyclePrimary::Retirement(original),semio_framework_job::OriginalTurnPrimary::RetirementReceiving(original)=>PluginLifecyclePrimary::RetirementReceiving(original),semio_framework_job::OriginalTurnPrimary::NativeSource(outcome)=>PluginLifecyclePrimary::Value(ValueError::new(ValueRefusalKind::InvariantViolated,outcome.message().to_owned()).with_retained_progress(outcome.retained_progress())),semio_framework_job::OriginalTurnPrimary::NativeRetirementSource(outcome)=>PluginLifecyclePrimary::Value(ValueError::new(ValueRefusalKind::InvariantViolated,outcome.message().to_owned()).with_retained_progress(outcome.retained_progress()))},receipt_refusal:failure.receipt_refusal,context_refusal:failure.context_refusal,work_refusal:failure.work_refusal}}
 }
 impl From<PluginLifecycleFailure> for semio_framework_job::OriginalTurnFailure{
  fn from(failure:PluginLifecycleFailure)->Self{Self{effects:failure.effects,primary:match failure.primary{PluginLifecyclePrimary::Value(error)=>semio_framework_job::OriginalTurnPrimary::Value(error),PluginLifecyclePrimary::Fault(fault)=>semio_framework_job::OriginalTurnPrimary::Fault(fault),PluginLifecyclePrimary::Domain(original)=>semio_framework_job::OriginalTurnPrimary::Domain(original),PluginLifecyclePrimary::Receiving(original)=>semio_framework_job::OriginalTurnPrimary::Receiving(original),PluginLifecyclePrimary::Retirement(original)=>semio_framework_job::OriginalTurnPrimary::Retirement(original),PluginLifecyclePrimary::RetirementReceiving(original)=>semio_framework_job::OriginalTurnPrimary::RetirementReceiving(original)},receipt_refusal:failure.receipt_refusal,context_refusal:failure.context_refusal,work_refusal:failure.work_refusal}}
@@ -67,6 +67,67 @@ pub fn original_lifecycle_step(cx:&mut StepContext<'_>,loan:RetainedCloneGrant,d
  if !progress.fits(grant){return Err(debit_unposted(PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle receipt exceeds its exact phase loan").with_retained_progress(progress)),before,cx))}
  if matches!(step,PluginLifecycleStep::Complete(_))&&!terminal{return Err(debit_unposted(PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle completed without its terminal-empty witness").with_retained_progress(progress)),before,cx))}
  let remaining=original_lifecycle_unposted(progress,before,original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress()))?;cx.consume_retained(remaining).map_err(|error|PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;Ok(step)
+}
+
+/// 🪙️ Like [`original_lifecycle_step`] but the owner runs inside the context's own performed-work effect; the performed work is debited once here, and a refused quote runs nothing and charges nothing.
+pub fn original_lifecycle_effect_step(cx:&mut StepContext<'_>,loan:RetainedCloneGrant,demand:RetirementDemand,advance:impl FnOnce(&mut StepContext<'_>,&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(PluginLifecycleStep,bool),PluginLifecycleFailure>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+ let grant=original_lifecycle_grant(cx,loan);if cx.retirement_should_yield()||!super::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}
+ let before=cx.retained_progress();let reserved_before=cx.reserved_return_progress();let fuel=cx.fuel_remaining();
+ let Some((result,performed))=cx.with_original_effect(grant,advance)?else{return Ok(PluginLifecycleStep::Progress(Default::default()))};
+ cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
+ let(step,terminal)=result.map_err(|failure|debit_unposted(failure,before,cx))?;let progress=step.progress().unwrap_or_default();
+ if !progress.fits(grant){return Err(debit_unposted(PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle receipt exceeds its exact phase loan").with_retained_progress(progress)),before,cx))}
+ if matches!(step,PluginLifecycleStep::Complete(_))&&!terminal{return Err(debit_unposted(PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle completed without its terminal-empty witness").with_retained_progress(progress)),before,cx))}
+ let remaining=original_lifecycle_unposted(progress,before,original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress()))?;cx.consume_retained(remaining).map_err(|error|PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;Ok(step)
+}
+
+/// 🧾️ Folds one finished retirement poll into the plain step lifecycle closers return; the effect already recorded the work and a pending poll made no physical progress.
+pub fn plugin_settle_poll(poll:semio_framework_value::OriginalRetirementPoll)->Result<semio_framework_value::RetainedCloneStep,PluginLifecycleFailure>{
+ match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(PluginLifecycleFailure::from)}
+}
+
+/// 🧾️ Projects the first original cause of a retirement failure into one value refusal, keeping its physical receipt.
+pub fn plugin_failure_error(failure:semio_framework_value::OriginalRetirementFailure)->ValueError{
+ let progress=failure.retained_progress();let(primary,work,receipt,allocation,child,_)=failure.into_parts();
+ primary.or(work).or(receipt).or_else(||child.map(|child|plugin_failure_error(*child))).unwrap_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,if allocation.is_some(){"original retirement allocation was refused"}else{"original retirement failed without a cause"})).with_retained_progress(progress)
+}
+
+/// 🧾️ Folds one finished retirement poll into a plain value step; a pending poll made no physical progress.
+pub fn plugin_settle_value(poll:semio_framework_value::OriginalRetirementPoll)->Result<semio_framework_value::RetainedCloneStep,ValueError>{
+ match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(plugin_failure_error)}
+}
+
+/// ⏱️ Records one pure retirement action on the effect; a refused unit is a typed work limit.
+pub fn plugin_pay_unit(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(),ValueError>{
+ if effect.performed(1)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original lifecycle action exceeds its work grant"))}
+}
+
+/// 🌉️ Runs one still grant-shaped closer under the effect's grant and records its reported work on the effect exactly once.
+pub fn plugin_grant_step<E:From<ValueError>>(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,close:impl FnOnce(RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneStep,E>)->Result<semio_framework_value::RetainedCloneStep,E>{
+ let turn=close(effect.grant());let work=u64::try_from(turn.work).unwrap_or(u64::MAX);
+ match effect.performed(work){Ok(true)=>turn.result,Ok(false)=>turn.result.and_then(|_|Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original lifecycle closer exceeds its work grant").into())),Err(error)=>Err(error.into())}
+}
+
+/// 🌉️ Runs one pure grant-shaped closer that reports no work and records one unit on the effect.
+pub fn plugin_unit_step<T,E:From<ValueError>>(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,close:impl FnOnce(RetainedCloneGrant)->Result<T,E>)->Result<T,E>{
+ let result=close(effect.grant());
+ match effect.performed(1){Ok(true)=>result,Ok(false)=>result.and_then(|_|Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original lifecycle closer exceeds its work grant").into())),Err(error)=>Err(error.into())}
+}
+
+/// 🪙️ Runs one effect-shaped closer inside the context's own performed-work effect and debits its performed work once; a refused quote advances nothing.
+pub fn plugin_effect_close<E:From<ValueError>>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,close:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,E>)->Result<semio_framework_value::RetainedCloneStep,E>{
+ match cx.with_original_effect(grant,|_,effect|close(effect)).map_err(E::from)?{
+  Some((result,performed))=>{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));result}
+  None=>Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))
+ }
+}
+
+/// 🪙️ Runs one plain-result owner inside the context's own performed-work effect and posts its receipt and performed work through the original receiving debit once; a yielding turn or refused quote advances nothing.
+pub fn plugin_effect_turn<E:Into<semio_framework_job::OriginalTurnPrimary>>(cx:&mut StepContext<'_>,close:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,E>)->Result<semio_framework_value::RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
+ if cx.retirement_should_yield(){return Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))}
+ let grant=RetainedCloneGrant{maximum_items:1,..cx.retained_grant()};
+ let Some((result,performed))=cx.with_original_effect(grant,|_,effect|close(effect))? else{return Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))};
+ semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:performed})
 }
 
 #[cfg(test)]

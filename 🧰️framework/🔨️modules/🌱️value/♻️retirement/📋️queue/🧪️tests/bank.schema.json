@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "stock"],
+  "properties": {
+    "version": { "const": 1 },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "copyBytes", "capacityBytes", "releaseBytes", "depth", "fuel"],
+      "properties": {
+        "items": { "type": "integer", "minimum": 4096 },
+        "copyBytes": { "type": "integer", "minimum": 16777216 },
+        "capacityBytes": { "type": "integer", "minimum": 16777216 },
+        "releaseBytes": { "type": "integer", "minimum": 16777216 },
+        "depth": { "type": "integer", "minimum": 128 },
+        "fuel": { "type": "integer", "minimum": 4096 }
+      }
+    }
+  }
+}

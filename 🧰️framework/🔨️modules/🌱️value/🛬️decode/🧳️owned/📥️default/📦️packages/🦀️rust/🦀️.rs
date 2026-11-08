@@ -10,5 +10,5 @@ pub use defaults::*;
 #[cfg(test)]pub(crate) use semio_framework_value_testing_allocator::observe_retirement_allocations;
 
 pub use semio_framework_value_native_decoding::native_decoding;
-pub use semio_framework_value_retirement::{OriginalRetirementOutcome,OriginalRetirementFailure};
+pub use semio_framework_value_retirement::{OriginalRetirementOutcome,OriginalRetirementPoll,OriginalRetirementFailure,RetirementPollExit};
 #[cfg(test)]pub use semio_framework_value_testing_admission as source_fixture;

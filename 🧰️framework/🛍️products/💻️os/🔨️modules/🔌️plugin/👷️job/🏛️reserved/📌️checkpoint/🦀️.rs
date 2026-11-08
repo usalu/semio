@@ -1,5 +1,5 @@
 //! 🚩️ Native reserved checkpoint routing preserves the actual arguments, child metadata source and parent command through one original continuation.
-use super::child_vcs::{invalid,header,original,paid,*,checkpoint::{CheckpointMetadata,cascade::{ChildCheckpointCascade,ChildRosterIdentity}}};
+use semio_plugin_job_child_vcs::{invalid,header,original,paid,*,checkpoint::{CheckpointMetadata,cascade::{ChildCheckpointCascade,ChildRosterIdentity}}};
 use semio_os_kernel::os_store::{SpaceMember,ArtifactNativeVcsRequest,ArtifactNativeVcsResult};
 use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetirementDemand,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::RetainedCloneClose};

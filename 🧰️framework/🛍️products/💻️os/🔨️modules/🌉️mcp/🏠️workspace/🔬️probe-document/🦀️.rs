@@ -259,7 +259,7 @@ pub fn close_probe_store_to_terminal(mut probe_store: ProbeStore) {
     const PROBE_STORE_CLOSE_BLOCKED_BACKOFF: std::time::Duration = std::time::Duration::from_millis(1);
     for _ in 0..PROBE_STORE_CLOSE_MAXIMUM_TURNS {
         let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 134_217_728, maximum_release_bytes: 134_217_728, maximum_depth: 256 };
-        match probe_store.close_owned_step(grant) {
+        match probe_store.close_owned_step_cold(grant) {
             Ok(semio_framework_value::RetainedCloneStep::Complete(progress)) => {
                 assert!(progress.fits(grant), "Probe store close exceeded the original caller turn");
                 assert!(probe_store.close_owned_terminal_is_empty(), "probe store close driver reported Complete without its exact terminal-empty witness");

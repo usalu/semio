@@ -3,6 +3,9 @@ use semio_framework_3d::mesh::*;
 use std::collections::{BTreeMap,HashMap,HashSet};
 use semio_framework_value::{ToValue,FromValue};
 
+/// 🏦️ Drives one step under an authoring wallet equal to the granted stock: these laws run without a job turn.
+fn funded<R>(grant:semio_framework_value::retained_clone::RetainedCloneGrant,step:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->R)->R{semio_framework_value::AuthoringWallet::new(grant,1<<20).run(grant,1<<16,step).unwrap().expect("work quote admitted").output}
+
 #[test]
 fn knife_cut_fixtures_preserve_surfaces_and_shared_boundaries() {
     let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/✂️knife-cut/🔣️.json")).unwrap();
@@ -530,13 +533,13 @@ fn retained_modeling_jobs_slice_work_and_match_synchronous_geometry() {
         if case["operation"] == "bevel" { synchronous.bevel_edges(&[EdgeId(0)],case["amount"].as_f64().unwrap() as f32,case["segments"].as_u64().unwrap() as u32).unwrap(); } else { synchronous.decimate(case["ratio"].as_f64().unwrap() as f32).unwrap(); }
         let mut sliced = make_job();
         let initial = sliced.progress();
-        assert!(matches!(sliced.step(0,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).unwrap(),MeshModelingStep::Working(_)));
+        assert!(matches!(funded(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},|effect|sliced.step(0,effect,&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())).unwrap(),MeshModelingStep::Working(_)));
         assert_eq!(sliced.progress(),initial);
         let mut calls = 0;
         let output = loop {
             let before = sliced.progress().units_done;
             calls += 1;
-            match sliced.step(1,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).unwrap() {
+            match funded(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},|effect|sliced.step(1,effect,&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())).unwrap() {
                 MeshModelingStep::Working(progress) => {
                     assert_eq!(progress.units_done,before+1);
                     assert!(progress.units_done < progress.units_total);
@@ -562,27 +565,27 @@ fn retained_modeling_jobs_slice_work_and_match_synchronous_geometry() {
         assert_eq!(source.to_obj().unwrap(),before);
         assert_eq!(sliced.progress().units_done,sliced.progress().units_total);
         sliced.cancel();
-        assert!(sliced.step(1,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).is_err());
+        assert!(funded(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},|effect|sliced.step(1,effect,&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())).is_err());
         let mut cancelled = make_job();
-        assert!(matches!(cancelled.step(1,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).unwrap(),MeshModelingStep::Working(_)));
+        assert!(matches!(funded(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},|effect|cancelled.step(1,effect,&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())).unwrap(),MeshModelingStep::Working(_)));
         let progress = cancelled.progress();
         cancelled.cancel();
-        assert!(matches!(cancelled.step(1,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).unwrap(),MeshModelingStep::Cancelled(value) if value.units_done == progress.units_done));
+        assert!(matches!(funded(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},|effect|cancelled.step(1,effect,&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())).unwrap(),MeshModelingStep::Cancelled(value) if value.units_done == progress.units_done));
         assert_eq!(source.to_obj().unwrap(),before);
         let mut batched = make_job();
-        let output = loop { match batched.step(3,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).unwrap() { MeshModelingStep::Done(mesh) => break mesh, MeshModelingStep::Working(_) => {}, MeshModelingStep::Cancelled(_) => panic!("unexpected cancellation") } };
+        let output = loop { match funded(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},|effect|batched.step(3,effect,&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())).unwrap() { MeshModelingStep::Done(mesh) => break mesh, MeshModelingStep::Working(_) => {}, MeshModelingStep::Cancelled(_) => panic!("unexpected cancellation") } };
         assert_eq!(output.to_obj().unwrap(),synchronous.to_obj().unwrap());
         for phase in case["cancelPhases"].as_array().unwrap() {
             let phase = phase.as_str().unwrap();
             let mut job = make_job();
             while job.progress().phase != phase {
-                assert!(matches!(job.step(1,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).unwrap(),MeshModelingStep::Working(_)),"missing phase {phase}");
+                assert!(matches!(funded(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},|effect|job.step(1,effect,&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())).unwrap(),MeshModelingStep::Working(_)),"missing phase {phase}");
             }
             let budget = case["sliceEvidence"]["cancelPhaseUnits"].as_u64().unwrap() as usize;
-            assert!(matches!(job.step(budget,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).unwrap(), MeshModelingStep::Working(_)));
+            assert!(matches!(funded(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},|effect|job.step(budget,effect,&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())).unwrap(), MeshModelingStep::Working(_)));
             let held = job.progress();
             job.cancel();
-            assert!(matches!(job.step(1000,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).unwrap(),MeshModelingStep::Cancelled(progress) if progress == held));
+            assert!(matches!(funded(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},|effect|job.step(1000,effect,&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())).unwrap(),MeshModelingStep::Cancelled(progress) if progress == held));
             assert_eq!(source.to_obj().unwrap(),before);
         }
     }

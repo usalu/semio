@@ -110,9 +110,9 @@ impl ArtifactStoreInitializationEditIndex {
         if let Some(close)=self.close.as_ref(){return if close.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<protocol::HistoryFoldIndex<String,usize>>>>(),depth:1,..Default::default()})}else{close.next_demand(body)}}
         if self.positions.terminal_is_empty(){return Ok(Default::default())}Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<protocol::HistoryFoldIndex<String,usize>>(),depth:1,..Default::default()})
     }
-    pub fn retire_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        let d=self.retirement_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-        if let Some(close)=self.close.as_mut(){if close.terminal_is_empty(){self.close.take();return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}return close.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}
+    pub fn retire_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();let d=self.retirement_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+        if let Some(close)=self.close.as_mut(){if close.terminal_is_empty(){self.close.take();return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}return semio_os_store_read::settle_close_poll(close.step(effect)).map(|step|RetainedCloneStep::Progress(step.progress()))}
         if self.positions.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}self.close=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(&mut self.positions)).unwrap_or_else(|_|unreachable!("native index declares original retirement")));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
     }
 }
@@ -275,8 +275,8 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         Ok(())
     }
 
-    pub fn settle_current_retirement_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        artifact_retirement_box_close_step(&mut self.close_active, grant).result
+    pub fn settle_current_retirement_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        semio_os_store_read::settle_close_poll(artifact_retirement_box_close_step(&mut self.close_active, effect))
     }
 
     /// ✏️ Installs the effective supersessions the initializer folds the applied edits with; the adopted store keeps
@@ -440,24 +440,34 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     }
 
     /// 🧹️ Admits original whole storage before transfer and retains refused values in their original fields.
-    pub fn close_step(&mut self, current_factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>
+    pub fn close_step(&mut self, current_factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>
     where P: Send + Sync + 'static,
     {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.taken { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         let demand = self.initialization_retirement_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "initialization retirement exceeds admitted depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        if self.close_active.is_some() { return self.settle_current_retirement_step(grant); }
+        if self.close_active.is_some() { return self.settle_current_retirement_step(effect); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         match self.close_phase {
             0 => {
-                if let Some(original) = self.current.take() {
-                    match ReturnedSnapshotReadRetirement::admit(original, Arc::clone(current_factory), child) {
-                        Ok((owner, receipt)) => { *self.close_active = Some(owner); self.close_phase = 1; if !receipt.fits(child) || receipt.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initialization shared constructor changed its admitted receipt")); } return Ok(RetainedCloneStep::Progress(receipt)); }
-                        Err((error, original, alias)) => { *self.current = Some(original); drop(alias); return Err(error); }
-                    }
+                if self.current.is_some() {
+                    let mut alias = Some(Arc::clone(current_factory));
+                    let mut output = None;
+                    let turn = match ReturnedSnapshotReadRetirement::admit_original(&mut self.current, &mut alias, &mut output, &mut effect.nested(child)) {
+                        semio_framework_value::RetainedWorkPoll::Pending { .. } => { drop(alias); return Ok(RetainedCloneStep::Progress(empty)); }
+                        semio_framework_value::RetainedWorkPoll::Complete(turn) => turn,
+                    };
+                    drop(alias);
+                    let receipt = turn.result?.progress();
+                    let Some(owner) = output else { return Ok(RetainedCloneStep::Progress(empty)); };
+                    *self.close_active = Some(owner);
+                    self.close_phase = 1;
+                    if !receipt.fits(child) || receipt.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initialization shared constructor changed its admitted receipt")); }
+                    return Ok(RetainedCloneStep::Progress(receipt));
                 }
             }
             1 => {

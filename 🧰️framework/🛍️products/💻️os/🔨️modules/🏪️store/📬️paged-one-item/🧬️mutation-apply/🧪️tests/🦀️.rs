@@ -2,8 +2,10 @@
 #[path="../../../../../../../🔨️modules/🌱️value/📽️projection/👁️post/🧪️testing/🦀️.rs"]
 mod post_fixture;
 use post_fixture::PostFixture;
+#[path="../../🧪️tests/⏱️effect/🦀️.rs"]
+mod effect;
 use semio_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
-use semio_framework_os_store_one_item_batch::paged_one_item as paged;
+use semio_os_store_one_item_batch::paged_one_item as paged;
 use semio_os_spr as protocol;
 use paged::mutation_apply_preparation_factory;
 use paged::PagedOneItemEdit;
@@ -184,7 +186,7 @@ impl<T: semio_framework_value::retirement::RetireOwned + Sync> OriginalSource<T>
             if self.0.terminal_is_empty() { return; }
             let demand = self.0.next_close_demand(4096).unwrap();
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            assert!(self.0.close_step(grant).result.unwrap().progress().fits(grant));
+            assert!(effect::settled(effect::with_effect(grant,effect::CPU,|effect|self.0.close_step(effect)).0).result.unwrap().progress().fits(grant));
         }
         panic!("original test source did not physically close");
     }
@@ -201,10 +203,10 @@ enum Outcome { Completed { post: PlainDocument, inverse: Vec<DocumentMutation>, 
 struct OriginalMutationIssuer;
 impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation> for OriginalMutationIssuer {fn retire_owned_work_demand(&self,_:&DocumentMutation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self, value: &DocumentMutation) -> usize { semio_framework_value::ArtifactOwnedValueRetirementFactory::retirement_birth_bytes(&OwnedValueRetirementFactory::<DocumentMutation>::default(), value) }
-    fn retire_owned(&self, value: DocumentMutation, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::OriginalRetirementFailure, DocumentMutation)> {let turn=(||{
-        ORIGINAL_ISSUER_RETIRES.set(ORIGINAL_ISSUER_RETIRES.get() + 1);
-        semio_framework_value::ArtifactOwnedValueRetirementFactory::retire_owned(&OwnedValueRetirementFactory::<DocumentMutation>::default(), value, grant)
-    })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
+
+    fn retire_owned_demands(&self,value:&DocumentMutation)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_value::ArtifactOwnedValueRetirementFactory::<DocumentMutation>::retire_owned_demands(&OwnedValueRetirementFactory::<DocumentMutation>::default(),value)}
+    fn retire_owned<'reply>(&self,value:&mut Option<DocumentMutation>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::factory::FactoryProducerReply<'reply,dyn semio_framework_value::ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>)->semio_framework_value::factory::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure>{ORIGINAL_ISSUER_RETIRES.set(ORIGINAL_ISSUER_RETIRES.get() + 1);semio_framework_value::ArtifactOwnedValueRetirementFactory::<DocumentMutation>::retire_owned(&OwnedValueRetirementFactory::<DocumentMutation>::default(),value,effect,reply)}
+    fn recover_retire_owned<'reply>(&self,value:&mut Option<DocumentMutation>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::factory::FactoryProducerReply<'reply,dyn semio_framework_value::ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>)->semio_framework_value::factory::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure>{semio_framework_value::ArtifactOwnedValueRetirementFactory::<DocumentMutation>::recover_retire_owned(&OwnedValueRetirementFactory::<DocumentMutation>::default(),value,effect,reply)}
 }
 
 const RECEIVER_TURNS:usize=1_100_032;
@@ -219,22 +221,41 @@ impl ReceiverReceipt for semio_framework_value::retained_clone::RetainedCloneSte
 impl ReceiverReceipt for semio_os_store_replay_operation::ArtifactReplayPreparationStep{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.progress()}}
 impl ReceiverReceipt for paged::PagedOneItemEditStep<DocumentMutation>{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{match self{Self::Progress(p)|Self::Complete(p,_)|Self::CompleteRows(p,_)|Self::CompleteOutcome(p,_,_)|Self::RefusedOutcome(p,_)=>*p}}}
 impl<T:ReceiverReceipt> ReceiverReceipt for Result<T,ValueError>{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.as_ref().map_or_else(ValueError::retained_progress,ReceiverReceipt::receipt)}}
+impl<T:ReceiverReceipt> ReceiverReceipt for Result<T,semio_framework_value::OriginalReceivingPrimary>{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.as_ref().map_or_else(semio_framework_value::OriginalReceivingPrimary::retained_progress,ReceiverReceipt::receipt)}}
+impl<T:ReceiverReceipt> ReceiverReceipt for Result<T,semio_framework_value::OriginalRetirementFailure>{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.as_ref().map_or_else(|failure|failure.retained_progress(),ReceiverReceipt::receipt)}}
 impl<T:ReceiverReceipt,U> ReceiverReceipt for (T,U){fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.0.receipt()}}
 struct Received<T>{value:T,progress:semio_framework_value::retained_clone::RetainedCloneProgress}
 impl<T> ReceiverReceipt for Received<T>{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.progress}}
 struct Receiver { owner: semio_framework_job::OriginalJobDecodeOwner, caller:semio_framework_job::OriginalJobFixtureCaller }
 impl Receiver {
     fn new(original: semio_framework_value::retained_clone::RetainedCloneGrant) -> Self { Self { owner: semio_framework_job::OriginalJobDecodeOwner::empty(),caller:semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),receiver_source(original),receiver_clock,u64::MAX,RECEIVER_TURNS as u64*16) } }
-    fn run<T:ReceiverReceipt>(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<T, ValueError>) -> Result<T, ValueError> {
+    fn run<T:ReceiverReceipt,E:Into<semio_framework_value::OriginalReceivingPrimary>>(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<T, E>) -> Result<T, ValueError> {
+        use semio_framework_job::{OriginalTurnFailure,OriginalTurnPrimary};
         self.caller.turn_with_decoder(grant,&mut self.owner,|cx|{
-            let result=cx.with_native_receiving(operation);
-            let progress=result.as_ref().map_or_else(ValueError::retained_progress,ReceiverReceipt::receipt);
-            cx.consume_receiving_retained(grant,progress)?;
-            result.map_err(Into::into)
+            let mut out=None;let mut produced=None;
+            if !cx.with_native_receiving(&mut out,|control,_|{produced=Some(operation(control));Ok(())})?{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture receiving scope did not open").into())}
+            if let Some(source)=out{return Err(OriginalTurnFailure{effects:Default::default(),primary:OriginalTurnPrimary::NativeSource(source),receipt_refusal:None,context_refusal:None,work_refusal:None})}
+            match produced.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture receiving produced nothing"))?{
+                Ok(value)=>{cx.consume_receiving_retained(grant,value.receipt())?;Ok(value)}
+                Err(failure)=>{let failure:semio_framework_value::OriginalReceivingPrimary=failure.into();let progress=failure.retained_progress();cx.consume_receiving_retained(grant,progress)?;Err(OriginalTurnFailure{effects:progress,primary:OriginalTurnPrimary::Receiving(failure),receipt_refusal:None,context_refusal:None,work_refusal:None})}
+            }
         }).map_err(|failure|{
             assert!(failure.receipt_refusal.is_none()&&failure.context_refusal.is_none(),"original fixture failure must retain coherent receipts: {failure:?}");
-            failure.primary_value().expect("fixture returns its original value refusal").clone().with_retained_progress(failure.effects)
+            match failure.primary{
+                OriginalTurnPrimary::Receiving(primary)=>receiving_value(primary),
+                OriginalTurnPrimary::Value(error)=>error.with_retained_progress(failure.effects),
+                other=>panic!("fixture returns its original value refusal: {other:?}"),
+            }
         })
+    }
+    fn retire(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant, run: impl for<'a,'b,'c,'d,'e> FnOnce(&'a mut semio_framework_value::RetainedAllocationEffect<'b>, &'c mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'d,'e>) -> semio_framework_value::OriginalRetirementPoll) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+        let mut output = None;
+        self.caller.turn_with_decoder(grant,&mut self.owner,|cx|cx.with_original_work_loan(effect::CPU,u64::MAX,|cx|cx.with_original_retirement(|cx|{
+            let turn = cx.with_original_effect(grant,|cx,effect|cx.with_native_retirement(|control|Ok::<_,ValueError>(run(effect,control))))?;
+            if let Some((inner,_)) = turn { let turn = effect::settled(inner?); cx.consume_retained(turn.result.as_ref().map_or_else(|failure|failure.retained_progress(),|step|step.progress()))?; output = Some(turn.result); }
+            Ok(())
+        }))).map_err(|failure| failure.primary_value().expect("fixture returns its original value refusal").clone())?;
+        match output { Some(Ok(step)) => Ok(step), Some(Err(failure)) => Err(failure.primary().or(failure.work_refusal()).or(failure.receipt_refusal()).cloned().unwrap_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated,"original retirement failed without a value cause"))), None => Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())) }
     }
     fn born<T>(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(T,semio_framework_value::retained_clone::RetainedCloneProgress),ValueError>)->Result<T,ValueError>{self.run(grant,|control|operation(control).map(|(value,progress)|Received{value,progress})).map(|result|result.value)}
     fn finish(mut self) {
@@ -242,10 +263,16 @@ impl Receiver {
             if self.owner.terminal_is_empty() {let stock=self.caller.stock();self.caller.retire(stock);return;}
             let demand = self.owner.retirement_demands(WIDE).unwrap();
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            self.caller.turn(grant,|cx|cx.with_original_retirement(|cx|{self.owner.close_on_source(cx)?;Ok(())})).unwrap();
+            self.caller.turn(grant,|cx|{self.owner.close_on_source(cx)?;Ok(())}).unwrap();
         }
         panic!("original receiving owner did not close");
     }
+}
+
+fn receiving_value(primary: semio_framework_value::OriginalReceivingPrimary) -> ValueError {
+    let progress = primary.retained_progress();
+    let message = primary.message().to_owned();
+    primary.primary.or(primary.quote_refusal).or(primary.allocation_refusal).or(primary.work_refusal).or(primary.work_overrun).or(primary.receipt_refusal).unwrap_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, message)).with_retained_progress(progress)
 }
 
 const EDIT_BODY: usize = 4096;
@@ -297,7 +324,7 @@ fn prepare_with(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<Documen
                 if retirement.terminal_is_empty() { break; }
                 let copy = retirement.next_copy_byte_demand().unwrap();
                 let quoted = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: retirement.next_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: retirement.next_release_byte_demand().unwrap(), maximum_depth: retirement.next_depth_demand().unwrap() };
-                assert!(retirement.close_step(quoted).result.unwrap().progress().fits(quoted));
+                assert!(effect::settled(effect::with_effect(quoted,effect::CPU,|e|retirement.close_step(e)).0).result.unwrap().progress().fits(quoted));
                 assert!(turn < 99_999, "prepared original owners must reach typed terminal closure");
             }
             assert!(retirement.terminal_is_empty());
@@ -320,7 +347,8 @@ fn close<P>(owner: &mut Box<dyn ArtifactStoreOneItemPreparation<P, DocumentMutat
         if owner.terminal_is_empty() { return; }
         let copy = owner.next_close_copy_byte_demand().unwrap();
         let quote = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_close_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: owner.next_close_release_byte_demand().unwrap(), maximum_depth: owner.next_close_depth_demand().unwrap() };
-        let (step, heap) = observe(|| owner.close_step(quote).unwrap());
+        let ((poll, heap), _) = effect::with_effect(quote.retained_grant(), effect::CPU, |effect| observe(|| owner.close_step(effect)));
+        let step = effect::settled(poll).result.unwrap();
         last=Some((quote,step.progress()));
         assert!(step.progress().fits(quote.retained_grant()), "close receipt {:?} exceeds its quote {quote:?}", step.progress());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes), "close accounting disagrees with its receipt");
@@ -404,11 +432,11 @@ fn config_apply_reaches_prepared_with_independent_scalar_owner(){
     let prepared=prepared.expect("scalar config prepared");assert_eq!(**prepared.post_snapshot(),expected);assert_eq!(prepared.edit().inverse.get(0).unwrap().value,base);assert_eq!(*root,base);
     let(mut ticket,receipt)=prepared.admit_retirement(mutations,snapshots,policy.retained_grant()).unwrap_or_else(|_|panic!("scalar config candidate retirement"));assert!(receipt.fits(policy.retained_grant()));
     for _ in 0..100000{
-        if ticket.terminal_is_empty(){break;}let copy=ticket.next_copy_byte_demand().unwrap();let quote=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:ticket.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:ticket.next_release_byte_demand().unwrap(),maximum_depth:ticket.next_depth_demand().unwrap()};assert!(ticket.close_step(quote).result.unwrap().progress().fits(quote));
+        if ticket.terminal_is_empty(){break;}let copy=ticket.next_copy_byte_demand().unwrap();let quote=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:ticket.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:ticket.next_release_byte_demand().unwrap(),maximum_depth:ticket.next_depth_demand().unwrap()};assert!(effect::settled(effect::with_effect(quote,effect::CPU,|e|ticket.close_step(e)).0).result.unwrap().progress().fits(quote));
     }
     assert!(ticket.terminal_is_empty());owner.begin_close();
     for _ in 0..100000{
-        if owner.terminal_is_empty(){break;}let copy=owner.next_close_copy_byte_demand().unwrap();let quote=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_close_release_byte_demand().unwrap(),maximum_depth:owner.next_close_depth_demand().unwrap()};assert!(owner.close_step(quote).unwrap().progress().fits(quote.retained_grant()));
+        if owner.terminal_is_empty(){break;}let copy=owner.next_close_copy_byte_demand().unwrap();let quote=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_close_release_byte_demand().unwrap(),maximum_depth:owner.next_close_depth_demand().unwrap()};assert!(effect::settled(effect::with_effect(quote.retained_grant(),effect::CPU,|e|owner.close_step(e)).0).result.unwrap().progress().fits(quote.retained_grant()));
     }
     assert!(owner.terminal_is_empty());assert_eq!(observe(||drop(owner)).1.requested_bytes,0);receiver.finish();drain_fixture(root);
 }
@@ -536,8 +564,8 @@ fn paged_invalid_edit_receipt_retires_returned_inverse_with_original_issuer() {
         fn recognizes(_:&DocumentMutation)->bool { true }
         fn preflight(_:&DocumentMutation)->Result<usize,String> { Ok(1) }
         fn post_mode(&self)->semio_framework_value_snapshot_projection::snapshot_projection::post::PagedOneItemPostMode{semio_framework_value_snapshot_projection::snapshot_projection::post::PagedOneItemPostMode::Mutable}
-        fn advance_demands(&self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,_post:semio_framework_value_snapshot_projection::snapshot_projection::post::PagedOneItemPostRead<'_,Document>,_body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
-        fn advance(&mut self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,post:semio_framework_value_snapshot_projection::snapshot_projection::post::PagedOneItemPost<'_,Document>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<DocumentMutation>,ValueError> {
+        fn advance_demands(&self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,_post:semio_framework_value_snapshot_projection::snapshot_projection::post::PagedOneItemPostRead<'_,Document>,_body:usize,_maximum_work_units:u64)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+        fn advance(&mut self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,post:semio_framework_value_snapshot_projection::snapshot_projection::post::PagedOneItemPost<'_,Document>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<DocumentMutation>,semio_framework_value::OriginalReceivingPrimary> {
             self.last_work=0;
             if grant.maximum_items==0{return Ok(PagedOneItemEditStep::Progress(Default::default()));}
             let post=post.mutable()?;
@@ -546,10 +574,14 @@ fn paged_invalid_edit_receipt_retires_returned_inverse_with_original_issuer() {
             Ok(PagedOneItemEditStep::CompleteRows(RetainedCloneProgress{copied_items:1,copied_bytes:grant.maximum_copy_bytes+1,..Default::default()},inverse))
         }
         fn last_turn_work(&self)->u64{self.last_work}
+        fn has_pending_receiving_recovery(&self)->bool{false}
+        fn pending_receiving_demand(&self)->Option<semio_framework_value::RetirementDemand>{None}
+        fn pending_receiving_recovery(&mut self)->Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>>{None}
+        fn finish_receiving_recovery(&mut self,_:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_,'_>)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,semio_framework_value::OriginalReceivingPrimary>{semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"invalid receipt edit never retains a pending receiving frame").into()),work:0}}
         fn begin_close(&mut self){}
-        fn close_demands(&self,_:&dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(Default::default())}
-        fn close_work_demand(&self,_:&dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>,_:usize)->Result<u64,ValueError>{Ok(0)}
-        fn close_step(&mut self,_:&dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>,_:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}
+        fn close_demands(&self,_:&Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>>,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(Default::default())}
+        fn close_work_demand(&self,_:&Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>>,_:usize)->Result<u64,ValueError>{Ok(0)}
+        fn close_step(&mut self,_:&Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{semio_framework_value::RetirementPollExit::settle(effect,Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())))}
         fn terminal_is_empty(&self)->bool{true}
     }
     let law:Value=serde_json::from_str(include_str!("./🧫️fixtures/♻️inverse-issuer/🔣️.json")).unwrap();
@@ -575,15 +607,20 @@ mod cold_replay;
 struct ZstEditOriginal;
 #[derive(Clone,Copy,semio_framework_value::FactoryPayloadRetirement)]
 struct ZstEditOther;
-union EditIssuerSlot{original:ZstEditOriginal,other:ZstEditOther}
 thread_local!{static OTHER_EDIT_ISSUER_CALLS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};}
 impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation> for ZstEditOriginal{fn retire_owned_work_demand(&self,_:&DocumentMutation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
  fn retirement_birth_bytes(&self,_:&DocumentMutation)->usize{semio_framework_value::owned_retirement_birth_bytes::<DocumentMutation>()}
- fn retire_owned(&self,row:DocumentMutation,g:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,DocumentMutation)>{let turn=(||{semio_framework_value::admit_owned_retirement(row,g)})();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
+
+    fn retire_owned_demands(&self,value:&DocumentMutation)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_value::ArtifactOwnedValueRetirementFactory::<DocumentMutation>::retire_owned_demands(&OwnedValueRetirementFactory::<DocumentMutation>::default(),value)}
+    fn retire_owned<'reply>(&self,value:&mut Option<DocumentMutation>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::factory::FactoryProducerReply<'reply,dyn semio_framework_value::ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>)->semio_framework_value::factory::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure>{semio_framework_value::ArtifactOwnedValueRetirementFactory::<DocumentMutation>::retire_owned(&OwnedValueRetirementFactory::<DocumentMutation>::default(),value,effect,reply)}
+    fn recover_retire_owned<'reply>(&self,value:&mut Option<DocumentMutation>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::factory::FactoryProducerReply<'reply,dyn semio_framework_value::ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>)->semio_framework_value::factory::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure>{semio_framework_value::ArtifactOwnedValueRetirementFactory::<DocumentMutation>::recover_retire_owned(&OwnedValueRetirementFactory::<DocumentMutation>::default(),value,effect,reply)}
+
 }
 impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation> for ZstEditOther{fn retire_owned_work_demand(&self,_:&DocumentMutation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
  fn retirement_birth_bytes(&self,_:&DocumentMutation)->usize{semio_framework_value::owned_retirement_birth_bytes::<DocumentMutation>()}
- fn retire_owned(&self,row:DocumentMutation,_:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,DocumentMutation)>{let turn=(||{OTHER_EDIT_ISSUER_CALLS.set(OTHER_EDIT_ISSUER_CALLS.get()+1);semio_framework_value::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign zero-sized editor issuer must not receive original inverse rows"),row)),work:1}})();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
+ fn retire_owned_demands(&self,value:&DocumentMutation)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_value::ArtifactOwnedValueRetirementFactory::<DocumentMutation>::retire_owned_demands(&OwnedValueRetirementFactory::<DocumentMutation>::default(),value)}
+ fn retire_owned<'reply>(&self,_:&mut Option<DocumentMutation>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,mut reply:semio_framework_value::factory::FactoryProducerReply<'reply,dyn semio_framework_value::ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>)->semio_framework_value::factory::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure>{OTHER_EDIT_ISSUER_CALLS.set(OTHER_EDIT_ISSUER_CALLS.get()+1);let result=match reply.performed(effect,1){Ok(_)=>Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign zero-sized editor issuer must not receive original inverse rows").into()),Err(error)=>Err(error.into())};reply.complete(semio_framework_value::RetainedWorkOutcome{result,work:1})}
+ fn recover_retire_owned<'reply>(&self,_:&mut Option<DocumentMutation>,_:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::factory::FactoryProducerReply<'reply,dyn semio_framework_value::ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>)->semio_framework_value::factory::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure>{reply.pending()}
 }
 /// 🔑️ Generic editor refusal preserves its original inverse vector before a differently typed same-address issuer can act.
 
@@ -626,7 +663,7 @@ fn mutation_apply_diagnostics_gate_atomic_publication() {
         let mut receiver = Receiver::new(grant);
         let mut before_source=OriginalSource::new(document_from_plain(original.clone()));
         let mut mutation_source=OriginalSource::new(mutation.clone());
-        let issuer=OwnedValueRetirementFactory::<DocumentMutation>::default();
+        let issuer:Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>>=Arc::new(OwnedValueRetirementFactory::<DocumentMutation>::default());
         let mut post = PostFixture::new(document_from_plain(original.clone()));
         APPLY_CALLS.set(0); INVERSE_CALLS.set(0); DIFF_CALLS.set(0);
         let (applied, messages) = loop {
@@ -650,7 +687,7 @@ fn mutation_apply_diagnostics_gate_atomic_publication() {
         let mut ledger = protocol::MutationMessageLedgerRetirement::new(String::new(), messages);
         while !matches!(ledger.close_step(grant).unwrap(), RetainedCloneStep::Complete(_)) {}
         owner.begin_close();
-        while !matches!(owner.close_step(&issuer,grant).unwrap(), RetainedCloneStep::Complete(_)) {}
+        while !matches!(effect::settled(effect::with_effect(grant,effect::CPU,|e|owner.close_step(&issuer,e)).0).result.unwrap(), RetainedCloneStep::Complete(_)) {}
         assert!(owner.terminal_is_empty());
         receiver.finish();
         drain_fixture(post.into_inner());before_source.close();mutation_source.close();
@@ -668,7 +705,7 @@ fn mutation_apply_inverse_cancellation_uses_original_factory() {
         let mutation = mutation(&law["mutation"]);
         let mut before_source = OriginalSource::new(document_from_plain(original.clone()));
         let mut mutation_source = OriginalSource::new(mutation);
-        let issuer = OriginalMutationIssuer;
+        let issuer:Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>> = Arc::new(OriginalMutationIssuer);
         let mut post = PostFixture::new(document_from_plain(original.clone()));
         let mut owner = paged::MutationApplyEdit::<Document, DocumentMutation>::default();
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: WIDE, maximum_capacity_bytes: WIDE, maximum_release_bytes: WIDE, maximum_depth: 4096 };
@@ -685,7 +722,7 @@ fn mutation_apply_inverse_cancellation_uses_original_factory() {
         while !owner.terminal_is_empty() {
             let demand = owner.close_demands(&issuer, WIDE).unwrap();
             let quote = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let step = owner.close_step(&issuer, quote).unwrap();
+            let step = effect::settled(effect::with_effect(quote,effect::CPU,|e|owner.close_step(&issuer, e)).0).result.unwrap();
             assert!(step.progress().fits(quote));
             if matches!(step, RetainedCloneStep::Complete(_)) { assert!(owner.terminal_is_empty()); }
         }
@@ -709,7 +746,7 @@ fn mutation_apply_cancellation_after_decision_preserves_base() {
     let mutation = DocumentMutation::Diagnostic { level: "warning".into(), code: "mutation.partial".into(), message: "retained warning".into() };
     let mut before_source=OriginalSource::new(document_from_plain(original.clone()));
     let mut mutation_source=OriginalSource::new(mutation.clone());
-    let issuer=OwnedValueRetirementFactory::<DocumentMutation>::default();
+    let issuer:Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>>=Arc::new(OwnedValueRetirementFactory::<DocumentMutation>::default());
     let mut owner = paged::MutationApplyEdit::<Document, DocumentMutation>::default();
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: WIDE, maximum_capacity_bytes: WIDE, maximum_release_bytes: WIDE, maximum_depth: 4096 };
     let mut receiver = Receiver::new(grant);
@@ -723,7 +760,7 @@ fn mutation_apply_cancellation_after_decision_preserves_base() {
     while !owner.terminal_is_empty() {
         let demand = owner.close_demands(&issuer,WIDE).unwrap();
         let quote = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        let step = owner.close_step(&issuer,quote).unwrap();
+        let step = effect::settled(effect::with_effect(quote,effect::CPU,|e|owner.close_step(&issuer,e)).0).result.unwrap();
         assert!(step.progress().fits(quote));
         if matches!(step, RetainedCloneStep::Complete(_)) { assert!(owner.terminal_is_empty()); }
     }
@@ -738,12 +775,12 @@ fn mutation_apply_rejects_same_data_different_method_table_inverse_issuer(){
     let mut _original_receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(WIDE*1024,&mut _original_receiving_callback);
  use paged::{PagedOneItemEdit,PagedOneItemEditStep};use semio_framework_value::retained_clone::RetainedCloneGrant;
  let manifest=std::path::Path::new(env!("CARGO_MANIFEST_DIR"));let root=manifest.ancestors().find(|p|p.join(".🧬semio").is_dir()&&p.join("🧰️framework").is_dir()).expect("native fixture repository root");let law:Value=serde_json::from_str(&std::fs::read_to_string(root.join("🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()).unwrap();let law=&law["issuerAlias"];let index=law["pendingId"].as_u64().unwrap()as usize;
- let slot=EditIssuerSlot{original:ZstEditOriginal};let original_issuer=unsafe{&slot.original};let foreign=unsafe{&slot.other};assert_eq!(std::ptr::from_ref(original_issuer).cast::<()>(),std::ptr::from_ref(foreign).cast::<()>());OTHER_EDIT_ISSUER_CALLS.set(0);
+ let original_issuer:&Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>>=&(Arc::new(ZstEditOriginal) as Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>>);let foreign:&Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>>=&(Arc::new(ZstEditOther) as Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>>);OTHER_EDIT_ISSUER_CALLS.set(0);
  let original=plain_document_json(&fixture()["base"]);let mut before=OriginalSource::new(document_from_plain(original.clone()));let mut input=OriginalSource::new(DocumentMutation::SetText{index,text:"changed".into()});let mut post=PostFixture::new(document_from_plain(original.clone()));let mut owner=paged::MutationApplyEdit::<Document,DocumentMutation>::default();let wide=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:WIDE,maximum_capacity_bytes:WIDE,maximum_release_bytes:WIDE,maximum_depth:4096};let mut receiver=Receiver::new(wide);
  for turn in 0..10000{if owner.stage()==paged::test_support::Stage::Commit{break;}assert!(matches!(step_edit(&mut receiver,&mut owner,&before,&input,&mut post,wide).unwrap(),PagedOneItemEditStep::Progress(_)));assert!(turn<9999);}
- let inverse=owner.inverse_rows().unwrap();let backing=inverse.as_ptr();let text=match &inverse[0]{DocumentMutation::SetText{index:actual,text}=>{assert_eq!(*actual,index);text.as_ptr()},_=>panic!("original inverse shape")};owner.begin_close();let d=owner.close_demands(original_issuer,WIDE).unwrap();let q=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};owner.close_step(original_issuer,q).unwrap();
- let(result,heap)=observe(||owner.close_step(foreign,q));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(OTHER_EDIT_ISSUER_CALLS.get(),law["providerCalls"].as_u64().unwrap()as usize);let inverse=owner.inverse_rows().unwrap();assert_eq!(inverse.as_ptr(),backing);match &inverse[0]{DocumentMutation::SetText{text:actual,..}=>assert_eq!(actual.as_ptr(),text),_=>panic!("original inverse row changed")};assert_eq!(plain_document(&*post),original);
- for turn in 0..100000{if owner.terminal_is_empty(){break;}let d=owner.close_demands(original_issuer,WIDE).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let s=owner.close_step(original_issuer,g).unwrap();assert!(s.progress().fits(g));assert!(turn<99999);}
+ let inverse=owner.inverse_rows().unwrap();let backing=inverse.as_ptr();let text=match &inverse[0]{DocumentMutation::SetText{index:actual,text}=>{assert_eq!(*actual,index);text.as_ptr()},_=>panic!("original inverse shape")};owner.begin_close();let d=owner.close_demands(original_issuer,WIDE).unwrap();let q=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};effect::settled(effect::with_effect(q,effect::CPU,|e|owner.close_step(original_issuer,e)).0).result.unwrap();
+ let((poll,heap),_)=effect::with_effect(q,effect::CPU,|e|observe(||owner.close_step(foreign,e)));let result=effect::settled(poll).result;assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(OTHER_EDIT_ISSUER_CALLS.get(),law["providerCalls"].as_u64().unwrap()as usize);let inverse=owner.inverse_rows().unwrap();assert_eq!(inverse.as_ptr(),backing);match &inverse[0]{DocumentMutation::SetText{text:actual,..}=>assert_eq!(actual.as_ptr(),text),_=>panic!("original inverse row changed")};assert_eq!(plain_document(&*post),original);
+ for turn in 0..100000{if owner.terminal_is_empty(){break;}let d=owner.close_demands(original_issuer,WIDE).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let s=effect::settled(effect::with_effect(g,effect::CPU,|e|owner.close_step(original_issuer,e)).0).result.unwrap();assert!(s.progress().fits(g));assert!(turn<99999);}
  assert!(owner.terminal_is_empty());receiver.finish();drain_fixture(post.into_inner());before.close();input.close();
 }
 

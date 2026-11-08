@@ -4,7 +4,7 @@
   "maximumFrameBytes": 1048576,
   "grant": {
     "maximumItems": 1,
-    "maximumCopyBytes": 2,
+    "maximumCopyBytes": 4096,
     "maximumCapacityBytes": 65536,
     "maximumReleaseBytes": 262144,
     "maximumDepth": 64

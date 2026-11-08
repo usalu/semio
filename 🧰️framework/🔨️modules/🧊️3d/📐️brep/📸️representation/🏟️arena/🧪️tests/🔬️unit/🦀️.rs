@@ -4,6 +4,11 @@ define_id!(TestId, "test");
 #[path="../🎟️growth/🦀️.rs"]
 mod admitted_growth;
 
+/// 🏦️ Drives one retirement step under an authoring wallet equal to the granted stock (no job turn exists in this law) and reads its poll as the funded step.
+fn funded_step(grant:semio_framework_value::retained_clone::RetainedCloneGrant,step:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
+    match semio_framework_value::AuthoringWallet::new(grant,1<<20).run(grant,1<<16,step).unwrap().expect("work quote admitted").output{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()))}
+}
+
 /// 🧱️ Every original slot keeps its borrowed address when the original arena source grows.
 #[test]
 fn original_arena_growth_preserves_borrowed_original_slot_addresses(){
@@ -13,7 +18,7 @@ fn original_arena_growth_preserves_borrowed_original_slot_addresses(){
     let mut store=Store::<u64,TestId>::new();let mut originals:[Option<(TestId,*const u64)>;1337]=[None;1337];let(mut born,mut freed)=(0,0);
     for slot in 0..row["slots"].as_u64().unwrap() as usize{let(id,heap)=observe(||store.insert(slot as u64));born+=heap.0;freed+=heap.1;originals[slot]=Some((id,store.get(id).unwrap() as *const u64));for (id,pointer) in originals[..slot].iter().flatten(){assert_eq!(store.get(*id).unwrap() as *const u64,*pointer,"original arena growth at slot {slot} moved a prior original slot; actualSystem={heap:?}");}}
     let mut owner=ControlledRetirement::new(store).unwrap_or_else(|_|panic!("original arena growth requires typed closure"));let mut turns=0;
-    while !owner.terminal_is_empty(){let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant {maximum_items:row["itemsPerTurn"].as_u64().unwrap() as usize,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe(||owner.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;turns+=1;assert!(turns<100000);}assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,row["terminalDropBytes"].as_u64().unwrap() as usize));
+    while !owner.terminal_is_empty(){let demand=owner.next_demand(0).and_then(|first|owner.next_demand(first.copy_bytes)).unwrap();let grant=RetainedCloneGrant {maximum_items:row["itemsPerTurn"].as_u64().unwrap() as usize,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe(||funded_step(grant,|effect|owner.step(effect)).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;turns+=1;assert!(turns<100000);}assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,row["terminalDropBytes"].as_u64().unwrap() as usize));
 }
 
 /// 🗄️ Original arena removal and LIFO reuse preserve the exact slot backing without an unfunded directory copy.
@@ -32,7 +37,7 @@ fn original_arena_removal_reuses_same_slots_without_backing_effects(){
             }
             for slot in row["reuseOrder"].as_array().unwrap(){let slot=slot.as_u64().unwrap()as usize;let(id,heap)=observe(||store.insert(slot as u64));assert_eq!(heap,(0,0));assert_eq!(id.raw_index(),slot as u32);assert_eq!(id.raw_generation(),generation as u32);ids[slot]=id;assert_eq!(&store.slots[0] as *const _,original);}for id in stale{assert!(store.get(id).is_none());}
         }
-        let(mut owner,heap)=observe(||ControlledRetirement::new(store).unwrap_or_else(|(error,_)|panic!("original arena close: {error}")));assert_eq!(heap,(0,0));let mut turns=0;while !owner.terminal_is_empty(){let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;turns+=1;assert!(turns<100000);}assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
+        let(mut owner,heap)=observe(||ControlledRetirement::new(store).unwrap_or_else(|(error,_)|panic!("original arena close: {error}")));assert_eq!(heap,(0,0));let mut turns=0;while !owner.terminal_is_empty(){let demand={let first=owner.selected_demand(copy).unwrap();owner.selected_demand(first.copy_bytes.max(copy)).unwrap()};let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe(||funded_step(grant,|effect|owner.step(effect)).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;turns+=1;assert!(turns<100000);}assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
     }
 }
 

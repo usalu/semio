@@ -8,7 +8,7 @@ pub struct NativeClosePermit(());
 
 pub trait NativeReceiver<I:?Sized,T>:Send+'static{
  /// 🎯️ Selects one retained effect boundary using only already-cached receiver state.
- fn capture_plan(&self)->Result<Option<semio_framework_value_native_decoding::native_decoding::NativeEffectCapturePlan>,ValueError>;
+ fn capture_plan(&self)->Result<Option<semio_framework_value_native_decoding::native_decoding::construction::NativeEffectCapturePlan>,ValueError>;
 
  fn advance_work_demand(&self,original:RetainedCloneRef<'_,I>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>;
  fn take_work_demand(&self)->Result<u64,ValueError>;
@@ -40,7 +40,7 @@ pub trait NativeReceiver<I:?Sized,T>:Send+'static{
 
 
 /// ⛽️ Narrows caller DATA to the actual live native work loan before any receiving effect.
-pub fn native_work_limit(control:&mut NativeDecodeControl<'_>,maximum:u64)->Result<u64,ValueError>{if maximum==0{Ok(0)}else{Ok(maximum.min(control.available_work_units()?))}}
+pub fn native_work_limit(control:&mut NativeDecodeControl<'_>,maximum:u64)->Result<u64,ValueError>{if maximum==0{Ok(0)}else{let held=control.pending_work();if held>0{Ok(maximum.min(held))}else if control.prepare_work(maximum)?{Ok(maximum)}else{Ok(0)}}}
 /// ➕️ Preserves checked actual parent and child work.
 pub fn work_sum(left:u64,right:u64)->Result<u64,ValueError>{left.checked_add(right).ok_or_else(||ValueError::invariant("native receiving work overflow"))}
 /// 🎯️ Returns a selected quote only when the existing scope can fund it.

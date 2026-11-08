@@ -1,12 +1,26 @@
 //! 🛬️ Text record receiving borrows actual ordinal fields under the same required native construction port.
 use super::{FieldValue,RecordValue};
-use semio_framework_value_native_owned::native_decoding::owned::tree::{NativeValueSource,NativeTreeKind};
+use semio_framework_value_native_owned::native_decoding::owned::tree::{NativeValueSource,NativeTreeKind,NativeScalarQuery,NativeSourceScalar};
+use semio_framework_value::retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete};
+use semio_framework_value::RetainedAllocationEffect;
 use semio_framework_value::{Number, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::owned::NativeRecordKey;
+fn scalar<S:NativeValueSource+?Sized>(source:&S,query:NativeScalarQuery)->Result<NativeSourceScalar,ValueError>{match query{
+ NativeScalarQuery::Kind=>Ok(NativeSourceScalar::Kind(source.tree_kind())),NativeScalarQuery::Null=>Ok(NativeSourceScalar::Null(source.is_null())),NativeScalarQuery::Boolean=>source.boolean().map(NativeSourceScalar::Boolean),NativeScalarQuery::Number=>source.number().map(NativeSourceScalar::Number),NativeScalarQuery::EnumOrdinal=>source.enum_ordinal().map(NativeSourceScalar::EnumOrdinal),NativeScalarQuery::RecordLength=>source.record_len().map(NativeSourceScalar::Length),NativeScalarQuery::SequenceLength=>source.sequence_len().map(NativeSourceScalar::Length),
+}}
+macro_rules! scalar_methods{()=>{
+ fn query_scalar<'reply>(&self,query:NativeScalarQuery,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,NativeSourceScalar,ValueError>)->Result<OriginalEffectReplyComplete<'reply,NativeSourceScalar,ValueError>,ValueError>{
+  if effect.maximum_work_units()==0{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"scalar query lacks its original work grant"))))}
+  if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"scalar query exceeded its original work authority"))))}
+  Ok(reply.complete(scalar(self,query)))
+ }
+ fn recover_scalar<'reply>(&self,_:NativeScalarQuery,_:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,NativeSourceScalar,ValueError>)->Result<OriginalEffectReplyComplete<'reply,NativeSourceScalar,ValueError>,ValueError>{Ok(reply.pending())}
+};}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"native text record member has a different original type or rank")}
 
 
 impl NativeValueSource for RecordValue{
+ scalar_methods!();
  fn as_source(&self)->&dyn NativeValueSource{self}
  fn tree_kind(&self)->Option<NativeTreeKind>{Some(NativeTreeKind::Object)}
  fn record_len(&self)->Result<usize,ValueError>{Ok(self.fields.len())}
@@ -15,6 +29,7 @@ impl NativeValueSource for RecordValue{
 }
 fn unblocked(value:&FieldValue)->&FieldValue{if let FieldValue::Block(inner)=value{inner}else{value}}
 impl NativeValueSource for FieldValue{
+ scalar_methods!();
  fn as_source(&self)->&dyn NativeValueSource{self}
  fn tree_kind(&self)->Option<NativeTreeKind>{if self.is_null(){return Some(NativeTreeKind::Null)}match unblocked(self){Self::Bool(_)=>Some(NativeTreeKind::Bool),Self::Int(_)|Self::UInt(_)|Self::Float(_)=>Some(NativeTreeKind::Number),Self::Text(_)=>Some(NativeTreeKind::Text),Self::List(_)|Self::Tuple(_)|Self::Statements(_)|Self::Bytes64(_)=>Some(NativeTreeKind::Array),Self::Record(_)|Self::Map(_)=>Some(NativeTreeKind::Object),Self::Value(value)=>value.tree_kind(),_=>None}}
  fn is_null(&self)->bool{matches!(unblocked(self),Self::Statements(values)if values.is_empty())||matches!(unblocked(self),Self::Absent)||matches!(unblocked(self),Self::Value(value)if value.is_null())}

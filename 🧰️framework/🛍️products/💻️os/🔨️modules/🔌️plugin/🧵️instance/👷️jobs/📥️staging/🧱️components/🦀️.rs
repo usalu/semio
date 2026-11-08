@@ -159,11 +159,11 @@ pub fn new(dispatch_report:protocol::DispatchReport)->Self{let backing=true;Self
 /// 🪐️ Tool operations: typed operation outboxes, tool jobs and registrations, cancellations and latest-wins commands.
 pub struct ToolOperations<A: ArtifactApp> {
     pub pending_tool_lease_admission:ManuallyDrop<Option<OriginalToolLeaseAdmission>>,
-    pub original_tool_follow:ManuallyDrop<Option<Box<semio_plugin_tool_run::tool_jobs_tool_machine::OriginalToolMachineFollow<A>>>>,
+    pub original_tool_follow:ManuallyDrop<Option<Box<semio_plugin_tool_machine::OriginalToolMachineFollow<A>>>>,
     pub original_tool_tag_retirement:ManuallyDrop<Option<Box<semio_plugin_scrub_host::OriginalToolTagRetirement>>>,
-    pub original_tool_tag_capture:ManuallyDrop<Option<Box<semio_plugin_tool_run::tool_jobs_tool_machine::OriginalToolTagCapture>>>,
-    pub original_scrub_dispatch:ManuallyDrop<Option<Box<semio_plugin_scrub_host::OriginalScrubDispatch<semio_plugin_tool_run::tool_jobs_tool_machine::PressLeaf<A::Mutation,A::ConfigMutation>>>>>,
-    pub original_press_settlement:ManuallyDrop<Option<Box<semio_plugin_tool_run::tool_jobs_tool_machine::OriginalPressSettlement<A>>>>,
+    pub original_tool_tag_capture:ManuallyDrop<Option<Box<semio_plugin_tool_machine::OriginalToolTagCapture>>>,
+    pub original_scrub_dispatch:ManuallyDrop<Option<Box<semio_plugin_scrub_host::OriginalScrubDispatch<semio_plugin_tool_machine::PressLeaf<A::Mutation,A::ConfigMutation>>>>>,
+    pub original_press_settlement:ManuallyDrop<Option<Box<semio_plugin_tool_machine::OriginalPressSettlement<A>>>>,
     pub original_typing_settlement:ManuallyDrop<Option<Box<semio_plugin_typing_edit::OriginalTypingSettlement<A>>>>,
     pub typed_effect_outbox: ArtifactFixedQueue<Effect>,
     pub typed_event_outbox: ArtifactFixedQueue<AppEvent>,

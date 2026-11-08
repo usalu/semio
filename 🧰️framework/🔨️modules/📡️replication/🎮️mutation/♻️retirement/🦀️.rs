@@ -1,14 +1,14 @@
 //! ♻️ Native pending replay owners admit constructors and physical backing release independently.
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement};
-use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, FactoryAuthority, close_factory_ticket, factory_ticket_demands, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, factory::FactorySharedRetirement};
+use semio_framework_value::{OriginalRetirementFailure, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, RetirementPollExit, ValueError, ValueRefusalKind, RetirementDemand, FactoryAuthority, close_factory_ticket, factory_ticket_demands, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, factory::FactorySharedRetirement};
 use semio_framework_value_persistent::list::PagedList;
 use std::{mem::{ManuallyDrop,size_of},sync::Arc};
 
 pub trait ArtifactReplayRetirementFactory<P,M>:semio_framework_value::FactoryRetirement+Send+Sync {
     fn snapshot_birth_bytes(&self)->usize;
     fn mutations_birth_bytes(&self)->usize;
-    fn snapshot(&self,owner:Arc<P>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<P>)>;
-    fn mutations(&self,owners:PagedList<M,{usize::MAX}>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,PagedList<M,{usize::MAX}>)>;
+    fn snapshot(&self,owner:&mut Option<Arc<P>>,output:&mut Option<Box<dyn ErasedSnapshotRetirement>>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll;
+    fn mutations(&self,owners:&mut Option<PagedList<M,{usize::MAX}>>,output:&mut Option<Box<dyn ErasedSnapshotRetirement>>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll;
 }
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RegisteredReplayRetirement<P,M> {
@@ -20,16 +20,26 @@ struct RegisteredReplayRetirement<P,M> {
 impl<P:Send+Sync+'static,M:Send+'static> ArtifactReplayRetirementFactory<P,M> for RegisteredReplayRetirement<P,M> {
     fn snapshot_birth_bytes(&self)->usize {FactorySharedRetirement::<P>::constructor_capacity_bytes()}
     fn mutations_birth_bytes(&self)->usize {size_of::<ReplayMutationsRetirement<M>>()}
-    fn snapshot(&self,owner:Arc<P>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<P>)> {
-        let turn=FactorySharedRetirement::admit(owner,Arc::clone(&self.snapshots),grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,owner,factory)|{drop(factory);(error,owner)}),work:turn.work}
+    fn snapshot(&self,owner:&mut Option<Arc<P>>,output:&mut Option<Box<dyn ErasedSnapshotRetirement>>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
+        let mut factory=Some(Arc::clone(&self.snapshots));
+        FactorySharedRetirement::admit_original(owner,&mut factory,output,effect).map_err(Into::into)
     }
-    fn mutations(&self,owners:PagedList<M,{usize::MAX}>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,PagedList<M,{usize::MAX}>)> {
-        let bytes=self.mutations_birth_bytes();
-        if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes {return semio_framework_value::RetainedWorkOutcome{result:Err((refusal("replay inverse frame requires exact constructor admission"),owners)),work:0};}
+    fn mutations(&self,owners:&mut Option<PagedList<M,{usize::MAX}>>,output:&mut Option<Box<dyn ErasedSnapshotRetirement>>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
+        let complete=|result:Result<RetainedCloneStep,OriginalRetirementFailure>,work:u128|RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work});
+        let idle=||Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+        if owners.is_none(){return complete(Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),0);}
+        if output.is_some(){return complete(Err(ValueError::invariant("replay inverse output slot is occupied").into()),0);}
+        let bytes=self.mutations_birth_bytes();let grant=effect.grant();
+        if effect.maximum_work_units()==0||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes {return complete(idle(),0);}
+        if effect.actual().is_some(){return complete(Err(ValueError::invariant("replay inverse allocation marker is occupied").into()),0);}
+        match effect.performed(1){Ok(true)=>{},Ok(false)=>return complete(Err(refusal("replay inverse frame exceeded its work ceiling").into()),1),Err(error)=>return complete(Err(error.into()),1)}
         let layout=std::alloc::Layout::new::<ReplayMutationsRetirement<M>>();
-        let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<ReplayMutationsRetirement<M>>())else{return semio_framework_value::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::AllocationFailed,"replay inverse frame allocation failed"),owners)),work:1};};
-        let owner=unsafe{pointer.as_ptr().write(ReplayMutationsRetirement::new(owners,Arc::clone(&self.mutations)));Box::from_raw(pointer.as_ptr())};
-        semio_framework_value::RetainedWorkOutcome{result:Ok((owner,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})),work:1}
+        *effect.actual()=Some(0);
+        let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<ReplayMutationsRetirement<M>>())else{return complete(Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"replay inverse frame allocation failed").into()),1);};
+        *effect.actual()=Some(layout.size());
+        let Some(original)=owners.take()else{return complete(Err(ValueError::invariant("replay inverse owners vanished").into()),1);};
+        *output=Some(unsafe{pointer.as_ptr().write(ReplayMutationsRetirement::new(original,Arc::clone(&self.mutations)));Box::from_raw(pointer.as_ptr())});
+        complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})),1)
     }
 }
 /// 📏️ The defining shared factory quotes its exact original system allocation before any child issuer aliases move.
@@ -63,10 +73,12 @@ impl<P,M> ReplayRetirement<P,M> {
     pub fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if let Some(active)=self.active.as_ref(){return if active.terminal_is_empty(){Ok(1)}else{active.next_computational_work(body)}}if self.snapshot.is_some()||self.mutations.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"replay source and factory handoff needs its exact selected-work quote"))}if self.factory.is_some(){return Ok(1)}match self.closing_factory.as_ref(){Some(factory) if factory.terminal_is_empty()=>Ok(1),Some(factory)=>factory.next_computational_work(body),None=>Ok(0)}}
     pub fn terminal_is_empty(&self)->bool{self.snapshot.is_none()&&self.mutations.is_none()&&self.active.is_none()&&self.factory.is_none()&&self.closing_factory.is_none()}
     pub fn requires_original_control(&self)->bool{if let Some(active)=self.active.as_ref(){return !active.terminal_is_empty()&&active.requires_original_control()}if self.snapshot.is_some()||self.mutations.is_some()||self.factory.is_some(){return false}self.closing_factory.as_ref().is_some_and(|factory|!factory.terminal_is_empty()&&factory.requires_original_control())}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{self.close_inner(grant,None)}
-    pub fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::OriginalRetirementOutcome{let mut control=ReplayCloseControl::Controlled(control);self.close_inner(grant,Some(&mut control))}
-    pub fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{let mut control=ReplayCloseControl::Original(original);self.close_inner(grant,Some(&mut control))}
-    fn close_inner(&mut self,grant:RetainedCloneGrant,mut control:Option<&mut ReplayCloseControl<'_,'_>>)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result=(||->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.close_inner(effect,None)}
+    pub fn close_step_controlled(&mut self,effect:&mut RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->OriginalRetirementPoll{let mut control=ReplayCloseControl::Controlled(control);self.close_inner(effect,Some(&mut control))}
+    pub fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let mut control=ReplayCloseControl::Original(original);self.close_inner(effect,Some(&mut control))}
+    fn close_inner(&mut self,effect:&mut RetainedAllocationEffect<'_>,mut control:Option<&mut ReplayCloseControl<'_,'_>>)->OriginalRetirementPoll{
+        let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;
+        let result=(||->Result<RetainedCloneStep,RetirementPollExit>{
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
@@ -74,24 +86,26 @@ impl<P,M> ReplayRetirement<P,M> {
         if !permits(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}
         if self.requires_original_control()&&control.is_none(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"replay retirement selected child requires original control").into())}
         let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        if self.active.is_some(){let turn=match control.as_deref_mut(){Some(ReplayCloseControl::Controlled(control))=>semio_framework_value::close_factory_ticket_controlled(&mut self.active,child,*control),Some(ReplayCloseControl::Original(original))=>semio_framework_value::close_factory_ticket_original(&mut self.active,*original,child),None=>close_factory_ticket(&mut self.active,child)};work=turn.work;return turn.result;}
-        if self.snapshot.is_some(){let turn=self.factory.as_ref().unwrap().snapshot(self.snapshot.take().unwrap(),child);work=turn.work;match turn.result{Ok((owner,progress))=>{*self.active=Some(owner);return admit_birth(progress,child,demand.capacity_bytes).map_err(Into::into);},Err((error,owner))=>{*self.snapshot=Some(owner);return Err(error.into());}}}
-        if self.mutations.is_some(){let turn=self.factory.as_ref().unwrap().mutations(self.mutations.take().unwrap(),child);work=turn.work;match turn.result{Ok((owner,progress))=>{*self.active=Some(owner);return admit_birth(progress,child,demand.capacity_bytes).map_err(Into::into);},Err((error,owner))=>{*self.mutations=Some(owner);return Err(error.into());}}}
-        if self.factory.is_some(){let factory:Arc<dyn semio_framework_value::FactoryRetirement>=self.factory.take().unwrap();*self.closing_factory=Some(FactoryAuthority::new(factory));work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}
-        let factory=self.closing_factory.as_mut().ok_or_else(||ValueError::invariant("closing_factory absent"))?;if factory.terminal_is_empty(){drop(self.closing_factory.take());work=1;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}))}let turn=match control.as_deref_mut(){Some(ReplayCloseControl::Controlled(control))=>factory.step_controlled(child,*control),Some(ReplayCloseControl::Original(original))=>factory.step_original(*original,child),None=>factory.step(child)};work=turn.work;let step=turn.result?;
+        if self.active.is_some(){let poll=match control.as_deref_mut(){Some(ReplayCloseControl::Controlled(control))=>semio_framework_value::close_factory_ticket_controlled(&mut self.active,&mut effect.nested(child),*control),Some(ReplayCloseControl::Original(original))=>semio_framework_value::close_factory_ticket_original(&mut self.active,*original,&mut effect.nested(child)),None=>close_factory_ticket(&mut self.active,&mut effect.nested(child))};let turn=RetirementPollExit::settled(poll)?;work=turn.work;return turn.result.map_err(Into::into);}
+        if self.snapshot.is_some(){let issuer=self.factory.as_ref().ok_or_else(||ValueError::invariant("replay factory absent"))?;let turn=RetirementPollExit::settled(issuer.snapshot(&mut *self.snapshot,&mut *self.active,&mut effect.nested(child)))?;work=turn.work;let step=turn.result?;return Ok(admit_birth(step.progress(),child,demand.capacity_bytes)?);}
+        if self.mutations.is_some(){let issuer=self.factory.as_ref().ok_or_else(||ValueError::invariant("replay factory absent"))?;let turn=RetirementPollExit::settled(issuer.mutations(&mut *self.mutations,&mut *self.active,&mut effect.nested(child)))?;work=turn.work;let step=turn.result?;return Ok(admit_birth(step.progress(),child,demand.capacity_bytes)?);}
+        if let Some(factory)=self.factory.take(){let factory:Arc<dyn semio_framework_value::FactoryRetirement>=factory;*self.closing_factory=Some(FactoryAuthority::new(factory));work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}
+        let factory=self.closing_factory.as_mut().ok_or_else(||ValueError::invariant("closing_factory absent"))?;if factory.terminal_is_empty(){drop(self.closing_factory.take());work=1;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}))}
+        let poll=match control.as_deref_mut(){Some(ReplayCloseControl::Controlled(control))=>factory.step_controlled(&mut effect.nested(child),*control),Some(ReplayCloseControl::Original(original))=>factory.step_original(*original,&mut effect.nested(child)),None=>factory.step(&mut effect.nested(child))};
+        let turn=RetirementPollExit::settled(poll)?;work=turn.work;let step=turn.result?;
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
-    })();semio_framework_value::RetainedWorkOutcome{result,work}}
+        })();settle_exit(effect,base,result,work)}
 }
 impl<P,M> Drop for ReplayRetirement<P,M>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"replay cleanup requires exact terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.snapshot);ManuallyDrop::drop(&mut self.mutations);ManuallyDrop::drop(&mut self.active);ManuallyDrop::drop(&mut self.factory);ManuallyDrop::drop(&mut self.closing_factory);}}}}
 
-struct ReplayMutationsRetirement<M>{
+struct ReplayMutationsRetirement<M:'static>{
     owners:ManuallyDrop<Option<PagedList<M,{usize::MAX}>>>,
     pending:ManuallyDrop<Option<M>>,
     active:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,
     closing_factory:ManuallyDrop<Option<FactoryAuthority>>,
 }
-impl<M> ReplayMutationsRetirement<M>{
+impl<M:'static> ReplayMutationsRetirement<M>{
     fn new(owners:PagedList<M,{usize::MAX}>,factory:Arc<dyn ArtifactOwnedValueRetirementFactory<M>>)->Self{Self{owners:ManuallyDrop::new(Some(owners)),pending:ManuallyDrop::new(None),active:ManuallyDrop::new(None),factory:ManuallyDrop::new(Some(factory)),closing_factory:ManuallyDrop::new(None)}}
     fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if let Some(active)=self.active.as_ref(){return nested(factory_ticket_demands(active,copy)?);}
@@ -105,24 +119,33 @@ impl<M> ReplayMutationsRetirement<M>{
 impl<M:Send+'static> ErasedSnapshotRetirement for ReplayMutationsRetirement<M>{
     fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if let Some(active)=self.active.as_ref(){return if active.terminal_is_empty(){Ok(1)}else{active.next_computational_work(body)}}if let Some(value)=self.pending.as_ref(){return self.factory.as_ref().ok_or_else(||ValueError::invariant("factory absent"))?.retire_owned_work_demand(value)}if self.owners.is_some()||self.factory.is_some(){return Ok(1)}match self.closing_factory.as_ref(){Some(factory) if factory.terminal_is_empty()=>Ok(1),Some(factory)=>factory.next_computational_work(body),None=>Ok(0)}}
     fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{
-        let mut work=0;let result=(||->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
+    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+        let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;
+        let result=(||->Result<RetainedCloneStep,RetirementPollExit>{
         let empty=RetainedCloneProgress::default();if self.empty(){return Ok(RetainedCloneStep::Complete(empty));}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
         let demand=self.demands(grant.maximum_copy_bytes)?;if !permits(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}
         let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        if self.active.is_some(){let turn=close_factory_ticket(&mut self.active,child);work=turn.work;return turn.result;}
-        if self.pending.is_some(){let turn=match self.factory.as_ref(){Some(v)=>v,None=>return Err(ValueError::invariant("factory absent").into())}.retire_owned(match self.pending.take(){Some(v)=>v,None=>return Err(ValueError::invariant("pending absent").into())},child);work=turn.work;match turn.result{Ok((owner,progress))=>{*self.active=Some(owner);return admit_birth(progress,child,demand.capacity_bytes).map_err(Into::into);},Err((error,owner))=>{*self.pending=Some(owner);return Err(error);}}}
+        if self.active.is_some(){let turn=RetirementPollExit::settled(close_factory_ticket(&mut self.active,&mut effect.nested(child)))?;work=turn.work;return turn.result.map_err(Into::into);}
+        if self.pending.is_some(){
+            let factory=self.factory.as_ref().ok_or_else(||ValueError::invariant("factory absent"))?;
+            let turn=match semio_framework_value::factory::factory_retire_owned(&**factory,&mut *self.pending,&mut effect.nested(child)){RetainedWorkPoll::Pending{work}=>return Err(RetirementPollExit::Pending(work)),RetainedWorkPoll::Complete(turn)=>turn};
+            work=turn.work;let(owner,progress)=turn.result?;*self.active=Some(owner);return Ok(admit_birth(progress,child,demand.capacity_bytes)?);
+        }
         if let Some(owners)=self.owners.as_mut(){
             if !owners.is_empty(){*self.pending=owners.pop();work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<M>(),..empty}));}
             if owners.terminal_is_empty(){drop(self.owners.take());work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-            let progress=owners.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;
-            work=progress.work;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(progress.progressed),released_bytes:progress.released_allocation_bytes,..empty}));
+            let turn=owners.release_empty_page(&mut effect.nested(child));work=turn.work;
+            return match turn.result{
+                Ok(semio_framework_value_persistent::list::PagedListReleaseOutcome::Denied)=>Ok(RetainedCloneStep::Progress(empty)),
+                Ok(semio_framework_value_persistent::list::PagedListReleaseOutcome::Ready(progress))=>Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(progress.progressed),released_bytes:progress.released_allocation_bytes,..empty})),
+                Err(failure)=>Err(release_error(failure).into()),
+            };
         }
-        if self.factory.is_some(){let factory:Arc<dyn semio_framework_value::FactoryRetirement>=self.factory.take().unwrap();*self.closing_factory=Some(FactoryAuthority::new(factory));work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}
-        let factory=match self.closing_factory.as_mut(){Some(v)=>v,None=>return Err(ValueError::invariant("closing_factory absent").into())};if factory.terminal_is_empty(){drop(self.closing_factory.take());work=1;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}))}let turn=factory.step(child);work=turn.work;let step=turn.result?;
+        if let Some(factory)=self.factory.take(){let factory:Arc<dyn semio_framework_value::FactoryRetirement>=factory;*self.closing_factory=Some(FactoryAuthority::new(factory));work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}
+        let factory=self.closing_factory.as_mut().ok_or_else(||ValueError::invariant("closing_factory absent"))?;if factory.terminal_is_empty(){drop(self.closing_factory.take());work=1;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}))}
+        let turn=RetirementPollExit::settled(factory.step(&mut effect.nested(child)))?;work=turn.work;let step=turn.result?;
         Ok(if self.empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
-        })();
-        semio_framework_value::RetainedWorkOutcome{result,work}
+        })();settle_exit(effect,base,result,work)
     }
     fn terminal_is_empty(&self)->bool{self.empty()}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
@@ -130,10 +153,31 @@ impl<M:Send+'static> ErasedSnapshotRetirement for ReplayMutationsRetirement<M>{
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.release_bytes)}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
 }
-impl<M> Drop for ReplayMutationsRetirement<M>{fn drop(&mut self){assert!(std::thread::panicking()||self.empty(),"native inverse retirement abandoned owners");}}
+impl<M:'static> Drop for ReplayMutationsRetirement<M>{fn drop(&mut self){assert!(std::thread::panicking()||self.empty(),"native inverse retirement abandoned owners");}}
 fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"replay cleanup nested depth overflow"))?;Ok(demand)}
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::WorkLimit,message)}
+/// 🧾️ Runs one physical-only erased close and settles its reported work on the shared effect.
+pub(crate) fn erased_close(effect:&mut RetainedAllocationEffect<'_>,close:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,ValueError>)->OriginalRetirementPoll{
+    let grant=effect.grant();let base=effect.performed_work();let turn=close(grant);
+    settle_exit(effect,base,turn.result.map_err(Into::into),turn.work)
+}
+/// ⚠️ Keeps the Work refusal or the page release refusal of an empty-page release as one typed value error.
+pub(crate) fn release_error(failure:semio_framework_value_persistent::list::PagedListReleaseFailure)->ValueError{match failure{semio_framework_value_persistent::list::PagedListReleaseFailure::Work(error)=>error,semio_framework_value_persistent::list::PagedListReleaseFailure::Release(error)=>ValueError::from(error)}}
+/// ⏱️ Records the work a reported total still owes the shared effect, keeping every refusal and Pending child.
+pub(crate) fn settle_exit(effect:&mut RetainedAllocationEffect<'_>,base:u128,result:Result<RetainedCloneStep,RetirementPollExit>,work:u128)->OriginalRetirementPoll{
+    let done=effect.performed_work().saturating_sub(base);
+    let settlement:Result<(),ValueError>=if done>work{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"replay cleanup recorded more work than it reports"))}else{u64::try_from(work-done).map_err(|_|refusal("replay cleanup work does not fit one original unit")).and_then(|owed|if owed==0||effect.performed(owed)?{Ok(())}else{Err(refusal("replay cleanup work exceeded its original action"))})};
+    let complete=|result|RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work});
+    match(result,settlement){
+        (Ok(step),Ok(()))=>complete(Ok(step)),
+        (Ok(step),Err(error))=>complete(Err(OriginalRetirementFailure::from_work_refusal(error.with_retained_progress(step.progress())))),
+        (Err(RetirementPollExit::Failed(failure)),Ok(()))=>complete(Err(failure)),
+        (Err(RetirementPollExit::Failed(failure)),Err(error))=>complete(Err(OriginalRetirementFailure::from_owned_parts(None,Some(error),None,None,Some(Box::new(failure)),None))),
+        (Err(RetirementPollExit::Pending(child)),Ok(()))=>RetirementPollExit::finish::<RetainedCloneStep>(Err(RetirementPollExit::Pending(child)),work),
+        (Err(RetirementPollExit::Pending(_)),Err(error))=>complete(Err(OriginalRetirementFailure::from_work_refusal(error))),
+    }
+}
 fn admit_birth(progress:RetainedCloneProgress,grant:RetainedCloneGrant,bytes:usize)->Result<RetainedCloneStep,ValueError>{if !progress.fits(grant)||progress.retained_capacity_bytes!=bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"replay cleanup constructor changed its receipt"));}Ok(RetainedCloneStep::Progress(progress))}
 
 #[cfg(test)]

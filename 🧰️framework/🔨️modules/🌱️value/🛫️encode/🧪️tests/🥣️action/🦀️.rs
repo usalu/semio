@@ -3,5 +3,8 @@ pub use semio_framework_value_native_encoding::*;
 #[cfg(test)]
 pub(crate) use semio_framework_value_testing_allocator::observe_retirement_allocations;
 #[cfg(test)]
+#[path="../🎟️eff/🦀️.rs"]
+mod eff;
+#[cfg(test)]
 #[path="../../🎟️action/🧪️tests/🦀️.rs"]
 mod tests;

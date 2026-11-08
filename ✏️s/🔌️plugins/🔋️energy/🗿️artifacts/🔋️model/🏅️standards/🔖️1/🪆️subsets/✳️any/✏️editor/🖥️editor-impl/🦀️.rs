@@ -42,7 +42,7 @@ impl ArtifactEditor for EnergyModelEditor {
     }
 
     /// 🌱️ A fresh editor is born on the canonical empty model, the real empty document.
-    fn reference_birth() -> Option<semio_plugin::ReferenceArtifactAppBirth<Self::Snapshot>> { Some(|| Ok(EnergyModelSnapshot::default())) }
+    fn reference_birth() -> Option<semio_plugin::ReferenceArtifactAppBirth<Self::Snapshot>> { Some(|| EnergyModelSnapshot::empty().map_err(|error| error.to_string().into())) }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         ENERGY_MODEL_RETAINED_TOOL_IDS.iter().map(|tool| semio_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<EnergyModelEditor>>(
@@ -205,7 +205,7 @@ fn render_body(
     interaction: &EnergyModelInteractionSnapshot,
 ) -> UiAssemblyResult<ComponentTree> {
     let node = match body_key {
-        structure::BODY_KEY => structure::render(doc.snapshot)?,
+        structure::BODY_KEY => structure::render(doc.snapshot, view_state.locale)?,
         zones::BODY_KEY => zones::render(doc.snapshot)?,
         simulation::BODY_KEY => simulation::render(doc.original_tool_run(), cfg.snapshot, doc.snapshot.model.read().run_period, doc.snapshot.weather_link.get().as_ref(), view_state.locale),
         model_window::BODY_KEY => {

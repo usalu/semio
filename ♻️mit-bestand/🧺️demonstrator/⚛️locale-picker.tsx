@@ -12,14 +12,13 @@ export function DemonstratorLocalePicker({ onChoose }: { readonly onChoose: (loc
     <main aria-labelledby="demonstrator-locale-picker-title" data-slot="demonstrator-locale-picker" className="grid h-full w-full place-items-center">
       <div className="grid justify-items-center gap-double">
         <h1 id="demonstrator-locale-picker-title" className="m-0 text-lg font-semibold">
-          {DEMONSTRATOR_LOCALES.map((locale, index) => (
-            <span key={locale} lang={locale}>
-              {index === 0 ? "" : " / "}
+          {DEMONSTRATOR_LOCALES.map((locale) => (
+            <span key={locale} lang={locale} className="block">
               {demonstratorText("demonstrator.locale.choose", locale)}
             </span>
           ))}
         </h1>
-        <div className="flex gap-double">
+        <div role="group" aria-labelledby="demonstrator-locale-picker-title" className="flex gap-double">
           {DEMONSTRATOR_LOCALES.map((locale) => (
             <button key={locale} type="button" lang={locale} data-locale={locale} onClick={() => onChoose(locale)} className="cursor-pointer rounded-sm border border-border px-double py-single text-sm hover:bg-hover-window">
               {DEMONSTRATOR_LOCALE_ENDONYMS[locale]}

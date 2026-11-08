@@ -28,8 +28,20 @@ fn pack_carrier_round_trips_to_an_equal_snapshot_and_stable_bytes(){
 }
 
 #[test]
-fn default_is_the_canonical_empty_engine_model(){
- assert_eq!(EnergyModelSnapshot::default(),EnergyModelSnapshot::from_model(&crate::model::Model::default()).unwrap());
+fn empty_is_the_canonical_empty_engine_model(){
+ assert_eq!(EnergyModelSnapshot::empty().unwrap(),EnergyModelSnapshot::from_model(&crate::model::Model::default()).unwrap());
+}
+
+#[test]
+fn the_native_snapshot_has_no_panicking_default_and_no_unit_retirement_hook(){
+ trait Absent{const PRESENT:bool=false;}
+ impl<T> Absent for T{}
+ struct Probe<T>(std::marker::PhantomData<T>);
+ impl<T:Default> Probe<T>{const PRESENT:bool=true;}
+ assert!(!Probe::<EnergyModelSnapshot>::PRESENT);
+ struct Hook<T>(std::marker::PhantomData<T>);
+ impl<T:semio_framework_value::FromValue> Hook<T>{const PRESENT:bool=true;}
+ assert!(!Hook::<EnergyModelSnapshot>::PRESENT);
 }
 
 #[test]

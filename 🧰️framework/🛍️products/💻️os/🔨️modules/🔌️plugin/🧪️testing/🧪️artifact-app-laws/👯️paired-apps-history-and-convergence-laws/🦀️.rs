@@ -57,7 +57,16 @@ where
     A: ArtifactApp,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
-    let admitted = dispatch_fixture_action(app,action,None,&meta("local"),identity,cx,mounted_policy.close).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
+    settle_history_verb_as(app, action, &meta("local"), receiver, mounted_policy, identity, cx).await
+}
+
+/// 🌐️ Like [`settle_history_verb`], but the verb is dispatched under the caller's `ActionMeta`, so its `view_state` carries the caller's language.
+pub async fn settle_history_verb_as<A, M>(app: &mut VcsArtifactApp<A, M>, action: &str, action_meta: &ActionMeta, receiver: u32, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
+where
+    A: ArtifactApp,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
+{
+    let admitted = dispatch_fixture_action(app,action,None,action_meta,identity,cx,mounted_policy.close).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
     semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
     settle_registered_typed_operation(app, receiver, mounted_policy, identity,cx).await.unwrap_or_else(|fault| panic!("history verb {action} publication: {fault:?}"));
 }

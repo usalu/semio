@@ -39,8 +39,8 @@ function PartnerLogoLink({ logo, locale }: { readonly logo: PartnerLogo; readonl
  * 🏛️ A plain (non-margined) footer item — the caller sits it between the bottom-middle command palette and
  * the bottom-right corner toggle by bracketing it with two `navbarFillItem` spacers, so it never claims the
  * exact corner pixel a floating corner `Panel` also anchors to. `relative z-40` matches `panel-tabs`' z-index so it
- * never disappears behind an anchored panel's own chrome. Rendered as a real `<button>` (not a link) so it reads as
- * chrome rather than page content; the click opens the funded project page in a new tab.
+ * never disappears behind an anchored panel's own chrome. Rendered as a real `<a>` so it is announced as a link and
+ * opens the funded project page in a new tab with middle or Ctrl click too.
  * 📱️ With `iconOnly` (the landing sets it on a phone) the credit shrinks to just its logo — the caption has no room.
  **/
 export function fundedByZukunftBauFooterItem(key: string, locale: DemonstratorLocale, iconOnly: boolean): NavbarItem {
@@ -49,18 +49,19 @@ export function fundedByZukunftBauFooterItem(key: string, locale: DemonstratorLo
     key,
     className: "relative z-40",
     content: (
-      <button
-        type="button"
+      <a
+        href={logo.href}
+        target="_blank"
+        rel="noopener noreferrer"
         aria-label={demonstratorFormat("demonstrator.footer.newTab", locale, { name: `${demonstratorText("demonstrator.footer.fundedBy", locale)} ${logo.alt}` })}
-        onClick={() => window.open(logo.href, "_blank", "noopener,noreferrer")}
-        className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors cursor-pointer"
+        className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors cursor-pointer no-underline"
       >
         {!iconOnly && <span className="whitespace-nowrap">{demonstratorText("demonstrator.footer.fundedBy", locale)}</span>}
         <span className="inline-flex shrink-0 items-center h-tiny">
           <img src={logo.src} alt="" className="h-full w-auto dark:hidden" />
           {logo.darkSrc !== undefined && <img src={logo.darkSrc} alt="" className="hidden h-full w-auto dark:block" />}
         </span>
-      </button>
+      </a>
     ),
   };
 }

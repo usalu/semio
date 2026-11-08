@@ -35,7 +35,7 @@ use semio_framework_plugin_instance_render::render_bundle::{RenderCtx, RenderRef
 use semio_plugin_operation::TOOL_CANCELLATION_SLOTS;
 use semio_framework_plugin_time_travel_turns::time_travel_bundle::{TimeTravelCtx, TimeTravelRef};
 use semio_plugin_time_travel::TimeTravelLedger;
-use semio_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_plugin_tool_machine::ToolMachineRuntime;
 use semio_framework_plugin_tool_run_turns::tool_run_bundle::{ToolRunCtx, ToolRunRef};
 use semio_plugin_tool_run::ToolRunLedger;
 use semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx;
@@ -114,7 +114,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             MaintenanceUnit::ActionIngress=>self.ingress.close_action_ingress_sources(cx, grant, false),
             MaintenanceUnit::CommandPrune=>self.history.advance_command_prune_step(&mut *self.stores, grant, false).map_err(Into::into),
             MaintenanceUnit::PrivateChildGroup(operation)=>Ok(match self.child_composition.close_private_child_group_operation_step(&mut *self.stores, operation, cx, grant)?{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"original private child group awaits custody"}}),
-            MaintenanceUnit::DirectIngress=>self.stores.window_config_store.close_direct_ingress(grant).map(progressed).map_err(Into::into),
+            MaintenanceUnit::DirectIngress=>{
+                let Some(((result,work),_))=cx.with_original_effect(grant,|_,effect|{let result=self.stores.window_config_store.close_direct_ingress(effect);(result,effect.performed_work())})? else{return Ok(PluginLifecycleStep::Progress(Default::default()))};
+                semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work}).map(progressed).map_err(Into::into)
+            }
             MaintenanceUnit::GrantedMounted=>self.granted_mounted_retirement_step(cx).map(progressed),
             MaintenanceUnit::ToolOverlay=>self.as_render().tool_overlay_retirement_step(cx,grant,false).map(progressed).map_err(Into::into),
             MaintenanceUnit::ToolRuns=>Ok(self.as_tool_run().tool_run_retire_step(cx)?.map_or_else(idle,progressed)),
@@ -135,8 +138,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             }
             return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
         }
-        if stage==13{return self.drive_envelope_completed_record_returns(grant,false)}
-        if stage==12{return self.drive_envelope_field_decoder_returns(grant,false)}
+        if stage==13{return self.drive_envelope_completed_record_returns(cx,grant,false)}
+        if stage==12{return self.drive_envelope_field_decoder_returns(cx,grant,false)}
         if stage==24{return self.drive_document_archive_load_retirements(cx,grant,false)}
         if stage==11{return self.drive_envelope_decode_jobs(cx,grant,false)}
         if stage==16{return self.tools.instance_operation_owner.maintenance_step(cx,grant)}
@@ -176,10 +179,22 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 drop(self.media.snapshot_retirements.remove(operation_id).ok_or_else(authority)?);
                 return Ok(removed(final_progress))
         }
+        if stage==MAINTENANCE_CHILD_ROOT_STAGE{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.child_root_retirement_step(effect).map(RetainedCloneStep::Progress).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)).map(progressed)}
+        if stage==MAINTENANCE_CHILD_MEMBER_STAGE{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.child_member_retirement_step(effect).map(RetainedCloneStep::Progress).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)).map(progressed)}
+        if stage==MAINTENANCE_DOCUMENT_DISPLACED_STAGE{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|semio_plugin_ownership::bounded_ownership::plugin_settle_poll(self.stores.store.maintenance_retirements_step(effect))).map(progressed)}
+        if stage==MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE{
+            return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|{
+                use semio_plugin_ownership::bounded_ownership::{plugin_settle_poll,PluginLifecycleFailure};
+                if !self.stores.config_store.maintenance_retirements_terminal_is_empty(){plugin_settle_poll(self.stores.config_store.maintenance_retirements_step(effect))}
+                else if !self.stores.draft_store.maintenance_retirements_terminal_is_empty(){plugin_settle_poll(self.stores.draft_store.maintenance_retirements_step(effect))}
+                else if !self.stores.interaction_store.maintenance_retirements_terminal_is_empty(){plugin_settle_poll(self.stores.interaction_store.maintenance_retirements_step(effect))}
+                else{self.stores.window_config_store.maintenance_retirements_step(effect).map_err(PluginLifecycleFailure::from)}
+            }).map(progressed)
+        }
         let result=(||->Result<PluginLifecycleStep,Fault>{
         let value_fault = plugin_retirement_fault;
         match stage {
-            MAINTENANCE_CHILD_ROOT_STAGE => self.child_root_retirement_step(grant).map(PluginLifecycleStep::Progress),
+            MAINTENANCE_CHILD_ROOT_STAGE => unreachable!("original child retirement handled before the fault-only ladder"),
             5 => {
                 let Some((index, generation)) = self.roster.peer_presence_retirements.next_id_from(self.maintenance.maintenance_peer_presence_cursor) else { return Ok(idle()) };
                 let authority = || maintenance_fault("interactive-job.maintenance-peer-presence-authority", "live peer-presence retirement authority changed during one fixed step");
@@ -234,7 +249,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 }
                 Ok(idle())
             }
-            MAINTENANCE_DOCUMENT_DISPLACED_STAGE => self.stores.store.maintenance_retirements_step(grant).map(progressed).map_err(value_fault),
+            MAINTENANCE_DOCUMENT_DISPLACED_STAGE => unreachable!("original displaced retirement handled before the fault-only ladder"),
             10 => self.drive_envelope_ingress(grant, false),
             11 => unreachable!("original envelope decode handled before the fault-only ladder"),
             12 => unreachable!("original decoder return handled before the fault-only ladder"),
@@ -243,23 +258,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             17 => self.tools.latest_wins_keys.advance(grant).map(progressed),
             18 => unreachable!("original cancellation cleanup requires its actual caller"),
             19 => self.stores.presence_store.maintenance_local_reads_step(grant).map(progressed).map_err(value_fault),
-            MAINTENANCE_CHILD_MEMBER_STAGE => self.child_member_retirement_step(grant).map(PluginLifecycleStep::Progress),
+            MAINTENANCE_CHILD_MEMBER_STAGE => unreachable!("original child retirement handled before the fault-only ladder"),
             21 => self.retire_document_windows_step(grant, false),
             22 => self.stores.window_transient_store.maintenance_step(grant),
 
             24 => unreachable!("original archive handled before the fault-only ladder"),
-            MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE => {
-                let step = if !self.stores.config_store.maintenance_retirements_terminal_is_empty() {
-                    self.stores.config_store.maintenance_retirements_step(grant).map_err(value_fault)
-                } else if !self.stores.draft_store.maintenance_retirements_terminal_is_empty() {
-                    self.stores.draft_store.maintenance_retirements_step(grant).map_err(value_fault)
-                } else if !self.stores.interaction_store.maintenance_retirements_terminal_is_empty() {
-                    self.stores.interaction_store.maintenance_retirements_step(grant).map_err(value_fault)
-                } else {
-                    self.stores.window_config_store.maintenance_retirements_step(grant)
-                };
-                step.map(progressed)
-            }
+            MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE => unreachable!("original lane displaced retirement handled before the fault-only ladder"),
             26 => unreachable!("original window admission source return requires its actual caller"),
             _ => unreachable!("fixed maintenance stage"),
         }
@@ -437,7 +441,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 active.drive_rejected_members(&self.child_composition.child_content_root,cx,grant)
             }
             State::CandidateReady => self.commit_store_replacement_candidate(operation_id, closing,cx).map_err(Into::into),
-            State::RetiringCommittedStore | State::RetiringRejectedCandidate => active.drive_retained_store(grant).map_err(Into::into),
+            State::RetiringCommittedStore | State::RetiringRejectedCandidate => {
+                let Some((step, performed)) = cx.with_original_effect(grant, |_, effect| active.drive_retained_store(effect))? else { return Ok(PluginLifecycleStep::Progress(Default::default())) };
+                cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+                step.map_err(Into::into)
+            }
             State::Complete | State::Initializing => {
                 if !closing {
                     return Ok(PluginLifecycleStep::Complete(empty));

@@ -11,7 +11,7 @@ use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_plugin_program::{PluginProgram, decode_wire_serialized};
 use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
 use serde_json::Value;
-use crate::ops_wire_limits::find_instance;
+use semio_plugin_runtime_ops_wire::find_instance;
 use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 use semio_ui_contract as ui_contract;
 use semio_plugin_runtime_instances::inst_wire_frames::{with_instances_mut, with_instances_turn_mut};

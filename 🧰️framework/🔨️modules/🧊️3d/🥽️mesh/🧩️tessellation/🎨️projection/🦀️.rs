@@ -38,11 +38,11 @@ impl MeshTessellationJob{
         depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original mesh attribute owner depth overflow"))
     }
     /// 🎨️ Moves one exact original row, writes one quoted index, or forwards one real typed closure turn before admitting another row.
-    pub(super) fn project_attribute_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        self.attribute_receipt.0=Default::default();
+    pub(super) fn project_attribute_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();self.attribute_receipt.0=Default::default();
         if self.attribute_projection_complete(){return Ok(RetainedCloneStep::Complete(self.attribute_receipt.0));}
         if grant.maximum_items==0||grant.maximum_capacity_bytes<self.next_attribute_capacity_byte_demand(grant.maximum_copy_bytes)?||grant.maximum_release_bytes<self.next_attribute_release_byte_demand()?||grant.maximum_depth<self.next_attribute_depth_demand()?{return Ok(RetainedCloneStep::Progress(self.attribute_receipt.0));}
-        if let Some(owner)=&mut self.attribute_original_indices{let result=owner.step(grant);self.attribute_receipt.0=owner.step_progress();let step=result?;self.attribute_receipt.0=step.progress();if owner.terminal_is_empty(){self.attribute_original_indices=None;self.attribute_stage=5;}return Ok(RetainedCloneStep::Progress(self.attribute_receipt.0));}
+        if let Some(owner)=&mut self.attribute_original_indices{let poll=owner.step(effect);self.attribute_receipt.0=owner.step_progress();let step=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?,semio_framework_value::RetainedWorkPoll::Pending{..}=>RetainedCloneStep::Progress(Default::default())};self.attribute_receipt.0=step.progress();if owner.terminal_is_empty(){self.attribute_original_indices=None;self.attribute_stage=5;}return Ok(RetainedCloneStep::Progress(self.attribute_receipt.0));}
         if grant.maximum_copy_bytes<self.next_attribute_copy_byte_demand()?{return Ok(RetainedCloneStep::Progress(self.attribute_receipt.0));}
         if self.attribute_pending.is_none(){self.attribute_pending=self.mesh.attributes.extract_slot_if(self.attribute_slot,|_,_|false);self.attribute_slot+=1;self.attribute_stage=1;self.attribute_cursor=0;self.attribute_receipt.0.copied_items=1;}
         else{match self.attribute_stage{

@@ -260,9 +260,11 @@ impl LdltJob {
 
     fn reserve_extent<T>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, target: usize, limit: usize, context: &mut StepContext<'_>) -> Result<bool, SparseError> {
         if owner.capacity() >= target { return Ok(true); }
-        let progress = owner.reserve_capacity_one_funded(limit, context.retained_grant()).map_err(|_| SparseError::DimensionMismatch)?;
-        context.consume_retained(progress).map_err(|_| SparseError::DimensionMismatch)?;
-        Ok(false)
+        let grant = context.retained_grant();
+        let Some((turn, performed)) = context.with_original_effect(grant, |_, effect| owner.reserve_capacity_one_funded(limit, effect)).map_err(|_| SparseError::DimensionMismatch)? else { return Ok(false) };
+        let (progress, ready, verdict) = match turn.result { Ok(PagedListReservationOutcome::Ready(progress)) => (progress, true, Ok(false)), Ok(PagedListReservationOutcome::Denied) => (RetainedCloneProgress::default(), false, Ok(false)), Err(_) => (RetainedCloneProgress::default(), false, Err(SparseError::DimensionMismatch)) };
+        if ready || performed != 0 { receive_original_retained_work(context, RetainedWorkOutcome { result: Ok::<_, ValueError>(RetainedCloneStep::Progress(progress)), work: performed }).map_err(|_| SparseError::DimensionMismatch)?; }
+        verdict
     }
 
     fn admit_work(context: &mut StepContext<'_>, depth: usize, bytes: usize) -> Result<bool, SparseError> {
@@ -564,7 +566,7 @@ impl LdltJob {
             2 => {
                 if state.publication_outer == state.columns.len() { if !numerical_commit_page(writer, context)? { return Ok(false); } state.publication_stage = 3; }
                 else if state.publication_inner == 0 {
-                    let length = state.columns.column_len(state.publication_outer).expect("published factor column");
+                    let length = state.columns.column_len(state.publication_outer).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "published factor column is absent"))?;
                     if write_numerical_entry(writer, &(length as u64).to_le_bytes(), context)? { state.publication_inner = 1; }
                 } else if let Some((row, value)) = state.columns.entry(state.publication_outer, state.publication_inner - 1) {
                     let mut bytes = [0; 12]; bytes[..4].copy_from_slice(&row.to_le_bytes()); bytes[4..].copy_from_slice(&value.to_bits().to_le_bytes());
@@ -616,8 +618,7 @@ impl LdltFactor {
             if yj == 0.0 {
                 continue;
             }
-            for entry in 0..self.column_entries_len(j).expect("factor column") {
-                let (row, lij) = self.column_entry(j, entry).expect("factor entry");
+            for (row, lij) in (0..).map_while(|entry| self.column_entry(j, entry)) {
                 y[row as usize] -= lij * yj;
             }
         }
@@ -626,8 +627,7 @@ impl LdltFactor {
         }
         for j in (0..n).rev() {
             let mut sum = y[j];
-            for entry in 0..self.column_entries_len(j).expect("factor column") {
-                let (row, lij) = self.column_entry(j, entry).expect("factor entry");
+            for (row, lij) in (0..).map_while(|entry| self.column_entry(j, entry)) {
                 sum -= lij * y[row as usize];
             }
             y[j] = sum;

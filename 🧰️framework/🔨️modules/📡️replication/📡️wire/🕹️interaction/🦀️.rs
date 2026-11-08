@@ -201,7 +201,8 @@ pub enum SelectionMode {
 }
 
 impl semio_framework_value::retirement::RetireOwned for SelectionMode {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(())}
+    type RetirementCursor=semio_framework_value::retirement::Leaf<()>;
+    fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::leaf(())}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<()>())}
     fn controlled_retirement_supported()->bool{true}
 }

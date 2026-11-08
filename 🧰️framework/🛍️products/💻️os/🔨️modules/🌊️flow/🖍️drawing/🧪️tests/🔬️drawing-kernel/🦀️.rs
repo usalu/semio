@@ -331,6 +331,31 @@ fn flatten_scene_errors_on_missing_handle() {
     let err = store.flatten_scene(&bogus).unwrap_err();
     assert!(matches!(err, semio_framework_2d::DrawingError::MissingHandle(_)));
 }
+
+#[test]
+fn live_handle_stays_readable_after_the_engine_cache_evicts_its_output() {
+    let mut store = DrawingStore::with_engine_cache(semio_framework_2d_compute::EngineCache::new(1));
+    let a = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
+    let _b = store.circle(10.0, 10.0, 3.0).unwrap();
+    assert!(store.export_svg_sync(&a).expect("evicted cache output must not lose a live node").contains("<svg"));
+}
+
+#[test]
+fn shared_child_group_chain_is_refused_before_exponential_expansion() {
+    let mut store = DrawingStore::new();
+    let mut handle = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
+    for _ in 0..40 {
+        handle = store.group(&[handle.clone(), handle]).unwrap();
+    }
+    assert!(matches!(store.flatten_scene_sync(&handle), Err(semio_framework_2d::DrawingError::Operation(_))));
+}
+
+#[test]
+fn group_of_a_missing_child_is_refused_at_creation() {
+    let mut store = DrawingStore::new();
+    let bogus = DrawingHandle("not-valid-hex".to_string());
+    assert!(matches!(store.group(&[bogus]), Err(semio_framework_2d::DrawingError::MissingHandle(_))));
+}
 // #endregion Registry lifecycle
 
 // #region Scene bounds

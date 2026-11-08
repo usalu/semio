@@ -113,7 +113,7 @@ where
     /// 🎯 Begins the target phases.
     pub(super) fn step_begin_targets(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
         if self.target_address.is_some() {
-            let step = semio_os_store_read::artifact_retirement_admit_owned(&mut self.target_address, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant });
+            let step = owned_outcome(cx, grant, &mut self.target_address, &mut self.active);
             return self.admitted_step(step.result, cx);
         }
         if self.target_source.is_none() {
@@ -193,7 +193,7 @@ where
             } else if let Err(diagnostic) = self.admit_active(retired_strings, cx, grant) { return self.reject(diagnostic); }
             self.operation_index += 1;
         } else {
-            let step = match semio_os_store_read::artifact_retirement_admit_owned(&mut self.pending_target, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant }).result {
+            let step = match owned_outcome(cx, grant, &mut self.pending_target, &mut self.active).result {
                 Ok(step) => step,
                 Err(_) => return self.reject(MemberOpenDiagnostic::Initialization),
             };

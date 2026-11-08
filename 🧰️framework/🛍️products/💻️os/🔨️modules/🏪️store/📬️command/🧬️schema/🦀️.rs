@@ -31,7 +31,7 @@ impl HistoryLane {
 }
 
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArtifactCommand<Mutation> {
     /// ▶️ Records `mutations` as one edit; `transaction` names the committed tool transaction that authored them, stamped
@@ -153,7 +153,7 @@ pub struct OpenToolTransaction {
 
 /// ✏️ One input of [`ArtifactCommand::Supersede`]: the superseded operation and the replacement it folds as from now
 /// on (`None` withdraws it).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct SupersedeInput<Mutation> {
     pub target: MutationId,

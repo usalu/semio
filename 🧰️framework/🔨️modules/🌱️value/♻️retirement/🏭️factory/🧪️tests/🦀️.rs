@@ -94,7 +94,7 @@ struct OriginalProtocolOwner { original: ControlledRetirement<String> }
 impl OriginalProtocolTicket for OriginalProtocolOwner { fn role(&self) -> &'static str { "original-protocol" } }
 impl ErasedSnapshotRetirement for OriginalProtocolOwner {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.original.next_demand(body)}
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let result=self.original.step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));crate::RetainedWorkOutcome{result,work:self.original.last_turn_work()}}
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let result=self.original.step(&mut effect.nested(grant));crate::RetainedWorkOutcome{result,work:self.original.last_turn_work()}}
     fn terminal_is_empty(&self) -> bool { self.original.terminal_is_empty() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.original.next_copy_byte_demand() }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { self.original.next_capacity_byte_demand(body) }

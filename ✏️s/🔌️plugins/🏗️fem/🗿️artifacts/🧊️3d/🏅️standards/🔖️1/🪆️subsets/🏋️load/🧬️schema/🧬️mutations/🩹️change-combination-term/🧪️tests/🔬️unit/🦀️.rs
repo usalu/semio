@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
@@ -10,37 +11,37 @@ fn load_field_intent_follows_committed_vectors() {
     let vectors = [
         (
             "⚖️weights",
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🔺️diff/🔣️.json"))
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/📸️snapshot/⬅️before/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🦠️mutation/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/📸️snapshot/➡️after/🔣️.json"),
+            Some(repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🔺️diff/🔣️.json"))
         ),
         (
             "🗑️removes",
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/🔺️diff/🔣️.json"))
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/📸️snapshot/⬅️before/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/🦠️mutation/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/📸️snapshot/➡️after/🔣️.json"),
+            Some(repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/🔺️diff/🔣️.json"))
         ),
         (
             "⏸️same",
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/🔺️diff/🔣️.json"))
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/🦠️mutation/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            Some(repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/🔺️diff/🔣️.json"))
         ),
         (
             "⛔️missing",
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/🦠️mutation/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
             None
         ),
         (
             "⚗️invalid",
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/🦠️mutation/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
             None
         ),
     ];

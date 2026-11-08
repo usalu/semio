@@ -23,7 +23,13 @@ impl Fem3dNumericalChild {
 
     /// 🧰 Advances the funded assembly build until the assembly is complete.
     pub(super) fn step_prepare_assembly(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
-        match self.assembly_build.as_mut().ok_or_else(|| b"fem3d.numerical-assembly-build".to_vec())?.step_one_funded(context.retained_grant()).and_then(|(complete, progress)| {
+        let grant = context.retained_grant();
+        let build = self.assembly_build.as_mut().ok_or_else(|| b"fem3d.numerical-assembly-build".to_vec())?;
+        let stepped = match context.with_original_effect(grant, |_, effect| build.step_one_in(effect)).map_err(|_| b"fem3d.numerical-assembly-grant".to_vec())? {
+            None => Ok((false, Default::default())),
+            Some((result, performed)) => { semio_framework_job::receive_original_retained_work(context, semio_framework_value::RetainedWorkOutcome { result: Ok::<_, semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(Default::default())), work: performed }).map_err(|_| b"fem3d.numerical-assembly-grant".to_vec())?; result }
+        };
+        match stepped.and_then(|(complete, progress)| {
             context.consume_retained(progress).map_err(|_| semio_s_fem_model::FemError::ResourceAdmission)?;
             Ok(complete)
         }) {

@@ -442,7 +442,7 @@ impl Operator for BrepDeconstruct {
     fn next_retire_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.0.next_close_capacity_byte_demand(copy)}
     fn next_retire_release_byte_demand(&self)->Result<usize,ValueError> {self.0.next_close_release_byte_demand()}
     fn next_retire_depth_demand(&self)->Result<usize,ValueError> {self.0.next_close_depth_demand()}
-    fn retire_step(&mut self,grant:RetainedCloneGrant,_:&mut neural_engine::ValueRetirement)->Result<RetainedCloneStep,ValueError> {self.0.close_step(grant)}
+    fn retire_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,_:&mut neural_engine::ValueRetirement)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit> {Ok(self.0.close_step(effect.grant())?)}
     fn retire_cold(mut self:Box<Self>) { self.0.retire_cold(); }
     fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)> {neural_engine::OperatorPlanAdmission::immediate(input,grant)}
     fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError> {Ok(0)}

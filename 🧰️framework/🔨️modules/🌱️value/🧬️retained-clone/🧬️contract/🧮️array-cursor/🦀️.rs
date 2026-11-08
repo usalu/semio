@@ -2,6 +2,10 @@
 
 use super::*;
 
+#[path="🔎️selection/🦀️.rs"]
+mod selection;
+pub use selection::{ArrayPrefixSelection,ArrayPrefixShape,select_array_prefix};
+
 /// 📃️ Clones bounded bitwise pages or typed rows; only slots before `index` own initialized values until the final paid array move resets that prefix.
 pub struct ArrayCursor<T: RetainedClone, const N: usize> {
     slots: [std::mem::MaybeUninit<T>; N],
@@ -48,23 +52,23 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCurs
 
     fn advance_work_demand(&self,source:RetainedCloneRef<'_,[T;N]>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{
         if self.closing||self.spent{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"array clone cannot quote a closing or spent owner"))}
-        let selected=if !source.check_binding(&self.source)?{1}else if self.output_ready(){0}else if let Some(child)=self.child.as_ref(){if self.child_value.is_some(){if !self.child_closing{child_close_start_work(child)?}else if child.terminal_is_empty(){1}else{child.close_work_demand(body)?}}else if child.output_ready(){child.take_work_demand()?}else{child.advance_work_demand(source.project(self.index+1,|values|&values[self.index]),body,maximum_work_units)?}}else{1};Ok(if selected<=maximum_work_units{selected}else{0})
+        let selected=if !source.check_binding(&self.source)?{source.binding_work_demand(&self.source)?}else if self.output_ready(){0}else if let Some(child)=self.child.as_ref(){if self.child_value.is_some(){if !self.child_closing{child_close_start_work(child)?}else if child.terminal_is_empty(){1}else{child.close_work_demand(body)?}}else if child.output_ready(){child.take_work_demand()?}else{child.advance_work_demand(source.project(self.index+1,|values|&values[self.index]),body,maximum_work_units)?}}else{1};Ok(if selected<=maximum_work_units{selected}else{0})
     }
     fn advance(&mut self, source: RetainedCloneRef<'_, [T; N]>, body: usize, maximum_work_units:u64, effect:&mut crate::RetainedAllocationEffect<'_>) ->crate::OriginalRetirementOutcome{let grant=effect.grant();let maximum_work_units=maximum_work_units.min(effect.maximum_work_units());let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         let needed=self.advance_work_demand(source,body,maximum_work_units)?;if needed==0&&!self.output_ready(){return Ok(RetainedCloneStep::Progress(Default::default()))}let demand = self.advance_demands(source,body,maximum_work_units)?;
         if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress) = {let turn=source.bind(&mut self.source,grant);work+=turn.work;turn.result}? { return Ok(RetainedCloneStep::Progress(progress)); }
+        if let Some(progress) = {let turn=source.bind(&mut self.source,effect);work+=turn.work;turn.result}? { return Ok(RetainedCloneStep::Progress(progress)); }
         if T::BITWISE && self.index==0 && N<=RETAINED_CLONE_BULK_PAGE_ITEMS && size_of::<[T;N]>()<=RETAINED_CLONE_BULK_PAGE_BYTES && size_of::<[T;N]>()<=body {
             work+=1;*self.output=Some(T::bitwise_array(source.get()).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"bitwise array refused bounded original copy"))?);
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));
         }
         if let Some(child) = self.child.as_mut() {
             if self.child_value.is_some() {
-                if !self.child_closing{let turn=start_child_close(child,&mut self.child_closing,grant);work+=turn.work;let progress=turn.result?;return Ok(RetainedCloneStep::Progress(progress))}
+                if !self.child_closing{let turn=start_child_close(child,&mut self.child_closing,effect);work+=turn.work;let progress=turn.result?;return Ok(RetainedCloneStep::Progress(progress))}
                 if !child.terminal_is_empty() {
                     let nested = nested_retained_clone_grant(grant)?;
-                    let step = {let turn=child.close_step(&mut effect.reborrow(nested,effect.maximum_work_units().saturating_sub(work))?);work+=turn.work;turn.result}?;
+                    let step = {let turn=settle_child_close(child.close_step(&mut effect.nested(nested)));work+=turn.work;turn.result}?;
                     return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(nested,step,child.terminal_is_empty(),"array original child scaffold")?.progress()));
                 }
                 *self.child = None;work+=1;
@@ -73,9 +77,9 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCurs
                 self.index += 1;
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
             }
-            if child.output_ready(){let nested=nested_retained_clone_grant(grant)?;let turn=child.take(nested);work+=turn.work;let Some((value,p))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()))};*self.child_value=Some(value);self.child_closing=false;return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,p,"array child output handoff")?))}
+            if child.output_ready(){let nested=nested_retained_clone_grant(grant)?;let Some(p)=take_child_output(child,&mut *self.child_value,nested,effect)?else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.child_closing=false;return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,p,"array child output handoff")?))}
             let nested = nested_retained_clone_grant(grant)?;
-            let step = {let turn=child.advance(source.project(self.index + 1, |values| &values[self.index]),body,maximum_work_units.checked_sub(work).ok_or_else(||ValueError::invariant("array consumed more than original work quote"))?,&mut effect.reborrow(nested,maximum_work_units)?);work+=turn.work;turn.result}?;
+            let step = {let turn=child.advance(source.project(self.index + 1, |values| &values[self.index]),body,maximum_work_units.checked_sub(spent(work)).ok_or_else(||ValueError::invariant("array consumed more than original work quote"))?,&mut effect.nested_within(nested,maximum_work_units));work+=turn.work;turn.result}?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,step.progress(),"array original row clone")?));
         }
         if self.index == N {
@@ -107,18 +111,18 @@ fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->
 
     
 
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result=(||{
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"array clone must begin close before granted retirement").into()); }
         if !retained_clone_grant_admits(grant,retained_clone_close_demands::<[T; N]>(self,grant.maximum_copy_bytes)?) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(child) = self.child.as_mut() {
-            if !self.child_closing { let turn=start_child_close(child,&mut self.child_closing,grant);work+=turn.work;let progress=turn.result?; return Ok(RetainedCloneStep::Progress(progress)); }
-            if !child.terminal_is_empty() { let nested = nested_retained_clone_grant(grant)?; let turn=child.close_step(&mut effect.reborrow(nested,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;let step=turn.result?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(nested,step,child.terminal_is_empty(),"array child close")?.progress())); }
+            if !self.child_closing { let turn=start_child_close(child,&mut self.child_closing,effect);work+=turn.work;let progress=turn.result?; return Ok(RetainedCloneStep::Progress(progress)); }
+            if !child.terminal_is_empty() { let nested = nested_retained_clone_grant(grant)?; let turn=crate::RetirementPollExit::settled(child.close_step(&mut effect.nested(nested)))?;work+=turn.work;let step=turn.result?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(nested,step,child.terminal_is_empty(),"array child close")?.progress())); }
             *self.child = None;
             self.child_closing = false;work+=1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<T::Cursor>(), ..Default::default() }));
         }
-        if !self.close.is_empty() { let turn=self.close.step_granted(effect);work+=turn.work;return turn.result; }
+        if !self.close.is_empty() { let turn=crate::RetirementPollExit::settled(self.close.step_granted(effect))?;work+=turn.work;return turn.result.map_err(Into::into); }
         {let turn=self.close.begin_granted(&mut self.child_value,effect);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
         if self.index > 0 {
             let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<T>(), ..Default::default() };
@@ -128,10 +132,10 @@ fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->
             return Ok(RetainedCloneStep::Progress(progress));
         }
         {let turn=self.close.begin_granted(&mut self.output,effect);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
-        {let turn=close_retained_binding(&mut self.source,effect);work+=turn.work;turn.result}
-    })();RetainedWorkOutcome{result,work}}
+        {let turn=crate::RetirementPollExit::settled(close_retained_binding(&mut self.source,effect))?;work+=turn.work;turn.result.map_err(Into::into)}
+    })();crate::RetirementPollExit::finish(result,work)}
 
-    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Ok(0)}if let Some(child)=self.child.as_ref(){if !self.child_closing{return child.begin_close_work_demand()}return if child.terminal_is_empty(){Ok(1)}else{child.close_work_demand(body)}}if !self.close.is_empty(){return self.close.next_owner_work::<[T;N]>(false,&self.source,body)}if self.child_value.is_some(){return self.close.next_owner_work::<T>(true,&self.source,body)}if self.index>0{return Ok(1)}self.close.next_owner_work::<[T;N]>(self.output.is_some(),&self.source,body)}
+    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Ok(0)}if let Some(child)=self.child.as_ref(){if !self.child_closing{return child_close_start_work(child)}return if child.terminal_is_empty(){Ok(1)}else{child.close_work_demand(body)}}if !self.close.is_empty(){return self.close.next_owner_work::<[T;N]>(false,&self.source,body)}if self.child_value.is_some(){return self.close.next_owner_work::<T>(true,&self.source,body)}if self.index>0{return Ok(1)}self.close.next_owner_work::<[T;N]>(self.output.is_some(),&self.source,body)}
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(Default::default());}
         if let Some(child)=self.child.as_ref(){if !self.child_closing{return child_close_start_demand(child);}return if child.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}else{nested_retained_clone_close_demands::<T>(child,body)};}
         if !self.close.is_empty(){return self.close.next_owner_demands::<[T;N]>(false,&self.source,body);}

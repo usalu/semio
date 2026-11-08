@@ -13,7 +13,7 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(EnergyModelInference::infer(&EnergyModelSnapshot::default()).expect("valid materialized inference fixture"), EnergyModelInference::default());
+    assert_eq!(EnergyModelInference::infer(&EnergyModelSnapshot::empty().unwrap()).expect("valid materialized inference fixture"), EnergyModelInference::default());
 }
 
 #[semio_framework_async_macros::async_test]

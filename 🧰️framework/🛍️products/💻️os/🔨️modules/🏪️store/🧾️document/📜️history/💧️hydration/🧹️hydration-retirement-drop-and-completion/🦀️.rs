@@ -2,6 +2,8 @@
 
 use super::*;
 
+/// 🪙️ Folds one effect-shaped owner poll into the close outcome its caller settles; the typed cause stays with the owner's own failure slot.
+fn poll_outcome<T>(poll:semio_framework_value::RetainedWorkPoll<T,semio_framework_value::OriginalRetirementFailure>,step:impl FnOnce(T)->RetainedCloneStep)->semio_framework_value::RetainedWorkOutcome{match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>semio_framework_value::RetainedWorkOutcome{result:turn.result.map(step).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"hydration owner retirement failed")),work:turn.work},semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}}}
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
     P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
@@ -11,6 +13,7 @@ where
         if self.terminal_is_empty_unbounded() { return Ok(Default::default()); }
         if self.original_failure.is_some()||self.original_context_failure.is_some()||!self.mutation_domain.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"hydration retains its complete unreceived original failure"));}
         if !self.fold_protocol.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fold protocol cause requires its actual original receiver"))}
+        if self.mutation_refusal.is_some()&&self.active.is_none(){return semio_os_store_read::artifact_retirement_owned_birth_demands(&self.mutation_refusal)}
         if !self.fold_output.terminal_is_empty(){return self.fold_output.close_demands(body)}
         if !self.empty_messages.terminal_is_empty(){return self.empty_messages.close_demands(body)}
         if !self.original_meta.terminal_is_empty(){return self.original_meta.close_demands(body)}
@@ -69,15 +72,18 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.depth) }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        let grant = effect.grant();
+        let turn = (|| -> semio_framework_value::RetainedWorkOutcome {
         if self.target==PersistedDocumentHydrationTarget::Envelope&&self.fold_job.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original fold retirement requires its actual Source decoder")),work:0}}
         if self.original_failure.is_some()||self.original_context_failure.is_some()||!self.mutation_domain.terminal_is_empty(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"hydration retains its complete unreceived original failure")),work:0}}
         if !self.fold_protocol.terminal_is_empty(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fold protocol cause requires its actual original receiver")),work:0}}
-        if !self.fold_output.terminal_is_empty(){let turn=self.fold_output.close_step(grant);return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}}
-        if !self.empty_messages.terminal_is_empty(){let turn=self.empty_messages.close_step(grant);return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}}
-        if !self.original_meta.terminal_is_empty(){let turn=self.original_meta.close_step(grant);return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}}
-        if let Some(cursor)=self.mutation_receiving.as_mut(){if !cursor.terminal_is_empty(){return cursor.close_step(grant)}let copy=std::mem::size_of_val(&self.mutation_receiving);let release=std::mem::size_of::<M::Receiving>();if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<release||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.mutation_receiving.take();return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:release,..Default::default()})),work:1}}
-        if !self.mutation_output.terminal_is_empty(){let turn=self.mutation_output.close_step(grant);return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}}
+        if self.mutation_refusal.is_some()&&self.active.is_none(){return semio_os_store_read::artifact_retirement_admit_owned(&mut self.mutation_refusal,&mut self.active,effect)}
+        if !self.fold_output.terminal_is_empty(){return poll_outcome(self.fold_output.close_step(effect),RetainedCloneStep::Progress)}
+        if !self.empty_messages.terminal_is_empty(){return poll_outcome(self.empty_messages.close_step(effect),RetainedCloneStep::Progress)}
+        if !self.original_meta.terminal_is_empty(){return poll_outcome(self.original_meta.close_step(effect),RetainedCloneStep::Progress)}
+        if let Some(cursor)=self.mutation_receiving.as_mut(){if !cursor.terminal_is_empty(){return poll_outcome(cursor.close_step(effect),|step|step)}let copy=std::mem::size_of_val(&self.mutation_receiving);let release=std::mem::size_of::<M::Receiving>();if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<release||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.mutation_receiving.take();return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:release,..Default::default()})),work:1}}
+        if !self.mutation_output.terminal_is_empty(){return poll_outcome(self.mutation_output.close_step(effect),RetainedCloneStep::Progress)}
         let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty_unbounded() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -87,15 +93,15 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.phase = Phase::Rejected;
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
-        if self.active.is_some() { return semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result; }
-        if self.fold_job.is_some() { return semio_os_store_read::retirement_owner_close(&mut self.fold_job, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, effect)); }
+        if self.fold_job.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.fold_job, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         macro_rules! original {
-            ($field:ident) => { if self.$field.is_some() { return semio_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, grant).result; } };
+            ($field:ident) => { if self.$field.is_some() { return semio_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, effect).result; } };
         }
         original!(normalized_conflicts);
         original!(normalized_transitions);
         original!(transition_ledger);
-        if self.target_decoder.is_some() { return semio_os_store_read::retirement_owner_close(&mut self.target_decoder, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.target_decoder.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.target_decoder, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         original!(pending_target);
         original!(target_address);
         original!(target_source);
@@ -110,7 +116,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         }
         if let Some(runtime) = self.runtime.as_mut() {
             let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration runtime lost its original factory"))?;
-            let step = runtime.close_step(&owners.initial_snapshot_retirement, child)?;
+            let step = runtime.close_step(&owners.initial_snapshot_retirement, &mut effect.nested(child))?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child, step, runtime.terminal_is_empty(), "hydration inline runtime")?;
             if matches!(step, RetainedCloneStep::Complete(_)) { self.runtime.take(); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
@@ -152,10 +158,13 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         }
         if self.initial.is_some() {
             let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration original projection lost its owner catalog"))?;
-            let initial = self.initial.take().expect("observed original projection");
-            match owners.retire_initial_snapshot_owned(initial, child) {
+            let turn = match owners.retire_initial_snapshot_owned(&mut self.initial, &mut effect.nested(child)) {
+                semio_framework_value::RetainedWorkPoll::Pending { .. } => return Ok(RetainedCloneStep::Progress(Default::default())),
+                semio_framework_value::RetainedWorkPoll::Complete(turn) => turn,
+            };
+            match turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error) {
                 Ok((owner, progress)) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "hydration original projection birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration projection birth differs from its original quote")); } return Ok(RetainedCloneStep::Progress(progress)); }
-                Err((error, original)) => { *self.initial = Some(original); return Err(error); }
+                Err(error) => return Err(error),
             }
         }
         original!(history);
@@ -167,19 +176,22 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         original!(expected);
         original!(owner);
         if self.actor.0.has_owner() {
-            let original = std::mem::take(&mut self.actor.0);
-            match semio_framework_value::retirement::admit_owned_retirement(original, child).result {
-                Ok((owner, progress)) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "hydration original actor birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration actor birth differs from its original quote")); } return Ok(RetainedCloneStep::Progress(progress)); }
-                Err((error, original)) => { self.actor.0 = original; return Err(error); }
+            let mut slot = Some(std::mem::take(&mut self.actor.0));
+            match semio_framework_value::retirement::admit_owned_retirement(&mut slot, &mut effect.nested(child)).result {
+                Ok(None) => { if let Some(original) = slot.take() { self.actor.0 = original; } return Ok(RetainedCloneStep::Progress(Default::default())); }
+                Ok(Some((owner, progress))) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "hydration original actor birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration actor birth differs from its original quote")); } return Ok(RetainedCloneStep::Progress(progress)); }
+                Err(error) => { if let Some(original) = slot.take() { self.actor.0 = original; } return Err(error); }
             }
         }
         original!(schema);
         let owners = self.owners.as_mut().expect("hydration final catalog remains original");
-        let step = owners.close_uninstalled_owners_step(child)?;
+        let step = owners.close_uninstalled_owners_step(&mut effect.nested(child))?;
         semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owners.uninstalled_owners_terminal_is_empty(), "hydration final original catalog")?;
         if matches!(step, RetainedCloneStep::Complete(_)) { self.owners.take(); self.terminal = true; return Ok(RetainedCloneStep::Complete(step.progress())); }
         Ok(step)
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); let work = u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } })();
+        semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: turn.result.map_err(Into::into), work: u128::from(turn.work).saturating_add(effect.performed_work()) })
+    }
 
     fn terminal_is_empty(&self) -> bool { self.terminal_is_empty_unbounded() }
 }
@@ -202,6 +214,8 @@ where
     /// 🔎️ Names the first original owner this hydration still retains, or `None` once every currency is terminal.
     pub fn remaining_owner(&self) -> Option<&'static str> {
         if !self.mutation_domain.terminal_is_empty(){return Some("mutation_domain")}
+        if self.mutation_refusal.is_some(){return Some("mutation_refusal")}
+        if self.mutation_constructing||!self.mutation_admission.terminal_is_empty(){return Some("mutation_admission")}
         if self.original_failure.is_some(){return Some("original_failure")}
         if self.original_context_failure.is_some(){return Some("original_context_failure")}
         if self.mutation_receiving.is_some(){return Some("mutation_receiving")}

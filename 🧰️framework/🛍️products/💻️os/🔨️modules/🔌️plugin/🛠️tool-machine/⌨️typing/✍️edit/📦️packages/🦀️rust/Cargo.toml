@@ -26,3 +26,4 @@ semio-framework-tool-typing-edit = { path = "../../../../../../../../../🔨️m
 semio-plugin-decl-app = { path = "../../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-plugin-decl-emission = { path = "../../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-plugin-tool-run = { path = "../../../../../⏯️tool-run/📦️packages/🦀️rust" }
+semio-plugin-tool-machine = { path = "../../../../../🛠️tool-machine/📦️packages/🦀️rust" }

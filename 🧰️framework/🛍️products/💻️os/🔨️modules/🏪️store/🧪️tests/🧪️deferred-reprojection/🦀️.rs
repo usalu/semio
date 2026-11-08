@@ -228,7 +228,7 @@ async fn the_prefix_ring_grows_with_the_square_root_of_the_history() {
         store.ingest_remote(event.clone()).await.expect("the replica takes the log");
         while store.maintenance_retirements_under_pressure() {
             let grant=physical_test_close_grant();
-        let receipt=store.maintenance_retirements_step(grant).expect("displaced owners retire under original plain full policy").progress();
+        let receipt=store.maintenance_retirements_step_cold(grant).expect("displaced owners retire under original plain full policy").progress();
         assert!(receipt.fits(grant));
         }
     }
@@ -370,7 +370,7 @@ const LONG_HISTORY: i32 = 240;
 fn settle(store: &mut ArtifactStore<DemoSnapshot, CountedOp>) {
     while store.maintenance_retirements_under_pressure() {
         let grant=physical_test_close_grant();
-        let receipt=store.maintenance_retirements_step(grant).expect("displaced owners retire under original plain full policy").progress();
+        let receipt=store.maintenance_retirements_step_cold(grant).expect("displaced owners retire under original plain full policy").progress();
         assert!(receipt.fits(grant));
     }
 }

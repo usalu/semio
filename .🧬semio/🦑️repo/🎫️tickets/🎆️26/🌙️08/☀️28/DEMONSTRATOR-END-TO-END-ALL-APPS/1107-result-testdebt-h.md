@@ -1,0 +1,33 @@
+STATUS: GREEN for the lane scope. value-native-decoding all targets (testdebt-h-14 rc 0: 10/6/5/1) and value-clone-source lib 20/20 (testdebt-h-19 rc 0). Encode unperformed-closure finding fixed by runtime2 (W-runtime2-20). Decode was last run before the clone-source admission quote change (ready quotes 1); the change is in the clone-source crate only.
+
+Logs: C/🗑️generated/1105b/testdebt-h-<n>.txt. Tools: C/1105b-tools/testdebt-h/ (seq.sh, seq2.sh, seq3.sh).
+
+## Decode accounting: real fault or stale row (runtime2 rulings, all applied)
+- Stale rows: construction work 📐️.json allocationWork 2 -> 4, publicationWork 1 -> 4 (shared original law prepare.total 3, publication.total 4; receive_shared quotes 1 + prepare). `copiedBytes` row dropped; the law now compares with `SealedShared::prepare_birth_demand().copy_bytes`. TS oracle (original-work.test.ts) updated: refusal path 2 (issuance + failed attempt), success path 4 (issuance, allocator, aliases, wrapper).
+- Production fault 1: `SealedShared::birth_work_demand()` was the literal 2; now `1 + prepare_birth_work_demand()` (sealed/🦀️.rs:87).
+- Production fault 2: decode `shared_birth_demand` quoted copy 0 while prepare_birth reports copied_bytes = prepare_birth_demand().copy_bytes (40); a recipient honouring the quote refused the birth. Quote is now `SealedShared::prepare_birth_demand()`.
+- Production fault 3: `admit_backing` prepared its work on the control, not on the frame, so the frame's effect could never start (every backing turn reported work 0 / no receipt). Now `frame.prepare_work`, and `finish_allocation` after the work settles.
+- Production fault 4: decode `close_retirement_recipient` never committed the closed owner's births to the ledger/recipient (encode had it). Added the mirror (`commit_closed_births`). `close_original_birth_step` must NOT commit: the failure-birth refill already did (a double commit showed as 3101 vs 2765 in testdebt-h-5).
+- Stale tests: unwind law (settle -> recover -> settle only if not yet Settled, for every event), continuation law (birth step before the general effect through a `close_turn!` macro), work-settlement law (`actual_work()` now includes the claimed performed receipt before commit: asserted equal to the performed work, pending stays asserted), backing null-allocation law (refusal scoped to the vector admission, not the whole turn machinery), false-actual law (explicit `finish_allocation` before the receipt).
+- Closure: 261,989 + my additions crossed 262,144 (testdebt-h-2: eff.rs refused). Paid with zero-caller dead API (never raised): 8 receiving recovery wrappers in ♻️retirement, `retry_unstarted`, `validate_capture_plan`, slots `reclaim_input`, recipient `failure_allocation_phase`/`take_failure_protocol_refusal`.
+
+## Open finding: quoted effect whose closure never performs
+FIXED by runtime2 (W-runtime2-20, 4/4). Reproduction: encode effect-settlement law `denied_and_unperformed_effects_do_not_post_work` with `for denied in [true,false]` (now enabled, no longer `[true]`; testdebt-h-7 rc 1: "original owner requires recovery before retirement"). Ruling (runtime2): performed == 0 must `cancel_for_action`, never commit 0 nor stay quoted. runtime2 took the fix (handed to port-e); the law stays red until then. I tried the analogous decode edit and reverted it (no repro in decode).
+
+## Clone-source (testdebt-h-19: 20/20 lib laws green)
+- Ported: law-bank (with_effect, observed, settled, observe_eff/success_eff/run_eff/observe_actual, source_quoted, CPU), admission, custody, header, query, retain, work, close, demand/owner; root re-exports retirement_fields_type/seed.
+- Rulings applied (runtime2): rows derived from types/quotes, not pasted. Header law: every admission turn must quote exactly the copy it places (source_quoted returns Some only then); header project/child receipts use RetainedOwnedProjection::constructor_demand().copy_bytes; close-demand terminal row uses size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>().
+- Evidence that reversed two rulings (runtime2 accepted): (d) a terminal-ticket quote of 0 copy bytes made paid_binding_check/paid_projection hang forever (testdebt-h-11) because the terminal turn really writes the 16 B Option<Box<dyn>> header: production kept at 16, not a regression. (c) binding_copy_bytes 688 = duplicate_copy_bytes + size_of Self + size_of Option<Self>; dropping the Self term made the same laws hang, so bind/close liveness relies on it: kept, test row = the formula.
+- Test fixes: Owner doubles implement next_computational_work (new erased-owner requirement) and record effect.performed; QueryCursor implements next_computational_work; grants for bind/project carry binding and constructor copy bytes.
+- The three reds closed (h-17/h-18):
+  1. Source constructor: isolated by per-phase print (h-17): owner 4/4, alias 3/3, payload 1/1, lease 4/4, publication 5/5, ready quoted 0 but take_output performs 1. Production fix: admission advance_work_demand quotes 1 for "ready" ("empty" stays 0); the law compares the summed quotes with the summed performed work (row birthCpu 9 no longer used by Rust).
+  2. Cold terminal close: the exact begin_granted demand is `controlled_retirement_birth_demand(&owner)` (copy = size_of Option<T> + size_of ControlledRetirement<T>, plus capacity/release/depth); the law now builds its grant from it. The funded terminal turns also need the header copy (size_of Option<Box<dyn>>, asserted equal to next_copy_byte_demand): green in testdebt-h-19.
+  3. Shared query: NOT a fault. ControlledRetirement::next_demand reaches the live cursor only once a cursor exists with a reserved slot; before that it quotes the slot reservation, which is the correct next turn. The law now re-triggers properly: a non-blocking `reach` probe steps the owner until the query enters the cursor, then runs the concurrent-query check. The projection copy grants carry the constructor copy bytes.
+
+## Next
+1. (done) testdebt-h-9: decode 22/22.
+2. Clone-source: apply (a)(b)(c)(e) rows/quotes per the ruling, rerun `-p semio-framework-value-clone-source --lib`.
+3. Encode finding 4: runtime2/port-e fix, rerun `--test effect-settlement`.
+
+## Deleted functions
+13 zero-caller functions removed (8 receiving recovery wrappers, retry_unstarted, validate_capture_plan, reclaim_input, failure_allocation_phase, take_failure_protocol_refusal).  over the whole tracked repo (all roots, wasm-gated and feature-gated code included, text level): the only hits are my claims lines, a ticket note and a ticket codemod script, no source caller. Decode compiled and passed on all targets after the deletion (testdebt-h-14).

@@ -285,7 +285,8 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
         ChildContentRetirement::parent_snapshot_demand(retirement.retirement_demands(body.saturating_sub(parent_copy))?,parent_copy).map(Some)
     }
 
-    pub fn child_member_retirement_unit(&mut self,grant:RetainedCloneGrant,closing:bool)->Result<RetainedCloneStep,Fault>{
+    pub fn child_member_retirement_unit(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,closing:bool)->Result<RetainedCloneStep,Fault>{
+        let grant=effect.grant();
         let empty=RetainedCloneProgress::default();let Some(demand)=self.child_member_retirement_quote(grant.maximum_copy_bytes, closing).map_err(|error|plugin_sdk_fault(error.into_message()))?else{return Ok(RetainedCloneStep::Progress(empty))};
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty))}
         let Some((index, generation)) = self.child_member_retirements.next_id_from(self.child_member_retirement_cursor) else {
@@ -296,7 +297,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
             return Ok(RetainedCloneStep::Progress(empty));
         }
         if retirement.terminal_is_empty(){drop(self.child_member_retirements.remove(generation));self.child_member_retirement_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
-        let parent_copy=size_of::<usize>();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent_copy,maximum_depth:grant.maximum_depth-1,..grant};let step=retirement.close_step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,retirement.terminal_is_empty(),"original child member registry").map_err(|error|plugin_sdk_fault(error.into_message()))?;
+        let parent_copy=size_of::<usize>();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent_copy,maximum_depth:grant.maximum_depth-1,..grant};let step=retirement.close_step(&mut effect.nested(child))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,retirement.terminal_is_empty(),"original child member registry").map_err(|error|plugin_sdk_fault(error.into_message()))?;
         let mut receipt=step.progress();if receipt!=empty{self.child_member_retirement_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;receipt.copied_bytes=receipt.copied_bytes.checked_add(parent_copy).expect("original child registry cursor preflight")}
         let receipt=semio_framework_value::retained_clone::admit_retained_clone_progress(grant,receipt,"original child member registry parent").map_err(|error|plugin_sdk_fault(error.into_message()))?;Ok(RetainedCloneStep::Progress(receipt))
     }

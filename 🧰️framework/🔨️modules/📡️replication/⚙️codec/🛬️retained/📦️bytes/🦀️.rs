@@ -6,6 +6,8 @@ type Bytes=PagedBytes<{isize::MAX as usize}>;
 /// 🧵️ One immutable original range retains every admitted prefix until a paid recipient or cancellation closes it.
 pub struct RetainedWireBytesDecode{last_work:u64,source:OriginalWireSourceIdentity,start:usize,length:usize,output:ManuallyDrop<Option<Bytes>>,retiring:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<Bytes>>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,closing:bool,closed:bool}
 fn invalid(text:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,text)}
+fn narrow(work:u128)->Result<u64,ValueError>{u64::try_from(work).map_err(|_|invalid("original wire field work exceeds its counter"))}
+fn pay(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<u64,ValueError>{match semio_framework_value::retirement::record_retirement_work(effect,1){Ok(work)=>narrow(work),Err((error,_))=>Err(error)}}
 fn funded(g:RetainedCloneGrant,d:RetirementDemand)->bool{semio_framework_value::retained_clone::retained_clone_grant_admits(g,d)}
 impl RetainedWireBytesDecode{
  /// 📐️ Quotes the exact inline source and destination headers before their enclosing original capture.
@@ -26,7 +28,26 @@ impl RetainedWireBytesDecode{
  /// ♻️ Quotes one retained byte or original empty page release without a replacement decoder.
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.closed||self.receipt.is_some(){return Ok(Default::default())}if let Some(retiring)=self.retiring.as_ref(){if !retiring.terminal_is_empty(){return retiring.next_demand(body)}}Ok(RetirementDemand{depth:1,..Default::default()})}
  /// 🧹️ Returns the original paged owner through its defining typed retirement and preserves every denied remainder.
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedWireFieldStep,ValueError>{self.last_work=0;if self.closed{return Ok(RetainedWireFieldStep::Closed)}if !self.closing||self.receipt.is_some(){return Ok(RetainedWireFieldStep::Blocked)}let d=self.close_demands(g.maximum_copy_bytes)?;if !funded(g,d){return Ok(RetainedWireFieldStep::Blocked)}let p=if let Some(retiring)=self.retiring.as_mut(){if !retiring.terminal_is_empty(){{let result=retiring.step(g);self.last_work=retiring.last_turn_work();match result{Ok(step)=>step.progress(),Err(error)=>{let p=error.retained_progress();self.receipt=Some((g,p));return Err(error)}}}}else{self.last_work=1;self.retiring.take();self.closed=true;RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}}}else if let Some(output)=self.output.take(){self.last_work=1;match semio_framework_value::retirement::controlled::ControlledRetirement::new(output){Ok(retiring)=>*self.retiring=Some(retiring),Err((error,original))=>{*self.output=Some(original);return Err(error)}}RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}}else{self.last_work=1;self.closed=true;RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}};self.receipt=Some((g,p));Ok(if self.closed{RetainedWireFieldStep::Closed}else{RetainedWireFieldStep::Progress})}
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedWireFieldStep,semio_framework_value::OriginalRetirementFailure>{
+  use semio_framework_value::RetainedWorkPoll;
+  let g=effect.grant();self.last_work=0;
+  if self.closed{return Ok(RetainedWireFieldStep::Closed)}if !self.closing||self.receipt.is_some(){return Ok(RetainedWireFieldStep::Blocked)}
+  let d=self.close_demands(g.maximum_copy_bytes)?;if !funded(g,d)||effect.maximum_work_units()==0{return Ok(RetainedWireFieldStep::Blocked)}
+  let p=if let Some(retiring)=self.retiring.as_mut(){
+   if !retiring.terminal_is_empty(){
+    match retiring.step(effect){
+     RetainedWorkPoll::Pending{work}=>{self.last_work=narrow(work)?;return Ok(RetainedWireFieldStep::Blocked)},
+     RetainedWorkPoll::Complete(turn)=>{self.last_work=narrow(turn.work)?;match turn.result{Ok(step)=>step.progress(),Err(error)=>{let p=error.retained_progress();self.receipt=Some((g,p));return Err(error)}}},
+    }
+   }else{self.last_work=pay(effect)?;self.retiring.take();self.closed=true;RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}}
+  }else if self.output.is_some(){
+   self.last_work=pay(effect)?;
+   let Some(output)=self.output.take()else{return Err(ValueError::invariant("output absent").into())};
+   match semio_framework_value::retirement::controlled::ControlledRetirement::new(output){Ok(retiring)=>*self.retiring=Some(retiring),Err((error,original))=>{*self.output=Some(original);return Err(error.into())}}
+   RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}
+  }else{self.last_work=pay(effect)?;self.closed=true;RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}};
+  self.receipt=Some((g,p));Ok(if self.closed{RetainedWireFieldStep::Closed}else{RetainedWireFieldStep::Progress})
+ }
 
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.output.is_none()&&self.retiring.is_none()&&self.receipt.is_none()}
 }

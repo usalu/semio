@@ -7,7 +7,7 @@ impl SnapshotOwner<'_,'_,'_>{
  /// 📐️ Reports the original native allocation ledger without resetting its scope.
  pub fn owned_bytes(&mut self)->usize{match self{Self::Decode(owner)=>owner.native().owned_bytes(),Self::Encode(owner)=>owner.native().owned_bytes()}}
  /// 💻️ Reports cumulative original concrete actions independently of physical receipts.
- pub fn actual_work(&mut self)->u64{match self{Self::Decode(owner)=>owner.native().actual_work(),Self::Encode(owner)=>owner.native().actual_work()}}
+ pub fn actual_work(&mut self)->u128{match self{Self::Decode(owner)=>owner.native().actual_work(),Self::Encode(owner)=>owner.native().actual_work()}}
  /// 🛑️ Observes the initiating direction before the next expensive effect.
  pub fn checkpoint(&mut self)->Result<(),ValueError>{match self{Self::Decode(owner)=>owner.native().checkpoint(),Self::Encode(owner)=>owner.native().checkpoint()}}
  /// 📏️ Reserves the same original native capacity before allocation.

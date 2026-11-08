@@ -61,8 +61,9 @@ impl ChildContentRetirement {
         retiring: Option<&mut ArtifactFixedRegistry<ChildMemberRetirement<M>>>,
         current: &ChildContentView,
         owners: &dyn ChildContentRetainers,
-        grant: RetainedCloneGrant,
+        effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
     ) -> Result<RetainedCloneStep, Fault> {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -73,8 +74,8 @@ impl ChildContentRetirement {
         if self.active.is_some() {
             let parent_copy=if self.active.as_ref().unwrap().terminal_is_empty(){size_of_val(&*self.active)}else{0};
             let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent_copy,maximum_depth:grant.maximum_depth-1,..grant};
-            let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, child)
-                .result.map_err(|reason| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-snapshot-disposer-refused"), format!("child snapshot disposer refused its own bounded step: {reason}")))?;
+            let step = semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, &mut effect.nested(child)))
+                .map_err(|reason| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-snapshot-disposer-refused"), format!("child snapshot disposer refused its own bounded step: {reason}")))?;
             let mut receipt=step.progress();receipt.copied_bytes=receipt.copied_bytes.checked_add(parent_copy).expect("original child header preflight");return Ok(RetainedCloneStep::Progress(admit(receipt)?));
         }
         if let Some(owner)=self.metadata_close.as_mut(){
@@ -111,7 +112,7 @@ impl ChildContentRetirement {
         let ChildContentEntry { owner: member_owner, slot, child_id, artifact_id, dialect, revision, snapshot } = entry;
         let mut read = Some(snapshot);
         let restore = |read: &mut Option<store::os_store::snapshot_read::ErasedSnapshotRead>, member_owner, slot, child_id, artifact_id, dialect, revision| ChildContentEntry { owner: member_owner, slot, child_id, artifact_id, dialect, revision, snapshot: read.take().expect("refused snapshot read remains with its caller") };
-        match member.retire_snapshot_read_erased(&mut read, child) {
+        match member.retire_snapshot_read_erased(&mut read, &mut effect.nested(child)) {
             Ok((Some(owner), progress)) => {
                 semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original child snapshot handoff").map_err(|error|plugin_sdk_fault(error.into_message()))?;
                 *self.active_member = Some(ChildContentMemberMetadata{key:MemberKey { owner: member_owner, slot, child_id }, artifact_id, dialect});
@@ -243,13 +244,14 @@ impl<M: SpaceMember> ChildMemberRetirement<M> {
         Ok(RetirementDemand{copy_bytes:size_of_val(&*self.entry)+size_of::<ChildMemberEntry<M>>()+size_of_val(&*self.metadata),depth:1,..Default::default()})
     }
 
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
+    pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,Fault>{
+        let grant=effect.grant();
         let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}
         let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.into_message()))?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty))}
         if let Some(owner)=self.metadata.as_mut(){if owner.terminal_is_empty(){drop(self.metadata.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.step(child).map_err(|error|plugin_sdk_fault(error.into_message()))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original child member metadata").map_err(|error|plugin_sdk_fault(error.into_message()))?;return Ok(RetainedCloneStep::Progress(step.progress()))}
         let entry=self.entry.as_mut().unwrap();let member=&mut entry.member;
         if !member.snapshot_read_leases_terminal_is_empty(){return Ok(RetainedCloneStep::Progress(empty))}
-        if !member.close_owned_terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=member.close_owned_step(child).map_err(|error|plugin_sdk_fault(error.into_message()))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,member.close_owned_terminal_is_empty(),"original child member store").map_err(|error|plugin_sdk_fault(error.into_message()))?;return Ok(RetainedCloneStep::Progress(step.progress()))}
+        if !member.close_owned_terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(member.close_owned_step(&mut effect.nested(child))).map_err(|error|plugin_sdk_fault(error.into_message()))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,member.close_owned_terminal_is_empty(),"original child member store").map_err(|error|plugin_sdk_fault(error.into_message()))?;return Ok(RetainedCloneStep::Progress(step.progress()))}
         if !<ChildMemberMetadata as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported(){return Err(plugin_sdk_fault("original child member metadata requires its native controlled producer"))}
         let ChildMemberEntry{reference,owner,member}=self.entry.take().unwrap();let original=ChildMemberMetadata{reference,owner};match ControlledRetirement::new(original){Ok(owner)=>*self.metadata=Some(owner),Err((error,original))=>{*self.entry=Some(ChildMemberEntry{reference:original.reference,owner:original.owner,member});return Err(plugin_sdk_fault(error.into_message()))}};drop(member);
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))

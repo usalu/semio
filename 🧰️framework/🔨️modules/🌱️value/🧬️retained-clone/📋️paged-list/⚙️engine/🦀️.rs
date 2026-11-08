@@ -77,7 +77,7 @@ impl<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> Pa
         if self.values.capacity() < length { return Ok(crate::RetirementDemand { copy_bytes:self.values.next_capacity_copy_byte_demand(length).map_err(crate::ValueError::from)?, capacity_bytes: self.values.next_capacity_allocation_bytes(length)?.ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "paged list capacity action is absent"))?, depth: self.values.next_capacity_depth_demand(length).map_err(crate::ValueError::from)?, ..Default::default() }); }
         if let Some(child) = self.child.as_ref() {
             if self.child_value.is_some() {
-                if !self.child_closing{return child_start_demand(child)}return if child.terminal_is_empty() { Ok(crate::RetirementDemand { copy_bytes: size_of::<T>().checked_add(size_of::<C>()).ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit, "paged list adoption extent overflow"))?, depth: 1, ..Default::default() }) } else { nested_retained_clone_close_demands::<T,C>(child, body) };
+                if !self.child_closing{return child_start_demand(child)}return if child.terminal_is_empty() { self.values.adoption_demand(&self.child_value) } else { nested_retained_clone_close_demands::<T,C>(child, body) };
             }
             if child.output_ready() { return nested_retained_clone_take_demands(child); }
             let mut demand=nested_retained_clone_demands::<T,C>(child, source.project(self.index + 1, |values| values.get(self.index).expect("validated paged list source ordinal")), body,maximum_work_units)?;demand.depth=demand.depth.max(source.get().next_get_depth_demand(self.index).map_err(crate::ValueError::from)?);return Ok(demand);
@@ -103,22 +103,22 @@ impl<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> Pa
                 if !state.child_closing{let turn=start_child_close(child,&mut state.child_closing,effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
                 if !child.terminal_is_empty() {
                     let nested = nested_retained_clone_grant(grant)?;
-                    let step = {let turn=child.close_step(&mut effect.reborrow(nested,effect.maximum_work_units())?);work+=turn.work;turn.result}?;
+                    let step = {let turn=settle_child_close(child.close_step(&mut effect.nested(nested)));work+=turn.work;turn.result}?;
                     return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(nested, step, child.terminal_is_empty(), "paged list child scaffold")?.progress()));
                 }
-                let progress=match state.values.adopt_reserved(&mut state.child_value){Ok(p)=>{work+=u128::from(p.work);p},Err(error)=>{work+=1;return Err(crate::ValueError::from(error).into())}};
+                let turn=state.values.adopt_reserved(&mut state.child_value,effect);work+=turn.work;let progress=match turn.result{Ok(p)=>p,Err(error)=>return Err(error.into())};
                 if !progress.progressed { return Err((crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "paged list lost its reserved adoption slot")).into()); }
                 state.child = None;state.child_closing=false;
                 state.index += 1;
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
             }
             if child.output_ready() {
-                let nested=nested_retained_clone_grant(grant)?;let turn=child.take(nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};state.child_value=Some(value);
+                let nested=nested_retained_clone_grant(grant)?;let mut slot=None;let boundary=effect.performed_boundary();{let reply=crate::OriginalEffectReply::borrow(&mut slot)?;child.take(&mut state.child_value,&mut effect.nested(nested),reply)?;}work+=effect.performed_since(boundary)?;let progress=slot.take().ok_or_else(||crate::ValueError::invariant("paged list child take left no reply"))??.progress();
                 
                 return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"paged list child take")?));
             }
             let nested = nested_retained_clone_grant(grant)?;
-            let step = {let turn=child.advance(source.try_project(index + 1, |values| values.get(index).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"paged list source ordinal is absent")))?,body,maximum_work_units,&mut effect.reborrow(nested,maximum_work_units)?);work+=turn.work;turn.result}?;
+            let step = {let turn=child.advance(source.try_project(index + 1, |values| values.get(index).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"paged list source ordinal is absent")))?,body,maximum_work_units,&mut effect.nested_within(nested,maximum_work_units));work+=turn.work;turn.result}?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested, step.progress(), "paged list child")?));
         }
         if index == length {
@@ -129,8 +129,8 @@ impl<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> Pa
         work+=1;state.child = Some(C::new());
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     })();crate::RetainedWorkOutcome{result,work}}
-    pub fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(retained_clone_take_demand())}
-    pub fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(PagedList<T, N>,RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=take_retained_clone_output(&mut self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.phase = 2;}turn}
+    pub fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{semio_framework_value_control_contract::retained_clone_cursor_take_demand::<PagedList<T,N>,u8>()}
+    pub fn take<'reply>(&mut self,output:&mut Option<PagedList<T, N>>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<crate::OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{semio_framework_value_control_contract::take_retained_clone_cursor_output!(self.output_ready(),self.state.output,output,self.state.phase,2,effect,reply,PagedList<T,N>,u8)}
 
     pub fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:usize::from(!self.closing),depth:usize::from(!self.closing),..Default::default()})}
  pub fn begin_close_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(!self.closing))}
@@ -144,8 +144,8 @@ impl<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> Pa
         if !retained_clone_grant_admits(grant,self.selected_close_demands(grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         let state = &mut *self.state;
         if let Some(child) = state.child.as_mut() {
-            if !state.child_closing {work+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));}
-            if !child.terminal_is_empty() { let step = {let turn=child.close_step(&mut effect.reborrow(nested_retained_clone_grant(grant)?,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result}?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained child close")?.progress())); }
+            if !state.child_closing {let turn=start_child_close(child,&mut state.child_closing,effect);work+=turn.work;let progress=turn.result?;return Ok(RetainedCloneStep::Progress(progress))}
+            if !child.terminal_is_empty() { let step = {let turn=semio_framework_value_retirement::retirement_contract::RetirementPollExit::settled(child.close_step(&mut effect.nested(nested_retained_clone_grant(grant)?)))?;work+=turn.work;turn.result}?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained child close")?.progress())); }
             state.child = None;state.child_closing=false;work+=1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes:size_of::<C>(), ..Default::default() }));
         }
@@ -168,7 +168,7 @@ impl<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> Pa
 
 
 impl<T:RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>,const N:usize>PagedListCloneEngine<T,C,N>{
- pub fn advance_work_demand(&self,source:RetainedCloneRef<'_,PagedList<T,N>>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{let _=self.advance_demands(source,body,maximum_work_units)?;if maximum_work_units==0||self.output_ready(){return Ok(0)}let selected=if !source.check_binding(&self.source)?{1}else if self.values.capacity()<source.get().len(){1}else if let Some(child)=self.child.as_ref(){if self.child_value.is_some(){if !self.child_closing{if child.close_started(){1}else{child.begin_close_work_demand()?}}else if child.terminal_is_empty(){1}else{child.close_work_demand(body)?}}else if child.output_ready(){child.take_work_demand()?}else{child.advance_work_demand(source.project(self.index+1,|values|values.get(self.index).expect("validated paged list ordinal")),body,maximum_work_units)?}}else{1};Ok(if selected<=maximum_work_units{selected}else{0})}
+ pub fn advance_work_demand(&self,source:RetainedCloneRef<'_,PagedList<T,N>>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{let _=self.advance_demands(source,body,maximum_work_units)?;if maximum_work_units==0||self.output_ready(){return Ok(0)}let selected=if !source.check_binding(&self.source)?{source.binding_work_demand(&self.source)?}else if self.values.capacity()<source.get().len(){1}else if let Some(child)=self.child.as_ref(){if self.child_value.is_some(){if !self.child_closing{if child.close_started(){1}else{child.begin_close_work_demand()?}}else if child.terminal_is_empty(){1}else{child.close_work_demand(body)?}}else if child.output_ready(){child.take_work_demand()?}else{child.advance_work_demand(source.project(self.index+1,|values|values.get(self.index).expect("validated paged list ordinal")),body,maximum_work_units)?}}else{1};Ok(if selected<=maximum_work_units{selected}else{0})}
  pub fn take_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(self.output_ready()))}
  pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Ok(0)}if let Some(child)=self.child.as_ref(){return if !self.child_closing{if child.close_started(){Ok(1)}else{child.begin_close_work_demand()}}else if child.terminal_is_empty(){Ok(1)}else{child.close_work_demand(body)}}if self.child_value.is_some(){return self.close.next_owner_work::<T>(true,&self.source,body)}self.close.next_owner_work::<PagedList<T,N>>(self.output.is_some()||!self.values.terminal_is_empty(),&self.source,body)}
 }

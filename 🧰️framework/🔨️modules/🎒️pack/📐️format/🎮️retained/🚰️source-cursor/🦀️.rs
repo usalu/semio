@@ -51,18 +51,23 @@ impl RetainedPackSourceCursor {
         Ok(requested)
     }
 
-    pub fn reserve_page(&mut self, maximum_bytes: usize) -> Result<RetainedPackSourceAllocationStep, RetainedPackSourceAllocationError> {
+    pub fn reserve_page(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedPackSourceAllocationStep, RetainedPackSourceAllocationError> {
+        let maximum_bytes = effect.grant().maximum_capacity_bytes;
         let rejected=|fault|RetainedPackSourceAllocationError{allocated_bytes:0,fault};
         let requested = self.next_allocation_bytes().map_err(rejected)?;
         let remaining = self.maximum_allocation_bytes - self.pages.allocated_bytes();
-        let step = match self.pages.reserve_one(maximum_bytes.min(remaining)) {
-            Ok(step) => step,
-            Err(error) => {
+        use semio_framework_value_persistent::list::{PagedListReservationOutcome,PagedListReservationFailure};
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_capacity_bytes: maximum_bytes.min(remaining), ..effect.grant() };
+        let step = match self.pages.reserve_one(&mut effect.nested(grant)).result {
+            Ok(PagedListReservationOutcome::Ready(step)) => step,
+            Ok(PagedListReservationOutcome::Denied) => return Ok(RetainedPackSourceAllocationStep { progressed: false, allocated_bytes: 0 }),
+            Err(PagedListReservationFailure::Allocation { error, .. }) => {
                 if error.allocated_bytes != 0 {
                     self.allocation_fault=Some(RetainedPackSourceFault::from_paged_allocation(error));
                 }
                 return Err(RetainedPackSourceAllocationError{allocated_bytes:error.allocated_bytes,fault:RetainedPackSourceFault::from_paged_allocation(error)});
             }
+            Err(PagedListReservationFailure::Work(_)) => return Err(rejected(RetainedPackSourceFault::refusal(ValueRefusalKind::WorkLimit,"retained-pack.page-work"))),
         };
         if self.pages.allocated_bytes() > self.maximum_allocation_bytes {
             let fault=RetainedPackSourceFault::allocation(ValueRefusalKind::OwnershipLimit,"retained-pack actual allocation exceeds physical credits; owner retained",step.allocated_bytes);
@@ -177,7 +182,8 @@ impl RetainedPackSourceCursor {
         Ok(Some(RetainedPackSourceEvent::Byte { offset, value }))
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedPackCloseStep, PagedListError> {
+    pub fn close_step(&mut self, maximum_items: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedPackCloseStep, PagedListError> {
+        let maximum_bytes = effect.grant().maximum_release_bytes;
         if maximum_items == 0 && maximum_bytes == 0 {
             return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -190,8 +196,13 @@ impl RetainedPackSourceCursor {
             return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if !self.pages.terminal_is_empty() {
-            let step = self.pages.release_empty_page(maximum_bytes)?;
-            return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: step.released_allocation_bytes });
+            use semio_framework_value_persistent::list::{PagedListReleaseOutcome,PagedListReleaseFailure};
+            return match self.pages.release_empty_page(effect).result {
+                Ok(PagedListReleaseOutcome::Ready(step)) => Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: step.released_allocation_bytes }),
+                Ok(PagedListReleaseOutcome::Denied) => Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                Err(PagedListReleaseFailure::Release(error)) => Err(error),
+                Err(PagedListReleaseFailure::Work(_)) => Err(PagedListError { kind: semio_framework_value_persistent::list::PagedListRefusalKind::OwnershipLimit, reason: "retained-pack.release-work" }),
+            };
         }
         self.closed = true;
         Ok(RetainedPackCloseStep::Complete)

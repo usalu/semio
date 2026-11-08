@@ -118,16 +118,19 @@
             ]
           },
           "pageBytes": {
-            "const": 4096
-          },
-          "expectedSlots": {
             "enum": [
-              256,
-              512
+              64,
+              128
             ]
           },
+          "expectedSlots": {
+            "const": 8
+          },
           "expectedCapacityBytes": {
-            "const": 4096
+            "enum": [
+              64,
+              128
+            ]
           }
         }
       },

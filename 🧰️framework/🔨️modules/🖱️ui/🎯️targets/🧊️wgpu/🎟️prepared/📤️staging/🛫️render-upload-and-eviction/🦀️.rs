@@ -114,19 +114,20 @@ impl PreparedRenderUpload {
         }
     }
 
-    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+    pub fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> PreparedClose {
+        let grant = effect.grant();
         let demand = self.next_close_release_byte_demand();
         if let Some(step) = prepared_close_gate(grant, self.terminal_is_empty(), demand.clone()) { return step; }
         match self {
             #[cfg(any(test, feature = "testkit"))]
-            Self::GlyphAtlas { pixels, .. } | Self::IconAtlas { pixels, .. } => return prepared_close_bytes(pixels, grant),
-            Self::GlyphAtlasPages { pixels } | Self::IconAtlasPages { pixels } => return pixels.close_original_step(grant),
+            Self::GlyphAtlas { pixels, .. } | Self::IconAtlas { pixels, .. } => return prepared_close_bytes(pixels, grant).map_err(Into::into),
+            Self::GlyphAtlasPages { pixels } | Self::IconAtlasPages { pixels } => return pixels.close_original_step(grant).map_err(Into::into),
             #[cfg(any(test, feature = "testkit"))]
-            Self::Raster { key, pixels, .. } => { if !pixels.is_empty() || pixels.capacity() != 0 { return prepared_close_bytes(pixels, grant); } else { prepared_close_text(key); } }
-            Self::RasterPages { key, pixels } => return pixels.close_with_key_granted(key, grant),
+            Self::Raster { key, pixels, .. } => { if !pixels.is_empty() || pixels.capacity() != 0 { return prepared_close_bytes(pixels, grant).map_err(Into::into); } else { prepared_close_text(key); } }
+            Self::RasterPages { key, pixels } => return pixels.close_with_key_granted(key, grant).map_err(Into::into),
             Self::SceneRaster { key, lease } => {
                 if key.capacity() != 0 { prepared_close_text(key); }
-                else { return lease.close_step(grant).map(|step|match step { semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => CloseStep::Pending { progress }, semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => CloseStep::Complete { progress } }); }
+                else { return prepared_close_poll(lease.close_step(effect)); }
             }
             Self::Mesh { key, .. } => { prepared_close_text(key); }
         }
@@ -167,7 +168,7 @@ impl PreparedRenderUpload {
     }
 
     /// 📪️ Releases one page, byte, or key scalar from a rejected upload owner.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
-        self.close_granted(grant)
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> PreparedClose {
+        self.close_granted(effect)
     }
 }

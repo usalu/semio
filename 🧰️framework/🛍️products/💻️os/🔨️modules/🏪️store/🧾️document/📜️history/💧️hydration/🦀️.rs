@@ -18,6 +18,8 @@ use semio_os_pack::{OpBinary, OpText};
 use semio_framework_job::{Generation, OperationId, StepContext};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::ManuallyDrop;
+/// 🪙️ Admits one owned field into the active retirement inside the turn's own performed-work effect; a denied quote leaves the field with its caller.
+fn owned_outcome<T:semio_framework_value::retirement::RetireOwned>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,pending:&mut Option<T>,active:&mut Option<Box<dyn ErasedSnapshotRetirement>>)->semio_framework_value::RetainedWorkOutcome{let one=RetainedCloneGrant{maximum_items:grant.maximum_items.min(1),..grant};match cx.with_original_effect(one,|_,effect|semio_os_store_read::artifact_retirement_admit_owned(pending,active,effect)){Ok(Some((turn,performed)))=>{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));turn},Ok(None)=>semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}}}
 
 #[path = "🧬️hydration-types-constructors-and-drive/🦀️.rs"]
 mod hydration_types_constructors_and_drive;

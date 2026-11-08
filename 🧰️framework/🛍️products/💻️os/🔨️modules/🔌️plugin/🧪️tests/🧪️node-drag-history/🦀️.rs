@@ -65,7 +65,11 @@ where
         edited_log[*index] = edited.clone();
         let expected = fresh(&edited_log);
         let mut replay = store.begin_report_replay(&drafts, Some(&target)).unwrap_or_else(|error| panic!("{guest}: the replay of edit #{index} begins: {error:?}"));
-        while let store::os_store::replay::ReplayStep::Pending(_) = replay.step(store.replay_edits(), &mut || false).unwrap_or_else(|error| panic!("{guest}: the replay of edit #{index} steps: {error:?}")) {}
+        let mut stalled = (None, 0u8);
+        while let store::os_store::replay::ReplayStep::Pending(progress) = replay.step(store.replay_edits(), &mut || false).unwrap_or_else(|error| panic!("{guest}: the replay of edit #{index} steps: {error:?}")) {
+            stalled = if stalled.0 == Some(progress) { (stalled.0, stalled.1 + 1) } else { (Some(progress), 0) };
+            assert!(stalled.1 < 16, "{guest}: the replay of edit #{index} made no progress for 16 steps at {progress:?}");
+        }
         let result = replay.finish().unwrap_or_else(|error| panic!("{guest}: the replay of edit #{index} finishes: {error:?}"));
         assert!(!store.replay_report(&result).unwrap_or_else(|error| panic!("{guest}: the report of edit #{index} reads: {error:?}")).blocks_finalize(), "{guest}: a re-offset or re-targeted drag never blocks finalizing");
         assert_eq!(result.state().unwrap_or_else(|| panic!("{guest}: the replay of edit #{index} reached no state")).as_ref(), &expected, "{guest}: the replay of edit #{index} equals the fresh fold of the edited log");

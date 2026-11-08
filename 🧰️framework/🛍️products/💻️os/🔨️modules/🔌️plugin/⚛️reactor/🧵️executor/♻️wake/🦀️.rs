@@ -4,9 +4,10 @@ use std::mem::{ManuallyDrop,size_of};
 use semio_framework_job_worker::{RetainedWorkerWake,admit_original_worker_wake,original_worker_wake_admission_demands};
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 
-struct ExecutorSignalLease{source:ManuallyDrop<Option<Arc<ExecutorWakeSignal>>>,id:Option<TaskId>}
+pub struct ExecutorSignalLease{source:ManuallyDrop<Option<Arc<ExecutorWakeSignal>>>,id:Option<TaskId>}
 impl RetireOwned for WakerData{
- fn retirement(self)->Box<dyn RetirementCursor>{Box::new(ExecutorSignalLease{source:ManuallyDrop::new(Some(self.signal)),id:Some(self.id)})}
+ type RetirementCursor=ExecutorSignalLease;
+ fn retirement_seed(self)->ExecutorSignalLease{ExecutorSignalLease{source:ManuallyDrop::new(Some(self.signal)),id:Some(self.id)}}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ExecutorSignalLease>())}
  fn controlled_retirement_supported()->bool{true}
  fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
@@ -14,13 +15,16 @@ impl RetireOwned for WakerData{
 impl RetirementCursor for ExecutorSignalLease{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;if self.terminal_is_empty(){return Ok(Default::default())}Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<Arc<ExecutorWakeSignal>>>()+size_of::<Arc<ExecutorWakeSignal>>()+size_of::<Option<TaskId>>(),release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<ExecutorWakeSignal>(),depth:1,..Default::default()})}
 
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
+ fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
+ fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+  let grant=effect.grant();
   if self.terminal_is_empty(){return RetirementStep::Complete(0)}
   let copy=self.next_work_byte_demand().unwrap();let release=self.next_close_byte_demand().unwrap();
   if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<release||grant.maximum_depth==0{return RetirementStep::BudgetExhausted}
   if Arc::weak_count(self.source.as_ref().unwrap())!=0{return RetirementStep::BudgetExhausted}
+  if !effect.performed(1).unwrap_or(false){return RetirementStep::BudgetExhausted}
   let released=Arc::into_inner(self.source.take().unwrap()).map_or(0,|original|{drop(original);release});self.id.take();
-  RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:released,..Default::default()},1)
+  RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:released,..Default::default()},effect.performed_work())
  }
  fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.id.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.terminal_is_empty(){0}else{size_of::<Option<Arc<ExecutorWakeSignal>>>()+size_of::<Arc<ExecutorWakeSignal>>()+size_of::<Option<TaskId>>()})}

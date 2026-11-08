@@ -1,7 +1,7 @@
 {
   "grant": {
     "items": 1,
-    "copyBytes": 0,
+    "copyBytes": 16,
     "capacityBytes": 65536,
     "releaseBytes": 65536,
     "depth": 16
@@ -12,5 +12,5 @@
     255,
     -7
   ],
-  "metadataCopy": 0
+  "metadataCopy": 16
 }

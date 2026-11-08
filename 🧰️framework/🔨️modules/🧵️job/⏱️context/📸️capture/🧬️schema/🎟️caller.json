@@ -6,7 +6,7 @@
   "required":["operation","generation","fuel","deadlineUs","grant","captureCuts"],
   "properties":{
     "operation":{"const":99191},"generation":{"const":17},"fuel":{"const":4},"deadlineUs":{"const":100000},
-    "grant":{"type":"object","additionalProperties":false,"required":["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"],"properties":{"maximumItems":{"const":1},"maximumCopyBytes":{"const":0},"maximumCapacityBytes":{"const":65536},"maximumReleaseBytes":{"const":262144},"maximumDepth":{"const":64}}},
+    "grant":{"type":"object","additionalProperties":false,"required":["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"],"properties":{"maximumItems":{"const":64},"maximumCopyBytes":{"const":65536},"maximumCapacityBytes":{"const":65536},"maximumReleaseBytes":{"const":262144},"maximumDepth":{"const":64}}},
     "captureCuts":{"const":[0,1,2]}
   }
 }

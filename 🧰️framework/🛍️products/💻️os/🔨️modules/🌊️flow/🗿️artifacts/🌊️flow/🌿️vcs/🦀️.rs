@@ -222,13 +222,13 @@ const FLOW_STORE_COLD_CLOSE_PAGE_BYTES: usize = 4_096;
 /// disposer installed by [`FlowHostSnapshot::member_store_owners`] empties it, so a store built for the
 /// length of an expression and then dropped aborts with
 /// `artifact store reached Drop without its exact terminal-empty shallow-shell witness`. Retained
-/// callers drive `close_owned_store_step` under their own grant; this drains the same ladder in one
+/// callers drive `close_owned_store_step` under their own effect; this drains the same ladder in one
 /// uninterrupted cold pass (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn retire_flow_store_cold(mut store: FlowStore) {
     for _ in 0..FLOW_STORE_COLD_CLOSE_STEPS {
         let demand=store.close_owned_demands(FLOW_STORE_COLD_CLOSE_PAGE_BYTES).expect("cold flow store original demands");
         let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:FLOW_STORE_COLD_CLOSE_PAGE_BYTES,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-        if matches!(store.close_owned_store_step(grant).expect("cold flow store disposal"),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+        if matches!(store.close_owned_step_cold(grant).expect("cold flow store disposal"),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
             assert!(store.close_owned_store_terminal_is_empty(), "a flow store disposer that reports Complete owes its exact terminal-empty witness");
             return;
         }

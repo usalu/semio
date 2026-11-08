@@ -53,11 +53,15 @@ impl MeshTranslationInput {
     /// 🎟️ Quotes the actual boxed retirement ticket needed for the retained cold input.
     pub fn retirement_birth_bytes(&self)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<Self>()}
     /// 🧹️ Moves the same cold source to paid typed retirement or returns the unchanged input on denial.
-    pub fn into_retirement(self,grant:RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Self)> {semio_framework_value::retirement::admit_owned_retirement(self,grant).result}
+    pub fn into_retirement(self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Option<Self>)> {
+        let mut slot=Some(self);
+        match semio_framework_value::retirement::admit_owned_retirement(&mut slot,effect).result{Ok(Some(admitted))=>Ok(admitted),Ok(None)=>Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"mesh translation retirement quote was not admitted"),slot)),Err(error)=>Err((error,slot))}
+    }
 }
 
 impl semio_framework_value::retirement::RetireOwned for MeshTranslationInput {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::deferred(self.source)}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(Option<HalfedgeMesh>);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.source)}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(semio_framework_value::retirement::deferred_birth_bytes_for(&self.source))}
     fn controlled_retirement_supported()->bool {true}
 }

@@ -66,19 +66,19 @@ impl Brep {
     fn register_import_entity(&mut self,entity:EntityRef)->Result<GeometryHandle,BrepError> {match entity {EntityRef::Solid(solid)=>Ok(self.register_solid(solid)),EntityRef::Shell(shell)=>Ok(self.register_shell(shell)),_=>Err(BrepError::InvalidInput("mesh import requires shell or solid".into()))}}
     /// 📦 Advances original production work and publishes its completed original entity.
     pub fn step_mesh_import_sync(&mut self,cursor:&mut MeshImportCursor,budget:usize)->Result<Option<GeometryHandle>,BrepError> {
-        if budget>0 && !cursor.is_active() && !cursor.retirement_complete() {cursor.set_active(true);self.pending_mutations+=1;}
+        if budget>0 && !cursor.is_active() && !cursor.cleanup_complete() {cursor.activate(&mut self.pending_mutations);}
         let result=cursor.step(&mut self.body,budget).map_err(|error|map_err(&error));
-        if cursor.cleanup_complete() && cursor.is_active() {cursor.set_active(false);self.pending_mutations=self.pending_mutations.checked_sub(1).expect("owned import mutation");}
+        if cursor.cleanup_complete() {cursor.release();}
         match result? {MeshImportStep::Done(entity)=>self.register_import_entity(entity).map(Some),_=>Ok(None)}
     }
     /// 🎟️ Forwards every original cleanup currency and its physical receipt without publishing.
     /// 🧾️ Forwards the exact import close work before either original result branch.
-    pub fn close_mesh_import_original(&mut self,cursor:&mut MeshImportCursor,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
-        let turn=cursor.close_original_step(&mut self.body,grant);
-        if cursor.cleanup_complete()&&cursor.is_active(){cursor.set_active(false);self.pending_mutations=self.pending_mutations.checked_sub(1).expect("owned import mutation");}
+    pub fn close_mesh_import_original(&mut self,cursor:&mut MeshImportCursor,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome{
+        let turn=cursor.close_original_step(&mut self.body,effect);
+        if cursor.cleanup_complete() {cursor.release();}
         turn
     }
-    pub fn close_mesh_import_sync(&mut self,cursor:&mut MeshImportCursor,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{self.close_mesh_import_original(cursor,grant).result}
+    pub fn close_mesh_import_sync(&mut self,cursor:&mut MeshImportCursor,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{self.close_mesh_import_original(cursor,effect).result}
     pub fn export_mesh_sync(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::io::MeshExporter) -> Result<Vec<u8>, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
         export_solid_mesh(&self.body, solid, deflection, exporter).map_err(|error| map_err(&error))

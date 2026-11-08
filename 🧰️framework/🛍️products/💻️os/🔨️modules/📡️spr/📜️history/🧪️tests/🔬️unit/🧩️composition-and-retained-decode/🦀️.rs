@@ -51,12 +51,21 @@ fn retained_corpus() -> (serde_json::Value, protocol::codec::HistoryReadLimits, 
     (law, limits, grant, allocation)
 }
 
-struct TurnWork(u64);
-impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for TurnWork{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.0.min(4096);limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.0.min(4096)))}}
-fn settle_work(turn:&FlaggedTurn,work:u64){assert!(work<=turn.work.get().min(4096));turn.work.set(turn.work.get()-work)}
+struct TurnBudget(u64);
+struct TurnWorkDriver;
+impl semio_framework_value_native_owned::native_decoding::OriginalWorkRecipient for TurnWorkDriver{
+    type Context<'t,'s>=TurnBudget where 's:'t;
+    fn validate_context<'t,'s>(&self,_:&TurnBudget)->Result<(),ValueError> where 's:'t{Ok(())}
+    fn source_turn<'t,'s>(&self,_:&TurnBudget)->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity> where 's:'t{None}
+    fn admits<'r,'t,'s>(&mut self,c:&mut TurnBudget,quote:semio_framework_value_native_owned::native_decoding::OriginalWorkQuote<'r>,observed:u64,additional:u64)->semio_framework_value_native_owned::native_decoding::OriginalWorkQuoteComplete<'r> where 's:'t{quote.complete(Ok(observed.checked_add(additional).is_some_and(|work|work<=c.0.min(4096))))}
+    fn settle_partial<'r,'t,'s>(&mut self,_:&mut TurnBudget,check:semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheck<'r>)->semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheckComplete<'r> where 's:'t{check.complete(Ok(()))}
+    fn recover_partial<'r,'t,'s>(&mut self,_:&mut TurnBudget,check:semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheck<'r>)->semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheckComplete<'r> where 's:'t{check.pending()}
+}
+fn with_budget<T>(turn:&FlaggedTurn,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::OriginalWorkLoan<'_>)->T)->T{let mut budget=TurnBudget(turn.work.load(std::sync::atomic::Ordering::Relaxed));let mut authority=semio_framework_value_native_owned::native_decoding::OriginalWorkAuthority::new(TurnWorkDriver);authority.with_loan(&mut budget,run).unwrap()}
+fn settle_work(turn:&FlaggedTurn,work:u128){let work=u64::try_from(work).unwrap();let have=turn.work.load(std::sync::atomic::Ordering::Relaxed);assert!(work<=have.min(4096));turn.work.store(have-work,std::sync::atomic::Ordering::Relaxed)}
 
 fn paid_turn(decode: &mut RetainedHistoryDecode, bytes: &[u8], turn: &FlaggedTurn, grant: RetainedCloneGrant, history: &mut Option<HistoryLog>) -> RetainedHistorySourceStep {
-    let outcome = decode.step(bytes, turn, grant, history, &mut TurnWork(turn.work.load(std::sync::atomic::Ordering::Relaxed)));
+    let outcome = with_budget(turn, |loan| decode.step(bytes, turn, grant, history, loan));
     settle_work(turn,outcome.work);
     if turn.should_yield()||turn.is_cancelled(){assert_eq!(outcome.work,0)}
     let step=outcome.result.expect("advance retained decode");
@@ -85,7 +94,7 @@ fn close_all(decode: &mut RetainedHistoryDecode, bytes: &[u8], grant: RetainedCl
         if decode.terminal_is_empty() {
             return;
         }
-        let outcome = decode.close_step(bytes, &RetainedHistoryUninterrupted, grant, &mut TurnWork(turn.work.load(std::sync::atomic::Ordering::Relaxed)));
+        let outcome = with_budget(turn, |loan| decode.close_step(bytes, &RetainedHistoryUninterrupted, grant, loan));
         settle_work(turn,outcome.work);
         let step=outcome.result.expect("close retained decode");
         assert!(step.progress().fits(grant), "every close receipt fits the supplied grant");
@@ -150,6 +159,27 @@ async fn retained_history_decode_closes_every_original_owner_after_a_cancelled_t
         assert!(decode.terminal_is_empty());
         assert!(decode.source_identity().is_none());
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn retained_history_decode_refuses_a_demand_above_the_grant_and_allocates_nothing() {
+    let log = sample_log().await;
+    let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode retained history fixture");
+    let (_, limits, grant, allocation) = retained_corpus();
+    let mut decode = RetainedHistoryDecode::new((0, bytes.len()), limits, false, allocation).expect("admit retained decode");
+    let turn = FlaggedTurn::new();
+    let mut history = None;
+    paid_turn(&mut decode, &bytes, &turn, grant, &mut history);
+    let denied = RetainedCloneGrant { maximum_copy_bytes: 0, ..grant };
+    let before = decode.consumed_end();
+    let (outcome, born, released) = with_budget(&turn, |loan| semio_framework_trace_memory_testing::observe_backing(|| decode.step(&bytes, &turn, denied, &mut history, loan)));
+    settle_work(&turn, outcome.work);
+    let step = outcome.result.expect("refuse retained decode");
+    assert_eq!(step, RetainedHistorySourceStep::Blocked, "a demand above the grant is refused typed");
+    assert_eq!((born, released), (0, 0), "a refused forwarded step allocates nothing");
+    assert_eq!(decode.consumed_end(), before, "a refused step consumes no original byte");
+    close_all(&mut decode, &bytes, grant, &turn);
+    assert!(decode.terminal_is_empty());
 }
 
 #[semio_framework_async_macros::async_test]

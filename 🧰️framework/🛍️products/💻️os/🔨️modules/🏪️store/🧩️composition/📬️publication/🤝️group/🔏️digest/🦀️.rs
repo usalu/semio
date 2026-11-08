@@ -1,7 +1,8 @@
 //! 🔏️ Original aggregate edits retain their native typed canonical seal and independent frame custody.
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_os_spr::Edit;
-use semio_framework_value::{ErasedSnapshotRetirement, ValueError};
+use semio_framework_value::{ErasedSnapshotRetirement, ValueError, RetainedAllocationEffect, RetirementPollExit};
+use crate::native_source::{pay, polled, paid_progress};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneSourceAdmission, RetainedCloneStep};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::size_of;
@@ -11,7 +12,7 @@ use semio_framework_value::{RetirementDemand,ValueRefusalKind,retirement::Retire
 /// 🧵️ The exact original typed sealer crosses only this bounded owning interface.
 pub trait ArtifactStoreBatchDigest<M>:ErasedSnapshotRetirement{
  fn next_digest_demand(&self)->Result<RetirementDemand,ValueError>;
- fn advance_digest(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ fn advance_digest(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>;
  fn ready(&self)->bool;
  fn take_edit(&mut self,grant:RetainedCloneGrant)->Result<Option<(Box<Edit<M>>,[u8;32],RetainedCloneProgress)>,ValueError>;
  fn begin_close(&mut self);
@@ -48,17 +49,21 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactStoreBat
   if self.source.is_some(){return nested(ArtifactCanonicalEditSealCursor::<M>::source_constructor_demand());}
   nested(header::<M>())
  }
- fn advance_digest(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ fn advance_digest(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+  let grant=effect.grant();
   if !admitted(self.next_digest_demand()?,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if let Some(original)=self.original.as_mut(){return original.advance(child(grant));}
+  if let Some(original)=self.original.as_mut(){return Ok(RetainedCloneStep::Progress(polled(original.advance(&mut effect.nested(child(grant))))?));}
   if let Some(admission)=self.admission.as_mut(){
-   if admission.phase()=="ready"{let step=admission.take_output(&mut self.source,child(grant)).result?;if admission.terminal_is_empty(){self.admission=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-   return admission.advance(child(grant)).result.map(|step|RetainedCloneStep::Progress(step.progress()));
+   if admission.phase()=="ready"{let turn=admission.take_output(&mut self.source,child(grant));pay(effect,turn.work)?;let step=turn.result?;if admission.terminal_is_empty(){self.admission=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+   return admission.advance(&mut effect.nested(child(grant))).result.map(|step|RetainedCloneStep::Progress(step.progress()));
   }
-  if self.source.is_some(){return Ok(match ArtifactCanonicalEditSealCursor::admit_source(&mut self.source,child(grant))?{Some((cursor,receipt))=>{self.original=Some(cursor);RetainedCloneStep::Progress(receipt)},None=>RetainedCloneStep::Progress(Default::default())});}
-  let edit=self.edit.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"batch digest lost its original edit"))?;
-  self.admission=Some(RetainedCloneSource::<Box<Edit<M>>>::admission_owned(edit,()));
-  Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Box<Edit<M>>>(),..Default::default()}))
+  let step=if self.source.is_some(){match ArtifactCanonicalEditSealCursor::admit_source(&mut self.source,child(grant))?{Some((cursor,receipt))=>{self.original=Some(cursor);RetainedCloneStep::Progress(receipt)},None=>RetainedCloneStep::Progress(Default::default())}}
+  else{
+   let edit=self.edit.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"batch digest lost its original edit"))?;
+   self.admission=Some(RetainedCloneSource::<Box<Edit<M>>>::admission_owned(edit,()));
+   RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Box<Edit<M>>>(),..Default::default()})
+  };
+  paid_progress(effect,step)
  }
  fn ready(&self)->bool{self.original.as_ref().is_some_and(ArtifactCanonicalEditSealCursor::is_ready)}
  fn take_edit(&mut self,grant:RetainedCloneGrant)->Result<Option<(Box<Edit<M>>,[u8;32],RetainedCloneProgress)>,ValueError>{if !admitted(self.next_digest_demand()?,grant){return Ok(None);}let Some(original)=self.original.as_mut() else{return Ok(None)};let taken=original.take_edit(child(grant))?;if original.terminal_is_empty(){self.original=None;}Ok(taken)}
@@ -66,19 +71,20 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactStoreBat
 }
 impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ErasedSnapshotRetirement for NativeBatchDigest<M>{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{self.close_demand()}
- fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
-  let result=(||->Result<RetainedCloneStep,ValueError>{
+ fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+  let result=(||->Result<RetainedCloneStep,RetirementPollExit>{
+   let grant=effect.grant();
    if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
    if !admitted(self.close_demand()?,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-   let progress=if let Some(original)=self.original.as_mut(){original.begin_close();if original.terminal_is_empty(){self.original=None;RetainedCloneProgress{copied_items:1,..Default::default()}}else{original.close_step(child(grant))?.progress()}}
-    else if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,child(grant));if let Some((edit,()))=returned{self.edit=Some(edit);}if admission.terminal_is_empty(){self.admission=None;}turn.result?.progress()}
-    else if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source=None;RetainedCloneProgress{copied_items:1,..Default::default()}}else{source.close_step(child(grant)).result?.progress()}}
+   let progress=if let Some(original)=self.original.as_mut(){original.begin_close();if original.terminal_is_empty(){self.original=None;RetainedCloneProgress{copied_items:1,..Default::default()}}else{RetirementPollExit::resume(original.close_step(&mut effect.nested(child(grant))))?.progress()}}
+    else if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,&mut effect.nested(child(grant)));if let Some((edit,()))=returned{self.edit=Some(edit);}if admission.terminal_is_empty(){self.admission=None;}turn.result?.progress()}
+    else if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source=None;RetainedCloneProgress{copied_items:1,..Default::default()}}else{RetirementPollExit::resume(source.close_step(&mut effect.nested(child(grant))))?.progress()}}
     else if let Some(edit)=self.edit.take(){self.edit_close=Some(ControlledRetirement::retain(edit));RetainedCloneProgress{copied_items:1,..Default::default()}}
-    else if let Some(owner)=self.edit_close.as_mut(){if owner.terminal_is_empty(){self.edit_close=None;RetainedCloneProgress{copied_items:1,..Default::default()}}else{owner.step(child(grant))?.progress()}}
+    else if let Some(owner)=self.edit_close.as_mut(){if owner.terminal_is_empty(){self.edit_close=None;RetainedCloneProgress{copied_items:1,..Default::default()}}else{RetirementPollExit::resume(owner.step(&mut effect.nested(child(grant))))?.progress()}}
     else{Default::default()};
    Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
   })();
-  let work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=RetainedCloneProgress::default()));semio_framework_value::RetainedWorkOutcome{result,work}
+  RetirementPollExit::settle(effect,result)
  }
  fn terminal_is_empty(&self)->bool{self.edit.is_none()&&self.admission.is_none()&&self.source.is_none()&&self.original.is_none()&&self.edit_close.is_none()}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand()?.copy_bytes)}
@@ -93,7 +99,7 @@ pub type OriginalCausalMessageBytes=semio_framework_value::paged::PagedBytes<{is
 /// 📤️ Actual original paged causal bytes stay with their retained edit issuer until handoff.
 pub trait ArtifactStoreBatchMessage<M>:ErasedSnapshotRetirement{
  fn next_message_demand(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn advance_message(&mut self,document:&str,schema:&str,observed:Option<&str>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ fn advance_message(&mut self,document:&str,schema:&str,observed:Option<&str>,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>;
  fn ready(&self)->bool;
  fn take_edit_message(&mut self,grant:RetainedCloneGrant)->Result<Option<(Box<Edit<M>>,OriginalCausalMessageBytes,RetainedCloneProgress)>,ValueError>;
  fn begin_close(&mut self);

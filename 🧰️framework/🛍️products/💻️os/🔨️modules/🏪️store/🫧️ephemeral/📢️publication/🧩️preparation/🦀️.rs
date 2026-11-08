@@ -187,55 +187,59 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPrepar
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.depth) }
     fn requires_original_control(&self)->bool{self.retirement.as_ref().is_some_and(|owner|!owner.terminal_is_empty()&&owner.requires_original_control())||(self.retirement.is_none()&&self.task.as_ref().is_some_and(|owner|!owner.terminal_is_empty()&&owner.requires_original_control()))}
-    fn close_step_controlled(&mut self,grant:ArtifactStoreOneItemGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::OriginalRetirementOutcome{
-        if !self.requires_original_control(){return self.close_step(grant)}
-        let grant=grant.retained_grant();let demand=match self.retirement_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}};
-        if !self.closing||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0}}
-        let child=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        if self.retirement.is_some(){let turn=semio_framework_value::close_factory_ticket_controlled(&mut self.retirement,child,control);return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress())),work:turn.work}}
-        let owner=self.task.as_mut().expect("selected ephemeral task retains original control");let turn=owner.close_step_controlled(child,control);let result=turn.result.and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"ephemeral construction task").map_err(Into::into)).map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));semio_framework_value::RetainedWorkOutcome{result,work:turn.work}
+    fn close_step_controlled(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::OriginalRetirementPoll{
+        if !self.requires_original_control(){return self.close_step(effect)}
+        let result=self.close_inner(effect,Some(control));semio_framework_value::RetirementPollExit::settle(effect,result)
     }
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> semio_framework_value::OriginalRetirementOutcome {let mut work=0;let result=(||->Result<_,semio_framework_value::OriginalRetirementFailure>{
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {let result=self.close_inner(effect,None);semio_framework_value::RetirementPollExit::settle(effect,result)}
+    fn terminal_is_empty(&self) -> bool { self.base.is_none() && self.mutation.is_none() && self.task.is_none() && self.prepared.is_none() && self.retirement.is_none() && self.base_registry.is_none() && self.state_retirement.is_none() && self.mutation_retirement.is_none() && self.factory_close.iter().all(Option::is_none) }
+
+}
+
+impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralTaskPreparation<P, M> {
+    fn close_inner(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, mut control: Option<&mut dyn semio_framework_value::OriginalRetirementControl>) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::RetirementPollExit> {
         use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress}};
+        let grant = effect.grant();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "ephemeral preparation close was not started").into()); }
+        if !self.closing { return if control.is_some() { Ok(RetainedCloneStep::Progress(Default::default())) } else { Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "ephemeral preparation close was not started").into()) }; }
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "ephemeral preparation exceeds admitted close depth").into()); }
-        if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant.retained_grant() };
-        if self.retirement.is_some() { let turn=semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, child);work=turn.work;return turn.result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if control.is_none() && grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "ephemeral preparation exceeds admitted close depth").into()); }
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if self.retirement.is_some() { let poll = match control.as_mut() { Some(control) => semio_framework_value::close_factory_ticket_controlled(&mut self.retirement, &mut effect.nested(child), *control), None => semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, &mut effect.nested(child)) }; return semio_framework_value::RetirementPollExit::resume(poll).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(task) = self.task.as_mut() {
-            if !task.terminal_is_empty() { let turn=task.close_step(child);work=turn.work;let step = turn.result?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, task.terminal_is_empty(), "ephemeral construction task")?; return Ok(RetainedCloneStep::Progress(step.progress())); }
-            self.task.take();work=1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
+            if !task.terminal_is_empty() { let poll = match control.as_mut() { Some(control) => ErasedSnapshotRetirement::close_step_controlled(task.as_mut(), &mut effect.nested(child), *control), None => ErasedSnapshotRetirement::close_step(task.as_mut(), &mut effect.nested(child)) }; let step = semio_framework_value::RetirementPollExit::resume(poll)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, task.terminal_is_empty(), "ephemeral construction task")?; return Ok(RetainedCloneStep::Progress(step.progress())); }
+            self.task.take(); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
         }
-        if let Some(original) = self.mutation.take() { let turn=self.mutation_retirement.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("original mutation factory is absent"))?.retire_owned(original, child);work=turn.work;return match turn.result { Ok((owner, receipt)) => { *self.retirement = Some(owner); if !receipt.fits(child) || receipt.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "ephemeral mutation constructor changed its receipt").with_retained_progress(receipt).into()); } Ok(RetainedCloneStep::Progress(receipt)) }, Err((error, original)) => { *self.mutation = Some(original); Err(error) } }; }
-        if let Some(prepared) = self.prepared.take() { let turn=ReturnedSnapshotReadRetirement::admit(prepared.next_root, self.state_retirement.as_ref().expect("original state factory").clone(), child);work=turn.work;return match turn.result { Ok((owner, receipt)) => { *self.retirement = Some(owner); Ok(RetainedCloneStep::Progress(receipt)) }, Err((error, root, alias)) => { *self.prepared = Some(ArtifactEphemeralOneItemPrepared { next_root: root }); drop(alias); Err(error.into()) } }; }
+        if self.mutation.is_some() { let factory = self.mutation_retirement.as_ref().ok_or_else(|| ValueError::invariant("original mutation factory is absent"))?; let (owner, receipt) = semio_framework_value::RetirementPollExit::resume(semio_framework_value::factory_retire_owned(&**factory, &mut self.mutation, &mut effect.nested(child)))?; *self.retirement = Some(owner); if !receipt.fits(child) || receipt.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "ephemeral mutation constructor changed its receipt").with_retained_progress(receipt).into()); } return Ok(RetainedCloneStep::Progress(receipt)); }
+        if let Some(prepared) = self.prepared.take() { let mut root = Some(prepared.next_root); let mut factory = self.state_retirement.clone(); let poll = ReturnedSnapshotReadRetirement::admit_original(&mut root, &mut factory, &mut self.retirement, &mut effect.nested(child)).map_err(Into::into); if let Some(next_root) = root { *self.prepared = Some(ArtifactEphemeralOneItemPrepared { next_root }); } return semio_framework_value::RetirementPollExit::resume(poll); }
         if let Some(base) = self.base.as_mut() {
             match &mut base.0 {
                 ArtifactEphemeralBaseOwner::Transient(_root) => {
-                    let original = self.base.take().expect("observed original transient base");
-                    let ArtifactEphemeralBaseOwner::Transient(root) = original.0 else { unreachable!() };
-                    let turn=ReturnedSnapshotReadRetirement::admit(root, self.state_retirement.as_ref().expect("original state factory").clone(), child);work=turn.work;return match turn.result { Ok((owner, receipt)) => { *self.retirement = Some(owner); Ok(RetainedCloneStep::Progress(receipt)) }, Err((error, root, alias)) => { *self.base = Some(ArtifactEphemeralBaseRead(ArtifactEphemeralBaseOwner::Transient(root))); drop(alias); Err(error.into()) } };
+                    let original = self.base.take().ok_or_else(|| ValueError::invariant("observed original transient base vanished"))?;
+                    let ArtifactEphemeralBaseOwner::Transient(root) = original.0 else { return Err(ValueError::invariant("original transient base changed its owner").into()); };
+                    let mut root = Some(root); let mut factory = self.state_retirement.clone();
+                    let poll = ReturnedSnapshotReadRetirement::admit_original(&mut root, &mut factory, &mut self.retirement, &mut effect.nested(child)).map_err(Into::into);
+                    if let Some(root) = root { *self.base = Some(ArtifactEphemeralBaseRead(ArtifactEphemeralBaseOwner::Transient(root))); }
+                    return semio_framework_value::RetirementPollExit::resume(poll);
                 }
                 ArtifactEphemeralBaseOwner::Presence(read) | ArtifactEphemeralBaseOwner::TransientRead(read) => {
-                    if read.release_original_alias() { work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+                    if read.release_original_alias() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
                     *self.base_registry = read.return_original_lease();
-                    self.base.take();work=1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+                    self.base.take(); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
                 }
             }
         }
         if let Some(registry) = self.base_registry.as_ref() {
-            if registry.strong_count() == 1 && registry.has_returned() { let turn=semio_framework_value_snapshot_read::advance_returned_snapshot_read(registry, &mut self.retirement, self.state_retirement.as_ref().expect("original state factory"), child);work=turn.work;return turn.result.map(|step| RetainedCloneStep::Progress(step.progress())); }
-            let turn=semio_framework_value_snapshot_read::snapshot_registry_alias_close_step(&mut self.base_registry, grant.retained_grant());work=turn.work;return turn.result.map(|step| RetainedCloneStep::Progress(step.progress()));
+            if registry.strong_count() == 1 && registry.has_returned() { let factory = self.state_retirement.as_ref().ok_or_else(|| ValueError::invariant("original state factory is absent"))?; return semio_framework_value::RetirementPollExit::resume(semio_framework_value_snapshot_read::advance_returned_snapshot_read(registry, &mut self.retirement, factory, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress())); }
+            return semio_framework_value::RetirementPollExit::resume(semio_framework_value_snapshot_read::snapshot_registry_alias_close_step(&mut self.base_registry, effect)).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(factory) = self.mutation_retirement.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close[0] = Some(semio_framework_value::FactoryAuthority::new(factory));work=1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
-        if let Some(factory) = self.state_retirement.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close[1] = Some(semio_framework_value::FactoryAuthority::new(factory));work=1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
-        if let Some(slot) = self.factory_close.iter_mut().find(|slot| slot.is_some()) { let Some(factory)=slot.as_mut() else { return Err(semio_framework_value::ValueError::invariant("original factory close slot is absent").into()); };if factory.terminal_is_empty(){*slot=None;work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}let turn=factory.step(child);work=turn.work;let step = turn.result?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "ephemeral preparation factory")?; return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if let Some(factory) = self.mutation_retirement.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close[0] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
+        if let Some(factory) = self.state_retirement.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close[1] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
+        if let Some(slot) = self.factory_close.iter_mut().find(|slot| slot.is_some()) { let Some(factory) = slot.as_mut() else { return Err(ValueError::invariant("original factory close slot is absent").into()); }; if factory.terminal_is_empty() { *slot = None; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); } let step = semio_framework_value::RetirementPollExit::resume(factory.step(&mut effect.nested(child)))?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "ephemeral preparation factory")?; return Ok(RetainedCloneStep::Progress(step.progress())); }
         Ok(RetainedCloneStep::Complete(Default::default()))
-    })();semio_framework_value::RetainedWorkOutcome{result,work}}
-    fn terminal_is_empty(&self) -> bool { self.base.is_none() && self.mutation.is_none() && self.task.is_none() && self.prepared.is_none() && self.retirement.is_none() && self.base_registry.is_none() && self.state_retirement.is_none() && self.mutation_retirement.is_none() && self.factory_close.iter().all(Option::is_none) }
-
+    }
 }
 
 impl<P, M> Drop for ArtifactEphemeralTaskPreparation<P, M> {

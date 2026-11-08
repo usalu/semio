@@ -11,6 +11,7 @@ use super::*;
 /// `body.surfaces` either) so each instance is stamped with its own fresh label at registration
 /// time instead.
 #[derive(Clone)]
+#[derive(semio_framework_value::RetireOwned)]
 pub(super) enum Entity {
     Vertex(VertexId),
     Edge(EdgeId),
@@ -23,41 +24,12 @@ pub(super) enum Entity {
     Surface(Surface, PersistentLabel),
 }
 
-impl semio_framework_value::retirement::RetireOwned for Entity {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        match self {
-            Self::Vertex(id)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
-            Self::Edge(id)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
-            Self::Wire(wire,label)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(wire),semio_framework_value::retirement::deferred(label)]),
-            Self::Face(id)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
-            Self::Shell(id)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
-            Self::Solid(id)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
-            Self::Compound(solids,label)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(solids),semio_framework_value::retirement::deferred(label)]),
-            Self::Curve(curve,label)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(curve),semio_framework_value::retirement::deferred(label)]),
-            Self::Surface(surface,label)=>semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(surface),semio_framework_value::retirement::deferred(label)]),
-        }
-    }
-    fn retirement_birth_bytes(&self)->Option<usize> {
-        match self {
-            Self::Vertex(id)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
-            Self::Edge(id)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
-            Self::Wire(wire,label)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(wire),semio_framework_value::retirement::deferred_birth_bytes_for(label)]),
-            Self::Face(id)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
-            Self::Shell(id)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
-            Self::Solid(id)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
-            Self::Compound(solids,label)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(solids),semio_framework_value::retirement::deferred_birth_bytes_for(label)]),
-            Self::Curve(curve,label)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(curve),semio_framework_value::retirement::deferred_birth_bytes_for(label)]),
-            Self::Surface(surface,label)=>semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(surface),semio_framework_value::retirement::deferred_birth_bytes_for(label)]),
-        }
-    }
-    fn controlled_retirement_supported()->bool {true}
-}
 
 /// 🧠 Native B-Rep session.
 pub struct Brep {
     pub(super) body: Body,
     pub(super) live: semio_framework_mesh_engine::HistoryFoldIndex<String, Entity>,
-    pub(super) pending_mutations: usize,
+    pub(super) pending_mutations: PendingMutations,
     pub(super) live_revision:u64,
 }
 
@@ -133,7 +105,7 @@ impl Brep {
 
     /// 🏗️ Empty native kernel session.
     pub fn new() -> Self {
-        Self { body: Body::new(), live: semio_framework_mesh_engine::HistoryFoldIndex::new(), pending_mutations: 0,live_revision:0 }
+        Self { body: Body::new(), live: semio_framework_mesh_engine::HistoryFoldIndex::new(), pending_mutations: PendingMutations::default(),live_revision:0 }
     }
 }
 // #endregion 🔖️Types

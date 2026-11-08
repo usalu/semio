@@ -94,11 +94,11 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresencePeerRejectio
     fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(self.demands(maximum_body_bytes)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let demand = self.demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "presence rejection exceeds admitted depth")); }
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "presence rejection exceeds admitted depth").into()); }
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(actor) = self.actor.take() {
             let bytes = actor.capacity();
@@ -106,21 +106,17 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresencePeerRejectio
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }));
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, child).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(presence) = self.presence.take() {
             *self.original_arc = Some(Arc::new(presence));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() }));
         }
-        if let Some(original_arc) = self.original_arc.take() {
-            let Some(factory) = self.factory.as_ref() else { return Err(semio_framework_value::ValueError::invariant("original presence factory is absent")); };
-            return match factory.retire(original_arc, child).result {
-                Ok((active, progress)) => {
-                    if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { *self.active = Some(active); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence rejection constructor changed its declared receipt")); }
-                    *self.active = Some(active);
-                    Ok(RetainedCloneStep::Progress(progress))
-                },
-                Err((error, original_arc)) => { *self.original_arc = Some(original_arc); Err(error) },
-            };
+        if self.original_arc.is_some() {
+            let Some(factory) = self.factory.as_ref() else { return Err(semio_framework_value::ValueError::invariant("original presence factory is absent").into()); };
+            let (active, progress) = semio_framework_value::RetirementPollExit::resume(semio_framework_value::factory_retire_snapshot(&**factory, &mut self.original_arc, &mut effect.nested(child)))?;
+            *self.active = Some(active);
+            if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence rejection constructor changed its declared receipt").into()); }
+            return Ok(RetainedCloneStep::Progress(progress));
         }
         if let Some(factory) = self.factory.take() {
             let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
@@ -128,13 +124,13 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresencePeerRejectio
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
         if let Some(factory) = self.factory_close.as_mut() {
-            let step = factory.step(child).result?;
+            let step = semio_framework_value::RetirementPollExit::resume(factory.step(&mut effect.nested(child)))?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "presence rejection factory")?;
             if factory.terminal_is_empty() { self.factory_close = None; }
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
         }
         Ok(RetainedCloneStep::Complete(Default::default()))
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
     fn terminal_is_empty(&self) -> bool { self.actor.is_none() && self.presence.is_none() && self.original_arc.is_none() && self.active.is_none() && self.factory.is_none() && self.factory_close.is_none() }
 }
 

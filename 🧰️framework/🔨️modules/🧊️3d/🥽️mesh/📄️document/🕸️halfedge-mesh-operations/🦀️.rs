@@ -286,7 +286,7 @@ impl HalfedgeMesh {
                     let vertex=if attribute.domain==MeshAttributeDomain::Corner {self.halfedges[domain].vertex as usize}else {domain};
                     let affected=ids.binary_search(&vertex).is_ok();let source=attribute.indices.as_ref().map_or(domain as u32,|indices|indices[domain]);
                     let sample=if let Some(sample)=samples.get(&(source,affected)) {*sample}else {
-                        let original=attribute.values[source as usize].as_array().unwrap();let mut normal=[0,1,2].map(|axis|original[axis].as_f64().unwrap());
+                        let Some([x,y,z])=attribute.values.get(source as usize).and_then(semio_framework_value::DslValue::as_array).and_then(|original|Some([original.first()?.as_f64()?,original.get(1)?.as_f64()?,original.get(2)?.as_f64()?])) else {return Err(MeshKernelError::DegenerateOperation);};let mut normal=[x,y,z];
                         if affected {normal=[0,1,2].map(|axis|matrix[axis][0]*normal[0]+matrix[axis][1]*normal[1]+matrix[axis][2]*normal[2]);let length=normal[0].hypot(normal[1]).hypot(normal[2]);normal=normal.map(|value|value/length);if normal.iter().any(|value|!value.is_finite() || !(*value as f32).is_finite()) {return Err(MeshKernelError::DegenerateOperation);}}
                         let sample=values.len() as u32;values.push(semio_framework_value::DslValue::Array(normal.into_iter().map(semio_framework_value::DslValue::float).collect()));samples.insert((source,affected),sample);sample
                     };indices.push(sample);

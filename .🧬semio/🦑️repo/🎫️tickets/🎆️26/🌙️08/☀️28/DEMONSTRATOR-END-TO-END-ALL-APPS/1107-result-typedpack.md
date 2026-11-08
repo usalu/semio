@@ -1,0 +1,28 @@
+STATUS: EDITED, UNVERIFIED (stopped by coordinator). Native job and four siblings ported; no compile or test ever ran (W-typedpack-101 killed in queue). See Stop section.
+
+## Port of window-config typed-pack-load native job (`🪟️window/🎚️config/📥️retained/📦️typed-pack-load/🛬️native/🦀️.rs`, 60,832 B -> 63,106 B)
+- Removed helpers `built`, `paid`, `receive`, `receive_posted`, `native_step`, `retire`, `reconcile`; written once: `retire`/`retire_unit`/`retire_native` (effect-shaped closes; native flavour nests `with_native_retirement` inside `with_original_effect`), `grant_close` (only the outcome descriptor slot is still grant-shaped), `native_step`/`receive` (construction steps through `with_native_receiving` + `receive_original_receiving_work`), `received`/`effected` (receiving scope + `settle_receiving_scope`, work from `actual_work()` delta, allocating actions through `with_allocated_effect`), `close_owned` (controlled-retirement wrap/step/drop ladder, used for pair failure, construction refusal, actor lease and metadata tuple).
+- New `Construction` (pub): one resident `OriginalConstructionAdmission` + `unit` output + `refusal`/`refusal_close` + `resume`. `run` = `admit_original_construction` + status handling (Ready -> `reset_step`, Failed -> `take_failure_into_step`, Err); `run_unit`, `settle` (resumes a construction whose constructor already ran), `close`. The job holds one; `paid_actual` takes it out of `self`, runs the closure with the job, puts it back. `resume` is set inside the constructor closure; `advance_native` settles first, `close_native` closes it first. Constructor closure sets the allocation marker from the returned capacity when the callee left it empty.
+- Stage routing: 0 pair admit = construction step (`receive`), 1 pair step = `effected` (decoder effect handed to `pair.step`), 2/3/5/6/7/9 = `native_step`/`receive`, 8/10/11/12/13..25 + metadata/edit = `paid*` (construction while open, funded retirement while `closing`), 21 address = `paid_actual` (`SharedUtf8::admit(.., actual)`), 11 initializer birth = `paid` writing `WindowConfigInitialization::awaiting_envelope` (needs it `pub`, REQUEST in claims). Operation receiver: `advance` via `received`, `take_owned_into` via `effected`, `close_step` via `retire_native`; wire admission `advance`/`retain_original`/inverse `reserve_one_funded` via `effected` (they need an effect); wire `take_output` via a construction. Single charge: nothing debits twice (`retire_native` refuses performed > settled work).
+- Pair failure capture: stage 0 failure carries the capture bytes in its construction receipt; stages 1 and the pair close pay them once through `captured` after the action.
+- `admit_typed_window_config_pack_load` now takes a caller-owned `WindowConfigLoadAdmission` (actor lease via `effected`/`admit_clone`, then the birth construction, `settled` flag); returns `true` when the frame is placed and settled. `close_step` retires actor lease and construction.
+
+## Dependents edited (same crate)
+- `📥️retained/🎞️command/🦀️.rs`: `built` removed; fields `admission`, `construction`, `admitted`; its two constructions use `Construction::run_unit`, `settle` first on resume, `close` first on closing, admission closed after the load.
+- `🧭️owner-registry/🦀️.rs` `admit_retained_load` (+admission, kind from the load once the pack is taken), `🗄️store-owners/🦀️.rs` trait + impl (+admission), `📐️owner-contract-and-mutation/🛬️receiving/🦀️.rs` `admit_history_source` adapter (codec returns `Result<NativeConstructionStepResult<bool,NativeReceivingEffectFailure>,Primary>`, the trait wants `NativeConstructionStepOutcome`), `📥️retained/🦀️.rs` and `📦️typed-pack-load/🦀️.rs` re-exports, native tests (two admit loops + admission close).
+
+## Not mine, still on the removed construction API in this crate (will block `-p semio-plugin-window-config`)
+`🎟️capture` (8 `built`), `🔒️epoch` (built, built_with, receive x2, with_native_receiving), `🗄️store-owners` (4 `built`), `🧭️owner-registry/🌱️registration` (3 `built`), `🧭️owner-registry` (1 `admit_original_construction` use). Same `Construction` pattern applies.
+
+## Source gate
+Closure of `semio-plugin-window-config` before: 250,370 B of 262,144 (18/32 files, 1,890/4,000 lines). Native file grew 2.3 KB; the five files above will add more.
+
+Rerun: `chk.sh W-typedpack-101 🌎️hub/Cargo.toml native -p semio-plugin-window-config` then `... wasm ...` (manifest as in the groupcallers 107 line).
+
+## Sibling pass (11/08 04:1x)
+- capture: ported (direct_unit for allocation-free units, Construction for address reserve and selection advance, effect-shaped close). EDITED-unverified.
+- epoch, registration (+ registry-held birth Construction), owner-registry: ported, EDITED-unverified. store-owners next (with gateway retire_owned_mutation / take_returned_snapshot_read_retirement effect shapes).
+- store-owners: built sites -> Construction/direct_unit/plugin_effect_turn, returned_read_step(effect) with gateway effect shapes. EDITED-unverified. Next: W-typedpack-101 result, then 102 on the edited tree.
+
+## Stop (04:3x)
+Coordinator final stop. W-typedpack-101 was still queued (never compiled); its wrapper tree (pids 60980/60983/61024 and child) was killed. All edits above are EDITED-unverified and syntactically parse (rustfmt). Next steps: rerun `chk.sh W-typedpack-102 🌎️hub/Cargo.toml native -p semio-plugin-window-config`, fix reported errors (expect grant-shaped leftovers in store-owners: preview_close_step, address.step, init-birth closes), then wasm, then tst.sh -p semio-plugin-window-config-original --lib original_saved_window; check the source gate (was 250,370/262,144 before sibling edits).

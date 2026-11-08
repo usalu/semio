@@ -111,11 +111,12 @@ impl<A: ArtifactApp> InstanceStores<A> {
     }
 
     /// 🪟️ Continues the window-config authority refresh a published receipt retains until the displaced snapshot has admitted custody; `true` once it is complete, when the use case tells the extensions and queues the receipt's result page; every unit reports its actual progress to the host turn.
-    pub fn advance_window_config_refresh(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained: RetainedCloneGrant) -> Result<bool, Fault> {
+    pub fn advance_window_config_refresh(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<bool, Fault> {
+        let retained = effect.grant();
         mounted.pending_window_config_receipt.ok_or_else(|| plugin_sdk_fault("window config refresh lost its retained publication receipt"))?;
         let authority = mounted.window_config_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window config receipt lost its captured window authority"))?;
         self.window_config_store.refresh_demands(authority, retained.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
-        let step = self.window_config_store.refresh(authority, retained)?;
+        let step = self.window_config_store.refresh(authority, effect)?;
         let (semio_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(progress) | semio_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Ready(progress)) = step;
         if progress != RetainedCloneProgress::default() {
             assert!(mounted.publication_ownership_progress.is_none(), "window config refresh cannot overwrite an unreturned original receipt");

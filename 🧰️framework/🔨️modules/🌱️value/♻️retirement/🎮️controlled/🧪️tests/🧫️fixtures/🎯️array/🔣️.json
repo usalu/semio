@@ -20,7 +20,8 @@
   ],
   "futureArrayBytes": 12,
   "futureElementBytes": 4,
-  "selectedChildCopyBytes": 0,
+  "runHeaderWords": 1,
+  "runCapacityBytes": 0,
   "oneItemPerGrant": true,
   "quoteHeap": [
     0,

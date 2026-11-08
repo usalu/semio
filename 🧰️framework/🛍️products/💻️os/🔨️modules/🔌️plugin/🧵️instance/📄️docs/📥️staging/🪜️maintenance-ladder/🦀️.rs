@@ -32,12 +32,12 @@ impl protocol::RetainedHistoryTurn for StepTurn<'_, '_> {
     fn should_yield(&self)->bool{self.actual.try_lock().map_or(true,|cx|if self.closing{cx.retirement_should_yield()}else{cx.should_yield()})}
     fn is_cancelled(&self)->bool{self.actual.try_lock().map_or(true,|cx|cx.is_cancelled())}
 }
-struct StepWork<'a,'b,'c>(&'a StepTurn<'b,'c>);
-impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for StepWork<'_,'_,'_>{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let cx=self.0.actual.try_lock().map_err(|_|ValueError::invariant("original archive caller is already borrowed"))?;let paused=if self.0.closing{cx.retirement_should_yield()}else{cx.should_yield()};Ok(if !paused&&(self.0.closing||!cx.is_cancelled()){cx.fuel_remaining().checked_sub(observed).unwrap_or(0)}else{0})}
-    fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{
-        let cx=self.0.actual.try_lock().map_err(|_|ValueError::invariant("original archive caller is already borrowed"))?;
-        let paused=if self.0.closing{cx.retirement_should_yield()}else{cx.should_yield()};
-        Ok(!paused&&(self.0.closing||!cx.is_cancelled())&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining()))
+impl semio_plugin_document_media::ArchiveWorkTurn for StepTurn<'_,'_>{
+    fn work_turn(&self)->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity>{self.actual.try_lock().ok().and_then(|cx|cx.original_source_turn_identity())}
+    fn admits(&self,observed:u64,additional:u64)->Result<bool,ValueError>{
+        let cx=self.actual.try_lock().map_err(|_|ValueError::invariant("original archive caller is already borrowed"))?;
+        let paused=if self.closing{cx.retirement_should_yield()}else{cx.should_yield()};
+        Ok(!paused&&(self.closing||!cx.is_cancelled())&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining()))
     }
 }
 
@@ -196,7 +196,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         }
         let fuel=cx.fuel_remaining();
         let actual=StepTurn{actual:std::sync::Mutex::new(&mut *cx),closing:true};
-        let turn=active.close_step(grant,&mut StepWork(&actual));drop(actual);
+        let turn=active.close_step(grant,&actual);drop(actual);
         let progress=match &turn.result {Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
         let observed=active.last_turn_native_work();
         match receive_archive(cx,grant,fuel,turn,progress,observed)? {
@@ -234,7 +234,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                 let decoder = active.history.as_mut().ok_or_else(|| missing("recursive document archive parent history decoder is absent"))?;
                 let fuel=cx.fuel_remaining();
                 let actual=StepTurn{actual:std::sync::Mutex::new(&mut *cx),closing:false};
-                let turn=decoder.step(&archive.parent_spr,&actual,grant,&mut active.decoded_history,&mut StepWork(&actual));drop(actual);
+                let turn=match active.work.with_loan(&mut (&actual as &dyn semio_plugin_document_media::ArchiveWorkTurn),|loan|decoder.step(&archive.parent_spr,&actual,grant,&mut active.decoded_history,loan)){Ok(turn)=>turn,Err(error)=>semio_framework_value::RetainedWorkOutcome{work:0,result:Err(semio_framework_value::OriginalRetirementFailure::from_work_refusal(error))}};drop(actual);
                 let progress=decoder.take_receipt().map_or_else(||match &turn.result {Err(error)=>error.retained_progress(),_=>Default::default()},|(_,progress)|progress);
                 let observed=decoder.last_turn_native_work();
                 let step=receive_archive(cx,grant,fuel,turn,progress,observed)?;

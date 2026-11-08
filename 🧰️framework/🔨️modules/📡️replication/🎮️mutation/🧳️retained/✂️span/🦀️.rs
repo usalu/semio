@@ -1,6 +1,7 @@
 //! ✂️ Original byte spans copy only admitted range fragments and retain exact output/source custody.
 use super::retained_mutation_demand_fits;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,close_retained_binding,admit_retained_clone_progress}};
+use semio_framework_replication_retained_field::{settle,settle_exit};
+use semio_framework_value::{OriginalRetirementFailure,OriginalRetirementOutcome,OriginalRetirementPoll,RetainedAllocationEffect,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,close_retained_binding,admit_retained_clone_progress}};
 use std::mem::{ManuallyDrop,size_of};
 
 /// 🧵️ A byte-range cursor owns one staged contiguous range and its genuine original source alias.
@@ -15,21 +16,26 @@ impl RetainedByteSpan{
   let copy=if self.phase==0{fixed}else{fixed+self.len.saturating_sub(self.copied).min(body.max(1)).min(semio_framework_value::retained_clone::RETAINED_CLONE_BULK_PAGE_BYTES)};
   Ok(RetirementDemand{copy_bytes:copy,capacity_bytes:if self.phase==0{self.len}else{0},depth:1,..Default::default()})
  }
- pub fn advance(&mut self,original:RetainedCloneRef<'_,Vec<u8>>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn advance(&mut self,original:RetainedCloneRef<'_,Vec<u8>>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementOutcome{let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedCloneStep,OriginalRetirementFailure>=(||{
   let d=self.demand(original,body)?;if !retained_mutation_demand_fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if let Some(p)=original.bind(&mut self.source,grant).result?{return Ok(RetainedCloneStep::Progress(p));}
-  let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
+  let turn=original.bind(&mut self.source,effect);work+=turn.work;if let Some(p)=turn.result?{return Ok(RetainedCloneStep::Progress(p));}
+  work+=1;let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
   if self.phase==0{let mut output=Vec::new();output.try_reserve_exact(self.len).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original byte span reservation failed"))?;p.retained_capacity_bytes=output.capacity();*self.output=Some(output);self.phase=if self.len==0{2}else{1};}
-  else if self.phase==1{let fixed=size_of::<Vec<u8>>()+size_of::<usize>()*2+size_of::<u8>();let count=d.copy_bytes-fixed;if count==0{return Ok(RetainedCloneStep::Progress(Default::default()));}let end=self.copied+count;self.output.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original byte span lost its admitted output"))?.extend_from_slice(&original.get()[self.start+self.copied..self.start+end]);self.copied=end;if self.copied==self.len{self.phase=2;}}
-  else{return Ok(RetainedCloneStep::Complete(Default::default()));}
+  else if self.phase==1{let fixed=size_of::<Vec<u8>>()+size_of::<usize>()*2+size_of::<u8>();let count=d.copy_bytes-fixed;if count==0{work-=1;return Ok(RetainedCloneStep::Progress(Default::default()));}let end=self.copied+count;self.output.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original byte span lost its admitted output"))?.extend_from_slice(&original.get()[self.start+self.copied..self.start+end]);self.copied=end;if self.copied==self.len{self.phase=2;}}
+  else{work-=1;return Ok(RetainedCloneStep::Complete(Default::default()));}
   let p=admit_retained_clone_progress(grant,p,"original byte span copy")?;Ok(if self.phase==2{RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})
- }
+ })();settle(effect,base,result,work)}
  pub fn ready(&self)->bool{!self.closing&&self.phase==2&&self.output.is_some()}
  pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original byte span is not ready"));}Ok(RetirementDemand{copy_bytes:size_of::<Vec<u8>>()*2+size_of::<u8>(),depth:1,..Default::default()})}
  pub fn take(&mut self,grant:RetainedCloneGrant)->Result<Option<(Vec<u8>,RetainedCloneProgress)>,ValueError>{let d=self.take_demand()?;if !retained_mutation_demand_fits(d,grant){return Ok(None);}self.phase=3;Ok(Some((self.output.take().unwrap(),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original byte span close has not begun"));}self.retirement.next_owner_demands::<Vec<u8>>(self.output.is_some(),&self.source,body)}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}let d=self.close_demand(grant.maximum_copy_bytes)?;if !retained_mutation_demand_fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result.map(|p|RetainedCloneStep::Progress(p.progress()));}if let Some(p)=self.retirement.begin_granted(&mut self.output,grant).result?{return Ok(RetainedCloneStep::Progress(p.progress()));}close_retained_binding(&mut self.source,grant).result}
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}let d=self.close_demand(grant.maximum_copy_bytes)?;if !retained_mutation_demand_fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
+  if !self.retirement.is_empty(){let turn=RetirementPollExit::settled(self.retirement.step_granted(effect))?;work=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));}
+  let turn=self.retirement.begin_granted(&mut self.output,effect);work=turn.work;if let Some(p)=turn.result?{return Ok(RetainedCloneStep::Progress(p.progress()));}
+  let turn=RetirementPollExit::settled(close_retained_binding(&mut self.source,effect))?;work+=turn.work;Ok(turn.result?)
+ })();settle_exit(effect,base,result,work)}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.source.is_none()&&self.output.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for RetainedByteSpan{fn drop(&mut self){let empty=self.source.is_none()&&self.output.is_none()&&self.retirement.is_empty();assert!(std::thread::panicking()||empty,"original byte span requires exact funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.output);}}}}

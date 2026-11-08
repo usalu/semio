@@ -12,7 +12,7 @@ export type { PluginPackageDescriptor } from "../../🛂️descriptor-admission/
 export { createTurnOutcomeBroadcast } from "../../📡️turn-outcome-broadcast/🟦️.ts";
 export type { TurnOutcome } from "../../📡️turn-outcome-broadcast/🟦️.ts";
 export type { PluginDispatchHintV1, PluginWasmHandle } from "../../🪝️plugin-wasm-handle/🟦️.ts";
-export { buildContributionsJson, resolveLayoutForMode, scopeContributionsJson } from "../../🧾️contributions-json/🟦️.ts";
+export { buildContributionsJson, consumedTopicsForApp, resolveLayoutForMode, scopeContributionsJson } from "../../🧾️contributions-json/🟦️.ts";
 export { expandPluginRegistry } from "../../🗂️plugin-registry/🟦️.ts";
 export type { PluginDependency, PluginRegistryEntry, VersionPin } from "../../🗂️plugin-registry/🟦️.ts";
 export type {

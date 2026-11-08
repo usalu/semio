@@ -231,7 +231,7 @@ fn action_args(args: Option<&Value>, window_id: Option<&str>) -> Option<semio_fr
 
 /// 📤️ One fixed result page of the testkit's instance, borrowed under the mounted maintenance grant.
 fn take_page(app: &mut Puzzle2dApp) -> Result<Option<semio_plugin::app::TypedOperationResultPage>, Fault> {
-    Ok(app.take_typed_operation_result_page(1, semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance)?.0)
+    Ok(semio_plugin::artifact_app_laws::take_fixture_result_turn(app, 1, semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance)?.0)
 }
 
 /// 🧰️ [`dispatch`] of an app verb from an explicit window view — for a law that needs what the view carries,

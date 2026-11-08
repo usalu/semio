@@ -157,12 +157,13 @@ impl neural::Operator for ContributedExtensionStub {
     fn next_retire_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{let owner=self.retirement.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original contributed retirement gate is occupied"))?;owner.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(copy))}
     fn next_retire_release_byte_demand(&self)->Result<usize,ValueError>{let owner=self.retirement.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original contributed retirement gate is occupied"))?;owner.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand)}
     fn next_retire_depth_demand(&self)->Result<usize,ValueError>{let owner=self.retirement.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original contributed retirement gate is occupied"))?;owner.as_ref().map_or(Ok(usize::from(self.metadata.is_some())),ControlledRetirement::next_depth_demand)}
-    fn retire_step(&mut self,grant:RetainedCloneGrant,_values:&mut neural::ValueRetirement)->Result<RetainedCloneStep,ValueError>{
+    fn retire_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,_values:&mut neural::ValueRetirement)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{
+        let grant=effect.grant();
         if self.retirement_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
         let retirement=self.retirement.get_mut();
-        if let Some(owner)=retirement.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){*retirement=None}return Ok(if self.metadata.is_none()&&retirement.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
-        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original contributed stub handoff requires depth"))}
-        *retirement=Some(ControlledRetirement::new(ContributedStubSource{metadata:self.metadata.take()}).unwrap_or_else(|_|unreachable!("original contributed stub source is typed")));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
+        if let Some(owner)=retirement.as_mut(){let step=semio_framework_value::RetirementPollExit::resume(owner.step(effect))?;if owner.terminal_is_empty(){*retirement=None}return Ok(if self.metadata.is_none()&&retirement.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original contributed stub handoff requires depth").into())}
+        *retirement=Some(ControlledRetirement::retain(ContributedStubSource{metadata:self.metadata.take()}));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
 }
 

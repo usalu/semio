@@ -588,47 +588,57 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
         Ok(None)
     }
 
-    /// ♻️ Keeps original child owners until their supplied grant admits one real release or transfer.
-    pub fn close_child_one(&mut self, grant: RetainedCloneGrant) -> Result<Option<PluginLifecycleStep>, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {self.close_child_original(grant).result}
-    /// 🧮️ Preserves each original child delegate work receipt on success and refusal.
-    pub fn close_child_original(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<Option<PluginLifecycleStep>,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {let mut work=0;let result=(||{
-        let Some(demand) = self.child_close_demands(grant.maximum_copy_bytes).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)? else { return Ok(None); };
+    /// 🧮️ Keeps original child owners until the effect's grant admits one real release or transfer; every delegate records its performed work on that same effect.
+    pub fn close_child_original(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<PluginLifecycleStep>,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        use semio_plugin_ownership::bounded_ownership::{PluginLifecycleFailure,plugin_pay_unit};
+        let grant=effect.grant();
+        let Some(demand) = self.child_close_demands(grant.maximum_copy_bytes).map_err(PluginLifecycleFailure::from)? else { return Ok(None); };
         if grant.maximum_depth < demand.depth { return Err(plugin_sdk_fault("original emitted child close exceeds supplied depth").into()); }
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(Some(PluginLifecycleStep::Progress(Default::default()))); }
-        work=1;let child_grant = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        let child_grant = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(preparation) = self.child_preparations.front_mut() {
             if preparation.terminal_is_empty() {
+                plugin_pay_unit(effect)?;
                 self.child_preparations.pop_front();
                 return Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })));
             }
             preparation.begin_close();
-            let result=preparation.close_step(child_grant);work=preparation.last_turn_work();let step=result?;
+            let result=preparation.close_step(child_grant);let work=preparation.last_turn_work();
+            let paid=effect.performed(work).map_err(PluginLifecycleFailure::from).and_then(|admitted|if admitted{Ok(())}else{Err(PluginLifecycleFailure::from(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original child preparation close exceeds its work grant")))});
+            let step=result?;paid?;
             if let Some(progress) = step.progress() { if !progress.fits(child_grant) { return Err(plugin_sdk_fault("original child preparation exceeded its supplied grant").into()); } }
             if matches!(step, PluginLifecycleStep::Complete(_)) && !preparation.terminal_is_empty() { return Err(plugin_sdk_fault("original child preparation completed with retained owners").into()); }
             return Ok(Some(match step { PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), step => step }));
         }
-        if self.child_preparations.capacity() != 0 { self.child_preparations = std::collections::VecDeque::new(); }
+        if self.child_preparations.capacity() != 0 { plugin_pay_unit(effect)?;self.child_preparations = std::collections::VecDeque::new(); }
         else if let Some(child) = self.owned_child_emits.last_mut() {
-            if child.terminal_is_empty() { self.owned_child_emits.pop(); return Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))); }
-            let result=child.close_granted(child_grant);work=child.last_turn_work();let step=result.map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child_grant, step, child.terminal_is_empty(), "original emitted typed child").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+            if child.terminal_is_empty() { plugin_pay_unit(effect)?;self.owned_child_emits.pop(); return Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))); }
+            let step=child.close_step(&mut effect.nested(child_grant)).map_err(PluginLifecycleFailure::from)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child_grant, step, child.terminal_is_empty(), "original emitted typed child").map_err(PluginLifecycleFailure::from)?;
             return Ok(Some(PluginLifecycleStep::Progress(step.progress())));
         }
-        else if self.owned_child_emits.capacity() != 0 { self.owned_child_emits = Vec::new(); }
+        else if self.owned_child_emits.capacity() != 0 { plugin_pay_unit(effect)?;self.owned_child_emits = Vec::new(); }
         else if let Some(child) = self.child_emits.last_mut() {
-            if child.terminal_is_empty() { self.child_emits.pop(); return Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))); }
-            let step = child.close_one(child_grant).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child_grant, step, child.terminal_is_empty(), "original emitted wire child").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+            if child.terminal_is_empty() { plugin_pay_unit(effect)?;self.child_emits.pop(); return Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))); }
+            let step = child.close_one(child_grant).map_err(PluginLifecycleFailure::from)?;
+            plugin_pay_unit(effect)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child_grant, step, child.terminal_is_empty(), "original emitted wire child").map_err(PluginLifecycleFailure::from)?;
             return Ok(Some(PluginLifecycleStep::Progress(step.progress())));
         }
-        else { self.child_emits = Vec::new(); }
+        else { plugin_pay_unit(effect)?;self.child_emits = Vec::new(); }
         Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })))
-    })();semio_framework_value::RetainedWorkOutcome{result,work}}
+    }
 
     /// 🎟️ Returns ready child backing to the caller's persistent parent; typed preparations retain their original physical close contract.
-    pub fn return_child_one<const N: usize>(&mut self, parent: &mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<N>, grant: RetainedCloneGrant) -> Result<Option<PluginLifecycleStep>, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    pub fn return_child_one<const N: usize>(&mut self, parent: &mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<N>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<PluginLifecycleStep>, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        let grant = effect.grant();
+        if !self.child_preparations.is_empty() || self.child_preparations.capacity() != 0 || !self.owned_child_emits.is_empty() { return self.close_child_original(effect); }
+        let step = self.return_child_backing(parent, grant)?;
+        if step.is_some() && grant.maximum_items != 0 && grant.maximum_depth != 0 { semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect)?; }
+        Ok(step)
+    }
+    fn return_child_backing<const N: usize>(&mut self, parent: &mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<N>, grant: RetainedCloneGrant) -> Result<Option<PluginLifecycleStep>, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let refused = semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from;
-        if !self.child_preparations.is_empty() || self.child_preparations.capacity() != 0 || !self.owned_child_emits.is_empty() { return self.close_child_one(grant); }
         let accepted = |accepted| Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: usize::from(accepted), ..Default::default() })));
         if self.owned_child_emits.capacity() != 0 { return parent.return_empty_vec(&mut self.owned_child_emits, 1).map_err(refused).and_then(accepted); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Some(PluginLifecycleStep::Progress(Default::default()))); }

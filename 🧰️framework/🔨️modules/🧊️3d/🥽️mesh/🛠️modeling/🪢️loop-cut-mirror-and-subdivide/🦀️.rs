@@ -154,8 +154,8 @@ impl Subdivide {
         self.emitted_corners+=corners;Ok(())
     }
     fn next_face(&mut self) { self.face += 1; self.corner = 0; self.emitting = false; self.center = Vec3::ZERO; self.convex = true; }
-    pub(super) fn advance(&mut self,grant:RetainedCloneGrant,tessellation_progress:&mut RetainedCloneProgress) -> MeshResult<Option<HalfedgeMesh>> {
-        if self.tessellation_retirement.is_some(){if close_tessellation_handoff(&mut self.tessellation_retirement,grant,tessellation_progress)?{self.soup.positions=std::mem::take(&mut self.snapshot.soup.positions);self.phase=4;}return Ok(None);}
+    pub(super) fn advance(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,tessellation_progress:&mut RetainedCloneProgress) -> MeshResult<Option<HalfedgeMesh>> {
+        if self.tessellation_retirement.is_some(){if close_tessellation_handoff(&mut self.tessellation_retirement,effect,tessellation_progress)?{self.soup.positions=std::mem::take(&mut self.snapshot.soup.positions);self.phase=4;}return Ok(None);}
         match self.phase {
             0 => {
                 if self.cursor==self.input.len() {if self.delete_selected && self.selected.len()==self.snapshot.source.face_count() {return Err(MeshKernelError::InvalidInput("deletion would leave an empty mesh".into()));}self.phase = 1;}
@@ -177,7 +177,7 @@ impl Subdivide {
             }
             3 => {
                 if let Some(tessellation) = &mut self.tessellation {
-                    let result=tessellation.step(grant);*tessellation_progress=tessellation.normal_step_progress();if let MeshTessellationStep::Done(transfer) = result.map_err(MeshKernelError::Retained)?.0 {self.transfer=Some(transfer);let mut original=self.tessellation.take().unwrap();self.snapshot.source=original.take_source();self.tessellation_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(original).unwrap_or_else(|_|panic!("original tessellation handback requires typed retirement")));}
+                    let result=tessellation.step(effect);*tessellation_progress=tessellation.normal_step_progress();if let MeshTessellationStep::Done(transfer) = result.map_err(MeshKernelError::Retained)?.0 {self.transfer=Some(transfer);let mut original=self.tessellation.take().unwrap();self.snapshot.source=original.take_source();self.tessellation_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(original).unwrap_or_else(|_|panic!("original tessellation handback requires typed retirement")));}
                 } else { self.soup.positions = std::mem::take(&mut self.snapshot.soup.positions); self.phase = 4; }
             }
             4 => {

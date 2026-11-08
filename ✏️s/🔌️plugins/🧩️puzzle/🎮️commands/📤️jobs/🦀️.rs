@@ -68,11 +68,11 @@ impl<T: RetireOwned + 'static> WorkClosing<T> {
     pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
         if self.is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
         let demand = self.demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| {
+        let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| {
             if self.retirement.is_empty(){
-                let turn=self.retirement.begin_granted(&mut self.staged,grant);
-                RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))),work:turn.work}
-            }else{self.retirement.step_granted(grant)}
+                let turn=self.retirement.begin_granted(&mut self.staged,effect);
+                semio_framework_value::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))).map_err(Into::into),work:turn.work})
+            }else{self.retirement.step_granted(effect)}
         })?;
         Ok(if self.is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
     }

@@ -16,9 +16,9 @@ where
     fn close_host_initial_snapshot_retirement_factory(&self) -> Option<&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>> { self.owners.initial_snapshot_retirement_factory.as_ref() }
     fn snapshot_read_leases_terminal_is_empty(&self) -> bool { ArtifactStore::snapshot_read_leases_terminal_is_empty(self) }
     fn maintenance_retirements_terminal_is_empty(&self) -> bool { ArtifactStore::maintenance_retirements_terminal_is_empty(self) }
-    fn maintenance_retirements_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { ArtifactStore::maintenance_retirements_step(self, grant) }
+    fn maintenance_retirements_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { ArtifactStore::maintenance_retirements_step(self, effect) }
     fn close_take_backbone_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> { ArtifactStore::close_take_backbone_retirement(self, grant) }
-    fn close_cursor_admit(&mut self, phase: ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> { self.parts().close_cursor_admit(phase, grant) }
+    fn close_cursor_admit(&mut self, phase: ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), semio_framework_value::RetirementPollExit> { self.parts().close_cursor_admit(phase, grant, effect) }
     fn close_cursor_demands(&self, phase: ArtifactStoreCursorDisposerPhase, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { ArtifactStore::close_cursor_demands(self, phase, body) }
     fn owned_roots_terminal_is_empty(&self) -> bool { self.parts_ref().owned_roots_terminal_is_empty() }
 }

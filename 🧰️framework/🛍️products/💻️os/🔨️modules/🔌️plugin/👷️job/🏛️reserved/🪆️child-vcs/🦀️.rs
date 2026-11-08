@@ -3,13 +3,13 @@ use semio_os_kernel::os_store::{SpaceMember,MemberNativeVcsCommand,ArtifactNativ
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,OriginalConstructionDemand};
 use semio_framework_value::{RetirementDemand,RetainedCloneStep,RetainedCloneProgress,ValueError,ValueRefusalKind,retained_clone::RetainedCloneClose};
 use std::mem::{size_of,ManuallyDrop};
-use crate::{built,built_with,retired};
+use semio_plugin_job_receiving::original_steps::{built,built_with,retired};
 /// 🎮️ The caller owns one actual member command; no method creates a replacement decoder or caller.
 pub struct ChildVcsCommandUnit{binding:OriginalSourceBinding,decoder:(u64,u64),body:usize,request:ManuallyDrop<Option<ArtifactNativeVcsRequest>>,command:ManuallyDrop<Option<Box<dyn MemberNativeVcsCommand>>>,result:Option<ArtifactNativeVcsResult>,retirement:RetainedCloneClose,phase:u8,closing:bool}
-pub(super) fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original child VCS unit caller, decoder or ownership phase changed")}
-pub(super) fn header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
-pub(super) fn original(d:RetirementDemand)->OriginalConstructionDemand{OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth}}
-pub(super) fn paid(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
+pub fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original child VCS unit caller, decoder or ownership phase changed")}
+pub fn header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
+pub fn original(d:RetirementDemand)->OriginalConstructionDemand{OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth}}
+pub fn paid(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
 impl ChildVcsCommandUnit{
  pub fn capture_demands()->RetirementDemand{RetirementDemand{capacity_bytes:size_of::<Self>(),..header::<(Self,Option<ArtifactNativeVcsRequest>,Option<ArtifactNativeVcsRequest>)>()}}
  /// 🎟️ The exact request owner transfers once inside the original caller's funded construction.

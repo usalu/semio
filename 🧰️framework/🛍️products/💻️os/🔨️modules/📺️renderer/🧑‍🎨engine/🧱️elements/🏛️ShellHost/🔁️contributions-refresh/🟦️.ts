@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef } from "../../⚛️react-port/🟦️.ts";
 // #region 🔌️Adapters
 import {
+  consumedTopicsForApp,
   scopeContributionsJson,
   type Effect,
   normalizeAppLabelsOverlay,
@@ -178,7 +179,7 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
         hostMode: spawned ? false : hostMode,
         session: nextSession,
         targetViewState: resolvedTargetViewState(nextSession),
-        consumedTopics: registry.find((entry) => entry.pluginId === (loaded.find((program) => program.handle.pluginId === nextSession.pluginId)?.catalogModule?.pluginId ?? nextSession.pluginId))?.consumes ?? [],
+        consumedTopics: consumedTopicsForApp(registry, loaded.map((program) => ({ pluginId: programPluginIdV1(program), manifest: program.manifest })), loaded.find((program) => program.handle.pluginId === nextSession.pluginId)?.catalogModule?.pluginId ?? nextSession.pluginId, nextSession.app.id),
         dispatchDeferredEffects: (receiver, deferredEffects) =>
           queueMicrotask(() => {
             const live = sessionRef.current;

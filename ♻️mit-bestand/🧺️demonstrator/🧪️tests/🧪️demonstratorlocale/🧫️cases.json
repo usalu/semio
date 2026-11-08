@@ -24,7 +24,7 @@
       { "id": "literal-window-title", "pattern": "\\b(windowTitle|shortWindowTitle):\\s*\"" },
       { "id": "default-language", "pattern": "\\blocale\\b[^,)=\\n]*=\\s*[\"'](de|en)[\"']" }
     ],
-    "html": { "forbidden": "<html[^>]*\\blang=", "required": "<title>Entwerfen mit Bestand</title>" }
+    "html": { "forbidden": "<html[^>]*\\blang=", "required": "<title>Designing with Existing Stock · Demonstrator · Entwerfen mit Bestand · Demonstrator</title>" }
   },
   "localeResolution": [
     { "id": "stored-german", "candidates": ["de", "en-US"], "expected": "de" },

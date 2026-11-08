@@ -37,7 +37,7 @@ use semio_os_store_command::{parse_command, print_command};
 /// 🧪️ The report every language-neutral mutation case compares against its committed specification vector. The
 /// base and expected-after snapshots and the mutation are decoded through the production JSON codec, the mutation is
 /// applied through `protocol::apply_diff` (so an apply refusal surfaces as the fatal message production
-/// dispatch records), and the mutation's own computed inverse steps are replayed in order onto the applied snapshot.
+/// dispatch records), and the mutation's own computed inverse steps are replayed in reverse order (as the engine does) onto the applied snapshot.
 /// The forward half is `base`, `expectedSnapshot`, `snapshot`, `diff`, `messages`; the inverse half is
 /// `inverseSteps`, `inverseSnapshot`, `inverseMessages`. `expectedSnapshot` is decoded through the same path as
 /// `base`, so a caller compares like with like.
@@ -56,7 +56,7 @@ where
     let inverse = mutation.inverse(&base).map_err(ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         let (next, step_outcome) = apply_outcome(&undone, step.diff(&undone));
         undone = next;
         inverse_messages.extend(step_outcome.messages().iter().cloned());
@@ -571,11 +571,15 @@ where
 impl<P: Send + Sync + 'static> SnapshotRetirementFactory<P> for RoundTripValueRetirementFactory {
     fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { size_of::<RoundTripValueRetirement<Arc<P>>>() }
 
-    fn retire(&self, snapshot: Arc<P>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)> {
-        let result = admit_artifact_retirement(snapshot, grant, |snapshot| RoundTripValueRetirement(Some(snapshot)));
-        let work = u64::from(result.is_ok());
-        semio_framework_value::RetainedWorkOutcome { result, work }
+    fn retire_demands(&self, _snapshot: &Arc<P>) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { capacity_bytes: size_of::<RoundTripValueRetirement<Arc<P>>>(), depth: 1, ..Default::default() }) }
+
+    fn retire_work_demand(&self, _snapshot: &Arc<P>) -> Result<u64, ValueError> { Ok(1) }
+
+    fn retire<'reply>(&self, snapshot: &mut Option<Arc<P>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply:semio_framework_value::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure> {
+        semio_framework_value::factory_retire_framed(snapshot, effect, reply, |snapshot| RoundTripValueRetirement(Some(snapshot)))
     }
+
+    fn recover_retire<'reply>(&self, _: &mut Option<Arc<P>>, _: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply:semio_framework_value::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure> { reply.pending() }
 }
 
 /// 🧹️ One-value retirement used only by [`retire_parsed_document`] — a parsed comparison
@@ -583,14 +587,14 @@ impl<P: Send + Sync + 'static> SnapshotRetirementFactory<P> for RoundTripValueRe
 struct RoundTripValueRetirement<T>(Option<T>);
 
 impl<T: Send> ErasedSnapshotRetirement for RoundTripValueRetirement<T> {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.0.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "plain test retirement requires admitted depth")); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "plain test retirement requires admitted depth").into()); }
         drop(self.0.take());
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }))
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
     fn terminal_is_empty(&self) -> bool { self.0.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(0) }
@@ -604,9 +608,13 @@ struct RoundTripValueRetirementFactory;
 impl<T: Send + 'static> ArtifactOwnedValueRetirementFactory<T> for RoundTripValueRetirementFactory {fn retire_owned_work_demand(&self,_:&T)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self, _value: &T) -> usize { size_of::<RoundTripValueRetirement<T>>() }
 
-    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure, T)> {let turn=(||{ let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, T)> {
-        admit_artifact_retirement(value, grant, |value| RoundTripValueRetirement(Some(value)))
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
+    fn retire_owned_demands(&self, _value: &T) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { capacity_bytes: size_of::<RoundTripValueRetirement<T>>(), depth: 1, ..Default::default() }) }
+
+    fn retire_owned<'reply>(&self, value: &mut Option<T>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply:semio_framework_value::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure> {
+        semio_framework_value::factory_retire_framed(value, effect, reply, |value| RoundTripValueRetirement(Some(value)))
+    }
+
+    fn recover_retire_owned<'reply>(&self, _: &mut Option<T>, _: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply:semio_framework_value::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure> { reply.pending() }
 }
 
 /// 🧪️ Drives one erased retirement to its terminal-empty witness, granting each independent axis exactly its quoted demand.
@@ -616,7 +624,9 @@ pub fn drive_retirement(owner: &mut dyn ErasedSnapshotRetirement) -> Result<(), 
         if owner.terminal_is_empty() { return Ok(()); }
         let copy = owner.next_copy_byte_demand()?.max(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy)?, maximum_release_bytes: owner.next_release_byte_demand()?, maximum_depth: owner.next_depth_demand()?.max(1) };
-        let step = owner.close_step(grant).result?;
+        let mut allocation = semio_framework_value::AuthoringWallet::new(grant, 64);
+        let Some((turn, _)) = allocation.run_settled(grant, 64, |effect| owner.close_step(effect))? else { continue };
+        let step = turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;
         admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "driven test retirement")?;
         if matches!(step, RetainedCloneStep::Complete(_)) { return Ok(()); }
     }
@@ -737,7 +747,7 @@ pub struct ExampleAsset<'a> {
 /// 🪆 Subset-facing surface the integrated harness needs. Implement on a thin adapter per subset.
 pub trait SubsetRoundtripSpec {
     type Snapshot: Clone + PartialEq + std::fmt::Debug + ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + ToValue + FromValue;
-    type Mutation: Clone + semio_os_spr::ColdMutation<Self::Snapshot> + PartialEq + std::fmt::Debug + ToValue + FromValue + Mutation<Self::Snapshot> + OpText + OpBinary + Send + Sync + ArtifactCanonicalJsonTree + 'static;
+    type Mutation: Clone + semio_os_spr::ColdMutation<Self::Snapshot> + PartialEq + std::fmt::Debug + ToValue + FromValue + Mutation<Self::Snapshot> + OpText + OpBinary + Send + Sync + ArtifactCanonicalJsonTree + semio_os_spr::StoreMutationFor<Self::Snapshot> + 'static;
     type Inference: Clone + PartialEq + std::fmt::Debug + Default;
     async fn dialect() -> semio_framework_artifact_reference::ArtifactDialect;
     async fn fidelity() -> IoFidelityClass;

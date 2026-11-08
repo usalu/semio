@@ -2,6 +2,7 @@
 
 use super::*;
 
+
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
     P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
@@ -10,7 +11,7 @@ where
     /// 🧹 Retires the history runtime.
     pub(super) fn step_retire_history(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
         macro_rules! retire {
-            ($field:ident) => { if self.$field.is_some() { let step = semio_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant }); return self.admitted_step(step.result, cx); } };
+            ($field:ident) => { if self.$field.is_some() { let step = owned_outcome(cx, grant, &mut self.$field, &mut self.active); return self.admitted_step(step.result, cx); } };
         }
         retire!(history);
         retire!(mutation_lookup);
@@ -26,7 +27,7 @@ where
     /// 🗑 Retires the pack.
     pub(super) fn step_retire_pack(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
         if self.pack.is_some() {
-            let step = semio_os_store_read::artifact_retirement_admit_owned(&mut self.pack, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant });
+            let step = owned_outcome(cx, grant, &mut self.pack, &mut self.active);
             return self.admitted_step(step.result, cx);
         }
         self.phase = if self.target == PersistedDocumentHydrationTarget::Envelope { Phase::CloseEnvelopeRuntime } else { Phase::Finish };
@@ -54,7 +55,11 @@ where
     pub(super) fn step_close_envelope_owners(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
         let owners = self.owners.as_mut().expect("envelope hydration owner catalog remains retained");
         let child = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-        let Ok(step) = owners.close_uninstalled_owners_step(child) else { return self.reject(MemberOpenDiagnostic::Initialization) };
+        let (step, performed) = match cx.with_original_effect(child, |_, effect| owners.close_uninstalled_owners_step(effect)) {
+            Ok(Some((Ok(step), performed))) => (step, performed),
+            Ok(Some((Err(_), _))) | Err(_) => return self.reject(MemberOpenDiagnostic::Initialization),
+            Ok(None) => return PersistedDocumentHydrationStep::Pending(self.progress()),
+        };
         if semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owners.uninstalled_owners_terminal_is_empty(), "hydration envelope owner catalog").is_err() { return self.reject(MemberOpenDiagnostic::Initialization); }
         match step {
             RetainedCloneStep::Complete(_) => {
@@ -64,7 +69,7 @@ where
                 self.terminal = true;
                 return PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Envelope(envelope));
             }
-            RetainedCloneStep::Progress(progress) => if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); },
+            RetainedCloneStep::Progress(progress) => if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step_performed(cx, progress, performed) { return self.reject(diagnostic); },
         }
         PersistedDocumentHydrationStep::Pending(self.progress())
     }

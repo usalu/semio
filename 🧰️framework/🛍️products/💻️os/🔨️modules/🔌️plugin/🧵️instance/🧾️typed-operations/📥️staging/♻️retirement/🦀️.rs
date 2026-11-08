@@ -30,7 +30,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     fn retire_typed_operation_granted(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
-        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.pending_stream_abort.is_some()){let before=cx.retained_progress();cx.with_original_retirement(|cx|self.tools.tool_operations.get_mut(operation_id).unwrap().close_stream_abort(&mut self.stores.store,cx))?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
+        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.stream_abort_open()){let before=cx.retained_progress();cx.with_original_retirement(|cx|self.tools.tool_operations.get_mut(operation_id).unwrap().close_stream_abort(&mut self.stores.store,cx))?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
         if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.terminal_is_empty()){
             let d=self.tools.tool_operations.get(operation_id).unwrap().original_frame_release_demands();if !semio_plugin_ownership::bounded_ownership::fund_or_refuse(d,grant,grant)?{return Ok(PluginLifecycleStep::Progress(Default::default()))}
             let original=self.tools.tool_operations.remove(operation_id).unwrap();self.tools.operation_progress_retired|=original.progress.is_some();drop(original);
@@ -38,7 +38,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         self.as_render().request_gesture_cancellation(operation_id);
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.close_fault_pending()){return self.tools.tool_operations.get_mut(operation_id).unwrap().close_fault_step(grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
+        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.close_fault_pending()){let operation=self.tools.tool_operations.get_mut(operation_id).unwrap();let demand=operation.close_fault_demands(grant.maximum_copy_bytes)?;return semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx,grant,demand,|_,effect|Ok((PluginLifecycleStep::Progress(operation.close_fault_step(effect)?.progress()),false)));}
         if let Some(group) = self.tools.tool_operations.get(operation_id).and_then(|operation| operation.owned_child_group) {
             if self.child_composition.private_child_groups.get(group).is_some() {
                 return Ok(match self.child_composition.close_private_child_group_operation_step(&mut *self.stores, group, cx, grant)? {

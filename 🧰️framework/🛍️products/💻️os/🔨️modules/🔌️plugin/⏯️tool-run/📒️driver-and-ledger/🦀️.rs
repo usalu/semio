@@ -146,7 +146,8 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     /// 📸️ One paid strong alias retains the exact original presentation for an owned command context.
     pub fn capture_original_view_for(&self,window_id:Option<&str>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_tool_run_presentation::ToolRunCapturedView>,ValueError>{
         let Some(index)=self.window_index(window_id).or_else(||self.primary_index())else{return Ok(None)};let entry=&self.entries[index];
-        if let Some((capture,receipt))=entry.native.capture(entry.identity,entry.slot.state,cx.retained_grant())?{cx.consume_retained(receipt)?;cx.consume_fuel(1);Ok(Some(capture))}else{Ok(None)}
+        let Some((captured,performed))=cx.with_original_effect(cx.retained_grant(),|_,effect|entry.native.capture(entry.identity,entry.slot.state,effect))?else{return Ok(None)};
+        if let Some((capture,receipt))=captured?{cx.consume_retained(receipt)?;cx.consume_fuel(1u64.max(u64::try_from(performed).unwrap_or(u64::MAX)));Ok(Some(capture))}else{Ok(None)}
     }
 
     pub fn view_for(&self, window_id: Option<&str>) -> Option<ToolRunView> {
@@ -506,12 +507,16 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
                 Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes,..Default::default()}))
             })?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))
         }
-        if let Some(entry)=self.entries.iter_mut().find(|entry|entry.native.close_requested()){let step=retired(cx,demand,|grant|entry.native.close_step(grant))?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))}
+        if let Some(entry)=self.entries.iter_mut().find(|entry|entry.native.close_requested()){let step=entry.native.close_with(cx,demand)?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))}
         if let Some(job)=self.retired_jobs.last_mut(){
             if job.terminal_is_empty(){let released_bytes=job.scaffold_release_bytes();let step=retired(cx,demand,|_|{drop(self.retired_jobs.pop());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()}))})?;return Ok(Some(RetainedCloneStep::Progress(step.progress())));}
             return job.close_step(cx).map(Some);
         }
         if self.terminal_is_empty(){return Ok(None)}
+        if self.retired_publications.is_empty()&&self.snapshot_retirement.is_none()&&self.pending_snapshot_alias.is_some(){
+            let step=semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|store.retire_snapshot_alias(&mut self.pending_snapshot_alias,effect).map(|result|RetainedCloneStep::Progress(match result{Some((owner,progress))=>{self.snapshot_retirement=Some(owner);progress},None=>Default::default()})))?;
+            return Ok(Some(RetainedCloneStep::Progress(step.progress())))
+        }
         let step=retired(cx,demand,|grant|{
         if let Some(publication)=self.retired_publications.last_mut(){
             if publication.terminal_is_empty(){drop(self.retired_publications.pop());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
@@ -519,7 +524,6 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             let step=admit_retained_clone_close(child,step,publication.terminal_is_empty(),"tool publication original")?;return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.snapshot_retirement.is_some(){return close_tool_erased_retirement(&mut self.snapshot_retirement,grant);}
-        if self.pending_snapshot_alias.is_some(){let result=store.retire_snapshot_alias(&mut self.pending_snapshot_alias,grant)?;return Ok(RetainedCloneStep::Progress(match result{Some((owner,progress))=>{self.snapshot_retirement=Some(owner);progress},None=>Default::default()}));}
         if self.pending_discarded.is_some(){let result=store.retire_owned_mutation(&mut self.pending_discarded,grant)?;return Ok(RetainedCloneStep::Progress(match result{Some((owner,progress))=>{self.snapshot_retirement=Some(owner);progress},None=>Default::default()}));}
         let alias=self.retired_snapshots.pop().or_else(||self.entries.iter_mut().find(|entry|!entry.displaced.is_empty()).and_then(|entry|entry.displaced.pop()));
         if let Some(alias)=alias{self.pending_snapshot_alias=Some(alias);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}

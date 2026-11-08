@@ -3,7 +3,7 @@ use super::{RetainedRecordBodyCursor,RetainedRecordBodyToken,RetainedValueToken 
 use semio_framework_dsl_record::{BorrowedRecordSpec,BorrowedShape,RecordFields};
 use semio_framework_value::{DslValue, Number, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind, retirement::controlled::ControlledRetirement};
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,OriginalReceivingPrimary};
-use semio_framework_value::RetainedWorkOutcome;
+use semio_framework_value::{RetainedAllocationEffect,RetainedWorkOutcome};
 use std::mem::{ManuallyDrop,size_of};
 use semio_framework_replication_wire_core::{RetainedWireByteSource,OriginalWireSourceIdentity};
 use crate::{RetainedDocumentDriver,RetainedValueDriver};
@@ -126,24 +126,29 @@ impl RetainedRecordReceiving{
   }Ok(())
  }
  /// ⏱️ Performs one genuine parser or materialization action under the original supplied currencies.
- pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,native:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{
-  let demand=match self.demands(source){Ok(d)=>d,Err(e)=>return RetainedWorkOutcome{result:Err(e.into()),work:0}};
+ pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,native:&mut NativeDecodeControl<'_>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{
+  let grant=effect.grant();let demand=match self.demands(source){Ok(d)=>d,Err(e)=>return RetainedWorkOutcome{result:Err(e.into()),work:0}};
   if self.failed{return RetainedWorkOutcome{result:Err(invalid("failed original Record receiver requires paid close").into()),work:0}}
   if self.complete||self.closing||!funded(grant,demand){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
   if demand.capacity_bytes>self.maximum.saturating_sub(self.allocated)||native.owned_bytes().checked_add(demand.capacity_bytes).is_none_or(|n|n>native.maximum_bytes()){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original Record allocation maximum exhausted").into()),work:0}}
-  match native.prepare_work(1){Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{result:Ok(Default::default()),work:0},Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}}
-  if let Err(error)=native.checkpoint(){match native.commit_work(0){Ok(v)=>v,Err(_)=>return RetainedWorkOutcome{result:Err(ValueError::invariant("a cancelled Record action returns its exact unused work preclaim").into()),work:0}};return RetainedWorkOutcome{result:Err(error.into()),work:0}}
-  let before=self.allocated;let mut work=0;let mut copied_bytes=0;
-  if self.owned.scratch.capacity()>0{let released_bytes=self.owned.scratch.capacity();drop(std::mem::take(&mut self.owned.scratch));match native.commit_work(1){Ok(v)=>v,Err(_)=>return RetainedWorkOutcome{result:Err(ValueError::invariant("one selected scratch release consumes its held Record work").into()),work:0}};let turn=native.receive_retained_work(grant,RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()})),work:1});if turn.result.is_err(){self.failed=true}return RetainedWorkOutcome{result:turn.result.map(|step|step.progress()),work:turn.work}}
+  if let Err(error)=native.checkpoint(){return RetainedWorkOutcome{result:Err(error.into()),work:0}}
+  let recorded=effect.performed_work();
+  let before=self.allocated;let mut work:u128=0;let mut copied_bytes=0;
+  if self.owned.scratch.capacity()>0{let released_bytes=self.owned.scratch.capacity();drop(std::mem::take(&mut self.owned.scratch));let progress=RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()};return match effect.performed(1){Ok(true)=>RetainedWorkOutcome{result:Ok(progress),work:effect.performed_work()-recorded},Ok(false)=>{self.failed=true;RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Record scratch release exceeded its original work").into()),work:effect.performed_work()-recorded}},Err(error)=>{self.failed=true;RetainedWorkOutcome{result:Err(error.into()),work:effect.performed_work()-recorded}}}}
   let result=(||{if self.owned.frames.capacity()==0{work=1;self.owned.frames.try_reserve_exact(self.frames).map_err(|_|allocation())?;let actual=self.owned.frames.capacity()*size_of::<Frame>();self.add_capacity(0,actual)?;return Ok(())}
    if let Some(frame)=self.owned.frames.last_mut(){if let Some(table)=&mut frame.table{if table.phase==6{work=1;let bytes=table.rows.div_ceil(8);table.bitmap.try_reserve_exact(bytes).map_err(|_|allocation())?;let actual=table.bitmap.capacity();table.phase=if table.rows==0{1}else{0};self.add_capacity(0,actual)?;return Ok(())}if table.phase==0{work=1;let FieldValue::List(rows)=&mut frame.value else{return Err(ValueError::invariant("state invariant violated").into())};let mut slots=Vec::new();slots.try_reserve_exact(frame.record.unwrap().fields.len()).map_err(|_|allocation())?;let actual=slots.capacity()*size_of::<(u16,FieldValue)>();rows.push(FieldValue::Record(RecordValue{fields:RecordFields::from_empty_slots(slots)}));if rows.len()==table.rows{table.phase=1}self.add_capacity(0,actual)?;return Ok(())}if table.phase==4&&table.row<table.rows&&(table.element==super::ELEM_BOOL&&table.bit_count>0||table.element!=super::ELEM_BOOL&&!table_present(table)){work=1;let value=if table_present(table)&&table.element==super::ELEM_BOOL{FieldValue::Bool(table.bits&1!=0)}else{FieldValue::Absent};let FieldValue::List(rows)=&mut frame.value else{return Err(ValueError::invariant("state invariant violated").into())};let FieldValue::Record(row)=&mut rows[table.row]else{return Err(ValueError::invariant("state invariant violated").into())};row.fields.insert(frame.id.unwrap(),value);table.row+=1;if table.element==super::ELEM_BOOL{table.bits>>=1;table.bit_count-=1}if table.row==table.rows{table.phase=5}return Ok(())}}}
    if self.owned.frames.last().is_some_and(|frame|matches!(frame.value,FieldValue::Block(_))&&frame.remaining==0){work=1;let frame=self.owned.frames.pop().ok_or_else(||ValueError::invariant("pop target absent"))?;self.owned.scalar=frame.value;self.copy=CopyPhase::Ready;return Ok(())}
    match self.copy{CopyPhase::Ready=>{work=1;return self.attach()},CopyPhase::Symbol{symbol,index,count}=>{work=1;let character=self.cursor.symbol_char(symbol,index).map_err(pack)?.ok_or_else(||invalid("original symbol scalar absent"))?;let FieldValue::Text(text)=&mut self.owned.scalar else{return Err(invalid("original symbol owner absent"))};if text.len()+character.len_utf8()>text.capacity(){return Err(invalid("original symbol exceeds its capacity"))}text.push(character);copied_bytes=character.len_utf8();self.copy=if index+1==count{CopyPhase::Ready}else{CopyPhase::Symbol{symbol,index:index+1,count}};return Ok(())},_=>{}}
    if matches!(self.pending,Some(Token::Byte(_)))&&matches!(self.copy,CopyPhase::Bytes(_)){if let FieldValue::Bytes64(bytes)=&mut self.owned.scalar{if bytes.byte_backing_demand()?.capacity_bytes!=0{work=1;let progress=bytes.reserve_byte_backing(grant)?;self.add_capacity(0,progress.retained_capacity_bytes)?;return Ok(())}}}
    if let Some(token)=self.pending.take(){work=1;let bytes=match token{Token::StringChar(c)=>c.len_utf8(),Token::Byte(_)|Token::TableBitmap{..}=>1,_=>0};let result=self.token(token);if result.is_ok(){copied_bytes=bytes}return result}
-   let parser_before=self.cursor.allocated_bytes();let turn=self.cursor.advance(source,self.range,&mut self.position,&mut self.sealed,demand.capacity_bytes);work=turn.work;let after=self.cursor.allocated_bytes();self.add_capacity(parser_before,after)?;if turn.result.is_ok(){copied_bytes=demand.copy_bytes}if let Some(token)=turn.result.map_err(pack)?{self.pending=Some(token)}Ok(())})();
+   let parser_before=self.cursor.allocated_bytes();let turn=self.cursor.advance(source,self.range,&mut self.position,&mut self.sealed,demand.capacity_bytes,&mut effect.nested(grant));work=turn.work;let after=self.cursor.allocated_bytes();self.add_capacity(parser_before,after)?;if turn.result.is_ok(){copied_bytes=demand.copy_bytes}if let Some(token)=turn.result.map_err(pack)?{self.pending=Some(token)}Ok(())})();
   let born=self.allocated-before;let progress=RetainedCloneProgress{copied_items:usize::from(result.is_ok()&&work>0||born>0||copied_bytes>0),copied_bytes,retained_capacity_bytes:born,..Default::default()};
-  let result=result.map(|_|RetainedCloneStep::Progress(progress)).map_err(|error|error.with_retained_progress(progress));match native.commit_work(work){Ok(v)=>v,Err(_)=>return RetainedWorkOutcome{result:Err(ValueError::invariant("one selected bounded Record action consumes only its held native work").into()),work:0}};let turn=native.receive_retained_work(grant,RetainedWorkOutcome{result,work});if turn.result.is_err(){self.failed=true}RetainedWorkOutcome{result:turn.result.map(|step|step.progress()),work:turn.work}
+  let owed=work.saturating_sub(effect.performed_work()-recorded);
+  let recorded_owed=match u64::try_from(owed){Ok(0)=>Ok(true),Ok(owed)=>effect.performed(owed),Err(_)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Record work does not fit one effect"))};
+  let result=result.and_then(|()|match recorded_owed{Ok(true)=>Ok(()),Ok(false)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Record action exceeded its original work")),Err(error)=>Err(error)});
+  let result=result.and_then(|()|if born>0{native.charge(born)}else{Ok(())}).map(|()|progress).map_err(|error|error.with_retained_progress(progress));
+  if result.is_err(){self.failed=true}
+  RetainedWorkOutcome{result:result.map_err(Into::into),work:effect.performed_work()-recorded}
  }
  pub fn is_ready(&self)->bool{self.complete&&!self.closing&&self.owned.output.is_some()}
  pub fn take_into(&mut self,output:&mut Option<RecordValue>,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress>{let mut work=0;let result=(||{let demand=RetirementDemand{depth:1,..Default::default()};if !self.is_ready()||output.is_some()||!funded(grant,demand){return Ok(Default::default())}work=1;*output=self.owned.output.take();Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})})();RetainedWorkOutcome{result,work}}
@@ -159,27 +164,31 @@ impl RetainedRecordReceiving{
   *output=Some(value);Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})
  })();RetainedWorkOutcome{result,work}}
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.closed{return Ok(Default::default())}if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}if let Some(owned)=&self.retiring{if !owned.terminal_is_empty(){return owned.next_demand(body)}return Ok(RetirementDemand{depth:1,..Default::default()})}if !self.cursor.terminal_is_empty(){return self.cursor.source_close_demands().map_err(pack)}Ok(RetirementDemand{depth:1,..Default::default()})}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
-  if self.closed{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
-  let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
-  if !funded(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  if !self.closing{let original=std::mem::take(&mut*self.owned);let result=match ControlledRetirement::new(original){Ok(owned)=>{self.retiring=Some(owned);self.pending=None;self.closing=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))},Err((error,original))=>{*self.owned=original;Err(error)}};return RetainedWorkOutcome{result,work:1}}
-  if let Some(owned)=&mut self.retiring{if !owned.terminal_is_empty(){let result=owned.step(grant);return RetainedWorkOutcome{result,work:owned.last_turn_work()}}self.retiring=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
-  if !self.cursor.terminal_is_empty(){let turn=self.cursor.close_step(grant);return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(pack),work:turn.work}}
-  self.closed=true;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+  use semio_framework_value::RetainedWorkPoll::Complete;
+  let grant=effect.grant();let done=|result:Result<RetainedCloneStep,ValueError>,work:u128|Complete(RetainedWorkOutcome{result:result.map_err(Into::into),work});
+  if self.closed{return done(Ok(RetainedCloneStep::Complete(Default::default())),0)}
+  let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return done(Err(error),0)};
+  if !funded(grant,demand){return done(Ok(RetainedCloneStep::Progress(Default::default())),0)}
+  if !self.closing{let original=std::mem::take(&mut*self.owned);let result=match ControlledRetirement::new(original){Ok(owned)=>{self.retiring=Some(owned);self.pending=None;self.closing=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))},Err((error,original))=>{*self.owned=original;Err(error)}};let recorded=match effect.performed(1){Ok(true)=>Ok(()),Ok(false)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Record close exceeded its original work")),Err(error)=>Err(error)};return done(result.and(recorded.map(|()|RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))),1)}
+  if let Some(owned)=&mut self.retiring{if !owned.terminal_is_empty(){return owned.step(effect)}self.retiring=None;let recorded=match effect.performed(1){Ok(true)=>Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),Ok(false)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Record close exceeded its original work")),Err(error)=>Err(error)};return done(recorded,1)}
+  if !self.cursor.terminal_is_empty(){let turn=self.cursor.close_step(effect);return Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|error|pack(error).into()),work:turn.work})}
+  self.closed=true;let recorded=match effect.performed(1){Ok(true)=>Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),Ok(false)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Record close exceeded its original work")),Err(error)=>Err(error)};done(recorded,1)
  }
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.cursor.terminal_is_empty()&&self.retiring.is_none()}
 }
 impl Drop for RetainedRecordReceiving{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original Record receiver abandoned its paid partial owners");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owned)}}}}
-struct ReceivingRetirement(ManuallyDrop<RetainedRecordReceiving>);
+pub struct ReceivingRetirement(ManuallyDrop<RetainedRecordReceiving>);
 impl semio_framework_value::retirement::RetireOwned for RetainedRecordReceiving{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(ReceivingRetirement(ManuallyDrop::new(self)))}
+ type RetirementCursor=ReceivingRetirement;
+ fn retirement_seed(self)->Self::RetirementCursor{ReceivingRetirement(ManuallyDrop::new(self))}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ReceivingRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }
 impl semio_framework_value::retirement::RetirementCursor for ReceivingRetirement{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.close_demands(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;let turn=self.0.close_step(grant);match turn.result{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
+ fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;match self.0.close_step(effect){semio_framework_value::RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),semio_framework_value::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demands(usize::MAX)?.depth)}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demands(usize::MAX)?.copy_bytes)}

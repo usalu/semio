@@ -30,6 +30,7 @@ semio-framework-value-paged-list = { path = "../../../../../../📋️list/📦�
 semio-framework-value-derive = { path = "../../../../../../✨️derive/📦️packages/🦀️rust" }
 
 semio-framework-value-native-source = { path = "../../../📖️source/📦️packages/🦀️rust" }
+semio-framework-value-native-schema-engine = { path = "../../../../🧩️record/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

@@ -2,11 +2,13 @@
 
 use super::*;
 
-#[derive(Clone,Copy)]
+#[derive(Clone,Copy,semio_framework_value::RetireOwned)]
 pub enum DagInputKind{Progress,Statuses,Selection,Channels}
 
+#[derive(semio_framework_value::RetireOwned)]
 pub enum DagInputFacts{Progress(DagComputingProgress),Statuses(DagNodeStatuses),Selection(DagSelectionDomains),Channels(Vec<DagChannelRef>)}
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct DagInputCursor{pub kind:DagInputKind,grammar:JsonGrammarCursor<DslValue>,pub raw:Option<DslValue>,pub facts:Option<DagInputFacts>,pending_status:Option<DagNodeEvaluationStatus>,pending_key:Option<SharedOwner<String>>,pending_value:Option<SharedOwner<DagNodeEvaluationStatus>>,pending_update:Option<UpdateCursor<DagNodeEvaluationStatus>>,pending_retired:Option<(DagNodeStatuses,UpdateCursor<DagNodeEvaluationStatus>)>,pub phase:u8,pub field:usize,pub index:usize,pub complete:bool,pub progress:RetainedCloneProgress}
 
 impl DagInputCursor{
@@ -28,15 +30,15 @@ impl DagInputCursor{
                 3=>SharedOwner::<String>::allocation_bytes(),4=>SharedOwner::<DagNodeEvaluationStatus>::allocation_bytes(),
                 6=>{let update=self.pending_update.as_ref().unwrap();demand.copy_bytes=update.next_copy_byte_demand();demand.depth=update.next_depth_demand();update.next_capacity_byte_demand()?},_=>0}},_=>0}};Ok(demand)
     }
-    pub fn step(&mut self,source:&str,maximum_units:usize,control:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<bool,ValueError>{
-        self.progress=Default::default();if maximum_units==0||grant.maximum_items==0{return Ok(false)}control.checkpoint()?;if self.pending_retired.is_some(){return Ok(false)}if self.complete{return Ok(true)}
+    pub fn step(&mut self,source:&str,maximum_units:usize,control:&mut NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,ValueError>{
+        let grant=effect.grant();self.progress=Default::default();if maximum_units==0||grant.maximum_items==0{return Ok(false)}control.checkpoint()?;if self.pending_retired.is_some(){return Ok(false)}if self.complete{return Ok(true)}
         let demand=self.normal_step_demands(source)?;if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{return Ok(false)}
         control.admit_turn_capacity(grant.maximum_capacity_bytes)?;
-        if self.raw.is_some(){let before=control.owned_bytes();self.project_one(control,grant)?;self.progress.copied_items=1;self.progress.retained_capacity_bytes=control.owned_bytes()-before;control.step()?;return Ok(self.complete)}
-        let result=self.grammar.step(source,1,control,grant).map_err(|error|error.into_value_error());self.progress=self.grammar.normal_step_progress();self.raw=result?;Ok(false)
+        if self.raw.is_some(){let before=control.owned_bytes();self.project_one(control,effect)?;self.progress.copied_items=1;self.progress.retained_capacity_bytes=control.owned_bytes()-before;control.step()?;return Ok(self.complete)}
+        let result=self.grammar.step(source,1,control,effect).map_err(|error|error.into_value_error());self.progress=self.grammar.normal_step_progress();self.raw=result?;Ok(false)
     }
-    fn project_one(&mut self,control:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<(),ValueError>{
-        let raw=self.raw.as_mut().unwrap();
+    fn project_one(&mut self,control:&mut NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(),ValueError>{
+        let grant=effect.grant();let raw=self.raw.as_mut().ok_or_else(refuse)?;let admitting=matches!(self.facts,Some(DagInputFacts::Statuses(_)))&&matches!(self.phase,3|4);if !admitting&&!effect.performed(1)?{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original DAG input transition exceeded its work"))}
         if self.phase==0{
             self.facts=Some(match self.kind{
                 DagInputKind::Progress=>{closed(raw,&["active","stale"])?;let active=raw.get("active").ok_or_else(refuse)?;if !active.is_null(){identifier(active)?;}let stale=control.allocate_vec(array(field(raw,"stale")?)?.len())?;let active=match field(raw,"active")?{DslValue::Null=>None,value=>Some(take_text(value,false)?)};DagInputFacts::Progress(DagComputingProgress{active,stale})},
@@ -69,10 +71,10 @@ impl DagInputCursor{
                     let ports=array(field(row,"ports")?)?;if self.index==ports.len(){self.phase=3;}else{let DagNodeEvaluationStatus::Blocked{ports:output}=self.pending_status.as_mut().unwrap()else{unreachable!()};output.push(take_text(&mut ports[self.index],true)?);self.index+=1;}
                 }else if self.phase==3{
                     let bytes=SharedOwner::<String>::allocation_bytes();control.charge(bytes)?;let value=std::mem::take(id);
-                    match SharedOwner::admit(value,grant).result{Ok((owner,_))=>self.pending_key=Some(owner),Err((error,value))=>{*id=value;return Err(error)}}self.phase=4;
+                    let turn=SharedOwner::admit(value,grant,effect.actual());let work=turn.work;let outcome=turn.result;if !effect.performed(u64::try_from(work).unwrap_or(u64::MAX))?{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original DAG input admission exceeded its work"))}match outcome{Ok((owner,_))=>self.pending_key=Some(owner),Err((error,value))=>{*id=value;return Err(error)}}self.phase=4;
                 }else if self.phase==4{
                     let bytes=SharedOwner::<DagNodeEvaluationStatus>::allocation_bytes();control.charge(bytes)?;let value=self.pending_status.take().unwrap();
-                    match SharedOwner::admit(value,grant).result{Ok((owner,_))=>self.pending_value=Some(owner),Err((error,value))=>{self.pending_status=Some(value);return Err(error)}}self.phase=5;
+                    let turn=SharedOwner::admit(value,grant,effect.actual());let work=turn.work;let outcome=turn.result;if !effect.performed(u64::try_from(work).unwrap_or(u64::MAX))?{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original DAG input admission exceeded its work"))}match outcome{Ok((owner,_))=>self.pending_value=Some(owner),Err((error,value))=>{self.pending_status=Some(value);return Err(error)}}self.phase=5;
                 }else if self.phase==5{self.pending_update=Some(facts.begin_set_shared(self.pending_key.take().unwrap(),self.pending_value.take().unwrap()));self.phase=6;}
                 else if self.phase==6{
                     let cursor=self.pending_update.as_mut().ok_or_else(||ValueError::invariant("pending_update absent"))?;self.progress=match cursor.advance_insert_controlled(grant,control).result.map_err(|error|error.primary.or(error.quote_refusal).or(error.allocation_refusal).unwrap_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original native construction refused")))?{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};if cursor.is_complete(){self.phase=7;}
@@ -83,18 +85,6 @@ impl DagInputCursor{
         }Ok(())
     }
 
-}
-
-impl RetireOwned for DagInputFacts{
-    fn retirement(self)->Box<dyn RetirementCursor>{match self{Self::Progress(value)=>sequence(vec![deferred(value)]),Self::Statuses(value)=>sequence(vec![deferred(value)]),Self::Selection(value)=>sequence(vec![deferred(value)]),Self::Channels(value)=>sequence(vec![deferred(value)])}}
-    fn retirement_birth_bytes(&self)->Option<usize>{let bytes=match self{Self::Progress(value)=>deferred_birth_bytes_for(value),Self::Statuses(value)=>deferred_birth_bytes_for(value),Self::Selection(value)=>deferred_birth_bytes_for(value),Self::Channels(value)=>deferred_birth_bytes_for(value)};sequence_birth_bytes(&[bytes])}
-    fn controlled_retirement_supported()->bool{true}
-}
-
-impl RetireOwned for DagInputCursor{
-    fn retirement(self)->Box<dyn RetirementCursor>{sequence(vec![deferred(self.grammar),deferred(self.raw),deferred(self.facts),deferred(self.pending_status),deferred(self.pending_key),deferred(self.pending_value),deferred(self.pending_update),deferred(self.pending_retired)])}
-    fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.grammar),deferred_birth_bytes_for(&self.raw),deferred_birth_bytes_for(&self.facts),deferred_birth_bytes_for(&self.pending_status),deferred_birth_bytes_for(&self.pending_key),deferred_birth_bytes_for(&self.pending_value),deferred_birth_bytes_for(&self.pending_update),deferred_birth_bytes_for(&self.pending_retired)])}
-    fn controlled_retirement_supported()->bool{true}
 }
 
 pub fn array(value:&mut DslValue)->Result<&mut Vec<DslValue>,ValueError>{match value{DslValue::Array(values)=>Ok(values),_=>Err(refuse())}}

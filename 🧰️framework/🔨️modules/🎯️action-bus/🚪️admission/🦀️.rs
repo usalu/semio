@@ -34,57 +34,114 @@ impl OriginalToolJobIdentity{
 
 /// 🫴️ Original slots transfer only inside the original decoder's admitted construction callback.
 pub fn admit_original_tool_job<P:Send+'static,J:InteractiveJob+Send+'static>(
-    context:&mut StepContext<'_>,operation:&Operation,payload:&mut Option<Box<P>>,
+    context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,operation:&Operation,payload:&mut Option<Box<P>>,
     input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<Box<J>>,
     demand:ToolJobAdmissionDemand,
     construct:impl FnOnce(OriginalToolJobIdentity,Box<P>,Option<RetainedToolWireInput>,Option<RetainedToolWireInput>)->Box<J>,
-)->Result<bool,OriginalTurnFailure>{
-    admit_original_tool_job_measured(context,operation,payload,input,checkpoint,output,demand,|identity,payload,input,checkpoint|(construct(identity,payload,input,checkpoint),demand.progress()))
+)->Result<semio_framework_job::OriginalConstructionStatus,OriginalTurnFailure>{
+    admit_original_tool_job_measured(context,admission,operation,payload,input,checkpoint,output,demand,|identity,payload,input,checkpoint|(construct(identity,payload,input,checkpoint),demand.progress()))
 }
 
 /// 🧮️ Actual construction effects accompany retained output before original receipt acceptance.
 pub fn admit_original_tool_job_measured<P:Send+'static,J:InteractiveJob+Send+'static>(
-    context:&mut StepContext<'_>,operation:&Operation,payload:&mut Option<Box<P>>,
+    context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,operation:&Operation,payload:&mut Option<Box<P>>,
     input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<Box<J>>,
     demand:ToolJobAdmissionDemand,
     construct:impl FnOnce(OriginalToolJobIdentity,Box<P>,Option<RetainedToolWireInput>,Option<RetainedToolWireInput>)->(Box<J>,RetainedCloneProgress),
-)->Result<bool,OriginalTurnFailure>{
-    admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|identity,payload,input,checkpoint|Ok(construct(identity,payload.take().expect("admitted original payload"),input.take(),checkpoint.take())))
+)->Result<semio_framework_job::OriginalConstructionStatus,OriginalTurnFailure>{
+    admit_original_tool_job_controlled(context,admission,operation,payload,input,checkpoint,output,demand,|identity,payload,input,checkpoint|{let owned=payload.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"admitted original payload is absent"))?;Ok(construct(identity,owned,input.take(),checkpoint.take()))})
 }
 
 /// 🔐️ Fallible source preparation retains every original slot before a construction candidate exists.
 pub fn admit_original_tool_job_controlled<P:Send+'static,J:InteractiveJob+Send+'static>(
-    context:&mut StepContext<'_>,_operation:&Operation,payload:&mut Option<Box<P>>,
+    context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,_operation:&Operation,payload:&mut Option<Box<P>>,
     input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<Box<J>>,
     demand:ToolJobAdmissionDemand,
     construct:impl FnOnce(OriginalToolJobIdentity,&mut Option<Box<P>>,&mut Option<RetainedToolWireInput>,&mut Option<RetainedToolWireInput>)->Result<(Box<J>,RetainedCloneProgress),ValueError>,
-)->Result<bool,OriginalTurnFailure>{
-    if payload.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tool factory requires its original payload").into());}
-    admit_original_tool_construction(context,output,demand,|identity|construct(identity,payload,input,checkpoint))
+)->Result<semio_framework_job::OriginalConstructionStatus,OriginalTurnFailure>{
+    if output.is_none()&&payload.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tool factory requires its original payload").into());}
+    admit_original_tool_construction(context,admission,output,demand,|identity|construct(identity,payload,input,checkpoint))
 }
 
 /// 🏭️ A non-cloneable loan of an already admitted construction quote exists only inside its original callback.
 pub struct OriginalToolConstructionScope<'scope>{identity:OriginalToolJobIdentity,remaining:RetirementDemand,_loan:std::marker::PhantomData<&'scope mut ()>}
 impl<'scope> OriginalToolConstructionScope<'scope>{
- fn loan(_original:&'scope mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,identity:OriginalToolJobIdentity,remaining:RetirementDemand)->Self{Self{identity,remaining,_loan:std::marker::PhantomData}}
+ fn loan(_original:&'scope mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_,'_>,identity:OriginalToolJobIdentity,remaining:RetirementDemand)->Self{Self{identity,remaining,_loan:std::marker::PhantomData}}
  pub fn identity(&self)->OriginalToolJobIdentity{self.identity}
  /// 🪙️ Reserves only the still-available original owner quote before any physical source is born.
  pub fn admit_owner(&mut self,demand:RetirementDemand)->Result<(),ValueError>{if demand.depth>self.remaining.depth||demand.copy_bytes>self.remaining.copy_bytes||demand.capacity_bytes>self.remaining.capacity_bytes||demand.release_bytes>self.remaining.release_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original construction owner exceeds its remaining admitted quote"))}self.remaining.copy_bytes-=demand.copy_bytes;self.remaining.capacity_bytes-=demand.capacity_bytes;self.remaining.release_bytes-=demand.release_bytes;Ok(())}
 }
 
 /// 🏗️ One original operation funds construction while its caller retains any born candidate through refusal.
-pub fn admit_original_tool_construction<O>(context:&mut StepContext<'_>,output:&mut Option<O>,demand:ToolJobAdmissionDemand,construct:impl FnOnce(OriginalToolJobIdentity)->Result<(O,RetainedCloneProgress),ValueError>)->Result<bool,OriginalTurnFailure>{
-    admit_original_tool_construction_scoped(context,output,demand,|scope|construct(scope.identity()))
+pub fn admit_original_tool_construction<O>(context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,output:&mut Option<O>,demand:ToolJobAdmissionDemand,construct:impl FnOnce(OriginalToolJobIdentity)->Result<(O,RetainedCloneProgress),ValueError>)->Result<semio_framework_job::OriginalConstructionStatus,OriginalTurnFailure>{
+    admit_original_tool_construction_scoped(context,admission,output,demand,|scope|construct(scope.identity()))
 }
 
 /// 🔧️ Original scope custody funds nested owner births before one actual candidate reaches its receipt boundary.
-pub fn admit_original_tool_construction_scoped<O>(context:&mut StepContext<'_>,output:&mut Option<O>,demand:ToolJobAdmissionDemand,construct:impl FnOnce(&mut OriginalToolConstructionScope<'_>)->Result<(O,RetainedCloneProgress),ValueError>)->Result<bool,OriginalTurnFailure>{
+pub fn admit_original_tool_construction_scoped<O>(context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,output:&mut Option<O>,demand:ToolJobAdmissionDemand,construct:impl FnOnce(&mut OriginalToolConstructionScope<'_>)->Result<(O,RetainedCloneProgress),ValueError>)->Result<semio_framework_job::OriginalConstructionStatus,OriginalTurnFailure>{
     let source=OriginalToolSourceBinding::borrow(context);
-    semio_framework_job::admit_original_construction(context,output,semio_framework_job::OriginalConstructionDemand{items:demand.items,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},|control|{
+    semio_framework_job::admit_original_construction(context,output,admission,semio_framework_job::OriginalConstructionDemand{items:demand.items,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},1,|control,actual|{
         let identity=OriginalToolJobIdentity{source};
         let mut scope=OriginalToolConstructionScope::loan(control,identity,demand.physical());
-        let result = construct(&mut scope);
-        semio_framework_value::RetainedWorkOutcome { work: u64::from(result.is_ok()), result }
+        let result=construct(&mut scope);
+        if let Ok((_,progress))=&result{if progress.retained_capacity_bytes!=0&&actual.is_none(){*actual=Some(progress.retained_capacity_bytes)}}
+        semio_framework_value::RetainedWorkOutcome{work:u128::from(result.is_ok()),result}
+    })
+}
+
+/// 🧭️ Drives bind, construct and settle as far as this turn allows over the caller's resident admission and output: `Ok(true)` when settled, `Ok(false)` when the next turn must continue with the same admission and output; a quote above the operation ceiling is a typed refusal. The scope claims at most half of the items, copy bytes and fuel, so a turn commits only with twice the quote and the constructor and its settle then finish in the same turn.
+pub fn admit_original_construction_settled<O>(context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,work:u64,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_,'_>,&mut Option<usize>)->semio_framework_value::RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<bool,OriginalTurnFailure>{
+    let mut construct=Some(construct);
+    let(complete,total)=semio_framework_job::original_construction_reserve::<O>(demand,work)?;
+    let settle=semio_framework_job::OriginalConstructionDemand{items:2*(complete.items+3),copy_bytes:2*(complete.copy_bytes+64*size_of::<usize>()),capacity_bytes:2*complete.capacity_bytes,release_bytes:2*complete.release_bytes,..complete};let fuel_floor=2*(total+3)+8;
+    let(ceiling,ceiling_fuel)=context.original_turn_ceiling();
+    if !settle.fits(ceiling)||fuel_floor>ceiling_fuel{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original construction quote exceeds the largest grant any turn can have").into())}
+    let mut committed=false;
+    loop{
+        if output.is_some()&&admission.terminal_is_empty(){return Ok(true)}
+        if output.is_none()&&!admission.terminal_is_empty(){
+            if !committed&&(context.retirement_should_yield()||context.fuel_remaining()<fuel_floor||!settle.fits(context.retained_grant())){return Ok(false)}
+            committed=true;
+        }
+        let fuel=context.fuel_remaining();
+        let status=semio_framework_job::admit_original_construction(context,output,admission,demand,work,|scope,actual|match construct.take(){
+            Some(construct)=>construct(scope,actual),
+            None=>semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original constructor ran twice")),work:0},
+        })?;
+        match status{
+            semio_framework_job::OriginalConstructionStatus::Ready=>{admission.reset_step(context)?;return Ok(true)}
+            semio_framework_job::OriginalConstructionStatus::Failed=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original construction failed; its complete causes remain in the admission").into()),
+            semio_framework_job::OriginalConstructionStatus::Pending=>if context.fuel_remaining()==fuel{return Ok(false)},
+        }
+    }
+}
+
+/// 🏛️ A tool job keeps its construction admission and candidate resident, so a turn that cannot commit yet continues next turn over the same bind and scope.
+pub struct ResidentConstruction<O>{admission:semio_framework_job::OriginalConstructionAdmission,output:Option<O>}
+impl<O> Default for ResidentConstruction<O>{fn default()->Self{Self{admission:Default::default(),output:None}}}
+impl<O> ResidentConstruction<O>{
+    pub fn drive(&mut self,context:&mut StepContext<'_>,demand:semio_framework_job::OriginalConstructionDemand,work:u64,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_,'_>,&mut Option<usize>)->semio_framework_value::RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<Option<O>,OriginalTurnFailure>{
+        Ok(if admit_original_construction_settled(context,&mut self.admission,&mut self.output,demand,work,construct)?{self.output.take()}else{None})
+    }
+    pub fn drive_tool(&mut self,context:&mut StepContext<'_>,demand:ToolJobAdmissionDemand,construct:impl FnOnce(&mut OriginalToolConstructionScope<'_>)->Result<(O,RetainedCloneProgress),ValueError>)->Result<Option<O>,OriginalTurnFailure>{
+        Ok(if admit_original_tool_construction_settled(context,&mut self.admission,&mut self.output,demand,construct)?{self.output.take()}else{None})
+    }
+    /// 🏦️ The constructed output with the scope credit its consumed payload held, moved to a carrier that settles when the output retires.
+    pub fn drive_tool_credited(&mut self,context:&mut StepContext<'_>,demand:ToolJobAdmissionDemand,construct:impl FnOnce(&mut OriginalToolConstructionScope<'_>)->Result<(O,RetainedCloneProgress),ValueError>)->Result<Option<std::result::Result<semio_framework_job::OriginalCreditedOutput<O>,O>>,OriginalTurnFailure>{
+        match self.drive_tool(context,demand,construct)?{Some(output)=>Ok(Some(context.adopt_original_credit(output)?)),None=>Ok(None)}
+    }
+    pub fn terminal_is_empty(&self)->bool{self.output.is_none()&&self.admission.terminal_is_empty()}
+}
+
+/// 🧭️ The tool-shaped form of [`admit_original_construction_settled`] over its scoped identity and quote.
+pub fn admit_original_tool_construction_settled<O>(context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,output:&mut Option<O>,demand:ToolJobAdmissionDemand,construct:impl FnOnce(&mut OriginalToolConstructionScope<'_>)->Result<(O,RetainedCloneProgress),ValueError>)->Result<bool,OriginalTurnFailure>{
+    let source=OriginalToolSourceBinding::borrow(context);
+    admit_original_construction_settled(context,admission,output,semio_framework_job::OriginalConstructionDemand{items:demand.items,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},1,|control,actual|{
+        let identity=OriginalToolJobIdentity{source};
+        let mut scope=OriginalToolConstructionScope::loan(control,identity,demand.physical());
+        let result=construct(&mut scope);
+        if let Ok((_,progress))=&result{if progress.retained_capacity_bytes!=0&&actual.is_none(){*actual=Some(progress.retained_capacity_bytes)}}
+        semio_framework_value::RetainedWorkOutcome{work:u128::from(result.is_ok()),result}
     })
 }
 

@@ -138,3 +138,43 @@ async fn the_validate_gate_judges_the_shape_it_was_asked_about_and_not_the_arena
     assert!(kernel.validate_gate_sync(&healthy).is_ok(), "the healthy box must still pass while a STRANGER is broken: {stranger_issues:?}");
     eprintln!("scoped gate: healthy=ok stranger={:?}", stranger_issues.iter().map(|issue| format!("{}:{}", issue.entity, issue.code)).collect::<Vec<_>>());
 }
+
+fn open_triangle_import() -> MeshImportCursor {
+    MeshImportCursor::new(vec![0., 0., 0., 1., 0., 0., 0., 1., 0.], Vec::new(), vec![0, 1, 2], 1e-6).unwrap()
+}
+
+/// 🔒️ A dropped import releases its open mutation, so retention and compaction are never blocked by it.
+#[test]
+fn dropped_mesh_import_releases_its_pending_mutation() {
+    let mut kernel = Brep::new();
+    let mut cursor = open_triangle_import();
+    assert!(kernel.step_mesh_import_sync(&mut cursor, 1).unwrap().is_none());
+    assert_eq!(kernel.pending_mutations.count(), 1);
+    drop(cursor);
+    assert_eq!(kernel.pending_mutations.count(), 0);
+}
+
+/// 🔒️ A finished import releases its mutation, and stepping it again is a typed error instead of a republish or panic.
+#[test]
+#[ignore = "import close still does not reach cleanup within 4096 steps although every quote is now met (reviewfix3-211/221)"]
+fn finished_mesh_import_publishes_once() {
+    let mut kernel = Brep::new();
+    let mut cursor = open_triangle_import();
+    let mut published = 0;
+    for _ in 0..4096 {
+        if kernel.step_mesh_import_sync(&mut cursor, 1).unwrap().is_some() { published += 1; break; }
+    }
+    assert_eq!(published, 1, "import never published: progress={:?} cleanup={} active={}", cursor.progress(), cursor.cleanup_complete(), cursor.is_active());
+    assert_eq!(kernel.pending_mutations.count(), 0);
+    assert!(kernel.step_mesh_import_sync(&mut cursor, 1).is_err());
+    assert_eq!(kernel.pending_mutations.count(), 0);
+}
+
+/// 🧮️ Pattern admission refuses oversized instance counts before building any transform.
+#[test]
+fn oversized_patterns_are_refused_at_admission() {
+    let mut kernel = Brep::new();
+    let shape = kernel.box_prim_sync(1., 1., 1.).unwrap();
+    assert!(kernel.linear_pattern_sync(&shape, [1., 0., 0.], 2., 1 << 40).is_err());
+    assert!(kernel.grid_pattern_sync(&shape, [1., 0., 0.], [0., 1., 0.], (2., 2.), usize::MAX, usize::MAX).is_err());
+}

@@ -1,10 +1,14 @@
 //! 🌲️ Dynamic original trees advance through bounded probes, actual backing births and retained row publication.
 use super::{NativeValueSource,NativeTreeKind,fixed,invalid,receipt};
 use crate::{DslValue,Number,NativeDecodeControl,RetainedWorkOutcome,OriginalReceivingPrimary,RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits}};
-use crate::NativeReceiver;
+use crate::{NativeReceiver,OriginalEffectReply,OriginalEffectReplyComplete};
+use semio_framework_value_native_receiver_protocol::NativeAdvanceSelection;
 use std::mem::{ManuallyDrop,size_of};
 pub const NATIVE_TREE_MAXIMUM_DEPTH:usize=64;
 const TEXT_FRAGMENT:usize=64;
+fn allocate_vec<E>(count:usize,actual:&mut Option<usize>)->Result<Vec<E>,ValueError>{if actual.is_some(){return Err(invalid())}if count==0||size_of::<E>()==0{return Ok(Vec::new())}let layout=std::alloc::Layout::array::<E>(count).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"native vector layout overflow"))?;let pointer=unsafe{std::alloc::alloc(layout)}.cast::<E>();*actual=Some(if pointer.is_null(){0}else{layout.size()});if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"native vector backing allocation refused"))}Ok(unsafe{Vec::from_raw_parts(pointer,0,count)})}
+fn allocate_string(bytes:usize,actual:&mut Option<usize>)->Result<String,ValueError>{allocate_vec::<u8>(bytes,actual).map(|vector|unsafe{String::from_utf8_unchecked(vector)})}
+fn admit_in<V>(effect:&mut crate::RetainedAllocationEffect<'_>,demand:RetirementDemand,allocate:impl FnOnce(&mut Option<usize>)->Result<V,ValueError>)->Result<V,OriginalReceivingPrimary>{if !retained_clone_grant_admits(effect.grant(),demand){return Err(invalid().into())}allocate(effect.actual()).map_err(Into::into)}
 pub trait NativeTreeValue:RetireOwned+Sized{
  fn null()->Self;
  fn boolean(value:bool)->Self;
@@ -54,22 +58,26 @@ impl<I:NativeValueSource+?Sized,T:NativeTreeValue> NativeReceiver<I,T> for Nativ
    _=>{}
   }Ok(d)
  }
- fn advance(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{semio_framework_value_native_receiver_protocol::native_receive_zero_work!(maximum_work_units);
-  if let Some(error)=self.failed(){return RetainedWorkOutcome{result:Err(error.into()),work:0}}
-  let mut work=0;let mut own=RetainedCloneProgress::default();let result:Result<RetainedCloneStep,OriginalReceivingPrimary>=(||{
-   let d=self.demands(input,body,maximum_work_units)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}control.checkpoint()?;crate::receiving_capacity(control,d.capacity_bytes)?;
-   if self.binding.is_none(){let turn=input.bind(&mut self.binding,g);let turn=control.receive_retained_work(g,RetainedWorkOutcome{result:turn.result.map(|p|RetainedCloneStep::Progress(p.unwrap_or_default())),work:turn.work});work=turn.work;return turn.result.map_err(Into::into)}
-   if self.top().is_none(){self.frames[0]=Some(Frame::new(input.get().as_source()as*const dyn NativeValueSource));work=1;return Ok(RetainedCloneStep::Progress(receipt(fixed(0))))}
+ fn select_advance(&self,input:RetainedCloneRef<'_,I>,_body:usize,maximum_work_units:u64)->Result<NativeAdvanceSelection,ValueError>{
+  if self.closing||self.taken||self.complete{return Err(invalid())}if let Some(error)=self.failed(){return Err(error)}
+  let work=if input.check_binding(&self.binding)?{1}else{input.binding_work_demand(&self.binding)?};if work>maximum_work_units{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native tree action exceeds its original work ceiling"))}Ok(NativeAdvanceSelection::Local{work})
+ }
+ fn advance_nested(&mut self,_:RetainedCloneRef<'_,I>,_:&mut NativeDecodeControl<'_>,_:usize,_:u64,_:RetainedCloneGrant)->crate::RetainedWorkPoll<RetainedCloneStep,OriginalReceivingPrimary>{crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})}
+ fn advance_local<'reply>(&mut self,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{
+  let g=effect.grant();let maximum_work_units=effect.maximum_work_units();
+  let mut own=RetainedCloneProgress::default();let result:Result<RetainedCloneStep,OriginalReceivingPrimary>=(||{
+   let d=self.demands(input,body,maximum_work_units)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+   if self.binding.is_none(){let turn=input.bind(&mut self.binding,effect);return turn.result.map(|p|RetainedCloneStep::Progress(p.unwrap_or_default())).map_err(Into::into)}
+   if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native tree action exceeded its original work").into())}
+   if self.top().is_none(){self.frames[0]=Some(Frame::new(input.get().as_source()as*const dyn NativeValueSource));return Ok(RetainedCloneStep::Progress(receipt(fixed(0))))}
    if self.top().unwrap().phase==20{
-    work=1;let frame=self.frames[self.depth].as_ref().unwrap();if frame.value.is_none()||frame.text.is_some()||frame.key.is_some()||frame.array.is_some()||frame.object.is_some()||frame.pending.is_some()||self.depth>0&&self.frames[self.depth-1].as_ref().unwrap().pending.is_some(){return Err(invalid().into())}own=receipt(fixed(0));if self.depth==0{let value=self.frames[0].as_mut().unwrap().value.take().ok_or_else(invalid)?;*self.output=Some(value);self.complete=true;return Ok(RetainedCloneStep::Complete(own))}
+    let frame=self.frames[self.depth].as_ref().unwrap();if frame.value.is_none()||frame.text.is_some()||frame.key.is_some()||frame.array.is_some()||frame.object.is_some()||frame.pending.is_some()||self.depth>0&&self.frames[self.depth-1].as_ref().unwrap().pending.is_some(){return Err(invalid().into())}own=receipt(fixed(0));if self.depth==0{let value=self.frames[0].as_mut().unwrap().value.take().ok_or_else(invalid)?;*self.output=Some(value);self.complete=true;return Ok(RetainedCloneStep::Complete(own))}
     let value=self.frames[self.depth].as_mut().unwrap().value.take().ok_or_else(invalid)?;self.frames[self.depth]=None;self.depth-=1;let parent=self.frames[self.depth].as_mut().unwrap();parent.pending=Some(value);parent.phase=17;return Ok(RetainedCloneStep::Progress(own))
    }
    let f=self.frames[self.depth].as_mut().unwrap();let node=unsafe{&*f.node};
    if matches!(f.phase,3|6|10|12){
-    let turn=match f.phase{3 if f.text.is_none()=>Some(control.admit_string(&mut f.text,f.count,g)),6 if f.array.is_none()=>Some(control.admit_vec(&mut f.array,f.count,g)),10 if f.object.is_none()=>Some(control.admit_vec(&mut f.object,f.count,g)),12 if f.key.is_none()=>Some(control.admit_string(&mut f.key,f.key_length,g)),_=>None};
-    if let Some(turn)=turn{work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
+    match f.phase{3 if f.text.is_none()=>{let d=RetirementDemand{copy_bytes:size_of::<String>(),capacity_bytes:f.count,depth:1,..Default::default()};f.text=Some(admit_in(effect,d,|actual|allocate_string(f.count,actual))?);return Ok(RetainedCloneStep::Progress(receipt(d)))},6 if f.array.is_none()=>{let d=RetirementDemand{copy_bytes:size_of::<Vec<T>>(),capacity_bytes:f.bytes,depth:1,..Default::default()};f.array=Some(admit_in(effect,d,|actual|allocate_vec::<T>(f.count,actual))?);return Ok(RetainedCloneStep::Progress(receipt(d)))},10 if f.object.is_none()=>{let d=RetirementDemand{copy_bytes:size_of::<Vec<(String,T)>>(),capacity_bytes:f.bytes,depth:1,..Default::default()};f.object=Some(admit_in(effect,d,|actual|allocate_vec::<(String,T)>(f.count,actual))?);return Ok(RetainedCloneStep::Progress(receipt(d)))},12 if f.key.is_none()=>{let d=RetirementDemand{copy_bytes:size_of::<String>(),capacity_bytes:f.key_length,depth:1,..Default::default()};f.key=Some(admit_in(effect,d,|actual|allocate_string(f.key_length,actual))?);return Ok(RetainedCloneStep::Progress(receipt(d)))},_=>{}}
    }
-   work=1;
    match f.phase{
     0=>{let Some(kind)=node.tree_kind()else{self.failure=Some((ValueRefusalKind::InvalidValue,"native receiving original type, field or phase is invalid"));own=receipt(fixed(0));return Err(invalid().into())};f.kind=Some(kind);f.phase=match kind{NativeTreeKind::Null|NativeTreeKind::Bool|NativeTreeKind::Number=>1,NativeTreeKind::Text=>2,NativeTreeKind::Array=>5,NativeTreeKind::Object=>9};},
     1=>{let value=match f.kind.unwrap(){NativeTreeKind::Null=>T::null(),NativeTreeKind::Bool=>T::boolean(node.boolean()?),NativeTreeKind::Number=>T::number(node.number()?)?,_=>return Err(invalid().into())};f.value=Some(value);f.phase=20;own.copied_bytes=d.copy_bytes;},
@@ -98,27 +106,27 @@ impl<I:NativeValueSource+?Sized,T:NativeTreeValue> NativeReceiver<I,T> for Nativ
     50=>{let rows=f.object.as_ref().ok_or_else(invalid)?;let left=rows[f.compare_left].0.as_bytes();let right=rows[f.compare_right].0.as_bytes();let mut offset=f.compare_offset;let end=offset.saturating_add(TEXT_FRAGMENT).min(left.len().min(right.len()));let mut order=std::cmp::Ordering::Equal;while offset<end{order=left[offset].cmp(&right[offset]);if order!=std::cmp::Ordering::Equal{break}offset+=1;}if order==std::cmp::Ordering::Equal&&offset==left.len().min(right.len()){order=left.len().cmp(&right.len());}if order!=std::cmp::Ordering::Equal||offset==left.len().min(right.len()){f.order=match order{std::cmp::Ordering::Less=>-1,std::cmp::Ordering::Equal=>0,std::cmp::Ordering::Greater=>1};f.phase=f.compare_next;}else{f.compare_offset=offset;}},
     _=>return Err(invalid().into()),
    }
-   own.copied_items=1;let turn=control.receive_retained_work(g,RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(own)),work});work=turn.work;own=Default::default();turn.result
-  })();let result=result.map_err(|mut error|{if own!=RetainedCloneProgress::default(){error.progress=error.progress.saturating_add(own);}error});RetainedWorkOutcome{result,work}
+   own.copied_items=1;let step=RetainedCloneStep::Progress(own);own=Default::default();Ok(step)
+  })();let result=result.map_err(|mut error|{if own!=RetainedCloneProgress::default(){error.progress=error.progress.saturating_add(own);}error});Ok(reply.complete(result))
  }
  fn output_ready(&self)->bool{!self.closing&&self.complete&&self.output.is_some()}
  semio_framework_value_native_receiver_protocol::native_owned_output_state!(T,invalid,taken,true);
  fn begin_close(&mut self){self.closing=true;}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid())}if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.top().is_some(){return self.frame_close(body)}if self.output.is_some(){return self.retirement.next_owner_demands::<T>(true,&None,body)}if self.failure.is_some(){return Ok(fixed(0))}RetainedCloneBinding::close_demand(&self.binding,body)}
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(invalid())}if !self.retirement.is_empty(){return self.retirement.next_owner_work::<()>(false,&None,body)}if let Some(f)=self.top(){if f.value.is_some()||f.pending.is_some(){return self.retirement.next_owner_work::<T>(true,&None,body)}if f.key.is_some()||f.text.is_some(){return self.retirement.next_owner_work::<String>(true,&None,body)}if f.array.is_some(){return self.retirement.next_owner_work::<Vec<T>>(true,&None,body)}if f.object.is_some(){return self.retirement.next_owner_work::<Vec<(String,T)>>(true,&None,body)}return Ok(1)}if self.output.is_some(){return self.retirement.next_owner_work::<T>(true,&None,body)}if self.failure.is_some(){return Ok(1)}RetainedCloneBinding::close_work_demand(&self.binding,body)}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let g=effect.grant();
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll{let g=effect.grant();
   let mut work=0;let result:Result<RetainedCloneStep,crate::OriginalRetirementFailure>=(||{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demands(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-   if !self.retirement.is_empty(){let turn=self.retirement.step_granted(effect);work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
+   if !self.retirement.is_empty(){let turn=self.retirement.step_granted(effect);work=turn.work();return match turn{crate::RetainedWorkPoll::Complete(done)=>done.result.map(|s|RetainedCloneStep::Progress(s.progress())),crate::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default()))}}
    if let Some(f)=self.frames[self.depth].as_mut(){let turn=if f.value.is_some(){Some(self.retirement.begin_granted(&mut f.value,effect))}else if f.pending.is_some(){Some(self.retirement.begin_granted(&mut f.pending,effect))}else if f.key.is_some(){Some(self.retirement.begin_granted(&mut f.key,effect))}else if f.text.is_some(){Some(self.retirement.begin_granted(&mut f.text,effect))}else if f.array.is_some(){Some(self.retirement.begin_granted(&mut f.array,effect))}else if f.object.is_some(){Some(self.retirement.begin_granted(&mut f.object,effect))}else{None};if let Some(turn)=turn{work=turn.work;return turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into)}self.frames[self.depth]=None;if self.depth>0{self.depth-=1;}work=1;return Ok(RetainedCloneStep::Progress(receipt(fixed(0))))}
    if self.output.is_some(){let turn=self.retirement.begin_granted(&mut self.output,effect);work=turn.work;return turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into)}
    if self.failure.take().is_some(){work=1;return Ok(RetainedCloneStep::Progress(receipt(fixed(0))))}
-   let turn=RetainedCloneBinding::close_one(&mut self.binding,effect);work=turn.work;turn.result
-  })();RetainedWorkOutcome{result,work}
+   let turn=RetainedCloneBinding::close_one(&mut self.binding,effect);work+=turn.work();match turn{crate::RetainedWorkPoll::Complete(done)=>done.result,crate::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default()))}
+  })();crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work})
  }
  fn requires_original_birth(&self)->bool{self.retirement.requires_original_birth()}
- fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{self.retirement.step_original_birth(original,grant)}
+ fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementPoll{self.retirement.step_original_birth(original,grant)}
  fn requires_original_control(&self)->bool{self.retirement.requires_original_control()}
- fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{if self.requires_original_birth(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"settle original birth before opening a close effect").into()),work:0}}if self.retirement.requires_original_control(){return self.retirement.step_original(original,effect)}self.close_step(effect)}
+ fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll{if self.requires_original_birth(){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"settle original birth before opening a close effect").into()),work:0})}if self.retirement.requires_original_control(){return self.retirement.step_original(original,effect)}self.close_step(effect)}
  fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.frames.iter().all(Option::is_none)&&self.output.is_none()&&self.retirement.is_empty()&&self.failure.is_none()}
 }
 impl<I:NativeValueSource+?Sized,T:NativeTreeValue> Drop for NativeTreeReceiver<I,T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"native tree receiving requires funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.frames);ManuallyDrop::drop(&mut self.output);}}}}

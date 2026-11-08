@@ -32,6 +32,6 @@ pub(crate) fn projected(source:&dyn OriginalDomainProjection,path:&mut Vec<usize
 }
 pub(crate) fn close<T:RetireOwned>(value:T,cx:&mut crate::StepContext<'_>,bound:usize){
  let(mut owner,heap)=observe(||ControlledRetirement::new(value).unwrap_or_else(|_|panic!("fixture owner must support controlled close")));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- for _ in 0..bound{if owner.terminal_is_empty(){break}let grant=cx.retained_grant();let demand=owner.selected_demand(grant.maximum_copy_bytes).unwrap();let(result,heap)=observe(||close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:owner.last_turn_work()}}));let progress=result.unwrap().progress();assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}
+ for _ in 0..bound{if owner.terminal_is_empty(){break}let grant=cx.retained_grant();let demand=owner.selected_demand(grant.maximum_copy_bytes).unwrap();let(result,heap)=observe(||close_original_effect_step(cx,demand,|effect|owner.step(effect)));let progress=result.unwrap().progress();assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}
  assert!(owner.terminal_is_empty());let(_,heap)=observe(||drop(owner));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }

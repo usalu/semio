@@ -219,7 +219,7 @@ async fn interrupted_retained_clone_publication_handoffs_to_store_maintenance() 
         let demand = store.maintenance_retirements_demands(grant.maximum_copy_bytes).expect("Store maintenance quotes the handed-off publication frontier");
         let turn = grant.retained_grant();
         assert!(demand.copy_bytes <= turn.maximum_copy_bytes && demand.capacity_bytes <= turn.maximum_capacity_bytes && demand.release_bytes <= turn.maximum_release_bytes && demand.depth <= turn.maximum_depth);
-        let step = store.maintenance_retirements_step(turn).expect("Store maintenance retires the handed-off publication");
+        let step = store.maintenance_retirements_step_cold(turn).expect("Store maintenance retires the handed-off publication");
         assert!(step.progress().fits(turn) && step.progress().copied_items <= grant.maximum_items);
         if matches!(step, RetainedCloneStep::Complete(_)) { break; }
         assert!(close_turns < 4_096, "Store maintenance reaches terminal emptiness");

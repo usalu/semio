@@ -20,24 +20,30 @@ impl FlowCloseRefusalDisposer {
     fn child(grant: RetainedCloneGrant) -> RetainedCloneGrant {
         RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }
     }
-}
 
-impl semio_os_kernel::os_store::ArtifactStoreOwnedDisposer<FlowHostSnapshot, FlowMutation> for FlowCloseRefusalDisposer {
-    fn close_step(&mut self, view: &mut semio_os_kernel::os_store::ArtifactStoreCloseView<'_, FlowHostSnapshot, FlowMutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let demand = self.demands(&*view.store, grant.maximum_copy_bytes)?;
+    fn close_step_inner(&mut self, view: &mut semio_os_kernel::os_store::ArtifactStoreCloseView<'_, FlowHostSnapshot, FlowMutation>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
+        let grant = effect.grant();
+        let demand = semio_os_kernel::os_store::ArtifactStoreOwnedDisposer::demands(&*self, &*view.store, grant.maximum_copy_bytes)?;
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         if grant.maximum_depth < demand.depth {
-            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "test history disposer requires its quoted depth"));
+            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "test history disposer requires its quoted depth").into());
         }
         if self.refuse_once {
             self.refuse_once = false;
-            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "injected history retirement allocation refusal"));
+            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "injected history retirement allocation refusal").into());
         }
         let Some(original) = self.original.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())) };
         if original.terminal_is_empty(&*view.store) { return Ok(self.release_original()); }
-        original.close_step(view, Self::child(grant)).map(|step| RetainedCloneStep::Progress(step.progress()))
+        semio_framework_value::RetirementPollExit::resume(original.close_step(view, &mut effect.nested(Self::child(grant)))).map(|step| RetainedCloneStep::Progress(step.progress()))
+    }
+}
+
+impl semio_os_kernel::os_store::ArtifactStoreOwnedDisposer<FlowHostSnapshot, FlowMutation> for FlowCloseRefusalDisposer {
+    fn close_step(&mut self, view: &mut semio_os_kernel::os_store::ArtifactStoreCloseView<'_, FlowHostSnapshot, FlowMutation>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        let result = self.close_step_inner(view, effect);
+        semio_framework_value::RetirementPollExit::settle(effect, result)
     }
 
     fn terminal_is_empty(&self, _store: &dyn semio_os_kernel::os_store::ArtifactStoreCloseHost<FlowHostSnapshot, FlowMutation>) -> bool {
@@ -52,7 +58,8 @@ impl semio_os_kernel::os_store::ArtifactStoreOwnedDisposer<FlowHostSnapshot, Flo
         Self::nested_demand(original.demands(store, body)?)
     }
 
-    fn close_uninstalled_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_uninstalled_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         let demand = self.uninstalled_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
             return Ok(RetainedCloneStep::Progress(Default::default()));
@@ -62,7 +69,7 @@ impl semio_os_kernel::os_store::ArtifactStoreOwnedDisposer<FlowHostSnapshot, Flo
         }
         let Some(original) = self.original.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())) };
         if original.uninstalled_terminal_is_empty() { return Ok(self.release_original()); }
-        original.close_uninstalled_step(Self::child(grant)).map(|step| RetainedCloneStep::Progress(step.progress()))
+        original.close_uninstalled_step(&mut effect.nested(Self::child(grant))).map(|step| RetainedCloneStep::Progress(step.progress()))
     }
 
     fn uninstalled_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
@@ -115,7 +122,7 @@ fn retained_host_close_preserves_custody_after_a_real_history_authority_refusal(
     let mut refusals = 0;
     for _ in 0..law["maximumTurns"].as_u64().unwrap() {
         let grant = flow_retirement_contract_grant(&owner);
-        match owner.close_step(grant) {
+        match owner.close_step_cold(grant) {
             Ok(step) => assert!(step.progress().fits(grant)),
             Err(error) => {
                 assert_eq!(format!("{:?}", error.kind), law["refusalKind"].as_str().unwrap());
@@ -139,7 +146,7 @@ fn cold_host_close_returns_a_real_history_authority_refusal_without_panicking() 
     let refusal = match result { Err(refusal) => refusal, Ok(()) => panic!("original authority refusal was omitted") };
     let (error, mut owner) = refusal.into_parts();
     assert_eq!(format!("{:?}", error.kind), law["refusalKind"].as_str().unwrap());
-    for _ in 0..law["maximumTurns"].as_u64().unwrap() { if owner.terminal_is_empty() { break; } let grant = flow_retirement_contract_grant(&owner); assert!(owner.close_step(grant).unwrap().progress().fits(grant)); }
+    for _ in 0..law["maximumTurns"].as_u64().unwrap() { if owner.terminal_is_empty() { break; } let grant = flow_retirement_contract_grant(&owner); assert!(owner.close_step_cold(grant).unwrap().progress().fits(grant)); }
     assert!(owner.terminal_is_empty());
 }
 
@@ -150,7 +157,7 @@ fn cold_host_scope_returns_the_same_body_output_and_refused_original_owner(){
  assert_eq!(outcome.output.as_ref()as*const String,pointer);assert_eq!(calls,law["bodyTransfers"].as_u64().unwrap());
  let(error,mut owner)=match outcome.close{Err(refusal)=>refusal.into_parts(),Ok(())=>panic!("original authority refusal was omitted")};
  assert_eq!(format!("{:?}",error.kind),law["refusalKind"].as_str().unwrap());
- for _ in 0..law["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break;}let grant=flow_retirement_contract_grant(&owner);assert!(owner.close_step(grant).unwrap().progress().fits(grant));}
+ for _ in 0..law["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break;}let grant=flow_retirement_contract_grant(&owner);assert!(owner.close_step_cold(grant).unwrap().progress().fits(grant));}
  assert!(owner.terminal_is_empty());assert_eq!(outcome.output.as_ref()as*const String,pointer);
 }
 
@@ -161,7 +168,7 @@ fn funded_job_host_close_slot_keeps_original_custody_and_refusal_receipt(){
  let d=FlowHostCloseSlot::intake_demand();let intake=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
  let(receipt,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||slot.retain(&mut host,intake).unwrap());assert!(receipt.fits(intake));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));assert!(host.is_none());
  let mut refusals=0;for _ in 0..law["maximumTurns"].as_u64().unwrap(){if slot.terminal_is_empty(){break;}let d=slot.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes.max(4096),maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
-  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||slot.close_step(grant));let receipt=match result{Ok(step)=>step.progress(),Err(error)=>{refusals+=1;assert_eq!(format!("{:?}",error.kind),law["refusalKind"].as_str().unwrap());assert!(!slot.terminal_is_empty());error.retained_progress()}};assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
+  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||slot.close_step_cold(grant));let receipt=match result{Ok(step)=>step.progress(),Err(error)=>{refusals+=1;assert_eq!(format!("{:?}",error.kind),law["refusalKind"].as_str().unwrap());assert!(!slot.terminal_is_empty());error.retained_progress()}};assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
  }assert!(slot.terminal_is_empty());assert_eq!(refusals,law["expectedRefusals"].as_u64().unwrap());
 }
 

@@ -163,7 +163,7 @@ async fn check_in_fixture_gis_ledger_edit(schema: &str) -> Vec<MutationEnvelope>
     while !store.close_owned_terminal_is_empty() {
         let demand = store.close_owned_demands(0).expect("the store quotes its next close turn");
         let grant = directory::os_store::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        store.close_owned_step(grant).expect("fixture GIS store closes");
+        store.close_owned_step_cold(grant).expect("fixture GIS store closes");
     }
     assert!(store.close_owned_terminal_is_empty());
     drop(store);

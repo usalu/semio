@@ -34,6 +34,8 @@ pub struct ArtifactOwnedToolJobRequest<A: ArtifactApp> {
     pub instance_operation_owner: ArtifactInstanceOperationOwnerHandle,
     pub output_chunks: ArtifactOutputChunks,
     pub completion: ArtifactToolCompletion<A>,
+    /// 🏛️ Resident original construction admission: a turn that cannot commit yet resumes over the same bind and scope.
+    pub construction: semio_framework::action_bus::ResidentConstruction<semio_framework::ErasedToolJob>,
 }
 #[path="../🎟️request/♻️retirement/🦀️.rs"]
 mod original_request_retirement;

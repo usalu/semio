@@ -40,9 +40,10 @@ impl SelectionRetainedEditCursor{
 }
 impl RetainedCloneEditCursor<State,Mutation> for SelectionRetainedEditCursor{
  fn next_work_demand(&self,base:RetainedCloneRef<'_,State>,_:&State,mutation:RetainedCloneRef<'_,Mutation>,_:usize)->Result<u64,ValueError>{let Mutation::ChangeTestConfigSelection(value)=mutation.get();Ok(if self.phase==0{1+base.get().selected.as_ref().map_or(0,|text|text.len().min(1024))as u64+value.selected.as_ref().map_or(0,|text|text.len().min(1024))as u64}else{1})}
- fn last_turn_work(&self)->u64{self.last_work}
  fn advance_demands(&self,base:RetainedCloneRef<'_,State>,_:&State,mutation:RetainedCloneRef<'_,Mutation>,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if self.cancelled||self.custody.is_closing(){Ok(Default::default())}else{self.normal_demand(base.get(),mutation.get(),body)}}
- fn advance(&mut self,base:RetainedCloneRef<'_,State>,post:&mut State,mutation:RetainedCloneRef<'_,Mutation>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneEditStep,ValueError>{
+ fn advance(&mut self,base:RetainedCloneRef<'_,State>,post:&mut State,mutation:RetainedCloneRef<'_,Mutation>,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneEditStep,ValueError>{
+  let grant=effect.grant();
+  let result=(||->Result<RetainedCloneEditStep,ValueError>{
   self.last_work=0;
   if self.cancelled||self.custody.is_closing()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneEditStep::Progress(Default::default()));}
   if self.phase==0{let Mutation::ChangeTestConfigSelection(value)=mutation.get();self.last_work=1;if base.get().selected.as_ref().is_some_and(|text|text.len()>1024)||value.selected.as_ref().is_some_and(|text|text.len()>1024){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original selection text exceeds bounded preparation scan"));}let(bytes,work)=selection_prepared_work(base.get().selected.as_deref(),value.selected.as_deref());self.last_work+=work;if bytes.is_none_or(|bytes|bytes>1024){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original selection prepared Pack and forward/inverse rows exceed owner publication bound"));}}
@@ -56,12 +57,15 @@ impl RetainedCloneEditCursor<State,Mutation> for SelectionRetainedEditCursor{
    5=>{let copy=size_of::<Mutation>()*2+size_of::<Option<String>>();if grant.maximum_copy_bytes<copy{return Ok(RetainedCloneEditStep::Progress(Default::default()));}let fields=self.custody.original_mut();let rows=fields.2.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original inverse rows absent"))?;let selected=fields.1.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original inverse selection absent"))?;rows.push(Mutation::ChangeTestConfigSelection(ChangeTestConfigSelection{selected}));self.phase=6;RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}},
    _=>return Ok(RetainedCloneEditStep::Complete(Default::default())),
   };Ok(if self.phase==6{RetainedCloneEditStep::Complete(receipt)}else{RetainedCloneEditStep::Progress(receipt)})
+  })();
+  if self.last_work!=0&&!effect.performed(self.last_work)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"edit cursor exceeds its work ceiling"))}
+  result
  }
  fn take_inverse(&mut self)->Option<Vec<Mutation>>{(self.phase==6).then(||self.custody.original_mut().2.take()).flatten()}
  fn foreign_step_presence(&self)->bool{false}
  fn cancel(&mut self){self.cancelled=true;}
  fn begin_close(&mut self)->bool{self.custody.begin_close()}
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let turn=self.custody.step(grant);self.last_work=self.custody.last_turn_work();turn}
+ fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.custody.step(effect)}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.custody.demands(0)?.copy_bytes)}
  fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.custody.demands(body)?.capacity_bytes)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.custody.demands(0)?.release_bytes)}

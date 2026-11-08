@@ -36,7 +36,7 @@ pub enum RecordLayout {
 
 /// 🧩️ What one field's value looks like, textually. Covers all 16 grammar-shape
 /// primitives found across the 32 hand-rolled implementations this engine replaces.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub enum Shape {
     Bool,
     Int,
@@ -123,7 +123,7 @@ pub enum Shape {
     EmbedFrom(&'static str),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct FieldSpec {
     pub id: u16,
     /// 🫥️ Empty for positional-only fields.
@@ -178,7 +178,7 @@ impl FieldSpec {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct RecordSpec {
     pub keyword: Option<String>,
     pub layout: RecordLayout,
@@ -240,7 +240,7 @@ pub struct WireValue {
 /// to/from a concrete Rust value. Doubles as this v1 engine's "Cst": simplified (semantic, not a
 /// full lossless syntax tree) but sufficient for round-tripping, diagnostics, and highlighting;
 /// a real green/red tree can replace it later behind the same `parse`/`Writer` API.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum FieldValue {
     Bool(bool),
     Int(i64),
@@ -265,7 +265,7 @@ pub enum FieldValue {
 mod record_fields;
 pub use record_fields::RecordFields;
 
-#[derive(Clone, Debug, PartialEq, Default)]
+#[derive(Clone, Debug, PartialEq, Default, semio_framework_value::RetireOwned)]
 pub struct RecordValue {
     pub fields: RecordFields,
 }
@@ -313,7 +313,7 @@ impl ExprOp {
 /// `1.35*G + 1.5*Q` parses to `Binary(Add, Binary(Mul, Num(1.35), Var("G")), Binary(Mul,
 /// Num(1.5), Var("Q")))`. Deliberately NOT a general-purpose scripting language (no assignment, no
 /// control flow, no boolean logic) — it's a formula literal, one notch above a bare number.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum ExprValue {
     Num(f64),
     /// 🔣️ A snake_case reference to a sibling field/symbol, resolved by the consuming technology
@@ -388,7 +388,7 @@ impl<T, const N: usize> DslSequence<T> for semio_framework_value_persistent::lis
         while !self.has_reserved_slot() {
             let bytes = self.next_allocation_bytes().map_err(ValueError::from)?;
             control.charge(bytes)?;
-            self.reserve_one(bytes).map_err(|error| ValueError::from(error.refusal()))?;
+            self.reserve_one_cold(bytes).map_err(|error| ValueError::from(error.refusal()))?;
         }
         Ok(())
     }
@@ -412,6 +412,15 @@ impl<T> DslSequenceView<T> for Vec<T> {
 impl<T, const N: usize> DslSequenceView<T> for semio_framework_value_persistent::list::PagedList<T, N> {
     type Iter<'a> = semio_framework_value_persistent::list::PagedIter<'a, T, N> where T: 'a;
     fn field_items(&self) -> Self::Iter<'_> { self.iter() }
+}
+
+impl<T:semio_framework_value::retirement::RetireOwned+Send+Sync+'static> DslSequenceView<T> for semio_framework_value::persistent::PersistentList<T> {
+    type Iter<'a> = semio_framework_value::persistent::PersistentListIter<'a, T> where T: 'a;
+    fn field_items(&self) -> Self::Iter<'_> { self.iter() }
+}
+impl<T> DslSequenceView<T> for (T, T) {
+    type Iter<'a> = std::array::IntoIter<&'a T, 2> where T: 'a;
+    fn field_items(&self) -> Self::Iter<'_> { [&self.0, &self.1].into_iter() }
 }
 
 /// 🎛️ Admits bounded native expression cloning through the original directional control.

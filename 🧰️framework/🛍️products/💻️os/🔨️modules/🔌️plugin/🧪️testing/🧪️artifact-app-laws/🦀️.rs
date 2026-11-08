@@ -18,14 +18,26 @@ use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_instance_app::VcsArtifactApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use store::os_store::backbone::{Backbone, BackboneMessage, MemoryBackbone};
-pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture, receive_persistent_fixture, receive_view_fixture};
+pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture, receive_persistent_fixture, receive_view_fixture, typing_run, TypingRun};
     use semio_framework_value::ErasedSnapshotRetirement;
+
+    /// 🧮️ Refuses a test binary whose allocator is not the heap witness: every heap-equality assertion of these laws would otherwise read `(0, 0)` and fail any non-zero retained page. Install it with [`install_fixture_heap_witness!`](crate::install_fixture_heap_witness).
+    pub fn assert_heap_witness_installed(){
+        let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||std::hint::black_box(Box::new([0u8;64])));
+        assert!(heap.requested_bytes>=64,"fixture heap witness missing: call semio_plugin::install_fixture_heap_witness!() once in this test binary");
+    }
+
+    /// 🪙️ A fixture without a job turn funds one page presentation from an explicit finite wallet of exactly its grant.
+    pub fn take_fixture_result_turn<P:PluginApp>(app:&mut P,receiver:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Option<semio_plugin_job::TypedOperationResultPage>,semio_framework_value::retained_clone::RetainedCloneProgress),semio_framework::Fault>{
+        let mut wallet=semio_framework_value::AuthoringWallet::new(grant,1<<16);
+        match wallet.run(grant,1<<16,|effect|app.take_typed_operation_result_page(receiver,effect)).expect("fixture wallet admits its finite page stock"){Some(authored)=>authored.output,None=>Ok((None,Default::default()))}
+    }
 
     /// 📃️ Observes each production page presentation with the exact original fixture grant.
 
     pub fn take_fixture_result_page<P:PluginApp>(app:&mut P,receiver:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<semio_plugin_job::TypedOperationResultPage>,semio_framework::Fault>{
 
-        loop{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.take_typed_operation_result_page(receiver,grant));let(page,p)=result?;assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));if page.is_some()||p==Default::default(){return Ok(page);}}
+        assert_heap_witness_installed();loop{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||take_fixture_result_turn(app,receiver,grant));let(page,p)=result?;assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));if page.is_some()||p==Default::default(){return Ok(page);}}
 
     }
 
@@ -60,8 +72,8 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
         for _ in 0..OriginalFixtureCaller::maximum_turns(){
             let mut output=None;
             let demand=mounted.result_page_presentation_demands()?;
-            let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,issued|{
-                let (page,progress)=mounted.take_result_page(issued)?;
+            let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx,grant,demand,|_,effect|{
+                let (page,progress)=mounted.take_result_page(effect)?;
                 let complete=page.is_some();output=page;
                 Ok((if complete{PluginLifecycleStep::Complete(progress)}else{PluginLifecycleStep::Progress(progress)},complete))
             }));
@@ -97,12 +109,13 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
 mod fixture_dispatch_steps_and_document_loading;
 pub use fixture_dispatch_steps_and_document_loading::{
     assert_editor_genesis_children_declared, assert_viewer_genesis_children_declared,
+    arm_host_lifetime, fixture_renew_turn, HostLifetimeGuard, HostLifetimeStock,
     dispatch_fixture_action, dispatch_original_fixture_command, ensure_fixture_cancellation_issuer, FixtureOriginalJob, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
     fixture_identity, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes, fixture_pending_effects,
     fixture_progress, fixture_retained_turn, fixture_step, fixture_step_context,
     fixture_step_context_for, load_document, load_document_text, plugin_load_document,
-    plugin_load_document_text, plugin_settle_store_constructor, typing_run, with_document_view,
-    FixtureStepOutcome, TypingRun, LAW_DOCUMENT_LOAD_OPERATION,
+    plugin_load_document_text, plugin_settle_store_constructor, with_document_view,
+    FixtureStepOutcome, LAW_DOCUMENT_LOAD_OPERATION,
 };
 
 #[path = "🌳️fixture-tree-projection-and-scenes/🦀️.rs"]
@@ -137,7 +150,7 @@ pub use paired_apps_history_and_convergence_laws::{
     assert_transaction_rollback_leaves_state_untouched, assert_two_instances_converge,
     assert_two_registered_instances_converge, assert_two_registered_instances_converge_with_members,
     assert_undo_redo_round_trip, paired_apps, paired_registered_apps,
-    paired_registered_apps_with_members, settle_history_verb,
+    paired_registered_apps_with_members, settle_history_verb, settle_history_verb_as,
 };
 
 #[path = "👥️presence-round-trip-law/🦀️.rs"]
@@ -146,7 +159,7 @@ pub use presence_round_trip_law::{assert_presence_round_trip, publish_fixture_pr
 
 #[path = "🪧️pane-smoke-law/🦀️.rs"]
 mod pane_smoke_law;
-pub use pane_smoke_law::{assert_pane_smoke, assert_pane_smoke_by_example};
+pub use pane_smoke_law::{assert_pane_smoke_by_example, PaneSmokeLanguage, PANE_SMOKE_LOCALES};
 
 #[path = "🔎️declared-verb-probing/🦀️.rs"]
 mod declared_verb_probing;

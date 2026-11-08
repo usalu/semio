@@ -5,11 +5,11 @@ use super::*;
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-    ParentMutation: ArtifactCanonicalJsonTree + StoreMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_os_spr::ColdMutation<ParentP> + 'static,
+    ParentMutation: ArtifactCanonicalJsonTree + StoreMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_os_spr::ColdMutation<ParentP> + 'static + semio_os_spr::StoreMutationFor<ParentP>,
     DrawingP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-    DrawingMutation: ArtifactCanonicalJsonTree + StoreMutation<DrawingP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_os_spr::ColdMutation<DrawingP> + 'static,
+    DrawingMutation: ArtifactCanonicalJsonTree + StoreMutation<DrawingP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_os_spr::ColdMutation<DrawingP> + 'static + semio_os_spr::StoreMutationFor<DrawingP>,
     ValueP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-    ValueMutation: ArtifactCanonicalJsonTree + StoreMutation<ValueP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_os_spr::ColdMutation<ValueP> + 'static,
+    ValueMutation: ArtifactCanonicalJsonTree + StoreMutation<ValueP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_os_spr::ColdMutation<ValueP> + 'static + semio_os_spr::StoreMutationFor<ValueP>,
 {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
@@ -198,22 +198,22 @@ where
                 return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
             }
             DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingValue => {
-                if close_assembly_publication(&mut self.value_publication, grant)? {
+                if effect_turn(receiving, grant, |effect| close_assembly_publication(&mut self.value_publication, effect))?.unwrap_or(false) {
                     self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingDrawing;
                 }
             }
             DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingDrawing => {
-                if close_assembly_publication(&mut self.drawing_publication, grant)? {
+                if effect_turn(receiving, grant, |effect| close_assembly_publication(&mut self.drawing_publication, effect))?.unwrap_or(false) {
                     self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingParent;
                 }
             }
             DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingParent => {
-                if close_assembly_publication(&mut self.parent_publication, grant)? {
+                if effect_turn(receiving, grant, |effect| close_assembly_publication(&mut self.parent_publication, effect))?.unwrap_or(false) {
                     if self.failure.is_some() {
-                                                if let Some(owner) = self.parent_prepared.as_mut() { if !retire_binding_member(owner, &mut self.parent.as_mut().unwrap().parts(), grant)? { return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,owner.retirement_progress)); } self.parent_prepared = None; return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(self.phase)); }
-                        if let Some(owner) = self.drawing_prepared.as_mut() { if !retire_binding_member(owner, &mut self.drawing.as_mut().unwrap().parts(), grant)? { return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,owner.retirement_progress)); } self.drawing_prepared = None; return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(self.phase)); }
-                        if let Some(owner) = self.value_prepared.as_mut() { if !retire_binding_member(owner, &mut self.value.as_mut().unwrap().parts(), grant)? { return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,owner.retirement_progress)); } self.value_prepared = None; return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(self.phase)); }
-                        if let Some(prepared) = self.prepared.as_mut() { if !prepared.retire_originals_step(self.parent.as_mut().unwrap(), self.drawing.as_mut().unwrap(), self.value.as_mut().unwrap(), grant)? { return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,prepared.retirement_progress)); } }
+                                                if let Some(owner) = self.parent_prepared.as_mut() { if !effect_turn(receiving, grant, |effect| retire_binding_member(owner, &mut self.parent.as_mut().unwrap().parts(), effect))?.unwrap_or(false) { return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,owner.retirement_progress)); } self.parent_prepared = None; return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(self.phase)); }
+                        if let Some(owner) = self.drawing_prepared.as_mut() { if !effect_turn(receiving, grant, |effect| retire_binding_member(owner, &mut self.drawing.as_mut().unwrap().parts(), effect))?.unwrap_or(false) { return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,owner.retirement_progress)); } self.drawing_prepared = None; return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(self.phase)); }
+                        if let Some(owner) = self.value_prepared.as_mut() { if !effect_turn(receiving, grant, |effect| retire_binding_member(owner, &mut self.value.as_mut().unwrap().parts(), effect))?.unwrap_or(false) { return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,owner.retirement_progress)); } self.value_prepared = None; return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(self.phase)); }
+                        if let Some(prepared) = self.prepared.as_mut() { if !prepared.retire_originals_step(self.parent.as_mut().unwrap(), self.drawing.as_mut().unwrap(), self.value.as_mut().unwrap(), grant, receiving)? { return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,prepared.retirement_progress)); } }
 drop(self.prepared.take());
                         self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::Terminal;
                     } else {
@@ -224,7 +224,7 @@ drop(self.prepared.take());
             DurableOwnedThreeStoreMapAssemblyPhaseV1::Binding => {
                 let prepared=self.prepared.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 if prepared.binding_step<15 {
-                    let result=receiving.with_encoding_receiver(|room,observer,allocation| {let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(room,observer,allocation);prepared.advance_binding(self.parent.as_ref().unwrap(),self.drawing.as_ref().unwrap(),self.value.as_ref().unwrap(),grant,&mut native)});
+                    let result=encoding_turn(receiving,|room,observer,allocation| {let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(room,observer,allocation);prepared.advance_binding(self.parent.as_ref().unwrap(),self.drawing.as_ref().unwrap(),self.value.as_ref().unwrap(),grant,&mut native)});
                     return match result {Ok(Some(receipt))=>Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,receipt)),Ok(None)=>Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),Err(error)=>{self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Binding(error));Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(self.phase))}};
                 }
                 let hash=prepared.decision.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.decision_sha256.len();
@@ -337,11 +337,11 @@ drop(self.prepared.take());
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
     DrawingP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<DrawingP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<DrawingP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<DrawingP>,
     ValueP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<ValueP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<ValueP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ValueP>,
 {
     fn drop(&mut self) {
         assert!(

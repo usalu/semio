@@ -20,11 +20,12 @@ use protocol::wire::{DictBuilder, DictReader, ProtocolLimits, RecordHasher};
 use std::collections::{HashMap, HashSet};
 use protocol::codec::{HistoryReadLimits, OriginalWireSourceIdentity, RetainedWireByteSource};
 use semio_framework_value_native_owned::{NativeAllocationEvent,NativeAllocationBudget};
-use semio_framework_value_native_owned::native_decoding::allocation::{NativeForwardedDecodeReceipt,NativeDecodeAllocationIssuer};
+use semio_framework_value_native_owned::native_decoding::allocation::NativeForwardedDecodeReceipt;
+use semio_framework_value_native_owned::native_decoding::{NativeAllocationAuthority,NativeAllocationAuthorityPort,NativeAllocationRefusal,NativeAllocationReply,NativeAllocationReplyComplete,OriginalSourceTurnIdentity,OriginalWorkLoan};
 use semio_framework_value_native_owned::{native_decoding::NativeForwardedDecodeControl};
 use semio_framework_value::retained_clone::{admit_retained_clone_close, admit_retained_clone_progress};
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_value::{admit_owned_retirement, owned_retirement_birth_bytes, ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{admit_owned_retirement, close_factory_ticket_controlled, ErasedSnapshotRetirement, OriginalRetirementFailure, RetainedAllocationEffect, RetainedWorkPoll, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeRetirementRecipient};
 use std::mem::{size_of_val, ManuallyDrop};
 
@@ -77,12 +78,11 @@ impl RetainedHistoryTurn for RetainedHistoryUninterrupted {
 
 /// 📥️ Original retained History decoder: one cumulative native ledger and one retirement recipient carry the borrowed-range receiving frontier across caller turns, so every typed receiver is quoted by `demands` before it moves.
 pub struct RetainedHistoryDecode {
-    last_work: u64,
-    last_native_work:u64,
+    largest: RetainedCloneGrant,
+    last_work: u128,
+    last_native_work:u128,
     receipt: Option<NativeForwardedDecodeReceipt>,
-    allocation_issuer:NativeDecodeAllocationIssuer,
-    work_issuer:semio_framework_value_native_owned::native_decoding::NativeDecodeWorkIssuer,
-    allocation_budget:NativeAllocationBudget,
+    allocation:ManuallyDrop<Option<NativeAllocationAuthority<HistoryAllocationPort>>>,
     recipient: NativeDecodeRetirementRecipient,
     decoder: ManuallyDrop<Option<RetainedHistorySourceDecode>>,
     partial: ManuallyDrop<Option<RetainedHistorySourcePartial>>,
@@ -108,6 +108,11 @@ fn permits(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
     grant.maximum_depth >= demand.depth && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes
 }
 
+/// 📏️ Componentwise largest of two grants: the most any turn has supplied so far.
+fn widest(a: RetainedCloneGrant, b: RetainedCloneGrant) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: a.maximum_items.max(b.maximum_items), maximum_copy_bytes: a.maximum_copy_bytes.max(b.maximum_copy_bytes), maximum_capacity_bytes: a.maximum_capacity_bytes.max(b.maximum_capacity_bytes), maximum_release_bytes: a.maximum_release_bytes.max(b.maximum_release_bytes), maximum_depth: a.maximum_depth.max(b.maximum_depth) }
+}
+
 fn box_demands(owner: &dyn ErasedSnapshotRetirement, body: usize) -> Result<RetirementDemand, ValueError> {
     if owner.terminal_is_empty() {
         return Ok(RetirementDemand { release_bytes: size_of_val(owner), depth: 1, ..Default::default() });
@@ -124,20 +129,24 @@ fn birth_demands<T: RetireOwned>(pending: &Option<T>) -> Result<RetirementDemand
     if !T::controlled_retirement_supported() {
         return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "original History owner has no controlled retirement authority"));
     }
-    Ok(RetirementDemand { capacity_bytes: owned_retirement_birth_bytes::<T>(), depth: 2, ..Default::default() })
+    let birth = semio_framework_value::retirement::controlled::controlled_retirement_birth_demand(pending.as_ref().ok_or_else(|| invariant("original History retirement admission lost its owner"))?)?;
+    Ok(RetirementDemand { depth: 2, ..birth })
 }
 
-fn admit_owned<T: RetireOwned>(pending: &mut Option<T>, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant, work: &mut u64) -> Result<RetainedCloneStep, ValueError> {
+fn admit_owned<T: RetireOwned>(pending: &mut Option<T>, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, effect: &mut RetainedAllocationEffect<'_>, work: &mut u128) -> Result<RetainedCloneStep, ValueError> {
+    let grant = effect.grant();
     if active.is_some() {
         return Err(invariant("original History retirement admission requires an empty child slot"));
     }
     let demand = birth_demands(pending)?;
+    if pending.is_none() {
+        return Err(invariant("original History retirement admission lost its owner"));
+    }
     let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-    let original = pending.take().ok_or_else(|| invariant("original History retirement admission lost its owner"))?;
-    let turn=admit_owned_retirement(original, child);
-    *work=turn.work;
+    let turn = admit_owned_retirement(pending, &mut effect.nested(child));
+    *work = turn.work;
     match turn.result {
-        Ok((owner, progress)) => {
+        Ok(Some((owner, progress))) => {
             *active = Some(owner);
             admit_retained_clone_progress(child, progress, "original History child birth")?;
             if progress.retained_capacity_bytes != demand.capacity_bytes {
@@ -145,17 +154,54 @@ fn admit_owned<T: RetireOwned>(pending: &mut Option<T>, active: &mut Option<Box<
             }
             Ok(RetainedCloneStep::Progress(progress))
         }
-        Err((error, original)) => {
-            *pending = Some(original);
-            Err(error)
-        }
+        Ok(None) => Ok(RetainedCloneStep::Progress(Default::default())),
+        Err(error) => Err(error),
     }
 }
 
-fn close_box(slot:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant,work:&mut u64,control:&mut NativeDecodeControl<'_>)->semio_framework_value::OriginalRetirementOutcome{
- let child=if slot.as_ref().is_some_and(|owner|!owner.terminal_is_empty()){RetainedCloneGrant{maximum_depth:grant.maximum_depth.saturating_sub(1),..grant}}else{grant};
- let turn=control.with_retirement(child,|original|Ok::<_,semio_framework_value::OriginalRetirementFailure>(semio_framework_value::close_factory_ticket_controlled(slot,child,original)));
- match turn{Ok(turn)=>{*work=turn.work;turn},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}}
+fn polled(poll:RetainedWorkPoll<RetainedCloneStep,OriginalRetirementFailure>,work:&mut u128)->Result<RetainedCloneStep,OriginalRetirementFailure>{
+ *work=poll.work();
+ match poll{RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default())),RetainedWorkPoll::Complete(turn)=>turn.result}
+}
+
+/// 📏️ Quotes exactly the allocated capacity of the demand while the copy, release and depth axes stay the supplied grant's.
+fn quoted(demand:RetirementDemand,grant:RetainedCloneGrant)->RetirementDemand{RetirementDemand{copy_bytes:grant.maximum_copy_bytes.max(demand.copy_bytes),release_bytes:grant.maximum_release_bytes.max(demand.release_bytes),depth:grant.maximum_depth.max(demand.depth),..demand}}
+
+/// 🧰️ Runs one funded decoder turn: the closure's children record their performed work in the turn effect and only the owed remainder of the claimed work is added, once.
+fn funded<T>(control:&mut NativeDecodeControl<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,last_work:&mut u128,run:impl FnOnce(&mut NativeDecodeControl<'_>,&mut RetainedAllocationEffect<'_>,&mut u128)->T)->Result<Option<T>,ValueError>{
+ control.with_allocated_effect(quoted(demand,grant),RetainedHistorySourceDecode::work_demand(grant),|control,effect|{
+  let start=effect.performed_work();
+  let output=run(control,effect,&mut *last_work);
+  *last_work=settle_since(effect,start,*last_work)?;
+  Ok::<_,ValueError>(output)
+ })?.transpose()
+}
+
+/// 🔁️ Answers a decoder receipt, issued for the funded effect grant, with the grant this turn was supplied.
+fn supplied(issued:Option<(RetainedCloneGrant,RetainedCloneProgress)>,effect:&RetainedAllocationEffect<'_>,grant:RetainedCloneGrant)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{
+ issued.map(|(original,progress)|if original==effect.grant(){(grant,progress)}else{(original,progress)})
+}
+
+fn close_recipient(control:&mut NativeDecodeControl<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,last_work:&mut u128)->Result<RetainedCloneStep,OriginalRetirementFailure>{
+ match control.with_allocated_effect(quoted(demand,grant),RetainedHistorySourceDecode::work_demand(grant),|control,effect|control.close_retirement_recipient(effect)){
+  Ok(Some(poll))=>polled(poll,last_work),
+  Ok(None)=>Ok(RetainedCloneStep::Progress(Default::default())),
+  Err(error)=>Err(OriginalRetirementFailure::from_work_refusal(error)),
+ }
+}
+
+fn close_box(control:&mut NativeDecodeControl<'_>,slot:&mut Option<Box<dyn ErasedSnapshotRetirement>>,demand:RetirementDemand,grant:RetainedCloneGrant,last_work:&mut u128)->Result<RetainedCloneStep,OriginalRetirementFailure>{
+ let nonterminal=slot.as_ref().is_some_and(|owner|!owner.terminal_is_empty());
+ match control.with_allocated_effect(quoted(demand,grant),RetainedHistorySourceDecode::work_demand(grant),|control,effect|{
+  let funded=effect.grant();
+  let child=if nonterminal{RetainedCloneGrant{maximum_depth:funded.maximum_depth.saturating_sub(1),..funded}}else{funded};
+  control.with_retirement(child,|original|Ok::<_,ValueError>(close_factory_ticket_controlled(slot,&mut effect.nested(child),original)))
+ }){
+  Ok(Some(Ok(poll)))=>polled(poll,last_work),
+  Ok(Some(Err(error)))=>Err(OriginalRetirementFailure::from_work_refusal(error)),
+  Ok(None)=>Ok(RetainedCloneStep::Progress(Default::default())),
+  Err(error)=>Err(OriginalRetirementFailure::from_work_refusal(error)),
+ }
 }
 
 fn recipient_demands(recipient: &NativeDecodeRetirementRecipient, body: usize) -> Result<RetirementDemand, ValueError> {
@@ -174,49 +220,60 @@ fn receive(issued: Option<(RetainedCloneGrant, RetainedCloneProgress)>, grant: R
 fn receive_failure(issued:Option<(RetainedCloneGrant,RetainedCloneProgress)>,grant:RetainedCloneGrant,primary:ValueError)->semio_framework_value::OriginalRetirementFailure{
  let progress=issued.map_or_else(||primary.retained_progress(),|(_,progress)|progress);
  let receipt=issued.filter(|(original,_)|*original!=grant).map(|_|invariant("original History failure changed its supplied grant"));
- semio_framework_value::OriginalRetirementFailure::from_causes(Some(primary),None,receipt).with_retained_progress(progress)
+ semio_framework_value::OriginalRetirementFailure::from_causes(Some(primary),None,receipt,None).with_retained_progress(progress)
+}
+
+/// 🪙️ The allocation port admits through the cumulative budget and the caller's turn without owning either.
+struct HistoryAllocationPort{budget:NativeAllocationBudget}
+struct HistoryAllocationContext<'turn>{turn:&'turn dyn RetainedHistoryTurn,grant:RetainedCloneGrant,closing:bool,hop:bool}
+impl NativeAllocationAuthorityPort for HistoryAllocationPort{
+    type Context<'turn,'source>=HistoryAllocationContext<'turn> where 'source:'turn;
+    fn validate_context<'turn,'source>(&self,_:&Self::Context<'turn,'source>)->Result<(),ValueError> where 'source:'turn{Ok(())}
+    fn source_turn<'turn,'source>(&self,_:&Self::Context<'turn,'source>)->Option<OriginalSourceTurnIdentity> where 'source:'turn{None}
+    fn receive<'reply,'turn,'source>(&mut self,context:&mut Self::Context<'turn,'source>,event:NativeAllocationEvent,reply:NativeAllocationReply<'reply>)->Result<NativeAllocationReplyComplete<'reply>,ValueError> where 'source:'turn{
+        if !context.hop{self.budget.begin_hop();context.hop=true}
+        let may_quote=!matches!(event,NativeAllocationEvent::Quote(_)|NativeAllocationEvent::Admit(_))||!context.turn.should_yield()&&(context.closing||!context.turn.is_cancelled());
+        let verdict=self.budget.receive(event,context.grant,may_quote).map_err(NativeAllocationRefusal::from);
+        Ok(reply.complete(verdict))
+    }
+    fn recover<'reply,'turn,'source>(&mut self,_:&mut Self::Context<'turn,'source>,_:NativeAllocationEvent,reply:NativeAllocationReply<'reply>)->Result<NativeAllocationReplyComplete<'reply>,ValueError> where 'source:'turn{Ok(reply.pending())}
 }
 
 fn with_control<T>(
     receipt: &mut Option<NativeForwardedDecodeReceipt>,
     recipient: &mut NativeDecodeRetirementRecipient,
-    allocation_issuer:&mut NativeDecodeAllocationIssuer,
-    allocation_budget:&mut NativeAllocationBudget,
-    work_issuer:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeWorkIssuer,
+    allocation:&mut Option<NativeAllocationAuthority<HistoryAllocationPort>>,
     maximum: usize,
     turn: &dyn RetainedHistoryTurn,
     grant:RetainedCloneGrant,
     closing: bool,
-    work: &mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient,
-    observed:&mut u64,
+    work: &mut OriginalWorkLoan<'_>,
+    observed:&mut u128,
     run: impl FnOnce(&mut NativeDecodeControl<'_>) -> T,
 ) -> Result<T, ValueError> {
     let mut progress = |_| !turn.should_yield() && (closing || !turn.is_cancelled());
-    allocation_budget.begin_hop();
-    let mut allocate=|event:NativeAllocationEvent|{
-        let may_quote=!matches!(event,NativeAllocationEvent::Quote(_)|NativeAllocationEvent::Admit(_))||!turn.should_yield()&&(closing||!turn.is_cancelled());
-        allocation_budget.receive(event,grant,may_quote).map_err(Into::into)
-    };
-    let mut allocation_loan=allocation_issuer.loan(&mut allocate);
-    let mut control = if let Some(original) = receipt.take() {
-        match NativeForwardedDecodeControl::rebind(original, &mut progress, &mut allocation_loan, recipient) {
-            Ok(control) => control,
-            Err((error, original)) => {
-                *receipt = Some(original);
-                return Err(error);
+    let authority=allocation.as_mut().ok_or_else(||invariant("original History allocation authority was returned"))?;
+    let mut context=HistoryAllocationContext{turn,grant,closing,hop:false};
+    authority.with_send_loan(&mut context,|allocation_loan|{
+        let mut control = if let Some(original) = receipt.take() {
+            match NativeForwardedDecodeControl::rebind(original, &mut progress, allocation_loan, recipient) {
+                Ok(control) => control,
+                Err((error, original)) => {
+                    *receipt = Some(original);
+                    return Err(error);
+                }
             }
-        }
-    } else {
-        let mut control = NativeDecodeControl::new_forwarded(maximum, &mut progress, &mut allocation_loan);
-        control.install_retirement_recipient(recipient)?;
-        control
-    };
-    let before=control.actual_work();
-    let mut work_loan=work_issuer.loan(work);
-    let result = control.with_work_recipient(&mut work_loan,|original|original.scoped_stage(|native|Ok::<_,ValueError>(run(native))))?;
-    *observed=control.actual_work().saturating_sub(before);
-    *receipt = Some(control.detach().unwrap_or_else(|_| panic!("original History decode continuation violated canonical control invariants")));
-    Ok(result)
+        } else {
+            let mut control = NativeDecodeControl::new_forwarded(maximum, &mut progress, allocation_loan);
+            control.install_retirement_recipient(recipient)?;
+            control
+        };
+        let before=control.actual_work();
+        let result = control.with_work_recipient(work,|original|original.scoped_stage(|native|Ok::<_,ValueError>(run(native))))?;
+        *observed=control.actual_work().saturating_sub(before);
+        *receipt = Some(control.detach().unwrap_or_else(|_| panic!("original History decode continuation violated canonical control invariants")));
+        Ok(result)
+    })?
 }
 
 impl RetainedHistoryDecode {
@@ -226,12 +283,11 @@ impl RetainedHistoryDecode {
             return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "original History receiving bounds are invalid"));
         }
         Ok(Self {
+            largest: RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 },
             last_work: 0,
             last_native_work:0,
             receipt: None,
-            allocation_issuer:NativeDecodeAllocationIssuer::new(),
-            work_issuer:semio_framework_value_native_owned::native_decoding::NativeDecodeWorkIssuer::new(),
-            allocation_budget:NativeAllocationBudget::default(),
+            allocation:ManuallyDrop::new(Some(NativeAllocationAuthority::new(HistoryAllocationPort{budget:NativeAllocationBudget::default()}))),
             recipient: NativeDecodeRetirementRecipient::new(),
             decoder: ManuallyDrop::new(None),
             partial: ManuallyDrop::new(None),
@@ -251,10 +307,10 @@ impl RetainedHistoryDecode {
     }
 
     /// ⛽️ Keeps the selected child's actual work visible even when its result refuses.
-    pub fn last_turn_work(&self) -> u64 { self.last_work }
+    pub fn last_turn_work(&self) -> u128 { self.last_work }
 
     /// 🔭️ Observes the actual native counter separately from the selected producer report.
-    pub fn last_turn_native_work(&self)->u64{self.last_native_work}
+    pub fn last_turn_native_work(&self)->u128{self.last_native_work}
 
     pub fn source_identity(&self) -> Option<OriginalWireSourceIdentity> {
         self.decoder.as_ref().map(RetainedHistorySourceDecode::source_identity)
@@ -272,11 +328,11 @@ impl RetainedHistoryDecode {
         self.issued.take()
     }
 
-    fn failure_storage_needed(&self)->bool{!self.recipient.has_failure_storage()&&(self.active.is_some()||self.decoder.as_ref().is_some_and(|owner|!owner.terminal_is_empty())||self.recipient.has_owner())}
+    fn failure_storage_needed(&self)->bool{!self.recipient.has_failure_storage()&&(self.active.is_some()||self.decoder.as_ref().is_some_and(|owner|!owner.terminal_is_empty())||self.recipient.has_pending_close())}
 
-    fn refill_failure_storage(&mut self,turn:&dyn RetainedHistoryTurn,grant:RetainedCloneGrant,work:&mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient,closing:bool)->semio_framework_value::OriginalRetirementOutcome{
-        let result=with_control(&mut self.receipt,&mut self.recipient,&mut self.allocation_issuer,&mut self.allocation_budget,&mut self.work_issuer,self.maximum,turn,grant,closing,work,&mut self.last_native_work,|control|control.with_retirement(grant,|original|{let funding:&mut dyn semio_framework_value::OriginalRetirementControl=original;Ok::<_,semio_framework_value::OriginalRetirementFailure>(semio_framework_value::refill_original_failure_storage(funding,grant))}));
-        let outcome=match result{Ok(Ok(outcome))=>outcome,Ok(Err(error))=>semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}};
+    fn refill_failure_storage(&mut self,turn:&dyn RetainedHistoryTurn,grant:RetainedCloneGrant,work:&mut semio_framework_value_native_owned::native_decoding::OriginalWorkLoan<'_>,closing:bool)->semio_framework_value::OriginalRetirementOutcome{
+        let result=with_control(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,turn,grant,closing,work,&mut self.last_native_work,|control|control.with_retirement(grant,|original|{let funding:&mut dyn semio_framework_value::OriginalRetirementControl=original;Ok::<_,semio_framework_value::OriginalRetirementFailure>(semio_framework_value::refill_original_failure_storage(funding,grant))}));
+        let outcome=match result{Ok(Ok(RetainedWorkPoll::Complete(outcome)))=>outcome,Ok(Ok(RetainedWorkPoll::Pending{work}))=>semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work},Ok(Err(error))=>semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}};
         self.last_work=outcome.work;let progress=outcome.result.as_ref().map(|step|step.progress()).unwrap_or_else(|error|error.retained_progress());self.issued=Some((grant,progress));outcome
     }
 
@@ -291,7 +347,7 @@ impl RetainedHistoryDecode {
         if self.inner_fault.is_some() {
             return birth_demands(&self.inner_fault);
         }
-        if !self.closing && (self.recipient.has_owner()||self.admitted&&self.decoder.is_none()&&!self.recipient.terminal_is_empty()) {
+        if !self.closing && (self.recipient.has_pending_close()||self.admitted&&self.decoder.is_none()&&!self.recipient.terminal_is_empty()) {
             return recipient_demands(&self.recipient, body);
         }
         if self.decoder.is_some() {
@@ -306,20 +362,22 @@ impl RetainedHistoryDecode {
         Ok(RetirementDemand { depth: if self.closed { 0 } else if !self.admitted && !self.closing { 2 } else { 1 }, ..Default::default() })
     }
 
-    pub fn step<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, history: &mut Option<HistoryLog>, work: &mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient) -> semio_framework_value::RetainedWorkOutcome<RetainedHistorySourceStep, semio_framework_value::OriginalRetirementFailure> {self.last_work=0;self.last_native_work=0;let result=self.step_result(source,turn,grant, history,work);semio_framework_value::RetainedWorkOutcome{work:self.last_work,result}}
+    pub fn step<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, history: &mut Option<HistoryLog>, work: &mut semio_framework_value_native_owned::native_decoding::OriginalWorkLoan<'_>) -> semio_framework_value::RetainedWorkOutcome<RetainedHistorySourceStep, semio_framework_value::OriginalRetirementFailure> {self.last_work=0;self.last_native_work=0;let result=self.step_result(source,turn,grant, history,work);semio_framework_value::RetainedWorkOutcome{work:self.last_work,result}}
 
-    fn step_result<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, history: &mut Option<HistoryLog>, work: &mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient) -> Result<RetainedHistorySourceStep, semio_framework_value::OriginalRetirementFailure> {
+    fn step_result<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, history: &mut Option<HistoryLog>, work: &mut OriginalWorkLoan<'_>) -> Result<RetainedHistorySourceStep, OriginalRetirementFailure> {
         self.last_work=0;
         if self.closed {
             return Ok(RetainedHistorySourceStep::Closed);
         }
+        self.largest = widest(self.largest, grant);
         if self.closing || self.fault.is_some() {
             return Ok(RetainedHistorySourceStep::Fault);
         }
         if turn.should_yield() || turn.is_cancelled() || grant.maximum_items == 0 {
             return Ok(RetainedHistorySourceStep::Blocked);
         }
-        if !permits(grant, self.demands(grant.maximum_copy_bytes)?) {
+        let demand = self.demands(grant.maximum_copy_bytes)?;
+        if !permits(grant, demand) {
             return Ok(RetainedHistorySourceStep::Blocked);
         }
         if self.failure_storage_needed(){return self.refill_failure_storage(turn,grant,work,false).result.map(|_|RetainedHistorySourceStep::Progress)}
@@ -329,53 +387,58 @@ impl RetainedHistoryDecode {
         let admitted = &mut self.admitted;
         let quote = &mut self.demand;
         let (range, limits, persisted_document) = (self.range, self.limits, self.persisted_document);
-        let (result, issued) = with_control(&mut self.receipt, &mut self.recipient, &mut self.allocation_issuer, &mut self.allocation_budget, &mut self.work_issuer, self.maximum, turn, grant, false, work, &mut self.last_native_work, |control| {
-            if control.has_retirement_owner()||finish_storage {
-                let turn=control.close_retirement_recipient(grant);
-                *last_work=turn.work;
-                let raw = turn.result;
+        let (result, issued) = with_control(&mut self.receipt, &mut self.recipient, &mut self.allocation, self.maximum, turn, grant, false, work, &mut self.last_native_work, |control| {
+            if control.has_retirement_pending_close()||finish_storage {
+                let raw = close_recipient(control,demand,grant,last_work);
                 let progress = match &raw {
                     Ok(step) => step.progress(),
                     Err(error) => error.retained_progress(),
                 };
                 return (raw.map(|_| RetainedHistorySourceStep::Progress).map_err(RetainedHistoryOpMetaFault::from), Some((grant, progress)));
             }
-            let result = if !*admitted {
-                let turn=RetainedHistorySourceDecode::admit(source, range, limits, persisted_document, control, grant);
-                *last_work=turn.work;
-                match turn.result {
-                    Ok(Some(owner)) => {
-                        **decoder = Some(owner);
-                        *admitted = true;
-                        Ok(RetainedHistorySourceStep::Progress)
+            let funded = funded(control, demand, grant, last_work, |control, effect, last_work| {
+                let result = if !*admitted {
+                    *last_work=1;
+                    match RetainedHistorySourceDecode::admit(source, range, limits, persisted_document, control, effect) {
+                        Ok(Some(owner)) => {
+                            **decoder = Some(owner);
+                            *admitted = true;
+                            Ok(RetainedHistorySourceStep::Progress)
+                        }
+                        Ok(None) => Ok(RetainedHistorySourceStep::Blocked),
+                        Err(error) => Err(error),
                     }
-                    Ok(None) => Ok(RetainedHistorySourceStep::Blocked),
-                    Err(error) => Err(error),
-                }
-            } else if let Some(owner) = decoder.as_mut() {
-                if owner.terminal_is_empty() {
-                    decoder.take();
-                    *last_work=last_work.saturating_add(1);
-                    Ok(RetainedHistorySourceStep::Closed)
-                } else if owner.is_ready() {
-                    let turn=owner.take_ready_into(history, grant);
-                    *last_work=turn.work;
-                    turn.result.map(|ready| if ready { RetainedHistorySourceStep::Ready } else { RetainedHistorySourceStep::Blocked })
+                } else if let Some(owner) = decoder.as_mut() {
+                    if owner.terminal_is_empty() {
+                        decoder.take();
+                        *last_work=1;
+                        Ok(RetainedHistorySourceStep::Closed)
+                    } else if owner.is_ready() {
+                        let ready=owner.take_ready_into(history, effect);
+                        *last_work=owner.last_turn_work();
+                        ready.map(|ready| if ready { RetainedHistorySourceStep::Ready } else { RetainedHistorySourceStep::Blocked })
+                    } else {
+                        let step=owner.step(source, control, effect);
+                        *last_work=owner.last_turn_work();
+                        step
+                    }
                 } else {
-                    let turn=owner.step(source, control, grant);
-                    *last_work=turn.work;
-                    turn.result
+                    *last_work=1;
+                    Ok(RetainedHistorySourceStep::Ready)
+                };
+                let issued = supplied(decoder.as_mut().and_then(|owner| owner.take_receipt()), effect, grant);
+                if let Some(owner) = decoder.as_ref() {
+                    if let Ok(next) = owner.demands(source, control, grant.maximum_copy_bytes) {
+                        *quote = next;
+                    }
                 }
-            } else {
-                Ok(RetainedHistorySourceStep::Ready)
-            };
-            let issued = decoder.as_mut().and_then(|owner| owner.take_receipt());
-            if let Some(owner) = decoder.as_ref() {
-                if let Ok(next) = owner.demands(source, control, grant.maximum_copy_bytes) {
-                    *quote = next;
-                }
+                (result, issued)
+            });
+            match funded {
+                Ok(Some(pair)) => pair,
+                Ok(None) => (Ok(RetainedHistorySourceStep::Blocked), None),
+                Err(error) => (Err(error.into()), None),
             }
-            (result, issued)
         })?;
         let step = match result {
             Ok(step) => step,
@@ -385,7 +448,6 @@ impl RetainedHistoryDecode {
             }
             Err(error) => {
                 *self.fault = Some(error);
-                self.last_work=self.last_work.saturating_add(1);
                 self.closing = true;
                 RetainedHistorySourceStep::Fault
             }
@@ -398,26 +460,29 @@ impl RetainedHistoryDecode {
         if self.admitted && self.decoder.is_none() && self.recipient.terminal_is_empty() && issued.is_none() {
             self.receipt.take();
             self.closed = true;
-            self.last_work=self.last_work.saturating_add(1);
             self.issued = Some((grant, RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             return Ok(RetainedHistorySourceStep::Ready);
         }
-        Ok(if progress.copied_items > 0 { RetainedHistorySourceStep::Progress } else { step })
+        Ok(if progress.copied_items > 0 || step == RetainedHistorySourceStep::Closed { RetainedHistorySourceStep::Progress } else { step })
     }
 
-    pub fn close_step<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, work: &mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {self.last_work=0;self.last_native_work=0;let result=self.close_step_result(source,turn,grant,work);semio_framework_value::RetainedWorkOutcome{work:self.last_work,result}}
+    pub fn close_step<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, work: &mut semio_framework_value_native_owned::native_decoding::OriginalWorkLoan<'_>) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {self.last_work=0;self.last_native_work=0;let result=self.close_step_result(source,turn,grant,work);semio_framework_value::RetainedWorkOutcome{work:self.last_work,result}}
 
-    fn close_step_result<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, work: &mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+    fn close_step_result<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, work: &mut OriginalWorkLoan<'_>) -> Result<RetainedCloneStep, OriginalRetirementFailure> {
         self.last_work=0;
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
         }
         self.closing = true;
+        self.largest = widest(self.largest, grant);
         if turn.should_yield() || grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         let demand = self.demands(grant.maximum_copy_bytes)?;
         if !permits(grant, demand) {
+            if !permits(self.largest, demand) {
+                return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "original History close can never be funded: its demand exceeds the largest grant supplied").into());
+            }
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         if self.failure_storage_needed(){return self.refill_failure_storage(turn,grant,work,true).result}
@@ -427,13 +492,17 @@ impl RetainedHistoryDecode {
             let fault = &mut self.fault;
             let inner_fault = &mut self.inner_fault;
             let partial = &mut self.partial;
-            let raw = with_control(&mut self.receipt, &mut self.recipient, &mut self.allocation_issuer, &mut self.allocation_budget, &mut self.work_issuer, self.maximum, turn, grant, true, work, &mut self.last_native_work, |control| {
-                if active.is_some(){return close_box(active,grant,last_work,control).result}
-                control.with_retirement(grant,|original|{
-                    match original.prepare_work(1){Ok(true)=>{},Ok(false)=>return Ok(RetainedCloneStep::Progress(Default::default())),Err(error)=>return Err(semio_framework_value::OriginalRetirementFailure::from_work_refusal(error))}
-                    let result=original.charge(demand.capacity_bytes).and_then(|()|if fault.is_some(){admit_owned(fault,active,grant,last_work)}else if inner_fault.is_some(){admit_owned(inner_fault,active,grant,last_work)}else{admit_owned(partial,active,grant,last_work)});
-                    let turn=semio_framework_value::RetainedWorkOutcome{result,work:*last_work};semio_framework_value::settle_original_retirement_work(turn,original.commit_work(*last_work)).result
-                })
+            let raw = with_control(&mut self.receipt, &mut self.recipient, &mut self.allocation, self.maximum, turn, grant, true, work, &mut self.last_native_work, |control| {
+                if active.is_some(){return close_box(control,active,demand,grant,last_work)}
+                let funded = funded(control, demand, grant, last_work, |control, effect, last_work| {
+                    let admitted = if fault.is_some(){admit_owned(fault,active,effect,last_work)}else if inner_fault.is_some(){admit_owned(inner_fault,active,effect,last_work)}else{admit_owned(partial,active,effect,last_work)};
+                    admitted.map_err(OriginalRetirementFailure::from)
+                });
+                match funded {
+                    Ok(Some(raw)) => raw,
+                    Ok(None) => Ok(RetainedCloneStep::Progress(Default::default())),
+                    Err(error) => Err(OriginalRetirementFailure::from_work_refusal(error)),
+                }
             })?;
             let progress=raw.as_ref().map(|step|step.progress()).unwrap_or_else(|error|error.retained_progress());self.issued=Some((grant,progress));return raw.map_err(Into::into);
         }
@@ -442,39 +511,46 @@ impl RetainedHistoryDecode {
             let partial = &mut self.partial;
             let fault = &mut self.inner_fault;
             let quote = &mut self.demand;
-            let (result, issued) = with_control(&mut self.receipt, &mut self.recipient, &mut self.allocation_issuer, &mut self.allocation_budget, &mut self.work_issuer, self.maximum, turn, grant, true, work, &mut self.last_native_work, |control| {
-                let owner = decoder.as_mut().unwrap();
-                owner.cancel();
-                let result = if owner.terminal_is_empty() {
-                    Ok(RetainedHistorySourceStep::Closed)
-                } else if owner.fault().is_some() {
-                    let turn=owner.take_fault_into(fault, grant);
-                    *last_work=turn.work;
-                    turn.result.map(|_| RetainedHistorySourceStep::Progress)
-                } else if owner.partial_is_receivable() {
-                    let turn=owner.take_partial_into(partial, grant);
-                    *last_work=turn.work;
-                    turn.result.map(|_| RetainedHistorySourceStep::Progress)
-                } else {
-                    let turn=owner.close_step(source, control, grant);
-                    *last_work=turn.work;
-                    turn.result
-                };
-                let issued = owner.take_receipt();
-                if let Ok(next) = owner.demands(source, control, grant.maximum_copy_bytes) {
-                    *quote = next;
+            let (result, issued) = with_control(&mut self.receipt, &mut self.recipient, &mut self.allocation, self.maximum, turn, grant, true, work, &mut self.last_native_work, |control| {
+                let funded = funded(control, demand, grant, last_work, |control, effect, last_work| {
+                    let owner = decoder.as_mut().unwrap();
+                    owner.cancel();
+                    let result = if owner.terminal_is_empty() {
+                        *last_work=1;
+                        Ok(RetainedHistorySourceStep::Closed)
+                    } else if owner.fault().is_some() {
+                        let taken=owner.take_fault_into(fault, effect);
+                        *last_work=owner.last_turn_work();
+                        taken.map(|_| RetainedHistorySourceStep::Progress)
+                    } else if owner.partial_is_receivable() {
+                        let taken=owner.take_partial_into(partial, effect);
+                        *last_work=owner.last_turn_work();
+                        taken.map(|_| RetainedHistorySourceStep::Progress)
+                    } else {
+                        let step=owner.close_step(source, control, effect);
+                        *last_work=owner.last_turn_work();
+                        step
+                    };
+                    let issued = supplied(owner.take_receipt(), effect, grant);
+                    if let Ok(next) = owner.demands(source, control, grant.maximum_copy_bytes) {
+                        *quote = next;
+                    }
+                    (result, issued)
+                });
+                match funded {
+                    Ok(Some(pair)) => pair,
+                    Ok(None) => (Ok(RetainedHistorySourceStep::Blocked), None),
+                    Err(error) => (Err(error.into()), None),
                 }
-                (result, issued)
             })?;
             match result {
                 Err(RetainedHistoryOpMetaFault::Value(primary)) => return Err(receive_failure(issued, grant, primary).into()),
-                Err(error) => { *self.fault = Some(error);self.last_work=self.last_work.saturating_add(1); },
+                Err(error) => { *self.fault = Some(error); },
                 Ok(_) => {}
             }
             let progress = receive(issued, grant)?;
             if self.decoder.as_ref().is_some_and(RetainedHistorySourceDecode::terminal_is_empty) {
                 self.decoder.take();
-                self.last_work=self.last_work.saturating_add(1);
                 if issued.is_none() {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
                 }
@@ -482,17 +558,24 @@ impl RetainedHistoryDecode {
             return Ok(RetainedCloneStep::Progress(progress));
         }
         if !self.recipient.terminal_is_empty() {
-            let raw = with_control(&mut self.receipt, &mut self.recipient, &mut self.allocation_issuer, &mut self.allocation_budget, &mut self.work_issuer, self.maximum, turn, grant, true, work, &mut self.last_native_work, |control| { let turn=control.close_retirement_recipient(grant);*last_work=turn.work;turn.result })?;
+            let raw = with_control(&mut self.receipt, &mut self.recipient, &mut self.allocation, self.maximum, turn, grant, true, work, &mut self.last_native_work, |control| close_recipient(control,demand,grant,last_work))?;
             let progress=raw.as_ref().map(|step|step.progress()).unwrap_or_else(|error|error.retained_progress());self.issued=Some((grant,progress));return raw.map_err(Into::into);
+        }
+        let paid = with_control(&mut self.receipt, &mut self.recipient, &mut self.allocation, self.maximum, turn, grant, true, work, &mut self.last_native_work, |control| funded(control, demand, grant, last_work, |_, _, last_work| { *last_work=1; }))?;
+        match paid {
+            Ok(Some(())) => {}
+            Ok(None) => return Ok(RetainedCloneStep::Progress(Default::default())),
+            Err(error) => return Err(OriginalRetirementFailure::from_work_refusal(error)),
         }
         self.receipt.take();
         self.closed = true;
-        self.last_work=self.last_work.saturating_add(1);
         let progress=RetainedCloneProgress{copied_items:1,..Default::default()};self.issued=Some((grant,progress));Ok(RetainedCloneStep::Complete(progress))
     }
 
+    fn allocation_idle(&self)->bool{self.allocation.as_ref().is_none_or(|authority|!authority.has_pending_transaction()&&authority.inspect_port(|port|port.budget.terminal_is_empty()))}
+
     pub fn terminal_is_empty(&self) -> bool {
-        self.closed && !self.work_issuer.has_pending_work() && self.allocation_budget.terminal_is_empty() && self.decoder.is_none() && self.partial.is_none() && self.fault.is_none() && self.inner_fault.is_none() && self.active.is_none() && self.recipient.terminal_is_empty() && self.receipt.is_none()
+        self.closed && self.allocation_idle() && self.decoder.is_none() && self.partial.is_none() && self.fault.is_none() && self.inner_fault.is_none() && self.active.is_none() && self.recipient.terminal_is_empty() && self.receipt.is_none()
     }
 }
 
@@ -500,6 +583,7 @@ impl Drop for RetainedHistoryDecode {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty(), "retained history decoder reached Drop before every native receiving owner was closed");
         if self.terminal_is_empty() {
+            if let Some(authority)=self.allocation.take(){if let Err(authority)=authority.into_port(){std::mem::forget(authority)}}
             unsafe {
                 ManuallyDrop::drop(&mut self.decoder);
                 ManuallyDrop::drop(&mut self.partial);

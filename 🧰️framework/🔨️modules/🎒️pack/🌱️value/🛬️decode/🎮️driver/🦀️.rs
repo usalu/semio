@@ -3,11 +3,11 @@ use crate::RetainedValueToken as Token;
 use semio_framework_replication_wire_core::RetainedWireByteSource;
 use semio_framework_replication_codec::PackLimits;
 use semio_framework_pack_error::PackRefusal;
-use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{RetainedAllocationEffect,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 /// 🪶️ Body and Document parsers share the same explicit retained source and closure protocol.
 pub trait RetainedValueDriver:Sized{
- fn new(limits:PackLimits,length:usize,maximum:usize)->Result<Self,PackRefusal>;
- fn one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize)->Result<Option<Token>,PackRefusal>;
+ fn new(limits:PackLimits,length:usize,maximum:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<Self,PackRefusal>;
+ fn one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<Token>,PackRefusal>;
  fn allocated_bytes(&self)->usize;
  fn input_bytes(&self)->usize;
  fn consumed_bytes(&self)->u64;
@@ -21,7 +21,7 @@ pub trait RetainedValueDriver:Sized{
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(1)}
  fn next_release_demand(&self)->Result<usize,PackRefusal>;
  fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,PackRefusal>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PackRefusal>;
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,PackRefusal>;
  fn terminal_is_empty(&self)->bool;
 }
 /// 🧮️ Converts the physical format close receipt without changing its paid currencies.

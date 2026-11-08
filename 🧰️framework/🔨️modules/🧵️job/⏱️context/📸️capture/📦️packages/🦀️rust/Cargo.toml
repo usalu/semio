@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-job-capture"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Captured original callers: paid source aliases and exclusive supplier turns over one live context."
+
+[package.metadata.semio]
+role = "framework"
+id = "job-capture"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_job_capture"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job-context = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-value-retained-clone = { path = "../../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }

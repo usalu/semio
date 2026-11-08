@@ -263,14 +263,14 @@ fn original_repository_history_entry_close_conserves_raw_box_value_and_factory_c
         let demand = owner.close_demands(copy).unwrap();
         let grant = physical_test_close_grant();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant })].into_iter().flatten() {
-            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denied));
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| envelope_close_turn(denied, |effect| owner.close_step(effect)).result);
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
             if let Some(held) = owner.raw.as_ref() { assert_eq!(held.as_ptr(), raw); }
             if let Some(held) = owner.retirement_factory.as_ref() { assert!(std::ptr::addr_eq(Arc::as_ptr(held), factory)); }
             assert_eq!(owner.close_demands(copy).unwrap(), demand);
         }
-        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| envelope_close_turn(grant, |effect| owner.close_step(effect)).result);
         let step = step.unwrap();
         let progress = step.progress();
         assert!(progress.fits(grant));
@@ -307,13 +307,13 @@ fn original_schema_history_array_close_releases_same_decoder_ledger_and_factory_
         let demand = owner.close_demands(copy).unwrap();
         let grant = physical_test_close_grant();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant })].into_iter().flatten() {
-            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denied));
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| envelope_close_turn(denied, |effect| owner.close_step(effect)).result);
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
             if let Some(held) = owner.active_decoder.as_ref() { assert!(std::ptr::addr_eq(held.as_ref() as *const dyn ArtifactOwnedHistoryEntryAuthority<u64>, decoder)); }
             assert_eq!(owner.close_demands(copy).unwrap(), demand);
         }
-        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| envelope_close_turn(grant, |effect| owner.close_step(effect)).result);
         let step = step.unwrap();
         let progress = step.progress();
         assert!(progress.fits(grant));

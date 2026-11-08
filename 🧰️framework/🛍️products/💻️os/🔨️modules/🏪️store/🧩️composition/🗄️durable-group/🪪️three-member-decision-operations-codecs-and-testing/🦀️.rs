@@ -56,11 +56,11 @@ pub fn durable_owned_group_journal_test_record_from_edits<ParentP, ParentMutatio
 ) -> Result<DurableOwnedGroupJournalRecordV1, DurableOwnedGroupDecisionError>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_os_spr::StoreState,
-    ParentMutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned + Send + StoreMutation<ParentP> + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + 'static,
+    ParentMutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned + Send + StoreMutation<ParentP> + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + 'static + semio_os_spr::StoreMutationFor<ParentP>,
     DrawingP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_os_spr::StoreState,
-    DrawingMutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned + Send + StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<DrawingP> + semio_os_spr::OpBinary + semio_os_spr::OpText + 'static,
+    DrawingMutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned + Send + StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<DrawingP> + semio_os_spr::OpBinary + semio_os_spr::OpText + 'static + semio_os_spr::StoreMutationFor<DrawingP>,
     ValueP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_os_spr::StoreState,
-    ValueMutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned + Send + StoreMutation<ValueP> + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ValueP> + semio_os_spr::OpBinary + semio_os_spr::OpText + 'static,
+    ValueMutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned + Send + StoreMutation<ValueP> + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ValueP> + semio_os_spr::OpBinary + semio_os_spr::OpText + 'static + semio_os_spr::StoreMutationFor<ValueP>,
 {
     let parent_outcome = durable_group_test_outcome(PARENT_RECOVERY_SCHEMA, 1, parent);
     let drawing_outcome = durable_group_test_outcome(DRAWING_RECOVERY_SCHEMA, 2, drawing);

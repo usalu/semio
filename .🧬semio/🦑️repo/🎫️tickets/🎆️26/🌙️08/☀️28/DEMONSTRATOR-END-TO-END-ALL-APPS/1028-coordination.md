@@ -340,3 +340,73 @@ Brief: `1028-brief.md`. Official run: `1028-tools/act.sh <label>` → `🗑️ge
 - 17:30 GATE GREEN (cold, after debug0): cold-hub-3 + all 21 ext (incl. sourcing-windows after runtime import restore). Caches warm. Freeze still waits on ≥1 pane smoke load+apply+undo+close green (aussuchen: retire-demand gate; aggregator: publication spin; generator: load regression).
 - 21:32 slots.k 9→7: load ~20, cargo runs hitting 1 h deadline (flow-r19, proc-s17).
 - 21:40 MILESTONE: aggregator pane 1/2 GREEN (catalogue_add settles+closes); test 2 reaches undo; blocker = reserved-registry job fixture contexts lack OriginalCallerSourceParent → aggregator fixes via shared host-faithful constructor. aussuchen Retiring root = ChildContentRead alias sole-owner wait (runtime-b fix, smoke-55). statik 2/3 (publication idle, same class).
+
+## WAVE 1107 (11/07 03:20-)
+- 03:20 New coordinator (Opus 5.5 medium). Weekly 0 %. Since last fleet stop (11-06 23:15): FF 0b2d54d02c4 (repo, ui, process, teaching) + commit 731 (all 1105b edits, 1726 files). slots.k=0/wextra=0 until lock+sync land.
+- 03:45 Lanes added: ledger, canary, hostcheck, nativetests, aud-fixture. Envelope replacement-identity fault real (runtime, unverified). slot.sh fixed: BSD seq 1 0 made k=0 open. census.ts: all path dep keys match. freeze belief corrected by actinfra: only stale dep receipt restarts graph.
+- 04:12 lock-101+sync-101 chain done; marker state above. Definition of done: test-e2e 50, release build.
+- 04:53 job-context: testkit closure over by 5.1 KB, gate counts it. jobsplit authorised to extract retained/receiving accounting from StepContext. Exclusive editor. bundle fixed real contribution overflow (757 KB vs 49 KB per app, now 5-26 KB).
+- 05:03 value: frontier = value-native-decoding (99 errors), half-landed 11-06 remote migration (OriginalWork vs NativeDecodeWork*), porting like encode. aud-migration measuring reach. capsplit started, census: 11 over.
+- 05:13 native-decoding compiles (value-119 rc 0). Ports: koordinator A, bearbeiten B, flow tests. value reruns closure then gate.
+- 05:18 job-context closure 252,366 B with testkit (9.8 KB under) via new crate semio-framework-job-park + OriginalParkExt. Type-check pending. lock-103 chained. Frontier: value retained-clone-protocol (hostcheck), equality/paged-text (ledger).
+- 06:45 frontier: native-owned only (receivers lane; runtime derive addendum). Stopped canary and reacthost-103: verification restarted (155/3285 after 2853) and starved cargo; rerun at quiet point.
+- 07:08 native-owned lib GREEN (receivers W-110). Fleet woken.
+- 07:27 value lib green. Fleet woken. Weekly 15 %.
+- 07:32 frontier wide, 18 crates: port-a/b/c started; standing rule added: claim unclaimed red.
+- 08:25 hub 27 -> 10 crates (main-140). Weekly 22 %.
+- 09:20 OPEN after compile: presence JSON per-effect wallet inside a turn (needs control-provided effect); tick receive constant work:1; io-control Pending progress drop + tool-run panics; energy Default expect + swallowed retire_decoded refusal; JPEG/source phases unrecorded; DirectIngress double-charge check (callers lane); a11y 17/18 (localized MediaPortSpec.label + terminology_breadcrumbs: schema change); StepContext decomposition post-e2e; native-owned test closure 272 KB (nativetests); pack-json JSON writer pending-quote refusal.
+- 13:54 slots 7/2 -> 11/3: load 3.7 with 5 queued. Memory door still guards.
+- 13:55 cpu-picker queue: 20+ min stall = spinning test binary pid 32882 (port-j-18, neural-engine-model) holding cpu/0,1 + 6.6 GB. Killed by coordinator; port-j fixes the spin.
+- 13:57 Refill to 20: store3, actinfra2, opendebt, a11y, reviewfix2, descriptor, behaviours, review-5/6/7, hang. main-155 running. Weekly 45 %.
+- 14:14 slots 11/3 -> 9/2: load 27, memory floor reached, 7 waiters.
+- 14:32 main-155: 3 red: store-one-item-publication 183 (store4), space-history 62 (store3), energy-engine-sim 4 (energie). Dependents behind these unproven. Next map main-156 after store4/store3 report.
+- 14:38 a11y patch staged (typed label record, no cycle; core.py 82 edits/44 files, localize.py 44 files). Apply after hub-ok-1107 and include workflow_node_for_app (stores English cell only). toolrun started.
+- 15:24 hangfix-6 native: one-item-publication 183->5, space-history 62->40. Small unclaimed reds to hangfix: plugin-interpreter 1, tool-run-presentation 1, os-services 4, presence test 8.
+- 16:30 PENDING LOCK (coordinator): energy mounted-bestest Cargo.toml gained semio-s-artifact-energy-model-editor-panels (panede); Cargo.lock lacks it. Do at next lock point.
+- 16:38 main-156: 3 errors left: snapshot-clone 2 (E0432 original_vector, NativeDecodeConstructionRecipient; store4), operation-wire 1 (E0308; store5). Others off the red list, reachability not proven. Weekly 54 %. PENDING LOCK adds: testport ui-prepared dev-dep job, reviewfix7 backbone [[test]].
+- 16:54 RULING: sized-claim 512 ceiling is a protocol constant (actual 565 native, every sized claim refused); joblaws replaces it with a named constant + law. Loan law fixed (stale test).
+- 16:55 lock-108 + sync-108 started (tool-machine manifest, energy panels dep, ui-prepared dev-deps, presentation dev-dep).
+- 17:10 lock-108 rc 0 sync-108 rc 0
+- 18:08 slots.k 9 -> 8: 15-min load 48 (watchdog panic risk). main-157 so far: snapshot-clone 14 (store3+store4). store-ledger + space-history wasm green (store-122). Pending lock: toolsplit 27 manifests, snapshot-clone dep (without testkit), hangfix dev-dep.
+- 18:13 main-157: 1 red: snapshot-clone 14. lock-109 + sync-109 started.
+- 18:28 Corrupt Cargo.lock: remodeling + raster duplicates (refresh writer). lockfix lane assigned. energydebt edits uncompiled (snapshot-clone blocks).
+- 18:29 lock-109 rc 0 sync-109 rc 0
+- 18:58 snapshot-clone passes (store-124). Next blockers: replay-operation 140-164 (store3, W-); action-bus construction stall 19/32 tests (runtime2). Pending lock: store3 dev-deps.
+- 19:25 main-158: 1 red: replay-operation 2 (store3). lock-110 + sync-110 started. Weekly check next.
+- 19:30 lock-110 rc 0 sync-110 rc 0
+- 19:57 action-bus construction stall: cause scope growth drains all fuel (runtime2). New lane construct (a7 pending). Job-context laws all green (joblaws). Weekly ~70 %, ~4.7/h: checkpoint at 93 %. Blockers: replay-operation, replay, paged-one-item, construction.
+- 20:27 snapshot-clone native green (store4-110). lock-111 + sync-111 + main-159 chain started.
+- 20:41 lock-111 rc 0 sync-111 rc 0
+- 20:55 replay-operation green native+wasm (W-store3-5/6). paged-one-item green native. Gateway testing-laws: only store-read 13 (storecallers). Engine store API effect-shaped: lane enginecallers. value root lib-test closure over budget 271 KB (guard): must split. Pending lock: store3 dev-deps + original-vector, packtests.
+- 21:01 slots.k 8 -> 7: load 31. Weekly 75 %, 5/h; checkpoint at 93 % (about 00:30).
+- 21:04 main-159: refused before compiling: semio-plugin-job closure ~813 B over budget; paged splitting it. Slots 7/2.
+- 21:11 plugin-job split (233 KB, new crate plugin-job-child-vcs). lock-112 + sync-112 + main-160 chain started.
+- 21:27 lock-112 rc 0 sync-112 rc 0
+- 22:23 Gateway testing-laws: 3 red: member-open 36 (store7), one-item-batch 32 + codec-registry 4 (store6). replay, store-read, presence etc. clear. construct: 2 root causes fixed, resident admission next.
+- 22:45 main-160 (609 checked): 3 red: os-io 32 + durable-group-wire 25 (fixtures), engine-owners 32 (enginecallers). codec-registry + one-item-batch green (store6). Gateway also member-open (store7).
+- 22:46 DEBT: packtests fit pack-json-tests closure under the source gate by stripping indentation (263201 -> 260953 B): gaming the gate; must be a real split of the test closure and restored formatting. pack-json-tests 102/128; 26 failures listed in 1107-result-packtests.md (writer quote > grant, receiving close reports unperformed work, JsonValueProjection missing work quote, wire quotes). LOCK NEEDED (2 dev-deps).
+- 23:00 HISTORY GREEN: semio-os-history --lib 60/60 (W-history2-37), value-retirement tests 27/27 (W-history2-25). DEBT: deflate law weakened == -> >= (header copies; needs exact per-owner oracle); ControlledRetirement piecewise next_*_byte_demand disagrees with next_demand (0/0/3944 vs 536/304/0) - likely value bug; SIGTRAP W-history2-31 thread-local observer leak after failed test.
+- 23:07 RULING F7 mint: named recovery constructor (option ii), recorded in handover, not applied.
+- 23:08 PRIORITY DEBT (2 lanes independently): value ControlledRetirement piecewise next_copy_byte_demand under-quotes vs next_demand (history2 + reviewfix9). Also value testing::admit_owned_source panics 'original Work verdict must be inspected' on multi-turn admission (reviewfix9 worked around locally).
+- 23:08 port-h2: boolean silence = cold into_mesh loop (fixed); systemic cold-drain fault class recorded in handover.
+- 23:21 FLEET STOPPED for quota (~89 %). Root cause of cold-drain class found (ControlledRetirement piecewise demands). Resume from 1107-HANDOVER.md FINAL section.
+- 23:22 correction: weekly is 87 %, not 89. Started single lane rootfix (ControlledRetirement piecewise demands) to run until ~93 %.
+- 00:21 rootfix: source fix in, value lib native+wasm green, history 60/60 single-thread; law unrun (value test closure over budget); parallel SIGTRAP (observer leak, likely pre-existing). Fleet fully stopped.
+- 02:51 GOAL RE-SET by user: use remaining quota. Fleet restart at 20. slots 8/2. lock-113 + sync-113 started.
+- 02:53 Fleet at 20 (see 1107-lanes.md 11-08 restart).
+- 03:04 lock-113 rc 0 sync-113 rc 0
+- 03:27 job-capture seam landed (job-context margin 11.4 KB). lock-114 + sync-114 started.
+- 03:31 lock-114 rc 0 sync-114 rc 0
+- 04:04 wrap-up broadcast to 14 lanes at 94 %. FINAL-2 handover written.
+- 04:04 observer: replication fold use-after-free fixed (real production bug); history parallel green.
+- 04:16 W-gateway-105: only engine-stage (13) red on gateway path.
+- 04:16 lane enginestage started; lock-115 + sync-115 started.
+- 04:21 lock-115 rc 0 sync-115 rc 0
+- 04:31 Fleet refilled to 20 at 94 % (19 resumed + enginestage), each told to update its result file after every step.
+- 04:35 96 %: final stop broadcast.
+- 04:41 FINAL-3 handover written; fleet stopped except store7.
+- 12:57 goal re-set (no fleet size). 96 %: focus on semio-os-store-engine (enginestage). lock-116 + sync-116.
+- 13:01 Stopped at 97 %. FINAL-4 written: first step is the semio-os-store-engine split.
+- 15:00 lock-117 rc 0 sync-117 rc 0 (rename manifests)
+- 15:22 lock-118 rc 0 sync-118 rc 0 (plugin-abi dep)
+- 15:28 Weekly quota 100 %. FINAL-7 written.

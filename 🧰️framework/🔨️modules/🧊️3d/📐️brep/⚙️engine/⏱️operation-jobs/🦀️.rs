@@ -26,6 +26,12 @@ use semio_framework_3d_brep_representation::topology::{EntityRef, MergeMap};
 
 /// 🧭️ The tolerance every plane operation and fold of the engine runs at.
 const KERNEL_TOLERANCE: f64 = 1e-6;
+/// 🧮️ Largest pattern instance count admitted before any transform is built; larger requests are typed refusals.
+const PATTERN_INSTANCE_LIMIT: usize = 4096;
+fn pattern_instances(count: usize) -> Result<usize, BrepError> {
+    if count > PATTERN_INSTANCE_LIMIT { return Err(BrepError::InvalidInput(format!("pattern instance count {count} exceeds {PATTERN_INSTANCE_LIMIT}"))); }
+    Ok(count)
+}
 
 // #region 🔖️Descriptor
 
@@ -411,7 +417,7 @@ impl Brep {
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::LinearPattern { shape, direction, spacing, count } => {
-                let mut transforms = Vec::new();
+                let mut transforms = Vec::with_capacity(pattern_instances(*count)?.saturating_sub(1));
                 for i in 1..(*count).max(1) {
                     let offset = [direction[0] * spacing * i as f64, direction[1] * spacing * i as f64, direction[2] * spacing * i as f64];
                     require_finite_vector("translate offset", offset)?;
@@ -420,8 +426,8 @@ impl Brep {
                 self.plan_pattern(shape, transforms)
             }
             BrepOperation::CircularPattern { shape, axis, count } => {
-                let n = (*count).max(1);
-                let mut transforms = Vec::new();
+                let n = pattern_instances(*count)?.max(1);
+                let mut transforms = Vec::with_capacity(n - 1);
                 for i in 1..n {
                     require_direction("rotate axis", *axis)?;
                     let angle = std::f64::consts::TAU * i as f64 / n as f64;
@@ -431,6 +437,7 @@ impl Brep {
                 self.plan_pattern(shape, transforms)
             }
             BrepOperation::GridPattern { shape, dir_x, dir_y, spacing_x, spacing_y, count_x, count_y } => {
+                pattern_instances((*count_x).max(1).checked_mul((*count_y).max(1)).unwrap_or(usize::MAX))?;
                 let mut transforms = Vec::new();
                 for i in 0..(*count_x).max(1) {
                     for j in 0..(*count_y).max(1) {
@@ -495,7 +502,7 @@ impl Brep {
         match &operation {
             BrepOperation::LinearPattern { shape, count, .. } if *count <= 1 => return Ok(BrepOperationAdmission::Answered(vec![shape.clone()])),
             BrepOperation::CircularPattern { shape, count, .. } if *count <= 1 => return Ok(BrepOperationAdmission::Answered(vec![shape.clone()])),
-            BrepOperation::GridPattern { shape, count_x, count_y, .. } if (*count_x).max(1) * (*count_y).max(1) <= 1 => return Ok(BrepOperationAdmission::Answered(vec![shape.clone()])),
+            BrepOperation::GridPattern { shape, count_x, count_y, .. } if (*count_x).max(1).saturating_mul((*count_y).max(1)) <= 1 => return Ok(BrepOperationAdmission::Answered(vec![shape.clone()])),
             _ => {}
         }
         let Planned { extraction, stage } = self.plan_operation(&operation)?;

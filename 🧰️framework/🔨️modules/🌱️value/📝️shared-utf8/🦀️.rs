@@ -1,5 +1,5 @@
 //! 📝️ Shared immutable UTF8 adopts the original byte allocation and exposes borrowed projections.
-use crate::{paged::Utf8Text,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,RetirementCursor,arc_custody::{SharedControlledRetirement,shared_retirement_allocation_bytes}},ValueError,ValueRefusalKind};
+use crate::{paged::Utf8Text,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,arc_custody::{SharedControlledRetirement,shared_retirement_allocation_bytes}},ValueError,ValueRefusalKind};
 use std::{sync::Arc,mem::size_of};
 
 #[derive(Clone,Debug,Default)]
@@ -22,11 +22,12 @@ impl SharedUtf8 {
         let turn=crate::retirement::arc_custody::admit_shared_allocation(original,grant,actual);
         crate::RetainedWorkOutcome{result:turn.result.map(|(owner,progress)|(Self(Some(owner)),progress)),work:turn.work}
     }
-    pub fn admit_clone(&self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),ValueError> {let mut work=0;let result=(||{
-        if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"shared UTF8 lease requires one admitted item"));}
-        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"shared UTF8 lease requires admitted original depth"));}
-        work=1;Ok((Self(self.0.as_ref().map(Arc::clone)),RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()}))
-    })();crate::RetainedWorkOutcome{result,work}}
+    pub fn admit_clone(&self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),ValueError> {let grant=effect.grant();
+        if grant.maximum_items==0{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"shared UTF8 lease requires one admitted item")),work:0};}
+        if grant.maximum_depth==0{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"shared UTF8 lease requires admitted original depth")),work:0};}
+        let before=effect.performed_work();let performed=effect.performed(1);let work=effect.performed_work().saturating_sub(before);
+        match performed{Ok(true)=>{},Ok(false)=>return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"shared UTF8 lease exceeded its original work")),work},Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work}}
+        crate::RetainedWorkOutcome{result:Ok((Self(self.0.as_ref().map(Arc::clone)),RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()})),work}}
     pub fn as_str(&self)->&str {self.0.as_ref().map_or("",|source|source.as_str())}
     pub fn as_bytes(&self)->&[u8] {self.as_str().as_bytes()}
     pub fn as_ptr(&self)->*const u8 {self.as_str().as_ptr()}
@@ -55,9 +56,18 @@ impl serde::Serialize for SharedUtf8 {fn serialize<S:serde::Serializer>(&self,se
 impl<'de> serde::Deserialize<'de> for SharedUtf8 {fn deserialize<D:serde::Deserializer<'de>>(deserializer:D)->Result<Self,D::Error>{<String as serde::Deserialize>::deserialize(deserializer).map(Self::from)}}
 impl crate::ToValue for SharedUtf8 {fn to_value(&self)->crate::DslValue{crate::DslValue::String(self.as_str().to_owned())}}
 impl crate::FromValue for SharedUtf8 {fn from_value(value:crate::DslValue)->Result<Self,ValueError>{<String as crate::FromValue>::from_value(value).map(Self::from)}}
+#[doc(hidden)]
+pub struct Utf8Lease(Arc<String>);
+impl RetireOwned for Utf8Lease {
+    type RetirementCursor=SharedControlledRetirement<String>;
+    fn retirement_seed(self)->Self::RetirementCursor{SharedControlledRetirement::lease(self.0)}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<SharedControlledRetirement<String>>())}
+    fn controlled_retirement_supported()->bool{true}
+}
 impl RetireOwned for SharedUtf8 {
-    fn retirement(self)->Box<dyn RetirementCursor>{self.0.map_or_else(||None::<Arc<String>>.retirement(),|source|Box::new(SharedControlledRetirement::lease(source)))}
-    fn retirement_birth_bytes(&self)->Option<usize>{self.0.as_ref().map_or_else(||None::<Arc<String>>.retirement_birth_bytes(),|_|Some(size_of::<SharedControlledRetirement<String>>()))}
+    type RetirementCursor=<Option<Utf8Lease> as RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{self.0.map(Utf8Lease).retirement_seed()}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self::RetirementCursor>())}
     fn controlled_retirement_supported()->bool{true}
 }
 
@@ -65,6 +75,5 @@ impl RetireOwned for SharedUtf8 {
 mod original_clone;
 pub use original_clone::SharedUtf8CloneCursor;
 
-#[cfg(test)]#[path="🎟️admission/🧪️tests/🦀️.rs"]mod admission_tests;
 
 #[path="🎟️native/🦀️.rs"]mod native_receiving;

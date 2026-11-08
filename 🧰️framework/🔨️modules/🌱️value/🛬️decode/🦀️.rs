@@ -4,15 +4,16 @@ use crate::{ValueError, ValueRefusalKind, ErasedSnapshotRetirement};
 mod observer;
 #[path="🎟️work/🦀️.rs"]
 mod work;
-pub use work::{NativeDecodeWorkIdentity,NativeDecodeWorkIssuer,NativeDecodeWorkLoan,NativeDecodeWorkRecipient,OriginalWorkAuthority,OriginalWorkIssuerIdentity,OriginalWorkActionIssuer,OriginalWorkLoan,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
+pub use work::{OriginalWorkAuthority,OriginalWorkIssuerIdentity,OriginalWorkActionIssuer,OriginalWorkLoan,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalSourceTurnIdentity};
 #[path="📏️maximum/🦀️.rs"]
 mod maximum;
 #[path="🛂️allocation/🦀️.rs"]
 pub mod allocation;
+pub use crate::{NativeAllocationAuthority,NativeAllocationAuthorityPort,NativeAllocationRefusal,NativeAllocationReply,NativeAllocationReplyComplete};
 pub use allocation::{NativeAllocationRequest,NativeAllocationEvent,NativeDecodeAdmissionPhase,NativeDecodeAdmissionProgress,NativeDecodeAllocationOutcome,NativeDecodeAllocationProgress,NativeDecodeAllocationPhase,NativeDecodeAllocationRecovery,NativeSendAllocationLoan,NativeForwardedDecodeControl,NativeForwardedDecodeContinuation,NativeForwardedDecodeFrame};
 #[path="🏭️construction/🦀️.rs"]
 pub mod construction;
-pub use construction::{OriginalConstructionAuthority,OriginalConstructionRecipient,OriginalConstructionLoan,OriginalConstructionIssuerIdentity,OriginalConstructionAction,OriginalConstructionPhase,NativeBackingTurn,OriginalEffectAction,OriginalEffectAuthority,OriginalEffectCallbackMode,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,NativeReceivingEffect,NativeReceivingEffectPoll,NativeReceivingEffectError,NativeReceivingEffectFailure,NativeReceivingEffectPhase,NativeSharedAdmission,NativeOwnedDecodeControl,NativeConstructionStepResult,NativeConstructionStepOutcome,NativeConstructionStepFailure,OriginalReceivingPrimary};
+pub use construction::{OriginalConstructionAuthority,OriginalConstructionRecipient,OriginalConstructionLoan,OriginalConstructionIssuerIdentity,OriginalConstructionAction,OriginalConstructionPhase,OriginalConstructionGrant,OriginalConstructionGrantComplete,OriginalConstructionAccept,OriginalConstructionAcceptComplete,NativeBackingTurn,allocate_empty_vec,OriginalEffectAction,OriginalEffectAuthority,OriginalEffectCallbackMode,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,NativeReceivingEffect,NativeReceivingEffectPoll,NativeReceivingEffectError,NativeReceivingEffectFailure,NativeReceivingEffectPhase,NativeSharedAdmission,NativeOwnedDecodeControl,NativeConstructionStepResult,NativeConstructionStepOutcome,NativeConstructionStepFailure,OriginalReceivingPrimary};
 #[path = "🫴️recipient/🦀️.rs"]
 mod recipient;
 #[path="🧬️child/🦀️.rs"]
@@ -20,7 +21,8 @@ mod child;
 pub use recipient::NativeDecodeRetirementRecipient;
 #[path="🫴️recipient/🔁️continuation/🦀️.rs"]
 mod retirement_continuation;
-pub use retirement_continuation::{NativeRetirementDecodeContinuation,NativeDetachedRetirementDecodeContinuation,NativeCallFailure};
+pub use retirement_continuation::{NativeRetirementDecodeContinuation,NativeDetachedRetirementDecodeContinuation};
+pub use semio_framework_value_call::NativeCallFailure;
 #[path="♻️retirement/🦀️.rs"]mod retirement_loan;
 pub use retirement_loan::{NativeRetirementDecodeControl,NativeDecodeCloseControl,NativePreparedDecodeControl};
 
@@ -30,7 +32,7 @@ pub struct NativeDecodeProgress { pub completed:usize, pub total:usize, pub owne
 
 /// 🧵️ An opaque consuming receipt retains this operation's admission across callback lifetimes.
 #[derive(Debug)]
-pub struct NativeDecodeContinuation { actual_work:u64, reserved_work:u64, reserved_issuer:Option<u64>, reserved_action:Option<u64>, work_quote_pending:bool, ledger:Option<semio_framework_value_native_encoding::native_receiving::NativeAllocationLedger>, receiving:bool, maximum_bytes:usize, completed:usize, total:usize, stage:u64 }
+pub struct NativeDecodeContinuation { work:work::WorkState, ledger:Option<semio_framework_value_native_encoding::native_receiving::NativeAllocationLedger>, receiving:bool, maximum_bytes:usize, completed:usize, total:usize, stage:u64 }
 
 impl NativeDecodeContinuation{
  /// 📏️ Observes the admission retained by this same receipt.
@@ -39,7 +41,7 @@ impl NativeDecodeContinuation{
  pub fn ledger_identity(&self)->crate::NativeAllocationIdentity{self.ledger.as_ref().expect("original decode ledger present").identity()}
 }
 
-impl Drop for NativeDecodeContinuation{fn drop(&mut self){assert!(std::thread::panicking()||self.ledger.as_ref().is_none_or(|ledger|!ledger.is_bound())&&self.reserved_issuer.is_none()&&self.reserved_action.is_none(),"native decoder continuation retains original paired ledger or pending work")}}
+impl Drop for NativeDecodeContinuation{fn drop(&mut self){assert!(std::thread::panicking()||self.ledger.as_ref().is_none_or(|ledger|!ledger.is_bound())&&!self.work.has_live_actions(),"native decoder continuation retains original paired ledger or pending work")}}
 
 
 /// 🧮️ One caller-owned budget persists from input scanning through final typed construction.
@@ -47,8 +49,8 @@ pub struct NativeDecodeControl<'a> { work:work::Work<'a>, ledger:Option<semio_fr
 struct StageScope<'owner,'control>{control:&'owner mut NativeDecodeControl<'control>,parent:(usize,usize,bool,u64)}
 impl Drop for StageScope<'_, '_>{fn drop(&mut self){if self.control.stage!=self.parent.3{self.control.completed=self.parent.0;self.control.total=self.parent.1;self.control.started=self.parent.2;self.control.stage=self.parent.3;}}}
 
-impl std::fmt::Debug for NativeDecodeControl<'_>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("NativeDecodeControl").field("ledger",&self.ledger).field("actual_work",&self.work.actual).field("pending_work",&self.work.reserved_issuer.is_some()).finish()}}
-impl Drop for NativeDecodeControl<'_>{fn drop(&mut self){assert!(std::thread::panicking()||self.ledger.as_ref().is_none_or(|ledger|!ledger.is_bound())&&self.work.reserved_issuer.is_none()&&self.work.reserved_action.is_none(),"native decoder control retains original paired ledger or pending work")}}
+impl std::fmt::Debug for NativeDecodeControl<'_>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("NativeDecodeControl").field("ledger",&self.ledger).field("actual_work",&self.work.state.actual()).field("pending_work",&self.work.state.has_live_actions()).finish()}}
+impl Drop for NativeDecodeControl<'_>{fn drop(&mut self){assert!(std::thread::panicking()||self.ledger.as_ref().is_none_or(|ledger|!ledger.is_bound())&&!self.work.state.has_live_actions(),"native decoder control retains original paired ledger or pending work")}}
 
 impl<'a> NativeDecodeControl<'a> {
 
@@ -93,6 +95,8 @@ impl<'a> NativeDecodeControl<'a> {
     pub fn with_retirement_child<T,E:From<ValueError>>(&mut self,recipient:&mut NativeDecodeRetirementRecipient,operation:impl FnOnce(&mut NativeDecodeControl<'_>)->Result<T,E>)->Result<T,E>{child::run(self,recipient,operation)}
     /// 👓️ Reports the original return slot without moving its pending physical owner.
     pub fn has_retirement_owner(&self)->bool{self.retirement.as_ref().is_some_and(|recipient|recipient.has_owner())}
+    /// 🚧️ Reports retirement work other than idle spare failure custody.
+    pub fn has_retirement_pending_close(&self)->bool{self.retirement.as_ref().is_some_and(|recipient|recipient.has_pending_close())}
     /// 🧺️ Observes spare failure custody separately from a pending returned owner.
     pub fn has_retirement_failure_storage(&self)->bool{self.retirement.as_ref().is_some_and(|recipient|recipient.has_failure_storage())}
     /// 🚦️ Observes a resident failure-node birth without admitting another turn.
@@ -122,21 +126,21 @@ impl<'a> NativeDecodeControl<'a> {
         match self.continuation(){Ok(receipt)=>{Ok(receipt)},Err(error)=>Err((error,self))}
     }
     fn validate_continuation(&self)->Result<(),ValueError>{
-        if self.ledger.as_ref().is_none_or(|ledger|ledger.is_bound())||self.work.recipient.is_some()||(self.work.reserved_issuer.is_some()!=self.work.reserved_action.is_some())||(self.work.reserved_issuer.is_none()&&(self.work.reserved!=0||self.work.quote_pending))||self.depth!=0||(self.total!=0&&self.completed>self.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation lacks valid cumulative accounting"));}
+        if self.ledger.as_ref().is_none_or(|ledger|ledger.is_bound())||self.work.recipient.is_some()||self.work.state.has_live_actions()||self.depth!=0||(self.total!=0&&self.completed>self.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation lacks valid cumulative accounting"));}
         Ok(())
     }
     fn continuation(&mut self)->Result<NativeDecodeContinuation,ValueError>{self.validate_continuation()?;
-        let receipt=NativeDecodeContinuation{actual_work:self.work.actual,reserved_work:self.work.reserved,reserved_issuer:self.work.reserved_issuer,reserved_action:self.work.reserved_action,work_quote_pending:self.work.quote_pending,ledger:self.ledger.take(),receiving:self.receiving,maximum_bytes:self.maximum_bytes,completed:self.completed,total:self.total,stage:self.stage};self.work.reserved=0;self.work.reserved_issuer=None;self.work.reserved_action=None;self.work.quote_pending=false;Ok(receipt)
+        let receipt=NativeDecodeContinuation{work:self.work.state.take(),ledger:self.ledger.take(),receiving:self.receiving,maximum_bytes:self.maximum_bytes,completed:self.completed,total:self.total,stage:self.stage};Ok(receipt)
     }
     /// ▶️ Rebinds a moved operation receipt to the current hop's cancellation callback.
     pub fn resume(receipt:NativeDecodeContinuation,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Result<Self,(ValueError,NativeDecodeContinuation)>{
-        if receipt.ledger.is_none()||(receipt.reserved_issuer.is_some()!=receipt.reserved_action.is_some())||(receipt.reserved_issuer.is_none()&&(receipt.reserved_work!=0||receipt.work_quote_pending))||(receipt.total!=0&&receipt.completed>receipt.total){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation has invalid cumulative accounting"),receipt));}
+        if receipt.ledger.is_none()||(receipt.total!=0&&receipt.completed>receipt.total){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation has invalid cumulative accounting"),receipt));}
         Ok(Self::resume_validated(receipt,callback))
     }
-    fn resume_validated(mut receipt:NativeDecodeContinuation,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self{let mut work=work::Work::empty(receipt.actual_work);work.reserved=receipt.reserved_work;work.reserved_issuer=receipt.reserved_issuer;work.reserved_action=receipt.reserved_action;work.quote_pending=receipt.work_quote_pending;Self{work,ledger:receipt.ledger.take(),scope_maximum:None,construction:None,allocation:allocation::Binding::Local,receiving:receipt.receiving,retirement:None,maximum_bytes:receipt.maximum_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback}}
+    fn resume_validated(mut receipt:NativeDecodeContinuation,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self{Self{work:work::Work{state:receipt.work.take(),recipient:None},ledger:receipt.ledger.take(),scope_maximum:None,construction:None,allocation:allocation::Binding::Local,receiving:receipt.receiving,retirement:None,maximum_bytes:receipt.maximum_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback}}
 
     /// 🚦️ Binds the explicit allocation ceiling and cancellation callback.
-    pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self { Self{work:work::Work::empty(0),ledger:Some(semio_framework_value_native_encoding::native_receiving::NativeAllocationLedger::new(0)),scope_maximum:None,construction:None,allocation:allocation::Binding::Local,receiving:false,retirement:None,maximum_bytes,completed:0,total:0,started:false,stage:0,depth:0,callback} }
+    pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self { Self{work:work::Work::empty(),ledger:Some(semio_framework_value_native_encoding::native_receiving::NativeAllocationLedger::new(0)),scope_maximum:None,construction:None,allocation:allocation::Binding::Local,receiving:false,retirement:None,maximum_bytes,completed:0,total:0,started:false,stage:0,depth:0,callback} }
     /// 🪆️ Bounds recursive typed construction independently of physical input parsing.
     pub fn scoped_depth<T,E:From<ValueError>>(&mut self,maximum:usize,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{
         if self.depth>=maximum{return Err(E::from(ValueError::literal(ValueRefusalKind::DepthLimit, "native typed construction exceeds depth limit")))}
@@ -167,6 +171,8 @@ impl<'a> NativeDecodeControl<'a> {
     pub fn step(&mut self)->Result<(),ValueError> {self.advance(1)}
     /// 📦️ Admits cumulative storage before a caller copies or reserves it.
     pub fn charge(&mut self,bytes:usize)->Result<(),ValueError> { let prior=self.owned_bytes();let next=prior.checked_add(bytes).filter(|next|*next<=self.maximum_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native decoding ownership exceeds caller limit"))?;if !self.started||bytes>65536 {self.checkpoint()?;}if matches!(&self.allocation,allocation::Binding::Forwarded(_)){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"forwarded native allocation requires an actual quoted effect"))}self.ledger.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original decode ledger absent"))?.commit(NativeAllocationRequest{bytes,owned_bytes:prior,next_owned_bytes:next,maximum_bytes:self.maximum_bytes})?;Ok(()) }
+    /// 🪢️ Reports whether this decoder lends its allocation to a caller-quoted effect instead of charging its own ledger.
+    pub fn is_forwarded(&self)->bool{matches!(&self.allocation,allocation::Binding::Forwarded(_))}
     /// 🗂️ Reserves typed collection slots after overflow and caller-bound admission.
     pub fn allocate_vec<T>(&mut self,count:usize)->Result<Vec<T>,ValueError> { let bytes=count.checked_mul(size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native decoding collection size overflow"))?;self.charge(bytes)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native decoding collection allocation failed"))?;Ok(output) }
     fn copy_checkpoint(&mut self,completed:usize,total:usize)->Result<(),ValueError>{let owned_bytes=self.owned_bytes();if(self.callback)(NativeDecodeProgress{completed,total,owned_bytes}){Ok(())}else{Err(ValueError::literal(ValueRefusalKind::Canceled, "native decoding canceled"))}}

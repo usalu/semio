@@ -202,7 +202,7 @@ async fn measured_host_turn(app: &mut Puzzle3dApp) {
     let (raw, cx) = app.parts();
     raw.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
     let instance_id = app.instance_id;
-    if let Some(page) = app.take_typed_operation_result_page(instance_id, semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance).expect("take one typed operation result page").0 {
+    if let Some(page) = semio_plugin::artifact_app_laws::take_fixture_result_turn(&mut app, instance_id, semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance).expect("take one typed operation result page").0 {
         assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page"), "the app's own presented result page must accept its exact token");
     }
     drop(app.take_typed_operation_effect());

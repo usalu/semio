@@ -1,8 +1,9 @@
 //! 📊️ Original Progress tokens initialize one final native slot with separately paid field and backing custody.
 use crate::{ToolRunCounter,ToolRunIdentityReceiving,ToolRunNativeTickPreparation,ToolRunReceivedProgress,ToolRunReceivingLimits,ToolRunState,ToolRunStep,ToolRunStepReceiving};
 use pack::record::{RetainedRecordBodySourceDecode,RetainedRecordBodyToken,RetainedValueContainer,RetainedValueRole,RetainedValueToken};
-use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
-use semio_framework_value_persistent::list::PagedList;
+use crate::native_tick_preparation::{pure,release_page};
+use semio_framework_value::{RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_persistent::list::{PagedList, PagedListReservationFailure, PagedListReservationOutcome};
 use std::{mem::{ManuallyDrop,MaybeUninit,size_of},ptr::addr_of_mut};
 type Witness=(usize,usize,Option<(u64,u64)>,(usize,usize));
 type Receipt=Option<(RetainedCloneGrant,RetainedCloneProgress)>;
@@ -33,10 +34,10 @@ fn content_demands(ptr:*const ToolRunReceivedProgress,headers:u8)->Result<Retire
  if headers>=3{let rows=steps(unsafe{&*ptr.cast::<MaybeUninit<ToolRunReceivedProgress>>()});if let Some(step)=rows.last(){return Ok(if !step.args.is_empty()||step.args.capacity()>0{RetirementDemand{release_bytes:if step.args.is_empty(){step.args.capacity()*size_of::<crate::ToolRunStepArg>()}else{0},depth:rows.next_get_depth_demand(rows.len()-1).map_err(|_|fault())?+3,..Default::default()}}else{RetirementDemand{depth:rows.next_pop_depth_demand().map_err(|_|fault())?+1,..Default::default()}})}if !rows.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:rows.next_release_allocation_bytes().map_err(|_|fault())?,depth:rows.next_release_depth_demand().map_err(|_|fault())?+1,..Default::default()})}}
  if headers>=2{let rows=counters(unsafe{&*ptr.cast::<MaybeUninit<ToolRunReceivedProgress>>()});if !rows.is_empty(){return Ok(RetirementDemand{depth:rows.next_pop_depth_demand().map_err(|_|fault())?+1,..Default::default()})}if !rows.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:rows.next_release_allocation_bytes().map_err(|_|fault())?,depth:rows.next_release_depth_demand().map_err(|_|fault())?+1,..Default::default()})}}Ok(Default::default())
 }
-fn close_content(ptr:*mut ToolRunReceivedProgress,headers:u8,d:RetirementDemand,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
- if d.depth==0||!funded(g,d){return Ok(None)}let mut p=progress();
- if headers>=3{let rows=unsafe{&mut *addr_of_mut!((*ptr).steps)};if let Some(step)=rows.last_mut(){if !step.args.is_empty(){step.args.pop();}else if step.args.capacity()>0{drop(std::mem::take(&mut step.args));p.released_bytes=d.release_bytes;}else{rows.truncate_retired_last().map_err(|_|fault())?}return Ok(Some(p))}if !rows.terminal_is_empty(){let released=rows.release_empty_page(g.maximum_release_bytes).map_err(|_|fault())?;if !released.progressed{return Err(fault())}p.released_bytes=released.released_allocation_bytes;return Ok(Some(p))}}
- if headers>=2{let rows=unsafe{&mut *addr_of_mut!((*ptr).counters)};if !rows.is_empty(){rows.truncate_retired_last().map_err(|_|fault())?;return Ok(Some(p))}if !rows.terminal_is_empty(){let released=rows.release_empty_page(g.maximum_release_bytes).map_err(|_|fault())?;if !released.progressed{return Err(fault())}p.released_bytes=released.released_allocation_bytes;return Ok(Some(p))}}Err(fault())
+fn close_content(ptr:*mut ToolRunReceivedProgress,headers:u8,d:RetirementDemand,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+ if d.depth==0||!funded(effect.grant(),d){return Ok(None)}let mut p=progress();
+ if headers>=3{let rows=unsafe{&mut *addr_of_mut!((*ptr).steps)};if let Some(step)=rows.last_mut(){if !pure(effect)?{return Ok(None)}if !step.args.is_empty(){step.args.pop();}else if step.args.capacity()>0{drop(std::mem::take(&mut step.args));p.released_bytes=d.release_bytes;}else{rows.truncate_retired_last().map_err(|_|fault())?}return Ok(Some(p))}if !rows.terminal_is_empty(){return release_page(rows,effect)}}
+ if headers>=2{let rows=unsafe{&mut *addr_of_mut!((*ptr).counters)};if !rows.is_empty(){if !pure(effect)?{return Ok(None)}rows.truncate_retired_last().map_err(|_|fault())?;return Ok(Some(p))}if !rows.terminal_is_empty(){return release_page(rows,effect)}}Err(fault())
 }
 impl ToolRunProgressReceiving{
  pub const fn birth_bytes()->usize{size_of::<ToolRunReceivedProgress>()}
@@ -52,7 +53,7 @@ impl ToolRunProgressReceiving{
  pub fn native_address(&self)->Option<usize>{self.slot.as_ref().map(|slot|slot.as_ptr()as usize)}
  pub fn receipt(&self)->Receipt{self.receipt}
  pub fn take_receipt(&mut self,source:&RetainedRecordBodySourceDecode,parent:&mut ToolRunNativeTickPreparation)->Result<Receipt,ValueError>{if self.receipt.is_none(){return Ok(None)}self.validate(source,parent)?;if source.receipt().is_some(){return Ok(None)}if self.phase==Phase::Closed{parent.end_progress_issuer(source,self.parent)?}Ok(self.receipt.take())}
- pub fn initialize_header_step(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{self.validate(source,parent)?;if self.receipt.is_some()||source.receipt().is_some()||self.closing||self.headers==3||!funded(g,metadata()){return Ok(None)}let ptr=self.ptr_mut()?;unsafe{match self.headers{0=>addr_of_mut!((*ptr).total).write(None),1=>addr_of_mut!((*ptr).counters).write(PagedList::empty()),2=>addr_of_mut!((*ptr).steps).write(PagedList::empty()),_=>unreachable!()}}self.headers+=1;let p=progress();self.receipt=Some((g,p));Ok(Some(p))}
+ pub fn initialize_header_step(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{let g=effect.grant();self.validate(source,parent)?;if self.receipt.is_some()||source.receipt().is_some()||self.closing||self.headers==3||!funded(g,metadata()){return Ok(None)}let ptr=self.ptr_mut()?;if !pure(effect)?{return Ok(None)}unsafe{match self.headers{0=>addr_of_mut!((*ptr).total).write(None),1=>addr_of_mut!((*ptr).counters).write(PagedList::empty()),2=>addr_of_mut!((*ptr).steps).write(PagedList::empty()),_=>unreachable!()}}self.headers+=1;let p=progress();self.receipt=Some((g,p));Ok(Some(p))}
  pub fn demands(&self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,pending:&Option<RetainedRecordBodyToken>)->Result<RetirementDemand,ValueError>{
   self.validate(source,parent)?;if self.receipt.is_some()||source.receipt().is_some()||self.closing||self.headers!=3||matches!(self.phase,Phase::Complete|Phase::Closed){return Ok(Default::default())}self.allocation(source,parent,0)?;let mut d=metadata();
   match self.phase{Phase::IdentityAdmit|Phase::IdentityClose|Phase::StepAdmit|Phase::StepTake|Phase::StepClose=>d.depth=3,Phase::StepTag=>{if !steps(self.slot.as_ref().ok_or_else(fault)?.as_ref()).has_reserved_slot(){return Ok(Default::default())}},Phase::Scalar=>d.copy_bytes=match self.field{2|5|6=>8,3=>1,4=>2,8|9=>4,_=>return Err(fault())},Phase::IdentityTokens=>{d=self.identity.as_ref().ok_or_else(fault)?.demands();d.depth+=1},Phase::IdentityInstall=>d.copy_bytes=match self.identity_at{0|2=>4,1=>8,3..=34=>1,_=>0},Phase::CounterLength=>{if let Some(RetainedRecordBodyToken::Value(RetainedValueToken::Unsigned{role:RetainedValueRole::BytesLength,value}))=pending{let bytes=usize::try_from(*value).map_err(|_|limit())?;if bytes%10!=0||bytes/10>crate::TOOL_RUN_COUNTERS_MAX{return Err(limit())}}},Phase::CounterBytes=>{if !counters(self.slot.as_ref().ok_or_else(fault)?.as_ref()).has_reserved_slot(){return Ok(Default::default())}d.copy_bytes=1},Phase::CounterCommit=>d.depth=counters(self.slot.as_ref().ok_or_else(fault)?.as_ref()).next_push_depth_demand().map_err(|_|fault())?+1,Phase::StepTokens=>{d=self.step.as_ref().ok_or_else(fault)?.demands(pending)?;d.depth+=1;self.allocation(source,parent,d.capacity_bytes)?},Phase::StepAdopt=>d.depth=steps(self.slot.as_ref().ok_or_else(fault)?.as_ref()).next_push_depth_demand().map_err(|_|fault())?+1,_=>{}}Ok(d)
@@ -60,8 +61,23 @@ impl ToolRunProgressReceiving{
  pub fn reserve_demands(&self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation)->Result<RetirementDemand,ValueError>{
   self.validate(source,parent)?;if self.receipt.is_some()||source.receipt().is_some()||self.closing||self.headers!=3{return Ok(Default::default())}let d=if self.phase==Phase::CounterBytes&&self.counter_at==0{let rows=counters(self.slot.as_ref().ok_or_else(fault)?.as_ref());if rows.has_reserved_slot(){return Ok(Default::default())}RetirementDemand{copy_bytes:rows.next_capacity_copy_byte_demand(self.counter_count).map_err(|_|limit())?,capacity_bytes:rows.next_capacity_allocation_bytes(self.counter_count).map_err(|_|limit())?.ok_or_else(fault)?,depth:rows.next_reserve_depth_demand().map_err(|_|limit())?+1,..Default::default()}}else if self.phase==Phase::StepTag{let rows=steps(self.slot.as_ref().ok_or_else(fault)?.as_ref());if rows.has_reserved_slot(){return Ok(Default::default())}let count=rows.len()+self.steps_left;RetirementDemand{copy_bytes:rows.next_capacity_copy_byte_demand(count).map_err(|_|limit())?,capacity_bytes:rows.next_capacity_allocation_bytes(count).map_err(|_|limit())?.ok_or_else(fault)?,depth:rows.next_reserve_depth_demand().map_err(|_|limit())?+1,..Default::default()}}else{return Ok(Default::default())};self.allocation(source,parent,d.capacity_bytes)?;Ok(d)
  }
- pub fn reserve_step(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{let d=self.reserve_demands(source,parent)?;if d.depth==0||!funded(g,d){return Ok(None)}let ptr=self.ptr_mut()?;let result=if self.phase==Phase::CounterBytes{unsafe{&mut *addr_of_mut!((*ptr).counters)}.reserve_capacity_one_funded(self.counter_count,g)}else{let rows=unsafe{&mut *addr_of_mut!((*ptr).steps)};rows.reserve_capacity_one_funded(rows.len()+self.steps_left,g)};let p=match result{Ok(p)=>p,Err(error)=>{let p=RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..progress()};self.receipt=Some((g,p));return Err(limit().with_retained_progress(p))}};self.receipt=Some((g,p));if !p.fits(g){return Err(limit().with_retained_progress(p))}Ok(Some(p))}
- pub fn receive(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,pending:&mut Option<RetainedRecordBodyToken>,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
+ /// 🧱️ Reserves one exact counter or step page under the effect; the list primitive records its own work.
+ pub fn reserve_step(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+  let g=effect.grant();let d=self.reserve_demands(source,parent)?;if d.depth==0||!funded(g,d){return Ok(None)}let ptr=self.ptr_mut()?;
+  let turn=if self.phase==Phase::CounterBytes{unsafe{&mut *addr_of_mut!((*ptr).counters)}.reserve_capacity_one_funded(self.counter_count,effect)}else{let rows=unsafe{&mut *addr_of_mut!((*ptr).steps)};rows.reserve_capacity_one_funded(rows.len()+self.steps_left,effect)};
+  let p=match turn.result{
+   Ok(PagedListReservationOutcome::Ready(p))=>p,
+   Ok(PagedListReservationOutcome::Denied)=>return Ok(None),
+   Err(PagedListReservationFailure::Work(error))=>return Err(error),
+   Err(PagedListReservationFailure::Allocation{error,copied_bytes})=>{let p=RetainedCloneProgress{copied_bytes,retained_capacity_bytes:error.allocated_bytes,..progress()};self.receipt=Some((g,p));return Err(limit().with_retained_progress(p))}
+  };
+  self.receipt=Some((g,p));if !p.fits(g){return Err(limit().with_retained_progress(p))}Ok(Some(p))
+ }
+ /// 🎞️ Consumes one pending token under the effect; the whole turn, children included, records exactly one unit.
+ pub fn receive(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,pending:&mut Option<RetainedRecordBodyToken>,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+  if effect.remaining_work_units()?==0{return Ok(None)}let received=self.receive_granted(source,parent,pending,effect.grant())?;if received.is_some()&&!pure(effect)?{return Err(fault())}Ok(received)
+ }
+ fn receive_granted(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,pending:&mut Option<RetainedRecordBodyToken>,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
   let d=self.demands(source,parent,pending)?;if d.depth==0||!funded(g,d){return Ok(None)}
   if self.phase==Phase::IdentityTokens{let child=self.identity.as_mut().ok_or_else(fault)?;let Some(p)=child.receive(source,pending,g)?else{return Ok(None)};if child.take_receipt()!=Some((g,p)){self.receipt=Some((g,p));return Err(fault().with_retained_progress(p))}if child.identity().is_some(){self.phase=Phase::IdentityInstall}self.receipt=Some((g,p));return Ok(Some(p))}
   if self.phase==Phase::StepTokens{let child=self.step.as_mut().ok_or_else(fault)?;let result=child.receive(source,pending,g);match result{Ok(Some(p))=>{if child.take_receipt()!=Some((g,p)){self.receipt=Some((g,p));return Err(fault().with_retained_progress(p))}if child.step().is_some(){self.phase=Phase::StepTake}self.receipt=Some((g,p));return Ok(Some(p))},Ok(None)=>return Ok(None),Err(error)=>{self.receipt=child.take_receipt();return Err(error)}}}
@@ -83,17 +99,29 @@ impl ToolRunProgressReceiving{
   }
   pending.take();self.receipt=Some((g,p));Ok(Some(p))
  }
- pub fn advance_child_step(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
+ /// 🔗️ Advances one child transition under the effect; adoption records through its list primitive, every other transition records one unit.
+ pub fn advance_child_step(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+  if matches!(self.phase,Phase::CounterCommit|Phase::StepAdopt){return self.adopt_step(source,parent,effect)}
+  if effect.remaining_work_units()?==0{return Ok(None)}let advanced=self.advance_child_granted(source,parent,effect.grant())?;if advanced.is_some()&&!pure(effect)?{return Err(fault())}Ok(advanced)
+ }
+ fn adopt_step(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+  let g=effect.grant();let d=self.demands(source,parent,&None)?;if d.depth==0||!funded(g,d){return Ok(None)}let ptr=self.ptr_mut()?;
+  match self.phase{
+   Phase::CounterCommit=>{let mut scalar=Some(ToolRunCounter{counter:u16::from_le_bytes(self.counter[..2].try_into().map_err(|_|fault())?),value:u64::from_le_bytes(self.counter[2..].try_into().map_err(|_|fault())?)});let adopted=unsafe{&mut *addr_of_mut!((*ptr).counters)}.adopt_reserved(&mut scalar,effect).result?;if !adopted.progressed{return if scalar.is_some(){Ok(None)}else{Err(fault())}}if scalar.is_some(){return Err(fault())}self.counter_at=0;self.phase=if self.counter_bytes==0{self.seen|=64;Phase::Field}else{Phase::CounterBytes}},
+   Phase::StepAdopt=>{let adopted=unsafe{&mut *addr_of_mut!((*ptr).steps)}.adopt_reserved(&mut self.incoming,effect).result?;if !adopted.progressed{return if self.incoming.is_some(){Ok(None)}else{Err(fault())}}if self.incoming.is_some(){return Err(fault())}self.phase=Phase::StepClose},
+   _=>return Ok(None),
+  }
+  let p=progress();self.receipt=Some((g,p));Ok(Some(p))
+ }
+ fn advance_child_granted(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
   let d=self.demands(source,parent,&None)?;if d.depth==0||!funded(g,d){return Ok(None)}let mut p=progress();let ptr=self.ptr_mut()?;
   match self.phase{
-   Phase::IdentityAdmit=>{let Some((child,issued))=ToolRunIdentityReceiving::admit(source,g)else{return Ok(None)};*self.identity=Some(child);if self.identity.as_mut().unwrap().take_receipt()!=Some((g,issued)){return Err(fault())}p=issued;self.phase=Phase::IdentityTokens},
+   Phase::IdentityAdmit=>{let Some((child,issued))=ToolRunIdentityReceiving::admit(source,g)else{return Ok(None)};*self.identity=Some(child);if self.identity.as_mut().ok_or_else(fault)?.take_receipt()!=Some((g,issued)){return Err(fault())}p=issued;self.phase=Phase::IdentityTokens},
    Phase::IdentityInstall=>{let child=self.identity.as_mut().ok_or_else(fault)?;if self.identity_at==35{let Some(issued)=child.retire_identity_step(g)else{return Ok(None)};if child.take_receipt()!=Some((g,issued)){return Err(fault())}self.phase=Phase::IdentityClose}else{let value=child.identity().ok_or_else(fault)?;unsafe{match self.identity_at{0=>addr_of_mut!((*ptr).identity.id.app_instance_id).write(value.id.app_instance_id),1=>addr_of_mut!((*ptr).identity.id.run).write(value.id.run),2=>addr_of_mut!((*ptr).identity.generation).write(value.generation),at=>addr_of_mut!((*ptr).identity.base_revision).cast::<u8>().add(at as usize-3).write(value.base_revision[at as usize-3])}}p.copied_bytes=d.copy_bytes}self.identity_at+=1},
    Phase::IdentityClose=>{let child=self.identity.as_mut().ok_or_else(fault)?;child.cancel();let Some(issued)=child.close_step(g)else{return Ok(None)};if child.take_receipt()!=Some((g,issued)){return Err(fault())}p=issued;self.phase=Phase::IdentityRemove},
    Phase::IdentityRemove=>{if !self.identity.as_ref().is_some_and(|child|child.terminal_is_empty()){return Err(fault())}self.identity.take();self.seen|=1;self.phase=Phase::Field},
-   Phase::CounterCommit=>{let mut scalar=Some(ToolRunCounter{counter:u16::from_le_bytes(self.counter[..2].try_into().unwrap()),value:u64::from_le_bytes(self.counter[2..].try_into().unwrap())});if !unsafe{&mut *addr_of_mut!((*ptr).counters)}.adopt_reserved(&mut scalar).map_err(|_|fault())?.progressed{return Err(fault())}self.counter_at=0;self.phase=if self.counter_bytes==0{self.seen|=64;Phase::Field}else{Phase::CounterBytes}},
-   Phase::StepAdmit=>{let Some((child,issued))=ToolRunStepReceiving::admit(source,g)else{return Ok(None)};*self.step=Some(child);if self.step.as_mut().unwrap().take_receipt()!=Some((g,issued)){return Err(fault())}p=issued;self.phase=Phase::StepTokens},
+   Phase::StepAdmit=>{let Some((child,issued))=ToolRunStepReceiving::admit(source,g)else{return Ok(None)};*self.step=Some(child);if self.step.as_mut().ok_or_else(fault)?.take_receipt()!=Some((g,issued)){return Err(fault())}p=issued;self.phase=Phase::StepTokens},
    Phase::StepTake=>{let child=self.step.as_mut().ok_or_else(fault)?;let Some(issued)=child.take_step_into(&mut self.incoming,g)else{return Ok(None)};if child.take_receipt()!=Some((g,issued)){return Err(fault())}p=issued;self.phase=Phase::StepAdopt},
-   Phase::StepAdopt=>{if !unsafe{&mut *addr_of_mut!((*ptr).steps)}.adopt_reserved(&mut self.incoming).map_err(|_|fault())?.progressed{return Err(fault())}self.phase=Phase::StepClose},
    Phase::StepClose=>{let child=self.step.as_mut().ok_or_else(fault)?;child.cancel();let Some(issued)=child.close_step(g)?else{return Ok(None)};if child.take_receipt()!=Some((g,issued)){return Err(fault())}p=issued;self.phase=Phase::StepRemove},
    Phase::StepRemove=>{if !self.step.as_ref().is_some_and(|child|child.terminal_is_empty()){return Err(fault())}self.step.take();self.steps_left-=1;self.phase=if self.steps_left==0{Phase::ListEnd}else{Phase::StepTag}},
    _=>return Ok(None),
@@ -101,21 +129,27 @@ impl ToolRunProgressReceiving{
   self.receipt=Some((g,p));Ok(Some(p))
  }
  pub fn borrowed(&self)->Option<&ToolRunReceivedProgress>{if self.phase!=Phase::Complete||self.receipt.is_some()||self.closing{return None}self.slot.as_ref().map(|slot|unsafe{slot.assume_init_ref()})}
- pub fn publish_into(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,recipient:&mut Option<ToolRunReceivedProgressSource>,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
-  self.validate(source,parent)?;if self.receipt.is_some()||source.receipt().is_some()||self.closing||self.phase!=Phase::Complete||recipient.is_some()||!funded(g,metadata()){return Ok(None)}let p=progress();*recipient=Some(ToolRunReceivedProgressSource{slot:ManuallyDrop::new(self.slot.take()),source:self.source,parent:self.parent,limits:self.limits,receipt:Some((g,p)),parent_receipt:true,closing:false,closed:false});self.headers=0;self.phase=Phase::Closed;Ok(Some(p))
+ pub fn publish_into(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,recipient:&mut Option<ToolRunReceivedProgressSource>,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+  let g=effect.grant();self.validate(source,parent)?;if self.receipt.is_some()||source.receipt().is_some()||self.closing||self.phase!=Phase::Complete||recipient.is_some()||!funded(g,metadata()){return Ok(None)}if !pure(effect)?{return Ok(None)}let p=progress();*recipient=Some(ToolRunReceivedProgressSource{slot:ManuallyDrop::new(self.slot.take()),source:self.source,parent:self.parent,limits:self.limits,receipt:Some((g,p)),parent_receipt:true,closing:false,closed:false});self.headers=0;self.phase=Phase::Closed;Ok(Some(p))
  }
  pub fn cancel(&mut self){self.closing=true;if let Some(child)=self.identity.as_mut(){child.cancel()}if let Some(child)=self.step.as_mut(){child.cancel()}}
  pub fn close_demands(&self)->Result<RetirementDemand,ValueError>{
   if self.receipt.is_some()||!self.closing||self.phase==Phase::Closed{return Ok(Default::default())}let mut d=if self.identity.is_some(){metadata()}else if let Some(child)=self.step.as_ref(){if child.terminal_is_empty(){metadata()}else{child.close_demands()?}}else if let Some(step)=self.incoming.as_ref(){RetirementDemand{release_bytes:if step.args.is_empty(){step.args.capacity()*size_of::<crate::ToolRunStepArg>()}else{0},..metadata()}}else if let Some(slot)=self.slot.as_ref(){let content=content_demands(slot.as_ptr(),self.headers)?;if content.depth>0{content}else{RetirementDemand{release_bytes:Self::birth_bytes(),..metadata()}}}else{metadata()};if self.identity.is_some()||self.step.is_some(){d.depth+=1}Ok(d)
  }
- pub fn close_step(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
-  self.validate(source,parent)?;if source.receipt().is_some(){return Ok(None)}let d=self.close_demands()?;if d.depth==0||!funded(g,d){return Ok(None)}let mut p=progress();
+ /// ♻️ Retires one resident owner under the effect; content release records through its list primitive, every other transition records one unit.
+ pub fn close_step(&mut self,source:&RetainedRecordBodySourceDecode,parent:&ToolRunNativeTickPreparation,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+  let g=effect.grant();self.validate(source,parent)?;if source.receipt().is_some(){return Ok(None)}let d=self.close_demands()?;if d.depth==0||!funded(g,d){return Ok(None)}let mut p=progress();
+  if self.identity.is_none()&&self.step.is_none()&&self.incoming.is_none()&&self.slot.is_some(){
+   let ptr=self.ptr_mut()?;let content=content_demands(ptr,self.headers)?;
+   if content.depth>0{let Some(done)=close_content(ptr,self.headers,d,effect)?else{return Ok(None)};p=done}else{if !pure(effect)?{return Ok(None)}drop(self.slot.take());self.headers=0;p.released_bytes=Self::birth_bytes();}
+   self.receipt=Some((g,p));return Ok(Some(p))
+  }
+  if effect.remaining_work_units()?==0{return Ok(None)}
   if let Some(child)=self.identity.as_mut(){if child.terminal_is_empty(){self.identity.take();}else{child.cancel();let Some(issued)=child.close_step(g)else{return Ok(None)};if child.take_receipt()!=Some((g,issued)){return Err(fault())}p=issued}}
   else if let Some(child)=self.step.as_mut(){if child.terminal_is_empty(){self.step.take();}else{child.cancel();let Some(issued)=child.close_step(g)?else{return Ok(None)};if child.take_receipt()!=Some((g,issued)){return Err(fault())}p=issued}}
   else if let Some(step)=self.incoming.as_mut(){if !step.args.is_empty(){step.args.pop();}else if step.args.capacity()>0{drop(std::mem::take(&mut step.args));p.released_bytes=d.release_bytes;}else{self.incoming.take();}}
-  else if self.slot.is_some(){let ptr=self.ptr_mut()?;let content=content_demands(ptr,self.headers)?;if content.depth>0{p=close_content(ptr,self.headers,d,g)?.ok_or_else(fault)?}else{drop(self.slot.take());self.headers=0;p.released_bytes=Self::birth_bytes();}}
   else{self.phase=Phase::Closed;self.counter_at=0;self.counter_bytes=0;self.steps_left=0;}
-  self.receipt=Some((g,p));Ok(Some(p))
+  if !pure(effect)?{return Err(fault())}self.receipt=Some((g,p));Ok(Some(p))
  }
  pub fn terminal_is_empty(&self)->bool{self.phase==Phase::Closed&&self.slot.is_none()&&self.identity.is_none()&&self.step.is_none()&&self.incoming.is_none()&&self.receipt.is_none()}
 }
@@ -128,7 +162,12 @@ impl ToolRunReceivedProgressSource{
  pub fn take_receipt(&mut self,source:&RetainedRecordBodySourceDecode,parent:&mut ToolRunNativeTickPreparation)->Result<Receipt,ValueError>{if self.receipt.is_none(){return Ok(None)}if self.parent_receipt{if witness(source)!=self.source||source.receipt().is_some(){return Ok(None)}parent.end_progress_issuer(source,self.parent)?;self.parent_receipt=false;}Ok(self.receipt.take())}
  pub fn cancel(&mut self){self.closing=true}
  pub fn close_demands(&self)->Result<RetirementDemand,ValueError>{if self.receipt.is_some()||self.parent_receipt||!self.closing||self.closed{return Ok(Default::default())}if let Some(slot)=self.slot.as_ref(){let d=content_demands(slot.as_ptr(),3)?;if d.depth>0{return Ok(d)}return Ok(RetirementDemand{release_bytes:ToolRunProgressReceiving::birth_bytes(),..metadata()})}Ok(metadata())}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{let d=self.close_demands()?;if d.depth==0||!funded(g,d){return Ok(None)}let mut p=progress();if let Some(slot)=self.slot.as_mut(){let ptr=slot.as_mut_ptr();if content_demands(ptr,3)?.depth>0{p=close_content(ptr,3,d,g)?.ok_or_else(fault)?}else{drop(self.slot.take());p.released_bytes=ToolRunProgressReceiving::birth_bytes();}}else{self.closed=true}self.receipt=Some((g,p));Ok(Some(p))}
+ /// ♻️ Retires the published slot under the effect with the same one-unit-per-transition accounting.
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+  let g=effect.grant();let d=self.close_demands()?;if d.depth==0||!funded(g,d){return Ok(None)}let mut p=progress();
+  if let Some(slot)=self.slot.as_mut(){let ptr=slot.as_mut_ptr();if content_demands(ptr,3)?.depth>0{let Some(done)=close_content(ptr,3,d,effect)?else{return Ok(None)};p=done}else{if !pure(effect)?{return Ok(None)}drop(self.slot.take());p.released_bytes=ToolRunProgressReceiving::birth_bytes();}}else{if !pure(effect)?{return Ok(None)}self.closed=true}
+  self.receipt=Some((g,p));Ok(Some(p))
+ }
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.slot.is_none()&&self.receipt.is_none()&&!self.parent_receipt}
 }
 impl Drop for ToolRunProgressReceiving{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original Progress receiving abandoned its native slot, child or receipt")}}

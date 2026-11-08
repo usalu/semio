@@ -203,10 +203,10 @@ fn dof_map_push_places_into_reserved_pages_and_refuses_without_changing_either_o
     let mut map = DofMap::from_order(Vec::new());
     assert_eq!(map.get("a", Dof::Tx), None);
     assert_eq!(map.push(("a".into(), Dof::Tx)), Err(("a".into(), Dof::Tx)), "no reserved order slot");
-    while map.order.capacity() < maximum { map.order.reserve_capacity_one(maximum, 4096).unwrap(); }
+    while map.order.capacity() < maximum { semio_s_fem_sparse::reserve_cold_page(&mut map.order, maximum).unwrap(); }
     assert_eq!(map.push(("a".into(), Dof::Tx)), Err(("a".into(), Dof::Tx)), "no initialized index slot");
     let slot_count = DofMap::slot_count(maximum).unwrap();
-    while map.slots.capacity() < slot_count { map.slots.reserve_capacity_one(slot_count, 4096).unwrap(); }
+    while map.slots.capacity() < slot_count { semio_s_fem_sparse::reserve_cold_page(&mut map.slots, slot_count).unwrap(); }
     while map.slots.len() < slot_count { map.slots.push_reserved(None).unwrap(); }
     for index in 0..maximum {
         let owner = (format!("n{}", index / 4), Dof::ALL[index % 4]);
@@ -219,7 +219,7 @@ fn dof_map_push_places_into_reserved_pages_and_refuses_without_changing_either_o
     assert_eq!(map.len(), maximum);
     assert_eq!(map.push(("overflow".into(), Dof::Tz)), Err(("overflow".into(), Dof::Tz)), "order page admission is exhausted");
     let mut tight = DofMap::from_order(vec![("a".into(), Dof::Tx)]);
-    tight.order.reserve_capacity_one(2, 4096).unwrap();
+    semio_s_fem_sparse::reserve_cold_page(&mut tight.order, 2).unwrap();
     assert_eq!(tight.slots.len(), 2);
     assert_eq!(tight.push(("b".into(), Dof::Tx)), Ok(()));
     assert_eq!(tight.push(("c".into(), Dof::Tx)), Err(("c".into(), Dof::Tx)), "the index has no vacant slot left");

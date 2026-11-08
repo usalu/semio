@@ -2,7 +2,7 @@
 pub use semio_os_store_durable_group_wire::lifted_durable_group::planning;
 use planning::{DurableCanonicalOutputV1, DurablePackOutputV1, copy, permit};
 use semio_framework_dsl_record::DslField;
-use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError};
+use semio_framework_value::{NativeEncodeControl, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError};
 use semio_os_store_durable_group_wire::lifted_durable_group::*;
 use semio_os_store_one_item_publication::lifted_canonical_edit as canonical_edit;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
@@ -484,7 +484,7 @@ where
     if !valid_edit_identities(&edit) || CursorRevisionAccumulator::edit_digest(&edit) != outcome.edit_digest {
         return Err(DurableOwnedGroupDecisionError::InvalidHash);
     }
-    let authority = ArtifactStoreOneItemLiveAuthority::mint(
+    let authority = ArtifactStoreOneItemLiveAuthority::from_recovered_outcome(
         semio_framework_job::OperationId(outcome.operation),
         semio_framework_job::Generation(outcome.base_generation),
         outcome.base_revision,
@@ -614,7 +614,7 @@ where
         if post_snapshot.encode_pack() != outcome.post_snapshot_pack {
             return Err(DurableOwnedGroupDecisionError::NonCanonical);
         }
-        let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
+        let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::from_recovered_outcome(
             semio_framework_job::OperationId(outcome.operation),
             semio_framework_job::Generation(outcome.base_generation),
             outcome.base_revision,

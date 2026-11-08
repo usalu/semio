@@ -11,7 +11,7 @@ pub fn copy_into(output:&mut Vec<u8>,blob:&[u8],control:&mut SqliteSnapshotContr
   let turn=if blob.len()>remaining{semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"SQLite blob exceeds its remaining original allocation allowance").into()),work:0}}else{
    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(||owner.copy_blob(blob,output,marker,unwind,allocation,depth,progress))){
     Ok(turn)=>turn,
-    Err(error)=>{payload=Some(error);let work=u64::from(output.capacity()!=0)+(output.len().div_ceil(65536)as u64);semio_framework_value::RetainedWorkOutcome{result:Ok(()),work}},
+    Err(error)=>{payload=Some(error);let work=u128::from(output.capacity()!=0)+(output.len().div_ceil(65536)as u128);semio_framework_value::RetainedWorkOutcome{result:Ok(()),work}},
    }
   };
   let after=owner.actual_work();let receipt=SqliteStageWorkReceipt{declared:turn.work,before,after,actual:after.checked_sub(before)};

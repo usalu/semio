@@ -8,12 +8,13 @@ impl ScopeBoxRetirement{
 }
 impl RetirementCursor for ScopeBoxRetirement{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(self.demand())}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
+ fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+  let grant=effect.grant();
   if self.source.is_none(){return RetirementStep::Complete(0)}
   let demand=self.demand();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
   let progress=if let Some(text)=self.text.as_mut(){if text.capacity()!=0{*text=String::new();P{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}}else{self.text=None;self.ordinal+=1;P{copied_items:1,..Default::default()}}}
   else if self.ordinal<5{
-   let Some(source)=self.source.as_mut()else{return RetirementStep::Failure(ValueError::invariant("diagnostic retirement source absent"),0)};self.text=unsafe{match self.ordinal{0=>source.take_field(|root|std::ptr::addr_of_mut!((*root).plugin_id)),1=>source.take_field(|root|std::ptr::addr_of_mut!((*root).app_id)),2=>source.take_field(|root|std::ptr::addr_of_mut!((*root).instance_id)),3=>source.take_field(|root|std::ptr::addr_of_mut!((*root).module)),4=>source.take_field(|root|std::ptr::addr_of_mut!((*root).body_key)),_=>return RetirementStep::Failure(ValueError::invariant("diagnostic scope ordinal out of range"),0)}};if self.text.is_none(){self.ordinal+=1}P{copied_items:1,..Default::default()}
+   let Some(source)=self.source.as_mut()else{return RetirementStep::Failure(ValueError::invariant("diagnostic retirement source absent").into(),0)};self.text=unsafe{match self.ordinal{0=>source.take_field(|root|std::ptr::addr_of_mut!((*root).plugin_id)),1=>source.take_field(|root|std::ptr::addr_of_mut!((*root).app_id)),2=>source.take_field(|root|std::ptr::addr_of_mut!((*root).instance_id)),3=>source.take_field(|root|std::ptr::addr_of_mut!((*root).module)),4=>source.take_field(|root|std::ptr::addr_of_mut!((*root).body_key)),_=>return RetirementStep::Failure(ValueError::invariant("diagnostic scope ordinal out of range").into(),0)}};if self.text.is_none(){self.ordinal+=1}P{copied_items:1,..Default::default()}
   }else if let Some(source)=self.source.as_mut().filter(|source|!source.terminal_is_empty()){unsafe{source.release_empty(grant)}}else{self.source=None;P{copied_items:1,..Default::default()}};
   RetirementStep::Progress(progress,1)
  }

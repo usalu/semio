@@ -59,12 +59,17 @@ where
             let capacity = owners.initial_snapshot_retirement.retirement_birth_bytes(snapshot);
             if grant.maximum_depth < 2 { return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
             if grant.maximum_capacity_bytes < capacity { return ConfigStoreHydrationStep::Pending(self.progress()); }
-            let snapshot = self.pending_snapshot.take().expect("observed exact pending config snapshot");
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            match owners.retire_initial_snapshot_owned(snapshot, child) {
+            let mut wallet = semio_framework_value::AuthoringWallet::new(child, 64);
+            let turn = match wallet.run_settled(child, 64, |effect| owners.retire_initial_snapshot_owned(&mut self.pending_snapshot, effect)) {
+                Ok(Some((turn, _))) => turn,
+                Ok(None) => return ConfigStoreHydrationStep::Pending(self.progress()),
+                Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+            };
+            match turn.result {
                 Ok((owner, progress)) if progress.fits(child) && progress.retained_capacity_bytes == capacity => { *self.active = Some(owner); self.last_retirement_progress = progress; }
                 Ok((owner, _)) => { *self.active = Some(owner); return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
-                Err((_, snapshot)) => { *self.pending_snapshot = Some(snapshot); return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
+                Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
             }
             return ConfigStoreHydrationStep::Pending(self.progress());
         }
@@ -73,10 +78,14 @@ where
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
             let capacity = semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<semio_os_spr::OpPayload>();
             if child.maximum_capacity_bytes < capacity { return ConfigStoreHydrationStep::Pending(self.progress()); }
-            let payload = self.pending_retired_payload.take().expect("decoded original payload retains its custody slot");
-            match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(payload, child) .result {
-                Ok((owner, progress)) => { *self.active = Some(owner); self.last_retirement_progress = progress; return ConfigStoreHydrationStep::Pending(self.progress()); }
-                Err((_, payload)) => { *self.pending_retired_payload = Some(payload); return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
+            match Self::authored(child, |effect| semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::retirement::admit_owned_retirement(&mut *self.pending_retired_payload, effect))) {
+                Ok(Some(turn)) => match turn.result {
+                    Ok(Some((owner, progress))) => { *self.active = Some(owner); self.last_retirement_progress = progress; return ConfigStoreHydrationStep::Pending(self.progress()); }
+                    Ok(None) => return ConfigStoreHydrationStep::Pending(self.progress()),
+                    Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+                },
+                Ok(None) => return ConfigStoreHydrationStep::Pending(self.progress()),
+                Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
             }
         }
         match self.phase {
@@ -221,7 +230,8 @@ where
                     if self.phase == Phase::DecodeInverse {
                         let edit = self.pending_edit.as_mut().expect("pending config edit remains retained");
                         if !edit.inverse.has_reserved_slot() {
-                            match edit.inverse.reserve_one(maximum_bytes) {
+                            match Self::authored(grant, |effect| semio_framework_value::RetainedWorkPoll::Complete(edit.inverse.reserve_one(effect))) {
+                                Ok(Some(turn)) if turn.result.is_err() => return self.reject(ConfigStoreHydrationDiagnostic::Capacity),
                                 Ok(_) => return ConfigStoreHydrationStep::Pending(self.progress()),
                                 Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Capacity),
                             }

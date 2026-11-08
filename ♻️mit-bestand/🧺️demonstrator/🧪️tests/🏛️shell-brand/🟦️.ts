@@ -39,12 +39,12 @@ describe("demonstrator shell brands", () => {
     expect(ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND.id).toBe("entwerfen-mit-bestand-verfolgen");
     expect(isEntwerfenMitBestandBrandId(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.id)).toBe(true);
     expect(isEntwerfenMitBestandBrandId("semio-os")).toBe(false);
-    expect(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.windowTitle).toBe("Entwerfen mit Bestand");
+    expect(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.windowTitle).toBe("Designing with Existing Stock · Entwerfen mit Bestand");
     expect(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.locks?.locale).toBeUndefined();
     const energy = (locale: "en" | "de") => demonstratorPaneViews(locale).find((pane) => pane.id === "energie")!;
-    expect(energy("en").brand.windowTitle).toBe("Entwerfen mit Bestand · Energy");
+    expect(energy("en").brand.windowTitle).toBe("Designing with Existing Stock · Energy");
     expect(energy("de").brand.windowTitle).toBe("Entwerfen mit Bestand · Energie");
-    expect(energy("en").brand.shortWindowTitle).toBe("EmB · Energy");
+    expect(energy("en").brand.shortWindowTitle).toBe("DwES · Energy");
     expect(energy("de").brand.shortWindowTitle).toBe("EmB · Energie");
     expect(demonstratorGeneralIntroduction("de").steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding"]);
   });
@@ -131,7 +131,9 @@ describe("demonstrator shell brands", () => {
 
   it("mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text", () => {
     const fundedByMarkup = renderToStaticMarkup(createElement(Footer, { items: [navbarFillItem("fillLeft"), fundedByZukunftBauFooterItem("fundedByEn", "en", false), navbarFillItem("fillRight")] }));
-    expect(fundedByMarkup).toContain("<button");
+    expect(fundedByMarkup).toContain("<a ");
+    expect(fundedByMarkup).toContain(`href="${ZUKUNFT_BAU_PROJECT_URL}"`);
+    expect(fundedByMarkup).toContain("rel=\"noopener noreferrer\"");
     expect(fundedByMarkup).toContain("Funded by");
     expect(fundedByMarkup).toContain("z-40");
     expect(ZUKUNFT_BAU_PROJECT_URL).toMatch(/^https:\/\/www\.zukunftbau\.de\//);

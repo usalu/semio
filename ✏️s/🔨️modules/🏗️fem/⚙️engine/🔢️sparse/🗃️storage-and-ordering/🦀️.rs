@@ -396,8 +396,10 @@ impl SymmetricPencilConstruction {
 
     fn reserve<T>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, count: usize, context: &mut StepContext<'_>) -> Result<bool, &'static [u8]> {
         if owner.capacity() >= count { return Ok(true); }
-        let progress = owner.reserve_capacity_one_funded(count, context.retained_grant()).map_err(|_| b"pencil-capacity" as &'static [u8])?;
-        context.consume_retained(progress).map_err(|_| b"pencil-capacity-receipt" as &'static [u8])?;
+        let grant = context.retained_grant();
+        let Some((turn, performed)) = context.with_original_effect(grant, |_, effect| owner.reserve_capacity_one_funded(count, effect)).map_err(|_| b"pencil-capacity" as &'static [u8])? else { return Ok(false) };
+        let progress = match turn.result { Ok(PagedListReservationOutcome::Ready(progress)) => progress, Ok(PagedListReservationOutcome::Denied) => return Ok(false), Err(_) => return Err(b"pencil-capacity") };
+        receive_original_retained_work(context, RetainedWorkOutcome { result: Ok::<_, ValueError>(RetainedCloneStep::Progress(progress)), work: performed }).map_err(|_| b"pencil-capacity-receipt" as &'static [u8])?;
         Ok(false)
     }
     fn admit(context: &mut StepContext<'_>, depth: usize, bytes: usize) -> Result<bool, &'static [u8]> {

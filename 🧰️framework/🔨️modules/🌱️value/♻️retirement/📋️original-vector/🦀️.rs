@@ -51,7 +51,7 @@ impl<T:RetireOwned> OriginalVectorCursor<T>{
    if !permits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
    let p=if let Some(active)=self.active.as_mut(){
     if active.terminal_is_empty(){*self.active=None;work=1;RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}}
-    else{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let mut child=effect.reborrow(child,effect.maximum_work_units())?;let turn=crate::retirement_contract::RetirementPollExit::settled(invoke(active,&mut child))?;work=turn.work;turn.result?.progress()}
+    else{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let mut child=effect.nested(child);let turn=crate::retirement_contract::RetirementPollExit::settled(invoke(active,&mut child))?;work=turn.work;turn.result?.progress()}
    }else if let Some(original)=self.pending.take(){
     work=1;match ControlledRetirement::new(original){Ok(active)=>{*self.active=Some(active)},Err((error,original))=>{*self.pending=Some(original);return Err(error.into())}}
     RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}

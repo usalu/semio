@@ -50,10 +50,11 @@ impl BodyValidationJob {
   if self.phase==BodyValidationPhase::LoopRings&&self.loop_id.is_some()&&self.ring_next.is_some(){if self.ring.capacity()==0{let extent=self.live_coedges.checked_add(1).ok_or_else(refusal)?;Ok(RetirementDemand{capacity_bytes:extent.checked_mul(std::mem::size_of::<CoedgeId>()).ok_or_else(refusal)?,depth:1,..Default::default()})}else if self.ring.len()<self.ring.capacity(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<CoedgeId>(),depth:1,..Default::default()})}else{Err(refusal())}}else{Ok(metadata(1))}
  }
  /// ⏱️ Advances one original planning or loop event under its full physical authority.
- pub fn step_funded(&mut self,body:&Body,units:usize,grant:RetainedCloneGrant)->Result<(RetainedCloneProgress,usize),ValueError>{
+ pub fn step_funded(&mut self,body:&Body,units:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(RetainedCloneProgress,usize),ValueError>{
+  let grant=effect.grant();
   let demand=self.funded_demands(body)?;
   if self.is_complete()||units==0||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok((Default::default(),0))}
-  if self.phase==BodyValidationPhase::CollectingTopology{return self.step_planning_funded(body,units,grant)}
+  if self.phase==BodyValidationPhase::CollectingTopology{return self.step_planning_funded(body,units,effect)}
   let mut receipt=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
   if let Some(finding)=self.loop_findings.get(self.loop_finding_cursor).copied().flatten(){
    if self.loop_output.is_none(){self.loop_output=Some(ValidationIssue{entity:String::new(),code:finding.code(),message:String::new()});}
@@ -62,7 +63,7 @@ impl BodyValidationJob {
     if text.len()==length{self.loop_text_stage+=1;}
     else if text.capacity()==0{text.try_reserve_exact(length).map_err(|_|allocation())?;receipt.retained_capacity_bytes=text.capacity();}
     else{let from=text.len();let end=from.saturating_add(grant.maximum_copy_bytes).min(length);finding.text(entity,&mut TextSlice{target:text,start:from,end,visited:0}).map_err(|_|refusal())?;receipt.copied_bytes=text.len()-from;}
-   }else if demand.capacity_bytes!=0{receipt=self.issues.reserve_one_funded(grant).map_err(|error|allocation().with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}))?;}
+   }else if demand.capacity_bytes!=0{let Some(progress)=retained_planning::funded_page(self.issues.reserve_one_funded(effect))? else{return Ok((Default::default(),0))};receipt=progress;}
    else{let output=self.loop_output.take().unwrap();if let Err(output)=self.issues.push_reserved(output){self.loop_output=Some(output);return Err(refusal())}self.loop_findings[self.loop_finding_cursor]=None;self.loop_finding_cursor+=1;self.loop_text_stage=0;}
   }else if self.loop_finding_cursor!=0{self.loop_finding_cursor=0;self.loop_findings=[None,None];if self.phase==BodyValidationPhase::LoopRings{self.ring_probe+=1;}}
   else if self.phase==BodyValidationPhase::SameParameter{receipt=self.probe_same_parameter_funded(body,grant)?;}

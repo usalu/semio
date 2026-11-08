@@ -27,30 +27,38 @@ pub fn original_disposal_demands<T>(slot:&ArtifactDisposal<T>,owner:&T,body:usiz
 }
 
 #[doc(hidden)]
-pub fn original_disposal_step<T>(slot:&mut ArtifactDisposal<T>,owner:&mut T,grant:RetainedCloneGrant)->Result<(PluginLifecycleStep,bool),Fault>{
+pub fn original_disposal_step<T>(slot:&mut ArtifactDisposal<T>,owner:&mut T,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(PluginLifecycleStep,bool),Fault>{
+ let grant=effect.grant();
  let demand=original_disposal_demands(slot,owner,grant.maximum_copy_bytes).map_err(|error|Fault::from(error.into_message()))?;
  if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok((PluginLifecycleStep::Progress(Default::default()),false));}
  let disposer=slot.as_mut().expect("quoted original disposer");
  if disposer.terminal_is_empty(owner){let bytes=demand.release_bytes;slot.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}),true));}
- let step=disposer.close_step(owner,grant)?;
+ let step=disposer.close_step(owner,effect)?;
  if matches!(step,PluginLifecycleStep::Complete(_))&&!disposer.terminal_is_empty(owner){return Err(Fault::from("store disposer claimed a false original terminal witness"));}
  Ok((match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),other=>other},false))
 }
 
+#[doc(hidden)]
+pub fn original_disposal_step_cold<T>(slot:&mut ArtifactDisposal<T>,owner:&mut T,grant:RetainedCloneGrant)->Result<(PluginLifecycleStep,bool),Fault>{
+ let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);
+ match wallet.run(grant,64,|effect|original_disposal_step(slot,owner,effect)).map_err(|error|Fault::from(error.into_message()))?{Some(done)=>done.output,None=>Ok((PluginLifecycleStep::Progress(Default::default()),false))}
+}
+
 impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
- pub fn close_owned_stores_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
+ pub fn close_owned_stores_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<PluginLifecycleStep,Fault>{
+  let grant=effect.grant();
   let demand=self.shared().close_owned_stores_demands(grant.maximum_copy_bytes).map_err(|error|Fault::from(error.into_message()))?;
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
   if self.close.close_owned_advance_ready{let step=match self.close.close_owned_stage{0 if !self.stores.store.terminal_is_empty()=>Some(self.stores.store.box_close_step(grant)),1 if !self.stores.config_store.terminal_is_empty()=>Some(self.stores.config_store.box_close_step(grant)),2 if !self.stores.draft_store.terminal_is_empty()=>Some(self.stores.draft_store.box_close_step(grant)),5 if !self.stores.interaction_store.terminal_is_empty()=>Some(self.stores.interaction_store.box_close_step(grant)),_=>None};if let Some(step)=step{return step.map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(ValueError::into_fault)}self.close.close_owned_stage += 1;self.close.close_owned_advance_ready=false;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
   let (step,ready)=match self.close.close_owned_stage{
-   0=>{original_disposal_step(&mut self.close.close_document_disposer,&mut self.stores.store,grant)?},
-   1=>{original_disposal_step(&mut self.close.close_config_disposer,&mut self.stores.config_store,grant)?},
-   2=>{original_disposal_step(&mut self.close.close_draft_disposer,&mut self.stores.draft_store,grant)?},
-   3=>{original_disposal_step(&mut self.close.close_presence_disposer,&mut self.stores.presence_store,grant)?},
-   4=>{original_disposal_step(&mut self.close.close_transient_disposer,&mut self.stores.transient_store,grant)?},
-   5=>{original_disposal_step(&mut self.close.close_interaction_disposer,&mut self.stores.interaction_store,grant)?},
-   6=>{if self.stores.window_config_store.terminal_is_empty(){(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),true)}else{(self.stores.window_config_store.close_step(grant)?,false)}},
-   7=>{if self.stores.window_transient_store.terminal_is_empty(){(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),true)}else{(self.stores.window_transient_store.close_step(grant)?,false)}},
+   0=>{original_disposal_step(&mut self.close.close_document_disposer,&mut self.stores.store,effect)?},
+   1=>{original_disposal_step(&mut self.close.close_config_disposer,&mut self.stores.config_store,effect)?},
+   2=>{original_disposal_step(&mut self.close.close_draft_disposer,&mut self.stores.draft_store,effect)?},
+   3=>{original_disposal_step(&mut self.close.close_presence_disposer,&mut self.stores.presence_store,effect)?},
+   4=>{original_disposal_step(&mut self.close.close_transient_disposer,&mut self.stores.transient_store,effect)?},
+   5=>{original_disposal_step(&mut self.close.close_interaction_disposer,&mut self.stores.interaction_store,effect)?},
+   6=>{if self.stores.window_config_store.terminal_is_empty(){(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),true)}else{(self.stores.window_config_store.close_step(effect)?,false)}},
+   7=>{if self.stores.window_transient_store.terminal_is_empty(){(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),true)}else{(self.stores.window_transient_store.close_step(effect)?,false)}},
    _=>return Ok(PluginLifecycleStep::Complete(Default::default())),
   };
   self.close.close_owned_advance_ready=ready;Ok(match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),other=>other})

@@ -26,7 +26,7 @@ use semio_framework_manifest_app_surface::AppDefinition;
 
 #[path="🚪️admission/🦀️.rs"]
 pub mod admission;
-pub use admission::{ToolJobAdmissionDemand,OriginalToolSourceBinding,OriginalToolJobIdentity,admit_original_tool_job,admit_original_tool_job_measured,admit_original_tool_job_controlled,admit_original_tool_construction,OriginalToolConstructionScope,admit_original_tool_construction_scoped};
+pub use admission::{ResidentConstruction,ToolJobAdmissionDemand,OriginalToolSourceBinding,OriginalToolJobIdentity,admit_original_tool_job,admit_original_tool_job_measured,admit_original_tool_job_controlled,admit_original_tool_construction,admit_original_tool_construction_settled,admit_original_construction_settled,OriginalToolConstructionScope,admit_original_tool_construction_scoped};
 //#region 🧬️Contract
 #[derive(Clone, Debug, PartialEq, Eq, Hash,semio_framework_value::RetireOwned)]
 pub struct ToolFactoryKey {
@@ -78,8 +78,8 @@ pub struct ToolWireAdmission {
 }
 
 impl semio_framework_value::retirement::RetireOwned for ToolWireAdmission{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;(self.key,self.schema_id).retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes::<ToolFactoryKey>(),semio_framework_value::retirement::deferred_birth_bytes::<String>()])}
+ type RetirementCursor=<(ToolFactoryKey,String) as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{use semio_framework_value::retirement::RetireOwned;(self.key,self.schema_id).retirement_seed()}
  fn controlled_retirement_supported()->bool{true}
 }
 
@@ -124,14 +124,14 @@ pub struct RetainedToolWireInput {
 }
 
 impl semio_framework_value::retirement::RetireOwned for ToolWirePage{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;().retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::RetireOwned;().retirement_birth_bytes()}
+ type RetirementCursor=<() as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{use semio_framework_value::retirement::RetireOwned;().retirement_seed()}
  fn controlled_retirement_supported()->bool{true}
  fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
 }
 impl semio_framework_value::retirement::RetireOwned for RetainedToolWireInput{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;self.pages.retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::RetireOwned;self.pages.retirement_birth_bytes()}
+ type RetirementCursor=<Vec<ToolWirePage> as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{use semio_framework_value::retirement::RetireOwned;self.pages.retirement_seed()}
  fn controlled_retirement_supported()->bool{true}
 }
 
@@ -326,11 +326,15 @@ impl ToolExecutionContract {
 
 pub struct ErasedToolJob {
     inner: std::mem::ManuallyDrop<Option<Box<dyn InteractiveJob + Send>>>,
+    credit: Option<semio_framework_job::OriginalCreditedOutput<()>>,
 }
 
 impl ErasedToolJob {
 /// 📩️ Receives a preborn typed job allocation without cloning or allocating another wrapper.
-    pub fn from_owned(inner: Box<dyn InteractiveJob + Send>) -> Self { Self { inner: std::mem::ManuallyDrop::new(Some(inner)) } }
+    pub fn from_owned(inner: Box<dyn InteractiveJob + Send>) -> Self { Self { inner: std::mem::ManuallyDrop::new(Some(inner)), credit: None } }
+
+    /// 🏦️ The scope credit of the payload this job consumed settles after the job's own close.
+    pub fn attach_credit(&mut self, mut credit: semio_framework_job::OriginalCreditedOutput<()>) { credit.take_output(); self.credit = Some(credit); }
 
     /// 💼️ Borrows the exact original erased allocation while its physical owner remains retained.
     pub fn retained_job(&self) -> Option<&(dyn InteractiveJob + Send)> { self.inner.as_deref() }
@@ -359,7 +363,12 @@ impl InteractiveJob for ErasedToolJob {
     fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_job::InteractiveJobCloseStep;
         use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::RetainedCloneProgress};
-        let Some(inner) = self.inner.as_mut() else { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }) };
+        let Some(inner) = self.inner.as_mut() else {
+            let Some(credit) = self.credit.as_mut() else { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }) };
+            if cx.should_yield() { return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }) }
+            if cx.settle_original_credit(credit)? { self.credit = None; return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }) }
+            return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() })
+        };
         let grant = cx.retained_grant();
         if cx.should_yield() || grant.maximum_items == 0 { return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }) }
         if inner.terminal_is_empty() {
@@ -371,7 +380,7 @@ impl InteractiveJob for ErasedToolJob {
             drop(self.inner.take());
             cx.consume_fuel(1);
             cx.consume_retained(progress).map_err(|error| semio_framework_job::OriginalTurnFailure::from(error.with_retained_progress(progress)))?;
-            return Ok(InteractiveJobCloseStep::Complete { progress });
+            return Ok(if self.credit.is_some() { InteractiveJobCloseStep::Pending { progress } } else { InteractiveJobCloseStep::Complete { progress } });
         }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "original erased job child close exceeds caller depth").into()) }
         let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
@@ -398,7 +407,7 @@ impl InteractiveJob for ErasedToolJob {
 
     fn register_close_wake(&self, waker: &std::task::Waker) -> bool { self.inner.as_ref().is_some_and(|inner| inner.register_close_wake(waker)) }
 
-    fn terminal_is_empty(&self) -> bool { self.inner.is_none() }
+    fn terminal_is_empty(&self) -> bool { self.inner.is_none() && self.credit.is_none() }
 }
 
 impl Drop for ErasedToolJob {
@@ -423,7 +432,7 @@ pub trait ToolJobFactory: Send + 'static {
     fn admission_demands(&self,operation:&Operation,payload:&Self::Payload,input:Option<&RetainedToolWireInput>,checkpoint:Option<&RetainedToolWireInput>)->Result<ToolJobAdmissionDemand,semio_framework_value::ValueError>;
 
     /// ⛔️ The caller retains all denied sources and any born unpublished candidate on refusal.
-    fn admit_job(&mut self,context:&mut StepContext<'_>,operation:&Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
+    fn admit_job(&mut self,context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,operation:&Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<semio_framework_job::OriginalConstructionStatus,semio_framework_job::OriginalTurnFailure>;
 
 }
 
@@ -496,7 +505,7 @@ impl Error for ToolDispatchError {}
 
 trait ErasedToolJobFactory:Send{
     fn admission_demands(&self,spec:&ToolOperationSpec,input:Option<&RetainedToolWireInput>,checkpoint:Option<&RetainedToolWireInput>)->Result<ToolJobAdmissionDemand,semio_framework_value::ValueError>;
-    fn admit_job(&mut self,context:&mut StepContext<'_>,spec:&mut ToolOperationSpec,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<ErasedToolJob>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
+    fn admit_job(&mut self,context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,spec:&mut ToolOperationSpec,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<ErasedToolJob>)->Result<semio_framework_job::OriginalConstructionStatus,semio_framework_job::OriginalTurnFailure>;
 }
 
 struct ToolJobFactoryAdapter<F:ToolJobFactory>{factory:F}
@@ -509,19 +518,22 @@ impl<F:ToolJobFactory> ToolJobFactoryAdapter<F>{
 }
 impl<F:ToolJobFactory> ErasedToolJobFactory for ToolJobFactoryAdapter<F>{
     fn admission_demands(&self,spec:&ToolOperationSpec,input:Option<&RetainedToolWireInput>,checkpoint:Option<&RetainedToolWireInput>)->Result<ToolJobAdmissionDemand,semio_framework_value::ValueError>{self.factory.admission_demands(&spec.operation,self.original_payload(spec)?,input,checkpoint)}
-    fn admit_job(&mut self,context:&mut StepContext<'_>,spec:&mut ToolOperationSpec,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<ErasedToolJob>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn admit_job(&mut self,context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,spec:&mut ToolOperationSpec,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<ErasedToolJob>)->Result<semio_framework_job::OriginalConstructionStatus,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_value::{ValueError,ValueRefusalKind};
+        if output.is_some(){
+            let mut present=Some(());
+            return semio_framework_job::admit_original_construction(context,&mut present,admission,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:0,release_bytes:0,depth:1},1,|_,_|semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original erased tool candidate already finished its construction")),work:0});
+        }
         self.original_payload(spec)?;
         if !spec.source.matches(context){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tool specification belongs to different source roots or clock").into());}
-        if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original erased tool candidate slot is occupied").into());}
         let original=spec.payload.value.take().expect("validated original payload");
         let typed=match original.downcast::<F::Payload>(){Ok(typed)=>typed,Err(original)=>{spec.payload.value=Some(original);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tool payload changed after validation").into());}};
         let mut payload=Some(typed);
         let mut candidate=None;
-        let result=self.factory.admit_job(context,&spec.operation,&mut payload,input,checkpoint,&mut candidate);
+        let result=self.factory.admit_job(context,admission,&spec.operation,&mut payload,input,checkpoint,&mut candidate);
         spec.payload.value=payload.map(|value|value as Box<dyn Any+Send>);
         *output=candidate.map(|job|ErasedToolJob::from_owned(job as Box<dyn InteractiveJob+Send>));
-        match result{Ok(true) if output.is_none()=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original factory omitted its admitted job candidate").into()),result=>result}
+        match result{Ok(semio_framework_job::OriginalConstructionStatus::Ready) if output.is_none()=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original factory omitted its admitted job candidate").into()),result=>result}
     }
 }
 
@@ -609,6 +621,10 @@ impl ActionBus {
             return Err(ToolRegistrationError::InvalidExecutionContract { key: keys[0].clone(), detail });
         }
         let identity = (TypeId::of::<F>(), std::any::type_name::<F>(), factory.payload_schema_id());
+        let mut unique = HashSet::with_capacity(keys.len());
+        if let Some(key) = keys.iter().find(|key| !unique.insert(*key)) {
+            return Err(ToolRegistrationError::DuplicateKey { key: key.clone() });
+        }
         let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         for key in keys {
             if let Some((registered_type_id, registered_type_name, registered_schema)) = inner.factory_identity_by_key.get(key) {
@@ -701,13 +717,13 @@ impl ActionBus {
     }
 
     /// 🚪️ Pending and refused turns retain caller slots; born candidates remain owned before receipt acceptance.
-    pub fn admit_job(&self,context:&mut StepContext<'_>,spec:&mut ToolOperationSpec,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<ErasedToolJob>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn admit_job(&self,context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,spec:&mut ToolOperationSpec,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<ErasedToolJob>)->Result<semio_framework_job::OriginalConstructionStatus,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_value::{ValueError,ValueRefusalKind};
         let mut inner=self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let index=inner.factory_by_key.get(spec.key()).copied().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool factory key is not registered"))?;
-        let admitted=inner.factories[index].admit_job(context,spec,input,checkpoint,output)?;
-        if admitted{inner.dispatch_count=inner.dispatch_count.saturating_add(1);}
-        Ok(admitted)
+        let status=inner.factories[index].admit_job(context,admission,spec,input,checkpoint,output)?;
+        if status==semio_framework_job::OriginalConstructionStatus::Ready{inner.dispatch_count=inner.dispatch_count.saturating_add(1);}
+        Ok(status)
     }
 
 }

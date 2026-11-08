@@ -1,10 +1,10 @@
 //! 🏷️ Canonical typed value schema and borrowed classification contract.
 
 use crate::{DslValue, FromValue, ToValue, ValueError};
-use crate::retirement::RetireOwned;
 
 /// 📐️ One domain-neutral type declaration.
-#[derive(Clone, Debug, Default, PartialEq, crate::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, crate::RetainedClone, crate::RetireOwned)]
+#[value(crate = "crate")]
 pub enum ValueType {
     Boolean,
     Integer,
@@ -107,11 +107,6 @@ impl FromValue for ValueType {
 #[path = "🛬️controlled/🦀️.rs"]
 mod controlled;
 
-impl RetireOwned for ValueType {
-    fn retirement(self)->Box<dyn crate::retirement::RetirementCursor> {match self {Self::List(value)=>value.retirement(),Self::Schema(value)=>value.retirement(),_=>crate::retirement::leaf(())}}
-    fn retirement_birth_bytes(&self)->Option<usize> {match self {Self::List(value)=>value.retirement_birth_bytes(),Self::Schema(value)=>value.retirement_birth_bytes(),_=>Some(crate::retirement::leaf_birth_bytes::<()>())}}
-    fn controlled_retirement_supported()->bool {true}
-}
 
 #[cfg(feature = "testkit")]
 #[doc(hidden)]

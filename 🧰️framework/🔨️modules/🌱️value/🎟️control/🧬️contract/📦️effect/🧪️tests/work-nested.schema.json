@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cases"],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "parent", "receipt", "spent", "wholeCeilingAdmitted", "nestedCeiling"],
+        "properties": {
+          "label": {"type": "string", "minLength": 1},
+          "parent": {"type": "integer", "minimum": 0},
+          "receipt": {"type": "integer", "minimum": 0},
+          "spent": {"type": "integer", "minimum": 0},
+          "wholeCeilingAdmitted": {"type": "boolean"},
+          "nestedCeiling": {"type": "integer", "minimum": 0}
+        }
+      }
+    }
+  }
+}

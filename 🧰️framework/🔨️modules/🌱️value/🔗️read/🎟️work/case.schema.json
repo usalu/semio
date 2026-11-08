@@ -10,6 +10,7 @@
     "copyBytes",
     "deniedWork",
     "cachedWork",
+    "refusedSourceAttemptWork",
     "readAliasReturnWork",
     "closingChildHandoffWork",
     "completedChildHeaderWork",
@@ -54,6 +55,9 @@
     },
     "cachedWork": {
       "const": 0
+    },
+    "refusedSourceAttemptWork": {
+      "const": 2
     },
     "readAliasReturnWork": {
       "const": 1

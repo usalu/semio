@@ -68,7 +68,7 @@ impl<K:Ord,V> HistoryFoldIndexInsert<K,V>{
   }
   if let Some(slot)=self.matching{return Ok((grant.maximum_depth>=index.next_slot_depth_demand(slot)?,empty))}
   let bytes=self.capacity_demand(index)?;if bytes==0{return Ok((true,empty))}let depth=self.depth_demand(index)?;if grant.maximum_depth<depth||grant.maximum_capacity_bytes<bytes{return Ok((false,empty))}
-  match index.nodes.reserve_one(grant.maximum_capacity_bytes){Ok(progress)=>Ok((false,RetainedCloneProgress{copied_items:usize::from(progress.progressed),retained_capacity_bytes:progress.allocated_bytes,..empty})),Err(error)=>{let progress=RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..empty};Err(index_page_refusal(error.kind,error.reason).with_retained_progress(progress))}}
+  match index.nodes.reserve_one_cold(grant.maximum_capacity_bytes){Ok(progress)=>Ok((false,RetainedCloneProgress{copied_items:usize::from(progress.progressed),retained_capacity_bytes:progress.allocated_bytes,..empty})),Err(error)=>{let progress=RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..empty};Err(index_page_refusal(error.kind,error.reason).with_retained_progress(progress))}}
  }
  fn capacity_demand<W>(&self,index:&HistoryFoldIndex<K,W>)->Result<usize,ValueError>{if index.free_head.is_some(){Ok(0)}else{index.nodes.next_allocation_bytes().map_err(|error|index_page_refusal(error.kind,error.reason))}}
  fn depth_demand<W>(&self,index:&HistoryFoldIndex<K,W>)->Result<usize,ValueError>{let page=if index.free_head.is_some(){0}else{index.nodes.next_reserve_depth_demand().map_err(|error|index_page_refusal(error.kind,error.reason))?};index.height(index.root).checked_add(2).and_then(|tree|page.checked_add(1).map(|page|tree.max(page))).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original insertion depth overflow"))}
@@ -107,7 +107,7 @@ impl<K:Ord,V> HistoryFoldIndex<K,V>{
  }
 }
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for HistoryFoldIndexInsert<K,V>{
- fn retirement(self)->Box<dyn RetirementCursor>{sequence(vec![deferred(self.source),deferred(self.epoch),deferred(self.next),deferred(self.rank),deferred(self.position),deferred(self.vacant),deferred(self.matching),deferred(self.slot)])}
- fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.source),deferred_birth_bytes_for(&self.epoch),deferred_birth_bytes_for(&self.next),deferred_birth_bytes_for(&self.rank),deferred_birth_bytes_for(&self.position),deferred_birth_bytes_for(&self.vacant),deferred_birth_bytes_for(&self.matching),deferred_birth_bytes_for(&self.slot)])}
+ type RetirementCursor=semio_framework_value::retirement_fields_type!(Option<(K,V)>,Option<u64>,Option<usize>,usize,usize,bool,Option<usize>,Option<usize>);
+ fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement_fields_seed!(self.source,self.epoch,self.next,self.rank,self.position,self.vacant,self.matching,self.slot)}
  fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }

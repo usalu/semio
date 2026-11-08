@@ -307,11 +307,12 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
     }
 
     /// 🧱️ Reserves at most `maximum_bytes` of the pending allocation.
-    pub fn reserve_retained_allocation(&mut self, maximum_bytes: usize) -> Result<mounted::RetainedPackSourceAllocationStep, mounted::RetainedPackSourceAllocationError> {
+    pub fn reserve_retained_allocation(&mut self, maximum_bytes: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<mounted::RetainedPackSourceAllocationStep, mounted::RetainedPackSourceAllocationError> {
         let remaining = semio_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES.saturating_sub(self.retained_allocated_bytes());
         let fault = |reason: &'static str| mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, fault: mounted::RetainedPackSourceFault::refusal(semio_framework_value::ValueRefusalKind::InvariantViolated, reason) };
+        let mut effect = effect.nested(semio_framework_value::RetainedCloneGrant { maximum_capacity_bytes: maximum_bytes.min(remaining), ..effect.grant() });
         match self.phase {
-            RetainedTypedPackPhase::Ingress => self.source.as_mut().ok_or(fault("mounted-pack.source-owner"))?.reserve_page(maximum_bytes.min(remaining)),
+            RetainedTypedPackPhase::Ingress => self.source.as_mut().ok_or(fault("mounted-pack.source-owner"))?.reserve_page(&mut effect),
             RetainedTypedPackPhase::Drive => {
                 let segment = self.segment.as_mut().ok_or(fault("mounted-pack.segment-owner"))?;
                 if segment.next_allocation_bytes().is_some() {
@@ -327,7 +328,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
                 self.catalog
                     .as_mut()
                     .ok_or(fault("mounted-pack.catalog-owner"))?
-                    .reserve_allocation(maximum_bytes.min(remaining))
+                    .reserve_allocation(&mut effect)
                     .map(|step| mounted::RetainedPackSourceAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
                     .map_err(|error| mounted::RetainedPackSourceAllocationError { allocated_bytes: error.allocated_bytes, fault: mounted::RetainedPackSourceFault::allocation(error.fault.kind(), error.fault.code, error.allocated_bytes) })
             }
@@ -350,7 +351,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
     }
 
     /// 🧹️ Releases one owner per grant, typed owner first, source last.
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedTypedPackCloseStep, semio_framework_value::ValueError> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedTypedPackCloseStep, semio_framework_value::ValueError> {
         let one = RetainedTypedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
         let retained = |step: mounted::RetainedPackCloseStep| match step {
             mounted::RetainedPackCloseStep::Pending { released_items, released_bytes } => Some(RetainedTypedPackCloseStep::Pending { released_items, released_bytes }),
@@ -385,7 +386,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
             return Ok(one);
         }
         if let Some(catalog) = self.catalog.as_mut() {
-            if let Some(step) = retained(catalog.close_step(1, maximum_bytes).map_err(|error| {
+            if let Some(step) = retained(catalog.close_step(1, effect).map_err(|error| {
                 semio_framework_value::ValueError::new(
                     match error.kind {
                         semio_framework_value_persistent::list::PagedListRefusalKind::OwnershipLimit => semio_framework_value::ValueRefusalKind::OwnershipLimit,
@@ -413,7 +414,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
             return Ok(one);
         }
         if let Some(source) = self.source.as_mut() {
-            if let Some(step) = retained(source.close_step(1, maximum_bytes).map_err(|error| {
+            if let Some(step) = retained(source.close_step(1, effect).map_err(|error| {
                 semio_framework_value::ValueError::new(
                     match error.kind {
                         semio_framework_value_persistent::list::PagedListRefusalKind::OwnershipLimit => semio_framework_value::ValueRefusalKind::OwnershipLimit,

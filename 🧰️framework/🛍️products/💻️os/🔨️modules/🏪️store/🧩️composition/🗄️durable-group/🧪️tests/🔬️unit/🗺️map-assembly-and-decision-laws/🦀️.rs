@@ -11,7 +11,7 @@ async fn durable_map_three_store_assembly_uses_exact_gis_factories_and_binds_one
     assert!(assembly.terminal_is_empty());
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     for _ in 0..4096 {
-        match host.advance(grant).expect("mounted assembly commit turn") {
+        match receive_turn(|receiving| host.advance(grant, receiving)).expect("mounted assembly commit turn") {
             DurableOwnedThreeStoreCommitAdvanceV1::AwaitingAck(_) => assert!(host.acknowledge()),
             DurableOwnedThreeStoreCommitAdvanceV1::Complete => break,
             DurableOwnedThreeStoreCommitAdvanceV1::Progress(_) | DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(_, _) | DurableOwnedThreeStoreCommitAdvanceV1::Blocked => {}
@@ -78,7 +78,7 @@ async fn durable_map_three_store_assembly_uncertain_journal_retains_same_host_un
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     let mut uncertain = false;
     for _ in 0..4096 {
-        match host.advance(grant) {
+        match receive_turn(|receiving| host.advance(grant, receiving)) {
             Err(DurableOwnedGroupDecisionError::Codec(error)) if error == "uncertain sync result" => {
                 uncertain = true;
                 let snapshot = host.capture_snapshot().expect("uncertain journal retains one all-old snapshot");
@@ -410,7 +410,7 @@ fn durable_boxed_terminal_retirement_requires_its_exact_release_grant(){
     use semio_framework_value::{ErasedSnapshotRetirement,ValueError,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
     struct Terminal(bool);
     impl ErasedSnapshotRetirement for Terminal{
-        fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {Ok(RetainedCloneStep::Complete(Default::default()))})(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+        fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {Ok(RetainedCloneStep::Complete(Default::default()))})(); semio_framework_value::RetirementPollExit::settle(effect, result) }
         fn terminal_is_empty(&self)->bool{self.0}
         fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
         fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
@@ -464,7 +464,7 @@ fn durable_binding_plans_before_consumption_and_transfers_one_original_member_pe
                 let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| advance_binding!(prepared,&parent, &drawing, &value, grant));
                 let receipt=match result.unwrap(){Some(receipt)=>receipt,None=>{
 let mut mutation_issuers=[parent.owners.mutation_retirement_factory.take(),drawing.owners.mutation_retirement_factory.take(),value.owners.mutation_retirement_factory.take()];let mut snapshot_issuers=[parent.owners.snapshot_retirement_factory.take(),drawing.owners.snapshot_retirement_factory.take(),value.owners.snapshot_retirement_factory.take()];let mut closed=false;
-for _ in 0..4_000_000{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||prepared.retire_originals_step(&mut parent,&mut drawing,&mut value,grant));let done=result.expect("blocked original's captured issuers must remain usable for controlled cancellation");let receipt=prepared.retirement_progress;assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));if done{closed=true;break;}}
+for _ in 0..4_000_000{let(result,heap)=receive_turn(|receiving|semio_framework_trace::observe_heap_allocations_on_this_thread(||prepared.retire_originals_step(&mut parent,&mut drawing,&mut value,grant,receiving)));let done=result.expect("blocked original's captured issuers must remain usable for controlled cancellation");let receipt=prepared.retirement_progress;assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));if done{closed=true;break;}}
 assert!(closed&&prepared.originals_empty());*parent.owners.mutation_retirement_factory=mutation_issuers[0].take();*drawing.owners.mutation_retirement_factory=mutation_issuers[1].take();*value.owners.mutation_retirement_factory=mutation_issuers[2].take();*parent.owners.snapshot_retirement_factory=snapshot_issuers[0].take();*drawing.owners.snapshot_retirement_factory=snapshot_issuers[1].take();*value.owners.snapshot_retirement_factory=snapshot_issuers[2].take();close_demo_artifact_store(&mut parent);close_demo_artifact_store(&mut drawing);close_demo_artifact_store(&mut value);panic!("fully funded durable binding frontier returned Blocked after all original children were cancelled");}};
                 assert!(receipt.fits(grant.retained_grant()));
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));
@@ -525,7 +525,7 @@ assert!(closed&&prepared.originals_empty());*parent.owners.mutation_retirement_f
             }
             let mut mutation_issuers=[parent.owners.mutation_retirement_factory.take(),drawing.owners.mutation_retirement_factory.take(),value.owners.mutation_retirement_factory.take()];let mut snapshot_issuers=[parent.owners.snapshot_retirement_factory.take(),drawing.owners.snapshot_retirement_factory.take(),value.owners.snapshot_retirement_factory.take()];
             let grant=copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);let mut closed=false;
-            for _ in 0..4_000_000 { let before=[prepared.parent.original_addresses(),prepared.drawing.original_addresses(),prepared.value.original_addresses()]; let(_,denied_heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||prepared.retire_originals_step(&mut parent,&mut drawing,&mut value,semio_os_store_one_item::ArtifactStoreOneItemGrant{maximum_items:0,..grant}).unwrap()); assert_eq!((denied_heap.requested_bytes,denied_heap.released_bytes),(0,0)); assert_eq!(prepared.retirement_progress,Default::default()); assert_eq!([prepared.parent.original_addresses(),prepared.drawing.original_addresses(),prepared.value.original_addresses()],before); let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||prepared.retire_originals_step(&mut parent,&mut drawing,&mut value,grant));let complete=result.unwrap();let receipt=prepared.retirement_progress;assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));if complete{closed=true;break;} }
+            for _ in 0..4_000_000 { let before=[prepared.parent.original_addresses(),prepared.drawing.original_addresses(),prepared.value.original_addresses()]; let(_,denied_heap)=receive_turn(|receiving|semio_framework_trace::observe_heap_allocations_on_this_thread(||prepared.retire_originals_step(&mut parent,&mut drawing,&mut value,semio_os_store_one_item::ArtifactStoreOneItemGrant{maximum_items:0,..grant},receiving).unwrap())); assert_eq!((denied_heap.requested_bytes,denied_heap.released_bytes),(0,0)); assert_eq!(prepared.retirement_progress,Default::default()); assert_eq!([prepared.parent.original_addresses(),prepared.drawing.original_addresses(),prepared.value.original_addresses()],before); let(result,heap)=receive_turn(|receiving|semio_framework_trace::observe_heap_allocations_on_this_thread(||prepared.retire_originals_step(&mut parent,&mut drawing,&mut value,grant,receiving)));let complete=result.unwrap();let receipt=prepared.retirement_progress;assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));if complete{closed=true;break;} }
             assert!(closed);
             assert!(prepared.originals_empty());
             for owner in [&prepared.parent,&prepared.drawing,&prepared.value] {assert!(owner.mutation_retirement.is_none()&&owner.snapshot_retirement.is_none(),"retirement transfers every captured issuer to its exact retained candidate owner");}

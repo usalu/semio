@@ -571,8 +571,7 @@ impl SubspaceIterationJob {
     pub(super) fn reserve_matrix_owner(matrix:&mut semio_s_fem_algebra::PagedMatD,rows:usize,columns:usize,context:&mut StepContext<'_>)->Result<bool,()>{
         let cells=rows.checked_mul(columns).ok_or(())?;
         if matrix.data.capacity()<cells{
-            let progress=matrix.data.reserve_capacity_one_funded(cells,context.retained_grant()).map_err(|_|())?;
-            context.consume_retained(progress).map_err(|_|())?;
+            let progress=reserve_funded_page(&mut matrix.data,cells,context)?;
             if progress.copied_items!=0{matrix.rows=rows;matrix.cols=columns;}
             return Ok(false);
         }
@@ -590,8 +589,7 @@ impl SubspaceIterationJob {
 
     pub(super) fn reserve_scalar_owner<T>(owner:&mut PagedList<T,SPARSE_INDEX_SPACE>,items:usize,context:&mut StepContext<'_>)->Result<bool,()>{
         if owner.capacity()>=items{return Ok(true)}
-        let progress=owner.reserve_capacity_one_funded(items,context.retained_grant()).map_err(|_|())?;
-        context.consume_retained(progress).map_err(|_|())?;Ok(false)
+        reserve_funded_page(owner,items,context)?;Ok(false)
     }
 
     pub(super) fn push_scalar<T>(owner:&mut PagedList<T,SPARSE_INDEX_SPACE>,value:T,context:&mut StepContext<'_>)->Result<bool,()>{

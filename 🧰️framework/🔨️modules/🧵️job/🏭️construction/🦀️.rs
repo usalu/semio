@@ -57,7 +57,7 @@ pub fn original_construction_reserve<O>(demand:OriginalConstructionDemand,work:u
  Ok((OriginalConstructionDemand{items,copy_bytes:copy,..demand},work))
 }
 /// 🎟️ The actual caller retains candidate, allocation frame, complete native child and Source outcome.
-pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut Option<O>,admission:&mut OriginalConstructionAdmission,demand:OriginalConstructionDemand,work:u64,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeConstructionScope<'_, '_>,&mut Option<usize>)->semio_framework_value_retained_clone::RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<OriginalConstructionStatus,OriginalTurnFailure>{
+pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut Option<O>,admission:&mut OriginalConstructionAdmission,demand:OriginalConstructionDemand,work:u64,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_, '_>,&mut Option<usize>)->semio_framework_value_retained_clone::RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<OriginalConstructionStatus,OriginalTurnFailure>{
  admission.validate(context)?;
  if admission.has_failure(){return Ok(OriginalConstructionStatus::Failed)}
  if admission.complete{return Ok(OriginalConstructionStatus::Ready)}
@@ -74,7 +74,7 @@ pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut O
   let turn=native.receive_prepared_construction(physical,frame,work+1,|scope,_grant,actual|{
    let turn=match scope.with_limits(body_grant,work,|scope|construct(scope,actual)){Ok(turn)=>turn,Err(error)=>return semio_framework_value_retained_clone::RetainedWorkOutcome{result:Err(error),work:0}};
    let result=turn.result.and_then(|(candidate,progress)|{*output=Some(candidate);progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<O>>(),..Default::default()}).map(RetainedCloneStep::Complete)});
-   semio_framework_value_retained_clone::RetainedWorkOutcome{result,work:turn.work.checked_add(u64::from(output.is_some())).expect("primitive work is bounded by its held construction scope")}
+   semio_framework_value_retained_clone::RetainedWorkOutcome{result,work:turn.work.checked_add(u128::from(output.is_some())).expect("primitive work is bounded by its held construction scope")}
   });*child=Some(turn.result);Ok(())
  })?;
  Ok(if admission.has_failure(){OriginalConstructionStatus::Failed}else{OriginalConstructionStatus::Pending})

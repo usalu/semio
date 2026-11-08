@@ -48,6 +48,19 @@ impl DslField for ArtifactRef{
     }
 }
 
+
+/// 🔎️ Whether the value is exactly the four literal identity texts, so a composite receiver can validate before it moves anything.
+pub fn is_artifact_ref_value(value:&FieldValue)->bool{matches!(value,FieldValue::Record(record) if record.fields.len()==4&&(0..4u16).all(|id|matches!(record.fields.get(&id),Some(FieldValue::Text(_)))))}
+/// 🚚️ The four literal identity strings are moved out of their record; the emptied record shell stays with its paid owner.
+pub fn take_artifact_ref(source:&mut FieldValue)->Result<ArtifactRef,ValueError>{
+    if !is_artifact_ref_value(source){return Err(semio_framework_dsl_record::receiving::owned::invalid())}
+    let FieldValue::Record(record)=source else{return Err(semio_framework_dsl_record::receiving::owned::invalid())};
+    let mut text=|id:u16|match record.fields.get_mut(&id){Some(FieldValue::Text(value))=>std::mem::take(value),_=>String::new()};
+    Ok(ArtifactRef{artifact_id:text(0),dialect:ArtifactDialect{artifact_kind:text(1),standard:text(2),subset:text(3)}})
+}
+fn artifact_ref_take(source:&mut Option<FieldValue>)->Result<ArtifactRef,ValueError>{take_artifact_ref(source.as_mut().ok_or_else(semio_framework_dsl_record::receiving::owned::invalid)?)}
+semio_framework_dsl_record::dsl_owned_scalar_receiving!(move ArtifactRef,artifact_ref_take);
+
 #[cfg(test)]
 #[path="🧪️tests/🚦️refusals/🦀️.rs"]
 mod refusal_tests;

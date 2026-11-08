@@ -90,7 +90,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
 
     pub(super) async fn commit_framework_clipboard_completion(&mut self,action:&str,completion:Option<ArtifactToolCompletion<A>>,meta:&ActionMeta,mut permit:FrameworkReservedCommitPermit, cx:&mut semio_framework_job::StepContext<'_>)->Result<InvocationResult,Fault>{
         let id=permit.operation.operation.0;
-        let started=self.mount_original_reserved_owners(action,None,None,completion,meta,Some((permit.operation,permit.lease,permit.identity.take().ok_or_else(||plugin_sdk_fault("original reserved producer lost its authoring receipt"))?)), cx).await?;
+        let started=self.mount_original_reserved_owners(action,None,None,completion,meta,Some((permit.operation,permit.lease.into_lease(),permit.identity.take().ok_or_else(||plugin_sdk_fault("original reserved producer lost its authoring receipt"))?)), cx).await?;
         if let Some(fault)=permit.producer_fault{let mounted=self.tools.tool_operations.get_mut(id).expect("original completion owns its admitted slot");mounted.terminal_fault.get_or_insert(fault);mounted.cancellation_lease.as_ref().expect("original completion lease").cancel();}
         self.tools.finish_mounted_reserved_completion(id);
         Ok(started)
@@ -99,7 +99,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 📥️ Keeps the original producer and completion in their fixed slot through every fallible worker boundary.
     pub async fn dispatch_reserved_original_producer(&mut self,verb:&str,raw:&[u8],decoded_items:usize,job:ArtifactReservedToolJob,completion:ArtifactToolCompletion<A>,meta:&ActionMeta,admission:Option<semio_framework::ToolWireAdmission>,mut permit:FrameworkReservedCommitPermit, cx:&mut semio_framework_job::StepContext<'_>)->Result<InvocationResult,Fault>{
         let id=permit.operation.operation.0;
-        let started=self.mount_original_reserved_owners(verb,None,Some(job),Some(completion),meta,Some((permit.operation,permit.lease,permit.identity.take().ok_or_else(||plugin_sdk_fault("original reserved producer lost its authoring receipt"))?)), cx).await?;
+        let started=self.mount_original_reserved_owners(verb,None,Some(job),Some(completion),meta,Some((permit.operation,permit.lease.into_lease(),permit.identity.take().ok_or_else(||plugin_sdk_fault("original reserved producer lost its authoring receipt"))?)), cx).await?;
         self.tools.tool_operations.get_mut(id).expect("original producer owns its admitted slot").producer_source=Some(semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx));
         let validation=(||->Result<(),Fault>{
             let proof=self.tools.qualified_tool_proof(&*self.stores,verb)?;
@@ -184,7 +184,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 assert_eq!(&self.tools.typed_operation_reservations[..occupied], &original[..occupied]);
                 self.tools.release_reserved_emit_slot(id + ARTIFACT_LIVE_OUTPUT_SLOTS as u64);
                 assert_eq!(self.tools.typed_operation_reservations[slot], Some(id));
-                self.tools.finish_reserved_emit_producer(permit);
+                self.tools.finish_reserved_emit_producer(&mut self.pending,permit);
                 assert_eq!(self.tools.typed_operation_reservations, original);
                 true
             }
@@ -205,7 +205,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         for _ in 0..128{caller.turn(grant,|cx|{permit=self.admit_reserved_emit_producer("cut",meta,cx)?;Ok(())}).unwrap();if permit.is_some(){break}}
         let permit=permit.expect("original cut producer admission");let id=permit.operation.operation;permit.lease.cancel();
         let retained=permit.operation.operation==id&&self.tools.typed_operation_reservations[id.0 as usize%ARTIFACT_LIVE_OUTPUT_SLOTS]==Some(id.0);
-        self.tools.finish_reserved_emit_producer(permit);caller.retire(grant);retained
+        self.tools.finish_reserved_emit_producer(&mut self.pending,permit);caller.retire(grant);retained
     }
 
     /// 🧷️ Preserves the mounted original reserved source across refused worker birth.
@@ -267,7 +267,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             config_generation:self.stores.config_store.generation_now(),draft_generation:self.stores.draft_store.generation_now(),presence_generation:0,transient_generation:0,
             window_config_authority:None,window_transient_authority:None,publication_lanes:&[],contract:None,
             session:None,session_rejected:None,producer_source:None,producer_request:None,producer_request_retirement:None,reserved_producer,completion,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:lease,identity,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},terminal_seen:true,worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,original_retirement_receipt:None,
-            publication,publication_ownership_progress:None,actor_capture:None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),worker_resume_pending:false,tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(),pending_stream_abort:None,stream_abort_completed:false,pending_child_publication:None,
+            publication,publication_ownership_progress:None,actor_capture:None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),worker_resume_pending:false,tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(),pending_stream_abort:None,stream_abort_resident:Default::default(),stream_abort_completed:false,pending_child_publication:None,
             owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,
             captured_child_content:Some(std::sync::Arc::new(ChildContentView::clone(&*self.child_composition.child_content_root))),captured_child_content_generation:self.child_composition.child_content_generation,
             page_publication:semio_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None, diagnostics:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,

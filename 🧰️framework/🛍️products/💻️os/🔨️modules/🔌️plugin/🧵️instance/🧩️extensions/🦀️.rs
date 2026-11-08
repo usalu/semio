@@ -26,7 +26,7 @@ use semio_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperation
 use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_plugin_time_travel::TimeTravelLedger;
-use semio_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_plugin_tool_machine::ToolMachineRuntime;
 use semio_plugin_tool_run::ToolRunLedger;
 use semio_plugin_interaction::UiAssemblyResult;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;

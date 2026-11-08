@@ -50,7 +50,7 @@ impl<V:RetireOwned> InferenceValues<V> {
         self.validate(cx)?;
         if self.closing||self.parent.is_none()||self.parents.len()==self.parents.capacity(){return Err(changed().into())}
         if cx.should_yield()||cx.is_cancelled()||!metadata(cx,size_of::<V>()+size_of::<Option<V>>(),1)?{return Ok(false)}
-        self.parents.push(self.parent.take().unwrap());Ok(true)
+        let Some(parent)=self.parent.take()else{return Err(changed().into())};self.parents.push(parent);Ok(true)
     }
 
     pub(super) fn close_parents_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
@@ -61,8 +61,8 @@ impl<V:RetireOwned> InferenceValues<V> {
             match ControlledRetirement::new(std::mem::take(&mut self.parents)){Ok(owner)=>self.parents_retirement=Some(owner),Err((error,parents))=>{self.parents=parents;return Err(error.into())}}
             return Ok(false)
         }
-        let owner=self.parents_retirement.as_mut().unwrap();
-        if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let r=owner.step(grant);semio_framework_value::RetainedWorkOutcome{work:u64::from(r.is_ok()),result:r}})?;return Ok(false)}
+        let Some(owner)=self.parents_retirement.as_mut()else{return Err(changed().into())};
+        if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(effect))?;return Ok(false)}
         if !metadata(cx,size_of::<Option<ControlledRetirement<Vec<V>>>>(),1)?{return Ok(false)}self.parents_retirement=None;Ok(true)
     }
 
@@ -91,9 +91,14 @@ impl<V:RetireOwned> InferenceValues<V> {
         else { if !metadata(cx,0,1)? { return Ok(false); } self.extent=Some(extent);return Ok(false); }
         if self.rows.len()==extent { return Ok(true); }
         if !self.rows.has_reserved_slot() {
-            match self.rows.reserve_capacity_one_funded(extent,cx.retained_grant()) {
-                Ok(progress)=>{if progress.copied_items==0 { return Ok(false); } cx.consume_retained(progress)?;cx.consume_fuel(1);return Ok(false);},
-                Err(error)=>{cx.consume_fuel(1);let original=ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress {retained_capacity_bytes:error.allocated_bytes,..Default::default()});return Err(OriginalTurnFailure::debit_original(original,cx).into());}
+            let rows=&mut self.rows;
+            let Some((turn,_))=cx.with_original_effect(cx.retained_grant(),|_,effect|rows.reserve_capacity_one_funded(extent,effect))? else { return Ok(false); };
+            let work=u64::try_from(turn.work).unwrap_or(u64::MAX);
+            match turn.result {
+                Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(progress))=>{if progress.copied_items==0 { return Ok(false); } cx.consume_retained(progress)?;cx.consume_fuel(work);return Ok(false);},
+                Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Denied)=>return Ok(false),
+                Err(semio_framework_value_persistent::list::PagedListReservationFailure::Work(error))=>{cx.consume_fuel(work);return Err(OriginalTurnFailure::debit_original(error,cx).into());}
+                Err(semio_framework_value_persistent::list::PagedListReservationFailure::Allocation{error,copied_bytes})=>{cx.consume_fuel(work);let original=ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress {copied_bytes,retained_capacity_bytes:error.allocated_bytes,..Default::default()});return Err(OriginalTurnFailure::debit_original(original,cx).into());}
             }
         }
         let depth=self.rows.next_push_depth_demand().map_err(ValueError::from)?;
@@ -135,7 +140,7 @@ impl<V:RetireOwned> InferenceValues<V> {
         if let Some(owner)=self.retirement.as_mut() {
             if !owner.terminal_is_empty() {
                 let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;
-                semio_framework_job::close_original_retained_step(cx,demand,|grant|{let r=owner.step(grant);semio_framework_value::RetainedWorkOutcome{work:u64::from(r.is_ok()),result:r}})?;
+                semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(effect))?;
                 return Ok(false);
             }
             self.retirement=None;

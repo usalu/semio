@@ -26,6 +26,22 @@ fn shared_full_grant_owns_original_aliases_weak_backing_and_each_physical_releas
     }}
 }
 
+/// 🛑️ Abandoning a macro record mid-close releases the fields it has not yet transferred together with every transferred level.
+#[test]
+fn abandoned_macro_record_releases_every_untransferred_field() {
+    use crate::{retained_clone::RetainedCloneGrant, observe_retirement_allocations};
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
+    for healthy in 0..4usize {
+        let ((), (requested, released)) = observe_retirement_allocations(|| {
+            let owner = MacroControlledRecord { label: "a".repeat(64), values: vec![1; 32], nested: Some(("b".repeat(48), vec![2; 16])) };
+            let mut retirement = controlled::ControlledRetirement::new(owner).unwrap_or_else(|_| panic!("macro record controlled authority"));
+            for _ in 0..healthy { retirement.step(grant).unwrap(); }
+            retirement.abandon();
+        });
+        assert_eq!(requested, released, "healthy turns {healthy} leaked an untransferred field");
+    }
+}
+
 #[test]
 fn erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_ownership() {
     use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, observe_retirement_allocations};

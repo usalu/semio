@@ -132,7 +132,7 @@ pub fn retire_record_one(record: &mut ui_contract::UiNodeRecord, field: &mut u8,
         3 => {
             if record.children.pop().is_some() { return false; }
             if !record.children.terminal_is_empty() {
-                let _ = record.children.release_empty_page(SURFACE_RECONCILE_PAGE_BYTES);
+                let _ = record.children.release_empty_page_leased(SURFACE_RECONCILE_PAGE_BYTES);
                 return false;
             }
         }

@@ -68,15 +68,17 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority 
 
     fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(usize::from(!self.terminal)) }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-        if self.terminal {
-            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
-        }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-        }
-        self.terminal = true;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
+        let grant = effect.grant();
+        let step = if self.terminal {
+            RetainedCloneStep::Complete(RetainedCloneProgress::default())
+        } else if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            RetainedCloneStep::Progress(RetainedCloneProgress::default())
+        } else {
+            self.terminal = true;
+            RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() })
+        };
+        store::os_store::owned_schema_decode::artifact_envelope_close_settle(effect, Ok(step))
     }
 
     fn terminal_is_empty(&self) -> bool {

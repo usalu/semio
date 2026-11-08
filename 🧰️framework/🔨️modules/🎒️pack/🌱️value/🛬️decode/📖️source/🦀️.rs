@@ -42,15 +42,15 @@ impl RetainedRecordBodySourceDecode{
   let cursor=self.cursor.as_ref().ok_or_else(||failure("original cursor is absent"))?;
   let mut demand=if cursor.ingress_ready(){RetirementDemand{depth:1,..Default::default()}}else{cursor.source_step_demands()?};demand.depth=demand.depth.checked_add(1).ok_or_else(||failure("original source depth overflow"))?;Ok(demand)
  }
- pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,grant:RetainedCloneGrant)->Result<RetainedRecordBodySourceStep,PackRefusal>{
-  self.validate(source)?;if self.receipt.is_some()||self.closed||self.closing||self.token.is_some()||self.complete{return Ok(RetainedRecordBodySourceStep::Blocked)}if self.fault.is_some(){return Ok(RetainedRecordBodySourceStep::Fault)}
+ pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedRecordBodySourceStep,PackRefusal>{
+  let grant=effect.grant();self.validate(source)?;if self.receipt.is_some()||self.closed||self.closing||self.token.is_some()||self.complete{return Ok(RetainedRecordBodySourceStep::Blocked)}if self.fault.is_some(){return Ok(RetainedRecordBodySourceStep::Fault)}
   if grant.maximum_items==0||grant.maximum_depth<2{return Ok(RetainedRecordBodySourceStep::Blocked)}
   let demand=match self.demands(source){Ok(demand)=>demand,Err(error)=>{*self.fault=Some(error);self.publish(grant,metadata())?;return Ok(RetainedRecordBodySourceStep::Fault)}};if !permits(grant,demand){return Ok(RetainedRecordBodySourceStep::Blocked)}
   let cursor=self.cursor.as_mut().unwrap();let mut progress=metadata();let result=(||{if cursor.ingress_ready(){
    if self.position<self.range.1-self.range.0{let byte=source.byte_at(self.range.0+self.position).ok_or_else(||failure("original borrowed source byte is absent"))?;cursor.admit_byte(self.position as u64,byte).map_err(|_|failure("original record ingress refused its quoted byte"))?;self.position+=1;Ok(RetainedRecordBodySourceStep::Progress)}
    else{cursor.seal(self.position as u64)?;self.sealed=true;Ok(RetainedRecordBodySourceStep::Progress)}
   }else if demand.capacity_bytes>0{
-   match cursor.reserve_allocation(grant.maximum_capacity_bytes){Ok(step)=>{progress.retained_capacity_bytes=step.allocated_bytes;Ok(RetainedRecordBodySourceStep::Progress)},Err(error)=>{progress.retained_capacity_bytes=error.allocated_bytes;Err(error.fault)}}
+   match cursor.reserve_allocation(grant.maximum_capacity_bytes,&mut effect.nested(grant)){Ok(step)=>{progress.retained_capacity_bytes=step.allocated_bytes;Ok(RetainedRecordBodySourceStep::Progress)},Err(error)=>{progress.retained_capacity_bytes=error.allocated_bytes;Err(error.fault)}}
   }else{
    match cursor.grant(){Ok(token)=>{progress.copied_bytes=demand.copy_bytes;if let Some(token)=token{if matches!(token,RetainedRecordBodyToken::Value(RetainedValueToken::Complete{..})){self.complete=true}self.token=Some(token);Ok(if self.complete{RetainedRecordBodySourceStep::Complete}else{RetainedRecordBodySourceStep::Token})}else{Ok(RetainedRecordBodySourceStep::Progress)}},Err(error)=>Err(error)}
   }})();
@@ -63,9 +63,9 @@ impl RetainedRecordBodySourceDecode{
   if self.closed||self.receipt.is_some()||!self.closing||self.token.is_some()||self.fault.is_some(){return Ok(Default::default())}
   let mut demand=match self.cursor.as_ref(){Some(cursor)if !cursor.terminal_is_empty()=>cursor.source_close_demands()?,_=>RetirementDemand{depth:1,..Default::default()}};demand.depth=demand.depth.checked_add(1).ok_or_else(||failure("original source close depth overflow"))?;Ok(demand)
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedRecordBodySourceStep,PackRefusal>{
-  if self.closed||self.receipt.is_some()||!self.closing||self.token.is_some()||self.fault.is_some(){return Ok(RetainedRecordBodySourceStep::Blocked)}let demand=self.close_demands()?;if !permits(grant,demand){return Ok(RetainedRecordBodySourceStep::Blocked)}
-  let mut progress=metadata();if let Some(cursor)=self.cursor.as_mut(){if cursor.terminal_is_empty(){drop(self.cursor.take())}else{match cursor.close_step(1,grant.maximum_release_bytes)?{RetainedPackCloseStep::Pending{released_bytes,..}=>progress.released_bytes=released_bytes,RetainedPackCloseStep::Complete=>{}}}self.publish(grant,progress)?;return Ok(RetainedRecordBodySourceStep::Progress)}
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedRecordBodySourceStep,PackRefusal>{
+  let grant=effect.grant();if self.closed||self.receipt.is_some()||!self.closing||self.token.is_some()||self.fault.is_some(){return Ok(RetainedRecordBodySourceStep::Blocked)}let demand=self.close_demands()?;if !permits(grant,demand){return Ok(RetainedRecordBodySourceStep::Blocked)}
+  let mut progress=metadata();if let Some(cursor)=self.cursor.as_mut(){if cursor.terminal_is_empty(){drop(self.cursor.take())}else{match cursor.close_step(1,grant.maximum_release_bytes,&mut effect.nested(grant))?{RetainedPackCloseStep::Pending{released_bytes,..}=>progress.released_bytes=released_bytes,RetainedPackCloseStep::Complete=>{}}}self.publish(grant,progress)?;return Ok(RetainedRecordBodySourceStep::Progress)}
   self.closed=true;self.publish(grant,progress)?;Ok(RetainedRecordBodySourceStep::Closed)
  }
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.cursor.is_none()&&self.token.is_none()&&self.fault.is_none()&&self.receipt.is_none()}

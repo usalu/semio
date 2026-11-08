@@ -30,7 +30,7 @@ impl PagedUtf8AppendCursor {
         if self.position==source.len()&&self.bytes.is_none()&&self.pending.is_none(){self.complete=true;return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(control())),work:1}}
         if self.pending.is_some(){let length=match self.pending.as_ref(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("pending absent").into()),work:0}}.len();let Some(total)=destination.byte_len.checked_add(length).filter(|n|*n<=N)else{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native UTF-8 append exceeds its declared capacity")),work:0}};let value=match self.pending.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("pending absent").into()),work:0}};if let Err(value)=destination.chunks.push_reserved(value){self.pending=Some(value);self.advance_fault=Some("native UTF-8 append lost its admitted slot");return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native UTF-8 append lost its admitted slot").with_retained_progress(control())),work:1}}destination.byte_len=total;self.destination=Some((destination as*const PagedUtf8<N>as usize,total));return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<String>(),..Default::default()})),work:1}}
         if self.bytes.is_some(){if self.position<self.end{if body==0{return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}let end=self.position+d.copy_bytes;let bytes=match self.bytes.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("bytes absent").into()),work:0}};if bytes.capacity()-bytes.len()<d.copy_bytes{self.advance_fault=Some("native UTF-8 append lost its admitted chunk capacity");return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native UTF-8 append lost its admitted chunk capacity").with_retained_progress(control())),work:1}}bytes.extend_from_slice(&source.as_bytes()[self.position..end]);self.position=end;return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}let bytes=match self.bytes.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("bytes absent").into()),work:0}};return match String::from_utf8(bytes){Ok(value)=>{self.pending=Some(value);crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(control())),work:1}},Err(error)=>{self.bytes=Some(error.into_bytes());self.advance_fault=Some("native UTF-8 append source changed");crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native UTF-8 append source changed").with_retained_progress(control())),work:1}}}}
-        if !destination.chunks.has_reserved_slot(){return match destination.chunks.reserve_one(grant.maximum_capacity_bytes){Ok(p)=>crate::RetainedWorkOutcome{work:p.work,result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(p.progressed),copied_bytes:if p.progressed{d.copy_bytes}else{0},retained_capacity_bytes:p.allocated_bytes,released_bytes:p.released_allocation_bytes}))},Err(error)=>crate::RetainedWorkOutcome{work:error.work,result:Err(ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}))}}}
+        if !destination.chunks.has_reserved_slot(){return match destination.chunks.reserve_one_cold(grant.maximum_capacity_bytes){Ok(p)=>crate::RetainedWorkOutcome{work:u128::from(p.work),result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(p.progressed),copied_bytes:if p.progressed{d.copy_bytes}else{0},retained_capacity_bytes:p.allocated_bytes,released_bytes:p.released_allocation_bytes}))},Err(error)=>crate::RetainedWorkOutcome{work:u128::from(error.work),result:Err(ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}))}}}
         let mut end=self.position.saturating_add(PAGED_UTF8_CHUNK_BYTES).min(source.len());while !source.is_char_boundary(end){end-=1}let mut bytes=Vec::new();if bytes.try_reserve_exact(end-self.position).is_err(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"native UTF-8 append chunk allocation failed")),work:1}}let capacity=bytes.capacity();self.bytes=Some(bytes);self.end=end;let p=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()};if capacity>grant.maximum_capacity_bytes{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native UTF-8 append allocator exceeded its admitted chunk").with_retained_progress(p)),work:1}}crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(p)),work:1}
     }
     pub fn begin_close(&mut self) -> bool { if self.closing { return false; } self.closing = true; self.close_faulted = false; true }
@@ -44,29 +44,29 @@ impl PagedUtf8AppendCursor {
     pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
     /// 🪙️ Reads the original pending chunk or terminal frame release.
     pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
-    pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome {let grant=effect.grant();
-        if self.terminal_is_empty() { return crate::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }; }
-        if grant.maximum_items == 0 { return crate::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }; }
+    pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll {let grant=effect.grant();
+        if self.terminal_is_empty() { return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }); }
+        if grant.maximum_items == 0 { return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }); }
         if !self.closing {
-            let work = u64::from(!self.close_faulted);
+            let work = u128::from(!self.close_faulted);
             self.close_faulted = true;
-            return crate::RetainedWorkOutcome { result: Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "native UTF-8 append must begin close before granted retirement").into()), work };
+            return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome { result: Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "native UTF-8 append must begin close before granted retirement").into()), work });
         }
         let demand = match self.close_demands(grant.maximum_copy_bytes) {
             Ok(demand) => demand,
-            Err(error) => return crate::RetainedWorkOutcome { result: Err(error.into()), work: 0 },
+            Err(error) => return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome { result: Err(error.into()), work: 0 }),
         };
-        if !crate::retained_clone::retained_clone_grant_admits(grant, demand) { return crate::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }; }
-        if !self.controlled_close.is_empty() { let turn=self.controlled_close.step_granted(effect);return crate::RetainedWorkOutcome{result:turn.result.map(|s|RetainedCloneStep::Progress(s.progress())),work:turn.work}; }
+        if !crate::retained_clone::retained_clone_grant_admits(grant, demand) { return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }); }
+        if !self.controlled_close.is_empty() { return self.controlled_close.step_granted(effect).map(|s|RetainedCloneStep::Progress(s.progress())); }
         if self.pending.is_some() {
             let turn = self.controlled_close.begin_granted(&mut self.pending, effect);
-            return crate::RetainedWorkOutcome { result: turn.result.and_then(|step|step.map(|s|RetainedCloneStep::Progress(s.progress())).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "native UTF-8 append retirement omitted its retained pending chunk"))).map_err(Into::into), work: turn.work };
+            return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome { result: turn.result.and_then(|step|step.map(|s|RetainedCloneStep::Progress(s.progress())).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "native UTF-8 append retirement omitted its retained pending chunk"))).map_err(Into::into), work: turn.work });
         }
-        if self.bytes.is_some(){let turn=self.controlled_close.begin_granted(&mut self.bytes,effect);return crate::RetainedWorkOutcome{result:turn.result.map(|s|RetainedCloneStep::Progress(s.unwrap_or(RetainedCloneStep::Progress(Default::default())).progress())).map_err(Into::into),work:turn.work};}
+        if self.bytes.is_some(){let turn=self.controlled_close.begin_granted(&mut self.bytes,effect);return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:turn.result.map(|s|RetainedCloneStep::Progress(s.unwrap_or(RetainedCloneStep::Progress(Default::default())).progress())).map_err(Into::into),work:turn.work});}
         self.source = None;
         self.destination = None;
         self.advance_fault = None;
-        crate::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() })), work: 1 }
+        crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() })), work: 1 })
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.source.is_none() && self.destination.is_none() && self.pending.is_none() && self.bytes.is_none() && self.advance_fault.is_none() && self.controlled_close.is_empty() }
@@ -74,12 +74,12 @@ impl PagedUtf8AppendCursor {
 
 impl ErasedSnapshotRetirement for PagedUtf8AppendCursor {
  fn requires_original_birth(&self)->bool{self.controlled_close.requires_original_birth()}
- fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{self.controlled_close.step_original_birth(original,grant)}
+ fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{self.controlled_close.step_original_birth(original,grant)}
  fn requires_original_control(&self)->bool{self.controlled_close.requires_original_control()}
- fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{if self.requires_original_birth(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"settle original birth first").into()),work:0}}if self.controlled_close.requires_original_control(){return self.controlled_close.step_original(original,effect)}Self::close_step(self,effect)}
+ fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{if self.requires_original_birth(){return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"settle original birth first").into()),work:0})}if self.controlled_close.requires_original_control(){return self.controlled_close.step_original(original,effect)}Self::close_step(self,effect)}
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if self.terminal_is_empty(){return Ok(0)}if !self.closing{return Ok(u64::from(!self.close_faulted))}if !self.controlled_close.is_empty(){return self.controlled_close.next_owner_work::<()>(false,&None,body)}if self.pending.is_some(){return self.controlled_close.next_owner_work::<String>(true,&None,body)}if self.bytes.is_some(){return self.controlled_close.next_owner_work::<Vec<u8>>(true,&None,body)}Ok(1)}
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.close_demands(body)}
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome {let grant=effect.grant(); Self::close_step(self,&mut effect.reborrow( grant,effect.maximum_work_units()).expect("retirement child exceeds original effect")) }
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll {Self::close_step(self,effect)}
     fn terminal_is_empty(&self) -> bool { PagedUtf8AppendCursor::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.next_close_copy_byte_demand() }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.next_close_capacity_byte_demand(copy) }
@@ -92,4 +92,3 @@ impl Drop for PagedUtf8AppendCursor {
 }
 
 
-#[cfg(test)]#[path="🎟️work/🧪️tests/🦀️.rs"]mod normal_work_tests;

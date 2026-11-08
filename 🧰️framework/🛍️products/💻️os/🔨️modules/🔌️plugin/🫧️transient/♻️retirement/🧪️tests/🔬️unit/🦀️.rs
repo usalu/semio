@@ -17,7 +17,7 @@ fn empty_transient_retirement_waits_for_read_release_and_matches_neutral_vectors
     let read = owner.current_read().expect("tracked empty transient read");
     let mut disposer = no_transient_store_disposer();
     let unfunded = RetainedCloneGrant { maximum_items: 0, ..funded(disposer.retirement_demands(&owner, maximum_bytes).expect("quoted close"), maximum_bytes) };
-    let zero = disposer.close_step(&mut owner, unfunded).expect("zero grant");
+    let zero = disposer.close_step_cold(&mut owner, unfunded).expect("zero grant");
     let copied_items = match zero {
         PluginLifecycleStep::Progress(progress) if progress == RetainedCloneProgress::default() => progress.copied_items,
         other => panic!("zero grant advanced retirement: {other:?}"),
@@ -25,7 +25,7 @@ fn empty_transient_retirement_waits_for_read_release_and_matches_neutral_vectors
     let mut held_read_blocks = false;
     for _ in 0..maximum_steps {
         let grant = funded(disposer.retirement_demands(&owner, maximum_bytes).expect("quoted close with held read"), maximum_bytes);
-        match disposer.close_step(&mut owner, grant).expect("close with held read") {
+        match disposer.close_step_cold(&mut owner, grant).expect("close with held read") {
             PluginLifecycleStep::Blocked { .. } => {
                 held_read_blocks = true;
                 break;
@@ -39,7 +39,7 @@ fn empty_transient_retirement_waits_for_read_release_and_matches_neutral_vectors
     let mut released_read_completes = false;
     for _ in 0..maximum_steps {
         let grant = funded(disposer.retirement_demands(&owner, maximum_bytes).expect("quoted close after read release"), maximum_bytes);
-        match disposer.close_step(&mut owner, grant).expect("close after read release") {
+        match disposer.close_step_cold(&mut owner, grant).expect("close after read release") {
             PluginLifecycleStep::Complete(progress) => {
                 assert!(progress.fits(grant));
                 released_read_completes = true;

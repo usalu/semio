@@ -5,7 +5,7 @@
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::kernel::ActorId;
 use std::sync::Arc;
-use semio_plugin_tool_run::tool_jobs_tool_machine::PressLeaf;
+use semio_plugin_tool_machine::PressLeaf;
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
@@ -29,7 +29,7 @@ use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutation
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use semio_framework_tool_machine::{ToolStep, TypingFold, TypingInput};
-use semio_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_plugin_tool_machine::ToolMachineRuntime;
 use semio_framework_tool_machine::ToolAbortReason;
 
 #[doc(hidden)]

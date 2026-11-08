@@ -6,14 +6,16 @@ use semio_framework_value_testing_allocator as _;
 
 struct Validation { performed:Arc<AtomicU64>, failed:bool, terminal:bool }
 impl ErasedSnapshotRetirement for Validation {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome {
-        if self.terminal{return RetainedWorkOutcome{work:0,result:Ok(RetainedCloneStep::Complete(Default::default()))}}
-        if grant.maximum_items==0||grant.maximum_depth==0{return RetainedWorkOutcome{work:0,result:Ok(RetainedCloneStep::Progress(Default::default()))}}
-        let mut work=0;
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll {
+        let grant=effect.grant();let done=|work:u128,result:Result<RetainedCloneStep,ValueError>|semio_framework_value::RetainedWorkPoll::Complete(RetainedWorkOutcome{work,result:result.map_err(Into::into)});
+        if self.terminal{return done(0,Ok(RetainedCloneStep::Complete(Default::default())))}
+        if grant.maximum_items==0||grant.maximum_depth==0{return done(0,Ok(RetainedCloneStep::Progress(Default::default())))}
+        let mut work=0u64;
         for _ in 0..3 {self.performed.fetch_add(1,Ordering::Relaxed);work+=1;}
         self.terminal=true;
         let result=if self.failed{Err(ValueError::literal(ValueRefusalKind::InvalidValue,"fold validation fixture refused after its performed prefix"))}else{Ok(RetainedCloneStep::Progress(Default::default()))};
-        RetainedWorkOutcome{work,result}
+        if let Err(error)=effect.performed(work){return done(work.into(),Err(error))}
+        done(work.into(),result)
     }
     fn terminal_is_empty(&self)->bool{self.terminal}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
@@ -26,7 +28,7 @@ fn finish(job:&mut HistoryFoldJob<'_,()>){
     for _ in 0..128 {
         if job.terminal_is_empty(){return}
         let grant=job.next_step_grant(1,7).unwrap();
-        let (turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant));
+        let (turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_cold(grant));
         let step=turn.result.unwrap();
         assert!(turn.work>0||matches!(step,RetainedCloneStep::Complete(_))&&job.terminal_is_empty());
         let progress=step.progress();
@@ -44,12 +46,12 @@ fn fold_work_preserves_delegated_validation_without_physical_items_even_on_failu
         let mut job=HistoryFoldJob::<()>::new(|_|std::future::pending());
         job.testkit_control().retirements().push_back(Box::new(Validation{performed:performed.clone(),failed,terminal:false}));
         let grant=job.next_step_grant(1,7).unwrap();
-        let (denied,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(RetainedCloneGrant{maximum_items:0,..grant}));
+        let (denied,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_cold(RetainedCloneGrant{maximum_items:0,..grant}));
         assert_eq!(denied.work,0);
         assert_eq!(denied.result.unwrap().progress(),RetainedCloneProgress::default());
         assert_eq!((heap.requested_bytes,heap.released_bytes,performed.load(Ordering::Relaxed)),(0,0,0));
-        let (turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant));
-        assert_eq!((turn.work,performed.load(Ordering::Relaxed)),(expected,expected));
+        let (turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_cold(grant));
+        assert_eq!((u64::try_from(turn.work).unwrap(),performed.load(Ordering::Relaxed)),(expected,expected));
         assert_eq!(job.last_turn_work(),expected);
         assert_eq!(turn.result.is_err(),failed);
         let progress=match turn.result{Ok(step)=>step.progress(),Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::InvalidValue);error.retained_progress()}};
@@ -70,13 +72,13 @@ fn fold_work_resets_on_denied_calls_and_terminal_probes(){
     assert!(matches!(step.unwrap(),HistoryFoldJobStep::Pending{..}));
     assert_eq!(job.last_turn_work(),work("fold-direct-future-poll"));
     assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    let (turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(RetainedCloneGrant{maximum_items:0,..grant}));
-    assert_eq!(turn.work,work("fold-denied-cleanup"));
+    let (turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_cold(RetainedCloneGrant{maximum_items:0,..grant}));
+    assert_eq!(turn.work,u128::from(work("fold-denied-cleanup")));
     assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     finish(&mut job);
-    let (turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(RetainedCloneGrant{maximum_items:0,..grant}));
+    let (turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_cold(RetainedCloneGrant{maximum_items:0,..grant}));
     assert!(matches!(turn.result.unwrap(),RetainedCloneStep::Complete(_)));
-    assert_eq!(turn.work,work("fold-terminal-cleanup-probe"));
+    assert_eq!(turn.work,u128::from(work("fold-terminal-cleanup-probe")));
     assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
 

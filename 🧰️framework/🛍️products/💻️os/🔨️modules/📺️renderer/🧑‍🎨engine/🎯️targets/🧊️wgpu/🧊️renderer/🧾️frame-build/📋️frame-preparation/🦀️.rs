@@ -234,27 +234,28 @@ impl AppFramePresentation {
         discard_frame_input_candidate(runtime, &mut self.input_candidate)
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep,semio_framework_value::RetirementPollExit> {
+        let grant = effect.grant();
         if self.input_candidate.is_some() { return Ok(InteractiveJobCloseStep::Blocked); }
         if let Some(packet) = self.packet.as_mut() {
-            if !packet.retirement_is_empty() { return frame_child_step(packet.close_step(grant), grant, packet.retirement_is_empty()); }
+            if !packet.retirement_is_empty() { return semio_ui_prepared::retirement::prepared_close_child(packet.close_step(effect)); }
             let bytes = std::mem::size_of::<Option<semio_ui_prepared::PreparedRenderPacket>>();
             if let Some(step) = frame_inline_gate(grant, bytes)? { return Ok(step); }
             self.packet = None;
-            return frame_inline_progress(bytes);
+            return Ok(frame_inline_progress(bytes)?);
         }
         if !self.engine_packets.terminal_is_empty() {
-            if !self.engine_packets.is_empty() { return frame_unpriced_child(); }
-            return frame_child_step(self.engine_packets.close_backing_step(grant), grant, self.engine_packets.terminal_is_empty());
+            if !self.engine_packets.is_empty() { return Ok(frame_unpriced_child()?); }
+            return Ok(frame_child_step(self.engine_packets.close_backing_step(grant), grant, self.engine_packets.terminal_is_empty())?);
         }
         if self.cursor_wake.is_some() {
             let bytes = std::mem::size_of::<Option<infinite_world::world::WorldCursorWakeToken>>();
             if let Some(step) = frame_inline_gate(grant, bytes)? { return Ok(step); }
             self.cursor_wake = None;
-            return frame_inline_progress(bytes);
+            return Ok(frame_inline_progress(bytes)?);
         }
         #[cfg(not(target_arch = "wasm32"))]
-        if self.job_progress.is_some() { return frame_unpriced_child(); }
+        if self.job_progress.is_some() { return Ok(frame_unpriced_child()?); }
         Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
     }
 

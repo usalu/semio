@@ -46,12 +46,12 @@ impl EnergyJobAuthority{
   if !self.tail_moved{return Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<ControlledRetirement<EnergyAuthorityRetirement>>()+std::mem::size_of::<EnergyAuthorityRetirement>(),depth:1,..Default::default()})}
   Ok(Default::default())
  }
- pub(super) fn retire_retained_tail(&mut self,grant:RetainedCloneGrant)->Result<InteractiveJobCloseStep,ValueError>{
-  let demand=self.retained_tail_demands(grant.maximum_copy_bytes)?;
+ pub(super) fn retire_retained_tail(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<InteractiveJobCloseStep,ValueError>{
+  let grant=effect.grant();let demand=self.retained_tail_demands(grant.maximum_copy_bytes)?;
   if !energy_grant_covers(grant,demand){return Ok(energy_idle())}
   if let Some(close)=self.closing_tail.as_mut(){
    if close.terminal_is_empty(){self.closing_tail=None;return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}})}
-   return close.step(grant).map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()})
+   return crate::retirement::energy_poll(close.step(effect)).map(|step|InteractiveJobCloseStep::Pending{progress:step.map(|step|step.progress()).unwrap_or_default()})
   }
   if !self.tail_moved{
    if !<EnergyAuthorityRetirement as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Energy retained terminal owners have no controlled retirement"))}

@@ -7,7 +7,7 @@ pub(super)fn check(value:&SpaceHistorySnapshot,encoding:SnapshotEncoding,control
  let maximum=limits.max_file_bytes.checked_sub(prefix).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native preflight ceiling cannot contain declared envelope"))?;
  control.allocation_stage(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint,allocation|{
   let mut progress=|event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total);
-  let mut native_allocation=|request:semio_framework_value::native_encoding::NativeAllocationRequest|allocation(request.bytes);let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(remaining,&mut progress,&mut native_allocation);
+  let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(remaining,&mut progress,allocation);
   let result=(||{
    let body=borrowed::measure(value,encoding,usize::MAX,&mut native)?;
    if body>maximum{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"exact canonical native wire exceeds caller file limit"))}Ok(())

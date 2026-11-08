@@ -12,34 +12,28 @@ pub fn admit_original_snapshot_alias<P:Send+Sync+'static>(original:&mut Option<A
 }
 enum AliasCloseControl<'a,'loan>{Uncontrolled,Controlled(&'a mut dyn OriginalRetirementControl),Original(&'a mut semio_framework_value::OriginalRetirementCloseLoan<'loan>)}
 impl<P:Send+Sync+'static> SnapshotAliasRetirement<P>{
- fn step(&mut self,g:RetainedCloneGrant,control:AliasCloseControl<'_,'_>)->semio_framework_value::OriginalRetirementOutcome{
-  if self.terminal_is_empty(){return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
-  let d=match self.next_demand(g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}};
-  if !semio_framework_value::retained_clone::retained_clone_grant_admits(g,d){return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  if self.active.is_some(){return match control{AliasCloseControl::Uncontrolled=>semio_framework_value::close_factory_ticket(&mut self.active,g),AliasCloseControl::Controlled(control)=>semio_framework_value::close_factory_ticket_controlled(&mut self.active,g,control),AliasCloseControl::Original(original)=>semio_framework_value::close_factory_ticket_original(&mut self.active,original,g)}}
+ fn step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,control:AliasCloseControl<'_,'_>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{
+  let g=effect.grant();
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+  let d=self.next_demand(g.maximum_copy_bytes)?;
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  if self.active.is_some(){let poll=match control{AliasCloseControl::Uncontrolled=>semio_framework_value::close_factory_ticket(&mut self.active,effect),AliasCloseControl::Controlled(control)=>semio_framework_value::close_factory_ticket_controlled(&mut self.active,effect,control),AliasCloseControl::Original(original)=>semio_framework_value::close_factory_ticket_original(&mut self.active,original,effect)};return semio_framework_value::RetirementPollExit::resume(poll)}
   if self.registry.is_none()&&self.alias.is_none()&&self.snapshots.is_none(){
    if let Some(factory)=self.factory.as_mut().filter(|factory|!factory.terminal_is_empty()&&factory.requires_original_control()){
-    return match control{AliasCloseControl::Uncontrolled=>factory.step(g),AliasCloseControl::Controlled(control)=>factory.step_controlled(g,control),AliasCloseControl::Original(original)=>factory.step_original(original,g)}
+    let poll=match control{AliasCloseControl::Uncontrolled=>factory.step(effect),AliasCloseControl::Controlled(control)=>factory.step_controlled(effect,control),AliasCloseControl::Original(original)=>factory.step_original(original,effect)};return semio_framework_value::RetirementPollExit::resume(poll)
    }
   }
-  match control{
-   AliasCloseControl::Uncontrolled=>self.local_step(g),
-   AliasCloseControl::Controlled(control)=>{let work=match self.next_computational_work(g.maximum_copy_bytes){Ok(work)=>work,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}};semio_framework_value::run_original_retirement_work(control,work,|control|{if let Err(error)=control.charge(d.capacity_bytes){return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}}self.local_step(g)})},
-   AliasCloseControl::Original(original)=>{let work=match self.next_computational_work(g.maximum_copy_bytes){Ok(work)=>work,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}};semio_framework_value::run_original_retirement_loan(original,work,|original|{if let Err(error)=original.charge(d.capacity_bytes){return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}}self.local_step(g)})}
-  }
+  self.local_step(effect)
  }
- fn local_step(&mut self,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{
-  if self.registry.is_some(){return snapshot_registry_alias_close_step(&mut self.registry,g)}
-  if self.alias.is_some(){
-   let turn=ReturnedSnapshotReadRetirement::admit_original(&mut self.alias,self.snapshots.as_ref().unwrap(),g);
-   return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|born|match born{Some((owner,p))=>{*self.active=Some(owner);RetainedCloneStep::Progress(p)},None=>RetainedCloneStep::Progress(Default::default())}).map_err(Into::into),work:turn.work}
-  }
-  if let Some(snapshots)=self.snapshots.take(){self.factory=Some(FactoryAuthority::new(snapshots));return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(),..Default::default()})),work:1}}
+ fn local_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{
+  if self.registry.is_some(){return semio_framework_value::RetirementPollExit::resume(snapshot_registry_alias_close_step(&mut self.registry,effect))}
+  if self.alias.is_some(){let mut factory=self.snapshots.as_ref().cloned();if factory.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"derived snapshot alias lost its issuer").into())}return semio_framework_value::RetirementPollExit::resume(ReturnedSnapshotReadRetirement::admit_original(&mut self.alias,&mut factory,&mut self.active,effect).map_err(Into::into))}
+  if let Some(snapshots)=self.snapshots.take(){self.factory=Some(FactoryAuthority::new(snapshots));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(),..Default::default()}))}
   if let Some(factory)=self.factory.as_mut(){
-   if factory.terminal_is_empty(){self.factory=None;return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<FactoryAuthority>>(),..Default::default()})),work:1}}
-   return factory.step(g)
+   if factory.terminal_is_empty(){self.factory=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<FactoryAuthority>>(),..Default::default()}))}
+   return semio_framework_value::RetirementPollExit::resume(factory.step(effect))
   }
-  semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}
+  Ok(RetainedCloneStep::Complete(Default::default()))
  }
 }
 impl<P:Send+Sync+'static> ErasedSnapshotRetirement for SnapshotAliasRetirement<P>{
@@ -52,9 +46,9 @@ impl<P:Send+Sync+'static> ErasedSnapshotRetirement for SnapshotAliasRetirement<P
   self.factory.as_ref().map_or(Ok(0),|factory|if factory.terminal_is_empty(){Ok(1)}else{factory.next_computational_work(body)})
  }
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(active)=self.active.as_ref(){return semio_framework_value::factory_ticket_demands(active,body)}if self.registry.is_some(){return snapshot_registry_alias_demands(&self.registry)}if self.alias.is_some(){return Ok(RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()})}if self.snapshots.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(),depth:1,..Default::default()})}self.factory.as_ref().map_or(Ok(Default::default()),|factory|if factory.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<FactoryAuthority>>(),depth:1,..Default::default()})}else{factory.demands(body)})}
- fn close_step(&mut self,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{self.step(g,AliasCloseControl::Uncontrolled)}
- fn close_step_controlled(&mut self,g:RetainedCloneGrant,c:&mut dyn OriginalRetirementControl)->semio_framework_value::OriginalRetirementOutcome{self.step(g,AliasCloseControl::Controlled(c))}
- fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{self.step(g,AliasCloseControl::Original(original))}
+ fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let result=self.step(effect,AliasCloseControl::Uncontrolled);semio_framework_value::RetirementPollExit::settle(effect,result)}
+ fn close_step_controlled(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,c:&mut dyn OriginalRetirementControl)->semio_framework_value::OriginalRetirementPoll{let result=self.step(effect,AliasCloseControl::Controlled(c));semio_framework_value::RetirementPollExit::settle(effect,result)}
+ fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let result=self.step(effect,AliasCloseControl::Original(original));semio_framework_value::RetirementPollExit::settle(effect,result)}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(4096)?.copy_bytes)}
  fn next_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{Ok(self.next_demand(b)?.capacity_bytes)}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(4096)?.release_bytes)}

@@ -53,8 +53,9 @@ impl FactoryChildSlot{
    if effect.maximum_work_units()<1{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}
    let Some(ticket)=self.ticket.as_mut()else{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("factory prepared reply lost its original ticket")),work:0})};
    let Some(source)=self.original.take()else{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("factory transfer lost its original source")),work:0})};
-   if let Err(original)=source.transfer_factory_original(ticket.as_mut()){*self.original=Some(original);return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("factory prepared ticket has a foreign typed source slot")),work:0})}
-   self.admission=Admission::empty();return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1})
+   let work=match crate::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>{*self.original=Some(source);return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error),work})}};
+   if let Err(original)=source.transfer_factory_original(ticket.as_mut()){*self.original=Some(original);return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("factory prepared ticket has a foreign typed source slot")),work})}
+   self.admission=Admission::empty();return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work})
   }
   let Some(source)=self.original.as_ref()else{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("factory admission lost its original source")),work:0})};
   if self.admission.phase==AdmissionPhase::Empty{
@@ -72,7 +73,7 @@ impl FactoryChildSlot{
   if self.preparation_is_complete(){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})}
   if self.original.is_none(){if let Some(ticket)=self.ticket.as_mut(){return ticket.prepare_step(effect)}
    if !permits(Self::capture_demand(),effect.grant())||effect.maximum_work_units()<1{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}
-   let _=source;*self.original=Some(capture());return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:Self::capture_demand().copy_bytes,..Default::default()})),work:1})
+   let _=source;let work=match crate::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error),work})};*self.original=Some(capture());return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:Self::capture_demand().copy_bytes,..Default::default()})),work})
   }self.admit(effect)
  }
  pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.original.is_some(){return self.admission_demands()}self.ticket.as_ref().map_or(Ok(Default::default()),|ticket|factory_ticket_demands(ticket,body))}

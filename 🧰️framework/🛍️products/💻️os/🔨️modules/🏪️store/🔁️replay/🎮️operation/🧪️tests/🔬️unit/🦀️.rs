@@ -3,6 +3,11 @@
 use super::*;
 use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetirement, arc_custody::SharedControlledRetirement};
 use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
+use crate::effect::{drive,settled,with_effect};
+type Exit=semio_framework_value::RetirementPollExit;
+type Effect<'a,'b>=&'a mut semio_framework_value::RetainedAllocationEffect<'b>;
+type Poll=semio_framework_value::OriginalRetirementPoll;
+type Control<'a>=&'a mut dyn semio_framework_value::OriginalRetirementControl;
 
 #[derive(semio_framework_value::RetireOwned)]
 struct TextInput {
@@ -128,15 +133,19 @@ impl ArtifactReplayPreparation<String, TextInput> for TextPreparation {
     fn next_close_capacity_byte_demand(&self, bytes:usize) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_capacity_byte_demand(bytes);} if let Some(owner)=self.active.as_ref(){return owner.next_capacity_byte_demand(bytes);} if let Some(owner)=self.shared.as_ref(){return owner.next_capacity_byte_demand(bytes);} self.inverse_list.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(bytes)) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_release_byte_demand();} if let Some(owner)=self.active.as_ref(){return owner.next_release_byte_demand();} if let Some(owner)=self.shared.as_ref(){return owner.next_release_byte_demand();} self.inverse_list.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand) }
     fn next_close_depth_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_depth_demand();} if let Some(owner)=self.active.as_ref(){return owner.next_depth_demand().map(|depth|depth.max(1));} if let Some(owner)=self.shared.as_ref(){return owner.next_depth_demand().map(|depth|depth.max(1));} self.inverse_list.as_ref().map_or(Ok(1),|owner|owner.next_depth_demand().map(|depth|depth.max(1))) }
-    fn close_step(&mut self,grant:RetainedCloneGrant,receiving:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
-        self.last_work=0;let empty=RetainedCloneProgress::default();
+    fn close_step(&mut self,effect:Effect<'_,'_>,receiving:Control<'_>)->Poll{let result=self.close_fixture(effect,receiving);Exit::settle(effect,result)}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.original.is_none()&&self.input_close.is_none()&&self.base.is_none()&&self.inverse.is_none()&&self.next.is_none()&&self.prepared.is_none()&&self.active.is_none()&&self.shared.is_none()&&self.inverse_list.is_none()}
+}
+impl TextPreparation{
+    fn close_fixture(&mut self,effect:Effect<'_,'_>,receiving:Control<'_>)->Result<RetainedCloneStep,Exit>{
+        let grant=effect.grant();let empty=RetainedCloneProgress::default();
         if !self.closing||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}
         let demand=self.close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}if demand.capacity_bytes!=0{receiving.charge(demand.capacity_bytes)?;}
-        if let Some(owner)=self.input_close.as_mut(){let result=owner.step(grant);self.last_work=owner.last_turn_work();let step=result?;if owner.terminal_is_empty(){self.input_close=None;self.last_work+=1;}return Ok(step);}
-        if let Some(owner)=self.active.as_mut(){let result=owner.step(grant);self.last_work=owner.last_turn_work();let step=result?;if owner.terminal_is_empty(){self.active=None;self.last_work+=1;}return Ok(step);}
-        if let Some(owner)=self.shared.as_mut(){let result=owner.step(grant);self.last_work=owner.last_turn_work();let step=result?;if owner.terminal_is_empty(){self.shared=None;self.last_work+=1;}return Ok(step);}
-        if let Some(owner)=self.inverse_list.as_mut(){let result=owner.step(grant);self.last_work=owner.last_turn_work();let step=result?;if owner.terminal_is_empty(){self.inverse_list=None;self.last_work+=1;}return Ok(step);}
-        self.last_work=u64::from(self.prepared.is_some()||self.inverse.is_some()||self.next.is_some()||self.base.is_some()||self.original.is_some());
+        if let Some(owner)=self.input_close.as_mut(){let step=Exit::resume(owner.step(effect))?;if owner.terminal_is_empty(){self.input_close=None;Exit::pay(effect,1)?;}return Ok(step);}
+        if let Some(owner)=self.active.as_mut(){let step=Exit::resume(owner.step(effect))?;if owner.terminal_is_empty(){self.active=None;Exit::pay(effect,1)?;}return Ok(step);}
+        if let Some(owner)=self.shared.as_mut(){let step=Exit::resume(owner.step(effect))?;if owner.terminal_is_empty(){self.shared=None;Exit::pay(effect,1)?;}return Ok(step);}
+        if let Some(owner)=self.inverse_list.as_mut(){let step=Exit::resume(owner.step(effect))?;if owner.terminal_is_empty(){self.inverse_list=None;Exit::pay(effect,1)?;}return Ok(step);}
+        Exit::pay(effect,u128::from(self.prepared.is_some()||self.inverse.is_some()||self.next.is_some()||self.base.is_some()||self.original.is_some()))?;
         if let Some(prepared)=self.prepared.as_mut(){
             if let Some(next)=prepared.next.take(){self.shared=Some(SharedControlledRetirement::lease(next));}
             else if let Ok(inverse)=&mut prepared.inverse {if !inverse.terminal_is_empty(){self.inverse_list=Some(ControlledRetirement::new(std::mem::take(inverse)).unwrap_or_else(|(error,_)|panic!("native fixture inverse refused: {error}")));}else{self.prepared=None;}}
@@ -148,7 +157,7 @@ impl ArtifactReplayPreparation<String, TextInput> for TextPreparation {
         if let Some(input)=self.original.take(){self.input_close=Some(SharedControlledRetirement::lease(input));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
         Ok(RetainedCloneStep::Complete(empty))
     }
-    fn terminal_is_empty(&self)->bool{self.closing&&self.original.is_none()&&self.input_close.is_none()&&self.base.is_none()&&self.inverse.is_none()&&self.next.is_none()&&self.prepared.is_none()&&self.active.is_none()&&self.shared.is_none()&&self.inverse_list.is_none()}
+
 
 }
 
@@ -156,18 +165,22 @@ impl Drop for TextPreparation {
     fn drop(&mut self) { assert!(self.terminal_is_empty() || std::thread::panicking(), "fixture replay producer dropped live owners"); }
 }
 
+fn close_turn<P,M>(owner:&mut ArtifactReplayPreparationRetirement<P,M>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,loan:RetainedCloneGrant,grant:RetainedCloneGrant)->(Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>,u128,semio_framework_trace::HeapAllocationObservation){
+    let((poll,heap),_)=with_effect(grant,1<<20,&mut None,|effect|semio_framework_trace::observe_heap_allocations_on_this_thread(||control.with_retirement(loan,|receiving|Ok::<_,ValueError>(owner.close_step(effect,receiving)))));
+    match poll{Ok(poll)=>{let turn=settled(poll);(turn.result,turn.work,heap)},Err(error)=>(Err(error.into()),0,heap)}
+}
 fn close(mut retirement:ArtifactReplayPreparationRetirement<String,TextInput>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>){
     let mut last=None;
     for _ in 0..4096 {
-        let body=retirement.next_copy_byte_demand().unwrap();
-        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,maximum_capacity_bytes:retirement.next_capacity_byte_demand(body).unwrap(),maximum_release_bytes:retirement.next_release_byte_demand().unwrap(),maximum_depth:retirement.next_depth_demand().unwrap()};
-        let step=control.with_retirement(grant,|receiving|retirement.close_step(grant,receiving)).expect("exact admitted fixture close");assert!(step.progress().fits(grant));
+        let d=retirement.next_demand(4096).unwrap();
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
+        let step=close_turn(&mut retirement,control,grant,grant).0.expect("exact admitted fixture close");assert!(step.progress().fits(grant));
         last=Some((grant,step));
         if retirement.terminal_is_empty(){return;}
     }
     panic!("fixture replay preparation never closed; last quoted grant and step {last:?}");
 }
-fn close_owned<T:RetireOwned>(value:T){let mut owner=ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("fixture native owner refused: {error}"));for _ in 0..4096{if owner.terminal_is_empty(){return;}let body=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,maximum_capacity_bytes:owner.next_capacity_byte_demand(body).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};assert!(owner.step(grant).unwrap().progress().fits(grant));}panic!("fixture owner did not close");}
+fn close_owned<T:RetireOwned>(value:T){let mut owner=ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("fixture native owner refused: {error}"));for _ in 0..4096{if owner.terminal_is_empty(){return;}let d=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let step=drive(grant,|effect|owner.step(effect)).unwrap();assert!(step.progress().fits(grant));}panic!("fixture owner did not close");}
 
 #[test]
 fn cooperative_history_operation_obeys_the_neutral_law() {
@@ -199,7 +212,7 @@ fn cooperative_history_operation_obeys_the_neutral_law() {
             }
             if let Some(next) = prepared.next.take() {
                 let mut owner=SharedControlledRetirement::lease(next);
-                while !owner.terminal_is_empty(){let body=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,maximum_capacity_bytes:owner.next_capacity_byte_demand(body).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};assert!(owner.step(grant).unwrap().progress().fits(grant));}
+                while !owner.terminal_is_empty(){let d=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert!(drive(grant,|effect|owner.step(effect)).unwrap().progress().fits(grant));}
             }
             if let Ok(inverse) = prepared.inverse {
                 for value in inverse {
@@ -237,7 +250,7 @@ impl ArtifactReplayPreparation<(), ()> for EmptyPreparation {
     fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-    fn close_step(&mut self, _: RetainedCloneGrant, _: &mut dyn semio_framework_value::OriginalRetirementControl) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> { Ok(RetainedCloneStep::Complete(Default::default())) }
+    fn close_step(&mut self, effect: Effect<'_,'_>, _: Control<'_>) -> Poll { Exit::settle(effect,Ok(RetainedCloneStep::Complete(Default::default()))) }
     fn terminal_is_empty(&self) -> bool { self.closing }
 }
 
@@ -285,12 +298,12 @@ fn cooperative_history_preparation_retirement_releases_the_actual_cursor_frame()
     assert_eq!(owner.next_depth_demand().unwrap(), 1);
     let full = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: bytes, maximum_depth: 1 };
     for short in [RetainedCloneGrant::default(), RetainedCloneGrant { maximum_release_bytes: bytes - 1, ..full }, RetainedCloneGrant { maximum_depth: 0, ..full }] {
-        let (step, heap) = observe_heap_allocations_on_this_thread(|| control.with_retirement(full,|receiving|owner.close_step(short,receiving)).unwrap());
+        let (step, _, heap) = close_turn(&mut owner, &mut control, full, short); let step = step.unwrap();
         assert_eq!(step.progress(), Default::default());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(!owner.terminal_is_empty());
     }
-    let (step, heap) = observe_heap_allocations_on_this_thread(|| control.with_retirement(full,|receiving|owner.close_step(full,receiving)).unwrap());
+    let (step, _, heap) = close_turn(&mut owner, &mut control, full, full); let step = step.unwrap();
     assert_eq!(heap.requested_bytes, 0);
     assert_eq!(heap.released_bytes, bytes);
     assert_eq!(step.progress().released_bytes, bytes);
@@ -313,7 +326,7 @@ impl ArtifactReplayPreparation<(),()> for WorkPreparation{
  fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(1)}
- fn close_step(&mut self,_:RetainedCloneGrant,_:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{self.perform(self.close_units);self.closed=true;Ok(RetainedCloneStep::Complete(Default::default()))}
+ fn close_step(&mut self,effect:Effect<'_,'_>,_:Control<'_>)->Poll{self.perform(self.close_units);self.closed=true;let result=Exit::pay(effect,u128::from(self.close_units)).map(|()|RetainedCloneStep::Complete(Default::default()));Exit::settle(effect,result)}
  fn terminal_is_empty(&self)->bool{self.closing&&self.closed}
 }
 #[test]
@@ -329,9 +342,9 @@ fn replay_task_preserves_cpu_only_and_failed_child_work_before_result_unwrap(){
   let actual=match result{Err(_)=>"Error",Ok(ArtifactReplayPreparationStep::Blocked)=>"Blocked",Ok(ArtifactReplayPreparationStep::Pending(p))=>{assert_eq!(p,Default::default());"Pending"},Ok(_)=>panic!("CPU-only fixture cannot prepare")};assert_eq!(actual,row["expectedResult"].as_str().unwrap());
   assert_eq!(task.step(7,[9;32],0,g,&mut control,&mut||true).unwrap(),ArtifactReplayPreparationStep::Blocked);assert_eq!(task.last_turn_work(),0);
   let mut close=task.into_retirement();let grant=g.retained_grant();
-  assert_eq!(control.with_retirement(grant,|c|close.close_step(RetainedCloneGrant{maximum_items:0,..grant},c)).unwrap().progress(),Default::default());assert_eq!(close.last_turn_work(),0);
-  control.with_retirement(grant,|c|close.close_step(grant,c)).unwrap();assert_eq!(close.last_turn_work(),law["closeUnits"].as_u64().unwrap());assert!(!close.terminal_is_empty());
-  control.with_retirement(grant,|c|close.close_step(grant,c)).unwrap();assert_eq!(close.last_turn_work(),1);assert!(close.terminal_is_empty());
+  let(denied,work,_)=close_turn(&mut close,&mut control,grant,RetainedCloneGrant{maximum_items:0,..grant});assert_eq!(denied.unwrap().progress(),Default::default());assert_eq!(work,0);
+  let(first,work,_)=close_turn(&mut close,&mut control,grant,grant);first.unwrap();assert_eq!(work,u128::from(law["closeUnits"].as_u64().unwrap()));assert!(!close.terminal_is_empty());
+  let(last,work,_)=close_turn(&mut close,&mut control,grant,grant);last.unwrap();assert_eq!(work,1);assert!(close.terminal_is_empty());
  }
 }
 

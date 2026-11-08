@@ -21,6 +21,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "installed_wake_retirement"
+path = "../../🧪️wake/🦀️.rs"
+
 [dependencies]
 semio-framework-value-paged-list = { path = "../../../../../../../🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust" }
 semio-os-dsl = { path = "../../../../🗣️dsl/📦️packages/🦀️rust" }

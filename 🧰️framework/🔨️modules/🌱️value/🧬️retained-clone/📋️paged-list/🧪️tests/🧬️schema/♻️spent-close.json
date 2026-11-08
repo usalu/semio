@@ -40,8 +40,8 @@
         "copyRequiresMultipleTurns": true,
         "closeRequiresMultipleTurns": true,
         "terminalEmpty": true,
-        "spentCloseTurns": 9,
-        "spentCloseCpu": 9
+        "spentCloseTurns": 10,
+        "spentCloseCpu": 10
       }
     }
   }

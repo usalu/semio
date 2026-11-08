@@ -43,7 +43,7 @@ pub(crate) mod reserved_jobs {
 pub extern crate semio_framework_plugin_retained_command as retained_command;
 pub(crate) use semio_plugin_reactor_app::operation_progress as tool_jobs_operation_progress;
 pub(crate) extern crate semio_plugin_tool_run as tool_jobs_tool_run;
-pub(crate) use semio_plugin_tool_run::tool_jobs_tool_machine as tool_jobs_tool_machine;
+pub(crate) extern crate semio_plugin_tool_machine as tool_jobs_tool_machine;
 pub(crate) extern crate semio_plugin_time_travel as tool_jobs_time_travel;
 pub(crate) mod tool_jobs {
     pub use semio_plugin_job::*;

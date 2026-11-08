@@ -107,32 +107,32 @@ pub struct HalfedgeMesh {
 }
 
 impl semio_framework_value::retirement::RetireOwned for HalfedgeMesh {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.vertices),semio_framework_value::retirement::deferred(self.halfedges),semio_framework_value::retirement::deferred(self.faces),semio_framework_value::retirement::deferred(self.uv_seams),semio_framework_value::retirement::deferred(self.attributes),semio_framework_value::retirement::deferred(self.materials),semio_framework_value::retirement::deferred(self.textures)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.vertices),semio_framework_value::retirement::deferred_birth_bytes_for(&self.halfedges),semio_framework_value::retirement::deferred_birth_bytes_for(&self.faces),semio_framework_value::retirement::deferred_birth_bytes_for(&self.uv_seams),semio_framework_value::retirement::deferred_birth_bytes_for(&self.attributes),semio_framework_value::retirement::deferred_birth_bytes_for(&self.materials),semio_framework_value::retirement::deferred_birth_bytes_for(&self.textures)])}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(Vec<MeshVertex>,Vec<HalfEdge>,Vec<MeshFace>,HistoryFoldSet<u32>,HistoryFoldIndex<String,MeshAttribute>,HistoryFoldIndex<String,semio_framework_value::DslValue>,HistoryFoldIndex<String,MeshTexture>);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.vertices,self.halfedges,self.faces,self.uv_seams,self.attributes,self.materials,self.textures)}
     fn controlled_retirement_supported()->bool {true}
 }
 
 impl semio_framework_value::retirement::RetireOwned for MeshVertex {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.position),semio_framework_value::retirement::deferred(self.normal),semio_framework_value::retirement::deferred(self.halfedge)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.position),semio_framework_value::retirement::deferred_birth_bytes_for(&self.normal),semio_framework_value::retirement::deferred_birth_bytes_for(&self.halfedge)])}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!([f32; 3],Option<[f32; 3]>,Option<u32>);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.position,self.normal,self.halfedge)}
     fn controlled_retirement_supported()->bool {true}
 }
 
 impl semio_framework_value::retirement::RetireOwned for HalfEdge {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.vertex),semio_framework_value::retirement::deferred(self.twin),semio_framework_value::retirement::deferred(self.next),semio_framework_value::retirement::deferred(self.face),semio_framework_value::retirement::deferred(self.uv)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.vertex),semio_framework_value::retirement::deferred_birth_bytes_for(&self.twin),semio_framework_value::retirement::deferred_birth_bytes_for(&self.next),semio_framework_value::retirement::deferred_birth_bytes_for(&self.face),semio_framework_value::retirement::deferred_birth_bytes_for(&self.uv)])}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(u32,Option<u32>,u32,Option<u32>,[f32; 2]);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.vertex,self.twin,self.next,self.face,self.uv)}
     fn controlled_retirement_supported()->bool {true}
 }
 
 impl semio_framework_value::retirement::RetireOwned for MeshFace {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.halfedge),semio_framework_value::retirement::deferred(self.smooth),semio_framework_value::retirement::deferred(self.flipped)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.halfedge),semio_framework_value::retirement::deferred_birth_bytes_for(&self.smooth),semio_framework_value::retirement::deferred_birth_bytes_for(&self.flipped)])}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(u32,bool,bool);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.halfedge,self.smooth,self.flipped)}
     fn controlled_retirement_supported()->bool {true}
 }
 
 impl semio_framework_value::retirement::RetireOwned for MeshTransfer {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.positions),semio_framework_value::retirement::deferred(self.normals),semio_framework_value::retirement::deferred(self.colors),semio_framework_value::retirement::deferred(self.indices),semio_framework_value::retirement::deferred(self.uvs),semio_framework_value::retirement::deferred(self.face_ids),semio_framework_value::retirement::deferred(self.vertex_ids),semio_framework_value::retirement::deferred(self.edge_positions),semio_framework_value::retirement::deferred(self.edge_ids),semio_framework_value::retirement::deferred(self.edge_uvs),semio_framework_value::retirement::deferred(self.edge_is_seam),semio_framework_value::retirement::deferred(self.attributes),semio_framework_value::retirement::deferred(self.materials),semio_framework_value::retirement::deferred(self.textures)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.positions),semio_framework_value::retirement::deferred_birth_bytes_for(&self.normals),semio_framework_value::retirement::deferred_birth_bytes_for(&self.colors),semio_framework_value::retirement::deferred_birth_bytes_for(&self.indices),semio_framework_value::retirement::deferred_birth_bytes_for(&self.uvs),semio_framework_value::retirement::deferred_birth_bytes_for(&self.face_ids),semio_framework_value::retirement::deferred_birth_bytes_for(&self.vertex_ids),semio_framework_value::retirement::deferred_birth_bytes_for(&self.edge_positions),semio_framework_value::retirement::deferred_birth_bytes_for(&self.edge_ids),semio_framework_value::retirement::deferred_birth_bytes_for(&self.edge_uvs),semio_framework_value::retirement::deferred_birth_bytes_for(&self.edge_is_seam),semio_framework_value::retirement::deferred_birth_bytes_for(&self.attributes),semio_framework_value::retirement::deferred_birth_bytes_for(&self.materials),semio_framework_value::retirement::deferred_birth_bytes_for(&self.textures)])}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(Vec<f32>,Vec<f32>,Vec<f32>,Vec<u32>,Vec<f32>,Vec<u32>,Vec<u32>,Vec<f32>,Vec<u32>,Vec<f32>,Vec<u8>,HistoryFoldIndex<String,MeshAttribute>,HistoryFoldIndex<String,semio_framework_value::DslValue>,HistoryFoldIndex<String,MeshTexture>);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.positions,self.normals,self.colors,self.indices,self.uvs,self.face_ids,self.vertex_ids,self.edge_positions,self.edge_ids,self.edge_uvs,self.edge_is_seam,self.attributes,self.materials,self.textures)}
     fn controlled_retirement_supported()->bool {true}
 }
 //#endregion HalfedgeMesh

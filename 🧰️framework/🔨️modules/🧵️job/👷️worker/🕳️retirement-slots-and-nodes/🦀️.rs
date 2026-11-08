@@ -116,7 +116,7 @@ pub(super) unsafe fn pump_worker_job_retirement_node<J:InteractiveJob+'static>(p
         WorkerJobCloseStep::Complete{progress}if progress!=Default::default()=>WorkerJobCloseStep::Pending{progress},
         WorkerJobCloseStep::Complete{..}=>{
             let grant=cx.retained_grant();if !inner.is_unique()||unsafe{(&*inner.waker.get()).is_some()}{return Ok(WorkerJobCloseStep::Blocked)}
-            match worker_wake_retirement::close_session_retained_wake(inner,grant){Ok(Some(step))=>return receive_original_worker_close_effects(cx,before,step),Ok(None)=>{},Err(error)=>return receive_original_worker_close_result(cx,before,Err(error))}
+            match worker_wake_retirement::close_session_retained_wake(inner,cx){Ok(Some(step))=>return receive_original_worker_close_effects(cx,before,step),Ok(None)=>{},Err(error)=>return receive_original_worker_close_result(cx,before,Err(error))}
             let released_bytes=std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<WorkerJobSessionInner<J>>()).expect("worker original Arc layout").0.pad_to_align().size();
             if grant.maximum_items==0||grant.maximum_release_bytes<released_bytes||grant.maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
             match node.inner.take().unwrap().try_return(){Ok(inner)=>{drop(inner);WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}}},Err(inner)=>{node.inner=Some(inner);WorkerJobCloseStep::Blocked}}

@@ -8,7 +8,7 @@
 use std::collections::{HashMap};
 #[cfg(test)] use std::collections::{BTreeMap};
 
-pub use semio_framework_3d_brep_mesh_io::{mesh_data_from_mesh_transfer, MeshImportCursor, MeshImportStep};
+pub use semio_framework_3d_brep_mesh_io::{mesh_data_from_mesh_transfer, MeshImportCursor, MeshImportStep, PendingMutations};
 
 use semio_framework_3d_brep_representation::contract::*;
 

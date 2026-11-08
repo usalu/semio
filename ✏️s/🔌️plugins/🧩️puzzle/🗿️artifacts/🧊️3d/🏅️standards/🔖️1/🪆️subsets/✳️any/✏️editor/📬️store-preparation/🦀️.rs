@@ -53,7 +53,6 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         use semio_framework_value::ValueError;
         use semio_framework_value::ValueRefusalKind;
         self.last_work = 0;
-        {static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<20||n%50_000==0{eprintln!("[DEBUG] aggregator-gate PR n={} phase={} permits_one={} cancelled={} closing={} refused={} prepared={}",n,self.phase,grant.permits_one(),self.cancelled,self.owners.is_closing(),self.owners.refused.is_some(),self.owners.prepared.is_some());}}
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -275,7 +274,6 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         use semio_framework_value::ValueError;
         use semio_framework_value::ValueRefusalKind;
         self.last_work = 0;
-        {static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<20||n%50_000==0{eprintln!("[DEBUG] aggregator-gate PR n={} phase={} permits_one={} cancelled={} closing={} refused={} prepared={}",n,self.phase,grant.permits_one(),self.cancelled,self.owners.is_closing(),self.owners.refused.is_some(),self.owners.prepared.is_some());}}
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }

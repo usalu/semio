@@ -2,6 +2,8 @@
 //! 🧮️ Sparse linear algebra core: COO/CSR/CSC storage, reverse-Cuthill-McKee ordering, and the numerical job
 
 use semio_framework_value_persistent::list::PagedList;
+use semio_framework_value_persistent::list::PagedListReservationOutcome;
+use semio_framework_value::{AuthoringWallet, RetainedAllocationEffect};
 use semio_framework_job::{InteractiveJob, InteractiveJobStep, OriginalJobReturnClaim, OriginalTurnFailure, close_original_retained_step, receive_original_retained_work};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_job::JobOutcomeBorrow;

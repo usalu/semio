@@ -33,6 +33,9 @@ semio-s-artifact-stdio-gltf-mutations = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
 semio-s-artifact-stdio-gltf-test-oracle = { path = "../../../../../../../🔮️oracles/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

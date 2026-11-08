@@ -2,6 +2,22 @@
 
 use super::*;
 
+/// 🎟️ The actual caller turn answers the archive history decoder's original work quotes.
+pub trait ArchiveWorkTurn:Sync{
+    fn work_turn(&self)->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity>;
+    fn admits(&self,observed:u64,additional:u64)->Result<bool,ValueError>;
+}
+/// 🪪️ The resident archive producer answers each original work quote through the borrowed caller turn.
+pub struct ArchiveWorkProducer;
+impl semio_framework_value_native_owned::native_decoding::OriginalWorkRecipient for ArchiveWorkProducer{
+    type Context<'turn,'source>=&'turn(dyn ArchiveWorkTurn+'turn) where 'source:'turn;
+    fn validate_context<'turn,'source>(&self,_:&Self::Context<'turn,'source>)->Result<(),ValueError> where 'source:'turn{Ok(())}
+    fn source_turn<'turn,'source>(&self,turn:&Self::Context<'turn,'source>)->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity> where 'source:'turn{turn.work_turn()}
+    fn admits<'reply,'turn,'source>(&mut self,turn:&mut Self::Context<'turn,'source>,quote:semio_framework_value_native_owned::native_decoding::OriginalWorkQuote<'reply>,observed:u64,additional:u64)->semio_framework_value_native_owned::native_decoding::OriginalWorkQuoteComplete<'reply> where 'source:'turn{quote.complete(turn.admits(observed,additional))}
+    fn settle_partial<'reply,'turn,'source>(&mut self,_:&mut Self::Context<'turn,'source>,check:semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheck<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.complete(Ok(()))}
+    fn recover_partial<'reply,'turn,'source>(&mut self,_:&mut Self::Context<'turn,'source>,check:semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheck<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.complete(Ok(()))}
+}
+
 #[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ActiveDocumentArchiveLoadState {
@@ -249,6 +265,7 @@ where
     pub merge: bool,
     pub ahead: u64,
     pub fault: Vec<u8>,
+    pub work: semio_framework_value_native_owned::native_decoding::OriginalWorkAuthority<ArchiveWorkProducer>,
 }
 
 impl<P, Mutation> ActiveDocumentArchiveLoad<P, Mutation>
@@ -284,6 +301,7 @@ where
             merge: false,
             ahead: 0,
             fault: Vec::new(),
+            work: semio_framework_value_native_owned::native_decoding::OriginalWorkAuthority::new(ArchiveWorkProducer),
         }
     }
 
@@ -311,7 +329,7 @@ where
 
     /// 🫙️ Every original input owner is returned; only the encoded fault diagnostic the terminal Fault status carries may remain.
     pub fn inputs_are_empty(&self) -> bool {
-        self.archive.is_none() && self.archive_retirement.is_none() && self.history.is_none() && self.history_custody.is_none() && self.decoded_history.is_none() && self.member.is_none() && self.rejected_ingress.is_none() && self.retained.is_none() && self.hydration.is_none() && self.replacement.is_none()
+        self.archive.is_none() && self.archive_retirement.is_none() && self.history.is_none() && self.history_custody.is_none() && self.decoded_history.is_none() && self.member.is_none() && self.rejected_ingress.is_none() && self.retained.is_none() && self.hydration.is_none() && self.replacement.is_none() && !self.work.has_live_actions()
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -354,7 +372,7 @@ where
     }
 
     /// 🎟️ Retains all original history and physical archive backing until full admission succeeds.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant,recipient:&mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant,work_turn:&dyn ArchiveWorkTurn) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure> {
         self.last_native_work=0;let mut work=0;let result:Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>=(||{
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
@@ -382,7 +400,7 @@ where
         if let Some(history)=self.history.as_mut(){
             if history.terminal_is_empty(){work=1;drop(self.history.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
             let source=&self.archive.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"archive history decoder lost its original source"))?.parent_spr;
-            let turn=history.close_step(source,&protocol::RetainedHistoryUninterrupted,child,recipient);work=turn.work;self.last_native_work=history.last_turn_native_work();let step=turn.result?;
+            let turn=match self.work.with_loan(&mut (work_turn as &dyn ArchiveWorkTurn),|loan|history.close_step(source,&protocol::RetainedHistoryUninterrupted,child,loan)){Ok(turn)=>turn,Err(error)=>semio_framework_value::RetainedWorkOutcome{work:0,result:Err(semio_framework_value::OriginalRetirementFailure::from_work_refusal(error))}};work=turn.work;self.last_native_work=history.last_turn_native_work();let step=turn.result?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,history.terminal_is_empty(),"original archive history decoder")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }

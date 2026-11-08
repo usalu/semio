@@ -2,6 +2,46 @@
 
 use super::*;
 
+/// ⏳️ One initiating native event's business stock and wall lifetime, mirrored from `NativeFrameRootPolicyV1::initiating_event` (total minus retirement reserve): the host debits ONE such lifetime across all turns; per-turn renewal alone would regrant it.
+pub struct HostLifetimeStock;
+impl HostLifetimeStock{
+    pub const FUEL:u64=67_108_864-8_388_608;
+    pub const ITEMS:usize=33_554_432-4_194_304;
+    pub const COPY_BYTES:usize=536_870_912-8_388_608;
+    pub const CAPACITY_BYTES:usize=268_435_456-4_194_304;
+    pub const RELEASE_BYTES:usize=536_870_912-268_435_456;
+    pub const ELAPSED:std::time::Duration=std::time::Duration::from_secs(30);
+}
+
+struct HostLifetime{started:std::time::Instant,work_start:u128,progress_start:semio_framework_value::RetainedCloneProgress}
+thread_local!{static HOST_LIFETIME:std::cell::RefCell<Option<HostLifetime>>=const{std::cell::RefCell::new(None)};}
+
+/// 🔒️ Disarms the host lifetime when the law that armed it ends, also on unwind.
+pub struct HostLifetimeGuard(());
+impl Drop for HostLifetimeGuard{fn drop(&mut self){let _=HOST_LIFETIME.try_with(|slot|slot.borrow_mut().take());}}
+
+/// ⏳️ Arms the host lifetime on this thread: from now on every fixture turn renewal debits one native initiating-event stock ([`HostLifetimeStock`]) of work, retained currencies and wall time, and refuses a turn the host would not issue.
+pub fn arm_host_lifetime(cx:&semio_framework_job::StepContext<'_>)->HostLifetimeGuard{
+    HOST_LIFETIME.with(|slot|*slot.borrow_mut()=Some(HostLifetime{started:std::time::Instant::now(),work_start:cx.original_work_units_spent(),progress_start:cx.retained_progress()}));
+    HostLifetimeGuard(())
+}
+
+fn host_lifetime_refusal(message:&'static str)->semio_framework_value::ValueError{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,message)}
+
+/// 🔁️ Renews one fixture turn like the host issues it: fuel and grant are restored per turn, but an armed [`arm_host_lifetime`] first refuses the turn once the lifetime stock is spent or the lifetime wall clock has run out.
+pub fn fixture_renew_turn(cx:&mut semio_framework_job::StepContext<'_>,fuel:u64,grant:RetainedCloneGrant)->Result<(),semio_framework_value::ValueError>{
+    HOST_LIFETIME.with(|slot|{
+        let slot=slot.borrow();let Some(lifetime)=slot.as_ref() else{return Ok(())};
+        if lifetime.started.elapsed()>HostLifetimeStock::ELAPSED{return Err(host_lifetime_refusal("host lifetime deadline exhausted: the native initiating event allows 30 s"))}
+        if cx.original_work_units_spent().saturating_sub(lifetime.work_start)>u128::from(HostLifetimeStock::FUEL){return Err(host_lifetime_refusal("host lifetime fuel exhausted across fixture turns"))}
+        let spent=cx.retained_progress();let before=lifetime.progress_start;
+        let delta=semio_framework_value::RetainedCloneProgress{copied_items:spent.copied_items.saturating_sub(before.copied_items),copied_bytes:spent.copied_bytes.saturating_sub(before.copied_bytes),retained_capacity_bytes:spent.retained_capacity_bytes.saturating_sub(before.retained_capacity_bytes),released_bytes:spent.released_bytes.saturating_sub(before.released_bytes)};
+        if delta.copied_items>HostLifetimeStock::ITEMS||delta.copied_bytes>HostLifetimeStock::COPY_BYTES||delta.retained_capacity_bytes>HostLifetimeStock::CAPACITY_BYTES||delta.released_bytes>HostLifetimeStock::RELEASE_BYTES{return Err(host_lifetime_refusal("host lifetime retained stock exhausted across fixture turns"))}
+        Ok(())
+    })?;
+    semio_framework_job::testkit::renew_turn(cx,fuel,grant)
+}
+
 /// 🪪️ Pays every birth the runtime performs while opening an instance through the SAME routine, `PluginApp::advance_instance_birth`: fixture constructors skip that opening, so a typed action could never obtain its cancellation lease.
 pub fn ensure_fixture_cancellation_issuer<P:PluginApp>(app:&mut P,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
     let (instance_id,actor)=app.birth_identity().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture app has no bound instance identity to be born under"))?;
@@ -19,7 +59,7 @@ pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Op
     let mut original_args=args;let mut original_meta=Some(meta.clone());
     let mut result=Ok(None);
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
-        semio_framework_job::testkit::renew_turn(cx,fresh_fuel,fresh_grant)?;
+        fixture_renew_turn(cx,fresh_fuel,fresh_grant)?;
         semio_framework_job::testkit::renew_payload_page_grant(cx);
         result=app.handle_action(action,&mut original_args,&mut original_meta,identity,cx).await;
         if !matches!(result,Ok(None)){break}
@@ -32,10 +72,11 @@ pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Op
 /// 🧭️ Drives the actual addressed command endpoint and pays remaining original fixture sources under its authored close loan.
 pub async fn dispatch_fixture_command<P:PluginApp>(app:&mut P,address:&semio_framework::manifest::CommandAddress,args:Option<semio_framework_value::DslValue>,active_mode:Option<&str>,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
     let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.retained_grant());
+    ensure_fixture_cancellation_issuer(app,cx)?;
     let mut original_args=args;let mut original_fault=None;let mut original_meta=Some(meta.clone());
     let mut result=Ok(None);
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
-        semio_framework_job::testkit::renew_turn(cx,fresh_fuel,fresh_grant)?;
+        fixture_renew_turn(cx,fresh_fuel,fresh_grant)?;
         semio_framework_job::testkit::renew_payload_page_grant(cx);
         result=app.handle_command(address,&mut original_args,&mut original_fault,active_mode,&mut original_meta,identity,cx).await;
         if !matches!(result,Ok(None)){break}
@@ -105,6 +146,7 @@ pub async fn take_fixture_media_export_chunk<P:PluginApp>(app:&mut P,handle:&sem
 
 /// 📨️ Exercises the real continuation receiver with one original argument and fault pair.
 pub async fn dispatch_fixture_response_action<P:PluginApp>(app:&mut P,action:&str,args:Option<semio_framework_value::DslValue>,fault:Option<semio_framework::Fault>,meta:&mut Option<ActionMeta>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+    ensure_fixture_cancellation_issuer(app,cx)?;
     let(mut original_args,mut original_fault)=(args,fault);let mut result=Ok(None);
     for _ in 0..OriginalFixtureCaller::maximum_turns(){result=app.handle_response_action(action,&mut original_args,&mut original_fault,meta,identity,cx).await;if !matches!(result,Ok(None)){break}if let Err(failure)=app.maintenance_step(cx,close_loan){result=Err(failure.into());break}}
     close_fixture_action_inputs(original_args,original_fault,cx,close_loan);
@@ -250,7 +292,7 @@ where
     let fresh_grant = cx.retained_grant();
     ensure_fixture_cancellation_issuer(app,cx)?;
     let status = loop {
-        semio_framework_job::testkit::renew_turn(cx, fresh, fresh_grant)?;
+        fixture_renew_turn(cx, fresh, fresh_grant)?;
         cx.consume_fuel(1);let grant=cx.retained_grant();PluginApp::maintenance_step(app,cx,grant)?;
         let status = PluginApp::poll_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await?;
         if !law_load_running(&status, &mut polls)? {
@@ -284,7 +326,7 @@ pub async fn plugin_load_document<PA: PluginApp>(runtime: &semio_plugin_reactor_
     let fresh = OriginalFixtureCaller::turn_fuel();
     let fresh_grant = cx.retained_grant();
     let status = loop {
-        semio_framework_job::testkit::renew_turn(cx, fresh, fresh_grant)?;
+        fixture_renew_turn(cx, fresh, fresh_grant)?;
         cx.consume_fuel(1);semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,None,identity,cx).await?;
         let status = semio_framework_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await?;
         if !law_load_running(&status, &mut polls)? {
@@ -349,63 +391,6 @@ where
     envelope.retire_unadopted();
     load_document(app, &pack.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?, identity,cx).await
 }
-
-/// ⌨️ One long typing run (fixture `🧫️fixtures/⌨️typing-run/🔣️.json`: ≥ 1000 typed characters with pauses, caret moves back
-/// into the run and Backspace/Delete corrections) as the full texts a text-editor host delivers, one per changed key.
-pub struct TypingRun {
-    pub initial: String,
-    pub texts: Vec<String>,
-    pub expected: String,
-}
-
-/// ⌨️ Replays the typing-run fixture under the caret-relative text-input model (typing inserts at the caret,
-/// Backspace/Delete remove one character, arrows move one character, Home/End reach the line edges, Enter inserts a line
-/// break) — the model the editor's own text-input law and Chromium's native textarea answer identically.
-pub fn typing_run() -> TypingRun {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⌨️typing-run/🔣️.json")).expect("typing-run fixture");
-    let initial = fixture["initial"].as_str().expect("typing-run initial").to_string();
-    let mut text: Vec<char> = initial.chars().collect();
-    let mut caret = text.len();
-    let mut texts = Vec::new();
-    for key in fixture["keys"].as_array().expect("typing-run keys") {
-        let before = text.clone();
-        match key.as_str().expect("typing-run key") {
-            "pause" => {}
-            "Backspace" => {
-                if caret > 0 {
-                    caret -= 1;
-                    text.remove(caret);
-                }
-            }
-            "Delete" => {
-                if caret < text.len() {
-                    text.remove(caret);
-                }
-            }
-            "ArrowLeft" => caret = caret.saturating_sub(1),
-            "ArrowRight" => caret = (caret + 1).min(text.len()),
-            "Home" => caret = text[..caret].iter().rposition(|ch| *ch == '\n').map_or(0, |index| index + 1),
-            "End" => caret = text[caret..].iter().position(|ch| *ch == '\n').map_or(text.len(), |index| caret + index),
-            "Enter" => {
-                text.insert(caret, '\n');
-                caret += 1;
-            }
-            typed => {
-                for ch in typed.chars() {
-                    text.insert(caret, ch);
-                    caret += 1;
-                }
-            }
-        }
-        if text != before {
-            texts.push(text.iter().collect());
-        }
-    }
-    let expected = fixture["expect"]["text"].as_str().expect("typing-run expected text").to_string();
-    assert_eq!(texts.last(), Some(&expected), "the typing-run model reaches the fixture's expected text");
-    TypingRun { initial, texts, expected }
-}
-
 /// 🎟️ The fixture's original policy admits each quoted demand without creating new authority.
 fn fixture_lifecycle_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
     let grant = fixture_mounted_policy().maintenance;
@@ -663,14 +648,14 @@ mod renew_turn_laws {
         let fresh = cx.fuel_remaining();
         let grant = cx.retained_grant();
         for _ in 0..4 {
-            semio_framework_job::testkit::renew_turn(cx, fresh, grant).expect("the fixture source renews");
+            fixture_renew_turn(cx, fresh, grant).expect("the fixture source renews");
             assert_eq!(cx.fuel_remaining(), fresh);
             assert_eq!(cx.retained_grant(), grant);
             cx.consume_fuel(fresh - 1);
             cx.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() }).expect("the renewed ceiling admits one item");
         }
         assert_eq!(cx.fuel_remaining(), 1);
-        semio_framework_job::testkit::renew_turn(cx, fresh, grant).expect("the last turn renews so the scope retires from fresh fuel");
+        fixture_renew_turn(cx, fresh, grant).expect("the last turn renews so the scope retires from fresh fuel");
     }
 
     /// ⚖️ LAW: the production turn bound survives renewal: a load that stays running stops with a fault at the authored bound.

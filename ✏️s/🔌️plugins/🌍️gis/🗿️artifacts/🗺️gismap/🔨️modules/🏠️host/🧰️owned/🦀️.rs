@@ -4,7 +4,7 @@ use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind}
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::{GisMapSnapshot, MapFeature};
 use protocol::{Mutation, OpBinary};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::RetirementDemand;
 
 #[path = "♻️retirement-and-clone/🦀️.rs"]

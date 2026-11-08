@@ -2,7 +2,7 @@
 //!
 //! The backing is invisible to the allocator contract, exactly as in the `RetireOwned` implementations of the same types.
 
-use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_close, admit_retained_clone_progress, close_retained_binding};
+use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, ValueError, admit_retained_clone_close, admit_retained_clone_progress, close_retained_binding};
 use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, hash::Hash, mem::size_of};
 
 /// ❄️ Exposes one standard collection as a dense, immutable entry sequence plus a cold constructor.
@@ -122,8 +122,8 @@ impl<M:RetainedCloneEntries> RetainedCloneEntriesCursor<M>{
     fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
         #[cfg(test)] selected_close_tests::record(self as*const Self as usize,body);
         if !self.closing{return Ok(Default::default());}
-        if !self.key_cursor.terminal_is_empty(){return if !self.key_cursor.close_started(){Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{super::nested_retained_clone_close_demands::<M::Key>(&self.key_cursor,body)};}
-        if !self.value_cursor.terminal_is_empty(){return if !self.value_cursor.close_started(){Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{super::nested_retained_clone_close_demands::<M::Value>(&self.value_cursor,body)};}
+        if !self.key_cursor.terminal_is_empty(){return if !self.key_cursor.close_started(){self.key_cursor.begin_close_demand()}else{super::nested_retained_clone_close_demands::<M::Key>(&self.key_cursor,body)};}
+        if !self.value_cursor.terminal_is_empty(){return if !self.value_cursor.close_started(){self.value_cursor.begin_close_demand()}else{super::nested_retained_clone_close_demands::<M::Value>(&self.value_cursor,body)};}
         if self.key.is_some(){return self.close.next_owner_demands::<M::Key>(true,&self.source,body);}
         if self.value.is_some(){return self.close.next_owner_demands::<M::Value>(true,&self.source,body);}
         self.close.next_owner_demands::<M>(self.building.is_some()||self.output.is_some(),&self.source,body)
@@ -162,7 +162,7 @@ fn output_ready(&self)->bool{self.output.is_some()}
     }
 
     fn advance_work_demand(&self,source:RetainedCloneRef<'_,M>,body:usize,maximum_work_units:u64)->Result<u64,crate::ValueError>{let selected=(||->Result<u64,crate::ValueError>{
-        self.advance_demands(source,body,maximum_work_units)?;if maximum_work_units==0||self.output_ready(){return Ok(0)}if self.source.is_none(){return Ok(1)}
+        self.advance_demands(source,body,maximum_work_units)?;if maximum_work_units==0||self.output_ready(){return Ok(0)}if self.source.is_none(){return source.binding_work_demand(&self.source)}
         match self.phase{
             KEY if self.key_cursor.output_ready()=>self.key_cursor.take_work_demand()?.checked_add(1).ok_or_else(||crate::ValueError::invariant("collection key transfer work overflow")),
             KEY=>self.key_cursor.advance_work_demand(source.project(self.index*2+1,|map|map.entry_at(self.index).expect("validated standard collection entry").0),body,maximum_work_units),
@@ -186,7 +186,8 @@ fn output_ready(&self)->bool{self.output.is_some()}
         let demand=self.advance_demands(source,body,maximum_work_units)?;
         if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !super::retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress) = {let turn=source.bind(&mut self.source, grant);work+=turn.work;turn.result}? { return Ok(RetainedCloneStep::Progress(progress)); }
+        if self.advance_work_demand(source,body,maximum_work_units)?==0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if let Some(progress) = {let turn=source.bind(&mut self.source, effect);work+=turn.work;turn.result}? { return Ok(RetainedCloneStep::Progress(progress)); }
         let index = self.index;
         match self.phase {
             SELECT => {
@@ -204,19 +205,19 @@ fn output_ready(&self)->bool{self.output.is_some()}
             }
             KEY => {
                 if self.key_cursor.output_ready() {
-                    let nested=super::nested_retained_clone_grant(grant)?;let turn=self.key_cursor.take(nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.key=Some(value);work+=1;
+                    let nested=super::nested_retained_clone_grant(grant)?;let Some(progress)=super::take_child_output(&mut self.key_cursor,&mut self.key,nested,effect)? else{return Ok(RetainedCloneStep::Progress(Default::default()))};work+=1;
                     self.phase=KEY_CLOSE;
                     return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"standard collection key take")?));
                 }
                 let nested=super::nested_retained_clone_grant(grant)?;
-                let step={let turn=self.key_cursor.advance(source.project(index*2+1,|map|map.entry_at(index).expect("validated standard collection entry").0),body,maximum_work_units,&mut effect.reborrow(nested,maximum_work_units)?);work+=turn.work;turn.result}?;
+                let step={let turn=self.key_cursor.advance(source.project(index*2+1,|map|map.entry_at(index).expect("validated standard collection entry").0),body,maximum_work_units,&mut effect.nested_within(nested,maximum_work_units));work+=turn.work;turn.result}?;
                 Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,step.progress(),"standard collection key")?))
             }
             KEY_CLOSE => {
-                if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid();work+=turn.work;turn.result?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+                if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(effect);work+=turn.work;turn.result?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
                 if !self.key_cursor.terminal_is_empty() {
-                    if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-let step = {let turn=self.key_cursor.close_step(&mut effect.reborrow(super::nested_retained_clone_grant(grant)?,effect.maximum_work_units().saturating_sub(work))?);work+=turn.work;turn.result}?;
+                    if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+let step = {let turn=super::settle_child_close(self.key_cursor.close_step(&mut effect.nested(super::nested_retained_clone_grant(grant)?)));work+=turn.work;turn.result}?;
                     return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.key_cursor.terminal_is_empty(), "retained standard collection key scaffold close")?.progress()));
                 }
                 work+=1;self.key_cursor = <M::Key as RetainedClone>::retained_clone_cursor();
@@ -230,19 +231,19 @@ let step = {let turn=self.key_cursor.close_step(&mut effect.reborrow(super::nest
             }
             VALUE => {
                 if self.value_cursor.output_ready() {
-                    let nested=super::nested_retained_clone_grant(grant)?;let turn=self.value_cursor.take(nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.value=Some(value);work+=1;
+                    let nested=super::nested_retained_clone_grant(grant)?;let Some(progress)=super::take_child_output(&mut self.value_cursor,&mut self.value,nested,effect)? else{return Ok(RetainedCloneStep::Progress(Default::default()))};work+=1;
                     self.phase=VALUE_CLOSE;
                     return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"standard collection value take")?));
                 }
                 let nested=super::nested_retained_clone_grant(grant)?;
-                let step={let turn=self.value_cursor.advance(source.project(index*2+2,|map|map.entry_at(index).expect("validated standard collection entry").1),body,maximum_work_units,&mut effect.reborrow(nested,maximum_work_units)?);work+=turn.work;turn.result}?;
+                let step={let turn=self.value_cursor.advance(source.project(index*2+2,|map|map.entry_at(index).expect("validated standard collection entry").1),body,maximum_work_units,&mut effect.nested_within(nested,maximum_work_units));work+=turn.work;turn.result}?;
                 Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,step.progress(),"standard collection value")?))
             }
             VALUE_CLOSE => {
-                if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid();work+=turn.work;turn.result?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+                if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(effect);work+=turn.work;turn.result?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
                 if !self.value_cursor.terminal_is_empty() {
-                    if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-let step = {let turn=self.value_cursor.close_step(&mut effect.reborrow(super::nested_retained_clone_grant(grant)?,effect.maximum_work_units().saturating_sub(work))?);work+=turn.work;turn.result}?;
+                    if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+let step = {let turn=super::settle_child_close(self.value_cursor.close_step(&mut effect.nested(super::nested_retained_clone_grant(grant)?)));work+=turn.work;turn.result}?;
                     return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.value_cursor.terminal_is_empty(), "retained standard collection value scaffold close")?.progress()));
                 }
                 work+=1;self.value_cursor = <M::Value as RetainedClone>::retained_clone_cursor();
@@ -281,29 +282,29 @@ let step = {let turn=self.value_cursor.close_step(&mut effect.reborrow(super::ne
 
     
 
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result=(||{
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "standard collection must begin close before granted retirement").into()); }
         if !super::retained_clone_grant_admits(grant,super::retained_clone_close_demands::<M>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         if !self.key_cursor.terminal_is_empty() {
-            if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-            if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-let step = {let turn=self.key_cursor.close_step(&mut effect.reborrow(super::nested_retained_clone_grant(grant)?,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result}?;
+            if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+            if !self.key_cursor.close_started(){let turn=self.key_cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+let step = {let turn=crate::RetirementPollExit::settled(self.key_cursor.close_step(&mut effect.nested(super::nested_retained_clone_grant(grant)?)))?;work+=turn.work;turn.result}?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.key_cursor.terminal_is_empty(), "retained standard collection key close")?.progress()));
         }
         if !self.value_cursor.terminal_is_empty() {
-            if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-            if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-let step = {let turn=self.value_cursor.close_step(&mut effect.reborrow(super::nested_retained_clone_grant(grant)?,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result}?;
+            if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+            if !self.value_cursor.close_started(){let turn=self.value_cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+let step = {let turn=crate::RetirementPollExit::settled(self.value_cursor.close_step(&mut effect.nested(super::nested_retained_clone_grant(grant)?)))?;work+=turn.work;turn.result}?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.value_cursor.terminal_is_empty(), "retained standard collection value close")?.progress()));
         }
-        if !self.close.is_empty() { return {let turn=self.close.step_granted(effect);work+=turn.work;turn.result}; }
+        if !self.close.is_empty() { return {let turn=crate::RetirementPollExit::settled(self.close.step_granted(effect))?;work+=turn.work;turn.result.map_err(Into::into)}; }
         if let Some(step) = {let turn=self.close.begin_granted(&mut self.key,effect);work+=turn.work;turn.result}? { return Ok(step); }
         if let Some(step) = {let turn=self.close.begin_granted(&mut self.value,effect);work+=turn.work;turn.result}? { return Ok(step); }
         if let Some(step) = {let turn=self.close.begin_granted(&mut self.building,effect);work+=turn.work;turn.result}? { return Ok(step); }
         if let Some(step) = {let turn=self.close.begin_granted(&mut self.output,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        {let turn=close_retained_binding(&mut self.source,effect);work+=turn.work;turn.result}
-    })();crate::RetainedWorkOutcome{result,work}}
+        {let turn=crate::RetirementPollExit::settled(close_retained_binding(&mut self.source,effect))?;work+=turn.work;turn.result.map_err(Into::into)}
+    })();crate::RetirementPollExit::finish(result,work)}
 
     fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.depth)}
     fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}

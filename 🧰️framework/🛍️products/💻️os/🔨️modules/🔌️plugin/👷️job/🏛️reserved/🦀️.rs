@@ -218,7 +218,7 @@ macro_rules! framework_reserved_job {
             }
 
             fn admission_demands(&self,_operation:&semio_framework_job::Operation,_payload:&Self::Payload,input:Option<&semio_framework::action_bus::RetainedToolWireInput>,checkpoint:Option<&semio_framework::action_bus::RetainedToolWireInput>)->Result<semio_framework::action_bus::ToolJobAdmissionDemand,semio_framework_value::ValueError>{if input.is_some()||checkpoint.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original typed job does not accept wire or checkpoint replacement"));}Ok(semio_framework::action_bus::ToolJobAdmissionDemand::reused_job())}
-fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework::action_bus::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework::action_bus::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,_,_|{payload.as_mut().expect("retained original job").bind_operation(*operation)?;let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
+fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework::action_bus::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework::action_bus::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<semio_framework_job::OriginalConstructionStatus,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,admission,operation,payload,input,checkpoint,output,demand,|_,payload,_,_|{payload.as_mut().expect("retained original job").bind_operation(*operation)?;let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
         }
 
         impl<A: ArtifactApp> ArtifactOwnedToolJobFactory for $factory<A> {
@@ -540,7 +540,7 @@ impl<A: ArtifactApp> semio_framework::ToolJobFactory for FrameworkConfigurationB
     }
 
     fn admission_demands(&self,_operation:&semio_framework_job::Operation,_payload:&Self::Payload,input:Option<&semio_framework_action_bus::RetainedToolWireInput>,checkpoint:Option<&semio_framework_action_bus::RetainedToolWireInput>)->Result<semio_framework::action_bus::ToolJobAdmissionDemand,semio_framework_value::ValueError>{if input.is_some()||checkpoint.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original typed job does not accept wire or checkpoint replacement"));}Ok(semio_framework::action_bus::ToolJobAdmissionDemand::reused_job())}
-fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework_action_bus::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework_action_bus::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,_,_|{payload.as_mut().expect("retained original job").operation=Some(*operation);let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
+fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework_action_bus::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework_action_bus::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<semio_framework_job::OriginalConstructionStatus,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,admission,operation,payload,input,checkpoint,output,demand,|_,payload,_,_|{payload.as_mut().expect("retained original job").operation=Some(*operation);let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
 }
 
 impl<A: ArtifactApp> ArtifactOwnedToolJobFactory for FrameworkConfigurationBinaryJobFactory<A> {
@@ -716,7 +716,7 @@ impl QualifiedToolView<'_> {
 #[doc(hidden)]
 pub struct FrameworkReservedCommitPermit {
     pub operation: semio_framework_job::Operation,
-    pub lease: ToolCancellationLease,
+    pub lease: ReservedLease,
     pub producer_fault: Option<ArtifactBoundedToolFault>,
     pub identity: Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,
     pub identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress,
@@ -730,15 +730,74 @@ impl FrameworkReservedCommitPermit {
         let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| !lease.cancel_token().is_cancelled_now() && !lease.publication_claim().is_cancelled();
         let control = semio_framework_value::NativeEncodeControl::new(maximum_identity_bytes, &mut observer);
         let identity = control.pause().map_err(|error| plugin_sdk_fault(error.to_string()))?;
-        Ok(Self { operation, lease, producer_fault: None, identity: Some(identity), identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress { completed: 0, total: 0, owned_bytes: 0 } })
+        Ok(Self { operation, lease: ReservedLease::new(lease), producer_fault: None, identity: Some(identity), identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress { completed: 0, total: 0, owned_bytes: 0 } })
     }
 
     pub async fn is_cancelled(&self) -> bool {
         self.lease.is_cancelled().await
     }
 
-    pub fn finish(mut self) {
-        self.lease.finish();
+}
+
+/// 🎟️ The operation lease of a framework-reserved permit: held while the route runs, then retired through the paid cancellation cursor (admit, close steps, release) instead of being dropped.
+#[doc(hidden)]
+pub struct ReservedLease {
+    lease: Option<ToolCancellationLease>,
+    close: Option<Box<semio_plugin_operation::ToolCancellationLeaseRetirement>>,
+}
+
+impl ReservedLease {
+    pub fn new(lease: ToolCancellationLease) -> Self {
+        Self { lease: Some(lease), close: None }
+    }
+
+    /// 🚚️ Hands the live lease to an owner that retires it itself; only valid before retirement started.
+    pub fn into_lease(self) -> ToolCancellationLease {
+        assert!(self.close.is_none(), "reserved lease already entered its paid retirement");
+        self.lease.unwrap_or_else(|| panic!("reserved lease was already moved out"))
+    }
+
+    pub fn is_retired(&self) -> bool {
+        self.lease.is_none() && self.close.is_none()
+    }
+
+    /// 🏁️ Seals the publication claim and advances the paid retirement by exactly one funded step; answers `true` once nothing is retained.
+    pub fn retire_step(&mut self, canonical: &semio_plugin_operation::ToolCancellationHandle, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if cx.retirement_should_yield() {
+            return Ok(self.is_retired());
+        }
+        if let Some(owner) = self.close.as_mut() {
+            if !owner.terminal_is_empty() {
+                let body = cx.retained_grant().maximum_copy_bytes;
+                let demand = owner.retirement_demands(canonical, body)?;
+                let work = owner.retirement_work_demand(body)?;
+                semio_framework_job::close_original_quoted_retained_step(cx, demand, work, |grant| owner.close_step(canonical, grant))?;
+                return Ok(false);
+            }
+            let progress = semio_plugin_operation::original_lease_cursor_release(&mut self.close, cx.retained_grant())?;
+            cx.consume_retained(progress)?;
+            return Ok(self.is_retired());
+        }
+        if let Some(lease) = self.lease.as_mut() {
+            lease.finish();
+            let (owner, progress) = semio_plugin_operation::original_lease_cursor_admit(&mut self.lease, cx.retained_grant())?;
+            self.close = owner;
+            cx.consume_retained(progress)?;
+        }
+        Ok(self.is_retired())
+    }
+}
+
+impl std::ops::Deref for ReservedLease {
+    type Target = ToolCancellationLease;
+    fn deref(&self) -> &Self::Target {
+        self.lease.as_ref().unwrap_or_else(|| panic!("reserved lease was used after its retirement was admitted"))
+    }
+}
+
+impl std::ops::DerefMut for ReservedLease {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.lease.as_mut().unwrap_or_else(|| panic!("reserved lease was used after its retirement was admitted"))
     }
 }
 
@@ -778,6 +837,8 @@ pub struct FrameworkReservedCommit<P,M:store::Mutation<P>+Sync> {
     pub stage: FrameworkReservedCommitStage<P,M>,
     pub applied: u64,
     pub total: u64,
+    /// 🏁️ `Some` once the route finished or was refused: the outcome owed to the host (if any) waits here until the permit's lease is retired.
+    pub sealed: Option<Option<Result<InvocationResult, Fault>>>,
 }
 
 /// 🪜️ The next unit a [`FrameworkReservedCommit`] runs.
@@ -787,8 +848,8 @@ pub enum FrameworkReservedCommitStage<P,M:store::Mutation<P>+Sync> {
     CheckpointChildren { message: String, authors: Vec<vcs::Author>, keys: Vec<MemberKey>, next: usize, pins: Vec<vcs::CompositionPin> },
     Route { pins: Vec<vcs::CompositionPin> },
     CheckoutChildren { pins: Vec<vcs::CompositionPin>, next: usize, result: InvocationResult },
-    Revert { edit_id: String, command:Option<store::os_store::ArtifactNativeVcsCommand<P,M>>, result:Option<store::os_store::ArtifactNativeVcsResult>, closing:bool },
-    Repin { pins:Option<Vec<vcs::CompositionPin>>, publication:Option<Box<semio_os_store_engine_replay::repin::OriginalRepinPublication<M>>>, retirement:semio_framework_value::retained_clone::RetainedCloneClose, changed:bool, closing:bool },
+    Revert { edit_id: String, command:Option<store::os_store::ArtifactNativeVcsCommand<P,M>>, result:Option<store::os_store::ArtifactNativeVcsResult>, resident:semio_os_store_engine_replay::OriginalReplayResident, closing:bool },
+    Repin { pins:Option<Vec<vcs::CompositionPin>>, publication:Option<Box<semio_os_store_engine_replay::repin::OriginalRepinPublication<M>>>, retirement:semio_framework_value::retained_clone::RetainedCloneClose, resident:semio_os_store_engine_replay::OriginalReplayResident, changed:bool, closing:bool },
 }
 
 /// 📊️ Progress of the framework-reserved commit at the head of an app's commit queue: `applied` of
@@ -973,7 +1034,7 @@ pub(crate) fn validate_tool_job_rows<A: ArtifactApp>(
 /// 🏭️ Moves a born reserved producer, bound to its operation, into the erased job its worker session admits; a refused bind returns the producer to its owner.
 pub fn admit_original_reserved_producer(source: &mut Option<ArtifactReservedToolJob>, output: &mut Option<semio_framework::ErasedToolJob>, operation: &semio_framework_job::Operation, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: size_of::<ArtifactReservedToolJob>(), release_bytes: 0, depth: 1 };
-    semio_framework::action_bus::admit_original_tool_construction(cx, output, demand, |_| {
+    semio_framework::action_bus::admit_original_tool_construction_settled(cx, &mut Default::default(), output, demand, |_| {
         let mut job = source.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original reserved producer is absent"))?;
         if let Err(error) = job.bind_operation(*operation) {
             *source = Some(job);
@@ -988,7 +1049,6 @@ pub mod configuration_worker;
 
 semio_framework_value::artifact_retire_leaf!(QualifiedBoundedFirstStepProof);
 
-#[path="🪆️child-vcs/🦀️.rs"]pub mod child_vcs;
 
 #[path="📌️checkpoint/🦀️.rs"]
 pub mod original_checkpoint;

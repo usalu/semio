@@ -72,7 +72,7 @@ impl JsonBorrowedSinkCursor{
      if self.frames.is_empty(){self.phase=4;progress=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()};}
      else{
       let mut atom=Atom{bytes:&mut self.pending,length:0};
-      let result=advance_source(&mut self.frames,&mut self.path,&mut atom,source,control,0);
+      let result=advance_source(&mut self.frames,&mut self.path,&mut atom,source,control,0,false);
       self.pending_length=atom.length;self.pending_position=0;
       let metadata=match &result{Ok(bytes)=>*bytes,Err(error)=>error.retained_progress().copied_bytes};
       progress=RetainedCloneProgress{copied_items:1,copied_bytes:metadata+atom.length+2*size_of::<usize>(),..Default::default()};
@@ -91,16 +91,20 @@ impl JsonBorrowedSinkCursor{
   if let Some(owner)=self.closing.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<(Vec<JsonWriteFrame>,Vec<usize>)>>>()+size_of::<u8>(),depth:1,..Default::default()})}else{owner.next_demand(body)}}
   Ok(RetirementDemand{copy_bytes:2*size_of::<(Vec<JsonWriteFrame>,Vec<usize>)>()+size_of::<Option<ControlledRetirement<(Vec<JsonWriteFrame>,Vec<usize>)>>>()+size_of::<u8>(),depth:1,..Default::default()})
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>{
-  if self.terminal_is_empty(){return RetainedWorkOutcome{work:0,result:Ok(RetainedCloneStep::Complete(Default::default()))}}
-  let d=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{work:0,result:Err(error)}};
-  if !fits(d,grant){return RetainedWorkOutcome{work:0,result:Ok(RetainedCloneStep::Progress(Default::default()))}}
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+  use semio_framework_value::RetainedWorkPoll::Complete as Settled;let grant=effect.grant();
+  let done=|result:Result<RetainedCloneStep,ValueError>,work:u128|Settled(RetainedWorkOutcome{work,result:result.map_err(Into::into)});
+  let pay=|effect:&mut semio_framework_value::RetainedAllocationEffect<'_>|->Result<(),ValueError>{if effect.performed(1)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"borrowed JSON sink closure exceeded its original work"))}};
+  if self.terminal_is_empty(){return done(Ok(RetainedCloneStep::Complete(Default::default())),0)}
+  let d=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return done(Err(error),0)};
+  if !fits(d,grant){return done(Ok(RetainedCloneStep::Progress(Default::default())),0)}
   if let Some(owner)=self.closing.as_mut(){
-   if owner.terminal_is_empty(){self.closing=None;self.phase=6;return RetainedWorkOutcome{work:1,result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}}
-   let result=owner.step(grant);return RetainedWorkOutcome{work:owner.last_turn_work(),result}
+   if owner.terminal_is_empty(){if let Err(error)=pay(effect){return done(Err(error),1)}self.closing=None;self.phase=6;return done(Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),1)}
+   return owner.step(effect)
   }
+  if let Err(error)=pay(effect){return done(Err(error),1)}
   self.closing=Some(ControlledRetirement::retain((std::mem::take(&mut*self.frames),std::mem::take(&mut*self.path))));self.phase=5;
-  RetainedWorkOutcome{work:1,result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+  done(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),1)
  }
 }
 impl Drop for JsonBorrowedSinkCursor{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"borrowed JSON sink cursor requires funded frontier closure")}}

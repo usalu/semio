@@ -29,6 +29,7 @@ impl<'a> BorrowedTextSourceSlot<'a>{
 #[cfg(test)]
 mod tests{
     use super::*;
+    use semio_framework_value::native_encoding::{OriginalWorkAuthority,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalSourceTurnIdentity};
     struct Source<'a>{panic:bool,text:&'a str}
     impl FieldProjectionSource for Source<'_>{
         fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{if self.panic{panic!("fixture source callback")};match path{[0]=>Ok(V::Text(self.text)),_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unexpected test path"))}}
@@ -49,16 +50,22 @@ mod tests{
         assert!(outcome.is_err());assert!(performed);assert!(slot.is_empty());
     }
     struct FixtureLoan{remaining:u64,committed:u64,refuse_post:bool}
-    impl semio_framework_value::native_encoding::NativeEncodeWorkRecipient for FixtureLoan{
-        fn admits(&mut self,_:u64,work:u64)->Result<bool,ValueError>{Ok(self.remaining>=work)}
-        fn committed(&mut self,work:u64)->Result<(),ValueError>{self.remaining-=work;self.committed+=work;if self.refuse_post{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"fixture work post refusal"))}else{Ok(())}}
+    struct LoanDriver;
+    impl OriginalWorkRecipient for LoanDriver{
+        type Context<'t,'s>=FixtureLoan where 's:'t;
+        fn validate_context<'t,'s>(&self,_:&FixtureLoan)->Result<(),ValueError> where 's:'t{Ok(())}
+        fn source_turn<'t,'s>(&self,_:&FixtureLoan)->Option<OriginalSourceTurnIdentity> where 's:'t{None}
+        fn admits<'r,'t,'s>(&mut self,c:&mut FixtureLoan,quote:OriginalWorkQuote<'r>,_:u64,work:u64)->OriginalWorkQuoteComplete<'r> where 's:'t{quote.complete(Ok(c.remaining>=work))}
+        fn settle_partial<'r,'t,'s>(&mut self,c:&mut FixtureLoan,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{let work=u64::try_from(check.delta()).unwrap_or(u64::MAX);let result=(||->Result<(),ValueError>{c.remaining=c.remaining.saturating_sub(work);c.committed+=work;if c.refuse_post{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"fixture work post refusal"))}else{Ok(())}})();check.complete(result)}
+        fn recover_partial<'r,'t,'s>(&mut self,_:&mut FixtureLoan,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{check.pending()}
     }
+    fn with_work<R>(control:&mut NativeEncodeControl<'_>,issuer:&mut OriginalWorkAuthority<LoanDriver>,loan:&mut FixtureLoan,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<R,ValueError>)->Result<R,ValueError>{issuer.with_loan(loan,|work|control.with_work_recipient(work,operation))?}
     #[test]
-    fn token_text_source_slot_runs_under_work_quote_fixture(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+    fn token_text_source_slot_runs_under_work_quote_fixture(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
         use semio_framework_io_control::NativeSnapshotEncodeWorkQuote;
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🔣️.json")).unwrap();let text=fixture["cases"].as_array().unwrap().iter().find(|case|case["name"]=="unicode").unwrap()["value"].as_str().unwrap();
         let source=Source{panic:false,text};let mut slot=BorrowedTextSourceSlot::new(&source);let mut callback=|_|true;let mut control=NativeEncodeControl::new(0,&mut callback);let mut loan=FixtureLoan{remaining:4,committed:0,refuse_post:false};
-        control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+        with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
             let mut performed=false;let mut failure=None;
             let quote=NativeSnapshotEncodeWorkQuote::reserve(control).unwrap();
             let outcome=quote.run(&mut performed,&mut failure,&mut |mark|slot.borrow_effect(&source,&[0],false,mark));
@@ -71,11 +78,11 @@ mod tests{
         assert_eq!(loan.committed,2);
     }
     #[test]
-    fn token_text_source_slot_work_quote_parks_unwind_refusal(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+    fn token_text_source_slot_work_quote_parks_unwind_refusal(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
         use semio_framework_io_control::NativeSnapshotEncodeWorkQuote;
         let source=Source{panic:true,text:"ignored"};let mut slot=BorrowedTextSourceSlot::new(&source);let mut callback=|_|true;let mut control=NativeEncodeControl::new(0,&mut callback);let mut loan=FixtureLoan{remaining:1,committed:0,refuse_post:true};let mut performed=false;let mut failure=None;
         let caught=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{
-            let _=control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+            let _=with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
                 let quote=NativeSnapshotEncodeWorkQuote::reserve(control).unwrap();
                 let _=quote.run(&mut performed,&mut failure,&mut |mark|slot.borrow_effect(&source,&[0],false,mark));Ok::<_,ValueError>(())
             });

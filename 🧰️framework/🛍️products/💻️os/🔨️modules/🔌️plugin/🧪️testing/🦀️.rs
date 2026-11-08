@@ -15,19 +15,25 @@ macro_rules! with_authoring_identity {
         $body
     }};
 }
+/// 🧮️ Installs the heap witness as this test binary's allocator, once per binary: `install_fixture_heap_witness!()`. The fixture heap-equality assertions read the witness; a binary without it measures `(0, 0)` and fails every non-zero retained page. See [`assert_heap_witness_installed`](crate::artifact_app_laws::assert_heap_witness_installed).
+#[cfg(any(test, feature = "artifact-app-testing"))]
+#[macro_export]
+macro_rules! install_fixture_heap_witness {
+    () => {
+        #[global_allocator]
+        static __FIXTURE_HEAP_WITNESS: $crate::__trace::HeapWitness = $crate::__trace::HeapWitness;
+    };
+}
+#[doc(hidden)]
+pub use semio_framework_trace as __trace;
 #[doc(hidden)]
 pub use semio_os_kernel as __kernel;
 #[doc(hidden)]
 pub use semio_framework_value as __value;
 
-pub use semio_plugin_testing_caller::{OriginalFixtureCaller, OriginalFixtureScope};
+pub use semio_plugin_testing_caller::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture, receive_persistent_fixture, receive_view_fixture, typing_run, TypingRun};
 use semio_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry};
 use semio_plugin_window_transient::window_transient::{WindowTransientOwner, WindowTransientOwnerRegistry};
-#[path="🎟️caller/👷️work/🦀️.rs"]
-mod original_work_fixture;
-pub use original_work_fixture::OriginalWorkFixture;
-pub use original_work_fixture::receive_persistent_fixture;
-pub use original_work_fixture::receive_view_fixture;
 #[path="📨️host-event-observation/🦀️.rs"]
 pub mod host_event_observation;
 

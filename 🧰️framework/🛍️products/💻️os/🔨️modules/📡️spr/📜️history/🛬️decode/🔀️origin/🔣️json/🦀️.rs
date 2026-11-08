@@ -2,7 +2,7 @@
 use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use super::{RetainedHistoryOriginProjection,permits,metadata};
 use semio_framework_pack_json::{JsonGrammarCursor,JsonSourceCursor,JsonReadLimits,JsonMemberPolicy,JsonError,JsonReadSource};
-use semio_framework_value::{DslValue, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect, retained_clone::NativeAllocationIdentity, DslValue, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::ManuallyDrop;
 use ::protocol::MutationOrigin;
@@ -16,7 +16,7 @@ impl<S:RetainedWireByteSource+?Sized> JsonReadSource for OriginalHistoryJsonRang
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum RetainedHistoryOriginJsonStep{Blocked,Progress,Ready,Fault,Closed}
 pub struct RetainedHistoryOriginJsonDecode{
- last_work:u64,source:OriginalWireSourceIdentity,control_identity:(u64,Option<u64>),range:(usize,usize),allocation_limit:usize,#[doc(hidden)] pub grammar:ManuallyDrop<Option<JsonGrammarCursor<DslValue>>>,parsed:ManuallyDrop<Option<DslValue>>,
+ last_work:u128,source:OriginalWireSourceIdentity,control_identity:(NativeAllocationIdentity,Option<u64>),range:(usize,usize),allocation_limit:usize,#[doc(hidden)] pub grammar:ManuallyDrop<Option<JsonGrammarCursor<DslValue>>>,parsed:ManuallyDrop<Option<DslValue>>,
  projection:ManuallyDrop<Option<RetainedHistoryOriginProjection>>,failure:ManuallyDrop<Option<JsonError>>,#[doc(hidden)] pub grammar_complete:bool,closing:bool,closed:bool,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,
 }
 impl RetainedHistoryOriginJsonDecode{
@@ -28,7 +28,7 @@ impl RetainedHistoryOriginJsonDecode{
  }
  fn validate<S:RetainedWireByteSource+?Sized>(&self,source:&S,control:&dyn NativeDecodeCloseControl)->Result<(),ValueError>{if self.source!=source.original_source_identity()||self.control_identity!=(control.ledger_identity(),control.retirement_recipient_identity()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"origin JSON changed its original source or cumulative receiving limit"))}Ok(())}
  pub fn source_identity(&self)->OriginalWireSourceIdentity{self.source}
- pub fn last_turn_work(&self)->u64{self.last_work}
+ pub fn last_turn_work(&self)->u128{self.last_work}
  pub fn receipt(&self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt}
  pub fn take_receipt(&mut self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt.take()}
  fn publish(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.receipt=Some((g,p));if !p.fits(g){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"origin JSON exceeded original parent authority").with_retained_progress(p))}Ok(())}
@@ -41,24 +41,24 @@ impl RetainedHistoryOriginJsonDecode{
   else{RetirementDemand{depth:1,..Default::default()}};
   d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"origin JSON parent depth overflow"))?;Ok(d)
  }
- pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,control:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant)->Result<RetainedHistoryOriginJsonStep,ValueError>{
-  self.last_work=0;self.validate(source,control)?;if self.receipt.is_some()||self.closing||self.closed{return Ok(RetainedHistoryOriginJsonStep::Blocked)}
+ pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,control:&mut NativeDecodeControl<'_>,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedHistoryOriginJsonStep,ValueError>{
+  let g=effect.grant();let start=effect.performed_work();self.last_work=0;self.validate(source,control)?;if self.receipt.is_some()||self.closing||self.closed{return Ok(RetainedHistoryOriginJsonStep::Blocked)}
   if self.failure.is_some(){return Ok(RetainedHistoryOriginJsonStep::Fault)}
   if g.maximum_items==0||g.maximum_depth<2{return Ok(RetainedHistoryOriginJsonStep::Blocked)}
   let d=match self.demands(source,control,g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>{*self.failure=Some(error);self.publish(g,metadata())?;return Ok(RetainedHistoryOriginJsonStep::Fault)}};if !permits(g,d){return Ok(RetainedHistoryOriginJsonStep::Blocked)}
   let child=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};
   if !self.grammar_complete{
-   let view=OriginalHistoryJsonRange{source,range:self.range};let known_utf8=false;let grammar=self.grammar.as_mut().unwrap();let mut work=0;let mut p=RetainedCloneProgress::default();let result=control.scoped_maximum(self.allocation_limit,|control|{let result=grammar.step_source(&view,1,control,child,known_utf8);work=grammar.last_turn_work();p=grammar.normal_step_progress();result});self.last_work=work;
+   let view=OriginalHistoryJsonRange{source,range:self.range};let known_utf8=false;let grammar=self.grammar.as_mut().unwrap();let mut work=0;let mut p=RetainedCloneProgress::default();let result=control.scoped_maximum(self.allocation_limit,|control|{let result=grammar.step_source(&view,1,control,&mut effect.nested(child),known_utf8);work=u128::from(grammar.last_turn_work());p=grammar.normal_step_progress();result});self.last_work=crate::settle_since(effect,start,work)?;
    let status=match result{Ok(Some(value))=>{*self.parsed=Some(value);self.grammar_complete=true;RetainedHistoryOriginJsonStep::Progress},Ok(None)=>RetainedHistoryOriginJsonStep::Progress,Err(error)=>{*self.failure=Some(error);RetainedHistoryOriginJsonStep::Fault}};self.publish(g,p)?;return Ok(status)
   }
   if self.grammar.is_some(){return Ok(RetainedHistoryOriginJsonStep::Blocked)}
   if self.parsed.is_some(){
-   self.last_work=1;let Some(mut projection)=RetainedHistoryOriginProjection::admit_original(&mut self.parsed,child)?else{self.last_work=0;return Ok(RetainedHistoryOriginJsonStep::Blocked)};
-   self.last_work=1;let(issued,p)=projection.take_receipt().unwrap();if issued!=child{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"origin projection changed its original admission grant"))}*self.projection=Some(projection);self.publish(g,p)?;return Ok(RetainedHistoryOriginJsonStep::Progress)
+   let Some(mut projection)=RetainedHistoryOriginProjection::admit_original(&mut self.parsed,child)?else{return Ok(RetainedHistoryOriginJsonStep::Blocked)};
+   self.last_work=crate::settle_since(effect,start,1)?;let(issued,p)=projection.take_receipt().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"origin projection receipt absent"))?;if issued!=child{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"origin projection changed its original admission grant"))}*self.projection=Some(projection);self.publish(g,p)?;return Ok(RetainedHistoryOriginJsonStep::Progress)
   }
   let Some(projection)=self.projection.as_mut()else{return Ok(RetainedHistoryOriginJsonStep::Blocked)};
   if projection.is_ready(){return Ok(RetainedHistoryOriginJsonStep::Ready)}
-  control.checkpoint()?;control.charge(d.capacity_bytes)?;let result=projection.step(child);self.last_work=projection.last_turn_work();let receipt=projection.take_receipt();let p=receipt.map_or_else(||result.as_ref().err().map_or(Default::default(),ValueError::retained_progress),|(_,p)|p);self.publish(g,p)?;
+  control.checkpoint()?;let result=projection.step(&mut effect.nested(child));self.last_work=projection.last_turn_work();let receipt=projection.take_receipt();let p=receipt.map_or_else(||result.as_ref().err().map_or(Default::default(),ValueError::retained_progress),|(_,p)|p);self.publish(g,p)?;
   result.map(|advanced|if self.projection.as_ref().is_some_and(RetainedHistoryOriginProjection::is_ready){RetainedHistoryOriginJsonStep::Ready}else if advanced{RetainedHistoryOriginJsonStep::Progress}else{RetainedHistoryOriginJsonStep::Blocked})
  }
  pub fn take_grammar_into(&mut self,recipient:&mut Option<JsonGrammarCursor<DslValue>>,g:RetainedCloneGrant)->Result<bool,ValueError>{if !self.grammar_is_receivable()||self.receipt.is_some()||recipient.is_some()||g.maximum_items==0||g.maximum_depth<2{return Ok(false)}*recipient=self.grammar.take();self.publish(g,metadata())?;Ok(true)}
@@ -70,14 +70,14 @@ impl RetainedHistoryOriginJsonDecode{
   let child=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};let projection=self.projection.as_mut().unwrap();let moved=projection.take_ready_into(recipient,child)?;if !moved{return Ok(false)}let(issued,p)=projection.take_receipt().unwrap();if issued!=child{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"origin ready transfer changed original grant"))}self.closing=true;self.publish(g,p)?;Ok(true)
  }
  pub fn cancel(&mut self){self.closing=true;if let Some(projection)=self.projection.as_mut(){projection.cancel()}}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedHistoryOriginJsonStep,ValueError>{self.last_work=0;
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedHistoryOriginJsonStep,ValueError>{let g=effect.grant();let start=effect.performed_work();self.last_work=0;
   if self.receipt.is_some()||!self.closing||self.closed||self.grammar.is_some()||self.parsed.is_some()||self.failure.is_some(){return Ok(RetainedHistoryOriginJsonStep::Blocked)}
   if let Some(projection)=self.projection.as_mut(){
    if g.maximum_items==0||g.maximum_depth<2{return Ok(RetainedHistoryOriginJsonStep::Blocked)}
-   if projection.terminal_is_empty(){self.last_work=1;drop(self.projection.take());self.publish(g,metadata())?;return Ok(RetainedHistoryOriginJsonStep::Progress)}
-   let child=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};let result=projection.close_step(child);self.last_work=projection.last_turn_work();let closed=result?;if !closed{return Ok(RetainedHistoryOriginJsonStep::Blocked)}let(_,p)=projection.take_receipt().unwrap();self.publish(g,p)?;return Ok(RetainedHistoryOriginJsonStep::Progress)
+   if projection.terminal_is_empty(){self.last_work=crate::settle_since(effect,start,1)?;drop(self.projection.take());self.publish(g,metadata())?;return Ok(RetainedHistoryOriginJsonStep::Progress)}
+   let child=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};let result=projection.close_step(child);self.last_work=crate::settle_since(effect,start,projection.last_turn_work())?;let closed=result?;if !closed{return Ok(RetainedHistoryOriginJsonStep::Blocked)}let(_,p)=projection.take_receipt().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"origin projection close receipt absent"))?;self.publish(g,p)?;return Ok(RetainedHistoryOriginJsonStep::Progress)
   }
-  if g.maximum_items==0||g.maximum_depth==0{return Ok(RetainedHistoryOriginJsonStep::Blocked)}self.last_work=1;self.closed=true;self.publish(g,metadata())?;Ok(RetainedHistoryOriginJsonStep::Closed)
+  if g.maximum_items==0||g.maximum_depth==0{return Ok(RetainedHistoryOriginJsonStep::Blocked)}self.last_work=crate::settle_since(effect,start,1)?;self.closed=true;self.publish(g,metadata())?;Ok(RetainedHistoryOriginJsonStep::Closed)
  }
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.grammar.is_none()&&self.parsed.is_none()&&self.projection.is_none()&&self.failure.is_none()&&self.receipt.is_none()}
 }

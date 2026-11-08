@@ -11,7 +11,7 @@
   "heapClone": false,
   "coldFallback": false,
   "childNarrowDelegation": true,
-  "rootCopyBytes": 0,
+  "rootCopyIsHeaderQuote": true,
   "unsupportedOriginal": {
     "retained": true,
     "constructorHeapBytes": 0,

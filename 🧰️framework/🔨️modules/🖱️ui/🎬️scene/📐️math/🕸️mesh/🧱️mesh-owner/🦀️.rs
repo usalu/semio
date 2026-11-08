@@ -27,6 +27,15 @@ pub(super) fn component_lengths(table:&ComponentReferenceTable)->Result<[usize;3
     Ok(lengths)
 }
 
+/// 🏦️ One controlled retirement turn runs under an explicit finite authoring stock because the mesh authority is closed outside any job turn.
+pub(crate) fn authored_step<T:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<T>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,Mesh3dFault>{
+    const MESH3D_CLOSE_WORK:u64=16;
+    let mut wallet=semio_framework_value::AuthoringWallet::new(grant,u128::from(MESH3D_CLOSE_WORK));
+    match wallet.run_settled(grant,MESH3D_CLOSE_WORK,|effect|owner.step(effect)){
+        Ok(Some((turn,_)))=>turn.result.map(|step|step.progress()).map_err(|_|Mesh3dFault::Closing),
+        Ok(None)|Err(_)=>Err(Mesh3dFault::Closing),
+    }
+}
 pub(super) fn controlled_demands<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,work:usize)->Result<RetirementDemand,Mesh3dFault> {
     Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand().map_err(|_|Mesh3dFault::Closing)?,capacity_bytes:owner.next_capacity_byte_demand(work).map_err(|_|Mesh3dFault::Closing)?,release_bytes:owner.next_release_byte_demand().map_err(|_|Mesh3dFault::Closing)?,depth:owner.next_depth_demand().map_err(|_|Mesh3dFault::Closing)?})
 }
@@ -212,11 +221,11 @@ impl Mesh3dOwner {
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(Mesh3dOwnershipStep::default());}
         if self.close_page<self.allocated_pages {
             if grant.maximum_release_bytes<MESH3D_PAGE_BYTES{return Ok(Mesh3dOwnershipStep::default());}
-            self.pages.as_mut().unwrap()[usize::from(self.close_page)]=None;self.close_page+=1;
+            self.pages.as_mut().ok_or(Mesh3dFault::Closing)?[usize::from(self.close_page)]=None;self.close_page+=1;
             return Ok(Mesh3dOwnershipStep{progress:RetainedCloneProgress{copied_items:1,released_bytes:MESH3D_PAGE_BYTES,..Default::default()},..Default::default()});
         }
         if let Some(owner)=self.component_retirement.as_mut() {
-            let step=owner.step(grant).map_err(|_|Mesh3dFault::Closing)?;let progress=step.progress();
+            let progress=authored_step(owner,grant)?;
             if owner.terminal_is_empty(){self.component_retirement=None;}
             return Ok(Mesh3dOwnershipStep{progress,..Default::default()});
         }
@@ -225,7 +234,7 @@ impl Mesh3dOwner {
             return Ok(Mesh3dOwnershipStep{progress:RetainedCloneProgress{copied_items:1,..Default::default()},..Default::default()});
         }
         if let Some(owner)=self.scratch_retirement.as_mut() {
-            let step=owner.step(grant).map_err(|_|Mesh3dFault::Closing)?;let progress=step.progress();
+            let progress=authored_step(owner,grant)?;
             if owner.terminal_is_empty(){self.scratch_retirement=None;}
             return Ok(Mesh3dOwnershipStep{progress,..Default::default()});
         }

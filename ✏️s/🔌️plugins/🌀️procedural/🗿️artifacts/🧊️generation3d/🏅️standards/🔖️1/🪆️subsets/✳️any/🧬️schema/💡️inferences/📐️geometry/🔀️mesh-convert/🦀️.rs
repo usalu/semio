@@ -56,7 +56,7 @@ impl Machine for FromBrep {
             };
         }
         let Some(job) = self.job.as_mut() else { return Err(cancelled_fault()) };
-        match modeling_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
+        match modeling_slice(job, fuel.saturating_mul(BATCH), cx).kernel()? {
             MeshModelingStep::Working(progress) => Ok(Flow::Working(0.5 + 0.5 * ratio(progress))),
             MeshModelingStep::Done(mesh) => Ok(Flow::Done(mesh_output(mesh))),
             MeshModelingStep::Cancelled(_) => Err(cancelled_fault()),
@@ -94,7 +94,7 @@ impl Machine for ToBrep {
     fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
         let fuel = fuel_budget(cx);
         if let Some(job) = self.tessellation.as_mut() {
-            return match tessellation_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
+            return match tessellation_slice(job, fuel.saturating_mul(BATCH), cx).kernel()? {
                 MeshTessellationStep::Working(progress) => Ok(Flow::Working(0.3 * ratio(progress))),
                 MeshTessellationStep::Cancelled(_) => Err(cancelled_fault()),
                 MeshTessellationStep::Done(transfer) => {

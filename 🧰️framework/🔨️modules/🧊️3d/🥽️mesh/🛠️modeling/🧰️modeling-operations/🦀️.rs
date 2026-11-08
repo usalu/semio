@@ -404,20 +404,20 @@ impl MeshModelingOps for HalfedgeMesh {
         *self=self.triangulate_job()?.finish_with_progress(|_|true)?;Ok(())
     }
     fn merge_coplanar_faces(&mut self) -> MeshResult<usize> {
-        let mut job=self.merge_coplanar_faces_job()?;loop {match job.step(256,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.coplanar_merge_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh coplanar merge cancelled".into()))}}
+        let mut job=self.merge_coplanar_faces_job()?;loop {match modeling_job::modeling_step(&mut job)? {MeshModelingStep::Done(mesh)=>{let count=job.coplanar_merge_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh coplanar merge cancelled".into()))}}
     }
     /// 🔩️ Unifies every group of vertices at (nearly) the same position — as commonly produced by importers
     /// that tessellate adjacent source faces independently, leaving duplicate, non-shared vertex ids along
     /// shared boundaries — into a single vertex id per position, so the halfedge topology (twins, boundary
     /// detection) reflects the true geometric connectivity. Returns the number of vertices removed.
     fn weld_coincident_vertices(&mut self,precision:f32)->MeshResult<usize> {
-        let mut job=self.weld_coincident_vertices_job(precision)?;loop {match job.step(256,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.welded_vertex_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh weld cancelled".into()))}}
+        let mut job=self.weld_coincident_vertices_job(precision)?;loop {match modeling_job::modeling_step(&mut job)? {MeshModelingStep::Done(mesh)=>{let count=job.welded_vertex_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh weld cancelled".into()))}}
     }
     /// 🟦️ Flips faces so every undirected edge is traversed in opposite directions by its two incident faces.
     /// CAD imports often leave inconsistently oriented face wires; without this pass, halfedge twins are
     /// missing even though the undirected mesh is closed. Returns the number of faces flipped.
     fn orient_faces_consistently(&mut self) -> MeshResult<usize> {
-        let mut job=self.orient_faces_job()?;loop {match job.step(256,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.orientation_flip_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh orientation cancelled".into()))}}
+        let mut job=self.orient_faces_job()?;loop {match modeling_job::modeling_step(&mut job)? {MeshModelingStep::Done(mesh)=>{let count=job.orientation_flip_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh orientation cancelled".into()))}}
     }
     /// 🪣️ Finds every closed boundary loop (a chain of edges with no opposite face on the other side) in the
     /// current halfedge topology and caps each with a new n-gon face, so the mesh becomes watertight. Call
@@ -425,7 +425,7 @@ impl MeshModelingOps for HalfedgeMesh {
     /// this will also "cap" seams that are actually already shared with a differently-indexed neighbor.
     /// Returns the number of holes filled.
     fn fill_holes(&mut self) -> MeshResult<usize> {
-        let mut job=self.fill_holes_job()?;loop {match job.step(256,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.filled_hole_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh hole filling cancelled".into()))}}
+        let mut job=self.fill_holes_job()?;loop {match modeling_job::modeling_step(&mut job)? {MeshModelingStep::Done(mesh)=>{let count=job.filled_hole_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh hole filling cancelled".into()))}}
     }
     /// 🪞 Reflects geometry on one side of the axis plane and welds its seam.
     fn mirror(&mut self, axis: MirrorAxis, weld_threshold: f32) -> MeshResult<()> {

@@ -1,5 +1,6 @@
 //! 🏭️ A normal generation3d action reaches its typed command through the framework-declared action producer: the plugin declares none, yet a widget value edit and its undo run end to end on the mounted app.
 
+semio_plugin::install_fixture_heap_witness!();
 extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;

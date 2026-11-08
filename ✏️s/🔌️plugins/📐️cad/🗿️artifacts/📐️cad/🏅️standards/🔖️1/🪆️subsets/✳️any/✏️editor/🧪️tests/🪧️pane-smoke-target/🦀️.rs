@@ -4,6 +4,7 @@ extern crate semio_os_kernel as store;
 
 use semio_plugin::ViewModel;
 use semio_s_artifact_cad_cad_commands::node::add_node;
+use semio_s_artifact_cad_cad_commands::model_definition::set_active_example;
 use semio_s_artifact_cad_cad_editor::*;
 use semio_s_artifact_cad_cad_kit::editor::cad::terminology::cad_labels;
 

@@ -25,7 +25,7 @@ where
         if self.closing||self.spent{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"scalar clone cannot quote a closing or spent owner"));}
         if maximum_work_units==0{return Ok(Default::default())}Ok(if self.source.is_none(){RetirementDemand{copy_bytes:source.binding_copy_bytes().max(size_of::<T>()),depth:1,..Default::default()}}else if self.value.is_none(){RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}else{Default::default()})
     }
-    fn advance_work_demand(&self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.advance_demands(source,body,maximum_work_units)?;Ok(u64::from(maximum_work_units>0&&(self.source.is_none()||self.value.is_none())))}
+    fn advance_work_demand(&self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.advance_demands(source,body,maximum_work_units)?;if maximum_work_units==0{return Ok(0)}if self.source.is_none(){let w=source.binding_work_demand(&self.source)?;return Ok(if w<=maximum_work_units{w}else{0})}Ok(u64::from(self.value.is_none()))}
     fn advance(&mut self, source: RetainedCloneRef<'_, T>, body: usize, maximum_work_units:u64, effect:&mut crate::RetainedAllocationEffect<'_>) ->crate::OriginalRetirementOutcome{let grant=effect.grant();let maximum_work_units=maximum_work_units.min(effect.maximum_work_units());let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         if self.closing {
             return Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "retained scalar clone cursor is closing")).into());
@@ -35,7 +35,7 @@ where
         }
         if maximum_work_units==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
         if self.value.is_none()&&!(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<T>(),..Default::default()}).fits(grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if let Some(progress)={let turn=source.bind(&mut self.source,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
+        if let Some(progress)={let turn=source.bind(&mut self.source,effect);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
         if self.value.is_some() {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
@@ -62,29 +62,20 @@ fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->
 
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(Default::default());}self.close.next_owner_demands::<T>(self.value.is_some(),&self.source,body)}
 
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result=(||{
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "clone cursor must begin close before granted retirement").into()); }
         if !retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if !self.close.is_empty() { let turn=self.close.step_granted(effect);work+=turn.work;return turn.result; }
+        if !self.close.is_empty() { let turn=crate::RetirementPollExit::settled(self.close.step_granted(effect))?;work+=turn.work;return turn.result.map_err(Into::into); }
         {let turn=self.close.begin_granted(&mut self.value,effect);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
-        {let turn=close_retained_binding(&mut self.source,effect);work+=turn.work;turn.result}
-    })();RetainedWorkOutcome{result,work}}
+        {let turn=crate::RetirementPollExit::settled(close_retained_binding(&mut self.source,effect))?;work+=turn.work;turn.result.map_err(Into::into)}
+    })();crate::RetirementPollExit::finish(result,work)}
 
-    fn next_close_depth_demand(&self)->Result<usize,ValueError>{if !self.closing {return Ok(0);} self.close.next_owner_depth_with_binding(self.value.is_some(),&self.source)}
-    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        self.close.next_copy_with_binding(&self.source)
-    }
-    fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        self.close.next_owner_capacity_with_binding::<T>(self.value.is_some(), maximum_release_bytes,&self.source)
-    }
+    fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.depth)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        self.close.next_release_with_binding(&self.source)
-    }
+    fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.value.is_none() && self.close.is_empty() && self.source.is_none()

@@ -57,7 +57,7 @@ fn settle(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
     let mut stalled = 0;
     while store.maintenance_retirements_under_pressure() {
         let grant=physical_test_close_grant();
-        let step=store.maintenance_retirements_step(grant).expect("original displaced owners retire");
+        let step=store.maintenance_retirements_step_cold(grant).expect("original displaced owners retire");
         assert!(step.progress().fits(grant));
     }
 }

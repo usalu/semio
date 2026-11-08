@@ -357,3 +357,25 @@ fn raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant() {
 }
 
 fn drain_abandoned_atlases() { while !close_abandoned_atlas_step() {} }
+
+/// 🖼️ A scene raster upload retires its lease through the effect of each ladder step, to the terminal witness.
+#[test]
+fn scene_raster_upload_closes_under_one_authored_effect_per_step() {
+    use semio_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterPool, SceneRasterPoolLimits, SceneRasterProfile, SceneRasterWriteMode};
+    let pool = SceneRasterPool::try_new(SceneRasterPoolLimits { item_bytes: 32, pool_bytes: 64, slot_capacity: 2, lease_capacity_per_slot: 2, transfer_bytes: 8, retire_bytes: 8, gpu_resident_bytes: 96 }).expect("pool");
+    let descriptor = SceneRasterDescriptor { width: 2, height: 2, source_digest: [1, 1u64.rotate_left(17)], source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
+    let SceneRasterBegin::Writer(mut writer) = pool.begin(descriptor, 1, SceneRasterWriteMode::Streamed) else { panic!("writer") };
+    for chunk in [7u8; 16].chunks(8) { writer = pool.push(writer, chunk).expect("push"); }
+    let mut upload = PreparedRenderUpload::SceneRaster { key: String::new(), lease: pool.seal(writer).expect("seal") };
+    drop(pool);
+    let mut turns = 0;
+    while !upload.terminal_is_empty() {
+        turns += 1;
+        assert!(turns < 4096, "scene raster upload must reach its terminal witness");
+        let grant = upload.next_close_demands(16 * 1024).unwrap();
+        let step = prepared_close_authored(grant, |effect| upload.close_step(effect)).unwrap();
+        assert!(step.progress().fits(grant));
+    }
+    let grant = upload.next_close_demands(0).unwrap();
+    assert!(matches!(prepared_close_authored(grant, |effect| upload.close_step(effect)).unwrap(), CloseStep::Complete { .. }));
+}

@@ -1,7 +1,7 @@
 //! ⌨️ The accepted typing emission retains its actual fields until one atomic ledger and emission handoff.
 use semio_plugin_decl_app::{ArtifactApp,tool_contract::{OriginalTypingFoldPolicy,ArtifactOriginalTypingFoldProducer}};
 use semio_plugin_decl_emission::Emit;
-use semio_plugin_tool_run::tool_jobs_tool_machine::TypingTag;
+use semio_plugin_tool_machine::TypingTag;
 use semio_framework_tool_machine::{TypingLedger,ToolStep};
 use semio_framework_tool_typing_edit::{OriginalTypingEdit,OriginalTypingEditRequest,OriginalTypingEditResult,OriginalTypingFold};
 use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalCallerSourceLoan,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};

@@ -8,7 +8,7 @@ use semio_os_store_replay_operation::native::{NativeSemanticPreparation, Semanti
 use semio_os_store_replay_operation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationRequest};
 use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPost, PagedOneItemPostMode, PagedOneItemPostRead};
 use semio_framework_value::retained_clone::{retained_clone_grant_admits, RetainedCloneClose, RetainedCloneRef};
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory, RetirementDemand};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, OriginalRetirementPoll, RetainedAllocationEffect, RetirementDemand, RetirementPollExit};
 use std::mem::ManuallyDrop;
 use semio_os_store_command::HistoryLane;
 use semio_os_store_one_item::{ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES};
@@ -89,13 +89,26 @@ fn fault(reason: &'static str) -> ValueError {
     ValueError::literal(ValueRefusalKind::InvariantViolated, reason)
 }
 
-impl<S:'static,M:'static> ColdMutationApplyPreparation<S,M>{
+impl<S:RetireOwned+Send+Sync+'static,M:RetireOwned+Send+'static> ColdMutationApplyPreparation<S,M>{
     fn record(&mut self,progress:RetainedCloneProgress)->ArtifactStoreOneItemPreparationStep{
         if progress==RetainedCloneProgress::default()&&self.last_work==0{return ArtifactStoreOneItemPreparationStep::Blocked;}
         self.checkpoint.cursor=self.checkpoint.cursor.saturating_add(1);
         self.checkpoint.completed_items=self.checkpoint.completed_items.saturating_add(u32::try_from(progress.copied_items).unwrap_or(u32::MAX));
         self.checkpoint.completed_bytes=self.checkpoint.completed_bytes.saturating_add(progress.copied_bytes.saturating_add(progress.retained_capacity_bytes).saturating_add(progress.released_bytes) as u64);
         ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,progress)
+    }
+    fn close_ladder(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+        let retained=effect.grant();
+        if let Some(demand)=self.message_close_demand()?{
+            if !retained_clone_grant_admits(retained,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
+            let owner=self.messages.as_mut().ok_or_else(||fault("cold diagnostic close owner is absent"))?;
+            if owner.terminal_is_empty(){self.messages=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+            let turn=owner.close_step(RetainedCloneGrant{maximum_depth:retained.maximum_depth-1,..retained});
+            RetirementPollExit::pay(effect,turn.work)?;
+            return Ok(RetainedCloneStep::Progress(turn.result?.progress()));
+        }
+        let step=RetirementPollExit::resume(self.owners.close_step(&mut effect.nested(retained)))?;
+        Ok(step)
     }
     fn message_close_demand(&self)->Result<Option<RetirementDemand>,ValueError>{
         self.messages.as_ref().map(|owner|if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<MutationMessagePublication>(),depth:1,..Default::default()})}else{let mut demand=owner.close_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||fault("cold diagnostic close depth overflow"))?;Ok(demand)}).transpose()
@@ -206,9 +219,10 @@ where
                 let owner=self.messages.as_mut().ok_or_else(||fault("cold diagnostic owner is absent"))?;
                 if owner.ready(){if grant.maximum_copy_bytes<size_of::<u8>()||!receiving.prepare_work(1)?{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}self.phase=ColdPreparationPhase::Seal;coordinated=true;return Ok(self.record(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}));}
                 let mut demand=owner.demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||fault("cold diagnostic preparation depth overflow"))?;
-                if !retained_clone_grant_admits(grant.retained_grant(),demand)||!receiving.prepare_work(1)?{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+                let quote=owner.advance_work_demand()?.max(1);
+                if !retained_clone_grant_admits(grant.retained_grant(),demand)||!receiving.prepare_work(quote)?{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant.retained_grant()};
-                coordinated=true;self.last_work+=1;let step=owner.advance(child)?;
+                coordinated=true;let turn=owner.advance(child);self.last_work=self.last_work.saturating_add(u64::try_from(turn.work).unwrap_or(u64::MAX).max(1));let step=turn.result?;
                 let progress=semio_framework_value::retained_clone::admit_retained_clone_progress(child,step.progress(),"cold original diagnostic publication")?;
                 Ok(self.record(progress))
             }
@@ -236,18 +250,22 @@ where
                 Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint,progress))
             }
             ColdPreparationPhase::Prepared=>Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint,RetainedCloneProgress::default())),
-            ColdPreparationPhase::Refused=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"cold mutation retains its semantic refusal")),
+            ColdPreparationPhase::Refused=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"cold mutation retains its semantic refusal").into()),
         }
         })();
-        let observed=receiving.actual_work().saturating_sub(before);
+        let observed=u64::try_from(receiving.actual_work().saturating_sub(before)).unwrap_or(u64::MAX);
         let reported=self.last_work;self.last_work=reported.max(observed).max(u64::from(coordinated));
         let work=semio_os_store_one_item::original_one_item_turn_work(reported,observed,coordinated)?;
-        if work>observed{receiving.commit_work(work-observed)?;}
+        if work>observed{receiving.commit_work(u128::from(work-observed))?;}else if work==0&&receiving.has_pending_work(){receiving.cancel_work()?;}
         self.last_work=work;
         result
     }
 
     fn last_turn_work(&self)->u64{self.last_work}
+    fn has_pending_receiving_recovery(&self)->bool{false}
+    fn pending_receiving_demand(&self)->Option<RetirementDemand>{None}
+    fn pending_receiving_recovery(&mut self)->Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>>{None}
+    fn finish_receiving_recovery(&mut self,_:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,semio_framework_value::OriginalReceivingPrimary>{semio_framework_value::RetainedWorkOutcome{result:Err(fault("cold preparation opens every native work action atomically and never retains a pending receiving frame to recover").into()),work:0}}
 
     fn outcome_messages(&self)->&[semio_os_spr::MutationMessage]{if let Some(owner)=self.messages.as_ref(){owner.original_messages()}else{self.owners.prepared.as_ref().map_or(&[],ArtifactStoreOneItemPrepared::outcome_messages)}}
 
@@ -272,14 +290,9 @@ where
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
-        if let Some(demand)=self.message_close_demand()?{
-            let retained=grant.retained_grant();if !retained_clone_grant_admits(retained,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
-            let owner=self.messages.as_mut().ok_or_else(||fault("cold diagnostic close owner is absent"))?;
-            if owner.terminal_is_empty(){self.messages=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-            return owner.close_step(RetainedCloneGrant{maximum_depth:retained.maximum_depth-1,..retained}).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);
-        }
-        self.owners.close_step(grant.retained_grant()).map_err(Into::into)
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let result = self.close_ladder(effect);
+        RetirementPollExit::settle(effect, result)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
@@ -313,7 +326,6 @@ fn replay_header<T>() -> RetirementDemand {
 
 /// 📽️ Clones the immutable base into the owned post projection the cold edit then advances in place.
 pub struct ColdReplayProjection<S: 'static> {
-    last_work:u64,
     snapshot: Option<(fn(&S) -> usize, usize)>,
     clone: ManuallyDrop<Option<S>>,
     retirement: RetainedCloneClose,
@@ -323,11 +335,11 @@ pub struct ColdReplayProjection<S: 'static> {
 
 impl<S: 'static> Default for ColdReplayProjection<S> {
     fn default() -> Self {
-        Self { last_work:0,snapshot: None, clone: ManuallyDrop::new(None), retirement: RetainedCloneClose::default(), cloned: false, closing: false }
+        Self { snapshot: None, clone: ManuallyDrop::new(None), retirement: RetainedCloneClose::default(), cloned: false, closing: false }
     }
 }
 
-impl<S: 'static> ColdReplayProjection<S> {
+impl<S: RetireOwned + 'static> ColdReplayProjection<S> {
     pub fn bounded(snapshot_bytes: fn(&S) -> usize, maximum_bytes: usize) -> Self {
         Self { snapshot: Some((snapshot_bytes, maximum_bytes)), ..Self::default() }
     }
@@ -342,37 +354,66 @@ impl<S: 'static> ColdReplayProjection<S> {
         }
         Ok(RetirementDemand { copy_bytes: bytes.max(size_of::<S>()), depth: 1, ..Default::default() })
     }
+
+    fn close_ladder(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, RetirementPollExit> {
+        let grant = effect.grant();
+        if !self.closing {
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+        }
+        if !self.retirement.is_empty() {
+            let step = RetirementPollExit::resume(self.retirement.step_granted(effect))?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        if let Some(step) = self.retirement.begin_granted(&mut self.clone, effect).result? {
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        if self.cloned {
+            let demand = RetirementDemand { copy_bytes: size_of::<bool>(), depth: 1, ..Default::default() };
+            if !retained_clone_grant_admits(grant, demand) {
+                return Ok(RetainedCloneStep::Progress(Default::default()));
+            }
+            RetirementPollExit::pay(effect, 1)?;
+            self.cloned = false;
+            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
+        }
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+    }
+}
+
+fn perform(effect: &mut RetainedAllocationEffect<'_>, units: u64) -> Result<(), ValueError> {
+    if effect.performed(units)? { Ok(()) } else { Err(ValueError::literal(ValueRefusalKind::WorkLimit, "cold replay action exceeds its work ceiling")) }
 }
 
 impl<S: Clone + RetireOwned + Send + Sync + 'static> SemanticProjection<S> for ColdReplayProjection<S> {
     fn birth_work_demand(&self)->Result<u64,ValueError>{Ok(1)}
     fn take_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(self.clone.is_some()))}
-    fn last_turn_work(&self)->u64{self.last_work}
     fn birth_demand(&self) -> RetirementDemand {
         replay_header::<Self>()
     }
 
-    fn begin(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
-        self.last_work=0;
+    fn begin(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
         let demand = self.birth_demand();
-        if !retained_clone_grant_admits(grant, demand) {
+        if !retained_clone_grant_admits(effect.grant(), demand) {
             return Err(fault("cold replay projection birth not funded"));
         }
-        self.last_work=1;
         Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })
     }
 
-    fn demands(&self, source: RetainedCloneRef<'_, S>, _body: usize) -> Result<RetirementDemand, ValueError> {
+    fn demands(&self, source: RetainedCloneRef<'_, S>, _body: usize, _maximum_work_units: u64) -> Result<RetirementDemand, ValueError> {
         self.clone_demand(source.get())
     }
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, S>, _body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
-        self.last_work=0;
+    fn advance_work_demand(&self, _source: RetainedCloneRef<'_, S>, _body: usize, _maximum_work_units: u64) -> Result<Option<u64>, ValueError> {
+        Ok(Some(1))
+    }
+
+    fn advance(&mut self, source: RetainedCloneRef<'_, S>, _body: usize, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
         let demand = self.clone_demand(source.get())?;
-        if self.closing || !retained_clone_grant_admits(grant, demand) {
+        if self.closing || !retained_clone_grant_admits(effect.grant(), demand) {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
-        self.last_work=1;*self.clone = Some(source.get().clone());
+        perform(effect, 1)?;
+        *self.clone = Some(source.get().clone());
         self.cloned = true;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     }
@@ -381,13 +422,13 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static> SemanticProjection<S> for C
         Ok(RetirementDemand { copy_bytes: size_of::<S>() * 2, depth: 1, ..Default::default() })
     }
 
-    fn take(&mut self, grant: RetainedCloneGrant) -> Result<Option<(S, RetainedCloneProgress)>, ValueError> {
-        self.last_work=0;
+    fn take(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<(S, RetainedCloneProgress)>, ValueError> {
         let demand = self.take_demand()?;
-        if !retained_clone_grant_admits(grant, demand) {
+        if !retained_clone_grant_admits(effect.grant(), demand) || self.clone.is_none() {
             return Ok(None);
         }
-        Ok(self.clone.take().map(|post| {self.last_work=1;(post, RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })}))
+        perform(effect, 1)?;
+        Ok(self.clone.take().map(|post| (post, RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })))
     }
 
     fn begin_close(&mut self) {
@@ -401,27 +442,13 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static> SemanticProjection<S> for C
         Ok(if self.cloned { RetirementDemand { copy_bytes:size_of::<bool>(), depth:1, ..Default::default() } } else { RetirementDemand::default() })
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
-        self.last_work=0;
-        if !self.closing {
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-        }
-        if !self.retirement.is_empty() {
-            let turn=self.retirement.step_granted(grant);self.last_work=turn.work;
-            return turn.result.map(|step| RetainedCloneStep::Progress(step.progress()));
-        }
-        let turn=self.retirement.begin_granted(&mut self.clone, grant);self.last_work=turn.work;
-        if let Some(step) = turn.result? {
-            return Ok(RetainedCloneStep::Progress(step.progress()));
-        }
-        if self.cloned {
-            let demand=RetirementDemand { copy_bytes:size_of::<bool>(), depth:1, ..Default::default() };
-            if !retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-            self.cloned=false;
-            self.last_work+=1;
-            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items:1, copied_bytes:demand.copy_bytes, ..Default::default() }));
-        }
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+    fn close_work_demand(&self, _body: usize) -> Result<Option<u64>, ValueError> {
+        Ok(Some(if self.closing && (self.cloned || self.clone.is_some() || !self.retirement.is_empty()) { 1 } else { 0 }))
+    }
+
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let result = self.close_ladder(effect);
+        RetirementPollExit::settle(effect, result)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -431,7 +458,7 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static> SemanticProjection<S> for C
 
 /// ✏️ Decides, inverts and applies one cold mutation in place on the owned post projection in one funded turn.
 pub struct ColdReplayEdit<S: 'static, M: 'static> {
-    last_work:u64,
+    last_work: u64,
     operation_index: u32,
     applied: bool,
     failed: bool,
@@ -442,24 +469,21 @@ pub struct ColdReplayEdit<S: 'static, M: 'static> {
 
 impl<S: 'static, M: 'static> Default for ColdReplayEdit<S, M> {
     fn default() -> Self {
-        Self { last_work:0,operation_index: 0, applied: false, failed: false, closing: false, closed: false, marker: PhantomData }
+        Self { last_work: 0, operation_index: 0, applied: false, failed: false, closing: false, closed: false, marker: PhantomData }
     }
 }
 
 impl<S: Clone + RetireOwned + Send + Sync + 'static, M: Mutation<S> + ColdMutation<S> + RetireOwned + Send + Sync + 'static> SemanticEdit<S, M> for ColdReplayEdit<S, M> {
     fn birth_work_demand(&self)->u64{1}
-    fn last_turn_work(&self)->u64{self.last_work}
     fn birth_demand(&self) -> RetirementDemand {
         replay_header::<Self>()
     }
 
-    fn begin(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
-        self.last_work=0;
+    fn begin(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
         let demand = self.birth_demand();
-        if !retained_clone_grant_admits(grant, demand) {
+        if !retained_clone_grant_admits(effect.grant(), demand) {
             return Err(fault("cold replay edit birth not funded"));
         }
-        self.last_work=1;
         Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })
     }
 
@@ -471,10 +495,8 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static, M: Mutation<S> + ColdMutati
         Ok(RetirementDemand { copy_bytes: size_of::<S>(), capacity_bytes: size_of::<M>(), depth: 1, ..Default::default() })
     }
 
-    fn advance(&mut self, before: RetainedCloneRef<'_, S>, input: RetainedCloneRef<'_, M>, post: PagedOneItemPost<'_, S>, _body: usize, grant: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<SemanticEditStep<M>, semio_framework_value::OriginalReceivingPrimary> {
-        self.last_work=0;
-        let observed_before=receiving.actual_work();
-        let result=(||{
+    fn advance(&mut self, before: RetainedCloneRef<'_, S>, input: RetainedCloneRef<'_, M>, post: PagedOneItemPost<'_, S>, _body: usize, grant: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<SemanticEditStep<M>, ValueError> {
+        self.last_work = 0;
         let demand = RetirementDemand { copy_bytes: size_of::<S>(), capacity_bytes: size_of::<M>(), depth: 1, ..Default::default() };
         if self.failed {
             return Err(fault("cold replay edit refused after a failed in-place application"));
@@ -482,60 +504,77 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static, M: Mutation<S> + ColdMutati
         if self.closing || self.applied || !retained_clone_grant_admits(grant, demand) {
             return Ok(SemanticEditStep::Progress(RetainedCloneProgress::default()));
         }
-        if !receiving.prepare_work(4)?{return Ok(SemanticEditStep::Progress(Default::default()));}
-        let post=post.mutable()?;
+        let post = post.mutable()?;
         receiving.admit_turn_capacity(grant.maximum_capacity_bytes)?;
         receiving.charge(demand.capacity_bytes)?;
         let mutation = input.get();
-        self.last_work+=1;let outcome = ColdMutation::diff(mutation, before.get()).stamp_op_index(self.operation_index);
-        let (outcome, admitted) = match outcome.admit() {
-            semio_os_spr::MutationAdmission::Admitted(outcome) => (outcome, true),
-            semio_os_spr::MutationAdmission::Refused(outcome) => (outcome, false),
+        let operation_index = self.operation_index;
+        let applied_flag = &mut self.applied;
+        let failed_flag = &mut self.failed;
+        let turn = receiving.with_effect(grant, 4, |_, effect| {
+            let result = (|| -> Result<SemanticEditStep<M>, ValueError> {
+                perform(effect, 1)?;
+                let outcome = ColdMutation::diff(mutation, before.get()).stamp_op_index(operation_index);
+                let (outcome, admitted) = match outcome.admit() {
+                    semio_os_spr::MutationAdmission::Admitted(outcome) => (outcome, true),
+                    semio_os_spr::MutationAdmission::Refused(outcome) => (outcome, false),
+                };
+                let (diff, messages) = outcome.into_parts();
+                let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() };
+                if !admitted {
+                    perform(effect, 1)?;
+                    <M::ReferenceDiff as MutationDiff<S>>::retire_cold(diff);
+                    *applied_flag = true;
+                    return Ok(SemanticEditStep::Refused(progress, messages));
+                }
+                *failed_flag = true;
+                perform(effect, 1)?;
+                let applied = apply_diff_cold_into(&diff, post);
+                perform(effect, 1)?;
+                <M::ReferenceDiff as MutationDiff<S>>::retire_cold(diff);
+                applied.map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue, "cold replay mutation could not produce its post root"))?;
+                perform(effect, 1)?;
+                let inverse = ColdMutation::inverse(mutation, before.get())?;
+                *failed_flag = false;
+                *applied_flag = true;
+                Ok(SemanticEditStep::Complete(progress, inverse, messages, false))
+            })();
+            (result, effect.performed_work())
+        })?;
+        let Some((result, performed)) = turn else {
+            return Ok(SemanticEditStep::Progress(RetainedCloneProgress::default()));
         };
-        let (diff, messages) = outcome.into_parts();
-        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() };
-        if !admitted {
-            self.last_work+=1;
-            <M::ReferenceDiff as MutationDiff<S>>::retire_cold(diff);
-            self.applied = true;
-            return Ok(SemanticEditStep::Refused(progress, messages));
-        }
-        self.failed = true;
-        self.last_work+=1;
-        let applied = apply_diff_cold_into(&diff, post);
-        self.last_work+=1;
-        <M::ReferenceDiff as MutationDiff<S>>::retire_cold(diff);
-        applied.map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue, "cold replay mutation could not produce its post root"))?;
-        self.last_work+=1;let inverse = ColdMutation::inverse(mutation, before.get())?;
-        self.failed = false;
-        self.applied = true;
-        Ok(SemanticEditStep::Complete(progress, inverse, messages, false))
-        })();
-        let observed=receiving.actual_work().saturating_sub(observed_before);
-        let work=semio_os_store_one_item::original_one_item_turn_work(self.last_work,observed,self.last_work!=0)?;
-        self.last_work=work;
-        if work>observed{receiving.commit_work(work-observed)?;}
+        self.last_work = u64::try_from(performed).unwrap_or(u64::MAX);
         result
+    }
+
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_demand(&self, _factory: &dyn ArtifactOwnedValueRetirementFactory<M>, _body: usize) -> Result<RetirementDemand, ValueError> {
+    fn close_demand(&self, _factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, _body: usize) -> Result<RetirementDemand, ValueError> {
         Ok(replay_header::<Self>())
     }
 
-    fn close_work_demand(&self,_factory:&dyn ArtifactOwnedValueRetirementFactory<M>,_body:usize)->Result<u64,ValueError>{Ok(u64::from(self.closing&&!self.closed))}
-    fn close_step(&mut self, _factory: &dyn ArtifactOwnedValueRetirementFactory<M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
-        self.last_work=0;
-        let demand = replay_header::<Self>();
-        if !self.closing || !retained_clone_grant_admits(grant, demand) {
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-        }
-        if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()));}
-        self.closed = true;self.last_work=1;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
+    fn close_work_demand(&self,_factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,_body:usize)->Result<u64,ValueError>{Ok(u64::from(self.closing&&!self.closed))}
+    fn close_step(&mut self, _factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let result = (|| -> Result<RetainedCloneStep, RetirementPollExit> {
+            let demand = replay_header::<Self>();
+            if !self.closing || !retained_clone_grant_admits(effect.grant(), demand) {
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+            }
+            if self.closed {
+                return Ok(RetainedCloneStep::Complete(Default::default()));
+            }
+            RetirementPollExit::pay(effect, 1)?;
+            self.closed = true;
+            Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
+        })();
+        RetirementPollExit::settle(effect, result)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -567,10 +606,8 @@ where
 }
 
 
-/// 🧫️ Runs the real post-handoff metadata boundary without constructing a replacement projection owner.
+/// 🧫️ Exposes a completed cold projection at its post-handoff metadata boundary so a law drives its funded close through its own original effect.
 #[cfg(feature="test-support")]
-pub fn cold_projection_metadata_case(cloned:bool,grant:RetainedCloneGrant)->Result<(RetainedCloneProgress,u64,bool),ValueError>{
- let mut owner=ColdReplayProjection::<u8>{cloned,closing:true,last_work:99,..Default::default()};
- let step=owner.close_step(grant)?;
- Ok((step.progress(),owner.last_turn_work(),owner.terminal_is_empty()))
+pub fn cold_projection_metadata_owner(cloned:bool)->Box<dyn SemanticProjection<u8>>{
+ Box::new(ColdReplayProjection::<u8>{cloned,closing:true,..Default::default()})
 }

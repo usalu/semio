@@ -2,6 +2,13 @@
 
 use super::*;
 use semio_os_spr::ColdMutation;
+use semio_framework_value::{RetainedAllocationEffect,RetirementPollExit};
+
+/// 🧾️ A pending exit keeps its owner and reports no progress; a failure collapses to its value error.
+fn settled_exit(step:Result<semio_framework_value::RetainedCloneStep,RetirementPollExit>)->Result<RetainedCloneProgress,ValueError>{match step{Ok(step)=>Ok(step.progress()),Err(RetirementPollExit::Pending(_))=>Ok(Default::default()),Err(RetirementPollExit::Failed(failure))=>Err(failure.into_value_error())}}
+
+/// 🧾️ A pending poll keeps its owner and reports no progress; a complete poll settles to its step progress.
+fn settled_poll(poll:semio_framework_value::OriginalRetirementPoll)->Result<RetainedCloneProgress,ValueError>{settled_exit(RetirementPollExit::resume(poll))}
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
@@ -60,17 +67,19 @@ where
     pub fn original_outbound_message(&self)->Option<&dyn semio_framework_value::ByteReadSource>{self.wire.original_outbox.front().map(|bytes|bytes as &dyn semio_framework_value::ByteReadSource)}
 
     /// 🚇️ Transfers retained intent to the actual attached actor queue without encoding or gathering bytes.
-    pub fn advance_original_outbound(&mut self,grant:RetainedCloneGrant)->Result<Option<(bool,RetainedCloneProgress)>,ValueError>{
-        if self.wire.original_outbox.front().is_none(){if self.wire.original_outbox.terminal_is_empty(){return Ok(None)}let step=self.wire.original_outbox.recycle_step(grant)?;let p=step.progress();return Ok((p!=Default::default()).then_some((false,p)))}
+    pub fn advance_original_outbound(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<(bool,RetainedCloneProgress)>,ValueError>{
+        let grant=effect.grant();
+        if self.wire.original_outbox.front().is_none(){if self.wire.original_outbox.terminal_is_empty(){return Ok(None)}let p=settled_exit(self.wire.original_outbox.recycle_step(effect))?;return Ok((p!=Default::default()).then_some((false,p)))}
         match self.wire.backbone.as_ref(){Some(Backbones::Channel(channel))=>channel.send_original(&mut self.wire.original_outbox,grant),_=>Ok(None)}
     }
 
     /// 🛑️ Returns private original causal suffixes through their issuing Store before generic batch teardown.
-    pub fn prepare_apply_batch_close(&mut self,publication:&mut ArtifactStoreBatchPublication<P,Mutation>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
+    pub fn prepare_apply_batch_close(&mut self,publication:&mut ArtifactStoreBatchPublication<P,Mutation>,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+        let grant=effect.grant();
         let Some(stage)=publication.stage.as_mut()else{return Ok(None)};
         if !publication.original_registry.as_ref().is_some_and(|registry|registry.ptr_eq(&self.owners.snapshot_read_leases)){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch abort requires its original Store issuer"))}
         let admits=semio_framework_value::retained_clone::retained_clone_grant_admits;
-        if let Some(owner)=stage.seed_retiring.as_mut(){let d=if owner.terminal_is_empty(){semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<String>>>(),depth:1,..Default::default()}}else{owner.next_demand(grant.maximum_copy_bytes)?};if !admits(grant,d){return Ok(Some(Default::default()))}if !owner.terminal_is_empty(){return owner.step(grant).map(|step|Some(step.progress()))}stage.seed_retiring=None;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+        if let Some(owner)=stage.seed_retiring.as_mut(){let d=if owner.terminal_is_empty(){semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<String>>>(),depth:1,..Default::default()}}else{owner.next_demand(grant.maximum_copy_bytes)?};if !admits(grant,d){return Ok(Some(Default::default()))}if !owner.terminal_is_empty(){return settled_poll(owner.step(effect)).map(Some)}stage.seed_retiring=None;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
         if stage.seed_pending.is_some(){let d=semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<protocol::MutationId>>()+size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<String>>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}let id=stage.seed_pending.take().unwrap();stage.seed_retiring=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(id.0).map_err(|(error,_)|error)?);return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
         if let Some(owner)=stage.seed_owner.as_ref(){let d=self.log.dag.original_seed_abort_demands(owner)?;if !admits(grant,d){return Ok(Some(Default::default()))}let Some((id,p))=self.log.dag.abort_original_seed_step(&mut stage.seed_owner,grant)?else{return Ok(Some(Default::default()))};stage.seed_pending=id.map(protocol::MutationId);return Ok(Some(p))}
         if let Some(metadata)=stage.commit_metadata.as_mut(){
@@ -116,7 +125,7 @@ where
     #[inline] pub fn advance_prepared_foreign_steps( &self, publication:&ArtifactStoreBatchPublication<P,Mutation>, output:&mut protocol::ForeignStepsPreparation, grant:RetainedCloneGrant, )->Result<RetainedCloneStep,ValueError> { self.live.advance_prepared_foreign_steps(&self.owners, &self.cursor, publication, output, grant) }
 
     /// 🪞️ Delegates to [`StoreLive::advance_prepared_operation_wire`].
-    #[inline] pub fn advance_prepared_operation_wire( &self, publication:&ArtifactStoreBatchPublication<P,Mutation>, cursor:&mut ArtifactPreparedOperationCursor,output:&mut[u8],grant:RetainedCloneGrant, )->Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> { self.live.advance_prepared_operation_wire(&self.owners, &self.cursor, publication, cursor, output, grant) }
+    #[inline] pub fn advance_prepared_operation_wire( &self, publication:&ArtifactStoreBatchPublication<P,Mutation>, cursor:&mut ArtifactPreparedOperationCursor,output:&mut[u8],effect:&mut semio_framework_value::RetainedAllocationEffect<'_>, )->Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> { self.live.advance_prepared_operation_wire(&self.owners, &self.cursor, publication, cursor, output, effect) }
 
     /// 🪞️ Delegates to [`StoreLog::cancel_apply_batch`].
     #[inline] pub fn cancel_apply_batch(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>) -> bool { self.log.cancel_apply_batch(publication) }

@@ -30,6 +30,8 @@ pub mod docs_typed_operations;
 pub mod docs_maintenance_ladder;
 #[path = "📥️staging/🧱️components/🦀️.rs"]
 pub mod docs_components;
+#[path = "📥️staging/📥️media-download/🦀️.rs"]
+pub mod docs_media_download;
 
 #[path="📥️staging/📸️checkpoint/🦀️.rs"]
 pub mod native_checkpoint_export;

@@ -1,6 +1,5 @@
 //! 🧬️ Bounded semantic edit capabilities shared by publication and replay producers.
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory,RetirementDemand,ValueError,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
-use semio_framework_value_snapshot_projection::snapshot_projection::post::OriginalPostRead;
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory,RetirementDemand,ValueError,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress}};
 pub use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
 pub enum PagedOneItemEditStep<M> {
     Progress(RetainedCloneProgress),
@@ -28,9 +27,9 @@ pub trait PagedOneItemEdit<S, M>: Default + Send + 'static {
     /// 🧾️ Finishes the same original receiving frame before owner retirement.
     fn finish_receiving_recovery(&mut self,control:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,semio_framework_value::OriginalReceivingPrimary>;
     fn begin_close(&mut self);
-    fn close_demands(&self, mutations: &dyn ArtifactOwnedValueRetirementFactory<M>, body: usize) -> Result<RetirementDemand, ValueError>;
-    fn close_work_demand(&self, mutations:&dyn ArtifactOwnedValueRetirementFactory<M>,body:usize)->Result<u64,ValueError>;
-    fn close_step(&mut self, mutations: &dyn ArtifactOwnedValueRetirementFactory<M>, grant: RetainedCloneGrant, actual:&mut Option<usize>) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>;
+    fn close_demands(&self, mutations: &std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, body: usize) -> Result<RetirementDemand, ValueError>;
+    fn close_work_demand(&self, mutations:&std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,body:usize)->Result<u64,ValueError>;
+    fn close_step(&mut self, mutations: &std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll;
     fn terminal_is_empty(&self) -> bool;
 }
 

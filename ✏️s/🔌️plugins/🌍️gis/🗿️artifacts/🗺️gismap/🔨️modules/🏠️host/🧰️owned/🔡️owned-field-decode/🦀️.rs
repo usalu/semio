@@ -130,41 +130,44 @@ macro_rules! gis_map_owned_field_authority {
 
             gis_map_owned_field_close_capacity!($authority_trait, $value);
 
-            fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-                let empty = RetainedCloneProgress::default();
-                if self.terminal_is_empty() {
-                    return Ok(RetainedCloneStep::Complete(empty));
-                }
-                if grant.maximum_items == 0 {
-                    return Ok(RetainedCloneStep::Progress(empty));
-                }
-                let demand = self.close_demands(grant.maximum_copy_bytes)?;
-                if grant.maximum_depth < demand.depth {
-                    return Err(self.diagnostic(concat!("gis-map-envelope.", $kind, "-retirement-depth"), 0));
-                }
-                if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
-                    return Ok(RetainedCloneStep::Progress(empty));
-                }
-                if let $state::Decode(authority) = &mut self.state {
-                    authority.cancel();
+            fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
+                let result = (|| -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::ArtifactEnvelopeCloseExit> {
+                    let grant = effect.grant();
+                    let empty = RetainedCloneProgress::default();
+                    if self.terminal_is_empty() {
+                        return Ok(RetainedCloneStep::Complete(empty));
+                    }
+                    if grant.maximum_items == 0 {
+                        return Ok(RetainedCloneStep::Progress(empty));
+                    }
+                    let demand = self.close_demands(grant.maximum_copy_bytes)?;
+                    if grant.maximum_depth < demand.depth {
+                        return Err(self.diagnostic(concat!("gis-map-envelope.", $kind, "-retirement-depth"), 0).into());
+                    }
+                    if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+                        return Ok(RetainedCloneStep::Progress(empty));
+                    }
+                    if let $state::Decode(authority) = &mut self.state {
+                        authority.cancel();
+                        self.state = $state::Closing;
+                        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: GIS_MAP_OWNED_FIELD_BYTES, ..empty }));
+                    }
+                    let fault = self.diagnostic(concat!("gis-map-envelope.", $kind, "-retirement-fault"), 0);
+                    let step = if self.retirement.is_some() {
+                        store::os_store::owned_schema_decode::artifact_envelope_close_resume_with(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, effect), |failure| store::os_store::owned_schema_decode::artifact_envelope_failure_diagnostic(fault, &failure))?
+                    } else if self.value.is_some() {
+                        store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, effect).result.map_err(|error| fault.with_native(error))?
+                    } else {
+                        RetainedCloneStep::Complete(empty)
+                    };
                     self.state = $state::Closing;
-                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: GIS_MAP_OWNED_FIELD_BYTES, ..empty }));
-                }
-                let step = if self.retirement.is_some() {
-                    store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant)
-                } else if self.value.is_some() {
-                    store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant)
-                } else {
-                    semio_framework_value::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(empty)), work: 0 }
-                }
-                .result
-                .map_err(|error| self.diagnostic(concat!("gis-map-envelope.", $kind, "-retirement-fault"), 0).with_native(error))?;
-                self.state = $state::Closing;
-                if self.value.is_none() && self.retirement.is_none() {
-                    self.state = $state::Complete;
-                    return Ok(RetainedCloneStep::Complete(step.progress()));
-                }
-                Ok(RetainedCloneStep::Progress(step.progress()))
+                    if self.value.is_none() && self.retirement.is_none() {
+                        self.state = $state::Complete;
+                        return Ok(RetainedCloneStep::Complete(step.progress()));
+                    }
+                    Ok(RetainedCloneStep::Progress(step.progress()))
+                })();
+                store::os_store::owned_schema_decode::artifact_envelope_close_settle(effect, result)
             }
 
             fn terminal_is_empty(&self) -> bool {

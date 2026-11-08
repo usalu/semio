@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-job-context-testkit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Dev-only fixture access to job-context turn state through its narrow StepFields view."
+
+[package.metadata.semio]
+role = "framework"
+id = "job-context-testkit"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job-context = { workspace = true, features = ["testkit"] }
+semio-framework-job-payload = { workspace = true }
+semio-framework-value-retained-clone = { path = "../../../../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }

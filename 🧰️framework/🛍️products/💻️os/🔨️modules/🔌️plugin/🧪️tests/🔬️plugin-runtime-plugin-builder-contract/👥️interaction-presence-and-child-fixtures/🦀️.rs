@@ -238,7 +238,7 @@ pub fn close_member_admission_fixture(member: &mut TestMembers) {
             let grant = semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close;
             let demand=member.close_owned_demands(grant.maximum_copy_bytes).expect("actual member close demand");
             assert!(grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"member demand exceeds its original fixture close policy");
-            let step = member.close_owned_step(grant).expect("actual member original close");
+            let step = member.close_owned_step_cold(grant).expect("actual member original close");
             assert!(step.progress().fits(grant));
             if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
                 assert!(member.close_owned_terminal_is_empty());

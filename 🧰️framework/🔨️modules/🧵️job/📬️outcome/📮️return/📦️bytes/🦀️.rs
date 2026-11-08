@@ -2,31 +2,47 @@
 use super::*;
 
 /// 🧱️ This sole contiguous backing is born and filled only through its actual original receiving context.
-pub struct OriginalContiguousJobBytes{bytes:Option<Vec<u8>>,source:Option<OriginalCallerSourceLoan>,binding:OriginalSourceBinding,capacity:usize,active:bool}
+pub struct OriginalContiguousJobBytes{bytes:Option<Vec<u8>>,source:Option<OriginalCallerSourceLoan>,binding:OriginalSourceBinding,capacity:usize,active:bool,admission:OriginalConstructionAdmission,candidate:Option<()>,failure:Option<OriginalConstructionFailure>}
 impl OriginalContiguousJobBytes{
  pub fn admit(length:usize,output:&mut Option<Self>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   let demand=OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:length,release_bytes:0,depth:1};if cx.should_yield()||cx.is_cancelled()||!demand.fits(cx.retained_grant()){return Ok(false)}
   let parent=cx.original_source_parent()?;parent.validate_borrowed_context(cx)?;
-  if output.is_none(){*output=Some(Self{bytes:None,source:None,binding:OriginalSourceBinding::borrow(cx),capacity:length,active:true});registry_control(cx,false)?;return Ok(false)}
+  if output.is_none(){*output=Some(Self{bytes:None,source:None,binding:OriginalSourceBinding::borrow(cx),capacity:length,active:true,admission:Default::default(),candidate:None,failure:None});registry_control(cx,false)?;return Ok(false)}
   let owner=output.as_mut().ok_or_else(||ValueError::invariant("output absent"))?;if !owner.active||!owner.binding.matches(cx)||owner.capacity!=length{return Err(refusal("contiguous birth changed its original source or exact extent").into())}
   if owner.source.is_none(){parent.admit_loan(&mut owner.source,cx)?;return Ok(false)}
   owner.source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.validate_context(cx)?;
-  admit_original_construction(cx,&mut owner.bytes,demand,|_|{let mut bytes=Vec::new();let result=bytes.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original contiguous backing allocation refused")).map(|()|{let capacity=bytes.capacity();(bytes,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})});semio_framework_value_retained_clone::RetainedWorkOutcome{result,work:1}})
+  if owner.bytes.is_some()&&!owner.admission.has_failure(){return if owner.admission.terminal_is_empty(){Ok(true)}else{owner.admission.reset_step(cx)}}
+  if owner.failure.is_some(){return Err(refusal("contiguous birth construction already failed").into())}
+  let status=admit_original_construction(cx,&mut owner.bytes,&mut owner.admission,demand,1,|_,_|{let mut bytes=Vec::new();let result=bytes.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original contiguous backing allocation refused")).map(|()|{let capacity=bytes.capacity();(bytes,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})});semio_framework_value_retained_clone::RetainedWorkOutcome{result,work:1}})?;
+  match status{
+   OriginalConstructionStatus::Ready=>owner.admission.reset_step(cx),
+   OriginalConstructionStatus::Pending=>Ok(false),
+   OriginalConstructionStatus::Failed=>{if !owner.admission.take_failure_into_step(&mut owner.failure,cx)?{return Ok(false)}Err(refusal("contiguous birth native construction failed").into())}
+  }
  }
  pub fn borrowed_bytes(&self)->Option<&[u8]>{self.bytes.as_deref()}
  pub fn retained_length(&self)->usize{self.bytes.as_ref().map_or(0,Vec::len)}
  pub fn ready(&self)->bool{self.bytes.is_some()&&self.source.is_some()}
  pub fn complete(&self)->bool{self.ready()&&self.retained_length()==self.capacity}
- pub fn terminal_is_empty(&self)->bool{!self.active&&self.bytes.is_none()&&self.source.is_none()}
+ pub fn terminal_is_empty(&self)->bool{!self.active&&self.bytes.is_none()&&self.source.is_none()&&self.failure.is_none()&&self.candidate.is_none()&&self.admission.terminal_is_empty()}
  pub fn append(&mut self,bytes:&[u8],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if !self.binding.matches(cx){return Err(refusal("contiguous append refused foreign original source").into())}self.source.as_ref().ok_or_else(||refusal("contiguous append lost its original source loan"))?.validate_context(cx)?;let output=self.bytes.as_mut().ok_or_else(||refusal("contiguous backing already retired"))?;
   if output.len()>self.capacity||bytes.len()>self.capacity-output.len(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"contiguous append exceeds its exact admitted backing").into())}
-  if bytes.is_empty(){return Ok(true)}let mut candidate=None;admit_original_construction(cx,&mut candidate,OriginalConstructionDemand{items:1,copy_bytes:bytes.len(),capacity_bytes:0,release_bytes:0,depth:1},|_|{output.extend_from_slice(bytes);semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes.len(),..Default::default()})),work:1}})
+  if bytes.is_empty(){return Ok(true)}if self.failure.is_some(){return Err(refusal("contiguous append construction already failed").into())}
+  let status=admit_original_construction(cx,&mut self.candidate,&mut self.admission,OriginalConstructionDemand{items:1,copy_bytes:bytes.len(),capacity_bytes:0,release_bytes:0,depth:1},1,|_,_|{output.extend_from_slice(bytes);semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes.len(),..Default::default()})),work:1}})?;
+  match status{
+   OriginalConstructionStatus::Ready=>{self.candidate=None;self.admission.reset_step(cx)}
+   OriginalConstructionStatus::Pending=>Ok(false),
+   OriginalConstructionStatus::Failed=>{if !self.admission.take_failure_into_step(&mut self.failure,cx)?{return Ok(false)}Err(refusal("contiguous append native construction failed").into())}
+  }
  }
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
   if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}if !self.binding.matches(cx){return Err(refusal("contiguous close refused foreign original source").into())}cx.original_source_parent()?.validate_borrowed_context(cx)?;
   if let Some(source)=self.source.as_ref(){if !source.terminal_is_empty(){source.validate_retirement_context(cx)?;}}
   if let Some(bytes)=self.bytes.as_ref(){let demand=RetirementDemand{release_bytes:bytes.capacity(),depth:1,..Default::default()};return close_original_retained_step(cx,demand,|_|{drop(self.bytes.take());semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}})}
+  if self.failure.is_some(){return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.failure.take();semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
+  if self.candidate.is_some(){return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.candidate.take();semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
+  if !self.admission.terminal_is_empty(){self.admission.close_step(cx)?;return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
   if let Some(source)=self.source.as_mut(){if !source.terminal_is_empty(){return source.close_step(cx.original_source_parent()?,cx)}}
   close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.source.take();self.active=false;semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})
  }

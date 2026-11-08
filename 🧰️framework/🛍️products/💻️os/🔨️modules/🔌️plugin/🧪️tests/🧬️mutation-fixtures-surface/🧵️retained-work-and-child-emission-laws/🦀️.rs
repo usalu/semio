@@ -101,6 +101,8 @@ fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_den
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     fn verify<A: ArtifactApp<Mutation = SurfaceMutation>>(count: usize) {
         let birth = A::owned_mutation_batch_birth_bytes().expect("selected surface declares its exact borrowed admission");
+        let stock = RetainedCloneGrant { maximum_items: 65_536, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 };
+        let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(43), semio_framework_job::Generation(1), stock, || Some(1), 1_000_000, 1_000_000_000);
         let mut values = Some((0..count).map(|index| SetSurfaceCount { value: index as i32 }.into()).collect::<Vec<SurfaceMutation>>());
         let pointer = values.as_ref().unwrap().as_ptr();
         let capacity = values.as_ref().unwrap().capacity();
@@ -121,7 +123,7 @@ fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_den
             let demand = owner.next_demands(64).unwrap();
             assert!(demand.copy_bytes <= 64 && demand.depth <= 8);
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: 8 };
-            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_granted(grant).unwrap());
+            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(RetainedCloneGrant { maximum_items: 4096, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 }, |cx| Ok(cx.with_original_effect(grant, |_, effect| owner.close_granted(effect))?.map(|(step, _)| step))).expect("original fixture effect turn").expect("original effect work quote admitted").unwrap());
             let progress = match step { RetainedCloneStep::Progress(progress) => progress, RetainedCloneStep::Complete(progress) => progress };
             assert!(progress.fits(grant));
             assert_eq!(events.requested_bytes, progress.retained_capacity_bytes);
@@ -130,6 +132,7 @@ fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_den
             if owner.terminal_is_empty() { break; }
         }
         assert!(owner.terminal_is_empty());
+        caller.retire(stock);
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🧫️fixtures/📚️history-cases/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {

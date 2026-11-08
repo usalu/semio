@@ -184,11 +184,11 @@ impl DagInputApplication{
  pub fn next_depth_demand(&self)->Result<usize,ValueError>{match self.phase{
   3=>{let output=match self.facts.as_ref().unwrap(){DagInputFacts::Progress(_)|DagInputFacts::Statuses(_)=>&self.stale,DagInputFacts::Selection(_)=>match self.field{0=>&self.selection.node_ids,1=>&self.selection.edge_ids,_=>&self.selection.handle_ids},DagInputFacts::Channels(_)=>if self.channels{&self.selection.handle_ids}else{&self.selection.node_ids}};output.insert_depth_demand(self.id_insert.as_ref().unwrap())},
   4=>self.status_insert.as_ref().unwrap().next_depth_demand(&self.statuses),6=>self.ports.insert_depth_demand(self.port_insert.as_ref().unwrap()),_=>Ok(1)}}
- pub fn step(&mut self,viewport: &DagViewportState, graph: &DagGraphState,units:usize,control:&mut NativeDecodeControl<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<bool,ValueError>{
-  self.progress=Default::default();if units==0||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}control.checkpoint()?;if self.complete{return Ok(true)}if self.next_capacity_byte_demand()?>grant.maximum_capacity_bytes||self.next_depth_demand()?>grant.maximum_depth{return Ok(false)}control.admit_turn_capacity(grant.maximum_capacity_bytes)?;let before=control.owned_bytes();let result=self.advance(viewport, graph,control);self.progress.copied_items=1;self.progress.retained_capacity_bytes=control.owned_bytes()-before;result?;control.step()?;Ok(self.complete)
+ pub fn step(&mut self,viewport: &DagViewportState, graph: &DagGraphState,units:usize,control:&mut NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,ValueError>{
+  let grant=effect.grant();self.progress=Default::default();if units==0||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}control.checkpoint()?;if self.complete{return Ok(true)}if self.next_capacity_byte_demand()?>grant.maximum_capacity_bytes||self.next_depth_demand()?>grant.maximum_depth{return Ok(false)}control.admit_turn_capacity(grant.maximum_capacity_bytes)?;let before=control.owned_bytes();let result=self.advance(viewport, graph,control,effect);self.progress.copied_items=1;self.progress.retained_capacity_bytes=control.owned_bytes()-before;result?;control.step()?;Ok(self.complete)
  }
  fn next_row(&mut self){self.row+=1;self.phase=0;self.identity=IdentityCursor::default();self.node=None;self.port=0;}
- pub fn advance(&mut self,viewport: &DagViewportState, graph: &DagGraphState,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
+ pub fn advance(&mut self,viewport: &DagViewportState, graph: &DagGraphState,control:&mut NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(),ValueError>{
   let facts=self.facts.as_ref().unwrap();
   if self.phase==0{
    let present=match facts{
@@ -218,16 +218,16 @@ impl DagInputApplication{
   }
   if self.phase==3{
    let output=match facts{DagInputFacts::Progress(_)|DagInputFacts::Statuses(_)=>&mut self.stale,DagInputFacts::Selection(_)=>match self.field{0=>&mut self.selection.node_ids,1=>&mut self.selection.edge_ids,_=>&mut self.selection.handle_ids},DagInputFacts::Channels(_)=>if self.channels{&mut self.selection.handle_ids}else{&mut self.selection.node_ids}};
-   if output.insert_step(self.id_insert.as_mut().unwrap(),1,control)?{self.id_insert.take();self.next_row();}return Ok(())
+   if output.insert_step(self.id_insert.as_mut().unwrap(),1,control,effect)?{self.id_insert.take();self.next_row();}return Ok(())
   }
   if self.phase==4{
-   if self.status_insert.as_mut().unwrap().step(&mut self.statuses,1,control)?{self.status_insert.take();let DagInputFacts::Statuses(facts)=facts else{unreachable!()};match facts.entry_at_rank(self.row).unwrap().1{DagNodeEvaluationStatus::Queued{}=>{self.id_insert=Some(NumericInsertCursor::new(self.node.unwrap(),()));self.phase=3},DagNodeEvaluationStatus::Blocked{..}=>self.phase=5,_=>self.next_row()}}return Ok(())
+   if self.status_insert.as_mut().unwrap().step(&mut self.statuses,1,control,effect)?{self.status_insert.take();let DagInputFacts::Statuses(facts)=facts else{unreachable!()};match facts.entry_at_rank(self.row).unwrap().1{DagNodeEvaluationStatus::Queued{}=>{self.id_insert=Some(NumericInsertCursor::new(self.node.unwrap(),()));self.phase=3},DagNodeEvaluationStatus::Blocked{..}=>self.phase=5,_=>self.next_row()}}return Ok(())
   }
   if self.phase==5{
    let DagInputFacts::Statuses(facts)=facts else{unreachable!()};let DagNodeEvaluationStatus::Blocked{ports}=facts.entry_at_rank(self.row).unwrap().1 else{unreachable!()};if self.port==ports.len(){self.next_row();return Ok(())}
    match self.identity.step(graph,Identity{first:&ports[self.port],second:None},3,self.node){IdentityStep::Progress=>{},IdentityStep::Missing=>{self.port+=1;self.identity=IdentityCursor::default()},IdentityStep::Resolved(port)=>{self.port_insert=Some(NumericInsertCursor::new((self.node.unwrap(),port as usize),()));self.phase=6;}}return Ok(())
   }
-  if self.ports.insert_step(self.port_insert.as_mut().unwrap(),1,control)?{self.port_insert.take();self.identity.candidate+=1;self.identity.byte=0;self.phase=5;}Ok(())
+  if self.ports.insert_step(self.port_insert.as_mut().unwrap(),1,control,effect)?{self.port_insert.take();self.identity.candidate+=1;self.identity.byte=0;self.phase=5;}Ok(())
  }
  pub fn commit(&mut self,graph: &mut DagGraphState, paint: &mut DagPaintState)->DagInputDisplaced{
   assert!(self.complete);let mut displaced=DagInputDisplaced{selection:None,chrome:None,progress:None};

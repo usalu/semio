@@ -12,7 +12,8 @@ impl CommandPageSet {
     }
     /// 🌱️ Retains actual allocated backing before reporting a successful or refused admission receipt.
     pub fn admit_source_step(output:&mut Option<Self>,declared:usize,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneStep>{
-        use semio_framework_value::{RetainedCloneStep as Step,RetainedCloneProgress as Progress,RetainedWorkOutcome as Turn,ValueError,ValueRefusalKind,retained_clone_grant_admits};
+        use semio_framework_value::{RetainedCloneStep as Step,RetainedCloneProgress as Progress,RetainedWorkOutcome as Turn,ValueError,ValueRefusalKind};
+        use semio_framework_value::retained_clone::retained_clone_grant_admits;
         if output.is_some(){return Turn{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"command page Source admission requires an empty destination")),work:0}}
         let demand=match Self::source_admission_demand(declared){Ok(demand)=>demand,Err(error)=>return Turn{result:Err(error),work:0}};
         if !retained_clone_grant_admits(grant,demand){return Turn{result:Ok(Step::Progress(Default::default())),work:0}}
@@ -30,7 +31,8 @@ impl CommandPageSet {
     }
     /// 📥️ Captures the original page backing only after a real Source grant funds every actual metadata placement.
     pub fn capture_source_step(&mut self,input:&mut Option<(CommandPageCursor,FixedCommandPage)>,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneStep>{
-        use semio_framework_value::{RetainedCloneStep as Step,RetainedCloneProgress as Progress,RetainedWorkOutcome as Turn,ValueError,ValueRefusalKind,retained_clone_grant_admits};
+        use semio_framework_value::{RetainedCloneStep as Step,RetainedCloneProgress as Progress,RetainedWorkOutcome as Turn,ValueError,ValueRefusalKind};
+        use semio_framework_value::retained_clone::retained_clone_grant_admits;
         let Some((_,page))=input.as_ref()else{return Turn{result:Ok(Step::Complete(Default::default())),work:0}};
         let Some(bytes)=self.source_push_byte_len(page)else{return Turn{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"command page Source has no slot or byte authority")),work:0}};
         let demand=Self::source_capture_demand();

@@ -1,0 +1,4 @@
+const fs=require("fs");const f=process.argv[2];let s=fs.readFileSync(f,"utf8");
+const R=[["Swipe down to reach {{label}} above","Show {{label}} above","Nach unten wischen, um {{label}} oben zu erreichen","{{label}} oben anzeigen"],["Swipe right to reach {{label}} on the left","Show {{label}} on the left","Nach rechts wischen, um {{label}} links zu erreichen","{{label}} links anzeigen"],["Swipe left to reach {{label}} on the right","Show {{label}} on the right","Nach links wischen, um {{label}} rechts zu erreichen","{{label}} rechts anzeigen"],["Swipe up to reach {{label}} below","Show {{label}} below","Nach oben wischen, um {{label}} unten zu erreichen","{{label}} unten anzeigen"]];
+for(const [a,b,c,d] of R){for(const [x,y] of [[a,b],[c,d]]){if(s.split(x).length!==2){console.error("c",x);process.exit(1)}s=s.replace(x,y)}}
+fs.writeFileSync(f,s);

@@ -63,9 +63,10 @@ impl BorrowedScalarRecordCursor{
         if self.identity.is_some_and(|old|old!=source.projection_identity())||self.spec.is_some_and(|old|old.fields.as_ptr()!=spec.fields.as_ptr()||old.fields.len()!=spec.fields.len()||old.keyword!=spec.keyword||old.layout!=spec.layout){return Err(Self::invalid("borrowed scalar record source or schema changed"))}
         if self.next_output_byte_demand()!=0&&output.is_empty(){return Ok(Default::default())}
         if self.phase==Phase::Value{
+            let located=self.field_path(true);
             if let Some(token)=self.token.as_mut(){
                 control.checkpoint().map_err(|error|Self::failure(error,0))?;if !control.prepare_work(1).map_err(|error|Self::failure(error,0))?{return Ok(Default::default())}
-                let(path,length)=self.field_path(true);let projection=source.projection_view(&path[..length]);let settlement=control.commit_work(1);
+                let(path,length)=located;let projection=source.projection_view(&path[..length]);let settlement=control.commit_work(1);
                 let projection=match projection{Ok(value)=>{settlement.map_err(|error|Self::failure(error,0))?;value},Err(error)=>{let mut failure=Self::failure(error,0);failure.settlement=settlement.err();return Err(failure)}};
                 let intrinsic=matches!(self.sequence.map_or_else(||self.block_shape.unwrap_or_else(||self.table.map_or(spec.fields[self.field].shape,|table|table.spec.fields[table.column].shape)),|sequence|sequence.shape),H::Value);
                 let text=match(projection,intrinsic){(V::Text(text),false)|(V::IntrinsicText(text),true)=>text,_=>return Err(Self::invalid("borrowed scalar text projection changed"))};
@@ -228,18 +229,24 @@ impl BorrowedScalarRecordCursor{
 #[cfg(test)]
 mod tests{
  use super::*;
- use semio_framework_value::native_encoding::NativeEncodeWorkRecipient;
+ use semio_framework_value::native_encoding::{OriginalWorkAuthority,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalSourceTurnIdentity};
  struct Loan(u64);
- impl NativeEncodeWorkRecipient for Loan{
-  fn admits(&mut self,_:u64,work:u64)->Result<bool,ValueError>{Ok(self.0>=work)}
-  fn committed(&mut self,work:u64)->Result<(),ValueError>{self.0-=work;Ok(())}
- }
+    struct LoanDriver;
+    impl OriginalWorkRecipient for LoanDriver{
+        type Context<'t,'s>=Loan where 's:'t;
+        fn validate_context<'t,'s>(&self,_:&Loan)->Result<(),ValueError> where 's:'t{Ok(())}
+        fn source_turn<'t,'s>(&self,_:&Loan)->Option<OriginalSourceTurnIdentity> where 's:'t{None}
+        fn admits<'r,'t,'s>(&mut self,c:&mut Loan,quote:OriginalWorkQuote<'r>,_:u64,work:u64)->OriginalWorkQuoteComplete<'r> where 's:'t{quote.complete(Ok(c.0>=work))}
+        fn settle_partial<'r,'t,'s>(&mut self,c:&mut Loan,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{let work=u64::try_from(check.delta()).unwrap_or(u64::MAX);let result=(||->Result<(),ValueError>{c.0=c.0.saturating_sub(work);Ok(())})();check.complete(result)}
+        fn recover_partial<'r,'t,'s>(&mut self,_:&mut Loan,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{check.pending()}
+    }
+    fn with_work<R>(control:&mut NativeEncodeControl<'_>,issuer:&mut OriginalWorkAuthority<LoanDriver>,loan:&mut Loan,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<R,ValueError>)->Result<R,ValueError>{issuer.with_loan(loan,|work|control.with_work_recipient(work,operation))?}
  struct Source<'a>(&'a str);
  impl FieldProjectionSource for Source<'_>{
   fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{match path{[]=>Ok(V::Record(&[0])),[0]=>Ok(V::Text(self.0)),_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unexpected test path"))}}
  }
  #[test]
- fn scalar_record_corpus_emits_one_byte_and_retains_denied_frontier(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();let mut denied_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_record_corpus_emits_one_byte_and_retains_denied_frontier(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);let mut denied_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec;
   const FIELDS:&[BorrowedFieldSpec]=&[BorrowedFieldSpec::new(0,"name",H::Text)];
   let spec=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};
@@ -248,23 +255,23 @@ mod tests{
    let source=Source(case["value"].as_str().unwrap());let expected=case["document"].as_str().unwrap().as_bytes();
    let mut cursor=BorrowedScalarRecordCursor::default();let mut callback=|_|true;let mut control=NativeEncodeControl::new(0,&mut callback);
    let mut byte=[0u8;1];let mut result=Vec::new();let mut loan=Loan(10000);
-   control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+   with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
     for _ in 0..10000{let demand=cursor.next_output_byte_demand();let step=cursor.advance(&source,spec,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(step.written_bytes,demand);result.extend_from_slice(&byte[..step.written_bytes]);if !result.is_empty(){break}}assert!(!result.is_empty());
     Ok::<_,ValueError>(())
    }).unwrap();
    let before=cursor.emitted_bytes();byte[0]=0xaa;
    let replacement=Source(source.0);
-   control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+   with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
     let work=control.actual_work();let failure=cursor.advance(&replacement,spec,&mut byte,control).unwrap_err();
     assert_eq!(failure.reason.kind,ValueRefusalKind::InvalidValue);assert_eq!(failure.written_bytes,0);assert_eq!(cursor.emitted_bytes(),before);assert_eq!(control.actual_work(),work);Ok::<_,ValueError>(())
    }).unwrap();
    let mut denied=Loan(0);
-   control.with_work_recipient(&mut denied_issuer.loan(&mut denied),|control|{
+   with_work(&mut control,&mut denied_issuer,&mut denied,|control|{
     let step=cursor.advance(&source,spec,&mut byte,control).map_err(|failure|failure.reason)?;
     assert_eq!(step.written_bytes,0);assert_eq!(cursor.emitted_bytes(),before);assert_eq!(byte[0],0xaa);
     assert!(!cursor.close(control)?);assert!(!cursor.terminal_is_empty());assert_eq!(cursor.emitted_bytes(),before);Ok::<_,ValueError>(())
    }).unwrap();
-   control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+   with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
     for _ in 0..10000{let demand=cursor.next_output_byte_demand();let step=cursor.advance(&source,spec,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(step.written_bytes,demand);result.extend_from_slice(&byte[..step.written_bytes]);if step.complete{break}}
     assert!(cursor.is_complete());assert_eq!(result,expected);
     for _ in 0..10000{if cursor.close(control)?{break}}assert!(cursor.terminal_is_empty());
@@ -277,7 +284,7 @@ mod tests{
   fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{match path{[]=>Ok(V::Record(&[0,1,2,3,4])),[0]=>Ok(V::Int(9)),[1]=>Ok(V::Text("a b")),[2]=>Ok(V::Int(7)),[3]=>Ok(V::Absent),[4]=>Ok(V::Bool(true)),_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unexpected test path"))}}
  }
  #[test]
- fn scalar_record_positional_and_named_order_matches_corpus(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_record_positional_and_named_order_matches_corpus(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[
    F{position:Some(2),..F::new(0,"late",H::Int)},F::new(1,"label",H::Text),
@@ -296,7 +303,7 @@ mod tests{
   let mut owned=RecordValue::default();owned.fields.insert(0,FieldValue::Int(9));owned.fields.insert(1,FieldValue::Text("a b".into()));owned.fields.insert(2,FieldValue::Int(7));owned.fields.insert(4,FieldValue::Bool(true));
   assert_eq!(crate::print(&owned,&owned_spec,JoinMode::Document),fixture["document"].as_str().unwrap());
   let source=OrderedSource;let mut cursor=BorrowedScalarRecordCursor::default();let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(10000);let mut output=Vec::new();let mut byte=[0u8;1];
-  control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+  with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
    for _ in 0..10000{let turn=cursor.advance(&source,spec,&mut byte,control).map_err(|failure|failure.reason)?;output.extend_from_slice(&byte[..turn.written_bytes]);if turn.complete{break}}
    assert!(cursor.is_complete());assert_eq!(output,fixture["document"].as_str().unwrap().as_bytes());for _ in 0..10000{if cursor.close(control)?{break}}assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
   }).unwrap();
@@ -307,25 +314,25 @@ mod tests{
   fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{self.0.set(self.0.get()+1);match path{[]=>Ok(V::Record(&[0])),[0]=>Ok(V::Text("name")),_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unexpected test path"))}}
  }
  #[test]
- fn scalar_record_zero_work_does_not_project_source(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_record_zero_work_does_not_project_source(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"name",H::Text)];
   let spec=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let source=CountingSource(std::cell::Cell::new(0));
   let mut cursor=BorrowedScalarRecordCursor::default();let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(0);let mut byte=[0u8;1];
-  control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+  with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
    let step=cursor.advance(&source,spec,&mut byte,control).map_err(|failure|failure.reason)?;
    assert_eq!(step.written_bytes,0);assert_eq!(source.0.get(),0);assert_eq!(control.actual_work(),0);Ok::<_,ValueError>(())
   }).unwrap();
  }
 
  #[test]
- fn scalar_record_cancellation_retains_prefix_and_resumes(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_record_cancellation_retains_prefix_and_resumes(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"name",H::Text)];
   let spec=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let source=Source("é😀");
   let enabled=std::cell::Cell::new(true);let mut callback=|_|enabled.get();let mut control=NativeEncodeControl::new(0,&mut callback);
   let mut cursor=BorrowedScalarRecordCursor::default();let mut loan=Loan(10000);let mut result=Vec::new();let mut byte=[0u8;1];
-  control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+  with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
    for _ in 0..10000{let turn=cursor.advance(&source,spec,&mut byte,control).map_err(|failure|failure.reason)?;result.extend_from_slice(&byte[..turn.written_bytes]);if result.len()>=6{break}}assert_eq!(result.len(),6);
    let before=control.actual_work();let emitted=cursor.emitted_bytes();enabled.set(false);
    let failure=cursor.advance(&source,spec,&mut byte,control).unwrap_err();
@@ -341,17 +348,23 @@ mod tests{
   fn projection_view(&self,_:&[usize])->Result<V<'_>,ValueError>{Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original source refusal"))}
  }
  struct RefusingSettlement;
- impl NativeEncodeWorkRecipient for RefusingSettlement{
-  fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(true)}
-  fn committed(&mut self,_:u64)->Result<(),ValueError>{Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original work settlement refusal"))}
+ struct RefusingDriver;
+ fn with_refusing<R>(control:&mut NativeEncodeControl<'_>,issuer:&mut OriginalWorkAuthority<RefusingDriver>,loan:&mut RefusingSettlement,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<R,ValueError>)->Result<R,ValueError>{issuer.with_loan(loan,|work|control.with_work_recipient(work,operation))?}
+ impl OriginalWorkRecipient for RefusingDriver{
+  type Context<'t,'s>=RefusingSettlement where 's:'t;
+  fn validate_context<'t,'s>(&self,_:&RefusingSettlement)->Result<(),ValueError> where 's:'t{Ok(())}
+  fn source_turn<'t,'s>(&self,_:&RefusingSettlement)->Option<OriginalSourceTurnIdentity> where 's:'t{None}
+  fn admits<'r,'t,'s>(&mut self,_:&mut RefusingSettlement,quote:OriginalWorkQuote<'r>,_:u64,_:u64)->OriginalWorkQuoteComplete<'r> where 's:'t{quote.complete(Ok(true))}
+  fn settle_partial<'r,'t,'s>(&mut self,_:&mut RefusingSettlement,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{check.complete(Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original work settlement refusal")))}
+  fn recover_partial<'r,'t,'s>(&mut self,_:&mut RefusingSettlement,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{check.pending()}
  }
  #[test]
- fn scalar_record_preserves_source_and_settlement_refusals(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_record_preserves_source_and_settlement_refusals(){let mut loan_issuer=OriginalWorkAuthority::new(RefusingDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"name",H::Text)];
   let spec=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let mut cursor=BorrowedScalarRecordCursor::default();
   let mut callback=|_|true;let mut control=NativeEncodeControl::new(0,&mut callback);let mut loan=RefusingSettlement;let mut byte=[0u8;1];
-  control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+  with_refusing(&mut control,&mut loan_issuer,&mut loan,|control|{
    let failure=cursor.advance(&RefusingSource,spec,&mut byte,control).unwrap_err();
    assert_eq!(failure.reason.kind,ValueRefusalKind::InvalidValue);assert_eq!(failure.settlement.unwrap().kind,ValueRefusalKind::OwnershipLimit);
    assert_eq!(failure.written_bytes,0);assert_eq!(control.actual_work(),1);Ok::<_,ValueError>(())
@@ -363,13 +376,13 @@ mod tests{
   fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{match path{[]=>Ok(V::Record(&[0,1,2])),[0]=>Ok(V::Float(1.5)),[1]=>Ok(V::Enum(4)),[2]=>Ok(V::UInt(7)),_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unexpected test path"))}}
  }
  #[test]
- fn scalar_record_float_enum_and_count_match_corpus(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_record_float_enum_and_count_match_corpus(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"value",H::Float),F::new(1,"kind",H::Enum(&[("other",3),("ready",4)])),F::new(2,"count",H::Count)];
   let spec=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};
   let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🔬️scalars.json")).unwrap();
   let source=ScalarSource;let mut cursor=BorrowedScalarRecordCursor::default();let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(10000);let mut output=Vec::new();let mut byte=[0u8;1];
-  control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+  with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
    for _ in 0..10000{let demand=cursor.next_output_byte_demand();let turn=cursor.advance(&source,spec,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if turn.complete{break}}
    assert!(cursor.is_complete());assert_eq!(output,fixture["document"].as_str().unwrap().as_bytes());for _ in 0..10000{if cursor.close(control)?{break}}assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
   }).unwrap();
@@ -381,7 +394,7 @@ mod tests{
  }
  fn list_integer_shape()->H{H::Int}
  #[test]
- fn scalar_list_cursor_matches_owned_and_sqlite(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_list_cursor_matches_owned_and_sqlite(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/📚️list.json")).unwrap();
   let spec=RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(0,"items",Shape::List(Box::new(Shape::Int))),FieldSpec::new(1,"label",Shape::Text)]);
   let mut record=RecordValue::default();record.fields.insert(0,FieldValue::List(fixture["items"].as_array().unwrap().iter().map(|value|FieldValue::Int(value.as_i64().unwrap())).collect()));record.fields.insert(1,FieldValue::Text(fixture["label"].as_str().unwrap().to_owned()));
@@ -392,7 +405,7 @@ mod tests{
   const FIELDS:&[F]=&[F::new(0,"items",H::List(list_integer_shape)),F::new(1,"label",H::Text)];
   let spec=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let source=ListSource;let mut cursor=BorrowedScalarRecordCursor::default();
   let enabled=std::cell::Cell::new(true);let mut accept=|_|enabled.get();let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(10000);let mut output=Vec::new();let mut byte=[0u8;1];
-  control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+  with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
    for _ in 0..10000{let demand=cursor.next_output_byte_demand();let turn=cursor.advance(&source,spec,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if output.len()>=20{break}}
    assert_eq!(output.len(),20);let prefix=cursor.emitted_bytes();let work=control.actual_work();enabled.set(false);
    let failure=cursor.advance(&source,spec,&mut byte,control).unwrap_err();assert_eq!(failure.reason.kind,ValueRefusalKind::Canceled);assert_eq!(failure.written_bytes,0);assert_eq!(cursor.emitted_bytes(),prefix);assert_eq!(control.actual_work(),work);enabled.set(true);
@@ -407,25 +420,25 @@ mod tests{
  }
  fn list_text_shape()->H{H::Text}
  #[test]
- fn scalar_list_borrows_and_resumes_text_tokens(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_list_borrows_and_resumes_text_tokens(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"names",H::List(list_text_shape))];
   let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🔤️list.json")).unwrap();
   let source=TextListSource;let spec=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let mut cursor=BorrowedScalarRecordCursor::default();
   let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(10000);let mut output=Vec::new();let mut byte=[0u8;1];
-  control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+  with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
    for _ in 0..10000{let demand=cursor.next_output_byte_demand();let turn=cursor.advance(&source,spec,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if turn.complete{break}}
    assert!(cursor.is_complete());assert_eq!(output,fixture["document"].as_str().unwrap().as_bytes());for _ in 0..10000{if cursor.close(control)?{break}}assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
   }).unwrap();
  }
 
  #[test]
- fn scalar_record_drains_pending_output_before_projection(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_record_drains_pending_output_before_projection(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"name",H::Text)];
   let spec=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let source=CountingSource(std::cell::Cell::new(0));
   let mut cursor=BorrowedScalarRecordCursor::default();let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(10000);let mut byte=[0u8;1];
-  control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+  with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
    for _ in 0..10000{if cursor.next_output_byte_demand()==1{break}cursor.advance(&source,spec,&mut byte,control).map_err(|failure|failure.reason)?;}
    assert_eq!(cursor.next_output_byte_demand(),1);let before=source.0.get();
    let turn=cursor.advance(&source,spec,&mut byte,control).map_err(|failure|failure.reason)?;
@@ -441,7 +454,7 @@ mod tests{
    _=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unexpected test path"))}}
  }
  #[test]
- fn scalar_coordinates_match_owned_and_sqlite(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_coordinates_match_owned_and_sqlite(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"point",H::Coord(2)),F::new(1,"direction",H::Dir)];
   let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/↔️coordinates.json")).unwrap();
@@ -452,7 +465,7 @@ mod tests{
   assert!(oracle.status.success(),"{}",String::from_utf8_lossy(&oracle.stderr));assert_eq!(oracle.stdout,expected.as_bytes());
   let source=CoordinateSource;let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let mut cursor=BorrowedScalarRecordCursor::default();
   let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(10000);let mut output=Vec::new();let mut byte=[0u8;1];
-  control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+  with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
    for _ in 0..10000{let demand=cursor.next_output_byte_demand();let turn=cursor.advance(&source,schema,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if turn.complete{break}}
    assert!(cursor.is_complete());assert_eq!(output,expected.as_bytes());for _ in 0..10000{if cursor.close(control)?{break}}assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
   }).unwrap();
@@ -464,7 +477,7 @@ mod tests{
  }
  fn tuple_unsigned_shape()->H{H::UInt}
  #[test]
- fn scalar_tuple_matches_owned_and_sqlite(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_tuple_matches_owned_and_sqlite(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"rgb",H::Tuple(tuple_unsigned_shape,Some(3)))];
   let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🔢️tuple.json")).unwrap();
@@ -475,7 +488,7 @@ mod tests{
   assert!(oracle.status.success(),"{}",String::from_utf8_lossy(&oracle.stderr));assert_eq!(oracle.stdout,expected.as_bytes());
   let source=TupleSource;let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let mut cursor=BorrowedScalarRecordCursor::default();
   let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(10000);let mut output=Vec::new();let mut byte=[0u8;1];
-  control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+  with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
    for _ in 0..10000{let demand=cursor.next_output_byte_demand();let turn=cursor.advance(&source,schema,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if turn.complete{break}}
    assert!(cursor.is_complete());assert_eq!(output,expected.as_bytes());for _ in 0..10000{if cursor.close(control)?{break}}assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
   }).unwrap();
@@ -486,7 +499,7 @@ mod tests{
   fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{match path{[]=>Ok(V::Record(&[0])),[0] if self.paged=>Ok(V::BytesSource(&self.bytes)),[0]=>Ok(V::Bytes(&self.bytes)),_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unexpected test path"))}}
  }
  #[test]
- fn scalar_bytes_match_owned_and_independent_base64(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_bytes_match_owned_and_independent_base64(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"data",H::Bytes64)];
   let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🔡️bytes.json")).unwrap();
@@ -499,7 +512,7 @@ mod tests{
   for paged in [false,true]{
    let source=BytesSource{bytes:bytes.clone(),paged};let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let mut cursor=BorrowedScalarRecordCursor::default();
    let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(10000);let mut output=Vec::new();let mut byte=[0u8;1];
-   control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+   with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
     for _ in 0..10000{let demand=cursor.next_output_byte_demand();let turn=cursor.advance(&source,schema,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if turn.complete{break}}
     assert!(cursor.is_complete());assert_eq!(output,expected.as_bytes());for _ in 0..10000{if cursor.close(control)?{break}}assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
    }).unwrap();
@@ -507,7 +520,7 @@ mod tests{
  }
 
  #[test]
- fn scalar_bytes_preserve_empty_and_partial_groups(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_bytes_preserve_empty_and_partial_groups(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"data",H::Bytes64)];
   let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🔡️bytes.json")).unwrap();
@@ -515,7 +528,7 @@ mod tests{
   for case in fixture["cases"].as_array().unwrap(){for paged in [false,true]{
    let source=BytesSource{bytes:case["bytes"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect(),paged};
    let mut cursor=BorrowedScalarRecordCursor::default();let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(10000);let mut output=Vec::new();let mut byte=[0u8;1];
-   control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+   with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
     for _ in 0..10000{let demand=cursor.next_output_byte_demand();let turn=cursor.advance(&source,schema,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if turn.complete{break}}
     assert!(cursor.is_complete());assert_eq!(output,case["document"].as_str().unwrap().as_bytes());for _ in 0..10000{if cursor.close(control)?{break}}assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
    }).unwrap();
@@ -530,7 +543,7 @@ mod tests{
    _=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unexpected test path"))}}
  }
  #[test]
- fn scalar_intrinsics_match_owned_and_sqlite(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_intrinsics_match_owned_and_sqlite(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"text",H::Value),F::new(1,"positive",H::Value),F::new(2,"whole",H::Value),F::new(3,"missing",H::Value)];
   let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🔮️intrinsics.json")).unwrap();
@@ -541,7 +554,7 @@ mod tests{
   assert!(oracle.status.success(),"{}",String::from_utf8_lossy(&oracle.stderr));assert_eq!(oracle.stdout,expected.as_bytes());
   let source=IntrinsicSource;let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let mut cursor=BorrowedScalarRecordCursor::default();
   let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(10000);let mut output=Vec::new();let mut byte=[0u8;1];
-  control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+  with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
    for _ in 0..10000{let demand=cursor.next_output_byte_demand();let turn=cursor.advance(&source,schema,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if turn.complete{break}}
    assert!(cursor.is_complete());assert_eq!(output,expected.as_bytes());for _ in 0..10000{if cursor.close(control)?{break}}assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
   }).unwrap();
@@ -552,7 +565,7 @@ mod tests{
   fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{match path{[]=>Ok(V::Record(&[0])),[0] if self.paged=>Ok(V::IntrinsicBytesSource(&self.bytes)),[0]=>Ok(V::IntrinsicBytes(&self.bytes)),_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unexpected test path"))}}
  }
  #[test]
- fn scalar_intrinsic_bytes_match_owned_and_base64(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_intrinsic_bytes_match_owned_and_base64(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"data",H::Value)];
   let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🔮️bytes.json")).unwrap();
@@ -564,7 +577,7 @@ mod tests{
   for paged in [false,true]{
    let source=IntrinsicBytesSource{bytes:bytes.clone(),paged};let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let mut cursor=BorrowedScalarRecordCursor::default();
    let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(10000);let mut output=Vec::new();let mut byte=[0u8;1];
-   control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+   with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
     for _ in 0..10000{let demand=cursor.next_output_byte_demand();let turn=cursor.advance(&source,schema,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if turn.complete{break}}
     assert!(cursor.is_complete());assert_eq!(output,expected.as_bytes());for _ in 0..10000{if cursor.close(control)?{break}}assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
    }).unwrap();
@@ -572,12 +585,12 @@ mod tests{
  }
 
  #[test]
- fn scalar_bytes_cancel_inside_base64_and_resume(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+ fn scalar_bytes_cancel_inside_base64_and_resume(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
   use crate::BorrowedFieldSpec as F;
   const FIELDS:&[F]=&[F::new(0,"data",H::Bytes64)];
   let source=BytesSource{bytes:vec![1,2,3,255],paged:true};let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};
   let enabled=std::cell::Cell::new(true);let mut accept=|_|enabled.get();let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(10000);let mut cursor=BorrowedScalarRecordCursor::default();let mut output=Vec::new();let mut byte=[0u8;1];
-  control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+  with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
    for _ in 0..10000{let turn=cursor.advance(&source,schema,&mut byte,control).map_err(|failure|failure.reason)?;output.extend_from_slice(&byte[..turn.written_bytes]);if output.len()>=8{break}}
    assert_eq!(output.as_slice(),b"data=\"AQ");let before=cursor.emitted_bytes();let work=control.actual_work();enabled.set(false);
    let failure=cursor.advance(&source,schema,&mut byte,control).unwrap_err();assert_eq!(failure.reason.kind,ValueRefusalKind::Canceled);assert_eq!(failure.written_bytes,0);assert_eq!(cursor.emitted_bytes(),before);assert_eq!(control.actual_work(),work);enabled.set(true);

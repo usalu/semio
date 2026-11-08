@@ -18,6 +18,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
+semio-plugin-tool-machine = { path = "../../../../🛠️tool-machine/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { path = "../../../../../../../../🔨️modules/🛠️tool-machine/📦️packages/🦀️rust" }

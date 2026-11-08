@@ -163,17 +163,14 @@ impl FromValue for Dictionary {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let mut input=retirement::RetainedDictionaryInput::new(value);
         loop {
-            let copy=4096.max(input.next_copy_byte_demand().expect("cold dictionary input copy demand"));
-            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:input.next_capacity_byte_demand(copy).expect("cold dictionary input capacity demand"),maximum_release_bytes:input.next_release_byte_demand().expect("cold dictionary input release demand"),maximum_depth:input.next_depth_demand().expect("cold dictionary input depth demand")};
-            match input.step(grant) {
+            match retirement::cold_input_step(&mut input) {
                 Ok(retirement::DictionaryInputStep {dictionary:Some(dictionary),..})=>return Ok(dictionary),
+                Ok(step) if step.progress==semio_framework_value::retained_clone::RetainedCloneProgress::default()=>{input.cancel();while !input.terminal_is_empty() {retirement::cold_input_close(&mut input)?;}return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"typed input binding step made no progress"))},
                 Ok(_)=>{},
                 Err(error)=>{
                     input.cancel();
                     while !input.terminal_is_empty() {
-                        let copy=4096.max(input.next_close_copy_byte_demand().expect("cold input close copy demand"));
-                        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:input.next_close_capacity_byte_demand(copy).expect("cold input close capacity demand"),maximum_release_bytes:input.next_close_release_byte_demand().expect("cold input close release demand"),maximum_depth:input.next_close_depth_demand().expect("cold input close depth demand")};
-                        input.close_step(grant).expect("cold dictionary input closure");
+                        retirement::cold_input_close(&mut input)?;
                     }
                     return Err(error);
                 },

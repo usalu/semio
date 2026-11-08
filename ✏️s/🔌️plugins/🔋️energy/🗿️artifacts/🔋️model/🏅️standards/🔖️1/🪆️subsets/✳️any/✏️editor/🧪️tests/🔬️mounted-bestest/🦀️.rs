@@ -1,4 +1,4 @@
-//! 🪟️ Mounted editor pane laws over the bundled BESTEST case 600: it loads into the native owner, one action applies natively and undoes and redoes through history.
+//! 🪟️ Mounted editor pane laws over the bundled BESTEST case 600: it loads into the native owner, one action applies natively and undoes and redoes through history in en and de.
 #![cfg(test)]
 
 #[global_allocator]
@@ -9,7 +9,7 @@ use semio_plugin::artifact_app_laws as laws;
 use semio_plugin::{App, DslValue, EditorApp, MountedOwnerPolicyV1, PluginApp as _, VcsArtifactApp, ViewModel};
 use semio_ui_locale::{Locale, Terminology};
 use semio_s_artifact_energy_model_editor::{create_energy_model_editor, examples, EnergyModelEditor};
-use semio_s_artifact_energy_model_editor_commands::SET_NODE_ACTION_ID;
+use semio_s_artifact_energy_model_editor_commands::EnergyModelEditorCommand;
 use semio_s_artifact_energy_model_mutations::EnergyModelMutation;
 use semio_s_artifact_energy_model_snapshot::{EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio::SemioMembers;
@@ -44,16 +44,6 @@ fn model_name(pane: &Pane) -> String {
     pane.0.snapshot().expect("projection").model.read().name.clone()
 }
 
-async fn rename(pane: &mut Pane, name: &str) {
-    let args = DslValue::Object(vec![("id".to_string(), DslValue::String("name".to_string())), ("value".to_string(), DslValue::String(name.to_string()))]);
-    laws::dispatch_fixture_action(&mut pane.0, SET_NODE_ACTION_ID, Some(args), &laws::meta("local"), &mut laws::fixture_identity(), pane.1.cx(), MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the rename is admitted");
-    laws::settle_registered_typed_operation(&mut pane.0, laws::meta("local").instance_id, laws::fixture_mounted_policy(), &mut laws::fixture_identity(), pane.1.cx()).await.expect("the rename settles");
-}
-
-async fn history(pane: &mut Pane, verb: &str) {
-    laws::settle_history_verb(&mut pane.0, verb, laws::meta("local").instance_id, laws::fixture_mounted_policy(), &mut laws::fixture_identity(), pane.1.cx()).await;
-}
-
 async fn render(pane: &mut Pane, body_key: &str) -> String {
     laws::render_registered_fixture_app(&mut pane.0, body_key, &ViewModel::new(Locale::En, Terminology::Native), pane.1.cx()).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"))
 }
@@ -73,16 +63,18 @@ async fn the_bundled_bestest_case_loads_and_every_pane_body_renders() {
     laws::close_registered_fixture_app(&mut pane.0, laws::fixture_mounted_policy(), pane.1.cx()).expect("original caller paid app close");
 }
 
-/// ⚖️ LAW: one action edits the native document exactly once and history undoes and redoes it natively.
+/// ⚖️ LAW: one action edits the native document exactly once and history undoes, redoes and undoes it again natively, in en and de, with the artifact tree carrying that language's catalog strings.
 #[semio_framework_async_macros::async_test]
 async fn one_action_applies_natively_and_undoes_and_redoes() {
-    let mut pane = bestest_pane().await;
-    let original = model_name(&pane);
-    rename(&mut pane, "Mounted rename").await;
-    assert_eq!(model_name(&pane), "Mounted rename");
-    history(&mut pane, "undo").await;
-    assert_eq!(model_name(&pane), original);
-    history(&mut pane, "redo").await;
-    assert_eq!(model_name(&pane), "Mounted rename");
-    laws::close_registered_fixture_app(&mut pane.0, laws::fixture_mounted_policy(), pane.1.cx()).expect("original caller paid app close");
+    for locale in laws::PANE_SMOKE_LOCALES {
+        let mut scope = laws::OriginalFixtureScope::admit();
+        let mut app = laws::new_app_with_registry_and_members::<EditorApp<EnergyModelEditor>, SemioMembers>(manifest, ActorId(LOCAL_ACTOR_ID.into()), laws::fixture_mounted_policy(), &mut laws::fixture_identity()).await;
+        app.bind_instance_id(laws::meta("local").instance_id).await;
+        let language = laws::PaneSmokeLanguage { body_key: "energy.model.artifact", catalog: vec![semio_s_artifact_energy_model_editor_panels::artifact::site_label(locale).into()], view: ViewModel::new(locale, Terminology::Native) };
+        let example = EnergyModelEditorCommand::SetActiveExample { example_id: "bestest-600".into() };
+        let command = EnergyModelEditorCommand::SetStructureField { field: "name".into(), value: "Mounted rename".into() };
+        let (loaded, applied) = laws::assert_pane_smoke_by_example(&mut app, &language, example, command, |app| app.snapshot().expect("projection").model.read().name.clone(), laws::fixture_mounted_policy(), &mut laws::fixture_identity(), scope.cx()).await;
+        assert_eq!(loaded, semio_s_plugin_energy_engine_bestest::model("600").expect("case 600 is registered").name);
+        assert_eq!(applied, "Mounted rename");
+    }
 }

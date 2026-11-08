@@ -3,7 +3,7 @@
  * with the partner credits in its chrome. */
 // #endregion 🧲️Header
 
-import { mountUiRoot, useUiCallback as useCallback, useUiMemo as useMemo, useUiState as useState } from "@semio-tech/ui-react/runtime";
+import { mountUiRoot, useUiCallback as useCallback, useUiEffect as useEffect, useUiMemo as useMemo, useUiState as useState } from "@semio-tech/ui-react/runtime";
 import {
   LayeredOverview,
   Navbar,
@@ -36,8 +36,8 @@ import { DemonstratorCard } from "./⚛️demonstrator-card.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
 import { DemonstratorLocalePicker, DemonstratorLocaleSwitcher } from "./⚛️locale-picker.tsx";
 import { commitDemonstratorLocale, demonstratorUiLabel, readDemonstratorLocale } from "./🔨️modules/🌐️locale/⚛️.ts";
-import { type DemonstratorLocale } from "./🔨️modules/🌐️locale/🟦️.ts";
-import { DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_LOGO_SVG, ENTWERFEN_MIT_BESTAND_NAME, demonstratorGeneralIntroduction, demonstratorPaneBootVariants, demonstratorPaneViews, type DemonstratorPaneView } from "./🪧️brand.ts";
+import { demonstratorText, type DemonstratorLocale } from "./🔨️modules/🌐️locale/🟦️.ts";
+import { DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_LOGO_SVG, demonstratorGeneralIntroduction, demonstratorPaneBootVariants, demonstratorPaneViews, type DemonstratorPaneView } from "./🪧️brand.ts";
 import "./🎨️globals.css";
 
 // 🎪️ Page-owning (single React root, no `ShellScope` of its own) — plain browser storage is correct;
@@ -114,14 +114,24 @@ const demonstratorCardRenderer = (views: readonly DemonstratorPaneView[]) => (pa
 //#region 🎪️DemonstratorLanding
 function DemonstratorLanding() {
   const [locale, setLocale] = useState<DemonstratorLocale | undefined>(INITIAL_LOCALE);
+  const [picked, setPicked] = useState(false);
   const chooseLocale = useCallback((chosen: DemonstratorLocale) => {
     commitDemonstratorLocale(chosen);
     setLocale(chosen);
   }, []);
-  return locale === undefined ? <DemonstratorLocalePicker onChoose={chooseLocale} /> : <DemonstratorLocaleLanding locale={locale} onChooseLocale={chooseLocale} />;
+  const pickLocale = useCallback((chosen: DemonstratorLocale) => {
+    setPicked(true);
+    chooseLocale(chosen);
+  }, [chooseLocale]);
+  return locale === undefined ? <DemonstratorLocalePicker onChoose={pickLocale} /> : <DemonstratorLocaleLanding locale={locale} onChooseLocale={chooseLocale} focusHeading={picked} />;
 }
 
-function DemonstratorLocaleLanding({ locale, onChooseLocale }: { readonly locale: DemonstratorLocale; readonly onChooseLocale: (locale: DemonstratorLocale) => void }) {
+function DemonstratorLocaleLanding({ locale, onChooseLocale, focusHeading }: { readonly locale: DemonstratorLocale; readonly onChooseLocale: (locale: DemonstratorLocale) => void; readonly focusHeading: boolean }) {
+  useEffect(() => {
+    if (!focusHeading) return undefined;
+    const frame = requestAnimationFrame(() => document.querySelector<HTMLElement>('h1[data-slot="app-name"]')?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [focusHeading]);
   const views = useMemo(() => demonstratorPaneViews(locale), [locale]);
   const pages = useMemo(() => demonstratorPages(views, locale), [views, locale]);
   const renderCard = useMemo(() => demonstratorCardRenderer(views), [views]);
@@ -176,7 +186,7 @@ function DemonstratorLocaleLanding({ locale, onChooseLocale }: { readonly locale
         {revealed ? null : (
           <div className="pointer-events-none absolute inset-x-0 top-0 z-40">
             <Navbar
-              label={ENTWERFEN_MIT_BESTAND_NAME}
+              label={demonstratorText("demonstrator.brand.name", locale)}
               items={[
                 {
                   key: "logoAndTitle",
@@ -184,8 +194,8 @@ function DemonstratorLocaleLanding({ locale, onChooseLocale }: { readonly locale
                   content: (
                     <div className="flex min-w-0 shrink-0 items-center gap-single">
                       <ShellBrandLogo svg={ENTWERFEN_MIT_BESTAND_LOGO_SVG} className="size-workbench shrink-0" />
-                      <h1 data-slot="app-name" className="m-0 px-single text-sm font-semibold text-foreground">
-                        {ENTWERFEN_MIT_BESTAND_NAME}
+                      <h1 data-slot="app-name" tabIndex={-1} className="m-0 px-single focus:outline-none text-sm font-semibold text-foreground">
+                        {demonstratorText("demonstrator.brand.name", locale)}
                       </h1>
                     </div>
                   ),

@@ -111,9 +111,10 @@ impl RetainedKeyLookup {
         key: RetainedCloneRef<'_, String>,
         maximum_body_bytes: usize,
         maximum_work_units: u64,
-        grant: RetainedCloneGrant,
+        effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
     ) -> RetainedWorkOutcome<RetainedCloneStep, ValueError> {
-        let mut work = 0;
+        let grant = effect.grant();
+        let mut work: u128 = 0;
         let result = (|| {
             let demand = self.demand(rows, key, maximum_body_bytes, maximum_work_units)?;
             if self.result.is_some() {
@@ -124,16 +125,16 @@ impl RetainedKeyLookup {
                 return Ok(RetainedCloneStep::Progress(Default::default()));
             }
             if self.rows.is_none() {
-                let turn = rows.bind(&mut self.rows, grant);
+                let turn = rows.bind(&mut self.rows, effect);
                 work = turn.work;
                 return Ok(RetainedCloneStep::Progress(turn.result?.ok_or_else(|| invalid("key lookup row source was not captured"))?));
             }
             if self.key.is_none() {
-                let turn = key.bind(&mut self.key, grant);
+                let turn = key.bind(&mut self.key, effect);
                 work = turn.work;
                 return Ok(RetainedCloneStep::Progress(turn.result?.ok_or_else(|| invalid("key lookup query source was not captured"))?));
             }
-            work = selected;
+            work = u128::from(selected);
             let copied_bytes = if let Some(row) = rows.get().get(self.index) {
                 let current = row.retained_key().as_bytes();
                 let needle = key.get().as_bytes();
@@ -205,19 +206,21 @@ impl RetainedKeyLookup {
     }
 
     /// 🪜️ Returns one genuine alias and preserves the defining owner's work and failure receipt.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        let grant = effect.grant();
+        let done = |result| semio_framework_value::RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: 0 });
         if !self.closing {
-            return RetainedWorkOutcome { result: Err(invalid("key lookup closure not started").into()), work: 0 };
+            return done(Err(invalid("key lookup closure not started").into()));
         }
         let demand = match self.close_demand(grant.maximum_copy_bytes) {
             Ok(demand) => demand,
-            Err(error) => return RetainedWorkOutcome { result: Err(error.into()), work: 0 },
+            Err(error) => return done(Err(error.into())),
         };
         if !retained_clone_grant_admits(grant, demand) {
-            return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 };
+            return done(Ok(RetainedCloneStep::Progress(Default::default())));
         }
-        let turn = RetainedCloneBinding::close_one(if self.key.is_some() { &mut self.key } else { &mut self.rows }, grant);
-        RetainedWorkOutcome { result: turn.result.map(|step| if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }), work: turn.work }
+        let turn = RetainedCloneBinding::close_one(if self.key.is_some() { &mut self.key } else { &mut self.rows }, effect);
+        turn.map(|step| if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
 
     /// 🫙️ No original list or query alias remains.

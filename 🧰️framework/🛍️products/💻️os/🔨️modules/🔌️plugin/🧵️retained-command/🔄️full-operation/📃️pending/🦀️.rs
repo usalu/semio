@@ -2,13 +2,28 @@
 use super::result_page_wire::{PublicationWire,write_publication_raw_into};
 use semio_framework_actor::typed_operation_page::{TypedOperationResultToken,TypedOperationResultLane,TypedOperationResultPage,TYPED_OPERATION_RESULT_PAGE_BYTES,backing::OriginalResultPageBacking};
 use semio_framework_pack_json::JsonBorrowedSinkCursor;
-use semio_framework_value::{NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkPoll,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::NativeDecodeControl;
 use semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl;
-use semio_framework_value::native_encoding::{NativeEncodeProgress,NativeEncodeAllocationPort};
-trait PageEncodingReceiver{fn encode<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(NativeEncodeProgress)->bool,&mut NativeEncodeAllocationPort<'_>)->Result<T,E>)->Result<T,E>;}
-impl PageEncodingReceiver for NativeDecodeControl<'_>{fn encode<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(NativeEncodeProgress)->bool,&mut NativeEncodeAllocationPort<'_>)->Result<T,E>)->Result<T,E>{self.with_encoding_receiver(operation)}}
-impl PageEncodingReceiver for NativeRetirementDecodeControl<'_, '_>{fn encode<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(NativeEncodeProgress)->bool,&mut NativeEncodeAllocationPort<'_>)->Result<T,E>)->Result<T,E>{self.with_encoding_receiver(operation)}}
+use semio_framework_value::native_encoding::NativeEncodeProgress;
+use semio_framework_value_native_owned::native_decoding::{NativeCallFailure,NativeSendAllocationLoan};
+/// 🫴️ Runs one resident-frame original receiving turn and settles its pair before the caller sees any output.
+macro_rules! receive_page{($control:expr,$operation:expr)=>{{
+ let mut frame=None;let mut result=NativeCallFailure::<(),ValueError>{output:None,operation:None,context:None,receipt_refusal:None};
+ let run=$control.with_encoding_receiver(&mut frame,&mut result,|maximum,observer,allocation,_,_,output,failure|{match $operation(maximum,observer,allocation){Ok(())=>*output=Some(()),Err(error)=>*failure=Some(error)}});
+ let mut refusal=run.err();
+ if let Some(frame)=frame.as_mut(){
+  if let Err(error)=frame.settle_pair(){refusal.get_or_insert(error);}else{
+   match frame.take_allocation_failure(){Ok(failure)if failure.is_empty()=>{},Ok(_)=>{refusal.get_or_insert_with(invalid);},Err(error)=>{refusal.get_or_insert(error);}}
+   if let Err(error)=$control.release_encoding_receiver(frame){refusal.get_or_insert(error);}
+  }
+ }
+ let NativeCallFailure{output,operation,context,receipt_refusal}=result;
+ match operation.or(context).or(receipt_refusal).or(refusal){Some(error)=>Err(error),None=>output.ok_or_else(invalid)}
+}}}
+trait PageEncodingReceiver{fn encode(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(NativeEncodeProgress)->bool,&mut dyn NativeSendAllocationLoan)->Result<(),ValueError>)->Result<(),ValueError>;}
+impl PageEncodingReceiver for NativeDecodeControl<'_>{fn encode(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(NativeEncodeProgress)->bool,&mut dyn NativeSendAllocationLoan)->Result<(),ValueError>)->Result<(),ValueError>{receive_page!(self,operation)}}
+impl PageEncodingReceiver for NativeRetirementDecodeControl<'_, '_>{fn encode(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(NativeEncodeProgress)->bool,&mut dyn NativeSendAllocationLoan)->Result<(),ValueError>)->Result<(),ValueError>{receive_page!(self,operation)}}
 use semio_framework::kernel::UiDirtyScope;
 use std::mem::size_of;
 /// 🪪️ Already accepted semantic results retain only scalar intent, never borrowed producer pointers.
@@ -86,7 +101,7 @@ impl PendingPublicationPage{
   let demand=match self.write_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return PublicationPageWrite{written_bytes:0,progress,work:1,result:Err(PublicationPageWriteFailure{primary:Some(error),forwarding:None,context:None})}};
   if maximum_work==0||!fits(demand,grant){return PublicationPageWrite{written_bytes:0,progress,work,result:Ok(false)}}
   if self.written==TYPED_OPERATION_RESULT_PAGE_BYTES&&self.cursor.pending_bytes()!=0{self.refused=true;return PublicationPageWrite{written_bytes:0,progress:RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()},work:1,result:Err(PublicationPageWriteFailure{primary:Some(ValueError::literal(ValueRefusalKind::OwnershipLimit,"encoded result exceeds fixed original page backing")),forwarding:None,context:None})}}
-  let intent=self.plan.unwrap().intent;
+  let Some(plan)=self.plan else{return PublicationPageWrite{written_bytes:0,progress,work:1,result:Err(PublicationPageWriteFailure{primary:Some(invalid()),forwarding:None,context:None})}};let intent=plan.intent;
   let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-metadata(),..grant};
   let bridge=decode.encode(|remaining,observer,allocation|{
    let mut control=NativeEncodeControl::new_forwarded(remaining,observer,allocation);
@@ -102,7 +117,7 @@ impl PendingPublicationPage{
     (PublicationPageIntent::Raw{..},_)=>{work=1;primary=Some(invalid());},
     _=>{
      work=1;let wire=match intent.wire(source){Ok(wire)=>wire,Err(error)=>{primary=Some(error);return Ok(())}};let output=&mut self.backing.initialized_bytes().ok_or_else(invalid)?[self.written..];
-     let turn=self.cursor.step(&wire,output,child,maximum_work,&mut control);work=turn.work;
+     let turn=self.cursor.step(&wire,output,child,maximum_work,&mut control);work=u64::try_from(turn.work).unwrap_or(u64::MAX);
      match turn.result{Ok(step)=>{progress=step.progress;if step.written_bytes!=0{self.written+=step.written_bytes;}if step.complete{self.framed=true;}},Err(error)=>{progress=error.retained_progress();self.written=self.cursor.written_bytes();primary=Some(error);}}
      progress.copied_bytes+=usize::from(self.written!=before)*size_of::<usize>()+usize::from(self.framed!=was_framed)*size_of::<bool>();
     }
@@ -120,11 +135,14 @@ impl PendingPublicationPage{
   let checked=(||{let PublicationPageIntent::Raw{reason,..}=self.plan.ok_or_else(invalid)?.intent else{return Err(invalid())};let PublicationPageSource::Raw{reason:actual,bytes}=source else{return Err(invalid())};if reason!=*actual||bytes.len()>TYPED_OPERATION_RESULT_PAGE_BYTES{return Err(invalid())}Ok(*bytes)})();
   let bytes=match checked{Ok(bytes)=>bytes,Err(error)=>{self.refused=true;return PublicationPageWrite{written_bytes:0,progress:RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()},work:1,result:Err(PublicationPageWriteFailure{primary:Some(error),forwarding:None,context:None})}}};
   let count=bytes.len().saturating_sub(self.written).min(64).min(grant.maximum_copy_bytes-metadata());
-  let before=self.framed;self.backing.initialized_bytes().expect("quoted initialized raw backing")[self.written..self.written+count].copy_from_slice(&bytes[self.written..self.written+count]);self.written+=count;self.framed=self.written==bytes.len();
+  let before=self.framed;let start=self.written;let end=start+count;
+  let copied=self.backing.initialized_bytes().and_then(|out|out.get_mut(start..end)).zip(bytes.get(start..end)).map(|(out,source)|out.copy_from_slice(source)).is_some();
+  if !copied{self.refused=true;return PublicationPageWrite{written_bytes:0,progress:RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()},work:1,result:Err(PublicationPageWriteFailure{primary:Some(invalid()),forwarding:None,context:None})}}
+  self.written+=count;self.framed=self.written==bytes.len();
   PublicationPageWrite{written_bytes:count,progress:RetainedCloneProgress{copied_items:1,copied_bytes:count+usize::from(count!=0)*size_of::<usize>()+usize::from(before!=self.framed)*size_of::<bool>(),..Default::default()},work:1,result:Ok(self.framed)}
  }
  pub fn traversal_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.framed{return Err(invalid())}self.cursor.close_demands(body)}
- pub fn close_traversal(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>{if !self.framed{return RetainedWorkOutcome{work:0,result:Err(invalid())}}self.cursor.close_step(grant)}
+ pub fn close_traversal(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{if !self.framed{return RetainedWorkPoll::Complete(RetainedWorkOutcome{work:0,result:Err(invalid().into())})}self.cursor.close_step(effect)}
  pub fn handoff_demands(&self)->Result<RetirementDemand,ValueError>{
   if !self.ready_to_handoff(){return Err(invalid())}
   let mut d=self.backing.page_demands()?;d.copy_bytes+=size_of::<Option<PublicationPagePlan>>()+metadata();Ok(d)
@@ -132,7 +150,7 @@ impl PendingPublicationPage{
  /// 📤️ Uses the frozen token rather than any later document generation or cancellation state.
  pub fn take_page(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(TypedOperationResultPage,RetainedCloneProgress)>>{
   let d=match self.handoff_demands(){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{work:0,result:Err(error)}};if !fits(d,grant){return RetainedWorkOutcome{work:0,result:Ok(None)}}
-  let plan=self.plan.unwrap();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Option<PublicationPagePlan>>()-metadata(),..grant};
+  let Some(plan)=self.plan else{return RetainedWorkOutcome{work:0,result:Err(invalid())}};let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Option<PublicationPagePlan>>()-metadata(),..grant};
   let turn=self.backing.take_page(plan.token,plan.intent.lane(),self.written,child);
   let result=turn.result.map(|page|page.map(|(page,mut p)|{self.plan=None;self.written=0;self.framed=false;self.refused=false;p.copied_bytes+=size_of::<Option<PublicationPagePlan>>()+metadata();(page,p)}));
   RetainedWorkOutcome{work:turn.work,result}
@@ -142,13 +160,15 @@ impl PendingPublicationPage{
   if !self.backing.terminal_is_empty(){return self.backing.close_demands(body)}
   Ok(if self.plan.is_some(){RetirementDemand{copy_bytes:size_of::<Option<PublicationPagePlan>>()+metadata(),depth:1,..Default::default()}}else{Default::default()})
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>{
-  if !self.cursor.terminal_is_empty(){return self.cursor.close_step(grant)}
-  if !self.backing.terminal_is_empty(){return self.backing.close_step(grant)}
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep>{
+  let grant=effect.grant();
+  if !self.cursor.terminal_is_empty(){return match self.cursor.close_step(effect){semio_framework_value::RetainedWorkPoll::Complete(turn)=>RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(|failure|failure.into_value_error())},semio_framework_value::RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{work,result:Ok(RetainedCloneStep::Progress(Default::default()))}}}
+  if !self.backing.terminal_is_empty(){return self.backing.close_step(effect)}
   let d=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{work:0,result:Err(error)}};
   if self.plan.is_none(){return RetainedWorkOutcome{work:0,result:Ok(RetainedCloneStep::Complete(Default::default()))}}
   if !fits(d,grant){return RetainedWorkOutcome{work:0,result:Ok(RetainedCloneStep::Progress(Default::default()))}}
-  self.plan=None;self.written=0;self.framed=false;self.refused=false;RetainedWorkOutcome{work:1,result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+  match effect.performed(1){Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{work:effect.performed_work(),result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"pending publication close exceeds its effect quote"))},Err(error)=>return RetainedWorkOutcome{work:effect.performed_work(),result:Err(error)}}
+  self.plan=None;self.written=0;self.framed=false;self.refused=false;RetainedWorkOutcome{work:effect.performed_work(),result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
  }
 }
 impl Drop for PendingPublicationPage{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"pending result intent and partial page require funded handoff or closure")}}

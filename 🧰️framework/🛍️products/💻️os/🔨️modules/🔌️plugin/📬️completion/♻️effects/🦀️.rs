@@ -1,23 +1,24 @@
 //! 📤️ Known host effect fields keep original typed owners through exact deferred retirement.
 use semio_framework::Effect;
-use semio_framework_value::{retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::RetainedCloneGrant};
+use semio_framework_value::{retirement::{RetireOwned,RetirementCursor,RetirementStep},RetainedAllocationEffect};
 use std::mem::ManuallyDrop;
 pub struct CompletionEffect(pub Effect);
 macro_rules! birth{($($value:expr),*$(,)?)=>{semio_framework_value::retirement::sequence_birth_bytes(&[$(semio_framework_value::retirement::deferred_birth_bytes_for($value)),*])};}
-macro_rules! sequence{($($value:expr),*$(,)?)=>{semio_framework_value::retirement::sequence(vec![$(semio_framework_value::retirement::deferred($value)),*])};}
+macro_rules! sequence{($($value:expr),*$(,)?)=>{semio_framework_value::retirement::sequence(vec![$(Box::new(semio_framework_value::retirement::deferred($value))as Box<dyn RetirementCursor>),*])};}
 impl CompletionEffect{pub fn supported(effect:&Effect)->bool{matches!(effect,Effect::Notify{..}|Effect::Navigate{..}|Effect::LoadDocument{..}|Effect::OpenExternalUrl{..}|Effect::SetPanel{..}|Effect::DownloadMediaExport{..}|Effect::RequestFileOpen{..}|Effect::SetActiveUtility{..}|Effect::SetActiveTool{..}|Effect::OpenDialog{..}|Effect::DispatchAction{..}|Effect::ReplayShellCommand{..}|Effect::ClipboardWrite{..})}}
 impl CompletionEffect{pub fn original_birth(effect:&Effect)->Option<usize>{match effect{Effect::Notify{message}=>birth!(message),Effect::Navigate{uri}=>birth!(uri),Effect::LoadDocument{pack,spr}=>birth!(pack,spr),Effect::OpenExternalUrl{url}=>birth!(url),Effect::SetPanel{panel_json}=>birth!(panel_json),Effect::DownloadMediaExport{filename,mime_type,data,encoding}=>birth!(filename,mime_type,data,encoding),Effect::RequestFileOpen{req,accept,read_as,import_action,args,multiple}=>birth!(&req.0,accept,read_as,import_action,args,multiple),Effect::SetActiveUtility{window_id,utility_id}=>birth!(window_id,utility_id),Effect::SetActiveTool{tool_id}=>birth!(tool_id),Effect::OpenDialog{req,dialog_id,args}=>birth!(&req.0,dialog_id,args),Effect::DispatchAction{req,action,args,delay_ms}=>birth!(&req.0,action,args,delay_ms),Effect::ReplayShellCommand{action_id,args}=>birth!(action_id,args),Effect::ClipboardWrite{fragment}=>birth!(fragment),_=>None}}}
 struct Unsupported{original:ManuallyDrop<Effect>}
 impl RetirementCursor for Unsupported{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original effect has no exact completion retirement facet"))}
 
- fn close_step(&mut self,_grant:RetainedCloneGrant)->RetirementStep{RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original effect has no exact completion retirement facet"),0)}
+ fn close_step(&mut self,_effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original effect has no exact completion retirement facet").into(),0)}
  fn terminal_is_empty(&self)->bool{false}
  fn next_birth_bytes(&self,_copy:usize)->Option<usize>{None}
 }
 impl Drop for Unsupported{fn drop(&mut self){assert!(std::thread::panicking(),"unsupported original host effect lost retained custody");}}
 impl RetireOwned for CompletionEffect{
- fn retirement(self)->Box<dyn RetirementCursor>{match self.0{Effect::Notify{message}=>sequence!(message),
+ type RetirementCursor=Box<dyn RetirementCursor>;
+ fn retirement_seed(self)->Self::RetirementCursor{match self.0{Effect::Notify{message}=>sequence!(message),
 Effect::Navigate{uri}=>sequence!(uri),
 Effect::LoadDocument{pack,spr}=>sequence!(pack,spr),
 Effect::OpenExternalUrl{url}=>sequence!(url),

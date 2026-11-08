@@ -68,6 +68,9 @@ mod bulk_vec_tests;
 pub(crate) use semio_framework_value_clone_source_testing::{FixtureSource,FixtureSourceBirth};
 
 #[cfg(test)]
+#[path="🧪️tests/⏱️effect/🦀️.rs"]
+mod effect;
+#[cfg(test)]
 #[path="🧪️tests/♻️close/🦀️.rs"]
 mod original_close_frame_tests;
 
@@ -103,6 +106,16 @@ fn allocate_clone_storage<T>(effect:&mut RetainedAllocationEffect<'_>)->Result<B
  let layout=std::alloc::Layout::new::<T>();if layout.size()==0{return Ok(Box::new(std::mem::MaybeUninit::uninit()))}if effect.actual().is_some(){return Err(ValueError::invariant("original allocation attempt is occupied"))}let pointer=unsafe{std::alloc::alloc(layout)};*effect.actual()=Some(if pointer.is_null(){0}else{layout.size()});if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"retained clone storage allocation failed"))}Ok(unsafe{Box::from_raw(pointer.cast::<std::mem::MaybeUninit<T>>())})
 }
 
+/// 🧷️ An advance outcome cannot carry an unresolved producer reply, so a child scaffold close that left its reply pending refuses typed.
+/// 🧮️ Narrows the u128 work already spent in a step to the u64 limit arithmetic of its original quote.
+pub fn spent(work:u128)->u64{u64::try_from(work).unwrap_or(u64::MAX)}
+pub fn settle_child_close(poll:crate::OriginalRetirementPoll)->crate::OriginalRetirementOutcome{match poll{crate::RetainedWorkPoll::Complete(turn)=>turn,crate::RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original child close left its producer reply pending inside advance").into()),work}}}
+/// 📤️ Moves a child's ready output into its parent slot under one nested effect; the child's own take records its work in that effect.
+pub fn take_child_output<T:RetainedClone>(child:&mut impl RetainedCloneCursor<T>,slot:&mut Option<T>,grant:RetainedCloneGrant,effect:&mut crate::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+ let mut reply_slot=None;{let reply=crate::OriginalEffectReply::borrow(&mut reply_slot)?;child.take(slot,&mut effect.nested(grant),reply)?;}
+ let step=reply_slot.take().ok_or_else(||ValueError::invariant("child take left no reply"))??;
+ Ok(if slot.is_some(){Some(step.progress())}else{None})
+}
 fn child_close_start_demand<T:RetainedClone>(child:&impl RetainedCloneCursor<T>)->Result<RetirementDemand,ValueError>{if child.close_started(){Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})}else{child.begin_close_demand()}}
 fn child_close_start_work<T:RetainedClone>(child:&impl RetainedCloneCursor<T>)->Result<u64,ValueError>{if child.close_started(){Ok(1)}else{child.begin_close_work_demand()}}
 fn start_child_close<T:RetainedClone>(child:&mut impl RetainedCloneCursor<T>,started:&mut bool,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>{if !child.close_started(){return child.begin_close_paid(effect)}crate::start_retained_close(started,effect)}

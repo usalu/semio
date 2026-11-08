@@ -76,6 +76,23 @@ export function cargoLockManifestsV1(workspaceRoot:string,members:readonly strin
  return[...seen,...policy.extraInputs.map(name=>join(workspaceRoot,name))].filter(path=>existsSync(path)).sort();
 }
 
+/** 🧹️ Drops the duplicate package rows of a lockfile text: a repeated registry row keeps its first copy, a repeated path row loses every copy because Cargo regenerates it from the manifests. Returns the repaired text and the dropped names, or null text when nothing was repeated.
+ * @see https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html */
+export function cargoLockDeduplicatedV1(content:string):Readonly<{text:string|null;dropped:readonly string[]}>{
+ const parts=content.split(/^(?=\[\[package\]\]$)/mu),field=(part:string,key:string):string=>new RegExp("^"+key+" = \"([^\"]*)\"$","mu").exec(part)?.[1]??"";
+ const identity=(part:string):string|null=>part.startsWith("[[package]]")?JSON.stringify([field(part,"name"),field(part,"version"),field(part,"source")]):null;
+ const counts=new Map<string,number>();for(const part of parts){const key=identity(part);if(key!==null)counts.set(key,(counts.get(key)??0)+1);}
+ const seen=new Set<string>(),dropped=new Set<string>();
+ const kept=parts.filter(part=>{const key=identity(part);if(key===null||counts.get(key)===1)return true;dropped.add(field(part,"name"));if(JSON.parse(key)[2]===""||seen.has(key))return false;seen.add(key);return true;});
+ return Object.freeze({text:dropped.size?kept.join(""):null,dropped:Object.freeze([...dropped].sort())});
+}
+/** 🩹️ Rewrites the lockfile atomically without its duplicate package rows so that Cargo can parse and refresh it again. */
+function repairCargoLockV1(path:string):readonly string[]{
+ let content:string;try{content=readFileSync(path,"utf8");}catch{return[];}
+ const {text:repaired,dropped}=cargoLockDeduplicatedV1(content);if(repaired===null)return[];
+ const temporary=path+"."+randomBytes(6).toString("hex");writeFileSync(temporary,repaired);renameSync(temporary,path);return dropped;
+}
+
 const probe=(manifest:string):string[]=>["update","--workspace","--locked","--offline","--manifest-path",manifest];
 const detail=(run:CargoLockRunV1):string=>{const line=(run.stderr+"\n"+run.stdout).split("\n").find(row=>row.startsWith("error"))??"";return boundedDiagnosticV1(line,policy.detailCharacters,1);};
 
@@ -101,6 +118,7 @@ export async function ensureCargoLockV1(request:CargoLockRequestV1,port:CargoLoc
  };
  const refresh=async():Promise<CargoLockOutcomeV1>=>{
   if(!request.force&&current())return"current";
+  const dropped=repairCargoLockV1(join(workspace,"Cargo.lock"));if(dropped.length)port.report(text("deduplicated",request.language,{workspace,count:dropped.length}));
   const first=await port.run(probe(manifest));if(first.status===0){await record();return"current";}
   port.report(text("refreshing",request.language,{workspace}));
   let update=await port.run(["update","--workspace","--offline","--manifest-path",manifest]);

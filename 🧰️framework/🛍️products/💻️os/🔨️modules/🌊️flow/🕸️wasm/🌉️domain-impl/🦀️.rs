@@ -2,6 +2,9 @@
 
 use super::*;
 
+/// ⛽️ Work one ABI-budgeted host close step may spend inside its own explicit authoring wallet.
+const FLOW_DOMAIN_HOST_CLOSE_STEP_WORK:u64=64;
+
 impl FlowDomain for FlowDomainAdapter {
     fn bind_session(&mut self, session: semio_framework_abi::AbiHandle) {
         self.vcs = Some(FlowRetainedVcs::new(semio_framework_artifact_flow_flow::artifact::FlowHostSnapshot::default(), session.generation(), 0, 0));
@@ -75,7 +78,8 @@ impl FlowDomain for FlowDomainAdapter {
             FlowDomainHost::Open(_)=>Err(flow_close_failure(AbiErrorCode::Busy)),
             FlowDomainHost::Closing(host)=>{
                 if host.terminal_is_empty(){self.host=FlowDomainHost::Closed;return Ok(RetainedCloneStep::Complete(inline))}
-                let step=host.close_step(child.retained).map_err(flow_close_value_failure)?;
+                let mut wallet=semio_framework_value::AuthoringWallet::new(child.retained,u128::from(FLOW_DOMAIN_HOST_CLOSE_STEP_WORK));
+                let step=match wallet.run(child.retained,FLOW_DOMAIN_HOST_CLOSE_STEP_WORK,|effect|host.close_step(effect)).map_err(flow_close_value_failure)?{Some(done)=>done.output.map_err(flow_close_value_failure)?,None=>RetainedCloneStep::Progress(Default::default())};
                 let step=admit_retained_clone_close(child.retained,step,host.terminal_is_empty(),"original Flow domain host").map_err(flow_close_value_failure)?;
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }

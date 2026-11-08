@@ -2,6 +2,12 @@ use semio_framework_3d::mesh::*;
 use std::collections::{BTreeMap,HashMap,HashSet};
 use semio_framework_value::{ToValue,FromValue};
 
+/// 🏁️ Drives a surface job to its output through public steps; the kernel's own cold driver is private.
+trait FinishDrained{fn finish_drained(self)->MeshResult<HalfedgeMesh>;}
+impl FinishDrained for MeshSurfaceJob{fn finish_drained(mut self)->MeshResult<HalfedgeMesh>{
+    loop{match self.step(1024)?{MeshModelingStep::Working(_)=>{},MeshModelingStep::Done(mesh)=>return Ok(mesh),MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("operation cancelled".into()))}}
+}}
+
 fn drain(mut job: MeshSurfaceJob, budget: usize) -> (HalfedgeMesh, Vec<usize>) {
     let mut done = Vec::new();
     loop {
@@ -55,7 +61,7 @@ fn shading_job_marks_faces_and_rebuilds_vertex_normals_in_bounded_units() {
         assert!(normal.length() > 0.99);
     }
     assert!(matches!(icosahedron.set_shading_job(&[], true), Err(MeshKernelError::EmptySelection)));
-    assert_eq!(icosahedron.set_shading_job(&[FaceId(9999)], true).unwrap().finish_with_progress().unwrap_err(), MeshKernelError::InvalidHandle);
+    assert_eq!(icosahedron.set_shading_job(&[FaceId(9999)], true).unwrap().finish_drained().unwrap_err(), MeshKernelError::InvalidHandle);
 }
 
 #[test]
@@ -79,7 +85,7 @@ fn seam_job_marks_an_edge_and_its_twin_as_one_seam() {
     let (cleared, _) = drain(marked.set_uv_seams_job(&[EdgeId(0)], false).unwrap(), 5);
     assert!(!cleared.is_uv_seam(EdgeId(0)) && !cleared.is_uv_seam(EdgeId(twin)));
     assert!(matches!(mesh.set_uv_seams_job(&[], true), Err(MeshKernelError::EmptySelection)));
-    assert_eq!(mesh.set_uv_seams_job(&[EdgeId(10_000)], true).unwrap().finish_with_progress().unwrap_err(), MeshKernelError::InvalidHandle);
+    assert_eq!(mesh.set_uv_seams_job(&[EdgeId(10_000)], true).unwrap().finish_drained().unwrap_err(), MeshKernelError::InvalidHandle);
 }
 
 #[test]

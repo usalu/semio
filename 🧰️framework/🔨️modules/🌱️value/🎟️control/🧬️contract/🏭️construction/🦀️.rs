@@ -62,6 +62,8 @@ impl<P:OriginalConstructionRecipient> OriginalConstructionAuthority<P>{
  pub fn with_loan<'turn,'source,R>(&mut self,context:&mut P::Context<'turn,'source>,operation:impl FnOnce(&mut OriginalConstructionLoan<'_>)->R)->Result<R,ValueError> where 'source:'turn{self.recipient.validate_context(context)?;let source_turn=self.recipient.source_turn(context);let mut dispatch=ConstructionDispatch{producer:&mut self.recipient,context,source_turn};let mut loan=self.issuer.loan(&mut dispatch,source_turn);Ok(operation(&mut loan))}
  /// 👁️ Borrows an immutable projection of the actual resident producer.
  pub fn inspect<R>(&self,query:impl FnOnce(&P)->R)->R{query(&self.recipient)}
+ /// ⏳️ Observes whether the resident issuer retains any live action.
+ pub fn has_live_actions(&self)->bool{self.issuer.outstanding!=0}
  /// 🫴️ Returns the original producer only after all its actions have returned.
  pub fn into_recipient(self)->Result<P,Self>{if self.issuer.outstanding!=0{return Err(self)}Ok(self.recipient)}
 }

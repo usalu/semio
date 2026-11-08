@@ -37,9 +37,10 @@ struct PageSlot{page:Option<TypedOperationResultPage>,delivery:Option<ResultPage
 impl PageSlot{
  fn empty(&self)->bool{self.page.is_none()&&self.delivery.is_none()&&self.receiver.is_none()&&self.publication.is_none()&&self.refused.is_none()}
  fn transfer_bytes()->usize{size_of::<Option<ResultPageDelivery>>()+size_of::<Option<ResultPageWireReceiver>>()}
- fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-  if let Some(receiver)=self.receiver.as_mut(){return receiver.advance(grant).map(RetainedCloneStep::progress)}
-  if let Some(delivery)=self.delivery.as_mut(){if !delivery.ready(){return delivery.advance(grant).map(RetainedCloneStep::progress)}}
+ fn advance(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
+  let grant=effect.grant();
+  if let Some(receiver)=self.receiver.as_mut(){return receiver.advance(effect).map(RetainedCloneStep::progress)}
+  if let Some(delivery)=self.delivery.as_mut(){if !delivery.ready(){return delivery.advance(effect).map(RetainedCloneStep::progress)}}
   let parent=Self::transfer_bytes();if grant.maximum_items==0||grant.maximum_copy_bytes<parent||grant.maximum_depth==0{return Ok(Default::default())}
   let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent,..grant};
   let progress=if self.delivery.is_some(){match ResultPageWireReceiver::capture(&mut self.delivery,child)?{Some((receiver,p))=>{self.receiver=Some(receiver);p},None=>return Ok(Default::default())}}else if self.page.is_some(){match ResultPageDelivery::capture(&mut self.page,child)?{Some((delivery,p))=>{self.delivery=Some(delivery);p},None=>return Ok(Default::default())}}else{return Ok(Default::default())};
@@ -48,11 +49,12 @@ impl PageSlot{
  fn ready(&self)->bool{self.receiver.as_ref().is_some_and(ResultPageWireReceiver::ready)}
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{let mut d=self.receiver.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Reactor receiving cursor is absent"))?.take_demand()?;d.copy_bytes+=size_of::<Option<ResultPageWireReceiver>>();Ok(d)}
  fn take(&mut self,grant:RetainedCloneGrant)->Result<Option<(Vec<u8>,RetainedCloneProgress)>,ValueError>{let d=self.take_demand()?;if !fits(d,grant){return Ok(None)}let parent=size_of::<Option<ResultPageWireReceiver>>();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent,..grant};let Some((wire,mut p))=self.receiver.as_mut().unwrap().take_wire(child)?else{return Ok(None)};self.receiver=None;p.copied_bytes+=parent;Ok(Some((wire,p)))}
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+ fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
+  let grant=effect.grant();
   let parent=Self::transfer_bytes()+size_of::<Option<Effect>>();if grant.maximum_items==0||grant.maximum_copy_bytes<parent||grant.maximum_depth==0{return Ok(Default::default())}let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent,..grant};
   if self.publication.is_some(){let Effect::SendMessage{target:MessageEndpoint::Shell{instance},payload}=self.publication.take().unwrap()else{unreachable!("original receiving publishes only a typed Shell destination")};self.refused=Some(ControlledRetirement::new((instance.0,payload)).unwrap_or_else(|_|unreachable!("original native destination fields declare controlled retirement")));return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:parent,..Default::default()})}
-  if let Some(owner)=self.refused.as_mut(){let p=owner.step(child)?.progress();if owner.terminal_is_empty(){self.refused=None;return Ok(RetainedCloneProgress{copied_items:p.copied_items.max(1),copied_bytes:p.copied_bytes+parent,..p})}return Ok(p)}
-  let(p,cleared)=if let Some(owner)=self.receiver.as_mut(){owner.begin_close();let p=owner.close_step(child)?.progress();let empty=owner.terminal_is_empty();if empty{self.receiver=None;}(p,empty)}else if let Some(owner)=self.delivery.as_mut(){owner.begin_close();let p=owner.close_step(child)?.progress();let empty=owner.terminal_is_empty();if empty{self.delivery=None;}(p,empty)}else if let Some(owner)=self.page.as_mut(){let p=owner.close_step(child)?.progress();let empty=owner.terminal_is_empty();if empty{self.page=None;}(p,empty)}else{return Ok(Default::default())};
+  if let Some(owner)=self.refused.as_mut(){let p=semio_framework_actor::typed_operation_page::poll_step(owner.step(&mut effect.nested(child)))?.progress();if owner.terminal_is_empty(){self.refused=None;return Ok(RetainedCloneProgress{copied_items:p.copied_items.max(1),copied_bytes:p.copied_bytes+parent,..p})}return Ok(p)}
+  let(p,cleared)=if let Some(owner)=self.receiver.as_mut(){owner.begin_close();let p=owner.close_step(&mut effect.nested(child))?.progress();let empty=owner.terminal_is_empty();if empty{self.receiver=None;}(p,empty)}else if let Some(owner)=self.delivery.as_mut(){owner.begin_close();let p=owner.close_step(&mut effect.nested(child))?.progress();let empty=owner.terminal_is_empty();if empty{self.delivery=None;}(p,empty)}else if let Some(owner)=self.page.as_mut(){let p=owner.close_step(&mut effect.nested(child))?.progress();let empty=owner.terminal_is_empty();if empty{self.page=None;}(p,empty)}else{return Ok(Default::default())};
   Ok(if cleared{RetainedCloneProgress{copied_items:p.copied_items.max(1),copied_bytes:p.copied_bytes+parent,..p}}else{p})
  }
 }
@@ -67,14 +69,14 @@ impl NativeResultPages{
   for slot in self.slots.iter_mut().filter(|slot|slot.empty()){
    for _ in 0..2{
     let parent=size_of::<Option<TypedOperationResultPage>>();let grant=cx.retained_grant();let mut demand=app.typed_operation_result_page_demands(instance)?;if demand==RetirementDemand::default(){return Ok(admitted)}demand.copy_bytes=demand.copy_bytes.checked_add(parent).ok_or_else(||plugin_internal_fault("original page handoff quote overflows"))?;if !fits(demand,grant){return Ok(admitted)}let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent,..grant};
-    let(page,mut progress)=app.take_typed_operation_result_page(instance,child)?;
+    let Some((taken,performed))=cx.with_original_effect(child,|_,effect|app.take_typed_operation_result_page(instance,effect)).map_err(|e|plugin_internal_fault(e.into_message()))?else{return Ok(admitted)};cx.consume_work(performed);let(page,mut progress)=taken?;
     if let Some(page)=page{slot.page=Some(page);progress.copied_bytes+=parent;progress.copied_items=progress.copied_items.max(1);admitted+=1;cx.consume_retained(progress).map_err(|e|plugin_internal_fault(e.into_message()))?;break}
     cx.consume_retained(progress).map_err(|e|plugin_internal_fault(e.into_message()))?;if progress==RetainedCloneProgress::default(){return Ok(admitted)}
    }
   }
   Ok(admitted)
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{match self.slots.iter_mut().find(|slot|!slot.empty()){Some(slot)=>slot.close_step(grant),None=>Ok(Default::default())}}
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{match self.slots.iter_mut().find(|slot|!slot.empty()){Some(slot)=>slot.close_step(effect),None=>Ok(Default::default())}}
 }
 
 /// 🎛️ Each destination action consumes the same caller receipt before any renderer effect becomes visible.
@@ -87,7 +89,7 @@ pub fn plugin_drive_result_pages<PA:PluginApp>(runtime:&PluginRuntime<PA>,effect
   for slot in &mut pages.slots{
    for _ in 0..TYPED_OPERATION_UNITS_PER_TURN{
     if slot.empty(){break}if slot.publication.is_some()||slot.refused.is_some()||cx.should_yield(){pending=true;break}
-    let result=if slot.ready(){publish(slot,id,effects,maximum_effects,cx)}else{let grant=cx.retained_grant();slot.advance(grant).map(|p|(false,p))};
+    let result=if slot.ready(){publish(slot,id,effects,maximum_effects,cx)}else{let grant=cx.retained_grant();match cx.with_original_effect(grant,|_,effect|slot.advance(effect)){Ok(Some((advanced,performed)))=>{cx.consume_work(performed);advanced.map(|p|(false,p))},Ok(None)=>Ok((false,Default::default())),Err(error)=>Err(error)}};
     match result{Ok((published,p))=>{cx.consume_retained(p).map_err(|e|plugin_internal_fault(e.into_message()))?;if published{effects.push(slot.publication.take().expect("accepted original publication remains in its receiving owner"))}if p==RetainedCloneProgress::default(){pending=true;break}},Err(error)=>{cx.consume_retained(error.retained_progress()).map_err(|e|plugin_internal_fault(e.into_message()))?;return Err(plugin_internal_fault(error.into_message()))}}
    }
   }

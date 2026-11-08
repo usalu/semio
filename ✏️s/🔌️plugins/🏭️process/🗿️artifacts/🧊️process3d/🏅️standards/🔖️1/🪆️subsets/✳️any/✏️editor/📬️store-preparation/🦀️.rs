@@ -128,7 +128,75 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMutation> for Process3dConfigStorePreparation {
-    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
+        self.advance_inner(grant).map_err(Into::into)
+    }
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
+    }
+
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Process3dConfig, Process3dConfigMutation>> {
+        self.owners.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Process3dConfig, Process3dConfigMutation>> {
+        self.owners.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn has_pending_receiving_recovery(&self) -> bool {
+        false
+    }
+
+    fn pending_receiving_demand(&self) -> Option<semio_framework_value::RetirementDemand> {
+        None
+    }
+
+    fn pending_receiving_recovery(&mut self) -> Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>> {
+        None
+    }
+
+    fn finish_receiving_recovery(&mut self, _: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::OriginalReceivingPrimary> {
+        semio_framework_value::RetainedWorkOutcome { result: Ok(Default::default()), work: 0 }
+    }
+
+    fn begin_close(&mut self) {
+        self.owners.begin_close();
+    }
+
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+        self.owners.close_step(grant.retained_grant()).map_err(Into::into)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.depth)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.owners.terminal_is_empty()
+    }
+
+impl Process3dConfigStorePreparation {
+    fn advance_inner(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
         self.last_work = 0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
@@ -171,53 +239,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Proc
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
     }
 
-    fn last_turn_work(&self) -> u64 {
-        self.last_work
-    }
-
-    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-
-    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Process3dConfig, Process3dConfigMutation>> {
-        self.owners.prepared.as_ref()
-    }
-
-    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Process3dConfig, Process3dConfigMutation>> {
-        self.owners.prepared.take()
-    }
-
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-
-    fn begin_close(&mut self) {
-        self.owners.begin_close();
-    }
-
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
-        self.owners.close_step(grant.retained_grant())
-    }
-
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.owners.close_demands(0)?.copy_bytes)
-    }
-
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes)
-    }
-
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.owners.close_demands(0)?.release_bytes)
-    }
-
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.owners.close_demands(0)?.depth)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.owners.terminal_is_empty()
-    }
+}
 }
 //#endregion 📬️ConfigStorePreparation
 
@@ -478,7 +500,75 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation> for Process3dArtifactPreparation {
-    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
+        self.advance_inner(grant).map_err(Into::into)
+    }
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
+    }
+
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Process3dSnapshot, Process3dMutation>> {
+        self.owners.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Process3dSnapshot, Process3dMutation>> {
+        self.owners.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn has_pending_receiving_recovery(&self) -> bool {
+        false
+    }
+
+    fn pending_receiving_demand(&self) -> Option<semio_framework_value::RetirementDemand> {
+        None
+    }
+
+    fn pending_receiving_recovery(&mut self) -> Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>> {
+        None
+    }
+
+    fn finish_receiving_recovery(&mut self, _: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::OriginalReceivingPrimary> {
+        semio_framework_value::RetainedWorkOutcome { result: Ok(Default::default()), work: 0 }
+    }
+
+    fn begin_close(&mut self) {
+        self.owners.begin_close();
+    }
+
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+        self.owners.close_step(grant.retained_grant()).map_err(Into::into)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.depth)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.owners.terminal_is_empty()
+    }
+
+impl Process3dArtifactPreparation {
+    fn advance_inner(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
         self.last_work = 0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
@@ -534,52 +624,6 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Proc
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
     }
 
-    fn last_turn_work(&self) -> u64 {
-        self.last_work
-    }
-
-    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-
-    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Process3dSnapshot, Process3dMutation>> {
-        self.owners.prepared.as_ref()
-    }
-
-    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Process3dSnapshot, Process3dMutation>> {
-        self.owners.prepared.take()
-    }
-
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-
-    fn begin_close(&mut self) {
-        self.owners.begin_close();
-    }
-
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
-        self.owners.close_step(grant.retained_grant())
-    }
-
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.owners.close_demands(0)?.copy_bytes)
-    }
-
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes)
-    }
-
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.owners.close_demands(0)?.release_bytes)
-    }
-
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.owners.close_demands(0)?.depth)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.owners.terminal_is_empty()
-    }
+}
 }
 //#endregion 📬️ArtifactStorePreparation

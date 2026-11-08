@@ -4,6 +4,11 @@ use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retaine
 enum PlanningAppend {None,Shell,ShellFace(usize),Edge,Face}
 
 fn refusal()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original validation planning source changed")}
+/// 📃️ Reads one funded page reservation: `None` is a completed denial, failures keep the allocated bytes.
+pub(super) fn funded_page(turn:semio_framework_value::RetainedWorkOutcome<semio_framework_value_persistent::list::PagedListReservationOutcome<RetainedCloneProgress>,semio_framework_value_persistent::list::PagedListReservationFailure>)->Result<Option<RetainedCloneProgress>,ValueError>{
+    use semio_framework_value_persistent::list::{PagedListReservationOutcome,PagedListReservationFailure};
+    match turn.result{Ok(PagedListReservationOutcome::Ready(progress))=>Ok(Some(progress)),Ok(PagedListReservationOutcome::Denied)=>Ok(None),Err(PagedListReservationFailure::Work(error))=>Err(error),Err(PagedListReservationFailure::Allocation{error,..})=>Err(allocation().with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}))}
+}
 fn allocation()->ValueError{ValueError::literal(ValueRefusalKind::AllocationFailed,"original validation planning backing allocation failed")}
 fn vector_demand<T>(values:&Vec<T>,extent:usize)->Result<RetirementDemand,ValueError>{
     if values.capacity()==0{Ok(RetirementDemand{capacity_bytes:extent.checked_mul(std::mem::size_of::<T>()).ok_or_else(refusal)?,depth:1,..Default::default()})}
@@ -50,12 +55,13 @@ impl BodyValidationJob {
         }
     }
     /// ⏱️ Retains empty backing before copying one original entity, with actual physical currencies.
-    pub fn step_planning_funded(&mut self,body:&Body,units:usize,grant:RetainedCloneGrant)->Result<(RetainedCloneProgress,usize),ValueError>{
+    pub fn step_planning_funded(&mut self,body:&Body,units:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(RetainedCloneProgress,usize),ValueError>{
+        let grant=effect.grant();
         let demand=self.planning_demands(body)?;
         if units==0||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok((Default::default(),0));}
         let receipt=if demand.capacity_bytes!=0{
             match self.planning_append(body)?{
-                PlanningAppend::Shell=>self.shells.reserve_one_funded(grant).map_err(|error|allocation().with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}))?,
+                PlanningAppend::Shell=>{let Some(progress)=funded_page(self.shells.reserve_one_funded(effect))? else{return Ok((Default::default(),0))};progress},
                 PlanningAppend::ShellFace(extent)=>reserve(&mut self.shells.last_mut().ok_or_else(refusal)?.faces,extent)?,
                 PlanningAppend::Edge=>reserve(&mut self.edges,body.edges.len())?,
                 PlanningAppend::Face=>reserve(&mut self.faces,body.faces.len())?,

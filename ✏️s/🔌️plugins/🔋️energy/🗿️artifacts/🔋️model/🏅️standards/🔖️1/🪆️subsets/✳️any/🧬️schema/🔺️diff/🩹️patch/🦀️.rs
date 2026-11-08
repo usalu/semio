@@ -139,11 +139,9 @@ pub struct Slot<T> {
 pub struct Slots<T, const N: usize>(pub Vec<Slot<T>>);
 
 impl<T: semio_framework_value::retirement::RetireOwned, const N: usize> semio_framework_value::retirement::RetireOwned for Slots<T, N> {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::RetireOwned::retirement(self.0)
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)
+    type RetirementCursor = <Vec<Slot<T>> as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor {
+        semio_framework_value::retirement::RetireOwned::retirement_seed(self.0)
     }
     fn controlled_retirement_supported() -> bool {
         <Vec<Slot<T>> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()
@@ -244,11 +242,9 @@ fn splice_of<K, T>(cuts: Vec<CutWire<K>>, puts: Vec<PutWire<T>>) -> Splice<K, T>
 pub struct ListEdit<T>(Splice<T, T>);
 
 impl<T: semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for ListEdit<T> {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::RetireOwned::retirement(self.0)
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)
+    type RetirementCursor = <Splice<T, T> as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor {
+        semio_framework_value::retirement::RetireOwned::retirement_seed(self.0)
     }
     fn controlled_retirement_supported() -> bool {
         <Splice<T, T> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()
@@ -361,11 +357,9 @@ where
     P::Target: semio_framework_value::retirement::RetireOwned,
     P::Key: semio_framework_value::retirement::RetireOwned,
 {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::RetireOwned::retirement((self.edit, self.modified))
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&(Splice::<P::Key, P::Target>::default(), Vec::<P>::new()))
+    type RetirementCursor = <(Splice<P::Key, P::Target>, Vec<P>) as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor {
+        semio_framework_value::retirement::RetireOwned::retirement_seed((self.edit, self.modified))
     }
     fn controlled_retirement_supported() -> bool {
         <(Splice<P::Key, P::Target>, Vec<P>) as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()

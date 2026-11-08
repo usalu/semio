@@ -17,7 +17,7 @@ use protocol::OpText;
 use semio_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_time_travel::TimeTravelLedger;
-use semio_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_plugin_tool_machine::ToolMachineRuntime;
 use semio_plugin_tool_run::ToolRunLedger;
 use semio_ui_contract::*;
 use std::marker::PhantomData;

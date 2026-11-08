@@ -128,7 +128,7 @@ impl DurableStorePreparedOutcomeV1 {
             return Err(DurableOwnedGroupDecisionError::NonCanonical);
         }
         let base_applied_edit_count = outcome.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
+        let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::from_recovered_outcome(
             semio_framework_job::OperationId(outcome.operation),
             semio_framework_job::Generation(outcome.base_generation),
             outcome.base_revision,

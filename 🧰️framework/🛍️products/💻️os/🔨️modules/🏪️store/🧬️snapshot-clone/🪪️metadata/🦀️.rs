@@ -40,7 +40,8 @@ impl<M:RetireOwned> NativeEditMetadata<M>{
             _=>return Err(refuses("native metadata phase has no original authority")),
         })
     }
-    pub fn step(&mut self,authority:&ArtifactStoreOneItemLiveAuthority,forward:&mut Option<M>,inverse:&mut OriginalVectorCursor<M>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+    pub fn step(&mut self,authority:&ArtifactStoreOneItemLiveAuthority,forward:&mut Option<M>,inverse:&mut OriginalVectorCursor<M>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
+        let grant=effect.grant();
         if self.phase==15{return Ok(Default::default());}let d=self.next_demand(authority,inverse)?;if !permits(d,grant){return Ok(Default::default());}
         let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes};
         match self.phase{
@@ -48,8 +49,8 @@ impl<M:RetireOwned> NativeEditMetadata<M>{
             1=>{let bytes=authority.actor().as_bytes();if self.actor_offset==bytes.len(){self.phase=2;}else{let end=self.actor_offset+d.copy_bytes;self.hasher.update(&bytes[self.actor_offset..end]);self.actor_offset=end;}},
             2=>{self.hasher.update(&authority.next_sequence_number().to_le_bytes());let clock=authority.next_clock();for part in [clock.actor,clock.physical_ms,clock.logical]{self.hasher.update(&part.to_le_bytes());}self.phase=3;},
             3=>{let id=if let Some(original)=authority.stamped_edit_id(){owned_text(original)?}else{let digest=self.hasher.finalize();let mut id=String::new();id.try_reserve_exact(21).map_err(|_|refuses("native edit identity allocation failed"))?;id.push_str("edit-");let hex=b"0123456789abcdef";for byte in &digest.as_bytes()[..8]{id.push(hex[usize::from(byte>>4)]as char);id.push(hex[usize::from(byte&15)]as char);}id};self.edit.as_mut().unwrap().id=id;self.phase=4;},
-            4=>{let(owner,receipt)=authority.admit_actor_lease(grant)?;self.edit.as_mut().unwrap().actor=Some(owner);p.copied_bytes=receipt.copied_bytes+size_of::<semio_framework_value::SharedUtf8>();self.phase=5;},
-            5=>{let(owner,receipt)=authority.admit_actor_lease(grant)?;self.meta.as_mut().unwrap().author_id=Some(ActorId(owner));p.copied_bytes=receipt.copied_bytes+size_of::<semio_framework_value::SharedUtf8>();self.phase=6;},
+            4=>{let(owner,receipt)=authority.admit_actor_lease(&mut effect.nested(grant))?;self.edit.as_mut().unwrap().actor=Some(owner);p.copied_bytes=receipt.copied_bytes+size_of::<semio_framework_value::SharedUtf8>();self.phase=5;},
+            5=>{let(owner,receipt)=authority.admit_actor_lease(&mut effect.nested(grant))?;self.meta.as_mut().unwrap().author_id=Some(ActorId(owner));p.copied_bytes=receipt.copied_bytes+size_of::<semio_framework_value::SharedUtf8>();self.phase=6;},
             6=>{self.edit.as_mut().unwrap().line=authority.line_id().map(owned_text).transpose()?;self.phase=7;},
             7=>{self.meta.as_mut().unwrap().group_id=authority.group_id().map(owned_text).transpose()?;self.phase=8;},
             8=>{let original=self.edit.as_ref().unwrap().id.as_str();let mut identity=String::new();identity.try_reserve_exact(original.len()+2).map_err(|_|refuses("native mutation identity allocation failed"))?;identity.push_str(original);identity.push_str("#0");self.meta.as_mut().unwrap().mutation_id=Some(MutationId(identity));self.phase=9;},
@@ -58,11 +59,12 @@ impl<M:RetireOwned> NativeEditMetadata<M>{
             11=>{self.edit.as_mut().unwrap().forwards.try_reserve_exact(1).map_err(|_|refuses("native forward allocation failed"))?;self.phase=12;},
             12=>{let edit=self.edit.as_mut().unwrap();if edit.forwards.capacity()<1{return Err(refuses("native forward has no admitted backing"));}edit.forwards.push(forward.take().ok_or_else(||refuses("native metadata lost original forward"))?);self.phase=13;},
             13 if inverse.remaining().is_empty()=>self.phase=15,
-            13 if !self.edit.as_ref().unwrap().inverse.has_reserved_slot()=>{let progress=self.edit.as_mut().unwrap().inverse.reserve_one(grant.maximum_capacity_bytes).map_err(|_|refuses("native inverse page allocation failed"))?;p.retained_capacity_bytes=progress.allocated_bytes;},
+            13 if !self.edit.as_ref().unwrap().inverse.has_reserved_slot()=>{let outcome=self.edit.as_mut().unwrap().inverse.reserve_one(&mut effect.nested(grant)).result.map_err(|_|refuses("native inverse page allocation failed"))?;match outcome{semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(progress)=>{p.retained_capacity_bytes=progress.allocated_bytes;},semio_framework_value_persistent::list::PagedListReservationOutcome::Denied=>return Ok(Default::default())}},
             13=>{let(original,receipt)=inverse.take_front(grant).result?.ok_or_else(||refuses("native inverse lost original front"))?;*self.inverse_pending=Some(original);p.copied_bytes=receipt.copied_bytes+size_of::<M>();self.phase=14;},
             14=>{let progress=self.edit.as_mut().unwrap().inverse.place_reserved(&mut self.inverse_pending,grant.maximum_copy_bytes).map_err(|_|refuses("native inverse original placement failed"))?;if !progress.progressed{return Ok(Default::default());}p.copied_bytes=progress.placed_bytes;self.phase=13;},
             _=>return Err(refuses("native metadata lacks original phase")),
         }
+        if effect.performed_work()==0{semio_os_store_one_item_publication::native_source::pay(effect,1)?;}
         admit_retained_clone_progress(grant,p,"original native edit metadata")
     }
     pub fn ready(&self)->bool{self.phase==15&&self.edit.is_some()&&self.meta.is_none()&&self.inverse_pending.is_none()}
@@ -70,7 +72,8 @@ impl<M:RetireOwned> NativeEditMetadata<M>{
     pub fn terminal_is_empty(&self)->bool{self.edit.is_none()&&self.meta.is_none()&&self.inverse_pending.is_none()}
 }
 impl<M:RetireOwned+Send+'static> RetireOwned for NativeEditMetadata<M>{
-    fn retirement(mut self)->Box<dyn RetirementCursor>{sequence(vec![deferred(self.edit.take()),deferred(self.meta.take()),deferred(self.inverse_pending.take())])}
+    type RetirementCursor=Box<dyn RetirementCursor>;
+    fn retirement_seed(mut self)->Box<dyn RetirementCursor>{sequence(vec![Box::new(deferred(self.edit.take())),Box::new(deferred(self.meta.take())),Box::new(deferred(self.inverse_pending.take()))])}
     fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&*self.edit),deferred_birth_bytes_for(&*self.meta),deferred_birth_bytes_for(&*self.inverse_pending)])}
     fn controlled_retirement_supported()->bool{M::controlled_retirement_supported()}
 }

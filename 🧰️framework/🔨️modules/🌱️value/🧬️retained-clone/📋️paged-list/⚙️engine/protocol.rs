@@ -9,13 +9,13 @@ fn advance_work_demand(&self,source:RetainedCloneRef<'_,T>,body:usize,maximum_wo
 fn advance(&mut self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementOutcome;
 fn take_demand(&self)->Result<RetirementDemand,ValueError>;
 fn take_work_demand(&self)->Result<u64,ValueError>;
-fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>;
+fn take<'reply>(&mut self,output:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>;
 fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>;
 fn begin_close_work_demand(&self)->Result<u64,ValueError>;
 fn begin_close_paid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>;
 fn close_started(&self)->bool;
 fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
 fn close_work_demand(&self,body:usize)->Result<u64,ValueError>;
-fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementOutcome;
+fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll;
 fn terminal_is_empty(&self)->bool;
 }

@@ -85,3 +85,76 @@ fn the_space_history_wire_borrows_the_canonical_mutation_tree() {
     let mutation = SpaceHistoryMutation::SwitchSpaceAlternative(SwitchSpaceAlternative { alternative_id: "alt".into() });
     assert!(matches!(wire.source(&mutation), Some(semio_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactPreparedOperationSource::CanonicalJson { .. })));
 }
+
+fn pack_value_samples() -> Vec<SpaceHistoryMutation> {
+    use crate::space_history_document::SpaceAlternative;
+    let alternative = SpaceAlternative { id: "alt".into(), name: "Alt".into(), checkpoint_ids: vec!["x".into(), "y".into()] };
+    vec![
+        SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint(None, None), index: None }),
+        SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint(Some("parent"), Some("avatar")), index: Some(1) }),
+        SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative: alternative.clone() }),
+        SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative: SpaceAlternative { checkpoint_ids: Vec::new(), ..alternative } }),
+        SpaceHistoryMutation::SwitchSpaceAlternative(SwitchSpaceAlternative { alternative_id: "alt".into() }),
+        SpaceHistoryMutation::RemoveSpaceCheckpoint(RemoveSpaceCheckpoint { checkpoint_id: "cp".into() }),
+        SpaceHistoryMutation::RemoveSpaceAlternative(RemoveSpaceAlternative { alternative_id: "alt".into() }),
+        SpaceHistoryMutation::SetActiveSpaceAlternative(SetActiveSpaceAlternative { alternative_id: Some("alt".into()) }),
+        SpaceHistoryMutation::SetActiveSpaceAlternative(SetActiveSpaceAlternative { alternative_id: None }),
+    ]
+}
+
+#[test]
+fn bounded_pack_value_receiving_decodes_every_leaf_like_the_pack_rt_oracle() {
+    semio_os_dsl::original_receiving::check_receiving_round_trip(&pack_value_samples()).expect("the bounded receiving cursor equals the whole-buffer pack_rt decode");
+}
+
+struct RequestedBytes;
+thread_local! { static REQUESTED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+fn requested(bytes: usize) { let _ = REQUESTED.try_with(|total| total.set(total.get().saturating_add(bytes))); }
+unsafe impl std::alloc::GlobalAlloc for RequestedBytes {
+    unsafe fn alloc(&self, layout: std::alloc::Layout) -> *mut u8 { requested(layout.size()); unsafe { std::alloc::System.alloc(layout) } }
+    unsafe fn alloc_zeroed(&self, layout: std::alloc::Layout) -> *mut u8 { requested(layout.size()); unsafe { std::alloc::System.alloc_zeroed(layout) } }
+    unsafe fn dealloc(&self, pointer: *mut u8, layout: std::alloc::Layout) { unsafe { std::alloc::System.dealloc(pointer, layout) } }
+    unsafe fn realloc(&self, pointer: *mut u8, layout: std::alloc::Layout, size: usize) -> *mut u8 { requested(size); unsafe { std::alloc::System.realloc(pointer, layout, size) } }
+}
+#[global_allocator]
+static REQUESTED_BYTES: RequestedBytes = RequestedBytes;
+
+/// 📏️ Law: the actual heap requested while binding a decoded value never exceeds the quote (decoded retained bytes plus the typed header); a sample above its quote needs a retained-clone `FromValue`.
+fn pack_value_quote_violations() -> Vec<String> {
+    use semio_framework_value::{FromValue, ToValue};
+    use semio_os_pack::pack_rt::{decode_pack_value, encode_pack_value, renormalize_whole_number_floats};
+    let mut violations = Vec::new();
+    for sample in pack_value_samples() {
+        let bytes = encode_pack_value(&ToValue::to_value(&sample));
+        let value = decode_pack_value(&bytes).expect("pack_rt decodes its own document");
+        let quote = semio_os_dsl::original_receiving::pack_value_conversion_quote::<SpaceHistoryMutation>(&value).copy_bytes;
+        let before = REQUESTED.with(std::cell::Cell::get);
+        let converted = SpaceHistoryMutation::from_value(renormalize_whole_number_floats(value)).expect("typed conversion");
+        let growth = REQUESTED.with(std::cell::Cell::get) - before;
+        assert_eq!(converted, sample);
+        if growth > quote { violations.push(format!("{} requested {growth} > quoted {quote}", converted_kind(&converted))); }
+    }
+    violations
+}
+fn converted_kind(mutation: &SpaceHistoryMutation) -> &'static str {
+    match mutation {
+        SpaceHistoryMutation::CommitSpaceCheckpoint(_) => "CommitSpaceCheckpoint",
+        SpaceHistoryMutation::CreateSpaceAlternative(_) => "CreateSpaceAlternative",
+        SpaceHistoryMutation::SwitchSpaceAlternative(_) => "SwitchSpaceAlternative",
+        SpaceHistoryMutation::RemoveSpaceCheckpoint(_) => "RemoveSpaceCheckpoint",
+        SpaceHistoryMutation::RemoveSpaceAlternative(_) => "RemoveSpaceAlternative",
+        SpaceHistoryMutation::SetActiveSpaceAlternative(_) => "SetActiveSpaceAlternative",
+    }
+}
+#[test]
+fn pack_value_conversion_heap_growth_report_names_every_leaf_above_its_quote() {
+    let violations = pack_value_quote_violations();
+    eprintln!("pack value quote violations: {violations:?}");
+    assert!(violations.iter().all(|line| line.starts_with("CommitSpaceCheckpoint") || line.starts_with("CreateSpaceAlternative")), "unexpected leaf above its quote: {violations:?}");
+}
+#[test]
+#[ignore = "CommitSpaceCheckpoint (and any leaf named by the report test) needs a retained-clone FromValue: its conversion requests more heap than the decoded value plus header"]
+fn pack_value_conversion_heap_growth_stays_within_its_quote() {
+    let violations = pack_value_quote_violations();
+    assert!(violations.is_empty(), "{violations:?}");
+}

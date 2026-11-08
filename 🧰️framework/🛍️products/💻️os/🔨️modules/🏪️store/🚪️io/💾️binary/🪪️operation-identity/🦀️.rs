@@ -9,16 +9,23 @@ use semio_os_vcs::io::binary::entity_identity::NativeIdentityPreimage;
 mod rows;
 pub use rows::OperationWireRows;
 
+/// ⛽️ Computational work one source-cursor step may spend in its own original effect.
+const OPERATION_IDENTITY_STEP_WORK: u64 = 64;
+
 pub struct OperationIdentityCursor{pub cursor:ArtifactPreparedOperationCursor,pub terminal:bool}
 impl OperationIdentityCursor{
     pub fn new()->Self{Self{cursor:ArtifactPreparedOperationCursor::default(),terminal:false}}
+    fn step(&mut self,source:ArtifactPreparedOperationSource<'_>,output:&mut [u8],control:&mut NativeEncodeControl<'_>,capacity:usize)->Result<semio_os_store_operation_wire::ArtifactPreparedOperationProgress,ValueError>{
+        let held=output.len();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:self.cursor.next_minimum_copy_bytes().max(held),maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:ARTIFACT_CANONICAL_JSON_DEPTH};
+        control.with_effect(grant,OPERATION_IDENTITY_STEP_WORK,|_,effect|self.cursor.advance(source,output,effect))?.ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"operation wire source step was not admitted"))?.map_err(|error|error.reason)
+    }
     pub fn encode_into(&mut self,source:ArtifactPreparedOperationSource<'_>,output:&mut Vec<u8>,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{
         control.begin_stage(0)?;
         let mut span=[0;64];
         loop{
             control.checkpoint()?;
             let capacity=self.cursor.next_capacity_byte_demand()?;control.charge(capacity)?;
-            let held=span.len();let step=self.cursor.advance(source,&mut span,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:self.cursor.next_minimum_copy_bytes().max(held),maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:ARTIFACT_CANONICAL_JSON_DEPTH}).map_err(|error|error.reason)?;
+            let step=self.step(source,&mut span,control,capacity)?;
             control.advance(step.processed_items.checked_add(step.copied_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"operation wire source work overflow"))?)?;
             control.append_bytes(output,&span[..step.written_bytes])?;
             if step.complete{return Ok(());}
@@ -30,7 +37,7 @@ impl OperationIdentityCursor{
         loop{
             control.checkpoint()?;
             let capacity=self.cursor.next_capacity_byte_demand()?;control.charge(capacity)?;
-            let held=output.len();let step=self.cursor.advance(source,&mut output,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:self.cursor.next_minimum_copy_bytes().max(held),maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:ARTIFACT_CANONICAL_JSON_DEPTH}).map_err(|error|error.reason)?;
+            let step=self.step(source,&mut output,control,capacity)?;
             control.advance(step.processed_items.checked_add(step.copied_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"operation identity source work overflow"))?)?;
             identity.write(&output[..step.written_bytes],control)?;control.advance(step.written_bytes)?;payload.update(&output[..step.written_bytes]);
             if step.complete{break;}
@@ -43,7 +50,7 @@ impl OperationIdentityCursor{
 
 impl ErasedSnapshotRetirement for OperationIdentityCursor{
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.cursor.retirement_demands() }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {let step=self.cursor.close(grant).map_err(|error|error.reason)?;self.terminal=step.complete;let progress=RetainedCloneProgress{copied_items:step.processed_items,copied_bytes:step.copied_bytes,retained_capacity_bytes:step.retained_capacity_bytes,released_bytes:step.released_bytes};Ok(if step.complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})})(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let step=self.cursor.close(effect).map_err(|error|error.reason)?;self.terminal=step.complete;let progress=RetainedCloneProgress{copied_items:step.processed_items,copied_bytes:step.copied_bytes,retained_capacity_bytes:step.retained_capacity_bytes,released_bytes:step.released_bytes};Ok(if step.complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})})(); semio_framework_value::RetirementPollExit::settle(effect, result) }
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
     fn next_capacity_byte_demand(&self,_copy:usize)->Result<usize,ValueError>{Ok(0)}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.cursor.next_close_byte_demand()}

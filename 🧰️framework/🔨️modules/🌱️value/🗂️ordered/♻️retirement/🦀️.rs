@@ -6,7 +6,7 @@ use std::mem::ManuallyDrop;
 
 trait RootOwner<V>:Send {
     fn needs_start(&self)->bool{false}
-    fn start_paid(&mut self,_:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{crate::RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+    fn start_paid(&mut self,_:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{crate::RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
     fn payload_ready(&self)->bool;
     fn work_demand(&self)->u64{u64::from(!self.is_empty())}
     fn last_turn_work(&self)->u64;
@@ -39,7 +39,7 @@ impl<V:RetireOwned+Sync> RootOwner<V> for UpdateCursor<V> {
     fn payload_ready(&self)->bool{self.state.retirement.payload.is_some()&&self.state.retirement.key_bytes.as_ref().is_none_or(Vec::is_empty)}
     fn last_turn_work(&self)->u64{self.last_close_work()}
     fn next_work_demand(&self)->u64{self.next_close_work_demand()}
-    fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep<V>{self.close_step(grant)}
+    fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep<V>{let limit=self.next_close_work_demand();self.close_step(grant,limit)}
     fn is_empty(&self)->bool{self.terminal_is_empty()}
     fn copy_demand(&self)->usize{self.next_close_copy_byte_demand()}
     fn release_demand(&self)->Result<usize,ValueError>{self.next_close_byte_demand()}
@@ -73,7 +73,7 @@ impl<V:RetireOwned+Sync> RootOwner<V> for SharedRoot<V> {
         if grant.maximum_items==0{return RetirementStep::Blocked;}
         if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"shared payload requires admitted depth"));}
         if let Some(value)=self.value.take(){self.last_work=1;return RetirementStep::OwnedValue(value);}
-        let turn=self.owner.release_step(grant);self.last_work=turn.work;match turn.result{
+        let turn=self.owner.release_step(grant);self.last_work=crate::narrow_work(turn.work);match turn.result{
             Err(error)=>RetirementStep::Failure(error),
             Ok(step) if step.progress.copied_items==0=>RetirementStep::Blocked,
             Ok(step)=>{*self.value=step.value;RetirementStep::Progress {released_items:1,released_bytes:step.progress.released_bytes}}
@@ -94,19 +94,19 @@ impl<V> Drop for SharedRoot<V> {
 pub struct TypedOwner<V:RetireOwned+Sync,R:RootOwner<V>> {root:R,payload:ManuallyDrop<Option<ControlledRetirement<V>>>}
 impl<V:RetireOwned+Sync,R:RootOwner<V>> TypedOwner<V,R> {
     fn new(root:R)->Self{Self{root,payload:ManuallyDrop::new(None)}}
-    fn step_with(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,invoke:impl FnOnce(&mut ControlledRetirement<V>,&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome)->TypedStep{if self.terminal_is_empty(){return TypedStep::Complete(0)}let grant=effect.grant();let work=match self.next_computational_work(grant.maximum_copy_bytes){Ok(work)=>work,Err(error)=>return TypedStep::Failure(error.into(),0)};if work>effect.maximum_work_units(){return TypedStep::BudgetExhausted}let demand=match self.next_demand(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return TypedStep::Failure(error.into(),0)};if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return TypedStep::BudgetExhausted}if self.root.needs_start(){let turn=self.root.start_paid(grant);return match turn.result{Ok(progress)=>TypedStep::Progress(progress,turn.work),Err(error)=>TypedStep::Failure(error.into(),turn.work)}}
+    fn step_with(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,invoke:impl FnOnce(&mut ControlledRetirement<V>,&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll)->TypedStep{if self.terminal_is_empty(){return TypedStep::Complete(0)}let grant=effect.grant();let work=match self.next_computational_work(grant.maximum_copy_bytes){Ok(work)=>work,Err(error)=>return TypedStep::Failure(error.into(),0)};if work>effect.maximum_work_units(){return TypedStep::BudgetExhausted}let demand=match self.next_demand(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return TypedStep::Failure(error.into(),0)};if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return TypedStep::BudgetExhausted}if self.root.needs_start(){let turn=self.root.start_paid(effect);return match turn.result{Ok(progress)=>TypedStep::Progress(progress,turn.work),Err(error)=>TypedStep::Failure(error.into(),turn.work)}}
         if self.terminal_is_empty(){return TypedStep::Complete(0)}
         if grant.maximum_items==0{return TypedStep::BudgetExhausted}
-        match self.next_depth_demand(){Err(error)=>return TypedStep::Failure(error.into(),0),Ok(depth)if depth>grant.maximum_depth=>return TypedStep::Failure(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered typed retirement exceeds admitted depth").into(),0),_=>{}}
+        if demand.depth>grant.maximum_depth{return TypedStep::Failure(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered typed retirement exceeds admitted depth").into(),0)}
         let retained_depth=self.root.retained_depth();
         if let Some(payload)=self.payload.as_mut(){
-            if payload.terminal_is_empty(){self.payload.take();return TypedStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1)}
+            if payload.terminal_is_empty(){self.payload.take();let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};return match crate::retirement::record_retirement_work(effect,1){Ok(work)=>TypedStep::Progress(progress,work),Err((error,work))=>TypedStep::Failure(error.into(),work)}}
             let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-retained_depth,..grant};
-            let turn=invoke(payload,&mut effect.reborrow(child,effect.maximum_work_units()).expect("selected ordered child effect"));let result=turn.result;let work=turn.work;
+            let turn=match invoke(payload,&mut effect.nested(child)){crate::RetainedWorkPoll::Pending{work}=>return TypedStep::Pending(work),crate::RetainedWorkPoll::Complete(turn)=>turn};let result=turn.result;let work=turn.work;
             let result=result.and_then(|step|admit_retained_clone_close(child,step,payload.terminal_is_empty(),"ordered typed payload retirement").map_err(Into::into));
             return match result{Err(error)=>TypedStep::Failure(error,work),Ok(step)=>TypedStep::Progress(step.progress(),work)}
         }
-        let step=self.root.step(grant);let work=self.root.last_turn_work();
+        let step=self.root.step(grant);let work=match crate::retirement::record_retirement_work(effect,self.root.last_turn_work()){Ok(work)=>work,Err((error,work))=>return TypedStep::Failure(error.into(),work)};
         match step{
             RetirementStep::Blocked=>TypedStep::BudgetExhausted,
             RetirementStep::Failure(error)=>TypedStep::Failure(error.into(),work),
@@ -129,7 +129,7 @@ impl<V:RetireOwned+Sync,R:RootOwner<V>> RetirementCursor for TypedOwner<V,R> {
     fn close_original_birth_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->TypedStep{let depth=self.root.retained_depth();if grant.maximum_depth<depth{return TypedStep::BudgetExhausted}let Some(owner)=self.payload.as_mut()else{return TypedStep::Failure(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"ordered owner has no selected original birth").into(),0)};semio_framework_value_retirement::retirement::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_original_birth_step(owner,original,RetainedCloneGrant{maximum_depth:grant.maximum_depth-depth,..grant}))}
     fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->TypedStep{self.step_with(effect,|owner,effect|crate::ErasedSnapshotRetirement::close_step_controlled(owner,effect,control))}
     fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->TypedStep{self.step_with(effect,|owner,effect|crate::ErasedSnapshotRetirement::close_original_step(owner,original,effect))}
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->TypedStep{self.step_with(effect,|owner,effect|{let result=owner.step(effect);crate::RetainedWorkOutcome{result,work:owner.last_turn_work()}})}
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->TypedStep{self.step_with(effect,|owner,effect|owner.step(effect))}
     fn terminal_is_empty(&self)->bool{self.root.is_empty()&&self.payload.is_none()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.payload.as_ref().map_or_else(||Ok(self.root.copy_demand()),ControlledRetirement::next_copy_byte_demand)}
     fn next_close_byte_demand(&self)->Option<usize>{self.payload.as_ref().map_or_else(||self.root.release_demand().ok(),|owner|owner.next_release_byte_demand().ok())}

@@ -38,7 +38,8 @@ impl FlowHostRetirement {
     pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
     /// 🎟️ Uses the original supplied currencies and preserves the full actual child receipt.
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
@@ -62,7 +63,7 @@ impl FlowHostRetirement {
         if let Some(port)=source.geometry_port.take(){self.state.geometry=Some(semio_os_flow_geometry::GeometryPortRetirement::new(port));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
         if let Some(store)=source.history_store.as_mut(){
             if store.close_owned_store_terminal_is_empty(){source.history_store=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
-            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=store.close_owned_store_step(child)?;
+            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=match store.close_owned_store_step(&mut effect.nested(child)){semio_framework_value::RetainedWorkPoll::Pending{..}=>RetainedCloneStep::Progress(empty),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?};
             let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,store.close_owned_store_terminal_is_empty(),"original host history store retirement")?;
             return Ok(RetainedCloneStep::Progress(step.progress()))
         }
@@ -73,6 +74,9 @@ impl FlowHostRetirement {
 impl Drop for FlowHostRetirement {
     fn drop(&mut self){if !self.terminal_is_empty(){assert!(std::thread::panicking(),"Flow host retirement abandoned its original source");return}unsafe{std::mem::ManuallyDrop::drop(&mut self.state)}}
 }
+
+/// ⛽️ Work one cold host close step may spend inside its own explicit authoring wallet.
+const FLOW_HOST_COLD_CLOSE_STEP_WORK:u64=64;
 
 impl FlowHost {
     /// 🧊️ Explicit cold-only disposal of a detached host — the twin of [`FlowHostSnapshot::retire_cold`].
@@ -86,7 +90,7 @@ impl FlowHost {
     }
 
     fn drain_cold(retirement:&mut FlowHostRetirement)->Result<(),ValueError>{
-        let mut idle=0usize;while !retirement.terminal_is_empty(){let copy=retirement.next_close_copy_byte_demand()?.max(4096);let demand=retirement.close_demands(copy)?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let step=retirement.close_step(grant)?;if step.progress()==RetainedCloneProgress::default(){idle+=1;if idle>64{return Err(ValueError::invariant("cold original host close stalled at exact demand"));}}else{idle=0;}}Ok(())
+        let mut idle=0usize;while !retirement.terminal_is_empty(){let copy=retirement.next_close_copy_byte_demand()?.max(4096);let demand=retirement.close_demands(copy)?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let step=retirement.close_step_cold(grant)?;if step.progress()==RetainedCloneProgress::default(){idle+=1;if idle>64{return Err(ValueError::invariant("cold original host close stalled at exact demand"));}}else{idle=0;}}Ok(())
     }
 
     /// 🧊️ Closes cold and, when the close stays refused after one retry, parks the live custody for the next close on this thread.
@@ -151,12 +155,26 @@ impl FlowHostCloseSlot{
   if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<Box<FlowHostRetirement>>>(),release_bytes:std::mem::size_of::<FlowHostRetirement>(),depth:1,..Default::default()});}
   let mut demand=owner.close_demands(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original host close slot depth overflow"))?;Ok(demand)
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+  let grant=effect.grant();
   if self.owner.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()));}let demand=self.next_demand(grant.maximum_copy_bytes)?;if !Self::admitted(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
   if self.owner.as_ref().unwrap().terminal_is_empty(){self.owner=None;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
-  let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let owner=self.owner.as_mut().unwrap();let step=owner.close_step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original command host close")?;Ok(RetainedCloneStep::Progress(step.progress()))
+  let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let owner=self.owner.as_mut().unwrap();let step=owner.close_step(&mut effect.nested(child))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original command host close")?;Ok(RetainedCloneStep::Progress(step.progress()))
  }
  pub fn terminal_is_empty(&self)->bool{self.owner.is_none()}
+ /// 🧊️ [`Self::close_step`] outside any Job turn under one explicit authoring wallet whose stock is `grant`.
+ pub fn close_step_cold(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+  let mut wallet=semio_framework_value::AuthoringWallet::new(grant,u128::from(FLOW_HOST_COLD_CLOSE_STEP_WORK));
+  match wallet.run(grant,FLOW_HOST_COLD_CLOSE_STEP_WORK,|effect|self.close_step(effect))?{Some(done)=>done.output,None=>Ok(RetainedCloneStep::Progress(Default::default()))}
+ }
+}
+
+impl FlowHostRetirement{
+ /// 🧊️ [`Self::close_step`] outside any Job turn under one explicit authoring wallet whose stock is `grant`.
+ pub fn close_step_cold(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+  let mut wallet=semio_framework_value::AuthoringWallet::new(grant,u128::from(FLOW_HOST_COLD_CLOSE_STEP_WORK));
+  match wallet.run(grant,FLOW_HOST_COLD_CLOSE_STEP_WORK,|effect|self.close_step(effect))?{Some(done)=>done.output,None=>Ok(RetainedCloneStep::Progress(Default::default()))}
+ }
 }
 
 #[cfg(any(test,feature="testkit"))]

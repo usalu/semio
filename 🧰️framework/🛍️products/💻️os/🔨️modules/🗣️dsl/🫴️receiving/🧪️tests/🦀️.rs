@@ -78,3 +78,40 @@ fn every_statement_enum_field_variant_is_received_like_its_decode_oracle(){
  let values=[StatementBody::Text{text:"t".into()},StatementBody::Number{value:-7}].map(|body|StatementFieldMutation::Put{id:"i".into(),body:Box::new(body)});
  check_receiving_round_trip(&values).unwrap();
 }
+#[test]
+fn receive_to_completion_refuses_when_fuel_runs_out_mid_operation_without_dropping_a_live_cursor(){
+ let value=OriginalMutation::Rename{text:"abc".into(),items:vec!["x".into(),"y".into()]};let bytes=value.encode_op().unwrap();
+ let grant=RetainedCloneGrant{maximum_items:1<<10,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<16,maximum_release_bytes:1<<16,maximum_depth:64};
+ let mut refused=0;
+ for fuel in 1..96{match receive_to_completion::<OriginalMutation>(&bytes,(0,bytes.len()),ReceivingStock{stock:grant,quantum:RetainedCloneGrant{maximum_items:1,..grant},fuel}){Ok(received)=>assert_eq!(received,value),Err(_)=>refused+=1}}
+ assert!(refused>0,"no fuel level exhausted mid-operation");
+}
+
+#[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_value::RetireOwned)]
+#[value(tag="operation",content="payload",rename_all="camelCase",deny_unknown_fields)]
+enum PackValueMutation{Rename{text:String,items:Vec<String>},Clear}
+impl OpBinary for PackValueMutation{
+ fn encode_op(&self)->Result<Vec<u8>,protocol::ProtocolError>{Ok(semio_os_pack::pack_rt::encode_pack_value(&semio_framework_value::ToValue::to_value(self)))}
+ fn decode_op(bytes:&[u8])->Result<Self,protocol::ProtocolError>{let value=semio_os_pack::pack_rt::decode_pack_value(bytes).map_err(|error|protocol::ProtocolError::Malformed{what:"pack value op",offset:0,detail:error.to_string()})?;semio_framework_value::FromValue::from_value(semio_os_pack::pack_rt::renormalize_whole_number_floats(value)).map_err(|error|protocol::ProtocolError::Malformed{what:"pack value op",offset:0,detail:error.to_string()})}
+}
+semio_os_kernel::original_pack_value_operation_receiving!(PackValueMutation);
+/// 🧪️ Third-party oracle: the bounded pack-value cursor decodes exactly the value the whole-buffer `pack_rt` path decodes, for every sample, and every turn fits its granted stock.
+#[test]
+fn original_pack_value_receiving_decodes_the_same_value_as_the_pack_rt_oracle(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let samples=[PackValueMutation::Clear,PackValueMutation::Rename{text:"a".into(),items:Vec::new()},PackValueMutation::Rename{text:fixture["text"].as_str().unwrap().into(),items:serde_json::from_value(fixture["items"].clone()).unwrap()}];
+ for expected in samples{
+  let encoded=expected.encode_op().unwrap();
+  let oracle=PackValueMutation::decode_op(&encoded).unwrap();assert_eq!(oracle,expected);
+  let mut source:Vec<u8>=serde_json::from_value(fixture["source"]["prefix"].clone()).unwrap();let start=source.len();source.extend_from_slice(&encoded);let end=source.len();source.extend(serde_json::from_value::<Vec<u8>>(fixture["source"]["suffix"].clone()).unwrap());
+  let f=&fixture["turn"];let grant=RetainedCloneGrant{maximum_items:f["items"].as_u64().unwrap()as usize,maximum_copy_bytes:f["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:f["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:f["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:f["depth"].as_u64().unwrap()as usize};
+  let mut bank=OperationBank::fixture(grant);let mut callback=|_|true;let mut native=NativeDecodeControl::new(bank.left.maximum_capacity_bytes,&mut callback);
+  let turn=PackValueMutation::admit_receiving(&source,(start,end),bank.grant());let(mut cursor,admitted)=turn.result.unwrap().unwrap();bank.debit(admitted,turn.work);
+  let wrong=source.clone();assert!(cursor.demands(&wrong,grant.maximum_copy_bytes).is_err());
+  let mut turns=0;
+  while !cursor.is_ready(){assert!(turns<10000);let progress=bank.normal(&mut native,|native,g|cursor.step(&source,native,grant.maximum_copy_bytes,g)).result.unwrap();assert!(progress.fits(grant));turns+=1;}
+  let mut output=None;let turn=cursor.take_into(&mut output,bank.grant());let p=turn.result.unwrap();bank.debit(p,turn.work);assert_eq!(output.as_ref(),Some(&oracle));
+  while !cursor.terminal_is_empty(){let turn=cursor.close_step(bank.grant());let p=turn.result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());bank.debit(p,turn.work);turn.result.unwrap();}
+  let mut output=ControlledRetirement::new(output.take().unwrap()).ok().unwrap();while !output.terminal_is_empty(){let result=output.step(bank.grant());let work=output.last_turn_work();let p=result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());bank.debit(p,work);result.unwrap();}
+ }
+}

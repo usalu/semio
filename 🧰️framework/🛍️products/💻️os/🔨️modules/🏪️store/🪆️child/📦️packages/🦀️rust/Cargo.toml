@@ -21,6 +21,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "retirement_seed"
+path = "../../🧪️retirement-seed/🦀️.rs"
+
 [dependencies]
 semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

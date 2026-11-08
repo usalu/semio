@@ -490,7 +490,7 @@ async fn two_instances_converge_on_disjoint_edits() {
     }
     fn close(app: &mut FlowAppFixture) {
         for _ in 0..100_000 {
-            let demand = PluginApp::close_retirement_demands(&*app, 16_384).expect("Flow convergence app close quote");
+            let demand = PluginApp::close_retirement_demands(&app.0, 16_384).expect("Flow convergence app close quote");
             let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(16_384), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
             if matches!(PluginApp::close_step(&mut app.0, app.1.cx(), grant).expect("Flow convergence app close"), semio_plugin::PluginLifecycleStep::Complete(_)) {
                 return;

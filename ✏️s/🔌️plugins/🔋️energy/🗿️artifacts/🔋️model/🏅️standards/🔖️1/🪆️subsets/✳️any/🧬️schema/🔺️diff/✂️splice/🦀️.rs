@@ -19,11 +19,9 @@ pub struct Splice<K, T> {
 
 /// ♻️ A script retires as its two entry lists.
 impl<K: semio_framework_value::retirement::RetireOwned, T: semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for Splice<K, T> {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::RetireOwned::retirement((self.cuts, self.puts))
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&(Vec::<(usize, K)>::new(), Vec::<(usize, T)>::new()))
+    type RetirementCursor = <(Vec<(usize, K)>, Vec<(usize, T)>) as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor {
+        semio_framework_value::retirement::RetireOwned::retirement_seed((self.cuts, self.puts))
     }
     fn controlled_retirement_supported() -> bool {
         <(Vec<(usize, K)>, Vec<(usize, T)>) as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()

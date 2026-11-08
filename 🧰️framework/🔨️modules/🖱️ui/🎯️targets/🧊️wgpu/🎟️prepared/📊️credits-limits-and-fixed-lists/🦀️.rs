@@ -13,16 +13,17 @@ pub(super) fn prepared_abandoned_demands<'a, T: 'a>(mut slots: impl Iterator<Ite
     result
 }
 
-pub(super) fn prepared_abandoned_close<'a, T: 'a>(mut slots: impl Iterator<Item = (&'a AtomicU8, &'a AtomicPtr<T>)>, queued: u8, grant: RetainedCloneGrant, empty: fn(&T) -> bool, close: fn(&mut T, RetainedCloneGrant) -> Result<CloseStep,ValueError>) -> Result<CloseStep,ValueError> {
+pub(super) fn prepared_abandoned_close<'a, T: 'a>(mut slots: impl Iterator<Item = (&'a AtomicU8, &'a AtomicPtr<T>)>, queued: u8, effect: &mut RetainedAllocationEffect<'_>, empty: fn(&T) -> bool, close: fn(&mut T, &mut RetainedAllocationEffect<'_>) -> PreparedClose) -> PreparedClose {
+    let grant = effect.grant();
     let Some((state, owner)) = slots.find(|(state, _)| state.compare_exchange(queued, 3, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() }); };
     let pointer = owner.swap(std::ptr::null_mut(), Ordering::AcqRel);
     if pointer.is_null() { state.store(queued, Ordering::Release); return Ok(CloseStep::Blocked); }
     let mut value = unsafe { Box::from_raw(pointer) };
     let step = if empty(&value) {
         if grant.maximum_items == 0 || grant.maximum_release_bytes < size_of::<T>() { Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }) }
-        else if grant.maximum_depth == 0 { Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original abandoned prepared backing close requires depth")) }
+        else if grant.maximum_depth == 0 { Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original abandoned prepared backing close requires depth").into()) }
         else { drop(value); state.store(0, Ordering::Release); return prepared_close_progress(size_of::<T>()) }
-    } else { prepared_close_child(close(&mut value, grant)) };
+    } else { prepared_close_child(close(&mut value, effect)) };
     owner.store(Box::into_raw(value), Ordering::Release);
     state.store(queued, Ordering::Release);
     step

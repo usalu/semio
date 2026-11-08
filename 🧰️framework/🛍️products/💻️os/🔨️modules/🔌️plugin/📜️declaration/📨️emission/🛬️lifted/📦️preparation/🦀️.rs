@@ -38,10 +38,9 @@ pub struct OwnedChildEmit {
     authority:Option<OriginalChildEditorCommandAuthority>,
     metadata:Option<ChildEmit>,
     mutations:Option<store::MemberStoreOwnedBatch>,
-    last_work:u64,
 }
 impl OwnedChildEmit {
-    pub fn new(metadata:ChildEmit,mutations:store::MemberStoreOwnedBatch)->Self{Self{metadata:Some(metadata),mutations:Some(mutations),authority:None,last_work:0}}
+    pub fn new(metadata:ChildEmit,mutations:store::MemberStoreOwnedBatch)->Self{Self{metadata:Some(metadata),mutations:Some(mutations),authority:None}}
     pub fn authority(&self)->Option<&OriginalChildEditorCommandAuthority>{self.authority.as_ref()}
     pub fn metadata(&self)->Option<&ChildEmit>{self.metadata.as_ref()}
     pub fn mutations<M:Send+'static>(&self)->Option<&[M]>{self.mutations.as_ref()?.mutations::<M>()}
@@ -61,34 +60,36 @@ impl OwnedChildEmit {
         if let Some(authority)=self.authority.as_ref(){let mut demand=authority.close_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"qualified child authority depth overflow"))?;return Ok(demand)}
         Ok(Default::default())
     }
-    /// 🎟️ Keeps logical work independent from original typed source and metadata physical release.
-    pub fn close_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
-        self.last_work=0;
-        use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+    /// 🎟️ Closes one owned child action inside the caller's effect: the typed source and displaced metadata pay their own performed work, the authority reports its delegate work onto the same effect.
+    pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
+        use semio_framework_value::{ValueError,ValueRefusalKind,RetainedWorkOutcome,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+        let grant=effect.grant();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if demand.depth>grant.maximum_depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"owned child close exceeds admitted depth").into());}
         if demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.copy_bytes>grant.maximum_copy_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
+        let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
         if let Some(batch)=self.mutations.as_mut(){
-            let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-            let result=batch.close_granted(child);self.last_work=batch.last_turn_work();let step=result?;
+            let step=batch.close_granted(&mut effect.nested(child))?;
             let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,batch.terminal_is_empty(),"owned child source")?;
             if batch.terminal_is_empty(){self.mutations.take();}
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(metadata)=self.metadata.as_mut(){
-            if metadata.terminal_is_empty(){self.last_work=1;self.metadata.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
-            let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-            self.last_work=1;let step=metadata.close_one(child)?;
+            if metadata.terminal_is_empty(){semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect)?;self.metadata.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
+            let step=semio_plugin_ownership::bounded_ownership::plugin_grant_step(effect,|_|RetainedWorkOutcome{result:metadata.close_one(child).map_err(semio_framework_value::OriginalRetirementFailure::from),work:1})?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,metadata.terminal_is_empty(),"original owned child metadata")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(authority)=self.authority.as_mut(){authority.begin_close();let result=authority.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});self.last_work=authority.last_turn_work();let step=result?;if authority.terminal_is_empty(){self.authority=None}return Ok(RetainedCloneStep::Progress(step.progress()))}
+        if let Some(authority)=self.authority.as_mut(){
+            authority.begin_close();
+            let step=semio_plugin_ownership::bounded_ownership::plugin_grant_step(effect,|_|{let result=authority.close_step(child);RetainedWorkOutcome{result:result.map_err(semio_framework_value::OriginalRetirementFailure::from),work:u128::from(authority.last_turn_work())}})?;
+            if authority.terminal_is_empty(){self.authority=None}
+            return Ok(RetainedCloneStep::Progress(step.progress()))
+        }
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
-    /// 🎟️ Actual work of the last owned-source close, including refused delegates.
-    pub fn last_turn_work(&self)->u64{self.last_work}
     pub fn terminal_is_empty(&self)->bool{self.metadata.is_none()&&self.mutations.is_none()&&self.authority.is_none()}
 }
 impl Drop for OwnedChildEmit{
@@ -215,7 +216,7 @@ impl ChildEmitPreparation {
     }
     pub fn next_owned_capacity_byte_demand(&self)->usize{self.owner.next_owned_capacity_byte_demand()}
     pub fn take_ready_owned(&mut self,grant:RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>{self.last_work=0;if self.authority.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"qualified child preparation requires its authenticated output owner"))}let result=self.owner.take_ready_owned(grant);self.last_work=self.owner.last_turn_work();result}
-    pub fn take_ready_owned_qualified(&mut self,grant:RetainedCloneGrant)->Result<Option<(OwnedChildEmit,RetainedCloneProgress)>,ValueError>{let result=self.owner.take_ready_owned(grant);self.last_work=self.owner.last_turn_work();let Some((metadata,mutations,progress))=result?else{return Ok(None)};Ok(Some((OwnedChildEmit{metadata:Some(metadata),mutations:Some(mutations),authority:self.authority.take(),last_work:0},progress)))}
+    pub fn take_ready_owned_qualified(&mut self,grant:RetainedCloneGrant)->Result<Option<(OwnedChildEmit,RetainedCloneProgress)>,ValueError>{let result=self.owner.take_ready_owned(grant);self.last_work=self.owner.last_turn_work();let Some((metadata,mutations,progress))=result?else{return Ok(None)};Ok(Some((OwnedChildEmit{metadata:Some(metadata),mutations:Some(mutations),authority:self.authority.take()},progress)))}
     pub fn begin_close(&mut self){self.owner.begin_close();if let Some(authority)=self.authority.as_mut(){authority.begin_close()}}
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         self.last_work=0;

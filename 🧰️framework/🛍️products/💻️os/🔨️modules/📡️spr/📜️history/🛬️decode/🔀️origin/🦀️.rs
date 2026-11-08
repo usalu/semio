@@ -1,5 +1,5 @@
 //! 🔀️ Original decoded origin cells project into typed recipients while all discarded native storage remains granted.
-use semio_framework_value::{DslValue,Number,ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ErasedSnapshotRetirement,admit_owned_retirement,owned_retirement_birth_bytes};
+use semio_framework_value::{RetainedAllocationEffect,DslValue,Number,ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ErasedSnapshotRetirement,admit_owned_retirement,owned_retirement_birth_bytes};
 use std::mem::{ManuallyDrop,size_of,size_of_val};
 use ::protocol::{MutationOrigin,ForeignTarget,SchemaId,PayloadHash};
 fn refusal()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"original History origin has invalid typed fields")}
@@ -19,11 +19,11 @@ pub mod testkit {
 pub use json::{RetainedHistoryOriginJsonDecode,RetainedHistoryOriginJsonStep};
 pub struct RetainedHistoryOriginPartial{
  #[doc(hidden)] pub cells:ManuallyDrop<[Option<DslValue>;10]>,#[doc(hidden)] pub key:ManuallyDrop<Option<String>>,#[doc(hidden)] pub retiring:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
- last_work:u64,hash:[u8;32],hash_ready:bool,field:usize,kind:u8,
+ last_work:u128,hash:[u8;32],hash_ready:bool,field:usize,kind:u8,
 }
 impl RetainedHistoryOriginPartial{
  #[doc(hidden)] pub fn empty(original:DslValue)->Self{let mut cells=std::array::from_fn(|_|None);cells[0]=Some(original);Self{last_work:0,cells:ManuallyDrop::new(cells),key:ManuallyDrop::new(None),retiring:ManuallyDrop::new(None),hash:[0;32],hash_ready:false,field:usize::MAX,kind:0}}
- pub fn last_turn_work(&self)->u64{self.last_work}
+ pub fn last_turn_work(&self)->u128{self.last_work}
  pub fn original_cell(&self,index:usize)->Option<&DslValue>{self.cells.get(index)?.as_ref()}
  pub fn terminal_is_empty(&self)->bool{self.key.is_none()&&self.retiring.is_none()&&self.cells.iter().all(Option::is_none)}
  fn child_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -31,17 +31,20 @@ impl RetainedHistoryOriginPartial{
   if child.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:size_of_val(child.as_ref()),depth:2,..Default::default()})}
   Ok(RetirementDemand{copy_bytes:child.next_copy_byte_demand()?,capacity_bytes:child.next_capacity_byte_demand(body)?,release_bytes:child.next_release_byte_demand()?,depth:child.next_depth_demand()?.checked_add(2).ok_or_else(refusal)?})
  }
- fn child_close(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-  self.last_work=0;let d=self.child_demands(g.maximum_copy_bytes)?;if !permits(g,d){return Ok(Default::default())}
-  let child=self.retiring.as_mut().unwrap();if child.terminal_is_empty(){self.last_work=1;drop(self.retiring.take());return Ok(RetainedCloneProgress{released_bytes:d.release_bytes,..metadata()})}
-  let nested=RetainedCloneGrant{maximum_depth:g.maximum_depth-2,..g};let turn=child.close_step(nested);self.last_work=turn.work;let result=turn.result;
+ fn child_close(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
+  let g=effect.grant();let start=effect.performed_work();self.last_work=0;let d=self.child_demands(g.maximum_copy_bytes)?;if !permits(g,d){return Ok(Default::default())}
+  let child=self.retiring.as_mut().ok_or_else(refusal)?;if child.terminal_is_empty(){self.last_work=crate::settle_since(effect,start,1)?;drop(self.retiring.take());return Ok(RetainedCloneProgress{released_bytes:d.release_bytes,..metadata()})}
+  let nested=RetainedCloneGrant{maximum_depth:g.maximum_depth.saturating_sub(2),..g};let poll=child.close_step(&mut effect.nested(nested));self.last_work=effect.performed_work();
+  let result=match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>return Ok(Default::default()),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)};
   let p=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};if !p.fits(nested){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original origin child exceeded its supplied grant").with_retained_progress(p))}result.map(|_|p)
  }
  fn discard_demands(&self,index:usize)->RetirementDemand{RetirementDemand{capacity_bytes:if self.cells[index].is_some(){owned_retirement_birth_bytes::<DslValue>()}else{0},depth:2,..Default::default()}}
- fn discard(&mut self,index:usize,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-  self.last_work=0;let d=self.discard_demands(index);if !permits(g,d){return Ok(Default::default())}
-  let original=self.cells[index].take().unwrap();let nested=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};
-  let turn=admit_owned_retirement(original,nested);self.last_work=turn.work;match turn.result{Ok((owner,p))=>{*self.retiring=Some(owner);Ok(p)},Err((error,original))=>{self.cells[index]=Some(original);Err(error)}}
+ fn discard(&mut self,index:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
+  let g=effect.grant();let start=effect.performed_work();self.last_work=0;let d=self.discard_demands(index);if !permits(g,d){return Ok(Default::default())}
+  let mut original=self.cells[index].take();let nested=RetainedCloneGrant{maximum_depth:g.maximum_depth.saturating_sub(1),..g};
+  let turn=admit_owned_retirement(&mut original,&mut effect.nested(nested));let settled=crate::settle_since(effect,start,turn.work);if let Ok(work)=&settled{self.last_work=*work}
+  let outcome=match turn.result{Ok(Some((owner,p)))=>{*self.retiring=Some(owner);Ok(p)},Ok(None)=>Ok(Default::default()),Err(error)=>Err(error)};
+  if original.is_some(){self.cells[index]=original}settled?;outcome
  }
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.retiring.is_some(){return self.child_demands(body)}
@@ -49,17 +52,17 @@ impl RetainedHistoryOriginPartial{
   if let Some(index)=self.cells.iter().position(Option::is_some){return Ok(self.discard_demands(index))}
   Ok(Default::default())
  }
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-  self.last_work=0;if self.terminal_is_empty(){return Ok(Default::default())}if !permits(g,self.close_demands(g.maximum_copy_bytes)?){return Ok(Default::default())}
-  if self.retiring.is_some(){return self.child_close(g)}
-  if let Some(key)=self.key.take(){self.last_work=1;let bytes=key.capacity();drop(key);return Ok(RetainedCloneProgress{released_bytes:bytes,..metadata()})}
-  self.discard(self.cells.iter().position(Option::is_some).unwrap(),g)
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
+  let g=effect.grant();let start=effect.performed_work();self.last_work=0;if self.terminal_is_empty(){return Ok(Default::default())}if !permits(g,self.close_demands(g.maximum_copy_bytes)?){return Ok(Default::default())}
+  if self.retiring.is_some(){return self.child_close(effect)}
+  if let Some(key)=self.key.take(){self.last_work=crate::settle_since(effect,start,1)?;let bytes=key.capacity();drop(key);return Ok(RetainedCloneProgress{released_bytes:bytes,..metadata()})}
+  let index=self.cells.iter().position(Option::is_some).ok_or_else(refusal)?;self.discard(index,effect)
  }
 }
 impl Drop for RetainedHistoryOriginPartial{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original History origin partial abandoned native fields");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.cells);ManuallyDrop::drop(&mut self.key);ManuallyDrop::drop(&mut self.retiring)}}}}
-#[doc(hidden)] pub struct RetainedHistoryOriginProjection{last_work:u64,#[doc(hidden)] pub partial:ManuallyDrop<Option<RetainedHistoryOriginPartial>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,closing:bool,ready:bool,closed:bool}
+#[doc(hidden)] pub struct RetainedHistoryOriginProjection{last_work:u128,#[doc(hidden)] pub partial:ManuallyDrop<Option<RetainedHistoryOriginPartial>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,closing:bool,ready:bool,closed:bool}
 impl RetainedHistoryOriginProjection{
- pub fn last_turn_work(&self)->u64{self.last_work}
+ pub fn last_turn_work(&self)->u128{self.last_work}
  pub fn admit_original(original:&mut Option<DslValue>,g:RetainedCloneGrant)->Result<Option<Self>,ValueError>{if original.is_none()||g.maximum_items==0||g.maximum_depth==0{return Ok(None)}Ok(Some(Self{last_work:0,partial:ManuallyDrop::new(Some(RetainedHistoryOriginPartial::empty(original.take().unwrap()))),receipt:Some((g,metadata())),closing:false,ready:false,closed:false}))}
  pub fn receipt(&self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt}
  pub fn take_receipt(&mut self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt.take()}
@@ -76,12 +79,12 @@ impl RetainedHistoryOriginProjection{
   if let Some(index)=Self::cleanup_index(p){return Ok(p.discard_demands(index))}
   Ok(RetirementDemand{depth:1,..Default::default()})
  }
- pub fn step(&mut self,g:RetainedCloneGrant)->Result<bool,ValueError>{
-  self.last_work=0;if self.receipt.is_some()||self.closing||self.closed||self.ready{return Ok(false)}let d=self.demands(g.maximum_copy_bytes)?;if !permits(g,d){return Ok(false)}
-  self.last_work=1;let p=self.partial.as_mut().ok_or_else(refusal)?;let progress=if p.retiring.is_some(){let result=p.child_close(g);self.last_work=p.last_turn_work();result?}
+ pub fn step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<bool,ValueError>{
+  let g=effect.grant();let start=effect.performed_work();self.last_work=0;if self.receipt.is_some()||self.closing||self.closed||self.ready{return Ok(false)}let d=self.demands(g.maximum_copy_bytes)?;if !permits(g,d){return Ok(false)}
+  let p=self.partial.as_mut().ok_or_else(refusal)?;let progress=if p.retiring.is_some(){let result=p.child_close(effect);self.last_work=p.last_turn_work();result?}
   else if let Some(key)=p.key.take(){let released_bytes=key.capacity();drop(key);RetainedCloneProgress{released_bytes,..metadata()}}
   else if p.cells[2].is_some(){
-   if p.field==usize::MAX{let result=p.discard(2,g);self.last_work=p.last_turn_work();result?}else{
+   if p.field==usize::MAX{let result=p.discard(2,effect);self.last_work=p.last_turn_work();result?}else{
     let field=p.field;let value=p.cells[2].as_ref().unwrap();
     let valid=match field{1=>matches!(value,DslValue::Object(_)),6=>matches!(value,DslValue::Array(values)if values.len()==32),9=>matches!(value,DslValue::Null|DslValue::String(_)),_=>matches!(value,DslValue::String(_))};if !valid||p.cells[field].is_some(){return Err(refusal())}
     if field==3{p.kind=match value{DslValue::String(s)if s=="owner"=>1,DslValue::String(s)if s=="contributed"=>2,DslValue::String(s)if s=="transaction"=>3,_=>return Err(refusal())}}
@@ -94,9 +97,9 @@ impl RetainedHistoryOriginProjection{
    let nested=index==1;let Some(DslValue::Object(fields))=p.cells[index].as_mut()else{return Err(refusal())};
    if fields.is_empty(){let Some(DslValue::Object(fields))=p.cells[index].take()else{unreachable!()};let released_bytes=fields.capacity()*size_of::<(String,DslValue)>();drop(fields);RetainedCloneProgress{released_bytes,..metadata()}}
    else{let(key,value)=fields.pop().unwrap();p.field=if nested{match key.as_str(){"artifactId"=>7,"artifactKind"=>8,"dialect"=>9,_=>usize::MAX}}else{match key.as_str(){"kind"=>3,"pluginId"=>4,"mutationId"=>5,"payloadHash"=>6,"initiator"=>1,_=>usize::MAX}};*p.key=Some(key);p.cells[2]=Some(value);metadata()}
-  }else if let Some(index)=Self::cleanup_index(p){let result=p.discard(index,g);self.last_work=p.last_turn_work();result?}
+  }else if let Some(index)=Self::cleanup_index(p){let result=p.discard(index,effect);self.last_work=p.last_turn_work();result?}
   else{let valid=match p.kind{1=>true,2=>p.cells[4].is_some()&&p.cells[5].is_some()&&p.hash_ready,3=>p.cells[7].is_some()&&p.cells[8].is_some(),_=>false};if !valid{return Err(refusal())}self.ready=true;metadata()};
-  self.publish(g,progress)?;Ok(true)
+  self.last_work=crate::settle_since(effect,start,1)?;self.publish(g,progress)?;Ok(true)
  }
  pub fn is_ready(&self)->bool{self.ready&&!self.closing}
  fn text(cell:&mut Option<DslValue>)->String{let Some(DslValue::String(text))=cell.take()else{unreachable!()};text}

@@ -224,14 +224,14 @@ async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them
 
     let outstanding = store.snapshot_read().expect("third snapshot read lease");
     assert!(store.close_owned_phase_witness().starts_with("ReturnedReads/"), "the close cursor must open on the lease registry, got {}", store.close_owned_phase_witness());
-    let refused = store.close_owned_step(quoted(store.close_owned_demands(4096).expect("quoted store close demand"))).expect("bounded value-store close");
+    let refused = store.close_owned_step_cold(quoted(store.close_owned_demands(4096).expect("quoted store close demand"))).expect("bounded value-store close");
     assert!(matches!(refused, RetainedCloneStep::Progress(progress) if progress == Default::default()), "a close that still holds a snapshot read must refuse, not advance past the lease registry: {refused:?}");
     assert!(store.close_owned_phase_witness().starts_with("ReturnedReads/"), "a refused close stays in the lease phase, got {}", store.close_owned_phase_witness());
     drop(outstanding);
 
     for _ in 0..100_000 {
         let grant = quoted(store.close_owned_demands(4096).expect("quoted store close demand"));
-        let step = store.close_owned_step(grant).expect("bounded value-store close");
+        let step = store.close_owned_step_cold(grant).expect("bounded value-store close");
         assert!(step.progress().fits(grant));
         if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(store.close_owned_terminal_is_empty(), "a Complete close owes its terminal-empty witness");
@@ -246,7 +246,7 @@ async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them
 fn close_member(member: &mut SemioMembers) {
     for _ in 0..100_000 {
         let grant = quoted(member.close_owned_demands(4096).expect("quoted member close demand"));
-        let step = member.close_owned_step(grant).expect("bounded member close");
+        let step = member.close_owned_step_cold(grant).expect("bounded member close");
         assert!(step.progress().fits(grant));
         if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(member.close_owned_terminal_is_empty());
@@ -288,7 +288,7 @@ async fn supersession_and_prefix_owners_follow_the_exact_semio_close_cursor() {
         if reached < phases.len() && witness.starts_with(&format!("{}/", phases[reached].as_str().unwrap())) { reached += 1; }
         let demand = store.close_owned_demands(max_bytes).expect("quoted genuine Semio close demand");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: max_items, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        match store.close_owned_step(grant).expect("bounded genuine Semio close") {
+        match store.close_owned_step_cold(grant).expect("bounded genuine Semio close") {
             RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant) && progress.copied_items <= max_items),
             RetainedCloneStep::Complete(_) => {
                 assert!(store.close_owned_terminal_is_empty());

@@ -47,7 +47,7 @@ describe("Puzzle3D Settings Component document", () => {
       expect(input.classList.contains("border-0")).toBe(true);
       const group = input.closest('[data-slot="stepper-group"]')!;
       expect(group.classList.contains("border")).toBe(true);
-      expect(group.classList.contains("overflow-hidden")).toBe(true);
+      expect(group.hasAttribute("data-shared-border-frame")).toBe(true);
       for (const slot of ["minus", "plus"]) {
         const button = group.querySelector(`[data-slot="stepper-${slot}"]`)!;
         expect(button.classList.contains("w-medium")).toBe(true);

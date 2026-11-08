@@ -322,7 +322,7 @@ impl OriginalReplayDiagnostics {
                 let source = self.selected(baseline, rows)?;
                 if let Some(message) = source.messages.get(self.message) {
                     let copy = self.copy.as_mut().unwrap();
-                    p = copy.advance(message, grant)?.progress();
+                    p = copy.advance(message, grant).result?.progress();
                     if copy.ready() {
                         self.phase = Phase::MessageTake;
                     }
@@ -339,7 +339,7 @@ impl OriginalReplayDiagnostics {
             }
             Phase::MessageClose => {
                 let copy = self.copy.as_mut().unwrap();
-                p = copy.close_step(grant)?.progress();
+                p = copy.close_step(grant).result?.progress();
                 if copy.terminal_is_empty() {
                     self.copy = None;
                     if self.row.as_ref().unwrap().messages.len() == self.selected(baseline, rows)?.messages.len() {
@@ -450,7 +450,8 @@ impl OriginalReplayDiagnostics {
         Ok(fixed(0))
     }
     /// ♻️ Closes partial copies, moved result rows and all private or displaced physical backing.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         if !self.closing {
             return Err(invalid("replay diagnostics closure was not requested"));
         }
@@ -460,7 +461,7 @@ impl OriginalReplayDiagnostics {
         }
         let mut p = event(d);
         if let Some(copy) = self.copy.as_mut() {
-            p = copy.close_step(grant)?.progress();
+            p = copy.close_step(grant).result?.progress();
             if copy.terminal_is_empty() {
                 self.copy = None;
             }
@@ -472,7 +473,7 @@ impl OriginalReplayDiagnostics {
         } else if let Some(row) = self.row.take() {
             self.row_close = Some(ArtifactStoreMessageLedgerRetirement::new(row.edit_id, row.messages));
         } else if let Some(ledger) = self.retiring.as_mut() {
-            p = ledger.close_step(grant).result?.progress();
+            p = match ledger.close_step(&mut effect.nested(grant)) { semio_framework_value::RetainedWorkPoll::Pending { .. } => Default::default(), semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?.progress() };
             if ledger.terminal_is_empty() {
                 self.retiring = None;
             }

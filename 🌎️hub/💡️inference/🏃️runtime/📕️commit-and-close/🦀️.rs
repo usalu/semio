@@ -119,7 +119,7 @@ impl<B: ComposedMapCommitBindingV1> RetainedGisMapApprovalCommitterV1<B> {
         let Some(owner) = store.as_mut() else { return Ok(true) };
         let demand = owner.close_owned_demands(0).map_err(|error| gis_map_storage_refusal(&error))?;
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        match owner.close_owned_step(grant) {
+        match owner.close_owned_step_cold(grant) {
             Ok(RetainedCloneStep::Complete(_)) => {
                 let terminal = owner.close_owned_terminal_is_empty();
                 record_close_store_step(&format!("{slot} Complete terminal_is_empty={terminal}"));

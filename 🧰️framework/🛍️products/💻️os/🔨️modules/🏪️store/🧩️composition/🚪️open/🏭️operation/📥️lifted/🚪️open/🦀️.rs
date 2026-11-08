@@ -132,7 +132,7 @@ where
 {
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.retirement_demands(body)}
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
         use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::admit_retained_clone_close};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -141,11 +141,11 @@ where
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "member-open exceeds admitted original owner depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.reject(MemberOpenDiagnostic::Cancelled);
-        if self.active.is_some() { return semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         let owners = self.owners.as_ref().expect("member-open retains original catalog");
         if let Some(runtime) = self.runtime.as_mut() {
-            let step = runtime.close_step(&owners.initial_snapshot_retirement, child)?;
+            let step = runtime.close_step(&owners.initial_snapshot_retirement, &mut effect.nested(child))?;
             let terminal = runtime.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "member-open original initialization")?;
             if terminal { drop(self.runtime.take()); }
@@ -163,17 +163,21 @@ where
                 Err((error, envelope)) => { *self.envelope = Some(envelope); Err(error) }
             };
         }
-        if let Some(initial) = self.initial.take() {
-            return match owners.initial_snapshot_retirement.retire_owned(initial, child).result {
-                Ok((owner, progress)) => { *self.active = Some(owner); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "member-open initial factory changed its constructor receipt")); } Ok(RetainedCloneStep::Progress(progress)) }
-                Err((error, initial)) => { *self.initial = Some(initial); Err(error) }
+        if self.initial.is_some() {
+            let turn = match owners.retire_initial_snapshot_owned(&mut self.initial, &mut effect.nested(child)) {
+                semio_framework_value::RetainedWorkPoll::Pending { .. } => return Ok(RetainedCloneStep::Progress(empty)),
+                semio_framework_value::RetainedWorkPoll::Complete(turn) => turn,
             };
+            let (owner, progress) = turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;
+            *self.active = Some(owner);
+            if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "member-open initial factory changed its constructor receipt")); }
+            return Ok(RetainedCloneStep::Progress(progress));
         }
-        if let Some(history) = self.history.take() {
-            return match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(history, child).result {
-                Ok((owner, progress)) => { *self.active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }
-                Err((error, history)) => { *self.history = Some(history); Err(error) }
-            };
+        if self.history.is_some() {
+            return Ok(match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(&mut self.history, &mut effect.nested(child)).result? {
+                Some((owner, progress)) => { *self.active = Some(owner); RetainedCloneStep::Progress(progress) }
+                None => RetainedCloneStep::Progress(empty),
+            });
         }
         if let Some(request) = self.request.as_mut() {
             let step = request.close_step(child)?;
@@ -183,12 +187,12 @@ where
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         let owners = self.owners.as_mut().expect("member-open catalog remains until terminal");
-        let step = owners.close_uninstalled_owners_step(child)?;
+        let step = owners.close_uninstalled_owners_step(&mut effect.nested(child))?;
         let terminal = owners.uninstalled_owners_terminal_is_empty();
         admit_retained_clone_close(child, step, terminal, "member-open original catalog")?;
         if terminal { drop(self.owners.take()); self.terminal = true; }
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()))); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work }) }
 
     fn terminal_is_empty(&self) -> bool {
         self.terminal && self.request.is_none() && self.owners.is_none() && self.history.is_none() && self.initial.is_none() && self.pending_edit.is_none() && self.envelope.is_none() && self.runtime.is_none() && self.active.is_none()

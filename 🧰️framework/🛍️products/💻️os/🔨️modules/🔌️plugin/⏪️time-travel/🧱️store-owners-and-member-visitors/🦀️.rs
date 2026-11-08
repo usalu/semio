@@ -33,8 +33,8 @@ where
     fn finalizing(&self)->bool{TimeTravelStoreState::finalizing(self)}
     fn cancel_prepared_command(&mut self){self.commit_closing=self.finalizing();if let Some(owner)=self.discard_effects.as_mut(){owner.closing=true}}
     fn requires_original_control(&self)->bool{self.preview_derived.as_ref().is_some_and(|owner|owner.is_closing()&&owner.requires_original_control())||self.retirements.iter().any(|owner|owner.requires_original_control())}
-    fn retire_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<Option<RetainedCloneStep>,Fault>{self.original_retirement_step_controlled(grant,control).map_err(ValueError::into_fault)}
-    fn retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, Fault> { self.original_retirement_step(grant).map_err(ValueError::into_fault) }
+    fn retire_step_controlled(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<Option<RetainedCloneStep>,Fault>{self.original_retirement_step_controlled(effect,control).map_err(ValueError::into_fault)}
+    fn retire_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<RetainedCloneStep>, Fault> { self.original_retirement_step(effect).map_err(ValueError::into_fault) }
 
     fn as_any(&self) -> &dyn std::any::Any {
         self

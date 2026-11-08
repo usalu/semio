@@ -21,7 +21,7 @@ use std::future::Future;
 use crate::stores_components::InstanceStores;
 use store::{MemberFactory, SpaceMember};
 use semio_ui_contract::*;
-use semio_plugin_tool_run::tool_jobs_tool_machine::*;
+use semio_plugin_tool_machine::*;
 
 //#region 🔖️Driver
 impl<A: ArtifactApp> InstanceStores<A> {

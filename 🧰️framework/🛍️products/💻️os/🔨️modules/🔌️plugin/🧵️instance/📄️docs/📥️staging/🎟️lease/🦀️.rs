@@ -37,7 +37,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         if grant.maximum_items==0||!semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
         if tools.pending_tool_lease_admission.is_none(){if let Some((permit,identity))=self.pending_reserved_producer_permit.take(){
             let FrameworkReservedCommitPermit{operation,lease,..}=permit;let instance=lease.key.app_instance_id;
-            *tools.pending_tool_lease_admission=Some(OriginalToolLeaseAdmission{source:ManuallyDrop::new(None),verb:ManuallyDrop::new(None),operation:Some(operation),lease:ManuallyDrop::new(Some(lease)),retirement:ManuallyDrop::new(None),instance,identity,keyed:true,copied:true,returning:true});
+            *tools.pending_tool_lease_admission=Some(OriginalToolLeaseAdmission{source:ManuallyDrop::new(None),verb:ManuallyDrop::new(None),operation:Some(operation),lease:ManuallyDrop::new(Some(lease.into_lease())),retirement:ManuallyDrop::new(None),instance,identity,keyed:true,copied:true,returning:true});
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
         }}
         let Some(pending)=tools.pending_tool_lease_admission.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()))};

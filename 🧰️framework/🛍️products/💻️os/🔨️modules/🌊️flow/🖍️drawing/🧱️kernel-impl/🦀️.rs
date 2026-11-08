@@ -66,6 +66,7 @@ impl DrawingKernel for DrawingStore {
         if children.is_empty() {
             return Err(semio_framework_2d::DrawingError::InvalidInput("group needs children".into()));
         }
+        children.iter().try_for_each(|child| self.entry(child).map(drop))?;
         let handles: Vec<String> = children.iter().map(|h| h.as_str().to_string()).collect();
         self.register(DrawingKind::Group, DrawingNode::Group { children: handles })
     }
@@ -170,7 +171,8 @@ fn boolean_path_operands(inputs: &[&[semio_framework_2d::PathSegment]], operatio
     let operands = inputs.iter().map(|path| PathBooleanOperand { segments: path.to_vec(), transform: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], tolerance: 0.01, fill_rule: BooleanFillRule::Nonzero }).collect();
     let mut job = PathBooleanJob::new(PathBooleanInput { operation, operands, epsilon: 1e-8f64.max(magnitude * f64::EPSILON * 32.0), max_edges: 65536, max_parameters: 262144, max_atomic_edges: 65536, max_segments: 65536, max_work: 100000000 });
     let outcome = (|| loop {
-        let progress = job.advance(4096, &mut RetainedWorkLedger::new(STOCK)).map_err(|error| DrawingError::Operation(error.to_string()))?;
+        let mut allocation = None;
+        let progress = job.advance(4096, &mut RetainedWorkLedger::new(STOCK), &mut allocation).map_err(|error| DrawingError::Operation(error.to_string()))?;
         if progress.done {
             return job.result().map(<[PathSegment]>::to_vec).map_err(|error| DrawingError::Operation(error.to_string()));
         }
@@ -179,14 +181,40 @@ fn boolean_path_operands(inputs: &[&[semio_framework_2d::PathSegment]], operatio
         }
     })();
     let (mut retired, _) = job.into_retirement();
-    let refused = |_| DrawingError::Operation("Boolean retirement refused its physical grant".into());
-    while !retired.terminal_is_empty() {
-        let copy = retired.next_copy_byte_demand().map_err(refused)?;
-        let release = retired.next_release_byte_demand().map_err(refused)?;
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: retired.next_capacity_byte_demand(if copy > 0 { copy } else { release }).map_err(refused)?, maximum_release_bytes: release, maximum_depth: retired.next_depth_demand().map_err(refused)? };
-        if retired.close_step(grant).map_err(refused)?.progress() == Default::default() {
-            return Err(DrawingError::Operation("Boolean retirement made no progress".into()));
-        }
+    fn refused<E>(_: E) -> DrawingError {
+        DrawingError::Operation("Boolean retirement refused its physical grant".into())
     }
-    outcome
+    let mut wallet = semio_framework_value::AuthoringWallet::new(STOCK, 1 << 48);
+    let drained = (|| -> Result<(), DrawingError> {
+        while !retired.terminal_is_empty() {
+            let mut body = 0;
+            let mut quoted = None;
+            for _ in 0..8 {
+                let demand = retired.next_demand(body).map_err(refused)?;
+                if demand.copy_bytes <= body {
+                    quoted = Some(demand);
+                    break;
+                }
+                body = demand.copy_bytes;
+            }
+            let Some(demand) = quoted else {
+                return Err(DrawingError::Operation("Boolean retirement quote did not settle".into()));
+            };
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+            let step = wallet.run_settled(grant, 1 << 24, |effect| retired.close_step(effect)).map_err(refused)?.ok_or_else(|| DrawingError::Operation("Boolean retirement work was not admitted".into()))?.0;
+            let work = step.work;
+            let step = step.result.map_err(refused)?;
+            wallet.post(step.progress()).map_err(refused)?;
+            if work == 0 {
+                return Err(DrawingError::Operation("Boolean retirement made no progress".into()));
+            }
+        }
+        Ok(())
+    })();
+    if !retired.terminal_is_empty() {
+        std::mem::forget(retired);
+    }
+    let output = outcome?;
+    drained?;
+    Ok(output)
 }

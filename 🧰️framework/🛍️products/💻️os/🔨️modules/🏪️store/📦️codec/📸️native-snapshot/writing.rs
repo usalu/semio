@@ -2,7 +2,7 @@
 use pack::record::BorrowedPackDocumentCursor;
 use semio_framework_dsl_record::{BorrowedRecordSpec, native_encoding::FieldProjectionSource};
 use semio_framework_value::{
-    NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind,
+    NativeEncodeControl, RetainedAllocationEffect, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind,
     retained_clone::retained_clone_grant_admits,
     retirement::{RetireOwned, RetirementCursor, RetirementStep},
 };
@@ -10,9 +10,11 @@ use std::mem::{ManuallyDrop, size_of};
 fn invalid() -> ValueError {
     ValueError::literal(ValueRefusalKind::InvariantViolated, "original Pack writer requires its borrowed canonical document and funded sole final buffer")
 }
+fn unit(effect: &mut RetainedAllocationEffect<'_>) -> Result<(), ValueError> {
+    if effect.performed(1)? { Ok(()) } else { Err(ValueError::literal(ValueRefusalKind::WorkLimit, "original Pack writer exceeds its work ceiling")) }
+}
 /// 📦️ Codec scratch, initialized bytes and successful scratch draining retain independent original demands.
 pub struct OriginalPackWriting {
-    last_work:u64,
     cursor: ManuallyDrop<Option<BorrowedPackDocumentCursor>>,
     wire: ManuallyDrop<Vec<u8>>,
     envelope: &'static str,
@@ -29,7 +31,6 @@ impl OriginalPackWriting {
         let prefix = semio_os_semio::declared_envelope_prefix_len(envelope, semio_os_semio::Component::Pack, 1)?;
         let body = maximum.checked_sub(prefix).ok_or_else(invalid)?;
         Ok(Self {
-            last_work:0,
             cursor: ManuallyDrop::new(Some(BorrowedPackDocumentCursor::with_maximum_file_len(body).with_maximum_body_len(body))),
             wire: ManuallyDrop::new(Vec::new()),
             envelope,
@@ -41,7 +42,6 @@ impl OriginalPackWriting {
             closing: false,
         })
     }
-    pub fn last_turn_work(&self)->u64{self.last_work}
     pub fn ready(&self) -> bool {
         !self.closing && self.cursor.is_none() && self.wire.capacity() > 0
     }
@@ -68,26 +68,26 @@ impl OriginalPackWriting {
         Ok(RetirementDemand { copy_bytes: cursor.next_copy_byte_demand()?, capacity_bytes: cursor.next_capacity_byte_demand()?, depth: cursor.next_depth_demand()?, ..Default::default() })
     }
     /// ✍️ Denied turns preserve every owner and callback count; accepted spans use the supplied original encoder.
-    pub fn advance<T: FieldProjectionSource>(&mut self, source: &T, schema: BorrowedRecordSpec, native: &mut NativeEncodeControl<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
-        self.last_work=0;
+    pub fn advance<T: FieldProjectionSource>(&mut self, source: &T, schema: BorrowedRecordSpec, native: &mut NativeEncodeControl<'_>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
+        let grant = effect.grant();
         let demand = self.demand(grant.maximum_copy_bytes)?;
         if !retained_clone_grant_admits(grant, demand) {
             return Ok(Default::default());
         }
         native.checkpoint()?;
-        let progress = self.advance_owned(source, schema, native, grant, demand)?;
+        let progress = self.advance_owned(source, schema, native, effect, demand)?;
         if progress != RetainedCloneProgress::default() {
             native.step().map_err(|e| e.with_retained_progress(progress))?;
         }
         Ok(progress)
     }
-    fn advance_owned<T: FieldProjectionSource>(&mut self, source: &T, schema: BorrowedRecordSpec, native: &mut NativeEncodeControl<'_>, grant: RetainedCloneGrant, demand: RetirementDemand) -> Result<RetainedCloneProgress, ValueError> {
+    fn advance_owned<T: FieldProjectionSource>(&mut self, source: &T, schema: BorrowedRecordSpec, native: &mut NativeEncodeControl<'_>, effect: &mut RetainedAllocationEffect<'_>, demand: RetirementDemand) -> Result<RetainedCloneProgress, ValueError> {
+        let grant = effect.grant();
         let cursor = self.cursor.as_mut().ok_or_else(invalid)?;
         if self.draining || cursor.is_complete() {
             self.draining = true;
             native.charge(demand.capacity_bytes)?;
-            let result=cursor.close(grant);self.last_work=cursor.last_turn_work();
-            let step=result.map_err(|e|e.reason)?;
+            let step = cursor.close(effect).map_err(|e| e.reason)?;
             if cursor.terminal_is_empty() {
                 self.cursor.take();
             }
@@ -96,7 +96,8 @@ impl OriginalPackWriting {
         if let Some(length) = cursor.output_len() {
             let total = self.prefix.checked_add(length).ok_or_else(invalid)?;
             if self.wire.capacity() == 0 {
-                self.last_work=1;*self.wire = native.allocate_vec(total)?;
+                unit(effect)?;
+                *self.wire = native.allocate_vec(total)?;
                 return Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Vec<u8>>(), retained_capacity_bytes: self.wire.capacity(), ..Default::default() });
             }
             if self.initialized < total {
@@ -104,7 +105,8 @@ impl OriginalPackWriting {
                 if count == 0 {
                     return Ok(Default::default());
                 }
-                self.last_work=1;self.initialized += count;
+                unit(effect)?;
+                self.initialized += count;
                 self.wire.resize(self.initialized, 0);
                 return Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: count, ..Default::default() });
             }
@@ -113,7 +115,8 @@ impl OriginalPackWriting {
                 if count == 0 {
                     return Ok(Default::default());
                 }
-                self.last_work=1;for i in self.prefix_written..self.prefix_written + count {
+                unit(effect)?;
+                for i in self.prefix_written..self.prefix_written + count {
                     self.wire[i] = semio_os_semio::declared_binary_prefix_byte(self.envelope, semio_os_semio::Component::Pack, 1, i)?.ok_or_else(invalid)?;
                 }
                 self.prefix_written += count;
@@ -127,8 +130,7 @@ impl OriginalPackWriting {
             let start = self.prefix.checked_add(self.written).ok_or_else(invalid)?;
             &mut self.wire[start..]
         };
-        let result=cursor.advance(source,schema,out,grant);self.last_work=cursor.last_turn_work();
-        match result {
+        match cursor.advance(source, schema, out, effect) {
             Ok(step) => {
                 self.written = self.written.checked_add(step.written_bytes).ok_or_else(invalid)?;
                 Ok(step.progress)
@@ -140,8 +142,8 @@ impl OriginalPackWriting {
         }
     }
     /// 📬️ Transfers the actual sole final Pack after all canonical codec scratch has reached terminal close.
-    pub fn take(&mut self, grant: RetainedCloneGrant) -> Result<Option<(Vec<u8>, RetainedCloneProgress)>, ValueError> {
-        self.last_work=0;
+    pub fn take(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<(Vec<u8>, RetainedCloneProgress)>, ValueError> {
+        let grant = effect.grant();
         if !self.ready() {
             return Err(invalid());
         }
@@ -151,7 +153,8 @@ impl OriginalPackWriting {
         if self.wire.len() != self.prefix.checked_add(self.written).ok_or_else(invalid)? {
             return Err(invalid());
         }
-        self.last_work=1;Ok(Some((std::mem::take(&mut *self.wire), RetainedCloneProgress { copied_items: 1, ..Default::default() })))
+        unit(effect)?;
+        Ok(Some((std::mem::take(&mut *self.wire), RetainedCloneProgress { copied_items: 1, ..Default::default() })))
     }
     pub fn close_demand(&self, _body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(cursor) = self.cursor.as_ref() {
@@ -160,23 +163,23 @@ impl OriginalPackWriting {
             Ok(RetirementDemand { copy_bytes: usize::from(self.wire.capacity() > 0) * size_of::<Vec<u8>>(), release_bytes: self.wire.capacity(), depth: usize::from(self.wire.capacity() > 0), ..Default::default() })
         }
     }
-    pub fn close(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        self.last_work=0;
+    pub fn close(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         let demand = self.close_demand(grant.maximum_copy_bytes)?;
         if !retained_clone_grant_admits(grant, demand) {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         self.closing = true;
         if let Some(cursor) = self.cursor.as_mut() {
-            let result=cursor.close(grant);self.last_work=cursor.last_turn_work();
-            let step=result.map_err(|e|e.reason)?;
+            let step = cursor.close(effect).map_err(|e| e.reason)?;
             if cursor.terminal_is_empty() {
                 self.cursor.take();
             }
             return Ok(RetainedCloneStep::Progress(step.progress));
         }
         if self.wire.capacity() > 0 {
-            self.last_work=1;let released_bytes = self.wire.capacity();
+            unit(effect)?;
+            let released_bytes = self.wire.capacity();
             drop(std::mem::take(&mut *self.wire));
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes, ..Default::default() }));
         }
@@ -187,9 +190,10 @@ impl OriginalPackWriting {
     }
 }
 impl RetireOwned for OriginalPackWriting {
-    fn retirement(mut self) -> Box<dyn RetirementCursor> {
+    type RetirementCursor = Self;
+    fn retirement_seed(mut self) -> Self {
         self.closing = true;
-        Box::new(self)
+        self
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {
         Some(size_of::<Self>())
@@ -202,10 +206,10 @@ impl RetirementCursor for OriginalPackWriting {
     fn next_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         self.close_demand(body)
     }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
-        match self.close(grant) {
-            Ok(step) => RetirementStep::Progress(step.progress(), self.last_work),
-            Err(e) => RetirementStep::Failure(e, self.last_work),
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetirementStep {
+        match self.close(effect) {
+            Ok(step) => RetirementStep::Progress(step.progress(), effect.performed_work()),
+            Err(e) => RetirementStep::Failure(e.into(), effect.performed_work()),
         }
     }
     fn terminal_is_empty(&self) -> bool {

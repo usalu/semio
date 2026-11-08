@@ -45,6 +45,25 @@ export function scopeContributionsJson(
   return JSON.stringify(entries);
 }
 
+/**
+ * 🎯️ The topics one app's `setContributions` pack is cut to: the `consumes` row of the plugin that OWNS the app, never the composition's union.
+ *
+ * 🧱️ A composition re-hosts apps exactly as their owners declared them, and each owner's `consumes` row is the authority for what that app acts on (and prices its wire against). Handing every app the composition's union put `flow.extension`'s 555 312-byte pack into the cad, process3d and sourcing apps, whose retained `setContributions` admits `CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES` (49 152) (measured 2026-11-07, ticket 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS). The owner is the loaded plugin other than the receiver whose manifest lists the app id; the result never exceeds the receiver's own row, and an app nobody else owns keeps the receiver's row whole.
+ */
+export function consumedTopicsForApp(
+  registry: ReadonlyArray<{ readonly pluginId: string; readonly consumes?: readonly string[] }>,
+  loaded: ReadonlyArray<{ readonly pluginId: string; readonly manifest: { readonly apps?: ReadonlyArray<{ readonly id: string }> } }>,
+  receiverPluginId: string,
+  appId: string | undefined,
+): readonly string[] {
+  const receiverRow = registry.find((row) => row.pluginId === receiverPluginId)?.consumes ?? [];
+  if (appId === undefined) return receiverRow;
+  const owner = loaded.find((entry) => entry.pluginId !== receiverPluginId && (entry.manifest.apps ?? []).some((app) => app.id === appId));
+  if (owner === undefined) return receiverRow;
+  const allowed = new Set(receiverRow);
+  return (registry.find((row) => row.pluginId === owner.pluginId)?.consumes ?? []).filter((topic) => allowed.has(topic));
+}
+
 export function resolveLayoutForMode(
   app: { readonly defaultLayout?: WindowLayout; readonly namedLayouts?: readonly NamedLayout[]; readonly modes: readonly { readonly id: string; readonly layoutId?: string }[] },
   modeId: string,

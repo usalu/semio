@@ -5,6 +5,8 @@
 // into `SourcingModules`; Send comes structurally from that concrete enum (R3), so this lint's suggested
 // `-> impl Future + Send` fix is never taken, and the method is never made sync to silence it.
 #![allow(async_fn_in_trait)]
+#[cfg(test)]
+semio_plugin::install_fixture_heap_witness!();
 
 extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;

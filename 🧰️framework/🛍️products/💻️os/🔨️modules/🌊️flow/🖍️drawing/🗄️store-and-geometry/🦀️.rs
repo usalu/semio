@@ -3,12 +3,17 @@
 use super::*;
 
 // #region 🔖️Store
+/// 📏️ Deepest group nesting that [`DrawingStore::flatten_scene_sync`] expands.
+pub const MAX_GROUP_DEPTH: usize = 256;
+/// 📏️ Most nodes (groups and leaves) that one flatten may visit, bounding shared-child expansion.
+pub const MAX_SCENE_VISITS: usize = 1 << 16;
+
 /// 🗄️ [`DrawingKernel`] using engine derive through the WIT `engine-derive`/`engine-read` guest↔host
 /// boundary (process-local [`semio_framework_2d_compute::EngineCache`]) — flow's own ephemeral node-evaluation kernel,
 /// not a persisted artifact store.
 pub struct DrawingStore {
     cache: semio_framework_2d_compute::EngineCache,
-    pub live: HashSet<String>,
+    packs: std::collections::HashMap<String, Vec<u8>>,
 }
 
 impl Default for DrawingStore {
@@ -21,13 +26,13 @@ impl DrawingStore {
     pub fn new() -> Self {
         let mut cache = semio_framework_2d_compute::EngineCache::new(ENGINE_CACHE_BUDGET_BYTES);
         cache.register(DrawingEngine);
-        Self { cache, live: HashSet::new() }
+        Self { cache, packs: std::collections::HashMap::new() }
     }
 
     /// 🧩 Attach to an existing host-owned cache (registers [`DrawingEngine`]).
     pub fn with_engine_cache(mut cache: semio_framework_2d_compute::EngineCache) -> Self {
         cache.register(DrawingEngine);
-        Self { cache, live: HashSet::new() }
+        Self { cache, packs: std::collections::HashMap::new() }
     }
 
     /// 🧠 Mutable engine cache backing the WIT `engine-derive`/`engine-read` guest↔host boundary.
@@ -39,7 +44,7 @@ impl DrawingStore {
         let pack = StoredNode::encode_pack(node).map_err(semio_framework_2d::DrawingError::InvalidInput)?;
         let compute_handle = self.cache.derive(DrawingEngine::ENGINE_ID, &pack).map_err(map_engine_fault)?;
         let drawing = drawing_handle_from_key(compute_handle.key);
-        self.live.insert(drawing.as_str().to_string());
+        self.packs.insert(drawing.as_str().to_string(), pack);
         Ok(drawing)
     }
 
@@ -62,24 +67,20 @@ impl DrawingStore {
     }
 
     pub fn entry(&self, handle: &DrawingHandle) -> Result<StoredNode, semio_framework_2d::DrawingError> {
-        if !self.live.contains(handle.as_str()) {
-            return Err(semio_framework_2d::DrawingError::MissingHandle(handle.as_str().to_string()));
-        }
-        let compute_handle = compute_handle_for_drawing(handle)?;
-        let pack = self.cache.read(&compute_handle).map_err(map_engine_fault)?;
-        StoredNode::decode_pack(&pack).map_err(semio_framework_2d::DrawingError::InvalidInput)
+        let pack = self.packs.get(handle.as_str()).ok_or_else(|| semio_framework_2d::DrawingError::MissingHandle(handle.as_str().to_string()))?;
+        StoredNode::decode_pack(pack).map_err(semio_framework_2d::DrawingError::InvalidInput)
     }
 
     pub fn registry_len(&self) -> usize {
-        self.live.len()
+        self.packs.len()
     }
 
     pub fn dispose_sync(&mut self, handle: &DrawingHandle) {
-        self.live.remove(handle.as_str());
+        self.packs.remove(handle.as_str());
     }
 
     pub fn retain_sync(&mut self, live: &HashSet<String>) {
-        self.live.retain(|handle| live.contains(handle));
+        self.packs.retain(|handle, _| live.contains(handle));
     }
 
     pub(super) fn node_to_segments(node: &DrawingNode) -> Vec<semio_framework_2d::PathSegment> {
@@ -95,21 +96,27 @@ impl DrawingStore {
         }
     }
 
-    fn flatten_handle(&self, handle: &DrawingHandle, parent: Affine2D) -> Result<Vec<SceneNode>, semio_framework_2d::DrawingError> {
+    fn flatten_handle(&self, handle: &DrawingHandle, parent: Affine2D, depth: usize, visits: &mut usize, out: &mut Vec<SceneNode>) -> Result<(), semio_framework_2d::DrawingError> {
+        if depth > MAX_GROUP_DEPTH || *visits == 0 {
+            return Err(semio_framework_2d::DrawingError::Operation("scene flatten exceeds its group depth or node bound".into()));
+        }
+        *visits -= 1;
         let entry = self.entry(handle)?;
         let transform = parent.multiply(entry.transform);
         match &entry.node {
-            DrawingNode::Group { children } => children.iter().try_fold(Vec::new(), |mut acc, child| {
-                let nested = self.flatten_handle(&DrawingHandle(child.clone()), transform)?;
-                acc.extend(nested);
-                Ok::<_, semio_framework_2d::DrawingError>(acc)
-            }),
-            _ => Ok(vec![SceneNode { transform, node: entry.node.clone(), fill: entry.fill.clone(), stroke: entry.stroke.clone(), opacity: entry.opacity, clip: entry.clip.clone() }]),
+            DrawingNode::Group { children } => children.iter().try_for_each(|child| self.flatten_handle(&DrawingHandle(child.clone()), transform, depth + 1, visits, out)),
+            _ => {
+                out.push(SceneNode { transform, node: entry.node.clone(), fill: entry.fill.clone(), stroke: entry.stroke.clone(), opacity: entry.opacity, clip: entry.clip.clone() });
+                Ok(())
+            }
         }
     }
 
+    /// 🧱️ Flattens a handle into scene nodes, refusing a group chain deeper than [`MAX_GROUP_DEPTH`] or a shared-child expansion beyond [`MAX_SCENE_VISITS`] visited nodes.
     pub fn flatten_scene_sync(&self, handle: &DrawingHandle) -> Result<DrawingScene, semio_framework_2d::DrawingError> {
-        let nodes = self.flatten_handle(handle, Affine2D::identity())?;
+        let mut nodes = Vec::new();
+        let mut visits = MAX_SCENE_VISITS;
+        self.flatten_handle(handle, Affine2D::identity(), 0, &mut visits, &mut nodes)?;
         let (width, height) = scene_bounds(&nodes);
         Ok(DrawingScene { width, height, nodes })
     }

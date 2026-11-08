@@ -2,7 +2,7 @@
 use super::{InferenceWorkFailure,OriginalInferredField};
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
-use semio_framework_value_persistent::list::PagedList;
+use semio_framework_value_persistent::list::{PagedList,PagedListReleaseFailure,PagedListReleaseOutcome,PagedListReservationFailure,PagedListReservationOutcome};
 
 #[derive(Default,semio_framework_value::RetireOwned)]
 pub struct OriginalInferencePlan{
@@ -146,9 +146,13 @@ fn compare(a:&str,b:&str,byte:&mut usize,cx:&mut StepContext<'_>)->Result<Option
 }
 fn append<T:Copy>(target:&mut PagedList<T,{usize::MAX}>,value:T,extent:usize,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
  if !target.has_reserved_slot(){
-  match target.reserve_capacity_one_funded(extent,cx.retained_grant()){
-   Ok(receipt)=>{if receipt.copied_items==0{return Ok(false)}cx.consume_fuel(1);cx.consume_retained(receipt)?;return Ok(false)},
-   Err(error)=>{cx.consume_fuel(1);let original=ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()});return Err(OriginalTurnFailure::debit_original(original,cx).into())}
+  let Some((turn,_))=cx.with_original_effect(cx.retained_grant(),|_,effect|target.reserve_capacity_one_funded(extent,effect))? else{return Ok(false)};
+  let work=u64::try_from(turn.work).unwrap_or(u64::MAX);
+  match turn.result{
+   Ok(PagedListReservationOutcome::Ready(receipt))=>{if receipt.copied_items==0{return Ok(false)}cx.consume_fuel(work);cx.consume_retained(receipt)?;return Ok(false)},
+   Ok(PagedListReservationOutcome::Denied)=>return Ok(false),
+   Err(PagedListReservationFailure::Work(error))=>{cx.consume_fuel(work);return Err(OriginalTurnFailure::debit_original(error,cx).into())},
+   Err(PagedListReservationFailure::Allocation{error,copied_bytes})=>{cx.consume_fuel(work);let original=ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_bytes,retained_capacity_bytes:error.allocated_bytes,..Default::default()});return Err(OriginalTurnFailure::debit_original(original,cx).into())}
   }
  }
  if cx.retained_grant().maximum_depth<target.next_push_depth_demand().map_err(ValueError::from)?||!scalar(cx,size_of::<T>())?{return Ok(false)}
@@ -160,8 +164,14 @@ fn close<T:Copy>(target:&mut PagedList<T,{usize::MAX}>,cx:&mut StepContext<'_>)-
  if !target.is_empty(){if grant.maximum_depth<target.next_pop_depth_demand().map_err(ValueError::from)?||!scalar(cx,size_of::<T>())?{return Ok(())}target.pop();return Ok(())}
  let bytes=target.next_release_allocation_bytes().map_err(ValueError::from)?;let depth=target.next_release_depth_demand().map_err(ValueError::from)?;
  if grant.maximum_items==0||grant.maximum_depth<depth||grant.maximum_release_bytes<bytes{return Ok(())}
- let released=target.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;
- if released.progressed{cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:released.released_allocation_bytes,..Default::default()})?}Ok(())
+ let Some((turn,_))=cx.with_original_effect(grant,|_,effect|target.release_empty_page(effect))? else{return Ok(())};
+ let work=u64::try_from(turn.work).unwrap_or(u64::MAX);
+ match turn.result{
+  Ok(PagedListReleaseOutcome::Ready(released))=>{if released.progressed{cx.consume_fuel(work);cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:released.released_allocation_bytes,..Default::default()})?}Ok(())},
+  Ok(PagedListReleaseOutcome::Denied)=>Ok(()),
+  Err(PagedListReleaseFailure::Work(error))=>{cx.consume_fuel(work);Err(OriginalTurnFailure::debit_original(error,cx).into())},
+  Err(PagedListReleaseFailure::Release(error))=>{cx.consume_fuel(work);Err(OriginalTurnFailure::debit_original(ValueError::from(error),cx).into())},
+ }
 }
 
 fn append_demand<T>(target:&PagedList<T,{usize::MAX}>,extent:usize)->Result<RetirementDemand,ValueError>{

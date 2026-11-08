@@ -10,19 +10,25 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use semio_framework_value::{ErasedSnapshotRetirement, FromValue, ToValue, ValueError};
 use std::sync::Arc;
+
+/// 🏁️ Settles one snapshot-factory turn: a pending turn keeps its resident snapshot and retries on the next close turn.
+fn settle_snapshot_factory(poll: semio_framework_value::OriginalRetirementPoll<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress)>) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), semio_framework_value::RetirementPollExit> {
+    semio_framework_value::RetirementPollExit::resume(poll)
+}
 use super::{StoreCloseAdmission, StoreCloseWitness};
 
 //#region 🔖️ArtifactStore
-impl<P, Mutation> StoreCloseAdmission for StoreParts<'_, P, Mutation>
+/// 🧯️ Admits the non-snapshot owned roots of one store; the snapshot phases carry their effect in [`StoreCloseAdmission::close_cursor_admit`].
+trait StoreCloseOwned {
+    fn close_cursor_admit_owned(&mut self, phase: ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>;
+}
+
+impl<P, Mutation> StoreCloseOwned for StoreParts<'_, P, Mutation>
 where
     P: semio_os_spr::StoreState,
     Mutation: semio_os_spr::StoreMutationFor<P>,
 {
-    fn close_take_backbone_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
-        self.wire.close_take_backbone_retirement(grant)
-    }
-
-    fn close_cursor_admit(&mut self, phase: ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
+    fn close_cursor_admit_owned(&mut self, phase: ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
         let structural = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         match phase {
             ArtifactStoreCursorDisposerPhase::RuntimeOwners(0) => {
@@ -82,45 +88,6 @@ where
                     Err((error, original)) => { *edit_id = original; Err(error) }
                 }
             }
-            ArtifactStoreCursorDisposerPhase::PrefixSnapshots => {
-                if self.live.prefix_ring.is_empty() { return Ok((None, structural)); }
-                let factory = self.owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "prefix close requires installed factory"))?;
-                let entry = self.live.prefix_ring.pop().expect("observed original prefix owner");
-                if Arc::strong_count(&entry.snapshot) > 1 { drop(entry); return Ok((None, structural)); }
-                match factory.retire(entry.snapshot, grant) .result {
-                    Ok((owner, receipt)) => Ok((Some(owner), receipt)),
-                    Err((error, snapshot)) => { self.live.prefix_ring.push(PrefixSnapshot { snapshot, ..entry }); Err(error) }
-                }
-            }
-            ArtifactStoreCursorDisposerPhase::TailSnapshot => {
-                if self.live.tail_undo_cache.as_ref().is_some_and(|(id, _)| id.capacity() != 0) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "tail snapshot still retains original edit-id backing")); }
-                if self.live.tail_undo_cache.is_none() { return Ok((None, structural)); }
-                let factory = self.owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "tail close requires installed factory"))?;
-                let (id, snapshot) = self.live.tail_undo_cache.take().expect("observed original tail owner");
-                if Arc::strong_count(&snapshot) > 1 { drop((id, snapshot)); return Ok((None, structural)); }
-                match factory.retire(snapshot, grant) .result {
-                    Ok((owner, receipt)) => Ok((Some(owner), receipt)),
-                    Err((error, snapshot)) => { *self.live.tail_undo_cache = Some((id, snapshot)); Err(error) }
-                }
-            }
-            ArtifactStoreCursorDisposerPhase::CurrentSnapshot => {
-                if self.live.current_detached { return Ok((None, structural)); }
-                if self.live.tail_undo_cache.is_some() || !self.owners.snapshot_read_leases_terminal_is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "current snapshot still holds tail or read owners")); }
-                let genesis = std::ptr::eq(self.live.current.as_ref(), self.log.envelope.vcs.genesis.facts().snapshot());
-                let result = if genesis {
-                    let factory = self.owners.initial_snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "genesis alias requires exact initial factory"))?.clone();
-                    let original = unsafe { std::mem::ManuallyDrop::take(&mut self.live.current) };
-                    ReturnedSnapshotReadRetirement::admit(original, factory, grant).map_err(|(error, original, alias)| { drop(alias); (error, original) })
-                } else {
-                    let factory = self.owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "current snapshot requires exact factory"))?;
-                    let original = unsafe { std::mem::ManuallyDrop::take(&mut self.live.current) };
-                    factory.retire(original, grant).result
-                };
-                match result {
-                    Ok((owner, receipt)) => { self.live.current_detached = true; Ok((Some(owner), receipt)) }
-                    Err((error, original)) => { self.live.current = std::mem::ManuallyDrop::new(original); Err(error) }
-                }
-            }
             ArtifactStoreCursorDisposerPhase::Backbone => self.close_take_backbone_retirement(grant),
             ArtifactStoreCursorDisposerPhase::Causal => {
                 let original = std::mem::replace(&mut *self.log.dag, semio_os_spr::MutationDag::empty());
@@ -141,6 +108,68 @@ where
                 }
             }
             _ => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "installed close addressed a non-admission phase")),
+        }
+    }
+}
+
+impl<P, Mutation> StoreCloseAdmission for StoreParts<'_, P, Mutation>
+where
+    P: semio_os_spr::StoreState,
+    Mutation: semio_os_spr::StoreMutationFor<P>,
+{
+    fn close_take_backbone_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
+        self.wire.close_take_backbone_retirement(grant)
+    }
+
+    fn close_cursor_admit(&mut self, phase: ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), semio_framework_value::RetirementPollExit> {
+        let structural = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+        match phase {
+            ArtifactStoreCursorDisposerPhase::PrefixSnapshots => {
+                if self.live.prefix_ring.is_empty() { return Ok((None, structural)); }
+                let factory = self.owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "prefix close requires installed factory"))?;
+                let entry = self.live.prefix_ring.pop().expect("observed original prefix owner");
+                if Arc::strong_count(&entry.snapshot) > 1 { drop(entry); return Ok((None, structural)); }
+                let mut snapshot = Some(entry.snapshot);
+                match settle_snapshot_factory(semio_framework_value::factory::factory_retire_snapshot(&**factory, &mut snapshot, effect)) {
+                    Ok((owner, receipt)) => Ok((Some(owner), receipt)),
+                    Err(exit) => { self.live.prefix_ring.push(PrefixSnapshot { snapshot: snapshot.take().expect("a refused factory keeps its snapshot"), ..entry }); Err(exit) }
+                }
+            }
+            ArtifactStoreCursorDisposerPhase::TailSnapshot => {
+                if self.live.tail_undo_cache.as_ref().is_some_and(|(id, _)| id.capacity() != 0) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "tail snapshot still retains original edit-id backing").into()); }
+                if self.live.tail_undo_cache.is_none() { return Ok((None, structural)); }
+                let factory = self.owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "tail close requires installed factory"))?;
+                let (id, snapshot) = self.live.tail_undo_cache.take().expect("observed original tail owner");
+                if Arc::strong_count(&snapshot) > 1 { drop((id, snapshot)); return Ok((None, structural)); }
+                let mut snapshot = Some(snapshot);
+                match settle_snapshot_factory(semio_framework_value::factory::factory_retire_snapshot(&**factory, &mut snapshot, effect)) {
+                    Ok((owner, receipt)) => Ok((Some(owner), receipt)),
+                    Err(exit) => { *self.live.tail_undo_cache = Some((id, snapshot.take().expect("a refused factory keeps its snapshot"))); Err(exit) }
+                }
+            }
+            ArtifactStoreCursorDisposerPhase::CurrentSnapshot => {
+                if self.live.current_detached { return Ok((None, structural)); }
+                if self.live.tail_undo_cache.is_some() || !self.owners.snapshot_read_leases_terminal_is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "current snapshot still holds tail or read owners").into()); }
+                let genesis = std::ptr::eq(self.live.current.as_ref(), self.log.envelope.vcs.genesis.facts().snapshot());
+                let result = if genesis {
+                    let factory = self.owners.initial_snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "genesis alias requires exact initial factory"))?.clone();
+                    let original = unsafe { std::mem::ManuallyDrop::take(&mut self.live.current) };
+                    admit_artifact_retirement(original, grant, |original| ReturnedSnapshotReadRetirement::new(original, factory)).map_err(|(error, original)| (error.into(), original))
+                } else {
+                    let factory = self.owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "current snapshot requires exact factory"))?;
+                    let original = unsafe { std::mem::ManuallyDrop::take(&mut self.live.current) };
+                    let mut snapshot = Some(original);
+                    match settle_snapshot_factory(semio_framework_value::factory::factory_retire_snapshot(&**factory, &mut snapshot, effect)) {
+                        Ok(admitted) => Ok(admitted),
+                        Err(exit) => Err((exit, snapshot.take().expect("a refused factory keeps its snapshot"))),
+                    }
+                };
+                match result {
+                    Ok((owner, receipt)) => { self.live.current_detached = true; Ok((Some(owner), receipt)) }
+                    Err((exit, original)) => { self.live.current = std::mem::ManuallyDrop::new(original); Err(exit) }
+                }
+            }
+            phase => self.close_cursor_admit_owned(phase, grant).map_err(Into::into),
         }
     }
 }

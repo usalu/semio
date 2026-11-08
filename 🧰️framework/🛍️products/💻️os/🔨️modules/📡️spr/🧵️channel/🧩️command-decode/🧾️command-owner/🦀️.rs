@@ -72,18 +72,18 @@ impl DecodedAppCommandOwner {
     pub fn original_command_mut(&mut self) -> Option<&mut AppCommand> { self.command.as_mut() }
 
     pub fn close_original_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_value::{RetainedCloneProgress as P,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone_grant_admits};
+        use semio_framework_value::{RetainedCloneProgress as P,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::retained_clone_grant_admits};
         let grant=cx.retained_grant();if cx.retirement_should_yield(){return Ok(false)}
         if self.archive_close.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"command retirement cannot combine two active frontiers").into())}
         if self.original_close.is_none(){
             if self.command.is_none(){return Ok(true)}if !AppCommand::controlled_retirement_supported(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"command has no complete controlled field graph").into())}
             let bytes=size_of::<Option<AppCommand>>()+size_of::<Option<ControlledRetirement<AppCommand>>>();let d=semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};if cx.fuel_remaining()<1||!retained_clone_grant_admits(grant,d){return Ok(false)}
-            cx.consume_retained(P{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);self.original_close=Some(ControlledRetirement::retain(self.command.take().unwrap()));return Ok(false)
+            cx.consume_retained(P{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);let Some(command)=self.command.take()else{return Ok(true)};self.original_close=Some(ControlledRetirement::retain(command));return Ok(false)
         }
-        let owner=self.original_close.as_mut().unwrap();
+        let Some(owner)=self.original_close.as_mut()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"command retirement lost its retained cursor").into())};
         if owner.terminal_is_empty(){let bytes=size_of::<Option<ControlledRetirement<AppCommand>>>();let d=semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};if cx.fuel_remaining()<1||!retained_clone_grant_admits(grant,d){return Ok(false)}cx.consume_retained(P{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);self.original_close.take();return Ok(true)}
         let demand=owner.next_demand(grant.maximum_copy_bytes)?;let work=owner.next_computational_work(grant.maximum_copy_bytes)?;if cx.fuel_remaining()<work||!retained_clone_grant_admits(grant,demand){return Ok(false)}
-        let result=owner.step(grant);cx.consume_fuel(owner.last_turn_work());match result{Ok(step)=>cx.consume_retained(step.progress())?,Err(failure)=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(failure,cx))}Ok(false)
+        super::original_cursor::close_controlled(owner,cx)?;Ok(false)
     }
 
     pub fn take_for_dispatch(&mut self) -> Option<AppCommand> {

@@ -88,7 +88,7 @@
             if store.inner.close_owned_terminal_is_empty() { return; }
             let demand = store.inner.close_owned_demands(4096).expect("fixture owner quotes its next turn");
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            store.inner.close_owned_step(grant).expect("fixture owner closes under its quoted grant");
+            store.inner.close_owned_step_cold(grant).expect("fixture owner closes under its quoted grant");
         }
         panic!("workflow fixture did not reach terminal emptiness");
     }

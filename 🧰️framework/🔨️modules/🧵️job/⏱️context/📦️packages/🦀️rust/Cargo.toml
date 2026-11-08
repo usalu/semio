@@ -113,3 +113,13 @@ path = "../../🎟️source/🏠️native/🧪️tests/🎯️recipient/🦀️.
 name = "original-native-pair-slot"
 required-features = ["testkit"]
 path = "../../🎟️source/🏠️native/🧪️tests/🎟️pair-slot/🦀️.rs"
+
+[[test]]
+name = "original-effect-provider"
+required-features = ["testkit"]
+path = "../../🧪️tests/🪙️effect-provider/🦀️.rs"
+
+[[test]]
+name = "original-park-state"
+required-features = ["testkit"]
+path = "../../🧪️tests/🅿️park-state/🦀️.rs"

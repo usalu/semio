@@ -26,3 +26,6 @@ serde = { workspace = true }
 [dev-dependencies]
 serde_json = { workspace = true }
 semio-framework-async-macros = { path = "../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
+semio-framework-value-native-receiving-original = { path = "../../../../🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }

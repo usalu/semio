@@ -1,6 +1,7 @@
 //! ♻️ Original refold alias batches retain their native snapshot roots until exact admission.
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_retirement::ErasedSnapshotRetirement;
+use semio_framework_value_retirement::{OriginalRetirementPoll,RetirementPollExit};
 use std::{mem::{ManuallyDrop,size_of,size_of_val},sync::Arc};
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 
@@ -36,8 +37,13 @@ impl<P> OriginalAliasBatch<P>{
         }
         Ok(Default::default())
     }
-    pub fn advance<F>(&mut self,alias_birth:usize,grant:RetainedCloneGrant,admit:F)->Result<RetainedCloneStep,ValueError>
-    where F:FnOnce(&mut Option<Arc<P>>,RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{
+    pub fn advance<F>(&mut self,alias_birth:usize,effect:&mut RetainedAllocationEffect<'_>,admit:F)->OriginalRetirementPoll
+    where F:FnOnce(&mut Option<Arc<P>>,&mut RetainedAllocationEffect<'_>)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{
+        let mut work=0;let result=self.advance_step(alias_birth,effect,admit,&mut work);RetirementPollExit::finish(result,work)
+    }
+    fn advance_step<F>(&mut self,alias_birth:usize,effect:&mut RetainedAllocationEffect<'_>,admit:F,work:&mut u128)->Result<RetainedCloneStep,RetirementPollExit>
+    where F:FnOnce(&mut Option<Arc<P>>,&mut RetainedAllocationEffect<'_>)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{
+        let grant=effect.grant();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         let demand=self.next_demand(alias_birth)?;
@@ -45,8 +51,8 @@ impl<P> OriginalAliasBatch<P>{
         if let Some(owner)=self.active.as_mut(){
             if !owner.terminal_is_empty(){
                 let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-                let step=owner.close_step(child).result?;
-                if !step.progress().fits(child)||matches!(step,RetainedCloneStep::Complete(_))&&!owner.terminal_is_empty(){return Err(refusal("original alias child violated its admitted receipt"));}
+                let turn=RetirementPollExit::settled(owner.close_step(&mut effect.nested(child)))?;*work=turn.work;let step=turn.result?;
+                if !step.progress().fits(child)||matches!(step,RetainedCloneStep::Complete(_))&&!owner.terminal_is_empty(){return Err(refusal("original alias child violated its admitted receipt").into());}
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
             drop(self.active.take());
@@ -54,9 +60,9 @@ impl<P> OriginalAliasBatch<P>{
         }
         if self.pending.is_some(){
             let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-            let (owner,receipt)=admit(&mut self.pending,child)?.ok_or_else(||refusal("original alias issuer returned no retained frame"))?;
+            let admitted=admit(&mut self.pending,&mut effect.nested(child));*work=effect.performed_work();let (owner,receipt)=admitted?.ok_or_else(||refusal("original alias issuer returned no retained frame"))?;
             *self.active=Some(owner);
-            if self.pending.is_some()||!receipt.fits(child){return Err(refusal("original alias issuer violated its admitted custody"));}
+            if self.pending.is_some()||!receipt.fits(child){return Err(refusal("original alias issuer violated its admitted custody").into());}
             return Ok(RetainedCloneStep::Progress(receipt));
         }
         let original=self.original.as_mut().ok_or_else(||refusal("original alias batch lost its backing"))?;

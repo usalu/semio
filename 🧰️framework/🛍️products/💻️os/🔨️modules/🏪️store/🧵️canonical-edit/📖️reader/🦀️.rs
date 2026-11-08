@@ -2,7 +2,17 @@
 
 use super::*;
 use std::mem::ManuallyDrop;
-use semio_framework_value::{ValueError, RetirementDemand, FactoryAuthority, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress}};
+use semio_framework_value::{ValueError, RetirementDemand, FactoryAuthority, FactoryProducerReply, OriginalRetirementFailure, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, RetirementPollExit, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress}};
+
+/// 🏭️ Retires the resident frozen root through its typed factory inside the caller's effect; the root stays resident until the factory takes it.
+fn retire_snapshot<T>(factory: &dyn SnapshotRetirementFactory<T>, root: &mut Option<Arc<T>>, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkPoll<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), OriginalRetirementFailure> {
+    let (mut output, mut reply, mut attempted) = (None, None, None);
+    let producer = match FactoryProducerReply::borrow(&mut output, &mut reply, &mut attempted) { Ok(producer) => producer, Err(error) => return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Err(error.into()), work: 0 }) };
+    let _ = factory.retire(root, effect, producer);
+    let Some(turn) = reply.take() else { return RetainedWorkPoll::Pending { work: effect.performed_work() }; };
+    let result = match (turn.result, output.take()) { (Ok(progress), Some(owner)) => Ok((owner, progress)), (Ok(_), None) => Err(ValueError::invariant("typed factory completed without publishing its retirement owner").into()), (Err(failure), _) => Err(failure) };
+    RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: turn.work })
+}
 
 //#region 📦️ReaderOwnership
 /// 📖️ Retains a frozen typed Arc and borrowed traversal; no Store publication authority is exposed.
@@ -70,21 +80,26 @@ impl<T: Send + Sync + 'static> ReaderState<T> {
         if let Some(factory) = self.factory_close.as_ref() { let mut demand = factory.demands(maximum_body_bytes)?; demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "reader factory depth overflow"))?; return Ok(demand); }
         Ok(Default::default())
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let result = self.close_action(effect);
+        RetirementPollExit::settle(effect, result)
+    }
+    fn close_action(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, RetirementPollExit> {
+        let grant = effect.grant();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let demand = self.demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "canonical reader exceeds admitted depth")); }
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "canonical reader exceeds admitted depth").into()); }
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.encoder.terminal_is_empty() { let progress = self.encoder.close_step(grant)?.progress(); return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }); }
-        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, child).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if let Some(root) = self.root.take() {
-            let Some(factory) = self.retirement.as_ref() else { self.root = Some(root); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical reader lost its root retirement factory")); };
-            return match factory.retire(root, child).result {
-                Ok((active, progress)) => { self.active = Some(active); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical reader constructor changed its receipt")); } Ok(RetainedCloneStep::Progress(progress)) },
-                Err((error, original)) => { self.root = Some(original); Err(error) },
-            };
+        if !self.encoder.terminal_is_empty() { let progress = self.encoder.close_step(grant)?.progress(); RetirementPollExit::pay(effect, 1)?; return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }); }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+        if self.active.is_some() { let step = RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, &mut effect.nested(child)))?; return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if self.root.is_some() {
+            let Some(factory) = self.retirement.as_ref() else { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical reader lost its root retirement factory").into()); };
+            let (active, progress) = RetirementPollExit::resume(retire_snapshot(factory.as_ref(), &mut self.root, &mut effect.nested(child)))?;
+            self.active = Some(active);
+            if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical reader constructor changed its receipt").into()); }
+            return Ok(RetainedCloneStep::Progress(progress));
         }
         if let Some(factory) = self.retirement.take() {
             let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
@@ -92,7 +107,7 @@ impl<T: Send + Sync + 'static> ReaderState<T> {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
         if let Some(factory) = self.factory_close.as_mut() {
-            let step = factory.step(child).result?;
+            let step = RetirementPollExit::resume(factory.step(&mut effect.nested(child)))?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "canonical reader factory")?;
             if factory.terminal_is_empty() { self.factory_close = None; }
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
@@ -153,7 +168,7 @@ impl<T> ArtifactCanonicalJsonReader<T> {
 
 impl<T: Send + Sync + 'static> ArtifactCanonicalJsonReader<T> {
     pub fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> { self.owned.demands(maximum_body_bytes) }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.owned.close_step(grant) }
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { self.owned.close_step(effect) }
 }
 
 impl<T: ArtifactCanonicalJson + Send + 'static> ArtifactCanonicalJsonReader<T> {

@@ -12,8 +12,7 @@ pub(super) struct RetainedCloneCursorHandoff<T: RetainedClone> {
 }
 
 impl<T: RetainedClone> RetainedCloneCursorHandoff<T> {
-    pub(super) fn new(mut cursor: T::Cursor) -> Self {
-        let _ = cursor.begin_close();
+    pub(super) fn new(cursor: T::Cursor) -> Self {
         Self { cursor: ManuallyDrop::new(Some(cursor)), terminal: false }
     }
 
@@ -38,18 +37,18 @@ impl<T: RetainedClone> RetainedCloneCursorHandoff<T> {
 
 impl<T: RetainedClone> ErasedSnapshotRetirement for RetainedCloneCursorHandoff<T> {
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if self.terminal {Ok(Default::default())}else{self.cursor()?.close_demands(body)}}
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         if self.terminal {
             return Ok(RetainedCloneStep::Complete(Default::default()));
         }
         let cursor = self.cursor_mut()?;
-        let step = cursor.close_step(grant).result?;
+        let step = semio_framework_value::RetirementPollExit::resume(cursor.close_step(&mut effect.nested(grant)))?;
         let step = admit_retained_clone_close(grant, step, cursor.terminal_is_empty(), "retained clone cursor handoff")?;
         if matches!(step, RetainedCloneStep::Complete(_)) {
             self.finish()?;
         }
         Ok(step)
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
 
     fn terminal_is_empty(&self) -> bool {
         self.terminal && self.cursor.is_none()

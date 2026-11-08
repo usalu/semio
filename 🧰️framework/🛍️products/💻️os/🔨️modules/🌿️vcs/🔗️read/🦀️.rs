@@ -21,42 +21,43 @@ impl<T> ArtifactHistoryLedger<T> {
  /// 🧮️ Queries the original frame or current source birth without taking its value.
  pub fn retained_read_demands(&self,key:ArtifactHistoryReadKey)->Result<RetirementDemand,ValueError> where T:Send+Sync+'static {let slot=self.original_read_slot(key)?;slot.read.as_ref().map_or(Ok(RetainedOriginalRead::<T>::initial_demands()),|read|read.birth_demands())}
  /// 🎟️ Moves the actual slot value and installed issuer into two independently granted read births.
- pub fn advance_retained_read(&mut self,key:ArtifactHistoryReadKey,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome where T:Send+Sync+'static {
-  let mut work=0u64;let result=(||{
+ pub fn advance_retained_read(&mut self,key:ArtifactHistoryReadKey,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome where T:Send+Sync+'static {
+  let grant=effect.grant();let result=(||{
   let demand=self.retained_read_demands(key)?;
   if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let read_head=self.read_head;
   let slot=self.slot_mut(key.key.index);
-  if let Some(read)=slot.read.as_mut(){if !read.matches_factory(factory){return Err(fault("history read issuer changed from its original catalog"));}let turn=read.advance(grant);work=turn.work;return turn.result;}
+  if let Some(read)=slot.read.as_mut(){if !read.matches_factory(factory){return Err(fault("history read issuer changed from its original catalog"));}return read.advance(effect).result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error);}
+  if !effect.performed(1)?{return Err(fault("history read birth exceeds its work grant"));}
   let original=slot.value.take().ok_or_else(||fault("history read lost its original slot value"))?;
   slot.read=Some(Box::new(RetainedOriginalRead::new(original,Arc::clone(factory))));
   slot.read_next=read_head;slot.read_previous=None;
   if let Some(head)=read_head{self.slot_mut(head).read_previous=Some(key.key.index);}
   self.read_head=Some(key.key.index);self.read_count+=1;
-  work=1;
   Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))
-  })();semio_framework_value::RetainedWorkOutcome{result,work}
+  })();semio_framework_value::RetainedWorkOutcome{result,work:effect.performed_work()}
  }
  /// 🤲️ Borrows a genuine root lease; callers project their recorded forward operation by field and index.
  pub fn retained_read(&self,key:ArtifactHistoryReadKey)->Result<RetainedCloneRef<'_,T>,ValueError>{self.original_read_slot(key)?.read.as_ref().ok_or_else(||fault("history read requires granted original source birth"))?.borrow()}
  /// 📽️ Retains the genuine slot source after validating its original ledger key.
- pub fn retain_read(&self,key:ArtifactHistoryReadKey,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(semio_framework_value::retained_clone::RetainedOwnedProjection<T>,RetainedCloneProgress)>where T:Sync{match self.original_read_slot(key).and_then(|slot|slot.read.as_ref().ok_or_else(||fault("history read requires granted original source birth"))){Ok(read)=>read.retain_original(grant),Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}}}
+ pub fn retain_read(&self,key:ArtifactHistoryReadKey,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<(semio_framework_value::retained_clone::RetainedOwnedProjection<T>,RetainedCloneProgress)>where T:Sync{match self.original_read_slot(key).and_then(|slot|slot.read.as_ref().ok_or_else(||fault("history read requires granted original source birth"))){Ok(read)=>read.retain_original(effect),Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}}}
  /// 🧭️ Observes the next original leased slot in constant time for Store cancellation.
  pub fn next_retained_read_key(&self)->Option<ArtifactHistoryReadKey>{let index=self.read_head?;Some(ArtifactHistoryReadKey{authority:self.authority(),issuance:self.read_issuance,key:ArtifactHistoryKey{index,generation:self.slot(index).generation}})}
  /// 🚪️ Queries exact source return through the caller's unchanged body allowance.
  pub fn retained_read_return_demands(&self,key:ArtifactHistoryReadKey,body:usize)->Result<RetirementDemand,ValueError>{self.original_read_slot(key)?.read.as_ref().map_or(Ok(Default::default()),|read|read.return_demands(body))}
  /// ↩️ Restores the same original slot and returns its captured issuer alias for controlled cleanup.
- pub fn return_retained_read(&mut self,key:ArtifactHistoryReadKey,returned_factory:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
-  let mut work=0u64;let result=(||{
+ pub fn return_retained_read(&mut self,key:ArtifactHistoryReadKey,returned_factory:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome{
+  let result=(||{
   self.original_read_slot(key)?;
   if returned_factory.is_some(){return Err(fault("history source issuer return requires an empty original slot"));}
   let slot=self.slot_mut(key.key.index);
   let Some(read)=slot.read.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};
-  let turn=read.return_original(grant);work=turn.work;match turn.result?{
+  if !effect.performed(1)?{return Err(fault("history source return exceeds its work grant"));}
+  match read.return_original(effect).result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?{
    RetainedOriginalReadReturn::Pending(receipt)=>Ok(RetainedCloneStep::Progress(receipt)),
-   RetainedOriginalReadReturn::Ready(original,factory,receipt)=>{let terminal=read.terminal_is_empty();slot.value=Some(original);*returned_factory=Some(factory);work=work.saturating_add(1);if !terminal{return Err(fault("history source claimed original return before terminal custody").with_retained_progress(receipt));}drop(slot.read.take());let previous=slot.read_previous.take();let next=slot.read_next.take();if let Some(previous)=previous{self.slot_mut(previous).read_next=next;}else{self.read_head=next;}if let Some(next)=next{self.slot_mut(next).read_previous=previous;}self.read_count-=1;Ok(RetainedCloneStep::Complete(receipt))}
+   RetainedOriginalReadReturn::Ready(original,factory,receipt)=>{let terminal=read.terminal_is_empty();slot.value=Some(original);*returned_factory=Some(factory);if !terminal{return Err(fault("history source claimed original return before terminal custody").with_retained_progress(receipt));}drop(slot.read.take());let previous=slot.read_previous.take();let next=slot.read_next.take();if let Some(previous)=previous{self.slot_mut(previous).read_next=next;}else{self.read_head=next;}if let Some(next)=next{self.slot_mut(next).read_previous=previous;}self.read_count-=1;Ok(RetainedCloneStep::Complete(receipt))}
   }
-  })();semio_framework_value::RetainedWorkOutcome{result,work}
+  })();semio_framework_value::RetainedWorkOutcome{result,work:effect.performed_work()}
  }
 }
 

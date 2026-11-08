@@ -75,13 +75,13 @@ fn begin_close_paid(&mut self,_effect:&mut crate::RetainedAllocationEffect<'_>)-
         Err(ValueError::new(ValueRefusalKind::UnsupportedOwner, "clone cursor has no controlled close release demand"))
     }
     /// 🎯️ Executes the same body-selected close only after every granted axis admits its fixed quote.
-    fn close_selected(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();
-        if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+    fn close_selected(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();let done=|result:Result<RetainedCloneStep,crate::OriginalRetirementFailure>|crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:0});
+        if self.terminal_is_empty(){return done(Ok(RetainedCloneStep::Complete(Default::default())))}
         let selected=(||{let demand=self.close_demands(body)?;if !retained_clone_grant_admits(grant,demand){return Ok(None)}if self.close_demands(demand.copy_bytes)?!=demand{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"selected retirement quote changes under its exact admitted copy frontier"))}Ok(Some(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}))})();
-        match selected{Ok(Some(grant))=>match effect.reborrow(grant,effect.maximum_work_units()){Ok(mut child)=>self.close_step(&mut child),Err(error)=>RetainedWorkOutcome{result:Err(error.into()),work:0}},Ok(None)=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>RetainedWorkOutcome{result:Err(error.into()),work:0}}
+        match selected{Ok(Some(grant))=>{let mut child=effect.nested(grant);self.close_step(&mut child)},Ok(None)=>done(Ok(RetainedCloneStep::Progress(Default::default()))),Err(error)=>done(Err(error.into()))}
     }
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();
-        RetainedWorkOutcome{result:if grant.maximum_items==0{Ok(RetainedCloneStep::Progress(Default::default()))}else{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor has no capacity-bearing close authority").into())},work:0}
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();
+        crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:if grant.maximum_items==0{Ok(RetainedCloneStep::Progress(Default::default()))}else{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor has no capacity-bearing close authority").into())},work:0})
     }
 }
 

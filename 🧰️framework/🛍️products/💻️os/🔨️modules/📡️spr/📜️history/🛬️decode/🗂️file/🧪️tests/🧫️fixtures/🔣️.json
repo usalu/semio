@@ -1,7 +1,7 @@
 {
   "grant": {
     "items": 1,
-    "copyBytes": 2,
+    "copyBytes": 8192,
     "capacityBytes": 65536,
     "releaseBytes": 262144,
     "depth": 64

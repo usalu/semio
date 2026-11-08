@@ -37,7 +37,7 @@ use kernel_types_and_path_segments::{optional_path_segments, PathSegmentJson};
 mod kernel_trait_and_engine;
 pub use kernel_trait_and_engine::{DrawingEngine, DrawingKernel};
 use kernel_trait_and_engine::{
-    compute_handle_for_drawing, drawing_handle_from_key, map_engine_fault, StoredNode,
+    drawing_handle_from_key, map_engine_fault, StoredNode,
     ENGINE_CACHE_BUDGET_BYTES,
 };
 

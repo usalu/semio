@@ -5,27 +5,27 @@ use semio_framework_io_sqlite_snapshot::{SqliteTable, SqliteRow, SqliteValue};
 use semio_framework_io_sqlite_snapshot::artifact::receiving::{Port, ReceivingWallet, Direction, integer, ordinal, sort, identity_position, parent_range, validate_schema_sql, check_database};
 use semio_framework_io_schema::{IoResult, IoOutcome, IoError};
 use super::settlement::TypedFileSettlement;
-type Result<T>=std::result::Result<T,ValueError>;
+type Fallible<T>=std::result::Result<T,ValueError>;
 pub(super) const TABLES:[(&str,usize);7]=[("space_history_document",2),("space_history_checkpoint",6),("space_history_timestamp",7),("space_history_author",6),("space_history_member_pin",6),("space_history_alternative",5),("space_history_alternative_checkpoint",4)];
 const ORDERED:[usize;5]=[1,3,4,5,6];
 pub(super) fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"space history semantic state differs")}
-pub(super) fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"space history validation row census overflow"))}
+pub(super) fn add(a:usize,b:usize)->Fallible<usize>{a.checked_add(b).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"space history validation row census overflow"))}
 #[derive(semio_framework_value::RetireOwned)]
-pub(super) struct Frame{pub(super) ids:[Vec<usize>;7],pub(super) ordered:[Vec<usize>;5],result:Option<Result<()>>}
+pub(super) struct Frame{pub(super) ids:[Vec<usize>;7],pub(super) ordered:[Vec<usize>;5],result:Option<std::result::Result<(),ValueError>>}
 impl Frame{pub(super) fn new()->Self{Self{ids:std::array::from_fn(|_|Vec::new()),ordered:std::array::from_fn(|_|Vec::new()),result:None}}}
-pub(super) fn table<'a>(database:&'a SqliteDatabase,index:usize)->Result<&'a SqliteTable>{database.tables.iter().find(|table|table.name.eq_ignore_ascii_case(TABLES[index].0)).ok_or_else(invalid)}
-pub(super) fn text(row:&SqliteRow,column:usize)->Result<&str>{match row.values.get(column){Some(SqliteValue::Text(text))=>Ok(text),_=>Err(invalid())}}
-fn equal<W:ReceivingWallet>(source:&str,actual:&str,port:&mut Port<'_,'_,'_,W>)->Result<()>{
+pub(super) fn table<'a>(database:&'a SqliteDatabase,index:usize)->Fallible<&'a SqliteTable>{database.tables.iter().find(|table|table.name.eq_ignore_ascii_case(TABLES[index].0)).ok_or_else(invalid)}
+pub(super) fn text(row:&SqliteRow,column:usize)->Fallible<&str>{match row.values.get(column){Some(SqliteValue::Text(text))=>Ok(text),_=>Err(invalid())}}
+fn equal<W:ReceivingWallet>(source:&str,actual:&str,port:&mut Port<'_,'_,'_,W>)->Fallible<()>{
  port.work(3,0)?;if source.len()!=actual.len(){return Err(invalid())}let total=source.len();port.control.checkpoint(port.phase(),0,total)?;
  for(index,(source,actual))in source.as_bytes().chunks(256).zip(actual.as_bytes().chunks(256)).enumerate(){port.work(3,0)?;if source!=actual{return Err(invalid())}port.control.checkpoint(port.phase(),(index*256+source.len()).min(total),total)?;}Ok(())
 }
-fn optional<W:ReceivingWallet>(source:Option<&str>,actual:&SqliteValue,port:&mut Port<'_,'_,'_,W>)->Result<()>{port.work(3,0)?;match(source,actual){(None,SqliteValue::Null)=>Ok(()),(Some(source),SqliteValue::Text(actual))=>equal(source,actual,port),_=>Err(invalid())}}
-fn coordinate<W:ReceivingWallet>(dialect:&semio_framework_artifact_reference::ArtifactDialect,port:&mut Port<'_,'_,'_,W>)->Result<()>{port.work(1,0)?;if dialect.artifact_kind!=S_SPACE_HISTORY_SCHEMA||dialect.standard!="1"||dialect.subset!="*"{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"space history does not own this SQLite coordinate"))}Ok(())}
-fn shape<W:ReceivingWallet>(table:&SqliteTable,index:usize,port:&mut Port<'_,'_,'_,W>)->Result<()>{
+fn optional<W:ReceivingWallet>(source:Option<&str>,actual:&SqliteValue,port:&mut Port<'_,'_,'_,W>)->Fallible<()>{port.work(3,0)?;match(source,actual){(None,SqliteValue::Null)=>Ok(()),(Some(source),SqliteValue::Text(actual))=>equal(source,actual,port),_=>Err(invalid())}}
+fn coordinate<W:ReceivingWallet>(dialect:&semio_framework_artifact_reference::ArtifactDialect,port:&mut Port<'_,'_,'_,W>)->Fallible<()>{port.work(1,0)?;if dialect.artifact_kind!=S_SPACE_HISTORY_SCHEMA||dialect.standard!="1"||dialect.subset!="*"{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"space history does not own this SQLite coordinate"))}Ok(())}
+fn shape<W:ReceivingWallet>(table:&SqliteTable,index:usize,port:&mut Port<'_,'_,'_,W>)->Fallible<()>{
  for row in &table.rows{port.work(2,0)?;if row.values.len()!=TABLES[index].1||integer(row,0)?!=row.rowid{return Err(invalid())}for(column,value)in row.values.iter().enumerate(){port.work(3,0)?;let integer_cell=column==0||index==2||index!=0&&column<=2;let optional_cell=matches!((index,column),(0,1)|(1,4)|(3,5));if integer_cell{let SqliteValue::Integer(value)=value else{return Err(invalid())};if index==2&&column>0&&! (0..=i64::from(u32::MAX)).contains(value){return Err(invalid())}if index!=0&&index!=2&&column==2&&*value<0{return Err(invalid())}}else if optional_cell{if !matches!(value,SqliteValue::Null|SqliteValue::Text(_)){return Err(invalid())}}else if !matches!(value,SqliteValue::Text(_)){return Err(invalid())}}}Ok(())
 }
-fn clock<W:ReceivingWallet>(source:u64,row:&SqliteRow,column:usize,port:&mut Port<'_,'_,'_,W>)->Result<()>{port.work(3,0)?;if integer(row,column)?!=(source>>32)as i64||integer(row,column+1)?!=(source&u64::from(u32::MAX))as i64{return Err(invalid())}Ok(())}
-pub(super) fn indexed<'a,W:ReceivingWallet>(database:&'a SqliteDatabase,frame:&mut Frame,port:&mut Port<'_,'_,'_,W>)->Result<[&'a SqliteTable;7]>{
+fn clock<W:ReceivingWallet>(source:u64,row:&SqliteRow,column:usize,port:&mut Port<'_,'_,'_,W>)->Fallible<()>{port.work(3,0)?;if integer(row,column)?!=(source>>32)as i64||integer(row,column+1)?!=(source&u64::from(u32::MAX))as i64{return Err(invalid())}Ok(())}
+pub(super) fn indexed<'a,W:ReceivingWallet>(database:&'a SqliteDatabase,frame:&mut Frame,port:&mut Port<'_,'_,'_,W>)->Fallible<[&'a SqliteTable;7]>{
  validate_schema_sql(database,SpaceHistorySnapshot::SQLITE_SCHEMA,port)?;check_database(database,port)?;
  let tables=[table(database,0)?,table(database,1)?,table(database,2)?,table(database,3)?,table(database,4)?,table(database,5)?,table(database,6)?];if tables[0].rows.len()!=1||tables[2].rows.len()!=tables[1].rows.len(){return Err(invalid())}
  for(index,table)in tables.iter().enumerate(){shape(table,index,port)?;port.vector(table.rows.len(),&mut frame.ids[index],2)?;for row in 0..table.rows.len(){port.work(2,size_of::<usize>())?;frame.ids[index].push(row)}sort(&mut frame.ids[index],port,|a,b|Ok(table.rows[a].rowid.cmp(&table.rows[b].rowid)))?;for pair in frame.ids[index].windows(2){port.work(2,0)?;if table.rows[pair[0]].rowid==table.rows[pair[1]].rowid{return Err(invalid())}}}
@@ -33,7 +33,7 @@ pub(super) fn indexed<'a,W:ReceivingWallet>(database:&'a SqliteDatabase,frame:&m
  for row in &tables[2].rows{if identity_position(&tables[1].rows,&frame.ids[1],row.rowid,port)?.is_none(){return Err(invalid())}}
  Ok(tables)
 }
-fn check<W:ReceivingWallet>(source:&SpaceHistorySnapshot,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,frame:&mut Frame,port:&mut Port<'_,'_,'_,W>)->Result<()>{
+fn check<W:ReceivingWallet>(source:&SpaceHistorySnapshot,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,frame:&mut Frame,port:&mut Port<'_,'_,'_,W>)->Fallible<()>{
  coordinate(dialect,port)?;
  let tables:[&SqliteTable;7]=[table(database,0)?,table(database,1)?,table(database,2)?,table(database,3)?,table(database,4)?,table(database,5)?,table(database,6)?];
  let mut authors=0;let mut members=0;let mut pins=0;for checkpoint in &source.checkpoints{port.work(1,0)?;authors=add(authors,checkpoint.authors.len())?;members=add(members,checkpoint.members.len())?;}for alternative in &source.alternatives{port.work(1,0)?;pins=add(pins,alternative.checkpoint_ids.len())?;}let counts=[1,source.checkpoints.len(),source.checkpoints.len(),authors,members,source.alternatives.len(),pins];
@@ -61,7 +61,7 @@ macro_rules! receive{
    let outcome=(||->std::result::Result<(),NativeSnapshotFailure>{
     let mut borrowed=settlement.control.borrow_mut();let control=&mut **borrowed;let mut port=Port{control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<IoResult<()>>())?;frame.result=Some(check(source,dialect,database,frame,&mut port));let owned=port.owned();drop(port);drop(borrowed);let status=frame.result.take().unwrap().map(|()|IoOutcome::clean(())).map_err(IoError::from_value_error);*result=Some(finish_validation(status,&settlement,owned));Ok(())
    })();
-   RetainedWorkOutcome{result:outcome,work:settlement.control.borrow().performed_work().checked_sub(before_work).expect("original SQL producer work is monotone")}
+   RetainedWorkOutcome{result:outcome,work:u128::from(settlement.control.borrow().performed_work().checked_sub(before_work).expect("original SQL producer work is monotone"))}
   }));
   let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal,receipt:None}),None=>turn.result.map_err(Stage::Operation)};
   RetainedWorkOutcome{result,work:turn.work}
@@ -81,18 +81,33 @@ mod dual_failure_tests{
  #[test]
  fn original_validation_output_survives_publication_receipt_refusal(){
   use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,RetirementDemand};
-  use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeDecodeConstructionRecipient,NativeDecodeRetirementRecipient};
+  use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeDecodeRetirementRecipient};
   struct Work(u64);
- impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.0;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->std::result::Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
+ impl semio_framework_value_native_owned::native_decoding::OriginalWorkRecipient for Work{
+  type Context<'turn,'source>=() where 'source:'turn;
+  fn validate_context<'turn,'source>(&self,_:&())->std::result::Result<(),ValueError> where 'source:'turn{Ok(())}
+  fn source_turn<'turn,'source>(&self,_:&())->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity> where 'source:'turn{None}
+  fn admits<'reply,'turn,'source>(&mut self,_:&mut (),quote:semio_framework_value_native_owned::native_decoding::OriginalWorkQuote<'reply>,observed:u64,additional:u64)->semio_framework_value_native_owned::native_decoding::OriginalWorkQuoteComplete<'reply> where 'source:'turn{quote.complete(Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0)))}
+  fn settle_partial<'reply,'turn,'source>(&mut self,_:&mut (),check:semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheck<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.complete(Ok(()))}
+  fn recover_partial<'reply,'turn,'source>(&mut self,_:&mut (),check:semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheck<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.pending()}
+ }
  struct Recipient{grant:RetainedCloneGrant,received:RetainedCloneProgress,refused:bool}
-  impl NativeDecodeConstructionRecipient for Recipient{
-   fn submitted(&self)->RetainedCloneProgress{self.received}
-   fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant>{Ok(self.grant)}
-   fn accept(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<()>{self.received=self.received.checked_add(progress)?;if !self.refused&&progress.copied_items==1&&progress.copied_bytes==0&&progress.retained_capacity_bytes==0&&progress.released_bytes==0{self.refused=true;Err(ValueError::literal(ValueRefusalKind::Canceled,"validation publication receipt refused"))}else{Ok(())}}
+  impl Recipient{
+   fn submitted_progress(&self)->RetainedCloneProgress{self.received}
+   fn grant_for(&mut self,_demand:RetirementDemand)->Fallible<RetainedCloneGrant>{Ok(self.grant)}
+   fn accept_for(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Fallible<()>{self.received=self.received.checked_add(progress)?;if !self.refused&&progress.copied_items==1&&progress.copied_bytes==0&&progress.retained_capacity_bytes==0&&progress.released_bytes==0{self.refused=true;Err(ValueError::literal(ValueRefusalKind::Canceled,"validation publication receipt refused"))}else{Ok(())}}
   }
-  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🪢️dual-failure/🔣️.json")).unwrap();let grant=RetainedCloneGrant{maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:64};let mut observer=|_|true;let mut retirement=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observer);native.install_retirement_recipient(&mut retirement).unwrap();let mut recipient=Recipient{grant,received:Default::default(),refused:false};let mut output:Option<IoResult<()>>=None;let primary=invalid();let pointer=primary.message.as_ptr();let mut primary=Some(primary);
-  let mut work=Work(1000000);native.with_work_recipient(&mut work,|native|{let turn=native.with_construction_recipient(&mut recipient,|native|{let mut owner=semio_framework_io_control::NativeSnapshotDecodeOwner::new(native,grant);Ok::<_,ValueError>(owner.receive::<(),IoResult<()>,semio_framework_io_control::NativeSnapshotFailure>(&mut output,&mut |_frame,result,marker,unwind,native,body|{let demand=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<IoResult<()>>(),maximum_depth:1,..Default::default()};let quote=match semio_framework_io_control::NativeSnapshotDecodeEffectQuote::decode(body,native,demand){Ok(quote)=>quote,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};quote.run(marker,unwind,&mut |performed,physical|{*result=Some(Err(IoError::from_value_error(primary.take().unwrap())));*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<IoResult<()>>(),..Default::default()};Ok(())})}))}).unwrap();
-  assert!(recipient.refused);assert!(turn.work>0);let failure=turn.result.err().expect("publication must retain its refusal");assert_eq!(failure.receipt_refusal().unwrap().message,fixture["publicationRefusal"].as_str().unwrap());let authored=output.take().unwrap().unwrap_err();assert_eq!(authored.cause.message.as_ptr(),pointer);assert_eq!(authored.cause.message,fixture["authoredMessage"].as_str().unwrap());
-  while native.has_retirement_owner(){native.close_retirement_recipient(grant).result.unwrap();}Ok::<(),ValueError>(())}).unwrap();
+  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🪢️dual-failure/🔣️.json")).unwrap();let grant=RetainedCloneGrant{maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:64};let mut observer=|_|true;let mut retirement=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observer);native.install_retirement_recipient(&mut retirement).unwrap();let mut recipient=semio_framework_value_native_owned::native_decoding::OriginalConstructionAuthority::new(Recipient{grant,received:Default::default(),refused:false});let mut output:Option<IoResult<()>>=None;let primary=invalid();let pointer=primary.message.as_ptr();let mut primary=Some(primary);
+  let mut work=semio_framework_value_native_owned::native_decoding::OriginalWorkAuthority::new(Work(1000000));work.with_loan(&mut (),|loan|native.with_work_recipient(loan,|native|{let turn=recipient.with_loan(&mut (),|construction|native.with_construction_recipient(construction,|native|{let mut owner=semio_framework_io_control::NativeSnapshotDecodeOwner::new(native,grant);Ok::<_,ValueError>(owner.receive::<(),IoResult<()>,semio_framework_io_control::NativeSnapshotFailure>(&mut output,&mut |_frame,result,marker,unwind,native,body|{let demand=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<IoResult<()>>(),maximum_depth:1,..Default::default()};let quote=match semio_framework_io_control::NativeSnapshotDecodeEffectQuote::decode(body,native,demand){Ok(quote)=>quote,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};quote.run(marker,unwind,&mut |performed,physical|{*result=Some(Err(IoError::from_value_error(primary.take().unwrap())));*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<IoResult<()>>(),..Default::default()};Ok(())})}))})).unwrap().unwrap();
+  assert!(recipient.inspect(|r|r.refused));assert!(turn.work>0);let failure=turn.result.err().expect("publication must retain its refusal");assert_eq!(failure.receipt_refusal().unwrap().message,fixture["publicationRefusal"].as_str().unwrap());let authored=output.take().unwrap().unwrap_err();assert_eq!(authored.cause.message.as_ptr(),pointer);assert_eq!(authored.cause.message,fixture["authoredMessage"].as_str().unwrap());
+  while native.has_retirement_owner(){native.close_retirement_recipient(grant).result.unwrap();}Ok::<(),ValueError>(())})).unwrap().unwrap();
+ }
+ impl semio_framework_value_native_owned::native_decoding::OriginalConstructionRecipient for Recipient{
+  type Context<'turn,'source>=() where 'source:'turn;
+  fn validate_context<'turn,'source>(&self,_:&())->std::result::Result<(),ValueError> where 'source:'turn{Ok(())}
+  fn source_turn<'turn,'source>(&self,_:&())->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity> where 'source:'turn{None}
+  fn grant<'reply,'turn,'source>(&mut self,_:&mut (),quote:semio_framework_value_native_owned::native_decoding::OriginalConstructionGrant<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalConstructionGrantComplete<'reply> where 'source:'turn{let result=self.grant_for(quote.demand());quote.complete(result)}
+  fn accept<'reply,'turn,'source>(&mut self,_:&mut (),receipt:semio_framework_value_native_owned::native_decoding::OriginalConstructionAccept<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalConstructionAcceptComplete<'reply> where 'source:'turn{let result=self.accept_for(receipt.grant(),receipt.progress());receipt.complete(result)}
+  fn submitted<'turn,'source>(&self,_:&())->RetainedCloneProgress where 'source:'turn{self.submitted_progress()}
  }
 }

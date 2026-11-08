@@ -47,8 +47,12 @@ impl ArtifactSqliteSnapshotHost for Puzzle5dPlaySnapshot{
  
  
  
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {{let outcome=Puzzle5dSnapshot::decode_sqlite_snapshot_native(payload,c,native_control);semio_framework_value::RetainedWorkOutcome{result:outcome.result.map(Self::from_typed),work:outcome.work}}}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {self.typed().encode_sqlite_snapshot_native(encoding,c,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+        if output.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original snapshot output slot is occupied"))),work:0}}
+        let mut typed=None;let outcome=Puzzle5dSnapshot::decode_sqlite_snapshot_native(payload,c,native_control,&mut typed);
+        *output=typed.map(|result|result.map(Self::from_typed).map_err(|failure|failure.map_operation(Self::from_typed)));outcome
+    }
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {self.typed().encode_sqlite_snapshot_native(encoding,c,native_owner,output)}
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{self.typed().validate_sqlite_snapshot_subset(dialect,d,c)}
 }
 

@@ -27,7 +27,7 @@ export async function registerTests1(
         const panes = demonstratorPaneViews(locale);
         expect(new Set(panes.map((pane) => pane.windowTitle)).size, locale).toBe(panes.length);
         expect(new Set(panes.map((pane) => pane.shortWindowTitle)).size, locale).toBe(panes.length);
-        for (const pane of panes) expect(pane.windowTitle.startsWith("Entwerfen mit Bestand · "), pane.windowTitle).toBe(true);
+        for (const pane of panes) expect(pane.windowTitle.startsWith(`${{ en: "Designing with Existing Stock", de: "Entwerfen mit Bestand" }[locale]} · `), pane.windowTitle).toBe(true);
       }
       expect(demonstratorPaneViews("en").map((pane) => pane.windowTitle)).not.toEqual(demonstratorPaneViews("de").map((pane) => pane.windowTitle));
     });

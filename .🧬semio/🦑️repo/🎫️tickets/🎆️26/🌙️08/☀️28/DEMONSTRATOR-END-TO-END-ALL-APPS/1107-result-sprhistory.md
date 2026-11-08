@@ -1,0 +1,16 @@
+STATUS: wasm32-wasip2 lib GREEN for semio-os-history and semio-os-spr at W-sprhistory-2/3 (rc 0), native test-profile build of semio-os-history compiles (W-sprhistory-20). The retained decode LAWS ARE RED (UNVERIFIED as correct); latest wasm recheck W-sprhistory-21 rc 1 only on upstream semio-framework-replication-history-index (peer in-flight, not mine).
+
+## Done (history in earlier sections kept)
+- Lib port of file/frames/deflate/root as before; native-owned allocation via NativeAllocationAuthority<HistoryAllocationPort>; every turn funded with `control.with_allocated_effect(quoted(demand,grant))` (capacity exactly the decoder quote; copy/release/depth from the supplied grant), receipts answered with the supplied grant (`supplied`).
+- runtime2 ruling (A): all forwarded-refused `control.charge(..)` deleted (edit, transition, conflict, identity-records, metadata, origin/json, file, deflate, 👁️source): charge is refused for ANY forwarded control, so every production history step would have failed. Physical allocation is paid by the allocated effect.
+- Value additive (claimed): `NativeDecodeRetirementRecipient::has_pending_close`, `NativeDecodeControl::has_retirement_pending_close` (`has_owner` counts spare failure storage, which made the root close its own just-refilled storage every other turn: refill -> close loop, 25k leaked 336-byte nodes until the 8 MiB ceiling). Value `paged:310` `PagedUtf8BoundedOrdCursor::close_work_demand` added (testdebt-g unreachable).
+- Tests ported: file/frames/deflate/composition test helpers to the effect API, test-retirement `close_original` to effects, fold-law close via AuthoringWallet, fixture grant copyBytes 2 -> 4096 (real quotes are 56..424 bytes). New law `retained_history_decode_refuses_a_demand_above_the_grant_and_allocates_nothing` (written, fails below).
+
+## Test state (W-sprhistory-20, native, `-- retained_history_decode`): 5 FAILED, 0 passed. Remaining root causes, none in the root driver
+1. `original metadata origin receiver faulted` / earlier `Malformed{op meta origin, "original page allocation attempt is occupied"}` (also fails plain `decode_history` tests: composition_overlay_round_trips..., history_encode_decode_identity_*): history-record-decode origin projection (store2 crate) leaves the page allocation attempt occupied. Owner: store2 / value paged-list.
+2. `retirement owner has no controlled birth authority` on close of partial/fault owners: RetireOwned partials of the history types lack controlled birth for the new `admit_owned_retirement`. Owner: store2 / value retirement.
+3. Law test: a refused step still reports (409,161) born/released bytes: the allocation counter sees the preceding turn's work? re-check after 1+2 (the refused step runs no allocation of ours).
+4. Fold tests (`fold_*`, `retained_native_history_fold_obeys_the_neutral_law`, `transition_record_round_trips_its_envelope`) hang >20 min (W-sprhistory-7): not in my decode path; owner of fold job.
+5. `original_history_*` file/deflate tests need the same allocated-effect port (their `effected` helper uses non-allocating `with_effect`), not yet done.
+
+Rerun: tst.sh W-sprhistory-N <spr manifest> native -p semio-os-history --lib -- retained_history_decode

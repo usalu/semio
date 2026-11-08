@@ -1,7 +1,7 @@
 //! 📋️ Original operation buffers retain paid collection backing until protocol handoff or closure.
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,RetainedAllocationEffect};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
-use semio_framework_value_persistent::{list::PagedList, list::PagedListError};
+use semio_framework_value_persistent::{list::PagedList, list::PagedListError, list::{PagedListReservationOutcome,PagedListReservationFailure,PagedListReleaseOutcome,PagedListReleaseFailure}};
 use std::mem::{ManuallyDrop,size_of};
 
 pub type ArtifactPreparedOperations=Vec<Vec<u8>>;
@@ -36,7 +36,8 @@ impl ArtifactPreparedOperationsOwner {
  pub fn allocated_bytes(&self)->usize{self.values.allocated_bytes()+self.payload_capacity_bytes+self.contiguous.as_ref().map_or(0,|value|value.capacity()*size_of::<Vec<u8>>())}
 
  /// 🤝️ Returns the original buffer on a denied transfer or a separately paid page birth.
- pub fn append_original(&mut self,original:Vec<u8>,grant:RetainedCloneGrant)->Result<(Option<Vec<u8>>,RetainedCloneProgress),(ValueError,Vec<u8>)>{
+ pub fn append_original(&mut self,original:Vec<u8>,effect:&mut RetainedAllocationEffect<'_>)->Result<(Option<Vec<u8>>,RetainedCloneProgress),(ValueError,Vec<u8>)>{
+  let grant=effect.grant();
   if self.closing||self.closed||self.contiguous.is_some(){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"operation collection is closing or transferring"),original));}
   if self.values.len()>=self.maximum_operations{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"operation collection row extent exhausted"),original));}
   if self.allocated_bytes().checked_add(original.capacity()).is_none_or(|total|total>self.maximum_capacity_bytes){return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"operation collection original payload exceeds total authority"),original));}
@@ -46,10 +47,12 @@ impl ArtifactPreparedOperationsOwner {
    let capacity=match self.values.next_exact_capacity_allocation_bytes(self.maximum_operations).map_err(refusal){Ok(Some(capacity))=>capacity,Ok(None)=>return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"operation collection lost its unfunded row slot"),original)),Err(error)=>return Err((error,original))};
    if self.allocated_bytes().checked_add(original.capacity()).and_then(|total|total.checked_add(capacity)).is_none_or(|total|total>self.maximum_capacity_bytes){return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"operation collection page exceeds total authority"),original));}
    if grant.maximum_depth<depth||grant.maximum_capacity_bytes<capacity{return Ok((Some(original),Default::default()));}
-   match self.values.reserve_exact_capacity_one(self.maximum_operations,grant.maximum_capacity_bytes){
-    Ok(step)=>return Ok((Some(original),RetainedCloneProgress{copied_items:usize::from(step.progressed),retained_capacity_bytes:step.allocated_bytes,..Default::default()})),
-    Err(error)=>return Err((refusal(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()}),original)),
-   }
+   return match self.values.reserve_exact_capacity_one(self.maximum_operations,effect).result{
+    Ok(PagedListReservationOutcome::Ready(step))=>Ok((Some(original),RetainedCloneProgress{copied_items:usize::from(step.progressed),retained_capacity_bytes:step.allocated_bytes,..Default::default()})),
+    Ok(PagedListReservationOutcome::Denied)=>Ok((Some(original),Default::default())),
+    Err(PagedListReservationFailure::Work(error))=>Err((error,original)),
+    Err(PagedListReservationFailure::Allocation{error,..})=>Err((refusal(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()}),original)),
+   };
   }
   let depth=match self.values.next_push_depth_demand().map_err(refusal).and_then(|depth|depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"operation row transfer depth overflow"))){Ok(depth)=>depth,Err(error)=>return Err((error,original))};
   let copied_bytes=size_of::<Option<Vec<u8>>>()+size_of::<usize>();
@@ -61,7 +64,8 @@ impl ArtifactPreparedOperationsOwner {
  }
 
  /// 📬️ Funds only the protocol row-header backing and moves each original buffer once.
- pub fn prepare_handoff(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn prepare_handoff(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+  let grant=effect.grant();
   if self.closing||self.closed{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"operation collection handoff requires its live original owner"));}
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
   if self.contiguous.is_none(){
@@ -81,7 +85,7 @@ impl ArtifactPreparedOperationsOwner {
    self.contiguous.as_mut().expect("protocol backing remains retained").push(original);self.transferred+=1;
    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}));
   }
-  self.close_paged_one(grant)
+  self.close_paged_one(effect)
  }
 
  /// 📨️ Transfers the exact paid protocol sequence after its original pages are closed.
@@ -98,14 +102,15 @@ impl ArtifactPreparedOperationsOwner {
   let(copy_bytes,release_bytes,depth)=if !self.values.is_empty(){(size_of::<Option<Vec<u8>>>(),0,self.values.next_pop_depth_demand().map_err(refusal)?)}else{(0,self.values.next_release_allocation_bytes().map_err(refusal)?,self.values.next_release_depth_demand().map_err(refusal)?)};
   Ok(RetirementDemand{copy_bytes,release_bytes,depth:depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"operation collection close depth overflow"))?,..Default::default()})
  }
- fn close_paged_one(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ fn close_paged_one(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+  let grant=effect.grant();
   if self.values.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.paged_demands()?;
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
   let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
   if let Some(Some(row))=self.values.last_mut(){if row.capacity()!=0{let original=std::mem::take(row);self.payload_capacity_bytes-=original.capacity();drop(original);progress.released_bytes=demand.release_bytes;}else{self.values.last_mut().expect("original last row remains present").take();}}
   else if !self.values.is_empty(){self.values.pop();}
-  else{progress.released_bytes=self.values.release_empty_page(grant.maximum_release_bytes).map_err(refusal)?.released_allocation_bytes;}
+  else{match self.values.release_empty_page(effect).result{Ok(PagedListReleaseOutcome::Ready(step))=>progress.released_bytes=step.released_allocation_bytes,Ok(PagedListReleaseOutcome::Denied)=>return Ok(RetainedCloneStep::Progress(Default::default())),Err(PagedListReleaseFailure::Work(error))=>return Err(error),Err(PagedListReleaseFailure::Release(error))=>return Err(refusal(error))}}
   Ok(if self.values.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
  }
  pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{
@@ -122,15 +127,15 @@ impl ErasedSnapshotRetirement for ArtifactPreparedOperationsOwner {
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement_demands()?.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.retirement_demands()?.depth)}
  fn terminal_is_empty(&self)->bool{self.closed&&self.values.terminal_is_empty()&&self.contiguous.is_none()}
- fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+ fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
   if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.retirement_demands()?;
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
   self.closing=true;
   if let Some(output)=self.contiguous.as_mut(){let progress=if let Some(row)=output.last_mut(){if row.capacity()!=0{let original=std::mem::take(row);self.payload_capacity_bytes-=original.capacity();drop(original);}else{output.pop();}RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}}else{drop(self.contiguous.take());RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}};return Ok(RetainedCloneStep::Progress(progress));}
-  let step=self.close_paged_one(grant)?;if self.values.terminal_is_empty(){self.closed=true;}
+  let step=self.close_paged_one(effect)?;if self.values.terminal_is_empty(){self.closed=true;}
   Ok(if self.closed{RetainedCloneStep::Complete(step.progress())}else{step})
- })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+ })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
 }
 impl Drop for ArtifactPreparedOperationsOwner {
  fn drop(&mut self){assert!(self.values.terminal_is_empty()&&self.contiguous.is_none(),"original operation rows require paid handoff or terminal closure");unsafe{ManuallyDrop::drop(&mut self.values);ManuallyDrop::drop(&mut self.contiguous)};}

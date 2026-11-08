@@ -91,7 +91,8 @@ impl SharedRequestReceiver {
     }
 
     /// ♻️ Keeps pending actor custody until completion, then retires every original body under the same caller.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.closing.as_ref().is_some_and(|close| close.terminal_is_empty()) {
             let bytes = size_of::<Option<ControlledRetirement<Result<Vec<u8>, Fault>>>>();
@@ -99,7 +100,7 @@ impl SharedRequestReceiver {
             self.closing = None;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }));
         }
-        if let Some(close) = self.closing.as_mut() { return close.step(grant); }
+        if let Some(close) = self.closing.as_mut() { return match semio_framework_value::RetirementPollExit::resume(close.step(effect)) { Ok(step) => Ok(step), Err(semio_framework_value::RetirementPollExit::Pending(_)) => Ok(RetainedCloneStep::Progress(Default::default())), Err(semio_framework_value::RetirementPollExit::Failed(failure)) => Err(failure.into_value_error()) }; }
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let source = self.source.as_ref().unwrap();

@@ -156,13 +156,14 @@ impl protocol::SemanticMutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
 
 /// ♻️ The typed authority retires through its own owner, then the deferred first-party host view, each as its own bounded cursor turn.
 impl semio_framework_value::retirement::RetireOwned for Puzzle3dPlaySnapshot {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+    type RetirementCursor = semio_framework_value::retirement_fields_type!(std::sync::Arc<Puzzle3dSnapshot>, Option<std::sync::Arc<DslValue>>);
+    fn retirement_seed(self) -> Self::RetirementCursor {
         let Self { typed, value } = self;
-        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(typed), semio_framework_value::retirement::deferred(value.into_inner())])
+        semio_framework_value::retirement_fields_seed!(typed, value.into_inner())
     }
 
     fn retirement_birth_bytes(&self) -> Option<usize> {
-        semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.typed), semio_framework_value::retirement::deferred_birth_bytes::<Option<std::sync::Arc<DslValue>>>()])
+        Some(std::mem::size_of::<Self::RetirementCursor>())
     }
 
     fn controlled_retirement_supported() -> bool {
@@ -206,12 +207,13 @@ impl ArtifactSqliteSnapshotHost for Puzzle3dPlaySnapshot {
     
     
     
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {
-        let outcome=Puzzle3dSnapshot::decode_sqlite_snapshot_native(payload, c,native_control);
-        semio_framework_value::RetainedWorkOutcome{result:outcome.result.map(Self::from_typed),work:outcome.work}
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+        if output.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original snapshot output slot is occupied"))),work:0}}
+        let mut typed=None;let outcome=Puzzle3dSnapshot::decode_sqlite_snapshot_native(payload,c,native_control,&mut typed);
+        *output=typed.map(|result|result.map(Self::from_typed).map_err(|failure|failure.map_operation(Self::from_typed)));outcome
     }
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {
-        self.typed().encode_sqlite_snapshot_native(encoding, c,native_owner)
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+        self.typed().encode_sqlite_snapshot_native(encoding, c,native_owner,output)
     }
     fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
         self.typed().validate_sqlite_snapshot_subset(dialect, d, c)

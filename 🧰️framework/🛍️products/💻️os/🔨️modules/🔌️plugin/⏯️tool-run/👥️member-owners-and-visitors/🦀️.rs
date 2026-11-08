@@ -353,9 +353,9 @@ impl store::MemberStoreVisitor for ToolRunMemberGeneration {
 /// ♻️ Hands one alias of a member run's owners to the member store's bounded alias retirement: displaced aliases first,
 /// and with `everything` the base and overlay too (the run left its slot).
 #[doc(hidden)]
-pub struct ToolRunMemberRetire<'a>{pub owners:&'a mut(dyn ToolRunMemberOwners+'static),pub everything:bool,pub grant:RetainedCloneGrant}
+pub struct ToolRunMemberRetire<'a,'e>{pub owners:&'a mut(dyn ToolRunMemberOwners+'static),pub everything:bool,pub grant:RetainedCloneGrant,pub effect:&'a mut semio_framework_value::RetainedAllocationEffect<'e>}
 
-impl store::MemberStoreVisitor for ToolRunMemberRetire<'_>{
+impl store::MemberStoreVisitor for ToolRunMemberRetire<'_,'_>{
     type Output=Result<(Option<Box<dyn store::ErasedSnapshotRetirement>>,RetainedCloneProgress),Fault>;
     fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
     where
@@ -371,7 +371,7 @@ impl store::MemberStoreVisitor for ToolRunMemberRetire<'_>{
         }
         if state.operation_retirement.is_some(){return semio_framework_value::close_factory_ticket(&mut state.operation_retirement,self.grant).result.map(|step|(None,step.progress())).map_err(ValueError::into_fault);}
         if state.operation.is_some()&&(self.everything||state.operation_consumed){return Ok(store.retire_owned_mutation(&mut state.operation,self.grant).map_err(ValueError::into_fault)?.map_or((None,Default::default()),|(frame,p)|(Some(frame),p)));}
-        if state.pending_alias.is_some(){return Ok(store.retire_snapshot_alias(&mut state.pending_alias,self.grant).map_err(FaultFrom::into_fault)?.map_or((None,Default::default()),|(owner,progress)|(Some(owner),progress)));}
+        if state.pending_alias.is_some(){return Ok(store.retire_snapshot_alias(&mut state.pending_alias,self.effect).map_err(FaultFrom::into_fault)?.map_or((None,Default::default()),|(owner,progress)|(Some(owner),progress)));}
         let copy=2*size_of::<Option<Arc<P>>>();
         if self.grant.maximum_copy_bytes<copy||self.grant.maximum_depth==0{return Ok((None,Default::default()));}
         let alias=state.displaced.pop().or_else(||if self.everything{state.overlay.take().or_else(||state.base.take()).map(store::os_store::snapshot_read::ArtifactDerivedSnapshot::into_snapshot_owner)}else{None});

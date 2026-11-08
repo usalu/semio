@@ -44,7 +44,8 @@ impl semio_framework_dsl_record::DslField for ScheduleId {
 /// 📽️ Scalar id snapshot projection and retained clone: the id is a fixed-size copy root, owned by its defining crate.
 impl semio_framework_value_snapshot_projection::snapshot_projection::ImmutableRootProjection for ScheduleId{
  fn root_projection_demand(_:semio_framework_value::RetainedCloneRef<'_,Self>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>()*2,depth:1,..Default::default()})}
- fn project_root(original:semio_framework_value::RetainedCloneRef<'_,Self>,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Self,semio_framework_value::RetainedCloneProgress)>>{let result=(||{let demand=Self::root_projection_demand(original)?;Ok(semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand).then(||(*original.get(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))})();let work=u64::from(matches!(result,Ok(Some(_))));semio_framework_value::RetainedWorkOutcome{result,work}}
+ fn root_projection_work_demand(_:semio_framework_value::RetainedCloneRef<'_,Self>)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
+ fn project_root(original:semio_framework_value::RetainedCloneRef<'_,Self>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Self,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{let grant=effect.grant();let result=(||{let demand=Self::root_projection_demand(original)?;Ok(semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand).then(||(*original.get(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))})();let work=u128::from(matches!(result,Ok(Some(_))));semio_framework_value::RetainedWorkOutcome{result,work}}
 }
 impl semio_framework_value::retained_clone::RetainedClone for ScheduleId{
  type Cursor=semio_framework_value::retained_clone::ScalarCursor<Self>;
@@ -54,7 +55,6 @@ impl semio_framework_value::retained_clone::RetainedClone for ScheduleId{
 impl<I:semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarValue<I> for ScheduleId{
  fn read(original:&I)->Result<Self,semio_framework_value::ValueError>{<u32 as semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarValue<I>>::read(original).map(Self)}
  fn read_copy_bytes(_: &I)->Result<usize,semio_framework_value::ValueError>{Ok(std::mem::size_of::<Self>())}
- fn read_work_demand(original:&I)->Result<u64,semio_framework_value::ValueError>{<u32 as semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarValue<I>>::read_work_demand(original)?.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"schedule id conversion work overflow"))}
 }
 impl<I:semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value_native_owned::native_decoding::NativeReceive<I> for ScheduleId{
  type Receiver=semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarReceiver<I,Self>;

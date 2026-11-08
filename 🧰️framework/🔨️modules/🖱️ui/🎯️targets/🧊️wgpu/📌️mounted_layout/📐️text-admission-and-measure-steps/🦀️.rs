@@ -75,8 +75,15 @@ impl MountedLayoutJob {
         if list.has_reserved_slot() || list.len() == N {
             return Ok(true);
         }
-        let progress = list.try_reserve_one_funded(cx.retained_grant()).map_err(|_| fault)?;
-        cx.consume_retained(progress).map_err(|_| fault)?;
+        let grant = cx.retained_grant();
+        let Some((turn, performed)) = cx.with_original_effect(grant, |_, effect| list.try_reserve_one_funded(effect)).map_err(|_| fault)? else { return Ok(false) };
+        let progress = match turn.result {
+            Ok(ui_contract::PagedListReservationOutcome::Ready(progress)) => progress,
+            Ok(ui_contract::PagedListReservationOutcome::Denied) => return Ok(false),
+            Err(_) => return Err(fault),
+        };
+        let step = semio_framework_value::RetainedWorkOutcome { result: Ok::<_, semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(progress)), work: performed };
+        semio_framework_job::receive_original_retained_work(cx, step).map_err(|_| fault)?;
         Ok(false)
     }
 

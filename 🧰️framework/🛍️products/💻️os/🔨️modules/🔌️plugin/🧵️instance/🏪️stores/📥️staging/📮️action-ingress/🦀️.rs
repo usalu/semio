@@ -8,7 +8,7 @@ use semio_plugin_decl_app::ArtifactApp;
 
 /// 🫴️ Original parser input is transferred only by the receiving caller, never by a structural copy.
 #[derive(RetireOwned)]
-pub struct ActionIngressSource{pub original_typing_ready:bool,pub original_typing_control_ready:bool,pub original_press_result:Option<bool>,pub original_tool_dispatch:Option<bool>,pub original_press_tag:Option<semio_plugin_tool_run::tool_jobs_tool_machine::ScrubTag>,pub original_tool_tag:Option<semio_plugin_tool_run::tool_jobs_tool_machine::ToolTag>,pub original_tool_tag_ready:bool,pub action:Option<String>,pub args:Option<DslValue>,pub prepared:Option<DslValue>,pub assembled:Option<DslValue>,pub fault:Option<Fault>}
+pub struct ActionIngressSource{pub original_typing_ready:bool,pub original_typing_control_ready:bool,pub original_press_result:Option<bool>,pub original_tool_dispatch:Option<bool>,pub original_press_tag:Option<semio_plugin_tool_machine::ScrubTag>,pub original_tool_tag:Option<semio_plugin_tool_machine::ToolTag>,pub original_tool_tag_ready:bool,pub action:Option<String>,pub args:Option<DslValue>,pub prepared:Option<DslValue>,pub assembled:Option<DslValue>,pub fault:Option<Fault>}
 
 impl ActionIngressSource{
  /// 🫴️ The caller-loaned source selects the same authoritative argument slot as its parser.

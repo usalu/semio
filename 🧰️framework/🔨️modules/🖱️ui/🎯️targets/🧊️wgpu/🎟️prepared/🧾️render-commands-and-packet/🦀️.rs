@@ -262,11 +262,12 @@ impl PreparedRenderPacket {
         Ok(0)
     }
 
-    pub(super) fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+    pub(super) fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> PreparedClose {
+        let grant = effect.grant();
         let demand = self.next_close_release_byte_demand();
         if let Some(step) = prepared_close_gate(grant, self.retirement_is_empty(), demand) { return step; }
         if let Some(upload) = self.uploads.last_mut() {
-            if !upload.terminal_is_empty() { return prepared_close_child(upload.close_granted(grant)); }
+            if !upload.terminal_is_empty() { return prepared_close_child(upload.close_granted(effect)); }
             self.uploads.pop(); return prepared_close_progress(0);
         }
         
@@ -300,7 +301,7 @@ impl PreparedRenderPacket {
             4 => self.limits = PreparedRenderLimits::default(),
             5 => {
                 if self.abandonment_slot != u8::MAX {
-                    let Some(state) = PREPARED_RENDER_PACKET_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared packet abandonment slot is absent")); };
+                    let Some(state) = PREPARED_RENDER_PACKET_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared packet abandonment slot is absent").into()); };
                     let current = state.load(Ordering::Acquire);
                     if !matches!(current, 1 | 3) || state.compare_exchange(current, if current == 3 { 3 } else { 0 }, Ordering::AcqRel, Ordering::Acquire).is_err() { return Ok(CloseStep::Blocked); }
                     self.abandonment_slot = u8::MAX;
@@ -414,12 +415,12 @@ impl PreparedRenderPacket {
         }
         Ok(demand)
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> { self.close_granted(grant) }
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> PreparedClose { self.close_granted(effect) }
     pub fn next_abandoned_close_demands(copy: usize) -> Result<RetainedCloneGrant, ValueError> {
         prepared_abandoned_demands(PREPARED_RENDER_PACKET_ABANDONMENT_STATE.iter().zip(PREPARED_RENDER_PACKET_ABANDONMENT_OWNER.iter()), 2, copy, Self::next_close_demands, Self::retirement_is_empty)
     }
-    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
-        prepared_abandoned_close(PREPARED_RENDER_PACKET_ABANDONMENT_STATE.iter().zip(PREPARED_RENDER_PACKET_ABANDONMENT_OWNER.iter()), 2, grant, Self::retirement_is_empty, Self::close_granted)
+    pub fn close_abandoned_step(effect: &mut RetainedAllocationEffect<'_>) -> PreparedClose {
+        prepared_abandoned_close(PREPARED_RENDER_PACKET_ABANDONMENT_STATE.iter().zip(PREPARED_RENDER_PACKET_ABANDONMENT_OWNER.iter()), 2, effect, Self::retirement_is_empty, Self::close_granted)
     }
 
     pub fn retirement_is_empty(&self) -> bool {

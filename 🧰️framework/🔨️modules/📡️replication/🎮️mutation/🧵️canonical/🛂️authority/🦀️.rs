@@ -1,5 +1,6 @@
 //! 🛂️ Native semantic authority validates original fields through retained immutable projections.
 use crate::Edit;
+use super::settle_exit;
 use semio_framework_replication_ids::HybridLogicalTimestamp;
 use semio_framework_pack_json::ArtifactCanonicalJsonText;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,paged::Utf8Text,retained_clone::{RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
@@ -31,7 +32,7 @@ pub struct ArtifactCanonicalEditAuthorityCursor<M:Send+Sync+'static>{
  right_offset:usize,
  verifying:bool,
  result:Option<bool>,
- last_work:u64,
+ last_work:u128,
 }
 impl<M:Send+Sync+'static> ArtifactCanonicalEditAuthorityCursor<M>{
  pub fn constructor_demand()->RetirementDemand{copy(size_of::<Self>())}
@@ -46,11 +47,13 @@ impl<M:Send+Sync+'static> ArtifactCanonicalEditAuthorityCursor<M>{
  pub fn terminal_is_empty(&self)->bool{self.edit.is_none()&&self.authority.is_none()}
  pub fn decision(&self)->Option<bool>{if self.terminal_is_empty(){self.result}else{None}}
  /// 🧮️ Includes actual comparison and alias-close work from the most recent call.
- pub fn last_turn_work(&self)->u64{self.last_work}
+ pub fn last_turn_work(&self)->u128{self.last_work}
  /// ⛽️ Bounds the comparison window and four optional field transitions before caller reservation.
  pub fn next_work_demand(&self)->u64{if self.terminal_is_empty(){0}else if self.verifying&&!self.scalar{256}else{1}}
  fn pair<'a>(field:usize,authority:&'a dyn ArtifactCanonicalEditAuthority,edit:&'a Edit<M>)->Result<(Option<Text<'a>>,Option<Text<'a>>),ValueError>{let meta=edit.mutation_meta.first().ok_or_else(||refusal("semantic authority lost original metadata"))?;Ok(match field{0=>(Some(authority.actor()),edit.actor.as_ref().map(|value|value as Text<'_>)),1=>(authority.line(),edit.line.as_ref().map(|value|value as Text<'_>)),2=>(Some(authority.actor()),meta.author_id.as_ref().map(|value|&value.0 as Text<'_>)),3=>(authority.group(),meta.group_id.as_ref().map(|value|value as Text<'_>)),_=>return Err(refusal("semantic authority native field is absent"))})}
- pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn advance(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+  use semio_framework_value::RetirementPollExit;let grant=effect.grant();let base=effect.performed_work();
+  let result:Result<RetainedCloneStep,RetirementPollExit>=(||->Result<RetainedCloneStep,RetirementPollExit>{
   self.last_work=0;
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}let demand=self.next_demand()?;if !admitted(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};
   self.last_work=1;
@@ -80,11 +83,13 @@ impl<M:Send+Sync+'static> ArtifactCanonicalEditAuthorityCursor<M>{
     }
     progress.copied_bytes=demand.copy_bytes.max(compared*2);
    }
-  }else if let Some(owner)=self.edit.as_mut(){if owner.terminal_is_empty(){self.edit=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;let turn=owner.close_step(child);self.last_work=turn.work;progress=turn.result?.progress();}}
-  else if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){self.authority=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;let turn=owner.close_step(child);self.last_work=turn.work;progress=turn.result?.progress();}}
+  }else if let Some(owner)=self.edit.as_mut(){if owner.terminal_is_empty(){self.edit=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;let turn=RetirementPollExit::settled(owner.close_step(&mut effect.nested(child)))?;self.last_work=turn.work;progress=turn.result?.progress();}}
+  else if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){self.authority=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;let turn=RetirementPollExit::settled(owner.close_step(&mut effect.nested(child)))?;self.last_work=turn.work;progress=turn.result?.progress();}}
   Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+ 
+  })();let work=self.last_work;settle_exit(effect,base,result,work)
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.begin_close();self.advance(grant)}
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{self.begin_close();self.advance(effect)}
 }
 impl<M:Send+Sync+'static> Drop for ArtifactCanonicalEditAuthorityCursor<M>{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"semantic authority abandoned original native aliases");}}
 

@@ -1,13 +1,13 @@
 //! 🧪️ The real original caller bounds float-field opportunity, cancellation and deadline gates.
 use super::*;
-use crate::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OriginalFailureContext,OperationId,Generation,close_original_retained_step};
+use crate::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OriginalFailureContext,OperationId,Generation,close_original_effect_step};
 use std::sync::atomic::{AtomicU64,Ordering};
 static CLOCK:AtomicU64=AtomicU64::new(1000);
 fn clock()->Option<u64>{Some(CLOCK.load(Ordering::Relaxed))}
 fn native<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->T{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(g,decoder,run));let p=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));result.unwrap()}
 fn caller()->OriginalJobFixtureCaller{CLOCK.store(1000,Ordering::Relaxed);OriginalJobFixtureCaller::admit(OperationId(97146),Generation(17),RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:128*1024*1024,maximum_capacity_bytes:256*1024*1024,maximum_release_bytes:512*1024*1024,maximum_depth:4096},clock,1500,32768)}
 fn close(mut work:OriginalFloatFieldWork,caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant){
- work.begin_close();for turn in 0..100{if work.terminal_is_empty(){break}native(caller,decoder,g,|cx|cx.with_original_retirement(|cx|{let d=work.close_demands(g.maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|work.close_step(grant))?;Ok(())}));assert!(turn+1<100)}assert!(work.terminal_is_empty());drop(work);
+ work.begin_close();for turn in 0..100{if work.terminal_is_empty(){break}native(caller,decoder,g,|cx|cx.with_original_retirement(|cx|{let d=work.close_demands(g.maximum_copy_bytes)?;close_original_effect_step(cx,d,|effect|{let turn=work.close_step(effect);semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work})})?;Ok(())}));assert!(turn+1<100)}assert!(work.terminal_is_empty());drop(work);
  while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(g.maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}
 }
 #[test]

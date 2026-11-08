@@ -496,7 +496,7 @@ pub trait NumericalRestoreOwner<T> {
     fn restored_len(&self) -> usize;
     fn restore_capacity(&self, length: usize, growth: bool) -> usize;
     fn reserve_restore_demand(&self, capacity: usize) -> Result<Option<RetirementDemand>, NumericalCheckpointFault>;
-    fn reserve_restore(&mut self, capacity: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, NumericalCheckpointFault>;
+    fn reserve_restore(&mut self, capacity: usize, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, NumericalCheckpointFault>;
     fn append_restore_depth(&self) -> Result<usize, NumericalCheckpointFault>;
     fn append_restore(&mut self, value: T) -> Result<(), NumericalCheckpointFault>;
 }
@@ -511,9 +511,9 @@ impl<T> NumericalRestoreOwner<T> for Vec<T> {
         if self.capacity() != 0 { return Err(NumericalCheckpointFault::Envelope); }
         Ok(Some(RetirementDemand { copy_bytes: size_of::<Self>(), capacity_bytes: bytes, depth: 1, ..Default::default() }))
     }
-    fn reserve_restore(&mut self, capacity: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, NumericalCheckpointFault> {
+    fn reserve_restore(&mut self, capacity: usize, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, NumericalCheckpointFault> {
         let Some(demand) = self.reserve_restore_demand(capacity)? else { return Ok(Default::default()); };
-        if !numerical_grant_covers(grant, demand) { return Ok(Default::default()); }
+        if !numerical_grant_covers(effect.grant(), demand) || !effect.performed(1).map_err(|_| NumericalCheckpointFault::Admission)? { return Ok(Default::default()); }
         self.try_reserve_exact(capacity - self.len()).map_err(|_| NumericalCheckpointFault::Admission)?;
         validate_restored_owner(self)?;
         Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: self.capacity() * size_of::<T>(), ..Default::default() })
@@ -533,8 +533,8 @@ impl<T, const N: usize> NumericalRestoreOwner<T> for PagedList<T, N> {
         let Some(capacity_bytes) = self.next_capacity_allocation_bytes(capacity).map_err(|_| NumericalCheckpointFault::Admission)? else { return Ok(None); };
         Ok(Some(RetirementDemand { capacity_bytes, copy_bytes: self.next_capacity_copy_byte_demand(capacity).map_err(|_| NumericalCheckpointFault::Admission)?, depth: self.next_capacity_depth_demand(capacity).map_err(|_| NumericalCheckpointFault::Admission)?, ..Default::default() }))
     }
-    fn reserve_restore(&mut self, capacity: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, NumericalCheckpointFault> {
-        self.reserve_capacity_one_funded(capacity, grant).map_err(|_| NumericalCheckpointFault::Admission)
+    fn reserve_restore(&mut self, capacity: usize, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, NumericalCheckpointFault> {
+        match self.reserve_capacity_one_funded(capacity, effect).result.map_err(|_| NumericalCheckpointFault::Admission)? { PagedListReservationOutcome::Ready(progress) => Ok(progress), PagedListReservationOutcome::Denied => Ok(Default::default()) }
     }
     fn append_restore_depth(&self) -> Result<usize, NumericalCheckpointFault> { self.next_push_depth_demand().map_err(|_| NumericalCheckpointFault::Admission) }
     fn append_restore(&mut self, value: T) -> Result<(), NumericalCheckpointFault> { self.push_reserved(value).map_err(|_| NumericalCheckpointFault::Admission) }
@@ -592,8 +592,9 @@ pub fn restore_numerical_owner<T: NumericalRestoreScalar>(
     if *entry == 0 {
         let capacity = owner.restore_capacity(shape.capacity, cursor.growth);
         if owner.reserve_restore_demand(capacity)?.is_some() {
-            let progress = owner.reserve_restore(capacity, context.retained_grant())?;
-            context.consume_retained(progress).map_err(|_| NumericalCheckpointFault::Admission)?;
+            let grant = context.retained_grant();
+            let Some((turn, performed)) = context.with_original_effect(grant, |_, effect| owner.reserve_restore(capacity, effect)).map_err(|_| NumericalCheckpointFault::Admission)? else { return Ok(false) };
+            receive_original_retained_work(context, RetainedWorkOutcome { result: Ok::<_, ValueError>(RetainedCloneStep::Progress(turn?)), work: performed }).map_err(|_| NumericalCheckpointFault::Admission)?;
             return Ok(false);
         }
         numerical_restore_admit(context, demand)?;

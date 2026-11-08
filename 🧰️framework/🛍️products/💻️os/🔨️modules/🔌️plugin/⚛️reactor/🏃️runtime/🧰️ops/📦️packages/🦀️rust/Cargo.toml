@@ -26,6 +26,9 @@ artifact-app-testing = []
 original-actor-context-testing = ["dep:semio-plugin-testing-caller","semio-framework-job/testkit","semio-plugin-plugin-program/original-surface-testing"]
 
 [dependencies]
+semio-plugin-runtime-ops-wire = { path = "../../🛡️wire-limits/📦️packages/🦀️rust" }
+semio-plugin-runtime-ops-document = { path = "../../📄️document/📦️packages/🦀️rust" }
+semio-plugin-runtime-ops-surface = { path = "../../🖥️surface-render/📦️packages/🦀️rust" }
 semio-plugin-testing-caller = { path = "../../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust", optional = true }
 semio-framework-value-native-owned = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-plugin-window-config = { path = "../../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }

@@ -133,7 +133,7 @@ impl SourcingCurationArtifactPreparation {
             if grant.maximum_copy_bytes < bytes { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
             let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Curation preparation lost its mutation owner"))?;
             let (post, inverse) = prepare_sourcing_curation_document(base, mutation)?;
-            let mutation = self.owners.mutation.take().expect("observed original mutation owner");
+            let mutation = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Curation preparation lost its mutation owner"))?;
             *self.owners.candidate = Some((post, inverse, mutation));
             self.retained_bytes = bytes;
             self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
@@ -154,14 +154,14 @@ impl SourcingCurationArtifactPreparation {
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation> for SourcingCurationArtifactPreparation {
-    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_dsl::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
         self.last_work = 0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.owners.refused.is_some() || self.owners.prepared.is_some() { return self.advance_step(grant); }
+        if self.owners.refused.is_some() || self.owners.prepared.is_some() { return self.advance_step(grant).map_err(Into::into); }
         if !receiving.prepare_work(1)? { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         let result = self.advance_step(grant);
-        receiving.commit_work(self.last_work)?;
-        result
+        receiving.commit_work(u128::from(self.last_work))?;
+        result.map_err(Into::into)
     }
 
     fn last_turn_work(&self) -> u64 { self.last_work }
@@ -169,8 +169,12 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Cura
     fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CurationSnapshot, SourcingMutation>> { self.owners.prepared.as_ref() }
     fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CurationSnapshot, SourcingMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
+    fn has_pending_receiving_recovery(&self) -> bool { false }
+    fn pending_receiving_demand(&self) -> Option<semio_framework_value::RetirementDemand> { None }
+    fn pending_receiving_recovery(&mut self) -> Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>> { None }
+    fn finish_receiving_recovery(&mut self, _control: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::OriginalReceivingPrimary> { semio_framework_value::RetainedWorkOutcome { result: Ok(Default::default()), work: 0 } }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> { self.owners.close_step(grant.retained_grant()).map_err(Into::into) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }

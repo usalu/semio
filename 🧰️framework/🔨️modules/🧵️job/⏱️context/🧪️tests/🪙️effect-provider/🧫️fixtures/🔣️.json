@@ -1,0 +1,9 @@
+{
+  "doc": "One corpus, four drivers (job with_original_effect, AuthoringWallet::run, encode control with_effect, decode control with_effect): admitted cases perform the listed steps in order and must settle committed == performed <= maximumWork with nothing live afterwards; a zero-performed case is admitted, charges 0 and leaves its action cancelled and retirable.",
+  "cases": [
+    { "name": "zeroPerformed", "maximumWork": 4, "performs": [], "performed": 0 },
+    { "name": "onePerformed", "maximumWork": 8, "performs": [7], "performed": 7 },
+    { "name": "splitPerformed", "maximumWork": 8, "performs": [3, 4], "performed": 7 },
+    { "name": "exactCeiling", "maximumWork": 5, "performs": [5], "performed": 5 }
+  ]
+}

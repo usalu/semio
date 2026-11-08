@@ -385,16 +385,17 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
         Ok(Default::default())
     }
     pub fn requires_original_control(&self)->bool{self.document.requires_original_control()||self.member.as_ref().and_then(|member|member.owners.as_ref()).is_some_and(|owners|owners.requires_original_control())||self.retiring.iter().any(|owners|owners.requires_original_control())}
-    pub fn retire_step(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,Fault>{self.retire_step_with_control(grant,None)}
-    pub fn retire_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<Option<RetainedCloneStep>,Fault>{self.retire_step_with_control(grant,Some(control))}
-    fn retire_step_with_control(&mut self,grant:RetainedCloneGrant,mut control:Option<&mut dyn semio_framework_value::OriginalRetirementControl>)->Result<Option<RetainedCloneStep>,Fault>{
+    pub fn retire_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneStep>,Fault>{self.retire_step_with_control(effect,None)}
+    pub fn retire_step_controlled(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<Option<RetainedCloneStep>,Fault>{self.retire_step_with_control(effect,Some(control))}
+    fn retire_step_with_control(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,mut control:Option<&mut dyn semio_framework_value::OriginalRetirementControl>)->Result<Option<RetainedCloneStep>,Fault>{
+        let grant=effect.grant();
         if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         if let Some(step)=self.pending_command_retirement_step(grant).map_err(ValueError::into_fault)?{return Ok(Some(step));}
         if let Some(step)=self.session_retirement_step(grant).map_err(ValueError::into_fault)?{return Ok(Some(step));}
-        if let Some(step)=match control.as_mut(){Some(control)=>self.document.retire_step_controlled(grant,*control),None=>self.document.retire_step(grant)}?{return Ok(Some(RetainedCloneStep::Progress(step.progress())));}
-        if let Some(owners)=self.member.as_mut().and_then(|member|member.owners.as_mut()){if let Some(step)=match control.as_mut(){Some(control)=>owners.retire_step_controlled(grant,*control),None=>owners.retire_step(grant)}?{return Ok(Some(RetainedCloneStep::Progress(step.progress())));}}
+        if let Some(step)=match control.as_mut(){Some(control)=>self.document.retire_step_controlled(effect,*control),None=>self.document.retire_step(effect)}?{return Ok(Some(RetainedCloneStep::Progress(step.progress())));}
+        if let Some(owners)=self.member.as_mut().and_then(|member|member.owners.as_mut()){if let Some(step)=match control.as_mut(){Some(control)=>owners.retire_step_controlled(effect,*control),None=>owners.retire_step(effect)}?{return Ok(Some(RetainedCloneStep::Progress(step.progress())));}}
         if let Some(owners)=self.retiring.last_mut(){
-            if !owners.terminal_is_empty(){return match control.as_mut(){Some(control)=>owners.retire_step_controlled(grant,*control),None=>owners.retire_step(grant)}.map(|step|step.map(|step|RetainedCloneStep::Progress(step.progress())));}
+            if !owners.terminal_is_empty(){return match control.as_mut(){Some(control)=>owners.retire_step_controlled(effect,*control),None=>owners.retire_step(effect)}.map(|step|step.map(|step|RetainedCloneStep::Progress(step.progress())));}
             let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
             if grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
             drop(self.retiring.pop());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})));
@@ -407,9 +408,13 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     /// typed owners settle at the runtime's close step, which reaches their stores.
     pub fn begin_close(&mut self) { self.closing = true; }
 
-    pub fn terminal_is_empty(&self) -> bool {
-        self.finalize_outcome.is_none()&&(!self.closing||self.session_retired) && self.command_receipt.is_none() && self.pending_command.is_none() && self.discard_cursor.is_none() && self.command_retirements.terminal_is_empty() && self.session_retirement.is_none() && !self.is_active() && self.session.accepted.capacity()==0 && self.session.pending.is_none() && self.session.report.is_none() && self.session.fault.is_none() && self.editor.is_none() && self.member.is_none() && self.authoring.is_none() && self.patch.is_none() && self.reprojection_fault.is_none() && self.deferred_history_row.is_none() && self.retiring.capacity()==0 && self.owners().all(TimeTravelOwners::terminal_is_empty)
+    /// 🔎️ Names the first field that keeps the ledger from being terminal-empty; `None` when it is.
+    pub fn residue(&self) -> Option<&'static str> {
+        let held=[(self.finalize_outcome.is_some(),"finalize outcome"),(self.closing&&!self.session_retired,"unretired closing session"),(self.command_receipt.is_some(),"command receipt"),(self.pending_command.is_some(),"pending command"),(self.discard_cursor.is_some(),"discard cursor"),(!self.command_retirements.terminal_is_empty(),"command retirements"),(self.session_retirement.is_some(),"session retirement"),(self.is_active(),"active session"),(self.session.accepted.capacity()!=0,"accepted rows"),(self.session.pending.is_some(),"pending row"),(self.session.report.is_some(),"replay report"),(self.session.fault.is_some(),"session fault"),(self.editor.is_some(),"editor"),(self.member.is_some(),"member"),(self.authoring.is_some(),"authoring frontier"),(self.patch.is_some(),"patch"),(self.reprojection_fault.is_some(),"reprojection fault"),(self.deferred_history_row.is_some(),"deferred history row"),(self.retiring.capacity()!=0,"retiring owners"),(!self.owners().all(TimeTravelOwners::terminal_is_empty),"typed owners")];
+        held.into_iter().find_map(|(held,name)|held.then_some(name))
     }
+
+    pub fn terminal_is_empty(&self) -> bool { self.residue().is_none() }
 
     /// 👉️ The first mutation, in replay order, whose outcome blocks finalizing (`MergePolicy::Normal`, the floor
     /// `ReplayReport::blocks_finalize` reads): what the status names as the next problem (design §22.2); `None` while the

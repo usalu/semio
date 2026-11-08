@@ -367,14 +367,16 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDe
         Ok(self.close_demands(0)?.depth)
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll {
+        let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit> {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
         }
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth {
-            return Err(Self::diagnostic("vcs", "artifact-envelope.fresh-close-depth"));
+            return Err((Self::diagnostic("vcs", "artifact-envelope.fresh-close-depth")).into());
         }
         if !artifact_retirement_grant_covers(grant, demand) {
             return Ok(RetainedCloneStep::Progress(empty));
@@ -387,9 +389,9 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDe
                 ArtifactEnvelopeFreshRecordActive::String { authority, .. } => authority.cancel(),
                 ArtifactEnvelopeFreshRecordActive::Vcs { authority, .. } => {
                     if !authority.terminal_is_empty() {
-                        let step = authority.close_step(child)?;
+                        let step = artifact_envelope_close_resume(authority.close_step(&mut effect.nested(child)))?;
                         if !step.progress().fits(child) || matches!(step, RetainedCloneStep::Complete(_)) && !authority.terminal_is_empty() {
-                            return Err(Self::diagnostic("vcs", "artifact-envelope.vcs-close-false-terminal").with_progress(step.progress()));
+                            return Err((Self::diagnostic("vcs", "artifact-envelope.vcs-close-false-terminal").with_progress(step.progress())).into());
                         }
                         return Ok(RetainedCloneStep::Progress(step.progress()));
                     }
@@ -397,9 +399,9 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDe
                 }
                 ArtifactEnvelopeFreshRecordActive::RejectedSnapshot { authority, .. } => {
                     if !authority.terminal_is_empty() {
-                        let step = authority.close_step(child)?;
+                        let step = artifact_envelope_close_resume(authority.close_step(&mut effect.nested(child)))?;
                         if !step.progress().fits(child) || matches!(step, RetainedCloneStep::Complete(_)) && !authority.terminal_is_empty() {
-                            return Err(Self::diagnostic("vcs", "artifact-envelope.snapshot-rejection-close-false-terminal").with_progress(step.progress()));
+                            return Err((Self::diagnostic("vcs", "artifact-envelope.snapshot-rejection-close-false-terminal").with_progress(step.progress())).into());
                         }
                         return Ok(RetainedCloneStep::Progress(step.progress()));
                     }
@@ -423,26 +425,26 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDe
                 drop(self.pending_completed.take());
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..empty }));
             }
-            let step = owner.close_step(child).map_err(|error| (Self::diagnostic("$", "artifact-envelope.completed-close")).with_native(error))?;
+            let step = artifact_envelope_close_resume_with(owner.close_step(&mut effect.nested(child)), |failure| artifact_envelope_failure_diagnostic(Self::diagnostic("$", "artifact-envelope.completed-close"), &failure))?;
             if !step.progress().fits(child) || matches!(step, RetainedCloneStep::Complete(_)) && !owner.terminal_is_empty() {
-                return Err(Self::diagnostic("$", "artifact-envelope.completed-close-false-terminal").with_progress(step.progress()));
+                return Err((Self::diagnostic("$", "artifact-envelope.completed-close-false-terminal").with_progress(step.progress())).into());
             }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.active_retirement.is_some() {
-            return artifact_retirement_box_close_step(&mut self.active_retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (Self::diagnostic("vcs", "artifact-envelope.target-retirement")).with_native(error));
+            return artifact_envelope_close_resume_with(artifact_retirement_box_close_step(&mut self.active_retirement, effect), |failure| artifact_envelope_failure_diagnostic(Self::diagnostic("vcs", "artifact-envelope.target-retirement"), &failure)).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(vcs) = self.target.vcs.take() {
             let (snapshots, mutations) = (self.initial_snapshot_factory.clone(), self.mutation_factory.clone());
             return match admit_artifact_retirement(vcs, child, |vcs| ArtifactStoreVcsRetirement::new(vcs, snapshots, mutations)) {
                 Ok((owner, progress)) => {
                     self.active_retirement = Some(owner);
-                    if !progress.fits(child) { return Err(Self::diagnostic("vcs", "artifact-envelope.target-retirement-receipt").with_progress(progress)); }
+                    if !progress.fits(child) { return Err(Self::diagnostic("vcs", "artifact-envelope.target-retirement-receipt").with_progress(progress).into()); }
                     Ok(RetainedCloneStep::Progress(progress))
                 }
                 Err((error, vcs)) => {
                     self.target.vcs = Some(vcs);
-                    Err(Self::diagnostic("vcs", "artifact-envelope.target-retirement-admission").with_native(error))
+                    Err(Self::diagnostic("vcs", "artifact-envelope.target-retirement-admission").with_native(error).into())
                 }
             };
         }
@@ -451,6 +453,8 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDe
         self.id = None;
         self.terminal = true;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes, ..empty }))
+        })();
+        artifact_envelope_close_settle(effect, result)
     }
 
     fn terminal_is_empty(&self) -> bool {

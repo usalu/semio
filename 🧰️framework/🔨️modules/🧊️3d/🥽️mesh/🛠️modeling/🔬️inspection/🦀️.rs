@@ -5,7 +5,7 @@ use semio_framework_3d_mesh_reconstruction::MeshTopologyInspection;
 
 pub struct MeshSnapshotInspection<'a>{pub snapshot:&'a Snapshot}
 impl<'a> MeshSnapshotInspection<'a>{pub fn snapshot(&self)->&'a Snapshot{self.snapshot}}
-pub struct MeshTessellationInspection<'a>{pub snapshot:&'a Snapshot,pub tessellation:Option<()>,pub tessellation_retirement:Option<()>}
+pub struct MeshTessellationInspection<'a>{pub snapshot:&'a Snapshot,pub tessellation:Option<&'a MeshTessellationJob>,pub tessellation_retirement:Option<()>}
 pub struct MeshTransformInspection<'a>{pub mesh:&'a HalfedgeMesh,pub phase:u8,pub vertex:usize}
 pub struct MeshOrientationInspection<'a>{
     pub snapshot:&'a Snapshot,pub edges:&'a HistoryFoldIndex<(u32,u32),Vec<(usize,bool)>>,pub keys:&'a Vec<(u32,u32)>,
@@ -29,13 +29,13 @@ impl MeshModelingJob{
             Work::Decimate(work)=>MeshModelingInspection::Decimate(MeshDecimationInspection{snapshot:&work.snapshot,phase:work.phase,candidate:work.candidate.as_ref().map(|candidate|MeshCandidateInspection{phase:candidate.phase,soup:&candidate.soup,a:candidate.a,b:candidate.b}),build:work.build.as_ref().map(Build::inspection)}),
             Work::Mirror(work)=>MeshModelingInspection::Mirror(MeshSnapshotInspection{snapshot:&work.snapshot}),
             Work::Merge(work)=>MeshModelingInspection::Merge(MeshSnapshotInspection{snapshot:work.snapshot()}),
-            Work::Subdivide(work)=>MeshModelingInspection::Subdivide(MeshTessellationInspection{snapshot:&work.snapshot,tessellation:work.tessellation.as_ref().map(|_|()),tessellation_retirement:work.tessellation_retirement.as_ref().map(|_|())}),
+            Work::Subdivide(work)=>MeshModelingInspection::Subdivide(MeshTessellationInspection{snapshot:&work.snapshot,tessellation:work.tessellation.as_ref(),tessellation_retirement:work.tessellation_retirement.as_ref().map(|_|())}),
             Work::LoopCut(work)=>MeshModelingInspection::LoopCut(MeshSnapshotInspection{snapshot:&work.snapshot}),
             Work::Orient(work)=>MeshModelingInspection::Orient(MeshOrientationInspection{snapshot:&work.snapshot,edges:&work.edges,keys:&work.keys,adjacency:&work.adjacency,oriented:&work.oriented,flipped:&work.flipped,stack:&work.stack,active:work.active,face:work.face,corner:work.corner,cursor:work.cursor,neighbor:work.neighbor,reversing:work.reversing,incidence:work.incidence,flip_count:work.flip_count,phase:work.phase,build:work.build.as_ref().map(Build::inspection)}),
             Work::FillHoles(work)=>MeshModelingInspection::FillHoles(MeshSnapshotInspection{snapshot:&work.snapshot}),
             Work::Inflate(work)=>MeshModelingInspection::Inflate(MeshSnapshotInspection{snapshot:&work.snapshot}),
             Work::Import(_)=>MeshModelingInspection::Import(()),
-            Work::Knife(work)=>MeshModelingInspection::Knife(MeshTessellationInspection{snapshot:&work.snapshot,tessellation:work.tessellation.as_ref().map(|_|()),tessellation_retirement:work.tessellation_retirement.as_ref().map(|_|())}),
+            Work::Knife(work)=>MeshModelingInspection::Knife(MeshTessellationInspection{snapshot:&work.snapshot,tessellation:work.tessellation.as_ref(),tessellation_retirement:work.tessellation_retirement.as_ref().map(|_|())}),
             Work::Transform(work)=>MeshModelingInspection::Transform(MeshTransformInspection{mesh:&work.mesh,phase:work.phase,vertex:work.vertex}),
         }
     }

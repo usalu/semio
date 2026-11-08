@@ -13,7 +13,7 @@ fn drain_completed_record(mut owner: Box<dyn ArtifactEnvelopeCompletedRecord<(),
         assert!(owner.next_close_capacity_byte_demand(grant.maximum_copy_bytes).expect("current completed record capacity demand") <= grant.maximum_capacity_bytes);
         assert!(owner.next_close_release_byte_demand().expect("current completed record release demand") <= grant.maximum_release_bytes);
         assert!(owner.next_close_depth_demand().expect("current completed record depth demand") <= grant.maximum_depth);
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| envelope_close_turn(grant, |effect| owner.close_step(effect)).result);
         let step = step.expect("completed record bounded close");
         let progress = step.progress();
         assert!(progress.fits(grant));
@@ -205,7 +205,7 @@ fn cancelled_and_rejected_envelope_decodes_close_one_exact_owner_per_grant() {
     let mut detached = None;
     while !rejected.terminal_is_empty() {
         drive_test_envelope_field_return(&registry, &mut detached);
-        let step = rejected.close_step(envelope_field_close_grant()).result.expect("retained decode rejection closes");
+        let step = envelope_close_turn(envelope_field_close_grant(), |effect| ErasedSnapshotRetirement::close_step(&mut rejected, effect)).result.expect("retained decode rejection closes");
         assert!(step.progress().fits(envelope_field_close_grant()));
         close_turns += 1;
         assert!(close_turns < 256);
@@ -229,14 +229,14 @@ fn artifact_envelope_public_rejection_preserves_record_lease_ticket_double_retur
     assert_eq!(Arc::as_ptr(&rejected.field_registry), registry_identity);
     assert_eq!(rejected.diagnostic, diagnostic);
     assert!(!registry.ticket_reclaimed(field_ticket));
-    assert_eq!(rejected.close_step(RetainedCloneGrant::default()).result, Ok(RetainedCloneStep::Progress(Default::default())));
+    assert_eq!(envelope_close_turn(RetainedCloneGrant::default(), |effect| ErasedSnapshotRetirement::close_step(&mut rejected, effect)).result, Ok(RetainedCloneStep::Progress(Default::default())));
     assert_eq!(rejected.record.as_ref().map(|record| record.decode_pages().slot_address()), Some(record_identity));
     assert_eq!(rejected.fields.as_ref().map(ArtifactEnvelopeFieldDecoderLease::ticket), Some(field_ticket));
 
     let mut detached = None;
     for _ in 0..256 {
         drive_test_envelope_field_return(&registry, &mut detached);
-        let step = rejected.close_step(envelope_field_close_grant()).result.expect("public rejection closes one exact owner");
+        let step = envelope_close_turn(envelope_field_close_grant(), |effect| ErasedSnapshotRetirement::close_step(&mut rejected, effect)).result.expect("public rejection closes one exact owner");
         assert!(step.progress().fits(envelope_field_close_grant()));
         if rejected.terminal_is_empty() {
             break;

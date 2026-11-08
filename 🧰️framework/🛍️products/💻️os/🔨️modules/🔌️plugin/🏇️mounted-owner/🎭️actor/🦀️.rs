@@ -24,7 +24,7 @@ impl ActorCapture{
    0=>{if source.is_empty()||source.len()>MOUNTED_ACTOR_TEXT_BYTES{return outcome(Err(invalid("mounted actor exceeds its fixed original identity capacity")),1)}self.source=Some(identity);self.stage=1;}
    1=>{if self.text.try_reserve_exact(source.len()).is_err(){return outcome(Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"mounted actor text backing allocation refused")),1)}p.retained_capacity_bytes=self.text.capacity();self.stage=2;if !p.fits(grant){return outcome(Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"mounted actor text backing exceeded its actual quote").with_retained_progress(p)),1)}}
    2=>{self.text.push_str(source);p.copied_bytes=source.len();self.stage=3;}
-   3=>{let turn=SharedUtf8::admit(std::mem::take(&mut self.text),grant);return outcome(match turn.result{Ok((owner,p))=>{*output=Some(ControlledRetirement::retain(owner));self.stage=4;Ok(RetainedCloneStep::Progress(p))},Err((error,text))=>{self.text=text;Err(error)}},turn.work)}
+   3=>{let mut actual=None;let turn=SharedUtf8::admit(std::mem::take(&mut self.text),grant,&mut actual);return outcome(match turn.result{Ok((owner,p))=>{*output=Some(ControlledRetirement::retain(owner));self.stage=4;Ok(RetainedCloneStep::Progress(p))},Err((error,text))=>{self.text=text;Err(error)}},turn.work)}
    _=>{self.source=None;self.stage=0;return outcome(Ok(RetainedCloneStep::Complete(p)),1)}
   }
   outcome(Ok(RetainedCloneStep::Progress(p)),1)
@@ -40,6 +40,6 @@ impl ActorCapture{
 }
 impl Drop for ActorCapture{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"partial actor capture requires paid close");}}
 fn funds(g:RetainedCloneGrant,d:RetirementDemand)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}
-fn outcome(result:Result<RetainedCloneStep,ValueError>,work:u64)->RetainedWorkOutcome<RetainedCloneStep>{RetainedWorkOutcome{result,work}}
+fn outcome(result:Result<RetainedCloneStep,ValueError>,work:u128)->RetainedWorkOutcome<RetainedCloneStep>{RetainedWorkOutcome{result,work}}
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 #[cfg(test)]#[path="🎟️work/🧪️tests/🦀️.rs"]mod work_tests;

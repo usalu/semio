@@ -29,7 +29,11 @@
       "cad-play-energy",
       "cad-play-structure-classic"
     ],
-    "rowPrefix": "cad-play-document.shape"
+    "rowPrefix": "cad-play-document.shape",
+    "rowText": {
+      "en": "Box \\d+",
+      "de": "Quader \\d+"
+    }
   },
   "aggregator": {
     "kindId": "Hexagonal Cut Concrete Forest Left",

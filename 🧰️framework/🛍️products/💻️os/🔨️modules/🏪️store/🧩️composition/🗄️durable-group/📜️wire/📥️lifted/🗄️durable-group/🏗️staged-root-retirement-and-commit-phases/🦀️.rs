@@ -92,7 +92,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueErr
     fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(maximum_body_bytes)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(0)?.depth) }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -101,14 +101,14 @@ fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueErr
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "staged root exceeds admitted depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-                if let Some(owner)=self.planning_output.as_mut(){if owner.terminal_is_empty(){self.planning_output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}return owner.step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if let Some(owner)=self.diagnostics.as_mut(){if owner.terminal_is_empty(){self.diagnostics=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}owner.begin_close();return owner.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
-if self.active.is_some() { return semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, child).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if self.edit.is_some() { return semio_os_store_read::retirement_owner_close(&mut self.edit, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if let Some(slot)=self.external_strings.iter_mut().find(|slot|slot.is_some()){let original=match slot.take(){Some(v)=>v,None=>return Err(ValueError::invariant("slot absent"))};return match semio_framework_value::retirement::admit_owned_retirement(original,child).result {Ok((owner,receipt))=>{self.active=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},Err((error,original))=>{*slot=Some(original);Err(error)}};}
+                if let Some(owner)=self.planning_output.as_mut(){if owner.terminal_is_empty(){self.planning_output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}return semio_os_store_read::settle_close_poll(owner.step(&mut effect.nested(child))).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if let Some(owner)=self.diagnostics.as_mut(){if owner.terminal_is_empty(){self.diagnostics=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}owner.begin_close();return owner.close_step(&mut effect.nested(child)).map(|step|RetainedCloneStep::Progress(step.progress()));}
+if self.active.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.edit.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.edit, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(slot)=self.external_strings.iter_mut().find(|slot|slot.is_some()){let original=match slot.take(){Some(v)=>v,None=>return Err(ValueError::invariant("slot absent"))};let mut original=Some(original);let turn=semio_framework_value::retirement::admit_owned_retirement(&mut original,&mut effect.nested(child));return match turn.result {Ok(Some((owner,receipt)))=>{self.active=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},Ok(None)=>{*slot=original;Ok(RetainedCloneStep::Progress(empty))},Err(error)=>{*slot=original;Err(error)}};}
         if let Some(owner) = self.inline_owner_mut() {
             if !owner.terminal_is_empty() {
-                let step = owner.close_step(child).result?;
+                let step = semio_os_store_read::settle_close_poll(owner.close_step(&mut effect.nested(child)))?;
                 return semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "staged inline owner").map(|step| RetainedCloneStep::Progress(step.progress()));
             }
             self.clear_inline();
@@ -117,9 +117,14 @@ if self.active.is_some() { return semio_os_store_read::artifact_retirement_box_c
         if (7..9).contains(&self.phase) {
             let index = usize::from(self.phase - 7);
             if let Some(snapshot) = self.snapshots[index].take() {
-                return match match self.factory.as_ref(){Some(v)=>v,None=>return Err(ValueError::invariant("staged root retains its snapshot factory"))}.retire(snapshot, child).result {
-                    Ok((owner, progress)) => { self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "staged snapshot constructor")?; Ok(RetainedCloneStep::Progress(progress)) },
-                    Err((error, snapshot)) => { self.snapshots[index] = Some(snapshot); Err(error) },
+                let factory = match self.factory.as_ref() { Some(v) => v, None => return Err(ValueError::invariant("staged root retains its snapshot factory")) };
+                let mut snapshot = Some(snapshot);
+                return match semio_framework_value::factory_retire_snapshot(&**factory, &mut snapshot, &mut effect.nested(child)) {
+                    semio_framework_value::RetainedWorkPoll::Complete(turn) => match turn.result {
+                        Ok((owner, progress)) => { self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "staged snapshot constructor")?; Ok(RetainedCloneStep::Progress(progress)) },
+                        Err(failure) => { self.snapshots[index] = snapshot; Err(semio_os_store_read::failure_value_error(failure)) },
+                    },
+                    semio_framework_value::RetainedWorkPoll::Pending { .. } => { self.snapshots[index] = snapshot; Ok(RetainedCloneStep::Progress(empty)) },
                 };
             }
         }
@@ -130,13 +135,13 @@ if self.active.is_some() { return semio_os_store_read::artifact_retirement_box_c
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), ..empty }));
         }
         if let Some(factory) = self.factory_close.as_mut() {
-            let step = factory.step(child).result?;
+            let step = semio_os_store_read::settle_close_poll(factory.step(&mut effect.nested(child)))?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "staged snapshot factory")?;
             if factory.terminal_is_empty() { self.factory_close = None; }
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
         }
         Ok(RetainedCloneStep::Complete(empty))
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()))); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work }) }
     fn terminal_is_empty(&self) -> bool { self.planning_output.is_none() && self.diagnostics.is_none() && self.edit.is_none() && self.external_strings.iter().all(Option::is_none) && self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none() && self.factory_close.is_none() }
 }
 
@@ -279,12 +284,12 @@ Blocked,
     Terminal,
 }
 
-pub fn close_assembly_publication<P: Send + Sync + 'static, Mutation: Send + 'static>(publication: &mut Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<bool, DurableOwnedGroupDecisionError> {
+pub fn close_assembly_publication<P: Send + Sync + 'static, Mutation: Send + 'static>(publication: &mut Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<bool, DurableOwnedGroupDecisionError> {
     use semio_framework_value::retained_clone::{RetainedCloneStep, admit_retained_clone_close};
     let Some(owner) = publication.as_mut() else { return Ok(true) };
-    let grant = grant.retained_grant();
+    let grant = effect.grant();
     let codec = DurableOwnedGroupDecisionError::Retirement;
-    let step = owner.close_step(grant).map_err(codec)?;
+    let step = match owner.close_step(effect) { Ok(step) => step, Err(semio_framework_value::RetirementPollExit::Pending(_)) => RetainedCloneStep::Progress(Default::default()), Err(semio_framework_value::RetirementPollExit::Failed(failure)) => return Err(codec(semio_os_store_read::failure_value_error(failure))) };
     match admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "durable group publication").map_err(codec)? {
         RetainedCloneStep::Complete(_) => {
             drop(publication.take());

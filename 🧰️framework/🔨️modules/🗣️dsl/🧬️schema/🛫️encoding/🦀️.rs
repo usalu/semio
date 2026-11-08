@@ -48,10 +48,25 @@ struct RecordWireStep {field:usize,state:u8,part:u8}
 semio_framework_value::artifact_retire_leaf!(RecordWireStep);
 
 enum RecordRetirement{Writer(Box<RetainedRecordWriter>),Spec(RecordSpec)}
+/// 🎒️ The finished child owner closes through its own inline cursor, never a boxed erasure.
+enum RecordRetirementCursor{Writer(Box<RetainedRecordWriter>),Spec(<RecordSpec as semio_framework_value::retirement::RetireOwned>::RetirementCursor)}
 impl semio_framework_value::retirement::RetireOwned for RecordRetirement{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;match self{Self::Writer(value)=>value,Self::Spec(value)=>value.retirement()}}
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::RetireOwned;match self{Self::Writer(_)=>Some(0),Self::Spec(value)=>value.retirement_birth_bytes()}}
+    type RetirementCursor=RecordRetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{use semio_framework_value::retirement::RetireOwned;match self{Self::Writer(value)=>RecordRetirementCursor::Writer(value),Self::Spec(value)=>RecordRetirementCursor::Spec(value.retirement_seed())}}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<RecordRetirementCursor>())}
     fn controlled_retirement_supported()->bool{true}
+}
+macro_rules! delegate{($self:ident,$cursor:ident=>$body:expr)=>{match $self{RecordRetirementCursor::Writer($cursor)=>$body,RecordRetirementCursor::Spec($cursor)=>$body}};}
+impl semio_framework_value::retirement::RetirementCursor for RecordRetirementCursor{
+    fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{delegate!(self,cursor=>cursor.next_computational_work(body))}
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{delegate!(self,cursor=>cursor.next_demand(body))}
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{delegate!(self,cursor=>cursor.close_step(effect))}
+    fn terminal_is_empty(&self)->bool{delegate!(self,cursor=>cursor.terminal_is_empty())}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{delegate!(self,cursor=>cursor.next_depth_demand())}
+    fn next_close_byte_demand(&self)->Option<usize>{delegate!(self,cursor=>cursor.next_close_byte_demand())}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError>{delegate!(self,cursor=>cursor.next_work_byte_demand())}
+    fn next_birth_bytes(&self,body:usize)->Option<usize>{delegate!(self,cursor=>cursor.next_birth_bytes(body))}
+    fn terminal_release_bytes(&self)->Option<usize>{delegate!(self,cursor=>cursor.terminal_release_bytes())}
 }
 
 /// 🧵️ Retains one projected record and its physical emitter across caller work grants.
@@ -74,7 +89,7 @@ impl RetainedRecordWriter {
         for _ in 0..maximum_units {control.checkpoint()?;if self.phase==3{return Ok(None)}if self.advance_unit(control)?{return Ok(self.emitter.output.take())}control.step()?;}Ok(None)
     }
     fn advance_unit(&mut self,control:&mut NativeEncodeControl<'_>)->Result<bool,ValueError>{
-        if let Some(retirement)=self.retiring.as_mut(){if retirement.terminal_is_empty(){self.retiring.take();}else{let copy=retirement.next_copy_byte_demand()?;let release=retirement.next_release_byte_demand()?;let capacity=retirement.next_capacity_byte_demand(if copy==0{release}else{copy})?;let depth=retirement.next_depth_demand()?;control.charge(capacity)?;retirement.step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth})?;}return Ok(false)}
+        if let Some(retirement)=self.retiring.as_mut(){if retirement.terminal_is_empty(){self.retiring.take();}else{let copy=retirement.next_copy_byte_demand()?;let release=retirement.next_release_byte_demand()?;let capacity=retirement.next_capacity_byte_demand(if copy==0{release}else{copy})?;let depth=retirement.next_depth_demand()?;control.charge(capacity)?;let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};let work=retirement.next_computational_work(copy)?;match control.with_effect(grant,work,|_,effect|retirement.step(effect))?{Some(poll)=>match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>{turn.result.map_err(|failure|failure.primary().cloned().unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"record child retirement failed without a primary cause")))?;},semio_framework_value::RetainedWorkPoll::Pending{..}=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"record child retirement cannot resume a pending effect"))},None=>{}}}return Ok(false)}
         if self.nested.is_some(){let child=self.nested.as_mut().unwrap();child.advance_unit(control)?;if child.phase==3{self.finish_nested(control)?;}return Ok(false)}
         if self.phase==0{self.plan(control)?;return Ok(false)}
         if self.advance_record(control)?{
@@ -279,30 +294,60 @@ impl RetainedRecordWriter {
     }
 }
 impl semio_framework_value::retirement::RetireOwned for RetainedRecordWriter {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(self)}
+    type RetirementCursor=Self;
+    fn retirement_seed(self)->Self::RetirementCursor{self}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn controlled_retirement_supported()->bool{true}
 }
+fn child_demand<T:semio_framework_value::retirement::RetireOwned>(slot:&Option<T>)->Result<semio_framework_value::RetirementDemand,ValueError>{
+    let Some(original)=slot.as_ref()else{return Ok(Default::default())};
+    let mut demand=semio_framework_value::retirement::retirement_cursor_birth_demand(original)?;demand.depth+=1;Ok(demand)
+}
+fn admit_child<T:semio_framework_value::retirement::RetireOwned>(slot:&mut Option<T>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+    use semio_framework_value::retirement::{RetirementStep,admit_retirement_cursor};
+    if slot.is_none(){return RetirementStep::Advanced}
+    let grant=effect.grant();
+    let mut child=effect.nested(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth.saturating_sub(1),..grant});
+    let turn=admit_retirement_cursor(slot,&mut child);
+    match turn.result{Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress,turn.work),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)}
+}
+fn admit_taken<T:semio_framework_value::retirement::RetireOwned+Default>(value:&mut T,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+    let mut slot=Some(std::mem::take(value));let step=admit_child(&mut slot,effect);if let Some(original)=slot{*value=original}step
+}
+impl RetainedRecordWriter{
+    fn position_demand(&self)->Result<semio_framework_value::RetirementDemand,ValueError>{
+        fn taken<T:semio_framework_value::retirement::RetireOwned>(value:&Vec<T>)->Result<semio_framework_value::RetirementDemand,ValueError>{if value.is_empty()&&value.capacity()==0{return Ok(Default::default())}let mut demand=semio_framework_value::retirement::retirement_cursor_birth_demand(value)?;demand.depth+=1;Ok(demand)}
+        match self.retirement_position{
+            0=>child_demand(&self.source),1=>child_demand(&self.spec),2=>taken(&self.order),3=>child_demand(&self.text),4=>taken(&self.intrinsic_frames),5=>taken(&self.intrinsic_path),
+            6=>child_demand(&self.emitter.output),7=>child_demand(&self.compound),8=>child_demand(&self.wire),9=>child_demand(&self.nested),10=>child_demand(&self.child_spec),11=>child_demand(&self.retiring),_=>Ok(Default::default()),
+        }
+    }
+}
 impl semio_framework_value::retirement::RetirementCursor for RetainedRecordWriter{
-    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{use semio_framework_value::retirement::RetirementCursor;Ok(semio_framework_value::RetirementDemand{capacity_bytes:self.next_birth_bytes(body).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"record writer field has no controlled constructor authority"))?,depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
-
-    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
-        use semio_framework_value::retirement::{RetireOwned,RetirementStep};if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.terminal_is_empty(){return RetirementStep::Complete(0);}if grant.maximum_depth<1{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"record writer retirement requires an admitted child depth"),0);}let Some(birth)=self.next_birth_bytes(grant.maximum_copy_bytes)else{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"record writer field has no controlled constructor authority"),0);};if birth>grant.maximum_capacity_bytes{return RetirementStep::BudgetExhausted;}
-        let child=match self.retirement_position{
-            0=>self.source.take().map(RetireOwned::retirement),1=>self.spec.take().map(RetireOwned::retirement),2=>(!self.order.is_empty()||self.order.capacity()!=0).then(||crate::retirement::RecordPlanningRetirement::new(std::mem::take(&mut self.order))),3=>self.text.take().map(RetireOwned::retirement),
-            4=>(!self.intrinsic_frames.is_empty()||self.intrinsic_frames.capacity()!=0).then(||crate::retirement::RecordPlanningRetirement::new(std::mem::take(&mut self.intrinsic_frames))),5=>(!self.intrinsic_path.is_empty()||self.intrinsic_path.capacity()!=0).then(||crate::retirement::RecordPlanningRetirement::new(std::mem::take(&mut self.intrinsic_path))),6=>self.emitter.output.take().map(RetireOwned::retirement),7=>self.compound.take().map(RetireOwned::retirement),8=>self.wire.take().map(RetireOwned::retirement),
-            9=>self.nested.take().map(|value|value as Box<dyn semio_framework_value::retirement::RetirementCursor>),10=>self.child_spec.take().map(RetireOwned::retirement),11=>self.retiring.take().map(RetireOwned::retirement),_=>return RetirementStep::Complete(1),
-        };self.retirement_position+=1;child.map_or(RetirementStep::Advanced,RetirementStep::Child)
+    fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
+    fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.position_demand()}
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+        use semio_framework_value::retirement::{RetirementStep,record_retirement_work};
+        if self.terminal_is_empty(){return RetirementStep::Complete(0);}
+        let grant=effect.grant();
+        if grant.maximum_items==0||effect.maximum_work_units()==0{return RetirementStep::BudgetExhausted;}
+        if grant.maximum_depth<1{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"record writer retirement requires an admitted child depth").into(),0);}
+        let demand=match self.position_demand(){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted;}
+        let step=match self.retirement_position{
+            0=>admit_child(&mut self.source,effect),1=>admit_child(&mut self.spec,effect),2=>admit_taken(&mut self.order,effect),3=>admit_child(&mut self.text,effect),
+            4=>admit_taken(&mut self.intrinsic_frames,effect),5=>admit_taken(&mut self.intrinsic_path,effect),6=>admit_child(&mut self.emitter.output,effect),7=>admit_child(&mut self.compound,effect),8=>admit_child(&mut self.wire,effect),
+            9=>admit_child(&mut self.nested,effect),10=>admit_child(&mut self.child_spec,effect),11=>admit_child(&mut self.retiring,effect),_=>return RetirementStep::Complete(1),
+        };
+        match step{
+            RetirementStep::BudgetExhausted|RetirementStep::Failure(..)=>step,
+            RetirementStep::Advanced=>match record_retirement_work(effect,1){Ok(work)=>{self.retirement_position+=1;RetirementStep::Progress(Default::default(),work)},Err((error,work))=>RetirementStep::Failure(error.into(),work)},
+            other=>{self.retirement_position+=1;other},
+        }
     }
     fn terminal_is_empty(&self)->bool{self.retirement_position==12}
     fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
-    fn next_birth_bytes(&self,_:usize)->Option<usize>{
-        use semio_framework_value::retirement::RetireOwned;match self.retirement_position{
-            0=>self.source.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes),1=>self.spec.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes),2=>if self.order.is_empty()&&self.order.capacity()==0{Some(0)}else{Some(crate::retirement::RecordPlanningRetirement::<usize>::birth_bytes())},3=>self.text.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes),
-            4=>if self.intrinsic_frames.is_empty()&&self.intrinsic_frames.capacity()==0{Some(0)}else{Some(crate::retirement::RecordPlanningRetirement::<RecordIntrinsicFrame>::birth_bytes())},5=>if self.intrinsic_path.is_empty()&&self.intrinsic_path.capacity()==0{Some(0)}else{Some(crate::retirement::RecordPlanningRetirement::<usize>::birth_bytes())},6=>self.emitter.output.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes),7=>self.compound.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes),8=>self.wire.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes),
-            9=>Some(0),10=>self.child_spec.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes),11=>self.retiring.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes),_=>Some(0),
-        }
-    }
+    fn next_birth_bytes(&self,_:usize)->Option<usize>{self.position_demand().ok().map(|demand|demand.capacity_bytes)}
     fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 

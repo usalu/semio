@@ -2,7 +2,7 @@
 use semio_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor};
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
-use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect, ValueError, ValueRefusalKind};
 use semio_os_pack::record::{BorrowedProjectedPackCursor, BorrowedProjectedPackFailure};
 use semio_framework_dsl_record::{BorrowedRecordSpec,native_encoding::FieldProjectionSource};
 
@@ -12,6 +12,8 @@ pub use text::{ArtifactOperationImage, ArtifactOperationText, ArtifactOperationT
 
 #[path = "📦️output/🦀️.rs"]
 mod output;
+/// 🪙️ Reads one finished original poll; a synchronous recipient never leaves a step pending.
+pub(crate) fn completed<T>(poll:semio_framework_value::RetainedWorkPoll<T,semio_framework_value::OriginalRetirementFailure>)->Result<T,ValueError>{match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|failure|failure.into_value_error()),semio_framework_value::RetainedWorkPoll::Pending{..}=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original operation step stayed pending on a synchronous recipient"))}}
 pub use output::{ArtifactPreparedOperationOutput,ArtifactPreparedOperations,ArtifactPreparedOperationsOwner};
 #[path="🧳️replacement/🦀️.rs"]
 mod replacement;
@@ -119,11 +121,12 @@ impl ArtifactPreparedOperationCursor {
         self.codec=Some(match expected{2=>ArtifactCodecFrontier::Pack(Default::default()),1=>ArtifactCodecFrontier::Text(Default::default()),_=>ArtifactCodecFrontier::Json(Default::default())});Ok(Some(ArtifactPreparedOperationProgress{processed_items:1,copied_bytes,..Default::default()}))
     }
     /// ✍️ Writes at most sixty-four bytes into caller-funded storage without copying the source owner.
-    pub fn advance(&mut self, source: ArtifactPreparedOperationSource<'_>, output: &mut [u8], grant: RetainedCloneGrant) -> Result<ArtifactPreparedOperationProgress, ArtifactPreparedOperationError> {
+    pub fn advance(&mut self, source: ArtifactPreparedOperationSource<'_>, output: &mut [u8], effect: &mut RetainedAllocationEffect<'_>) -> Result<ArtifactPreparedOperationProgress, ArtifactPreparedOperationError> {
+        let grant = effect.grant();
         if self.closed { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "prepared operation cursor is closed").into()); }
         if let Some(step)=self.admit_codec(source,grant)?{return Ok(step)}
         if let ArtifactPreparedOperationSource::Pack { tag, body, spec } = source {
-            return self.advance_pack(tag,body,spec,output,grant);
+            return self.advance_pack(tag,body,spec,output,effect);
         }
         if let ArtifactPreparedOperationSource::CanonicalJson { header, body } = source { return self.advance_json(header, &[], body, false, output, grant); }
         if let ArtifactPreparedOperationSource::HexJson { header, prefix, body } = source { return self.advance_json(header, prefix, body, true, output, grant); }
@@ -194,7 +197,8 @@ impl ArtifactPreparedOperationCursor {
         Ok(ArtifactPreparedOperationProgress { processed_items: progress.copied_items, written_bytes: if hex { 0 } else { step.written_bytes }, copied_bytes: progress.copied_bytes + usize::from(hex && step.written_bytes != 0), retained_capacity_bytes: progress.retained_capacity_bytes, released_bytes: progress.released_bytes, complete: self.complete })
     }
 
-    fn advance_pack(&mut self,tag:u64,body:&dyn FieldProjectionSource,spec:BorrowedRecordSpec,output:&mut[u8],grant:RetainedCloneGrant)->Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> {
+    fn advance_pack(&mut self,tag:u64,body:&dyn FieldProjectionSource,spec:BorrowedRecordSpec,output:&mut[u8],effect:&mut RetainedAllocationEffect<'_>)->Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> {
+        let grant=effect.grant();
         self.pack_started=true;
         if grant.maximum_items==0 { return Ok(Default::default()); }
         let identity=(body as*const dyn FieldProjectionSource as*const() as usize,tag as u32 as usize,(tag>>32) as usize,0,0,3);
@@ -209,7 +213,7 @@ impl ArtifactPreparedOperationCursor {
             return Ok(ArtifactPreparedOperationProgress {processed_items:1,written_bytes:count,copied_bytes:count,..Default::default()});
         }
         self.source_identity=Some(identity);
-        let step=self.pack_mut().advance(body,spec,output,grant)?;self.complete=step.complete;
+        let step=self.pack_mut().advance(body,spec,output,effect)?;self.complete=step.complete;
         Ok(ArtifactPreparedOperationProgress {processed_items:step.progress.copied_items,written_bytes:step.written_bytes,copied_bytes:step.progress.copied_bytes,retained_capacity_bytes:step.progress.retained_capacity_bytes,released_bytes:step.progress.released_bytes,complete:step.complete})
     }
 
@@ -234,13 +238,14 @@ impl ArtifactPreparedOperationCursor {
     }
 
     /// 🍂️ Retires exact funded symbol scaffolds; the original operation stays in its publication.
-    pub fn close(&mut self, grant: RetainedCloneGrant) -> Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> {
+    pub fn close(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> {
+        let grant = effect.grant();
         if self.closed { return Ok(ArtifactPreparedOperationProgress { complete: true, ..Default::default() }); }
         if self.pack_idle() { self.source_identity = None; self.closed = true; return Ok(ArtifactPreparedOperationProgress { complete: true, ..Default::default() }); }
         let demand = self.retirement_demands()?;
         if grant.maximum_items == 0 || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(ArtifactPreparedOperationProgress::default()); }
         if !self.source_identity.is_some_and(|identity|identity.5==3){self.source_identity=None;self.closed=true;return Ok(ArtifactPreparedOperationProgress{processed_items:1,complete:true,..Default::default()})}
-        let step=self.pack_mut().close(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?;
+        let step=self.pack_mut().close(&mut effect.nested(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }))?;
         if step.complete { self.source_identity=None;self.closed=true; }
         Ok(ArtifactPreparedOperationProgress {processed_items:step.progress.copied_items,retained_capacity_bytes:step.progress.retained_capacity_bytes,released_bytes:step.progress.released_bytes,copied_bytes:step.progress.copied_bytes,complete:step.complete,..Default::default()})
     }
@@ -289,6 +294,9 @@ impl<P: 'static, M: 'static> semio_os_store_one_item_publication::ArtifactStoreO
 #[cfg(test)]
 #[global_allocator]
 static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+#[cfg(test)]
+#[path="🧪️effect/🦀️.rs"]
+mod effect_fixture;
 #[path="🧳️original/🦀️.rs"]
 pub mod original_bytes;
 pub use original_bytes::ArtifactOriginalOperationBytes;

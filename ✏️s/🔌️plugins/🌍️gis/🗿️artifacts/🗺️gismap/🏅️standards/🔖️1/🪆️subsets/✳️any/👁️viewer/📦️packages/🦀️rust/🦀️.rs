@@ -3,6 +3,8 @@
 #![allow(clippy::result_large_err)]
 #![cfg_attr(test, recursion_limit = "256")]
 
+#[cfg(test)]
+semio_plugin::install_fixture_heap_witness!();
 extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;

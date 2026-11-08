@@ -48,7 +48,7 @@
           "source",
           "requestedBytes",
           "admittedBytes",
-          "expectedPrefix",
+          "expectedPrefixBytes",
           "expectedCopiedBytes"
         ],
         "properties": {
@@ -63,8 +63,13 @@
             "type": "integer",
             "minimum": 0
           },
-          "expectedPrefix": {
-            "type": "string"
+          "expectedPrefixBytes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
           },
           "expectedCopiedBytes": {
             "type": "integer",

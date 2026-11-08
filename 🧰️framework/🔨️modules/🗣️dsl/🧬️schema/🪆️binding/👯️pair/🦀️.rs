@@ -2,11 +2,6 @@
 use crate::*;
 use crate::native_encoding::{FieldProjectionView as View,projection_path_error};
 
-impl<T> DslSequenceView<T> for (T,T){
- type Iter<'a>=std::array::IntoIter<&'a T,2> where T:'a;
- fn field_items(&self)->Self::Iter<'_>{[&self.0,&self.1].into_iter()}
-}
-
 impl<T:BorrowedDslField> BorrowedDslField for (T,T){const SHAPE:BorrowedShape=BorrowedShape::Tuple(borrowed_field_shape::<T>,Some(2));}
 
 /// 🔧️ Fixed-arity `Shape::Tuple(_, Some(2))` for a pair whose items share one field type.

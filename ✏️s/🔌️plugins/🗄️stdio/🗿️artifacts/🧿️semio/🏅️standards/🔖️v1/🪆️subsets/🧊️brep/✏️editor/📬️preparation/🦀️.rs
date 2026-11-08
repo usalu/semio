@@ -7,7 +7,7 @@ use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
 use semio_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPost, PagedOneItemPostMode, PagedOneItemPostRead};
 use semio_framework_value::retained_clone::{RetainedCloneRef, RetainedCloneStep};
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory, RetirementDemand};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, OriginalReceivingPrimary, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetirementDemand, RetirementPollExit};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::sync::Arc;
 use std::mem::size_of;
@@ -88,11 +88,11 @@ impl PagedOneItemEdit<SemioBrepSnapshot, SemioBrepMutation> for BrepVertexEdit {
         PagedOneItemPostMode::Mutable
     }
 
-    fn advance_demands(&self, _before: RetainedCloneRef<'_, SemioBrepSnapshot>, _mutation: RetainedCloneRef<'_, SemioBrepMutation>, _post: PagedOneItemPostRead<'_, SemioBrepSnapshot>, _body: usize) -> Result<RetirementDemand, ValueError> {
+    fn advance_demands(&self, _before: RetainedCloneRef<'_, SemioBrepSnapshot>, _mutation: RetainedCloneRef<'_, SemioBrepMutation>, _post: PagedOneItemPostRead<'_, SemioBrepSnapshot>, _body: usize, _maximum_work_units: u64) -> Result<RetirementDemand, ValueError> {
         Ok(RetirementDemand::default())
     }
 
-    fn advance(&mut self, _before: RetainedCloneRef<'_, SemioBrepSnapshot>, mutation: RetainedCloneRef<'_, SemioBrepMutation>, post: PagedOneItemPost<'_, SemioBrepSnapshot>, _body: usize, grant: RetainedCloneGrant, receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<SemioBrepMutation>, ValueError> {
+    fn advance(&mut self, _before: RetainedCloneRef<'_, SemioBrepSnapshot>, mutation: RetainedCloneRef<'_, SemioBrepMutation>, post: PagedOneItemPost<'_, SemioBrepSnapshot>, _body: usize, grant: RetainedCloneGrant, receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<SemioBrepMutation>, OriginalReceivingPrimary> {
         self.last_work=0;
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PagedOneItemEditStep::Progress(Default::default()))}
         if !receiving.prepare_work(1)?{return Ok(PagedOneItemEditStep::Progress(Default::default()))}
@@ -102,8 +102,8 @@ impl PagedOneItemEdit<SemioBrepSnapshot, SemioBrepMutation> for BrepVertexEdit {
         let post = post.mutable()?;
         if self.scanned { self.apply(post, target, grant) } else { self.scan(post, target, grant) }
         })();
-        receiving.commit_work(self.last_work)?;
-        result
+        receiving.commit_work(u128::from(self.last_work))?;
+        result.map_err(Into::into)
     }
 
     fn last_turn_work(&self)->u64{self.last_work}
@@ -112,13 +112,27 @@ impl PagedOneItemEdit<SemioBrepSnapshot, SemioBrepMutation> for BrepVertexEdit {
         self.closing = true;
     }
 
-    fn close_demands(&self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<SemioBrepMutation>, _body: usize) -> Result<RetirementDemand, ValueError> {
+    fn has_pending_receiving_recovery(&self) -> bool { false }
+
+    fn pending_receiving_demand(&self) -> Option<RetirementDemand> { None }
+
+    fn pending_receiving_recovery(&mut self) -> Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>> { None }
+
+    fn finish_receiving_recovery(&mut self, _: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> RetainedWorkOutcome<RetainedCloneProgress, OriginalReceivingPrimary> {
+        RetainedWorkOutcome { result: Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "SemioBrepMutation edit opens every native work action atomically and never retains a pending receiving frame").into()), work: 0 }
+    }
+
+    fn close_demands(&self, _mutations: &Arc<dyn ArtifactOwnedValueRetirementFactory<SemioBrepMutation>>, _body: usize) -> Result<RetirementDemand, ValueError> {
         Ok(RetirementDemand::default())
     }
 
-    fn close_step(&mut self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<SemioBrepMutation>, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_work_demand(&self, _mutations: &Arc<dyn ArtifactOwnedValueRetirementFactory<SemioBrepMutation>>, _body: usize) -> Result<u64, ValueError> {
+        Ok(0)
+    }
+
+    fn close_step(&mut self, _mutations: &Arc<dyn ArtifactOwnedValueRetirementFactory<SemioBrepMutation>>, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         self.closing = true;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+        RetirementPollExit::settle(effect, Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())))
     }
 
     fn terminal_is_empty(&self) -> bool {

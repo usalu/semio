@@ -191,7 +191,7 @@ fn artifact_store_resident_uninstalled_catalog_terminal_drop_has_no_unreported_f
     let mut owners = semio_os_store_testing_doubles::demo_closable_store_owners();
     while !owners.store_disposer.uninstalled_terminal_is_empty() {
         let demand = owners.store_disposer.uninstalled_demands(0).unwrap();
-        assert!(matches!(owners.store_disposer.close_uninstalled_step(demand_grant(demand)).unwrap(), RetainedCloneStep::Progress(_) | RetainedCloneStep::Complete(_)));
+        assert!(matches!({let grant = demand_grant(demand); let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 64); wallet.run(grant, 64, |effect| owners.store_disposer.close_uninstalled_step(effect)).unwrap().unwrap().output.unwrap()}, RetainedCloneStep::Progress(_) | RetainedCloneStep::Complete(_)));
     }
     let mut turns = 0;
     let mut released = 0;

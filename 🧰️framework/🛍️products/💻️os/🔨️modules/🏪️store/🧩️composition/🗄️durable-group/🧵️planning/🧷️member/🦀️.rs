@@ -23,13 +23,14 @@ impl DurableUnboundPlanningV1 {
     }
     pub fn frontier(&self)->(u8,RetirementDemand,Result<RetirementDemand,ValueError>,Result<RetirementDemand,ValueError>){(self.phase,self.json.next_demand(),self.snapshot.next_demand(),self.encoded.next_demand())}
     pub fn terminal_is_empty(&self)->bool{self.phase==12&&self.wire.is_none()&&self.pack.is_none()&&self.closing_wire.is_none()&&self.closing_pack.is_none()&&self.json.terminal_is_empty()&&self.snapshot.terminal_is_empty()&&self.encoded.terminal_is_empty()}
-    pub fn close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+    pub fn close(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
+        let grant=effect.grant();
         if self.terminal_is_empty(){return Ok(Default::default());}
         if !self.json.terminal_is_empty(){return Ok(self.json.close(grant));}
-        if !self.snapshot.terminal_is_empty(){return self.snapshot.close(grant);}
-        if !self.encoded.terminal_is_empty(){return self.encoded.close(grant);}
-        if self.closing_wire.is_some(){let owner=self.closing_wire.as_mut().unwrap();let step=owner.step(grant)?;let receipt=step.progress();if owner.terminal_is_empty(){self.closing_wire=None;}return Ok(receipt);}
-        if self.closing_pack.is_some(){let owner=self.closing_pack.as_mut().unwrap();let step=owner.step(grant)?;let receipt=step.progress();if owner.terminal_is_empty(){self.closing_pack=None;}return Ok(receipt);}
+        if !self.snapshot.terminal_is_empty(){return self.snapshot.close(effect);}
+        if !self.encoded.terminal_is_empty(){return self.encoded.close(effect);}
+        if self.closing_wire.is_some(){let owner=self.closing_wire.as_mut().unwrap();let step=semio_os_store_read::settle_close_poll(owner.step(effect))?;let receipt=step.progress();if owner.terminal_is_empty(){self.closing_wire=None;}return Ok(receipt);}
+        if self.closing_pack.is_some(){let owner=self.closing_pack.as_mut().unwrap();let step=semio_os_store_read::settle_close_poll(owner.step(effect))?;let receipt=step.progress();if owner.terminal_is_empty(){self.closing_pack=None;}return Ok(receipt);}
         let bytes=size_of::<Option<Box<DurableUnboundOneItemOutcomeV1>>>()+size_of::<Option<Vec<u8>>>()+size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<Box<DurableUnboundOneItemOutcomeV1>>>()+size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>()+size_of::<u8>();if !permit(copy(bytes),grant){return Ok(Default::default());}
         if let Some(wire)=self.wire.take(){self.closing_wire=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(wire).map_err(|(error,_)|error)?);}
         else if let Some(pack)=self.pack.take(){self.closing_pack=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(DurablePlanningOutputV1::Pack(pack)).map_err(|(error,_)|error)?);}

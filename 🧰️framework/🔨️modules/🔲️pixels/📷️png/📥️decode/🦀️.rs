@@ -1,6 +1,7 @@
 //! 📥️ Budgeted PNG reconstruction with private RGBA publication.
 use super::{RasterImage,Ihdr,parse_ihdr,samples_per_pixel,packed_row_bytes,bpp_bytes,ADAM7,adam7_pass_dims,pixel_to_rgba,paeth,crc32_update};
 use semio_framework_deflate::{Inflater,InflateOutcome};
+use semio_framework_value::RetainedAllocationEffect;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value_persistent::list::PagedList;
 #[path="📝️text/🦀️.rs"] mod text;
@@ -11,8 +12,8 @@ pub struct PngDecodeProgress{pub phase:&'static str,pub bytes:usize,pub total_by
 #[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
 pub struct PngDecodedProperties{pub width:u32,pub height:u32,pub color_type:u8,pub bit_depth:u8}
 #[derive(Clone,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
-pub enum PngDecodeError{Invalid(&'static str),Incomplete,Cancelled}
-impl std::fmt::Display for PngDecodeError{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match self{Self::Invalid(v)=>f.write_str(v),Self::Incomplete=>f.write_str("PNG decode is incomplete"),Self::Cancelled=>f.write_str("PNG decode cancelled")}}}
+pub enum PngDecodeError{Invalid(&'static str),Incomplete,Cancelled,WorkLimit,AllocationFailed}
+impl std::fmt::Display for PngDecodeError{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match self{Self::Invalid(v)=>f.write_str(v),Self::Incomplete=>f.write_str("PNG decode is incomplete"),Self::Cancelled=>f.write_str("PNG decode cancelled"),Self::WorkLimit=>f.write_str("PNG decode exceeds its original work authority"),Self::AllocationFailed=>f.write_str("PNG decode allocation refused")}}}
 impl std::error::Error for PngDecodeError{}
 fn invalid(v:&'static str)->PngDecodeError{PngDecodeError::Invalid(v)}
 fn be(data:&[u8],at:usize)->u32{u32::from_be_bytes(data[at..at+4].try_into().unwrap())}
@@ -23,13 +24,15 @@ impl std::ops::Deref for PngInflater{type Target=Inflater;fn deref(&self)->&Infl
 impl std::ops::DerefMut for PngInflater{fn deref_mut(&mut self)->&mut Inflater{&mut self.0}}
 struct PngInflaterRetirement {pub owner:Option<PngInflater>}
 impl semio_framework_value::retirement::RetireOwned for PngInflater {
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(PngInflaterRetirement {owner:Some(self)})}
+ type RetirementCursor=PngInflaterRetirement;
+ fn retirement_seed(self)->Self::RetirementCursor{PngInflaterRetirement {owner:Some(self)}}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<PngInflaterRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }
 impl semio_framework_value::retirement::RetirementCursor for PngInflaterRetirement {
  fn next_demand(&self,_body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(self.owner.as_ref().map_or(Default::default(),|owner|if owner.retained_terminal_is_empty(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{owner.retained_retirement_demands()}))}
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;let Some(owner)=self.owner.as_mut()else{return RetirementStep::Complete(0);};let d=if owner.retained_terminal_is_empty(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{owner.retained_retirement_demands()};if grant.maximum_items==0||grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes||grant.maximum_depth<d.depth{return RetirementStep::BudgetExhausted;}if owner.retained_terminal_is_empty(){self.owner=None;return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1);}let step=owner.close_retained_step(grant.maximum_items,grant.maximum_release_bytes);let work=owner.last_retained_close_work();if work==0{return RetirementStep::BudgetExhausted;}let released=match step{semio_framework_deflate::RetainedInflateCloseStep::Complete=>0,semio_framework_deflate::RetainedInflateCloseStep::Pending{released_bytes,..}=>released_bytes};RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()},work)}
+ fn next_computational_work(&self,_body:usize)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;let grant=effect.grant();let Some(owner)=self.owner.as_mut()else{return RetirementStep::Complete(0);};let d=if owner.retained_terminal_is_empty(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{owner.retained_retirement_demands()};if grant.maximum_items==0||grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes||grant.maximum_depth<d.depth{return RetirementStep::BudgetExhausted;}if owner.retained_terminal_is_empty(){self.owner=None;if !matches!(effect.performed(1),Ok(true)){return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"PNG inflater close exceeded its original work").into(),0);}return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1);}let step=owner.close_retained_step(grant.maximum_items,grant.maximum_release_bytes);let work=owner.last_retained_close_work();if work==0{return RetirementStep::BudgetExhausted;}let released=match step{semio_framework_deflate::RetainedInflateCloseStep::Complete=>0,semio_framework_deflate::RetainedInflateCloseStep::Pending{released_bytes,..}=>released_bytes};if !matches!(effect.performed(work),Ok(true)){return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"PNG inflater close exceeded its original work").into(),u128::from(work));}RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()},u128::from(work))}
  fn terminal_is_empty(&self)->bool{self.owner.is_none()}
  fn next_close_byte_demand(&self)->Option<usize>{Some(self.owner.as_ref().and_then(|owner|owner.next_retained_release_allocation_bytes()).unwrap_or(0))}
  fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
@@ -95,7 +98,7 @@ impl PngDecodeJob{
   }
   Ok(())
  }
- fn chunk_step(&mut self,grant:RetainedCloneGrant)->Result<usize,PngDecodeError>{
+ fn chunk_step(&mut self,grant:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->Result<usize,PngDecodeError>{
   let source=&self.source;
   if self.chunk.is_none(){
    self.chunks+=1;if self.at+12>self.total_bytes||self.chunks>self.max_chunks{return Err(invalid("Truncated PNG or chunk limit exceeded"));}
@@ -107,7 +110,7 @@ impl PngDecodeJob{
   let c=self.chunk.as_mut().unwrap();
   if c.at<c.end{c.crc=crc32_update(c.crc,&source[c.at..c.at+1]);c.at+=1;self.bytes=c.at;return Ok(0);}
   if c.crc^0xffffffff!=be(source,c.end){return Err(invalid("PNG CRC mismatch"));}
-  if c.kind==*b"IDAT"&&!self.ranges.has_reserved_slot(){let step=match self.ranges.reserve_one_funded(grant){Ok(step)=>step,Err(error)=>{self.partial_allocated=error.allocated_bytes;return Err(invalid("PNG range allocation refused"))}};if step.copied_items==0&&!self.ranges.has_reserved_slot(){return Err(invalid("PNG range allocation refused"));}return Ok(step.retained_capacity_bytes);}
+  if c.kind==*b"IDAT"&&!self.ranges.has_reserved_slot(){let step=match self.ranges.reserve_one_funded(&mut effect.nested(grant)).result{Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(step))=>step,Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Denied)=>return Err(invalid("PNG range allocation refused")),Err(semio_framework_value_persistent::list::PagedListReservationFailure::Allocation{error,..})=>{self.partial_allocated=error.allocated_bytes;return Err(invalid("PNG range allocation refused"))},Err(semio_framework_value_persistent::list::PagedListReservationFailure::Work(_))=>return Err(invalid("PNG range allocation exceeded its original work"))};if step.copied_items==0&&!self.ranges.has_reserved_slot(){return Err(invalid("PNG range allocation refused"));}return Ok(step.retained_capacity_bytes);}
   self.at=c.end+4;self.bytes=self.at;let c=self.chunk.take().unwrap();self.parse_chunk(c)?;Ok(0)
  }
  fn next_pass(&mut self){
@@ -167,7 +170,7 @@ impl PngDecodeJob{
  }
  fn check(&self)->Result<(),PngDecodeError>{if self.cancelled{return Err(PngDecodeError::Cancelled);}if self.phase=="transferred"{return Err(PngDecodeError::Incomplete);}if let Some(e)=&self.failed{return Err(e.clone());}Ok(())}
  fn allocation_step(&mut self)->Result<usize,PngDecodeError>{
-  let allocated=match self.allocation_at{0=>{self.output.pixels.try_reserve_exact(self.total_pixels*4).map_err(|_|invalid("PNG output allocation refused"))?;self.output.pixels.capacity()},1=>{self.current.try_reserve_exact(self.stride).map_err(|_|invalid("PNG row allocation refused"))?;self.current.capacity()},2=>{self.previous.try_reserve_exact(self.stride).map_err(|_|invalid("PNG previous row allocation refused"))?;self.previous.capacity()},_=>{self.phase="inflating";0}};self.allocation_at+=1;Ok(allocated)
+  let allocated=match self.allocation_at{0=>{self.output.pixels.try_reserve_exact(self.total_pixels*4).map_err(|_|PngDecodeError::AllocationFailed)?;self.output.pixels.capacity()},1=>{self.current.try_reserve_exact(self.stride).map_err(|_|PngDecodeError::AllocationFailed)?;self.current.capacity()},2=>{self.previous.try_reserve_exact(self.stride).map_err(|_|PngDecodeError::AllocationFailed)?;self.previous.capacity()},_=>{self.phase="inflating";0}};self.allocation_at+=1;Ok(allocated)
  }
  fn pending_range_allocation(&self)->bool{self.phase=="chunks"&&self.chunk.as_ref().is_some_and(|chunk|chunk.at==chunk.end&&chunk.kind==*b"IDAT")&&!self.ranges.has_reserved_slot()}
  pub fn next_copy_byte_demand(&self)->Result<usize,PngDecodeError>{
@@ -205,10 +208,12 @@ impl PngDecodeJob{
  pub fn decoded_properties(&self)->Result<PngDecodedProperties,PngDecodeError>{self.result()?;let header=self.header.as_ref().ok_or(PngDecodeError::Incomplete)?;Ok(PngDecodedProperties{width:header.width,height:header.height,color_type:header.color_type,bit_depth:header.bit_depth})}
  pub fn last_turn_progress(&self)->RetainedCloneProgress{self.last_progress}
  pub fn last_turn_work(&self)->u64{self.last_work}
- pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<(PngDecodeProgress,RetainedCloneProgress),PngDecodeError>{
-  self.last_progress=Default::default();self.last_work=0;self.check()?;let mut receipt=RetainedCloneProgress::default();
-  for _ in 0..grant.maximum_items{if self.phase=="complete"{break;}let copy=self.next_copy_byte_demand()?;let capacity=self.next_capacity_byte_demand()?;if self.next_depth_demand()?>grant.maximum_depth||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}
-   self.partial_allocated=0;let result=match self.phase{"chunks"=>self.chunk_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:grant.maximum_capacity_bytes-receipt.retained_capacity_bytes,maximum_release_bytes:0,maximum_depth:grant.maximum_depth}),"allocation"=>self.allocation_step(),"pixels"=>self.pixel_step().map(|_|0),_=>self.inflate_step(grant.maximum_capacity_bytes-receipt.retained_capacity_bytes)};let allocated=match result{Ok(value)=>value,Err(error)=>{self.last_work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=self.partial_allocated;self.last_progress=receipt;self.failed=Some(error.clone());return Err(error);}};self.work+=1;self.last_work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=allocated;self.last_progress=receipt;
+ /// ⏳️ The effect carries one allocation attempt: a second range reservation waits for the next turn instead of being refused.
+ fn defers_range_reservation(&self,effect:&mut RetainedAllocationEffect<'_>)->bool{effect.actual().is_some()&&self.phase=="chunks"&&self.chunk.as_ref().is_some_and(|c|c.at>=c.end&&c.kind==*b"IDAT")&&!self.ranges.has_reserved_slot()}
+ pub fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<(PngDecodeProgress,RetainedCloneProgress),PngDecodeError>{
+  let grant=effect.grant();self.last_progress=Default::default();self.last_work=0;self.check()?;let mut receipt=RetainedCloneProgress::default();
+  for _ in 0..grant.maximum_items{if self.phase=="complete"||self.defers_range_reservation(effect){break;}let copy=self.next_copy_byte_demand()?;let capacity=self.next_capacity_byte_demand()?;if self.next_depth_demand()?>grant.maximum_depth||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}
+   self.partial_allocated=0;let recorded=effect.performed_work();let result=match self.phase{"chunks"=>self.chunk_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:grant.maximum_capacity_bytes-receipt.retained_capacity_bytes,maximum_release_bytes:0,maximum_depth:grant.maximum_depth},effect),"allocation"=>self.allocation_step(),"pixels"=>self.pixel_step().map(|_|0),_=>self.inflate_step(grant.maximum_capacity_bytes-receipt.retained_capacity_bytes)};if effect.performed_work()==recorded&&!effect.performed(1).map_err(|_|PngDecodeError::WorkLimit)?{return Err(PngDecodeError::WorkLimit)}let allocated=match result{Ok(value)=>value,Err(error)=>{self.last_work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=self.partial_allocated;self.last_progress=receipt;self.failed=Some(error.clone());return Err(error);}};self.work+=1;self.last_work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=allocated;self.last_progress=receipt;
   }
   Ok((self.progress(),receipt))
  }

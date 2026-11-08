@@ -1,4 +1,5 @@
 //! 🧾️ One original History operation retains its actual native fields through nested granted decoding and paid typed receiving custody.
+use semio_framework_value::RetainedAllocationEffect;
 use super::OpPayload;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress};
 use std::mem::ManuallyDrop;
@@ -32,7 +33,7 @@ impl RetainedHistoryOpDecode{
   let length=usize::try_from(length).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original History operation extent overflow"))?;let maximum=if self.phase==1{self.limits.maximum_text_bytes}else{self.limits.maximum_binary_bytes}as usize;if length>maximum{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original History operation field exceeds declared limit"))}let end=position.checked_add(length).filter(|end|*end<=self.original_range.1).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original History operation field is truncated"))?;Ok((position,end))
  }
  /// 🧵️ Advances exactly one funded original header, physical field piece or typed receiving transfer.
- pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,grant:RetainedCloneGrant)->Result<RetainedHistoryOpDecodeStep,ValueError>{
+ pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedHistoryOpDecodeStep,ValueError>{let grant=effect.grant();
   self.validate_source(source)?;if self.receipt.is_some()||self.closing||self.closed{return Ok(RetainedHistoryOpDecodeStep::Blocked)}if self.is_ready(){return Ok(RetainedHistoryOpDecodeStep::Ready)}
   let demand=self.demands(source,grant.maximum_copy_bytes)?;if !Self::permits(grant,demand){return Ok(RetainedHistoryOpDecodeStep::Blocked)}
   if self.field.is_some(){
@@ -59,9 +60,9 @@ impl RetainedHistoryOpDecode{
  }
  pub fn cancel(&mut self){self.closing=true;if let Some(field)=self.field.as_mut(){field.cancel()}}
  /// ♻️ Closes the exact child under original nested authority, then waits for its real partial receiver.
- pub fn close_step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,grant:RetainedCloneGrant)->Result<RetainedHistoryOpDecodeStep,ValueError>{
+ pub fn close_step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedHistoryOpDecodeStep,ValueError>{let grant=effect.grant();
   self.validate_source(source)?;if self.receipt.is_some()||!self.closing{return Ok(RetainedHistoryOpDecodeStep::Blocked)}if self.closed{return Ok(RetainedHistoryOpDecodeStep::Closed)}let demand=self.demands(source,grant.maximum_copy_bytes)?;if !Self::permits(grant,demand){return Ok(RetainedHistoryOpDecodeStep::Blocked)}
-  if self.field.is_some(){if self.field.as_ref().unwrap().terminal_is_empty(){drop(self.field.take());self.record(grant,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(RetainedHistoryOpDecodeStep::Progress)}let child_grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let result=self.field.as_mut().unwrap().close_step(child_grant);if let Some((_,progress))=self.field.as_mut().unwrap().take_receipt(){self.record(grant,progress)?}result?;return Ok(if self.receipt.is_some(){RetainedHistoryOpDecodeStep::Progress}else{RetainedHistoryOpDecodeStep::Blocked})}
+  if self.field.is_some(){if self.field.as_ref().unwrap().terminal_is_empty(){drop(self.field.take());self.record(grant,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(RetainedHistoryOpDecodeStep::Progress)}let child_grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let result=self.field.as_mut().unwrap().close_step(&mut effect.nested(child_grant));if let Some((_,progress))=self.field.as_mut().unwrap().take_receipt(){self.record(grant,progress)?}result?;return Ok(if self.receipt.is_some(){RetainedHistoryOpDecodeStep::Progress}else{RetainedHistoryOpDecodeStep::Blocked})}
   if self.partial.is_some(){return Ok(RetainedHistoryOpDecodeStep::Blocked)}self.closed=true;self.record(grant,RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(RetainedHistoryOpDecodeStep::Closed)
  }
  pub fn partial_is_receivable(&self)->bool{self.closing&&!self.closed&&self.field.is_none()&&self.receipt.is_none()&&self.partial.is_some()}

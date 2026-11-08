@@ -831,6 +831,9 @@ async function worldProjectionSnapshot(container: Locator): Promise<string> {
   }));
 }
 
+/** ⏸️ The paused transport label: `Play` while live, `Play / Pause` in the non-live results window (`fem …/📊️results/🦀️.rs`). */
+const pausedTransport = (): RegExp => new RegExp(`^${projectLanguage().texts.play}( / \\S+)?$`);
+
 test('statik undo-redo', async ({ page }) => {
   test.setTimeout(TEST_TIMEOUT_MS + 3 * SURFACE_CONTENT_TIMEOUT_MS);
   const scenario = simulationCases.fem;
@@ -843,7 +846,7 @@ test('statik undo-redo', async ({ page }) => {
   await caption.click();
   await openPaneTab(page, scenario.paneId, scenario.panelCategoryId, scenario.panelTabId);
   const transport = page.locator(paneElementSelector(scenario.paneId, "fem3d-play-results.transport.play"));
-  await expect(transport, "deformation comparisons require paused playback").toHaveText(projectLanguage().texts.play);
+  await expect(transport, "deformation comparisons require paused playback").toHaveText(pausedTransport());
   const fullAmplitude = await worldProjectionSnapshot(results);
   const phase = page.locator(paneElementSelector(scenario.paneId, "fem3d-play-results.phase.control")).getByRole("slider");
   await phase.press("Home");
@@ -876,14 +879,14 @@ test('statik undo-redo', async ({ page }) => {
     if (projections.has(step.scale)) expect(projection, `${step.action} restores the solved projection`).toBe(projections.get(step.scale));
     else projections.set(step.scale, projection);
     await expect(phase).toHaveAttribute("aria-valuenow", String(scenario.phase));
-    await expect(transport).toHaveText(projectLanguage().texts.play);
+    await expect(transport).toHaveText(pausedTransport());
   }
   await capturePaneArtifact(page, scenario.paneId);
 });
 
 const editCases = JSON.parse(readFileSync(new URL("./🧬️edits/🧫️cases.json", import.meta.url), "utf8")) as {
   readonly generator: { readonly heightId: string; readonly initial: number; readonly changed: number; readonly widgetIds: readonly string[]; readonly synapseIds: readonly string[] };
-  readonly koordinator: { readonly catalogueId: string; readonly windowIds: readonly string[]; readonly rowPrefix: string };
+  readonly koordinator: { readonly catalogueId: string; readonly windowIds: readonly string[]; readonly rowPrefix: string; readonly rowText: Readonly<Record<Language, string>> };
   readonly aggregator: { readonly kindId: string; readonly seedId: string; readonly vortexCount: number; readonly meshUrl: string; readonly windowIds: readonly string[] };
   readonly bearbeiten: { readonly stepId: string; readonly label: string; readonly machine: string; readonly capability: string; readonly stepIds: readonly string[] };
   readonly verfolgen: { readonly label: string; readonly delta: number; readonly collection: string; readonly longitude: number; readonly latitude: number };
@@ -989,7 +992,7 @@ test("koordinator undo-redo", async ({ page }) => {
   const newId = (await worldInstanceIds(windows[0]!)).find((id) => !initialIds[0]!.includes(id))!;
   await openDocumentTab(page, "koordinator", "artifact");
   const row = page.locator(paneElementSelector("koordinator", newId));
-  await expect(row).toContainText(/Box \d+/);
+  await expect(row).toContainText(new RegExp(scenario.rowText[projectLanguage().name as Language]));
   await waitWorldSettled(windows[0]!);
   const changed = await documentWorldProjection(windows[0]!);
   for (let index = 1; index < windows.length; index += 1) expect(await worldInstanceIds(windows[index]!)).toEqual(initialIds[index]);

@@ -1,9 +1,10 @@
 //! 🎟️ Bounded command reads retain original pages until their exact physical release is funded.
 use super::*;
-use semio_framework_value::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress,RetainedCloneStep as Step,RetainedWorkOutcome as Turn,RetirementDemand as Demand,ValueError,ValueRefusalKind,retained_clone_grant_admits};
+use semio_framework_value::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress,RetainedCloneStep as Step,RetainedWorkOutcome as Turn,RetirementDemand as Demand,ValueError,ValueRefusalKind};
+use semio_framework_value::retained_clone::retained_clone_grant_admits;
 fn refused(message:&'static str)->Turn<Step>{Turn{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,message)),work:0}}
 fn waiting()->Turn<Step>{Turn{result:Ok(Step::Progress(Default::default())),work:0}}
-fn complete(progress:Progress,work:u64)->Turn<Step>{Turn{result:Ok(Step::Complete(progress)),work}}
+fn complete(progress:Progress,work:u128)->Turn<Step>{Turn{result:Ok(Step::Complete(progress)),work}}
 fn admit_binary_field_source_step(output:&mut Option<Vec<u8>>,length:usize,maximum:usize,grant:Grant,work:u64)->Turn<Step>{
   if output.is_some(){return refused("command field admission requires an empty destination")}
   if length>maximum{return Turn{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"command field exceeds its assembled authority")),work:0}}
@@ -46,7 +47,7 @@ impl PagedCommandReader{
   if n==0{return waiting()}
   output.extend_from_slice(&available[..n]);self.offset+=n;
   let progress=Progress{copied_items:1,copied_bytes:metadata+n,..Default::default()};
-  Turn{result:Ok(if output.len()==length{Step::Complete(progress)}else{Step::Progress(progress)}),work:n as u64+1}
+  Turn{result:Ok(if output.len()==length{Step::Complete(progress)}else{Step::Progress(progress)}),work:n as u128+1}
  }
  /// 🪦️ Releases the actual 4096-byte block only after every physical and metadata axis is funded.
  pub fn release_consumed_source_step(&mut self,grant:Grant,work:u64)->Turn<Step>{

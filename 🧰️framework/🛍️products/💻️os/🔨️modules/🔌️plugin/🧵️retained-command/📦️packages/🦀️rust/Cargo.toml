@@ -26,7 +26,7 @@ artifact-app-testing = ["semio-framework-job/testkit"]
 
 [dependencies]
 semio-plugin-retained-work = { path = "../../🔖️checkpoint-and-work-contract/📦️packages/🦀️rust" }
-semio-framework-plugin-result-page = { path = "../../🔄️full-operation/📃️/📦️packages/🦀️rust" }
+semio-plugin-result-page = { path = "../../🔄️full-operation/📃️/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-pack-json-source-sink = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/🛫️encode/🫳️borrowed/📦️packages/🦀️rust" }
 replication = { package = "semio-framework-replication", path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }

@@ -32,7 +32,7 @@ impl<C> std::ops::Deref for ArtifactOriginalToolCommand<C>{
 }
 impl<C> AsRef<C> for ArtifactOriginalToolCommand<C>{fn as_ref(&self)->&C{&self.command}}
 impl<C:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for ArtifactOriginalToolCommand<C>{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{self.command.retirement()}
+ type RetirementCursor=<Box<C> as semio_framework_value::retirement::RetireOwned>::RetirementCursor;fn retirement_seed(self)->Self::RetirementCursor{self.command.retirement_seed()}
  fn retirement_birth_bytes(&self)->Option<usize>{self.command.retirement_birth_bytes()}
  fn controlled_retirement_supported()->bool{<Box<C> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }

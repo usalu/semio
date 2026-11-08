@@ -27,6 +27,9 @@ const states: readonly BorderState[] = ["normal", "focus", "active", "waiting", 
 const roots = new WeakMap<HTMLElement, { compositor: BorderCompositor; participants: number }>();
 let sequence = 0;
 
+/** 🧱️ Realm-independent element test: observer callbacks can outlive the window global that defined `Element`. */
+const isElement = (node: unknown): node is Element => typeof node === "object" && node !== null && (node as Node).nodeType === 1;
+
 /** 🛡️ Inline important geometry prevents ancestor icon selectors from shrinking frame paint. */
 export function sizeSharedBorderOverlay(svg: SVGSVGElement | null, width: number, height: number): void {
   if (!svg) return;
@@ -58,7 +61,7 @@ export class BorderCompositor {
     root.setAttribute("data-shared-border-root", "");
     const view = root.ownerDocument.defaultView;
     this.observer = typeof MutationObserver === "undefined" ? null : new MutationObserver(records => {
-      if (records.some(record => !(record.target instanceof Element && record.target.closest("[data-shared-border-overlay], [data-window-silhouette-border]")) && (record.type !== "childList" || [...record.addedNodes, ...record.removedNodes].some(node => !(node instanceof Element && node.hasAttribute("data-shared-border-overlay")))))) this.schedule();
+      if (records.some(record => !(isElement(record.target) && record.target.closest("[data-shared-border-overlay], [data-window-silhouette-border]")) && (record.type !== "childList" || [...record.addedNodes, ...record.removedNodes].some(node => !(isElement(node) && node.hasAttribute("data-shared-border-overlay")))))) this.schedule();
     });
     this.observer?.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style", "data-active", "data-state", "aria-selected", "aria-pressed", "data-shared-border-state", "data-shared-border-frame", "data-shared-border-edges", "data-introduced", "data-celebrated", "disabled", "aria-disabled"] });
     this.resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(this.schedule);
@@ -80,12 +83,12 @@ export class BorderCompositor {
   };
   private motionStart = (event: Event) => {
     const property = (event as TransitionEvent).propertyName;
-    if (!(event.target instanceof Element) || !/^(transform|translate|scale|width|height|top|left|right|bottom|flex-basis|grid-template-)/.test(property)) return;
+    if (!(isElement(event.target)) || !/^(transform|translate|scale|width|height|top|left|right|bottom|flex-basis|grid-template-)/.test(property)) return;
     const properties = this.motion.get(event.target) ?? new Set<string>();
     properties.add(property); this.motion.set(event.target, properties); this.schedule();
   };
   private motionEnd = (event: Event) => {
-    if (!(event.target instanceof Element)) return;
+    if (!(isElement(event.target))) return;
     const properties = this.motion.get(event.target);
     properties?.delete((event as TransitionEvent).propertyName);
     if (!properties?.size) this.motion.delete(event.target);

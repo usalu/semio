@@ -230,9 +230,11 @@ struct SceneRasterPoolInner {
     state: RetainedOwnerGate<SceneRasterPoolState>,
 }
 
-struct RasterPoolRetirement {state:std::mem::ManuallyDrop<SceneRasterPoolState>}
+#[doc(hidden)]
+pub struct RasterPoolRetirement {state:std::mem::ManuallyDrop<SceneRasterPoolState>}
 impl semio_framework_value::retirement::RetireOwned for SceneRasterPoolInner {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(RasterPoolRetirement{state:std::mem::ManuallyDrop::new(self.state.into_inner())})}
+    type RetirementCursor=RasterPoolRetirement;
+    fn retirement_seed(self)->Self::RetirementCursor{RasterPoolRetirement{state:std::mem::ManuallyDrop::new(self.state.into_inner())}}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<RasterPoolRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
@@ -240,19 +242,22 @@ impl RasterPoolRetirement {
     fn pixel_capacity(slot:&RasterSlot)->usize{match &slot.state{RasterSlotState::Vacant=>0,RasterSlotState::Writing(row)=>row.pixels.as_ref().map_or(0,Vec::capacity),RasterSlotState::Ready(row)=>row.pixels.capacity(),RasterSlotState::Retiring(row)=>row.pixels.capacity()}}
 }
 impl semio_framework_value::retirement::RetirementCursor for RasterPoolRetirement {
-    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:if let Some(slot)=self.state.slots.last(){Self::pixel_capacity(slot)}else if self.state.slots.capacity()!=0{self.state.slots.capacity()*size_of::<RasterSlot>()}else if !self.state.gpu_residents.is_empty(){0}else{self.state.gpu_residents.capacity()*size_of::<Option<SceneRasterGpuRecord>>()},..Default::default()})}
+    fn next_demand(&self,_body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:if let Some(slot)=self.state.slots.last(){Self::pixel_capacity(slot)}else if self.state.slots.capacity()!=0{self.state.slots.capacity()*size_of::<RasterSlot>()}else if !self.state.gpu_residents.is_empty(){0}else{self.state.gpu_residents.capacity()*size_of::<Option<SceneRasterGpuRecord>>()},..Default::default()})}
 
-    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
-        use semio_framework_value::{retained_clone::RetainedCloneProgress,retirement::RetirementStep};
+    fn next_computational_work(&self,_:usize)->Result<u64,semio_framework_value::ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+        use semio_framework_value::{retained_clone::RetainedCloneProgress,retirement::{RetirementStep,record_retirement_work}};
         if self.terminal_is_empty(){return RetirementStep::Complete(0)}
-        if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
-        let bytes=self.next_close_byte_demand().unwrap();
+        let grant=effect.grant();
+        if grant.maximum_items==0||effect.maximum_work_units()==0{return RetirementStep::BudgetExhausted}
+        let bytes=self.next_close_byte_demand().unwrap_or(0);
         if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted}
+        let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};
         if !self.state.slots.is_empty(){drop(self.state.slots.pop());}
         else if self.state.slots.capacity()!=0{self.state.slots=Vec::new();}
         else if !self.state.gpu_residents.is_empty(){self.state.gpu_residents.pop();}
         else{self.state.gpu_residents=Vec::new();}
-        RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..RetainedCloneProgress::default()},1)
+        RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..RetainedCloneProgress::default()},work)
     }
     fn terminal_is_empty(&self)->bool{self.state.slots.is_empty()&&self.state.slots.capacity()==0&&self.state.gpu_residents.is_empty()&&self.state.gpu_residents.capacity()==0}
     fn next_close_byte_demand(&self)->Option<usize>{Some(if let Some(slot)=self.state.slots.last(){Self::pixel_capacity(slot)}else if self.state.slots.capacity()!=0{self.state.slots.capacity()*size_of::<RasterSlot>()}else if !self.state.gpu_residents.is_empty(){0}else{self.state.gpu_residents.capacity()*size_of::<Option<SceneRasterGpuRecord>>()})}
@@ -378,24 +383,47 @@ impl fmt::Debug for SceneRasterLease {
 
 impl SceneRasterLease {
     /// ♻️ Keeps the original pooled pixels and final Arc payload under separately admitted ownership.
-    pub fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
-        use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
+    pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+        use semio_framework_value::{RetainedWorkOutcome,RetainedWorkPoll,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneProgress,RetainedCloneStep},retirement::record_retirement_work};
+        let done=|result:Result<RetainedCloneStep,ValueError>,work:u128|RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map_err(Into::into),work});
         let empty=RetainedCloneProgress::default();
-        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}
-        if grant.maximum_items==0||grant.maximum_depth<self.next_close_depth_demand()?{return Ok(RetainedCloneStep::Progress(empty))}
+        let grant=effect.grant();
+        if self.terminal_is_empty(){return done(Ok(RetainedCloneStep::Complete(empty)),0)}
+        let depth=match self.next_close_depth_demand(){Ok(depth)=>depth,Err(error)=>return done(Err(error),0)};
+        if grant.maximum_items==0||grant.maximum_depth<depth||effect.maximum_work_units()==0{return done(Ok(RetainedCloneStep::Progress(empty)),0)}
         if let Some(token)=self.token{
-            let Some(inner)=self.inner.as_ref()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"raster token lost its pool owner"))};
-            let Ok(mut state)=inner.state.try_lock()else{return Ok(RetainedCloneStep::Progress(empty))};
+            let Some(inner)=self.inner.as_ref()else{return done(Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"raster token lost its pool owner")),0)};
+            let Ok(mut state)=inner.state.try_lock()else{return done(Ok(RetainedCloneStep::Progress(empty)),0)};
+            let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return done(Err(error),work)};
             if let Some(slot)=state.slots.get_mut(usize::from(token.slot)).filter(|slot|slot.epoch==token.epoch){if let RasterSlotState::Ready(ready)=&mut slot.state{if let Some(lease)=ready.leases.iter_mut().find(|lease|lease.id==token.lease_id){lease.live=false;}}}
+            drop(state);
             self.token=None;
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
+            return done(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty})),work)
         }
-        if let Some(inner)=self.inner.take(){self.retirement=Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(inner));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
-        let owner=self.retirement.as_mut().unwrap();
-        let step=owner.step(grant)?;
-        if !step.progress().fits(grant){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"raster close receipt exceeded its grant"))}
-        if owner.terminal_is_empty(){self.retirement=None;}
-        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+        if self.inner.is_some(){
+            let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return done(Err(error),work)};
+            if let Some(inner)=self.inner.take(){self.retirement=Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(inner));}
+            return done(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty})),work)
+        }
+        let Some(owner)=self.retirement.as_mut()else{return done(Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"raster lease has no retirement owner")),0)};
+        match owner.step(effect){
+            RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},
+            RetainedWorkPoll::Complete(turn)=>{
+                let result=match turn.result{
+                    Ok(step)=>if step.progress().fits(grant){Ok(step)}else{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"raster close receipt exceeded its grant").into())},
+                    Err(error)=>Err(error),
+                };
+                match result{
+                    Ok(step)=>{
+                        if owner.terminal_is_empty(){self.retirement=None;}
+                        let progress=step.progress();
+                        let step=if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)};
+                        RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(step),work:turn.work})
+                    }
+                    Err(error)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error),work:turn.work}),
+                }
+            }
+        }
     }
     pub fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.retirement.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
     pub fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{self.retirement.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(copy))}

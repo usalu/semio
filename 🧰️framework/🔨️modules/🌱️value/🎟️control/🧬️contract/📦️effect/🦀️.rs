@@ -33,6 +33,13 @@ impl<'a> RetainedAllocationEffect<'a>{
   let remaining=self.remaining_work_units()?;let work_start=self.work.observed_work();if grant.restricted_by(self.grant)!=grant||maximum_work_units>remaining{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"nested allocation effect changes its original authority"))}
   Ok(RetainedAllocationEffect{grant,maximum_work_units,actual:self.actual,work:&mut *self.work,work_start})
  }
+ /// 🪆️ Lends a nested producer exactly what is left: the grant intersected with this one and the remaining work of this effect and its receipt, so no authority can widen.
+ pub fn nested(&mut self,grant:RetainedCloneGrant)->RetainedAllocationEffect<'_>{self.nested_within(grant,u64::MAX)}
+ /// 🪆️ Like `nested` but with a tighter authored ceiling; an exhausted or inconsistent receipt yields a zero ceiling that refuses on the first recorded unit.
+ pub fn nested_within(&mut self,grant:RetainedCloneGrant,maximum_work_units:u64)->RetainedAllocationEffect<'_>{
+  let maximum_work_units=self.remaining_work_units().unwrap_or(0).min(maximum_work_units);let grant=grant.restricted_by(self.grant);let work_start=self.work.observed_work();
+  RetainedAllocationEffect{grant,maximum_work_units,actual:self.actual,work:&mut *self.work,work_start}
+ }
 }
 
 #[cfg(test)]

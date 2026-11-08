@@ -100,6 +100,7 @@ const PROPERTY_TEST_ITERATIONS: u32 = 3000;
 
 #[test]
 fn round_trips_arbitrary_values() {
+    crate::warm();
     let mut rng = Rng::new(0xC0FF_EE00_1234_5678);
     for case in 0..PROPERTY_TEST_ITERATIONS {
         let value = arbitrary_value(&mut rng, 0);
@@ -141,6 +142,7 @@ fn number_matches(mine: &Number, theirs: &serde_json::Number) -> bool {
 
 #[test]
 fn differential_parse_matches_serde_json_on_arbitrary_values() {
+    crate::warm();
     let mut rng = Rng::new(0xD1FF_0000_BEEF_CAFE);
     let mut checked = 0usize;
     for case in 0..PROPERTY_TEST_ITERATIONS {
@@ -155,6 +157,7 @@ fn differential_parse_matches_serde_json_on_arbitrary_values() {
 
 #[test]
 fn differential_cross_parse_serde_json_writer_output() {
+    crate::warm();
     let mut rng = Rng::new(0x5EED_1357_2468_ACE0);
     let mut checked = 0usize;
     for case in 0..PROPERTY_TEST_ITERATIONS {
@@ -185,6 +188,7 @@ fn to_serde_json(value: &Value) -> serde_json::Value {
 /// now that `FloatParity` below proves the writers agree on every `f64`.
 #[test]
 fn canonical_bytes_match_serde_json_for_typical_documents() {
+    crate::warm();
     let cases: &[&str] = &[r#"null"#, r#"true"#, r#"false"#, r#"0"#, r#"-17"#, r#"3.5"#, r#""hello""#, r#""café""#, r#"[]"#, r#"{}"#, r#"[1,2,3]"#, r#"{"a":1}"#, r#"{"only":{"one":"key"}}"#, r#"1.5e300"#, r#"5e-300"#, r#"1e21"#, r#"1e-7"#];
     for text in cases {
         let mine = parse(text, crate::JsonMemberPolicy::Replace).unwrap();
@@ -249,6 +253,7 @@ fn float_parity_edge_cases() -> Vec<f64> {
 
 #[test]
 fn write_float_matches_serde_json_byte_for_byte() {
+    crate::warm();
     let mut checked = 0usize;
     let mut mismatches: Vec<String> = Vec::new();
     for &value in &float_parity_edge_cases() {
@@ -288,6 +293,7 @@ fn write_float_matches_serde_json_byte_for_byte() {
 /// with float-valued fields, the kind a checkpoint or a canonical scalar actually carries).
 #[test]
 fn realistic_payloads_byte_match_serde_json() {
+    crate::warm();
     let mut rng = Rng::new(0x0011_2233_4455_6677);
     let mut checked = 0usize;
     for _ in 0..20_000u32 {

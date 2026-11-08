@@ -1,4 +1,4 @@
-import {copyFileSync,existsSync,mkdirSync,readdirSync,writeFileSync,rmSync,statSync} from "node:fs";
+import {readFileSync,copyFileSync,existsSync,mkdirSync,readdirSync,writeFileSync,rmSync,statSync} from "node:fs";
 import {join} from "node:path";
 import {spawnSync} from "node:child_process";
 import {hostShimSource} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts";
@@ -7,7 +7,7 @@ import {rewritePreview2ShimImports} from "/Users/ueli/Documents/semio/🧰️fra
 import {PLUGIN_HOST_SHIM_FILE} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts";
 import {PLUGIN_DESCRIPTOR_PROBE_SOURCE,finalizePluginDescriptor} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts";
 import {pluginComponentBridgeSource} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts";
-const repoRoot="/Users/ueli/Documents/semio",out=process.argv[2]!,base="semio_s_plugin_flow_list_component",transpiled=join(out,"transpiled"),optimized=join(out,"optimized"),module=join(out,"module"),vendor=join(out,"vendor");
+const repoRoot="/Users/ueli/Documents/semio",out=process.argv[2]!,base=readFileSync(join(process.argv[2]!,"base.txt"),"utf8").trim(),transpiled=join(out,"transpiled"),optimized=join(out,"optimized"),module=join(out,"module"),vendor=join(out,"vendor");
 rmSync(module,{recursive:true,force:true});mkdirSync(module,{recursive:true});
 const walk=(dir:string,prefix=""):string[]=>readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(join(dir,e.name),prefix+e.name+"/"):[prefix+e.name]);
 for(const name of walk(transpiled)){const src=existsSync(join(optimized,name))?join(optimized,name):join(transpiled,name);mkdirSync(join(module,name,".."),{recursive:true});copyFileSync(src,join(module,name));}
@@ -23,5 +23,5 @@ const {decodePackValue}=await import("/Users/ueli/Documents/semio/🧰️framewo
 console.log("STAGE finalize OK pack",descriptor.pack.byteLength,"json",descriptor.json.length);
 writeFileSync(join(module,"🛂️.descriptor.semio"),descriptor.pack);writeFileSync(join(module,"🔣️.json"),descriptor.json);writeFileSync(join(module,"bridge.js"),pluginComponentBridgeSource(base,base+".wasm"));
 console.log("STAGE publish-to-scratch OK",walk(module).length,"files");
-import {createHash} from "node:crypto";import {readFileSync} from "node:fs";
+import {createHash} from "node:crypto";
 const committed=process.argv[3];if(committed){const live=createHash("sha256").update(descriptor.pack).digest("hex"),disk=createHash("sha256").update(readFileSync(committed)).digest("hex");console.log("CHECK committed descriptor pack equals finalized probe pack:",live===disk,live.slice(0,12),disk.slice(0,12));}

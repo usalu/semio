@@ -58,14 +58,14 @@ pub fn close_paged_owner_step<T, const N: usize>(owner: &mut PagedList<T, N>, ma
     if owner.terminal_is_empty() {
         return Ok(None);
     }
-    let progress = owner.release_empty_page(maximum_bytes).map_err(|_| ())?;
+    let progress = owner.release_empty_page_leased(maximum_bytes).map_err(|_| ())?;
     progress.progressed.then_some(Some((1, progress.released_allocation_bytes))).ok_or(())
 }
 
 pub fn cold_paged_owner<T, const N: usize>(capacity: usize) -> Result<PagedList<T, N>, FemError> {
     let mut owner = PagedList::default();
     while owner.capacity() < capacity {
-        if !owner.reserve_capacity_one(capacity, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?.progressed {
+        if !semio_s_fem_sparse::reserve_cold_page(&mut owner, capacity).map_err(|_| FemError::ResourceAdmission)?.progressed {
             return Err(FemError::ResourceAdmission);
         }
     }
@@ -171,8 +171,11 @@ impl<T, const N: usize> MountedModelItems<T, N> {
     }
 
     fn admit_one(&mut self, target: usize, maximum_bytes: usize) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
-        if self.next_allocation_bytes(target)?.is_some() {
-            let progress = self.values.reserve_capacity_one(target, maximum_bytes.min(MOUNTED_OWNER_PAGE_BYTES)).map_err(|error| MountedAnalysisFault::Allocation { allocated_bytes: error.allocated_bytes, reason: error.reason })?;
+        if let Some(demand) = self.next_allocation_bytes(target)? {
+            if demand > MOUNTED_OWNER_PAGE_BYTES { return Err(MountedAnalysisFault::Allocation { allocated_bytes: 0, reason: "mounted analysis page demand exceeds the owner page" }); }
+            if demand > maximum_bytes { return Ok(MountedAnalysisAdmission::default()); }
+            let progress = semio_s_fem_sparse::reserve_cold_page(&mut self.values, target).map_err(|_| MountedAnalysisFault::Allocation { allocated_bytes: 0, reason: "mounted analysis page reservation was refused" })?;
+            if progress.allocated_bytes > maximum_bytes.min(MOUNTED_OWNER_PAGE_BYTES) { return Err(MountedAnalysisFault::Allocation { allocated_bytes: progress.allocated_bytes, reason: "mounted analysis page exceeds its byte grant" }); }
             return Ok(MountedAnalysisAdmission { complete: false, allocated_bytes: progress.allocated_bytes });
         }
         if self.admitted < target {
@@ -527,7 +530,7 @@ pub fn validate(model: &AnalysisModel) -> Result<(), FemError> {
             return Err(FemError::DuplicateNodeId(node.id.clone()));
         }
     }
-    let node_exists = |id: &str| model.nodes.iter().any(|n| n.id == id);
+    let node_exists = |id: &str| seen.contains(id);
     for element in &model.elements {
         for id in element.node_ids() {
             if !node_exists(&id) {
@@ -544,7 +547,8 @@ pub fn validate(model: &AnalysisModel) -> Result<(), FemError> {
 }
 
 pub fn validate_case(model: &AnalysisModel, case: &LoadCase) -> Result<(), FemError> {
-    let node_exists = |id: &str| model.nodes.iter().any(|n| n.id == id);
+    let known: HashSet<&str> = model.nodes.iter().map(|n| n.id.as_str()).collect();
+    let node_exists = |id: &str| known.contains(id);
     for load in &case.nodal_loads {
         if !node_exists(&load.node_id) {
             return Err(FemError::DanglingNodeRef(load.node_id.clone()));

@@ -5,7 +5,7 @@ use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_decl_emission::ActionMeta;
 use semio_framework_value::DslValue;
 use semio_framework::{ActionKind,Fault,FaultCode,FaultOrigin};
-use semio_plugin_tool_run::tool_jobs_tool_machine::{ScrubTag,ToolTag};
+use semio_plugin_tool_machine::{ScrubTag,ToolTag};
 use semio_plugin_instance_extension::InstanceExtension;
 use semio_framework_tool_machine::{ScrubPhase,ToolAbortReason,SCRUB_ABORT_ARG,SCRUB_GESTURE_ARG,TYPING_BUFFER_ARG,TYPING_COMMIT_ARG};
 use store::{MemberFactory,ReferenceSpaceMember};
@@ -20,7 +20,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             typing.finish_into(typing_ready,decision,metadata,cx)?;return Ok(None)
         }
         let meta=metadata.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original dispatch metadata was not restored"))?;
-        type Host<A>=semio_plugin_scrub_host::OriginalScrubDispatch<semio_plugin_tool_run::tool_jobs_tool_machine::PressLeaf<<A as ArtifactApp>::Mutation,<A as ArtifactApp>::ConfigMutation>>;
+        type Host<A>=semio_plugin_scrub_host::OriginalScrubDispatch<semio_plugin_tool_machine::PressLeaf<<A as ArtifactApp>::Mutation,<A as ArtifactApp>::ConfigMutation>>;
         if let Some(owner)=self.tools.original_scrub_dispatch.as_ref(){
             if owner.terminal_is_empty(){
                 if owner.frozen(){

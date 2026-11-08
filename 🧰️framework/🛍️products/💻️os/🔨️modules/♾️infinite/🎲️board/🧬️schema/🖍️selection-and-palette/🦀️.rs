@@ -3,18 +3,13 @@
 use super::*;
 
 /// ✅️ Selection snapshot maintained by the engine hot path.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Selection {
     pub edge_ids: semio_framework_value::numeric_scratch::NumericSet<EdgeId>,
     pub handle_ids: semio_framework_value::numeric_scratch::NumericSet<HandleId>,
     pub node_ids: semio_framework_value::numeric_scratch::NumericSet<NodeId>,
 }
 
-impl semio_framework_value::retirement::RetireOwned for Selection {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::{sequence,deferred};sequence(vec![deferred(self.edge_ids),deferred(self.handle_ids),deferred(self.node_ids)])}
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.edge_ids),deferred_birth_bytes_for(&self.handle_ids),deferred_birth_bytes_for(&self.node_ids)])}
-    fn controlled_retirement_supported()->bool{true}
-}
 
 #[derive(Clone,Debug,PartialEq,Eq)]
 pub struct BoardPalette {

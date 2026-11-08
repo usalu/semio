@@ -23,7 +23,7 @@ name = "semio_framework_value"
 path = "🦀️.rs"
 
 [features]
-testkit = ["semio-framework-value-read/testkit"]
+testkit = ["semio-framework-value-read/testkit","dep:semio-framework-value-testing-effect-bank"]
 
 [dependencies]
 semio-framework-value-equality = { path = "../../🌳️tree/🟰️equal/📦️packages/🦀️rust" }
@@ -39,6 +39,7 @@ semio-framework-value-original-slot = { path="../../🧬️retained-clone/📦�
 semio-framework-value-factory = { path="../../♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path="../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path="../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path="../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust", optional=true }
 semio-framework-value-derive = { path = "../../✨️derive/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-projection = { path = "../../📽️projection/📦️packages/🦀️rust" }
@@ -75,5 +76,17 @@ path = "../../📦️paged/🛬️receive/🧪️tests/🦀️.rs"
 [[test]]
 name = "value-scratch"
 path = "../../🔑️hashed/🧮️scratch/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value-shared-utf8-native"
+path = "../../📝️shared-utf8/🎟️native/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value-shared-utf8-admission"
+path = "../../📝️shared-utf8/🎟️admission/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value-paged-append-work"
+path = "../../📦️paged/🎮️append/🎟️work/🧪️tests/🦀️.rs"
 
 

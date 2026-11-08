@@ -463,32 +463,32 @@ impl ArtifactStorePendingReportRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStorePendingReportRetirement {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         let demand = self.demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "pending report retirement exceeds admitted depth")); }
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "pending report retirement exceeds admitted depth").into()); }
         if grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_copy_bytes < demand.copy_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         let report = self.report.as_mut().expect("nonterminal report retains original");
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(original) = report.outbound.pop() {
             match admit_artifact_retirement(original, child, ArtifactStoreConflictRetirement::causal_envelope) {
                 Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
-                Err((error, original)) => { report.outbound.push(original); return Err(error); }
+                Err((error, original)) => { report.outbound.push(original); return Err(error.into()); }
             }
         }
         if let Some(original) = report.messages.pop() {
             match admit_artifact_retirement(original, child, |entry| ArtifactStoreMessageLedgerRetirement::new(entry.edit_id, entry.messages)) {
                 Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
-                Err((error, original)) => { report.messages.push(original); return Err(error); }
+                Err((error, original)) => { report.messages.push(original); return Err(error.into()); }
             }
         }
         if let Some(original) = report.edit_ids.as_mut().and_then(Vec::pop) {
             match admit_artifact_retirement(original, child, ArtifactStoreStringRetirement::new) {
                 Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
-                Err((error, original)) => { report.edit_ids.as_mut().expect("original edit-id backing").push(original); return Err(error); }
+                Err((error, original)) => { report.edit_ids.as_mut().expect("original edit-id backing").push(original); return Err(error.into()); }
             }
         }
         if report.outbound.capacity() != 0 { drop(std::mem::take(&mut report.outbound)); }
@@ -496,7 +496,7 @@ impl ErasedSnapshotRetirement for ArtifactStorePendingReportRetirement {
         else if report.edit_ids.is_some() { drop(report.edit_ids.take()); }
         else { report.worst = None; drop(self.report.take()); return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty })); }
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty }))
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
     fn terminal_is_empty(&self) -> bool { self.report.is_none() && self.active.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }

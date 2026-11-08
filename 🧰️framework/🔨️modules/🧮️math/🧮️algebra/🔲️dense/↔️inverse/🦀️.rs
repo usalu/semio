@@ -68,7 +68,8 @@ impl semio_framework_value::FromValue for DenseInverseCursor{
 impl semio_framework_value::serde::Serialize for DenseInverseCursor{fn serialize<S:semio_framework_value::serde::Serializer>(&self,serializer:S)->Result<S::Ok,S::Error>{semio_framework_value::serde::Serialize::serialize(&self.snapshot(),serializer)}}
 impl<'de> semio_framework_value::serde::Deserialize<'de> for DenseInverseCursor{fn deserialize<D:semio_framework_value::serde::Deserializer<'de>>(deserializer:D)->Result<Self,D::Error>{let words=<[u64;14] as semio_framework_value::serde::Deserialize>::deserialize(deserializer)?;Self::from_snapshot(words).map_err(|_|semio_framework_value::serde::de::Error::custom("invalid inverse cursor snapshot"))}}
 impl semio_framework_value::retirement::RetireOwned for DenseInverseCursor{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.snapshot())}
+ type RetirementCursor=<[u64;14] as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::RetireOwned::retirement_seed(self.snapshot())}
  fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.snapshot())}
  fn controlled_retirement_supported()->bool{true}
 }

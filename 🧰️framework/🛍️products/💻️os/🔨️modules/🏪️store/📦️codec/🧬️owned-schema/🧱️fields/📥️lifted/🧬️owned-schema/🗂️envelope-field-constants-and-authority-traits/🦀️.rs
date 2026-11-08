@@ -57,6 +57,97 @@ pub enum ArtifactEnvelopeFieldDecodeStep {
     RecordComplete,
 }
 
+/// ⏳️ One owned-schema close turn: still pending, or settled with its step and the actual work its effect performed.
+pub type ArtifactEnvelopeClosePoll = RetainedWorkPoll<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
+
+/// 🚦️ Control flow of a close ladder: a pending child or a fault, so `?` forwards both.
+#[derive(Debug, PartialEq, Eq)]
+pub enum ArtifactEnvelopeCloseExit<E = OwnedSchemaDecodeDiagnostic> {
+    Pending,
+    Fault(E),
+}
+
+impl<E> From<E> for ArtifactEnvelopeCloseExit<E> {
+    fn from(error: E) -> Self {
+        Self::Fault(error)
+    }
+}
+
+/// 🪆️ Forwards a child poll into a ladder: `Pending` stays pending, a settled fault is converted.
+pub fn artifact_envelope_close_resume<T, E, F: From<E>>(poll: RetainedWorkPoll<T, E>) -> Result<T, ArtifactEnvelopeCloseExit<F>> {
+    artifact_envelope_close_resume_with(poll, F::from)
+}
+
+/// 🪆️ Forwards a child poll into a ladder through an explicit fault mapping.
+pub fn artifact_envelope_close_resume_with<T, E, F>(poll: RetainedWorkPoll<T, E>, map: impl FnOnce(E) -> F) -> Result<T, ArtifactEnvelopeCloseExit<F>> {
+    match poll {
+        RetainedWorkPoll::Pending { .. } => Err(ArtifactEnvelopeCloseExit::Pending),
+        RetainedWorkPoll::Complete(turn) => turn.result.map_err(|error| ArtifactEnvelopeCloseExit::Fault(map(error))),
+    }
+}
+
+/// 🧾️ Settles a ladder against its effect once: a progressing turn that recorded no work pays one unit, and the poll carries exactly the effect's performed work.
+pub fn artifact_envelope_close_finish<T, E>(effect: &mut RetainedAllocationEffect<'_>, result: Result<T, ArtifactEnvelopeCloseExit<E>>, progressed: impl FnOnce(&T) -> bool, refused: impl FnOnce() -> E) -> RetainedWorkPoll<T, E> {
+    let result = match result {
+        Err(ArtifactEnvelopeCloseExit::Pending) => return RetainedWorkPoll::Pending { work: effect.performed_work() },
+        Err(ArtifactEnvelopeCloseExit::Fault(error)) => Err(error),
+        Ok(value) if effect.performed_work() == 0 && progressed(&value) => match effect.performed(1) {
+            Ok(true) => Ok(value),
+            Ok(false) | Err(_) => Err(refused()),
+        },
+        Ok(value) => Ok(value),
+    };
+    RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: effect.performed_work() })
+}
+
+/// 🧾️ Settles a field close ladder against its effect.
+pub fn artifact_envelope_close_settle(effect: &mut RetainedAllocationEffect<'_>, result: Result<RetainedCloneStep, ArtifactEnvelopeCloseExit>) -> ArtifactEnvelopeClosePoll {
+    artifact_envelope_close_finish(effect, result, |step| step.progress() != RetainedCloneProgress::default(), || {
+        let mut diagnostic = OwnedSchemaDecodeDiagnostic::before("artifact-envelope.close-work-limit", OwnedSchemaPath::ROOT);
+        diagnostic.refusal_kind = ValueRefusalKind::WorkLimit;
+        diagnostic
+    })
+}
+
+/// 🧾️ Settles a value-error close ladder into an original retirement poll against its effect.
+pub fn artifact_envelope_retirement_settle(effect: &mut RetainedAllocationEffect<'_>, result: Result<RetainedCloneStep, ArtifactEnvelopeCloseExit<ValueError>>) -> OriginalRetirementPoll {
+    let result = result.map_err(|exit| match exit {
+        ArtifactEnvelopeCloseExit::Pending => ArtifactEnvelopeCloseExit::Pending,
+        ArtifactEnvelopeCloseExit::Fault(error) => ArtifactEnvelopeCloseExit::Fault(error.into()),
+    });
+    artifact_envelope_close_finish(effect, result, |step| step.progress() != RetainedCloneProgress::default(), || artifact_envelope_close_work_error().into())
+}
+
+/// 🧾️ Records the work a grant-shaped child reported into the caller's effect so the ladder's poll keeps one exact charge.
+pub fn artifact_envelope_close_charge<T, E, F: From<E>>(effect: &mut RetainedAllocationEffect<'_>, turn: RetainedWorkOutcome<T, E>, refused: impl FnOnce() -> F) -> Result<T, ArtifactEnvelopeCloseExit<F>> {
+    let admitted = u64::try_from(turn.work).map_or(false, |work| work == 0 || effect.performed(work).unwrap_or(false));
+    match turn.result {
+        Err(error) => Err(ArtifactEnvelopeCloseExit::Fault(F::from(error))),
+        Ok(value) if admitted => Ok(value),
+        Ok(_) => Err(ArtifactEnvelopeCloseExit::Fault(refused())),
+    }
+}
+
+/// ⛽️ The refusal of a close ladder whose effect cannot fund its recorded work.
+pub fn artifact_envelope_close_work_error() -> ValueError {
+    ValueError::literal(ValueRefusalKind::WorkLimit, "artifact envelope close exceeds its work ceiling")
+}
+
+/// 🧯️ Converts an original retirement failure into its owning value refusal, keeping the physical effects it recorded.
+pub fn artifact_envelope_failure_error(failure: OriginalRetirementFailure) -> ValueError {
+    let progress = failure.retained_progress();
+    let (primary, work, receipt, ..) = failure.into_parts();
+    primary.or(work).or(receipt).unwrap_or_else(|| ValueError::invariant("original retirement failed without a recorded cause")).with_retained_progress(progress)
+}
+
+/// 🧯️ Carries the refusal kind and physical effects of an original retirement failure into a decode diagnostic.
+pub fn artifact_envelope_failure_diagnostic(diagnostic: OwnedSchemaDecodeDiagnostic, failure: &OriginalRetirementFailure) -> OwnedSchemaDecodeDiagnostic {
+    let kind = failure.primary().or(failure.work_refusal()).or(failure.receipt_refusal()).map_or(diagnostic.refusal_kind, |error| error.kind);
+    OwnedSchemaDecodeDiagnostic { refusal_kind: kind, retained_progress: failure.retained_progress(), ..diagnostic }
+}
+
+pub use semio_framework_value::factory_retire_owned as artifact_envelope_factory_retire;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactEnvelopeFieldReservation {
     pub(super) field_id: u16,
@@ -101,7 +192,7 @@ pub trait ArtifactEnvelopeVcsFieldAuthority<P, Mutation>: Send {
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -120,7 +211,7 @@ pub trait ArtifactEnvelopeSnapshotFieldAuthority<P>: Send {
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -144,7 +235,7 @@ pub trait ArtifactEnvelopeMutationFieldAuthority<Mutation>: Send {
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -162,7 +253,7 @@ pub trait ArtifactEnvelopeSprConflictAuthority: Send {
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -200,7 +291,7 @@ pub trait ArtifactOwnedHistoryEntryAuthority<T>: Send {
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll;
     fn terminal_is_empty(&self) -> bool;
 }
 

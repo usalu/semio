@@ -84,6 +84,30 @@ macro_rules! selected_entry_mut {
     };
 }
 
+/// 🚨️ The typed fault of a turn step that needs the selected run after the ledger lost it.
+pub fn tool_run_slot_lost(step:&'static str)->semio_framework::Fault{plugin_sdk_fault(format!("tool run {step} requires its selected run, which the ledger no longer holds"))}
+
+/// 🎯️ The selected run mutably, or the typed [`tool_run_slot_lost`] fault naming the step.
+#[macro_export]
+#[doc(hidden)]
+macro_rules! selected_entry_required {
+    ($ledger:expr,$step:expr) => {
+        $crate::selected_entry_mut!($ledger).ok_or_else(||$crate::tool_run_slot_lost($step))
+    };
+}
+
+#[cfg(test)]
+mod selected_entry_required_tests {
+    struct Ledger{selected:Option<usize>,entries:Vec<Box<u8>>}
+    fn fault(ledger:&mut Ledger)->Result<u8,semio_framework::Fault>{selected_entry_required!(ledger,"probe").map(|entry|*entry)}
+    #[test]
+    fn selection_resolves_the_selected_run(){assert_eq!(fault(&mut Ledger{selected:Some(1),entries:vec![Box::new(7),Box::new(9)]}).ok(),Some(9));}
+    #[test]
+    fn missing_selection_is_a_typed_fault(){let error=fault(&mut Ledger{selected:None,entries:vec![Box::new(7)]}).unwrap_err();assert!(error.message.contains("probe"),"{}",error.message);}
+    #[test]
+    fn dangling_selection_is_a_typed_fault(){assert!(fault(&mut Ledger{selected:Some(3),entries:vec![Box::new(7)]}).is_err());}
+}
+
 #[path="🎞️tick/📦️payload/🦀️.rs"]
 pub mod original_tick_payload;
 #[cfg(test)]
@@ -124,8 +148,6 @@ mod granted_ledger_retirement_tests;
 
 pub use semio_plugin_job::lifted_job::*;
 
-#[path = "../🛠️tool-machine/🦀️.rs"]
-pub mod tool_jobs_tool_machine;
 
 #[path="🎞️tick/🛬️native/🦀️.rs"]
 pub mod original_native_tick;

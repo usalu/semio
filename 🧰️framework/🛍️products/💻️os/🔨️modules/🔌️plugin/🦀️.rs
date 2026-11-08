@@ -3,7 +3,7 @@
 pub use semio_framework_os_kernel::io;
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
-pub use semio_plugin_testing_laws::with_authoring_identity;
+pub use semio_plugin_testing_laws::{with_authoring_identity, install_fixture_heap_witness};
 //#region 📣️FacadeMacroMounts
 #[macro_use]
 #[path = "📣️macros/🌱️wp1-window/🦀️.rs"]

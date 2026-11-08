@@ -33,6 +33,7 @@ struct FoldControlState {
     cancelled: AtomicBool,
     completed: AtomicU64,
     shared_work: AtomicU64,
+    slot: semio_framework_value::retained_clone::LentEffectSlot,
     page_bytes: AtomicUsize,
     pending_retirement_birth: AtomicUsize,
     pending_construction_capacity: AtomicUsize,
@@ -52,18 +53,55 @@ struct FoldControlState {
     retirements: FoldRetirementQueue,
 }
 
+/// 🏦️ Cold and test entry: runs a grant-shaped step outside any job turn inside a standalone synchronous effect funded by that grant.
+pub(crate) fn authored<R>(grant:RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->R)->Result<(R,u128),ValueError>{
+    let work=1u64<<16;
+    match semio_framework_value::AuthoringWallet::new(grant,u128::from(work)).run(grant,work,operation)?{Some(done)=>Ok((done.output,done.performed)),None=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"fold authoring work quote was not admitted"))}
+}
+
+/// ⛽️ Records owed work on the effect lent to `slot`; no lend or an unfunded unit is a typed refusal.
+fn owe_on(slot:&semio_framework_value::retained_clone::LentEffectSlot,work:impl Into<u128>)->Result<(),ValueError>{
+    let work=u64::try_from(work.into()).map_err(|_|ValueError::invariant("fold work exceeds a turn"))?;
+    if work==0{return Ok(())}
+    slot.with_effect(|effect|if effect.performed(work)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"fold work is not funded"))})?
+}
+
+/// ⛽️ Owes work through the live control, or through the job's own slot once the control is freed; borrows only the named fields.
+fn owe_split(control:&HistoryFoldControl,slot:&semio_framework_value::retained_clone::LentEffectSlot,closed:bool,work:impl Into<u128>)->Result<(),ValueError>{if closed{owe_on(slot,work)}else{control.owe(work)}}
+/// 🪢️ Runs one primitive on the lent effect through the live control, or through the job's own slot once the control is freed.
+fn charged_split<R>(control:&HistoryFoldControl,slot:&semio_framework_value::retained_clone::LentEffectSlot,closed:bool,operation:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->(R,u128))->Result<R,ValueError>{
+    if !closed{return control.charged(operation)}
+    let (output,reported,done)=slot.with_effect(|effect|{let before=effect.performed_work();let (output,reported)=operation(effect);(output,reported,effect.performed_work().saturating_sub(before))})?;
+    owe_on(slot,reported.saturating_sub(done))?;Ok(output)
+}
+
+/// 🏁️ Settles one finished retirement poll into its step and work; a refused or suspended close is a fault of the fold.
+pub(crate) fn settled(poll:semio_framework_value::OriginalRetirementPoll)->Result<(RetainedCloneStep,u128),ValueError>{
+    match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>Ok((step,turn.work)),Err(failure)=>{let progress=failure.retained_progress();drop(failure);Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fold close was refused").with_retained_progress(progress))}},semio_framework_value::RetainedWorkPoll::Pending{..}=>Err(ValueError::invariant("fold close stayed pending"))}
+}
+
 /// ⏱️ The shared pulse and retirement authority of one immutable-source fold.
 #[derive(Clone)]
 pub struct HistoryFoldControl(Arc<FoldControlState>);
 
 impl HistoryFoldControl {
     /// 🌱️ Creates fixed retirement queue capacity without inspecting any history.
-    pub fn new() -> Self { Self(Arc::new(FoldControlState { cancelled: AtomicBool::new(false), completed: AtomicU64::new(0), shared_work:AtomicU64::new(0), page_bytes: AtomicUsize::new(4096), pending_retirement_birth:AtomicUsize::new(0),pending_construction_capacity:AtomicUsize::new(0), pending_retirement_items:AtomicUsize::new(0),pending_original_copy:AtomicUsize::new(0),pending_original_depth:AtomicUsize::new(0),pending_original_release:AtomicUsize::new(0), retirement_capacity:AtomicUsize::new(0), retirement_items:AtomicUsize::new(0), admitted_retirement_items:AtomicUsize::new(0), admitted_retirement_capacity:AtomicUsize::new(0), original_copy:AtomicUsize::new(0),original_depth:AtomicUsize::new(0),original_release:AtomicUsize::new(0),admitted_original_copy:AtomicUsize::new(0),admitted_original_release:AtomicUsize::new(0),retirements: FoldRetirementQueue::new() })) }
+    pub fn new() -> Self { Self(Arc::new(FoldControlState { cancelled: AtomicBool::new(false), completed: AtomicU64::new(0), shared_work:AtomicU64::new(0), slot:Default::default(), page_bytes: AtomicUsize::new(4096), pending_retirement_birth:AtomicUsize::new(0),pending_construction_capacity:AtomicUsize::new(0), pending_retirement_items:AtomicUsize::new(0),pending_original_copy:AtomicUsize::new(0),pending_original_depth:AtomicUsize::new(0),pending_original_release:AtomicUsize::new(0), retirement_capacity:AtomicUsize::new(0), retirement_items:AtomicUsize::new(0), admitted_retirement_items:AtomicUsize::new(0), admitted_retirement_capacity:AtomicUsize::new(0), original_copy:AtomicUsize::new(0),original_depth:AtomicUsize::new(0),original_release:AtomicUsize::new(0),admitted_original_copy:AtomicUsize::new(0),admitted_original_release:AtomicUsize::new(0),retirements: FoldRetirementQueue::new() })) }
     /// 📊️ Completed cooperative work units, excluding cancellation retirement.
     pub fn completed(&self) -> u64 { self.0.completed.load(Ordering::Relaxed) }
     /// 🪙️ Reports only directly observed shared admission and lease work, independently of semantic pulses.
     pub fn shared_work(&self)->u64{self.0.shared_work.load(Ordering::Relaxed)}
-    fn record_shared_work(&self,actual:u64){let _=self.0.shared_work.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|before|Some(before.saturating_add(actual)));}
+    /// ⛽️ Records owed work on the turn's lent effect; no lend or an unfunded unit is a typed refusal.
+    fn owe(&self,work:impl Into<u128>)->Result<(),ValueError>{owe_on(&self.0.slot,work)}
+    /// 🪙️ Records directly observed shared work and charges it to the lent effect.
+    fn charge_work(&self,work:u128)->Result<(),ValueError>{self.record_shared_work(work);self.owe(work)}
+    /// 🪢️ Runs one primitive on the lent effect and charges any work it reported beyond what its receipt already recorded.
+    fn charged<R>(&self,operation:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->(R,u128))->Result<R,ValueError>{
+        let (output,reported,done)=self.0.slot.with_effect(|effect|{let before=effect.performed_work();let (output,reported)=operation(effect);(output,reported,effect.performed_work().saturating_sub(before))})?;
+        self.record_shared_work(reported.max(done));
+        self.owe(reported.saturating_sub(done))?;Ok(output)
+    }
+    fn record_shared_work(&self,actual:impl Into<u128>){let actual=u64::try_from(actual.into()).unwrap_or(u64::MAX);let _=self.0.shared_work.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|before|Some(before.saturating_add(actual)));}
 
     fn original_grant(&self)->RetainedCloneGrant {RetainedCloneGrant{maximum_items:self.0.retirement_items.load(Ordering::Relaxed),maximum_copy_bytes:self.0.original_copy.load(Ordering::Relaxed),maximum_capacity_bytes:self.0.retirement_capacity.load(Ordering::Relaxed),maximum_release_bytes:self.0.original_release.load(Ordering::Relaxed),maximum_depth:self.0.original_depth.load(Ordering::Relaxed)}}
     fn accept_original_progress(&self,progress:RetainedCloneProgress){self.0.retirement_items.fetch_sub(progress.copied_items,Ordering::Relaxed);self.0.retirement_capacity.fetch_sub(progress.retained_capacity_bytes,Ordering::Relaxed);self.0.original_copy.fetch_sub(progress.copied_bytes,Ordering::Relaxed);self.0.original_release.fetch_sub(progress.released_bytes,Ordering::Relaxed);self.0.admitted_original_release.fetch_add(progress.released_bytes,Ordering::Relaxed);self.0.admitted_retirement_items.fetch_add(progress.copied_items,Ordering::Relaxed);self.0.admitted_retirement_capacity.fetch_add(progress.retained_capacity_bytes,Ordering::Relaxed);self.0.admitted_original_copy.fetch_add(progress.copied_bytes,Ordering::Relaxed);}
@@ -75,28 +113,30 @@ impl HistoryFoldControl {
         if !T::controlled_retirement_supported() { return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner, "fold local has no controlled retirement authority"), value)); }
         self.0.pending_retirement_birth.fetch_add(owned_retirement_birth_bytes::<T>(), Ordering::Relaxed);
         self.0.pending_retirement_items.fetch_add(1, Ordering::Relaxed);
+        self.0.pending_original_copy.fetch_add(admission_copy::<T>(), Ordering::Relaxed);
         Ok(HistoryFoldAdmission { value: Some(value), control: self.clone() })
     }
     /// ⏭️ One pulse before each bounded work unit; cancellation is checked before publication.
     pub async fn pulse(&self) -> Result<(), semio_framework_replication_error::ProtocolError> { FoldPulse { control: self, yielded: false }.await }
     fn page_bytes(&self) -> usize { self.0.page_bytes.load(Ordering::Relaxed).clamp(1, 4096) }
     fn retire<T: RetireOwned>(&self, value: T) {
-        let bytes=owned_retirement_birth_bytes::<T>();
+        let bytes=owned_retirement_birth_bytes::<T>();let copy=admission_copy::<T>();
         self.0.retirement_capacity.try_update(Ordering::Relaxed,Ordering::Relaxed,|remaining|remaining.checked_sub(bytes)).expect("fold transfer requires admitted retirement capacity");
         self.0.retirement_items.try_update(Ordering::Relaxed,Ordering::Relaxed,|remaining|remaining.checked_sub(1)).expect("fold transfer requires admitted retirement item");
-        let turn=admit_owned_retirement(value,RetainedCloneGrant::one_capacity_turn(bytes,1));self.record_shared_work(turn.work);let (owner,progress)=turn.result.unwrap_or_else(|(error,_)|panic!("admitted fold owner refused retirement: {error}"));
+        let mut holder=Some(value);let turn=self.charged(|effect|{let turn=admit_owned_retirement(&mut holder,&mut effect.nested(admission_grant(bytes,copy)));let work=turn.work;(turn.result,work)}).unwrap_or_else(|error|panic!("admitted fold owner has no lent effect: {error}"));let (owner,progress)=turn.unwrap_or_else(|error|panic!("admitted fold owner refused retirement: {error}")).expect("admitted fold owner is present");
         let mut queue=self.0.retirements.lock();assert!(queue.len()<queue.capacity(),"fold retirement queue requires a reserved slot");queue.push_back(owner);
         self.0.admitted_retirement_capacity.fetch_add(progress.retained_capacity_bytes,Ordering::Relaxed);
         self.0.admitted_retirement_items.fetch_add(progress.copied_items,Ordering::Relaxed);
+        let _=self.0.original_copy.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|remaining|Some(remaining.saturating_sub(progress.copied_bytes)));
+        self.0.admitted_original_copy.fetch_add(progress.copied_bytes,Ordering::Relaxed);
     }
     fn empty(&self) -> bool { self.0.retirements.lock().is_empty() }
     fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{let queue=self.0.retirements.lock();queue.front().map_or(Ok(RetirementDemand::default()),|owner|semio_framework_value::factory_ticket_demands(owner,copy))}
-    fn close_one(&self,grant:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneStep,ValueError>{
-        *work=0;
+    fn close_one(&self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let mut queue=self.0.retirements.lock();let Some(owner)=queue.front_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if owner.terminal_is_empty(){let bytes=size_of_val(owner.as_ref());if grant.maximum_release_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"fold ticket release requires admitted depth"));}*work=1;drop(queue.pop_front());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}));}
-        let turn=owner.close_step(grant);*work=turn.work;let step=turn.result?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"fold queued owner")?;Ok(RetainedCloneStep::Progress(step.progress()))
+        if owner.terminal_is_empty(){let bytes=size_of_val(owner.as_ref());if grant.maximum_release_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"fold ticket release requires admitted depth"));}self.owe(1u64)?;drop(queue.pop_front());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}));}
+        let (step,_)=settled(self.charged(|effect|{let poll=owner.close_step(&mut effect.nested(grant));let work=match &poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.work,semio_framework_value::RetainedWorkPoll::Pending{work}=>*work};(poll,work)})?)?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"fold queued owner")?;Ok(RetainedCloneStep::Progress(step.progress()))
     }
 
 }
@@ -128,15 +168,15 @@ impl<K:Copy+Ord+RetireOwned> HistoryFoldSetCopy<K> for HistoryFoldSet<K> {
 }
 
 pub struct SharedActorAdmission {original:Option<HistoryFoldOwned<String>>,control:HistoryFoldControl,capacity:usize,done:bool}
-impl SharedActorAdmission{const COPY_BYTES:usize=0;}
+impl SharedActorAdmission{const COPY_BYTES:usize=2*size_of::<usize>()+size_of::<Arc<std::mem::MaybeUninit<String>>>()+size_of::<String>()+size_of::<Arc<String>>();}
 impl Future for SharedActorAdmission {
     type Output=Result<semio_framework_value::SharedUtf8,ValueError>;
     fn poll(mut self:Pin<&mut Self>,_:&mut Context<'_>)->Poll<Self::Output>{
         assert!(!self.done,"completed shared actor admission cannot be polled again");
         let grant=self.control.original_grant();
-        if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<self.capacity{return Poll::Pending}
+        if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<self.capacity||grant.maximum_copy_bytes<Self::COPY_BYTES{return Poll::Pending}
         let Some(frame)=self.original.as_mut()else{self.done=true;return Poll::Ready(Err(ValueError::invariant("original actor lost its preborn donor frame")))};let original=std::mem::take(&mut **frame);
-        let turn=semio_framework_value::SharedUtf8::admit(original,grant);self.control.record_shared_work(turn.work);
+        let mut actual=None;let turn=semio_framework_value::SharedUtf8::admit(original,grant,&mut actual);if let Err(error)=self.control.charge_work(turn.work){self.done=true;return Poll::Ready(Err(error))}
         let result=match turn.result{
             Ok((owner,progress))=>{self.control.accept_original_progress(progress);drop(self.original.take());Ok(owner)},
             Err((error,original))=>{if let Some(frame)=self.original.as_mut(){**frame=original;}self.control.accept_original_progress(error.retained_progress());Err(error)},
@@ -148,7 +188,7 @@ impl Drop for SharedActorAdmission {fn drop(&mut self){self.control.0.pending_re
 /// 🧾️ One original actor alias waits for the caller's independent copy and item authority.
 pub struct SharedActorLease<'a>{original:&'a semio_framework_value::SharedUtf8,control:HistoryFoldControl}
 impl SharedActorLease<'_>{const COPY_BYTES:usize=0;}
-impl Future for SharedActorLease<'_>{type Output=semio_framework_value::SharedUtf8;fn poll(self:Pin<&mut Self>,_:&mut Context<'_>)->Poll<Self::Output>{let grant=self.control.original_grant();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<Self::COPY_BYTES{return Poll::Pending;}let turn=self.original.admit_clone(grant);self.control.record_shared_work(turn.work);let(owner,progress)=turn.result.expect("a live exact shared actor lease has its checked physical authority");self.control.accept_original_progress(progress);Poll::Ready(owner)}}
+impl Future for SharedActorLease<'_>{type Output=semio_framework_value::SharedUtf8;fn poll(self:Pin<&mut Self>,_:&mut Context<'_>)->Poll<Self::Output>{let grant=self.control.original_grant();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<Self::COPY_BYTES{return Poll::Pending;}let turn=self.control.charged(|effect|{let turn=self.original.admit_clone(&mut effect.nested(grant));let work=turn.work;(turn,work)}).expect("a live exact shared actor lease polls under a lent effect");let(owner,progress)=turn.result.expect("a live exact shared actor lease has its checked physical authority");self.control.accept_original_progress(progress);Poll::Ready(owner)}}
 impl Drop for SharedActorLease<'_>{fn drop(&mut self){self.control.0.pending_retirement_items.fetch_sub(1,Ordering::Relaxed);self.control.0.pending_original_copy.fetch_sub(Self::COPY_BYTES,Ordering::Relaxed);}}
 
 /// 🧳️ Coroutine-local owned values enqueue their registered retirement instead of deep-dropping on cancellation.
@@ -158,27 +198,34 @@ impl<T: RetireOwned> Deref for HistoryFoldOwned<T> { type Target = T; fn deref(&
 impl<T: RetireOwned> DerefMut for HistoryFoldOwned<T> { fn deref_mut(&mut self) -> &mut T { self.owner.as_mut().and_then(|owner| owner.original_mut()).expect("fold local remains original") } }
 impl<T: RetireOwned> Drop for HistoryFoldOwned<T> { fn drop(&mut self) { if let Some(owner) = self.owner.take() { let mut queue = self.control.0.retirements.lock(); assert!(queue.len() < queue.capacity(), "fold local requires a reserved queue slot"); queue.push_back(owner); } } }
 
+/// 📏️ The exact copy credit one typed retirement frame needs: the moved original plus its defining cursor header.
+fn admission_copy<T: RetireOwned>() -> usize { size_of::<Option<T>>() + size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<T>>() }
+/// 🦜️ One structural allocation together with the copy credit its typed frame transfer consumes.
+fn admission_grant(capacity: usize, copy: usize) -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: 0, maximum_depth: 1 } }
 /// 🎟️ Retains an original coroutine local until its real typed frame is admitted.
 pub struct HistoryFoldAdmission<T: RetireOwned> { value: Option<T>, control: HistoryFoldControl }
 impl<T: RetireOwned> Unpin for HistoryFoldAdmission<T> {}
 impl<T: RetireOwned> Future for HistoryFoldAdmission<T> {
     type Output = HistoryFoldOwned<T>;
     fn poll(mut self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Self::Output> {
-        let bytes = owned_retirement_birth_bytes::<T>();
-        if self.control.0.retirement_items.load(Ordering::Relaxed) == 0 || self.control.0.retirement_capacity.load(Ordering::Relaxed) < bytes { return Poll::Pending; }
+        let bytes = owned_retirement_birth_bytes::<T>();let copy = admission_copy::<T>();
+        if self.control.0.retirement_items.load(Ordering::Relaxed) == 0 || self.control.0.retirement_capacity.load(Ordering::Relaxed) < bytes || self.control.0.original_copy.load(Ordering::Relaxed) < copy { return Poll::Pending; }
         let value = self.value.take().expect("fold admission retains original owner");
-        let grant = RetainedCloneGrant::one_capacity_turn(bytes, 1);
-        let turn=admit_typed_controlled_retirement(value, grant);self.control.record_shared_work(turn.work);let (owner, progress) = match turn.result { Ok(admitted) => admitted, Err((_, value)) => { self.value = Some(value); return Poll::Pending; } };
+        let grant = admission_grant(bytes, copy);
+        let mut slot=Some(value);let turn=match self.control.charged(|effect|{let turn=admit_typed_controlled_retirement(&mut slot,&mut effect.nested(grant));let work=turn.work;(turn.result,work)}){Ok(done)=>done,Err(_)=>{self.value=slot;return Poll::Pending;}};let (owner, progress) = match turn { Ok(Some(admitted)) => admitted, Ok(None) | Err(_) => { self.value = slot; return Poll::Pending; } };
         self.control.0.retirement_capacity.fetch_sub(progress.retained_capacity_bytes, Ordering::Relaxed);
         self.control.0.retirement_items.fetch_sub(progress.copied_items, Ordering::Relaxed);
         self.control.0.admitted_retirement_capacity.fetch_add(progress.retained_capacity_bytes, Ordering::Relaxed);
         self.control.0.admitted_retirement_items.fetch_add(progress.copied_items, Ordering::Relaxed);
+        self.control.0.original_copy.fetch_sub(progress.copied_bytes, Ordering::Relaxed);
+        self.control.0.admitted_original_copy.fetch_add(progress.copied_bytes, Ordering::Relaxed);
         self.control.0.pending_retirement_birth.fetch_sub(bytes, Ordering::Relaxed);
         self.control.0.pending_retirement_items.fetch_sub(1, Ordering::Relaxed);
+        self.control.0.pending_original_copy.fetch_sub(copy, Ordering::Relaxed);
         Poll::Ready(HistoryFoldOwned { owner: Some(owner), control: self.control.clone() })
     }
 }
-impl<T: RetireOwned> Drop for HistoryFoldAdmission<T> { fn drop(&mut self) { if let Some(value) = self.value.take() { self.control.0.pending_retirement_birth.fetch_sub(owned_retirement_birth_bytes::<T>(), Ordering::Relaxed); self.control.0.pending_retirement_items.fetch_sub(1, Ordering::Relaxed); self.control.retire(value); } } }
+impl<T: RetireOwned> Drop for HistoryFoldAdmission<T> { fn drop(&mut self) { if let Some(value) = self.value.take() { self.control.0.pending_retirement_birth.fetch_sub(owned_retirement_birth_bytes::<T>(), Ordering::Relaxed); self.control.0.pending_retirement_items.fetch_sub(1, Ordering::Relaxed); self.control.retire(value); self.control.0.pending_original_copy.fetch_sub(admission_copy::<T>(), Ordering::Relaxed); } } }
 
 struct FoldPulse<'a> { control: &'a HistoryFoldControl, yielded: bool }
 impl Future for FoldPulse<'_> {
@@ -200,9 +247,11 @@ pub enum HistoryFoldJobStep<T = HistoryFold> { Pending { completed: u64, release
 /// 🧮️ A pinned fold state machine; its immutable input is captured by the caller-owned runner.
 pub struct HistoryFoldJob<'a, T: RetireOwned = HistoryFold> {
     last_work: u64,
+    lent: bool,
     cancelling: bool,
     control: ManuallyDrop<HistoryFoldControl>,
-    native_binding: Option<(u64,Option<u64>)>,
+    closed_slot: semio_framework_value::retained_clone::LentEffectSlot,
+    native_binding: Option<(semio_framework_value::retained_clone::NativeAllocationIdentity,Option<u64>)>,
     original_output: Option<ControlledRetirement<T>>,
     future: Option<Pin<Box<dyn Future<Output = Result<T, semio_framework_replication_error::ProtocolError>> + Send + 'a>>>,
     result: Option<Result<T, semio_framework_replication_error::ProtocolError>>,
@@ -218,26 +267,42 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
     pub fn new<F: Future<Output = Result<T, semio_framework_replication_error::ProtocolError>> + Send + 'a>(runner: impl FnOnce(HistoryFoldControl) -> F) -> Self {
         let control = HistoryFoldControl::new();
         let future = Box::pin(runner(control.clone()));
-        Self { last_work:0, cancelling:false, control:ManuallyDrop::new(control), native_binding:None, original_output:None, future: Some(future), result: None, waker: Some(Waker::from(Arc::new(FoldWake))), future_finished:false,control_closed:false,completed_final:0,terminal: false }
+        Self { last_work:0, lent:false, cancelling:false, control:ManuallyDrop::new(control), closed_slot:Default::default(), native_binding:None, original_output:None, future: Some(future), result: None, waker: Some(Waker::from(Arc::new(FoldWake))), future_finished:false,control_closed:false,completed_final:0,terminal: false }
     }
     /// 🪙️ Work performed by the latest call, including a refused performed prefix.
     pub fn last_turn_work(&self)->u64{self.last_work}
     /// ✅️ Completed semantic and decoding work units.
     pub fn completed(&self) -> u64 { if self.control_closed{self.completed_final}else{self.control.completed()} }
-    /// 🪜️ Preserves independent work, copy, allocation, release and depth grants.
-    pub fn step(&mut self,grant:RetainedCloneGrant,body:usize,should_yield:&mut impl FnMut()->bool)->Result<HistoryFoldJobStep<T>,ValueError>{
-        self.last_work=0;
+    /// 🪜️ Runs one turn on the caller's effect; its grant bounds the independent copy, allocation, release and depth currencies.
+    pub fn step_effect(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,body:usize,should_yield:&mut impl FnMut()->bool)->Result<HistoryFoldJobStep<T>,ValueError>{
         if self.native_binding.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original history fold requires its receiving source"));}
-        self.step_granted(grant,body,should_yield)
+        self.step_lent(effect,body,should_yield)
     }
-    fn step_granted(&mut self,grant:RetainedCloneGrant,body:usize,should_yield:&mut impl FnMut()->bool)->Result<HistoryFoldJobStep<T>,ValueError>{
-        self.last_work=0;self.step_granted_result(grant,body,should_yield)
+    /// 🧷️ Lends the turn's effect to the control for exactly this call; the guard is released before the effect is read again.
+    fn lent<R>(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,run:impl FnOnce(&mut Self,RetainedCloneGrant)->R)->Result<R,ValueError>{
+        let grant=effect.grant();
+        if self.control_closed{
+            let slot:*const semio_framework_value::retained_clone::LentEffectSlot=&self.closed_slot;
+            let output=match unsafe{&*slot}.lend(effect){Ok(lend)=>{let output=run(self,grant);drop(lend);Ok(output)},Err(error)=>Err(error)};
+            self.last_work=u64::try_from(effect.performed_work()).unwrap_or(u64::MAX);return output;
+        }
+        let control=(*self.control).clone();self.lent=true;
+        let output=match control.0.slot.lend(effect){Ok(lend)=>{let output=run(self,grant);drop(lend);Ok(output)},Err(error)=>Err(error)};
+        self.lent=false;drop(control);
+        self.last_work=u64::try_from(effect.performed_work()).unwrap_or(u64::MAX);output
+    }
+    fn step_lent(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,body:usize,should_yield:&mut impl FnMut()->bool)->Result<HistoryFoldJobStep<T>,ValueError>{
+        self.lent(effect,|job,grant|job.step_granted_result(grant,body,should_yield))?
+    }
+    /// 🧊️ Cold and test entry: a grant-only step funded by a standalone effect outside any job turn.
+    pub fn step(&mut self,grant:RetainedCloneGrant,body:usize,should_yield:&mut impl FnMut()->bool)->Result<HistoryFoldJobStep<T>,ValueError>{
+        let (step,_)=authored(grant,|effect|self.step_effect(effect,body,should_yield))?;step
     }
     fn step_granted_result(&mut self,grant:RetainedCloneGrant,body:usize,should_yield:&mut impl FnMut()->bool)->Result<HistoryFoldJobStep<T>,ValueError>{
         let pending=|completed,progress:RetainedCloneProgress|HistoryFoldJobStep::Pending{completed,released_bytes:progress.released_bytes,progress};
         if grant.maximum_items==0||should_yield(){return Ok(pending(self.completed(),Default::default()));}
-        if self.cancelling||!self.control_closed&&self.control.0.cancelled.load(Ordering::Acquire){let turn=self.close_step(grant);self.last_work=turn.work;let step=turn.result?;return Ok(pending(self.completed(),step.progress()))}
-        if self.control_closed&&matches!(self.result,Some(Ok(_))){let demand=Self::output_handoff_demand();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(pending(self.completed(),Default::default()))}let Some(Ok(value))=self.result.take()else{unreachable!()};self.last_work=1;self.terminal=true;return Ok(HistoryFoldJobStep::Ready{value,progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}})}
+        if self.cancelling||!self.control_closed&&self.control.0.cancelled.load(Ordering::Acquire){let step=self.close_inner(grant)?;return Ok(pending(self.completed(),step.progress()))}
+        if self.control_closed&&matches!(self.result,Some(Ok(_))){let demand=Self::output_handoff_demand();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(pending(self.completed(),Default::default()))}let Some(Ok(value))=self.result.take()else{unreachable!()};owe_split(&self.control,&self.closed_slot,self.control_closed,1u64)?;self.terminal=true;return Ok(HistoryFoldJobStep::Ready{value,progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}})}
         if self.control_closed && matches!(self.result, Some(Err(_))) { return Ok(HistoryFoldJobStep::Rejected { progress: Default::default() }); }
         
         if self.future_finished||self.future.is_none()||!self.control.empty(){let step=self.cleanup_one(grant,false)?;let progress=step.progress();if self.control_closed&&matches!(self.result,Some(Err(_))){return Ok(HistoryFoldJobStep::Rejected{progress})}return Ok(pending(self.completed(),progress));}
@@ -246,7 +311,7 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
         self.control.0.page_bytes.store(body.clamp(1,4096),Ordering::Relaxed);
         self.control.0.original_copy.store(grant.maximum_copy_bytes,Ordering::Relaxed);self.control.0.original_depth.store(grant.maximum_depth,Ordering::Relaxed);self.control.0.original_release.store(grant.maximum_release_bytes,Ordering::Relaxed);self.control.0.admitted_original_copy.store(0,Ordering::Relaxed);self.control.0.admitted_original_release.store(0,Ordering::Relaxed);
         self.control.0.retirement_capacity.store(grant.maximum_capacity_bytes,Ordering::Relaxed);self.control.0.admitted_retirement_capacity.store(0,Ordering::Relaxed);self.control.0.retirement_items.store(grant.maximum_items,Ordering::Relaxed);self.control.0.admitted_retirement_items.store(0,Ordering::Relaxed);
-        let mut items=0;while items<grant.maximum_items{if should_yield(){break;}self.control.0.retirement_items.store(grant.maximum_items-items,Ordering::Relaxed);let before=self.control.0.admitted_retirement_items.load(Ordering::Relaxed);let shared_before=self.control.shared_work();self.last_work=self.last_work.saturating_add(1);let polled=self.future.as_mut().unwrap().as_mut().poll(&mut Context::from_waker(self.waker.as_ref().unwrap()));self.last_work=self.last_work.saturating_add(self.control.shared_work().saturating_sub(shared_before));items+=(self.control.0.admitted_retirement_items.load(Ordering::Relaxed)-before).max(1);if let Poll::Ready(result)=polled{self.result=Some(result);self.future_finished=true;break;}if !self.control.empty(){break;}}
+        let mut items=0;while items<grant.maximum_items{if should_yield(){break;}self.control.0.retirement_items.store(grant.maximum_items-items,Ordering::Relaxed);let before=self.control.0.admitted_retirement_items.load(Ordering::Relaxed);owe_split(&self.control,&self.closed_slot,self.control_closed,1u64)?;let polled=self.future.as_mut().unwrap().as_mut().poll(&mut Context::from_waker(self.waker.as_ref().unwrap()));items+=(self.control.0.admitted_retirement_items.load(Ordering::Relaxed)-before).max(1);if let Poll::Ready(result)=polled{self.result=Some(result);self.future_finished=true;break;}if !self.control.empty(){break;}}
         let progress=RetainedCloneProgress{copied_items:items,copied_bytes:self.control.0.admitted_original_copy.load(Ordering::Relaxed),retained_capacity_bytes:self.control.0.admitted_retirement_capacity.load(Ordering::Relaxed),released_bytes:self.control.0.admitted_original_release.load(Ordering::Relaxed)};semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"fold cooperative work")?;Ok(pending(self.completed(),progress))
     }
     /// 🔏️ Publishes every waiting original frame item before atomic coroutine destruction.
@@ -254,21 +319,21 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
     /// 📏️ Explicit cold admission preserves all independent currencies.
     pub fn next_step_grant(&self,maximum_items:usize,logical_copy:usize)->Result<RetainedCloneGrant,ValueError>{
         let demand=self.next_demand(logical_copy)?;
-        Ok(RetainedCloneGrant{maximum_items,maximum_copy_bytes:(if !self.control_closed&&!self.future_finished&&self.control.empty(){logical_copy}else{demand.copy_bytes.max(logical_copy)}).max(if self.control_closed||self.control.0.cancelled.load(Ordering::Acquire){0}else{self.control.0.pending_original_copy.load(Ordering::Relaxed)}),maximum_capacity_bytes:demand.capacity_bytes.checked_add(if self.control_closed||self.future_finished||self.control.0.cancelled.load(Ordering::Acquire)||!self.control.empty(){0}else{self.control.0.pending_construction_capacity.load(Ordering::Relaxed)}).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"fold construction capacity overflow"))?,maximum_release_bytes:demand.release_bytes.max(if self.control_closed||self.control.0.cancelled.load(Ordering::Acquire){0}else{self.control.0.pending_original_release.load(Ordering::Relaxed)}),maximum_depth:demand.depth.max(1).max(if self.control_closed||self.control.0.cancelled.load(Ordering::Acquire){0}else{self.control.0.pending_original_depth.load(Ordering::Relaxed)})})
+        Ok(RetainedCloneGrant{maximum_items,maximum_copy_bytes:(if !self.control_closed&&!self.future_finished&&self.control.empty(){logical_copy}else{demand.copy_bytes.max(logical_copy)}).max(if self.control_closed{0}else{self.control.0.pending_original_copy.load(Ordering::Relaxed)}),maximum_capacity_bytes:demand.capacity_bytes.checked_add(if self.control_closed||self.future_finished||self.control.0.cancelled.load(Ordering::Acquire)||!self.control.empty(){0}else{self.control.0.pending_construction_capacity.load(Ordering::Relaxed)}).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"fold construction capacity overflow"))?,maximum_release_bytes:demand.release_bytes.max(if self.control_closed||self.control.0.cancelled.load(Ordering::Acquire){0}else{self.control.0.pending_original_release.load(Ordering::Relaxed)}),maximum_depth:demand.depth.max(1).max(if self.control_closed||self.control.0.cancelled.load(Ordering::Acquire){0}else{self.control.0.pending_original_depth.load(Ordering::Relaxed)})})
     }
     fn output_handoff_demand()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<Option<Result<T,semio_framework_replication_error::ProtocolError>>>()+size_of::<T>()+size_of::<bool>(),depth:1,..Default::default()}}
     fn retained_output_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{let owner=self.original_output.as_ref().unwrap();if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:2*size_of::<Option<ControlledRetirement<T>>>()+size_of::<bool>(),depth:1,..Default::default()})}owner.next_demand(body)}
-    fn control_frame_bytes(&self)->usize{let layout=std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<FoldControlState>()).unwrap().0.pad_to_align();if Arc::strong_count(&self.control.0)==1{layout.size()}else{0}}
+    fn control_frame_bytes(&self)->usize{let layout=std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<FoldControlState>()).unwrap().0.pad_to_align();if Arc::strong_count(&self.control.0)==1+usize::from(self.lent){layout.size()}else{0}}
     fn cleanup_one(&mut self,grant:RetainedCloneGrant,cancelled:bool)->Result<RetainedCloneStep,ValueError>{
         let empty=RetainedCloneProgress::default();
-        if let Some(owner)=self.original_output.as_mut(){let demand=if owner.terminal_is_empty(){RetirementDemand{copy_bytes:2*size_of::<Option<ControlledRetirement<T>>>()+size_of::<bool>(),depth:1,..Default::default()}}else{owner.next_demand(grant.maximum_copy_bytes)?};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty))}if owner.terminal_is_empty(){self.last_work=1;self.original_output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let result=owner.step(grant);self.last_work=owner.last_turn_work();return result.map(|step|RetainedCloneStep::Progress(step.progress()))}
+        if let Some(owner)=self.original_output.as_mut(){let demand=if owner.terminal_is_empty(){RetirementDemand{copy_bytes:2*size_of::<Option<ControlledRetirement<T>>>()+size_of::<bool>(),depth:1,..Default::default()}}else{owner.next_demand(grant.maximum_copy_bytes)?};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty))}if owner.terminal_is_empty(){owe_split(&self.control,&self.closed_slot,self.control_closed,1u64)?;self.original_output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let (step,_)=settled(charged_split(&self.control,&self.closed_slot,self.control_closed,|effect|{let poll=owner.step(&mut effect.nested(grant));let work=match &poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.work,semio_framework_value::RetainedWorkPoll::Pending{work}=>*work};(poll,work)})?)?;return Ok(RetainedCloneStep::Progress(step.progress()))}
         if self.control_closed {
-            if matches!(self.result,Some(Ok(_))){let mut demand=Self::output_handoff_demand();demand.copy_bytes+=2*size_of::<ControlledRetirement<T>>();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty))}let Some(Ok(value))=self.result.take()else{unreachable!()};self.last_work=1;self.original_output=Some(ControlledRetirement::retain(value));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
+            if matches!(self.result,Some(Ok(_))){let mut demand=Self::output_handoff_demand();demand.copy_bytes+=2*size_of::<ControlledRetirement<T>>();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty))}let Some(Ok(value))=self.result.take()else{unreachable!()};owe_split(&self.control,&self.closed_slot,self.control_closed,1u64)?;self.original_output=Some(ControlledRetirement::retain(value));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
             if self.result.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
             let Some(Err(error)) = self.result.as_mut() else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "closed fold retained an unhanded successful result")); };
             let demand=semio_framework_replication_error::protocol_cause_retirement_demand(error)?;
             if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty))}
-            self.last_work=1;let step = semio_framework_replication_error::close_protocol_cause_one(error, grant)?;
+            owe_split(&self.control,&self.closed_slot,self.control_closed,1u64)?;let step = semio_framework_replication_error::close_protocol_cause_one(error, grant)?;
             if matches!(step, RetainedCloneStep::Complete(_)) { drop(self.result.take()); }
             return Ok(step);
         }
@@ -276,18 +341,22 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
         if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"fold closure requires admitted depth"));}
         let demand=self.next_demand(grant.maximum_copy_bytes)?;let release=demand.release_bytes;if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<release||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
         if self.control.empty()&&self.future.is_some()&&grant.maximum_items<self.control.0.pending_retirement_items.load(Ordering::Relaxed){return Ok(RetainedCloneStep::Progress(empty));}
-        if !self.control.empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};return self.control.close_one(child,&mut self.last_work);}
-        if self.future.is_some(){self.last_work=1;let shared_before=self.control.shared_work();self.control.0.retirement_capacity.store(grant.maximum_capacity_bytes,Ordering::Relaxed);self.control.0.admitted_retirement_capacity.store(0,Ordering::Relaxed);self.control.0.retirement_items.store(grant.maximum_items,Ordering::Relaxed);self.control.0.admitted_retirement_items.store(0,Ordering::Relaxed);drop(self.future.take());self.last_work=self.last_work.saturating_add(self.control.shared_work().saturating_sub(shared_before));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:self.control.0.admitted_retirement_items.load(Ordering::Relaxed).max(1),retained_capacity_bytes:self.control.0.admitted_retirement_capacity.load(Ordering::Relaxed),released_bytes:release,..empty}));}
-        if cancelled&&self.result.is_some(){let Some(result)=self.result.take()else{return Err(ValueError::invariant("fold cleanup result is absent"))};match result{Ok(value)=>{let reserved={let queue=self.control.0.retirements.lock();queue.len()<queue.capacity()};if !reserved{let mut demand=Self::output_handoff_demand();demand.copy_bytes+=2*size_of::<ControlledRetirement<T>>();if self.original_output.is_some()||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){self.result=Some(Ok(value));return Ok(RetainedCloneStep::Progress(empty))}self.last_work=1;self.original_output=Some(ControlledRetirement::retain(value));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let turn=admit_owned_retirement(value,grant);self.last_work=turn.work;match turn.result{Ok((owner,progress))=>{self.control.0.retirements.lock().push_back(owner);return Ok(RetainedCloneStep::Progress(progress));},Err((error,value))=>{self.result=Some(Ok(value));return Err(error);}}},Err(error)=>{self.result=Some(Err(error));let Some(Err(error))=self.result.as_mut()else{return Err(ValueError::invariant("fold cleanup error is absent"))};self.last_work=1;let step=semio_framework_replication_error::close_protocol_cause_one(error,grant)?;if matches!(step,RetainedCloneStep::Complete(_)){drop(self.result.take());}return Ok(RetainedCloneStep::Progress(step.progress()));}}}
-        let mut queue=self.control.0.retirements.lock();if queue.capacity()!=0{self.last_work=1;drop(std::mem::take(&mut*queue));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..empty}));}drop(queue);
-        if self.waker.is_some(){self.last_work=1;drop(self.waker.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..empty}));}
-        self.last_work=1;self.completed_final=self.control.completed();unsafe{ManuallyDrop::drop(&mut self.control)};self.control_closed=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..empty}))
+        if !self.control.empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};return self.control.close_one(child);}
+        if self.future.is_some(){owe_split(&self.control,&self.closed_slot,self.control_closed,1u64)?;self.control.0.retirement_capacity.store(grant.maximum_capacity_bytes,Ordering::Relaxed);self.control.0.admitted_retirement_capacity.store(0,Ordering::Relaxed);self.control.0.retirement_items.store(grant.maximum_items,Ordering::Relaxed);self.control.0.admitted_retirement_items.store(0,Ordering::Relaxed);drop(self.future.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:self.control.0.admitted_retirement_items.load(Ordering::Relaxed).max(1),retained_capacity_bytes:self.control.0.admitted_retirement_capacity.load(Ordering::Relaxed),released_bytes:release,..empty}));}
+        if cancelled&&self.result.is_some(){let Some(result)=self.result.take()else{return Err(ValueError::invariant("fold cleanup result is absent"))};match result{Ok(value)=>{let reserved={let queue=self.control.0.retirements.lock();queue.len()<queue.capacity()};if !reserved{let mut demand=Self::output_handoff_demand();demand.copy_bytes+=2*size_of::<ControlledRetirement<T>>();if self.original_output.is_some()||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){self.result=Some(Ok(value));return Ok(RetainedCloneStep::Progress(empty))}owe_split(&self.control,&self.closed_slot,self.control_closed,1u64)?;self.original_output=Some(ControlledRetirement::retain(value));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let mut slot=Some(value);let turn=charged_split(&self.control,&self.closed_slot,self.control_closed,|effect|{let turn=admit_owned_retirement(&mut slot,&mut effect.nested(grant));let work=turn.work;(turn.result,work)})?;match turn{Ok(Some((owner,progress)))=>{self.control.0.retirements.lock().push_back(owner);return Ok(RetainedCloneStep::Progress(progress));},Ok(None)=>return Err(ValueError::invariant("fold cleanup value is absent")),Err(error)=>{self.result=slot.map(Ok);return Err(error);}}},Err(error)=>{self.result=Some(Err(error));let Some(Err(error))=self.result.as_mut()else{return Err(ValueError::invariant("fold cleanup error is absent"))};owe_split(&self.control,&self.closed_slot,self.control_closed,1u64)?;let step=semio_framework_replication_error::close_protocol_cause_one(error,grant)?;if matches!(step,RetainedCloneStep::Complete(_)){drop(self.result.take());}return Ok(RetainedCloneStep::Progress(step.progress()));}}}
+        let mut queue=self.control.0.retirements.lock();if queue.capacity()!=0{owe_split(&self.control,&self.closed_slot,self.control_closed,1u64)?;drop(std::mem::take(&mut*queue));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..empty}));}drop(queue);
+        if self.waker.is_some(){owe_split(&self.control,&self.closed_slot,self.control_closed,1u64)?;drop(self.waker.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..empty}));}
+        owe_split(&self.control,&self.closed_slot,self.control_closed,1u64)?;self.completed_final=self.control.completed();unsafe{ManuallyDrop::drop(&mut self.control)};self.control_closed=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..empty}))
     }
     /// 🧊️ Runs the same cursor to completion for explicit cold callers; interactive owners grant individual turns.
     pub fn finish_cold(mut self) -> Result<T, semio_framework_replication_error::ProtocolError> {
+        let mut idle = 0u8;
         loop {
             match self.step(self.next_step_grant(64,4096).expect("registered fold demands"),4096, &mut || false).expect("registered history owners must retire within their grants") {
-                HistoryFoldJobStep::Pending { .. } => {},
+                HistoryFoldJobStep::Pending { progress, .. } => {
+                    idle = if progress == RetainedCloneProgress::default() { idle + 1 } else { 0 };
+                    assert!(idle < 16, "cold fold made no progress for 16 consecutive steps under an unchanged grant");
+                },
                 HistoryFoldJobStep::Ready { value, .. } => return Ok(value),
                 HistoryFoldJobStep::Rejected { .. } => return Err(self.take_rejection().expect("cold fold rejection retains its original error")),
             }
@@ -324,8 +393,20 @@ impl<T:RetireOwned> ErasedSnapshotRetirement for HistoryFoldJob<'_,T>{
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{if self.original_output.is_some()||self.control_closed&&matches!(self.result,Some(Ok(_))){return self.next_demand(copy).map(|d|d.capacity_bytes)}if self.control_closed{return self.result.as_ref().map_or(Ok(0),|result|match result{Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.capacity_bytes),Ok(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result"))});}if !self.control.empty(){return Ok(self.control.demands(copy)?.capacity_bytes);}if self.future.is_some(){return Ok(self.control.0.pending_retirement_birth.load(Ordering::Relaxed));}Ok(if self.control.0.cancelled.load(Ordering::Acquire)&&matches!(self.result,Some(Ok(_))){owned_retirement_birth_bytes::<T>()}else{0})}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{if self.original_output.is_some()||self.control_closed&&matches!(self.result,Some(Ok(_))){return self.next_demand(0).map(|d|d.release_bytes)}if self.control_closed{return self.result.as_ref().map_or(Ok(0), |result| match result { Err(error) => semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.release_bytes), Ok(_) => Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result")) });}if !self.control.empty(){return Ok(self.control.demands(0)?.release_bytes);}if let Some(future)=self.future.as_ref(){return Ok(size_of_val(future.as_ref().get_ref()));}if self.control.0.cancelled.load(Ordering::Acquire){if let Some(result)=self.result.as_ref(){return match result{Ok(_)=>Ok(0),Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.release_bytes)};}}let queue=self.control.0.retirements.lock();if queue.capacity()!=0{return Ok(queue.capacity()*size_of::<Box<dyn ErasedSnapshotRetirement>>());}drop(queue);if self.waker.is_some(){return Ok(size_of::<[usize;2]>());}Ok(self.control_frame_bytes())}
     fn next_depth_demand(&self)->Result<usize,ValueError>{if self.original_output.is_some()||self.control_closed&&matches!(self.result,Some(Ok(_))){return self.next_demand(0).map(|d|d.depth)}if self.control_closed{return self.result.as_ref().map_or(Ok(0),|result|match result{Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.depth),Ok(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result"))});}let depth=if self.control.empty(){0}else{self.control.demands(0)?.depth};depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"fold nested retirement depth overflow"))}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{self.last_work=0;let result=(||->Result<RetainedCloneStep,ValueError>{self.request_cancel();let step=self.cleanup_one(grant,true)?;if self.control_closed&&matches!(step,RetainedCloneStep::Complete(_)){self.terminal=true;}semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.terminal_is_empty(),"fold job closure")})();semio_framework_value::RetainedWorkOutcome{result,work:self.last_work}}
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{self.close_lent(effect)}
     fn terminal_is_empty(&self)->bool{self.terminal&&self.original_output.is_none()&&self.control_closed&&self.future.is_none()&&self.result.is_none()&&self.waker.is_none()}
+}
+impl<T: RetireOwned> HistoryFoldJob<'_, T> {
+    /// ♻️ Closes on the turn's effect; the reported work is exactly what that effect recorded.
+    pub(crate) fn close_lent(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+        let result=self.lent(effect,|job,grant|job.close_inner(grant)).and_then(|result|result);
+        semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:result.map_err(Into::into),work:effect.performed_work()})
+    }
+    /// 🧪️ Cold and test entry: a grant-only close funded by a standalone effect outside any job turn.
+    pub fn close_cold(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneStep,ValueError>{
+        match authored(grant,|effect|self.close_lent(effect)).and_then(|(poll,_)|settled(poll)){Ok((step,work))=>semio_framework_value::RetainedWorkOutcome{result:Ok(step),work},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}}
+    }
+    fn close_inner(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.request_cancel();let step=self.cleanup_one(grant,true)?;if self.control_closed&&matches!(step,RetainedCloneStep::Complete(_)){self.terminal=true;}semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.terminal_is_empty(),"fold job closure")}
 }
 impl<T: RetireOwned> Drop for HistoryFoldJob<'_, T> { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "history fold job released before exact handoff or retirement"); } }
 

@@ -1,6 +1,6 @@
 //! 📦️ Shared original publication assembly for cloned and domain-prepared semantic candidates.
 use super::*;
-use semio_framework_value::{RetirementDemand,RetainedWorkOutcome,retirement::arc_custody::shared_retirement_allocation_bytes};
+use semio_framework_value::{RetainedAllocationEffect, RetainedWorkPoll, RetirementPollExit, RetirementDemand,RetainedWorkOutcome,retirement::arc_custody::shared_retirement_allocation_bytes};
 /// 🧳️ Borrows the caller's exact semantic outputs until each funded frontier transfers its custody.
 pub struct OriginalPublicationInputs<'a,P,M>{
  pub forward:&'a mut Option<M>,pub post:&'a mut Option<P>,pub inverse:&'a mut Option<Vec<M>>,
@@ -36,9 +36,10 @@ impl<P:RetireOwned+Send+Sync+'static,M:ArtifactCanonicalJsonTree+RetireOwned+Sen
    } )
  }
  /// 🎟️ Advances one already admitted semantic frontier while retaining every refused original.
- pub fn advance(&mut self,input:OriginalPublicationInputs<'_,P,M>,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<RetainedCloneProgress>>{
+ pub fn advance(&mut self,input:OriginalPublicationInputs<'_,P,M>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneProgress>>{
+  let g=effect.grant();
   let OriginalPublicationInputs{forward,post,inverse,authority:authority_slot,mutations,snapshots}=input;
-  let mut progress=RetainedCloneProgress::default();let mut work=0u64;
+  let mut progress=RetainedCloneProgress::default();let mut work=0u128;
   let result=(||{
    let demand=self.advance_demands(authority_slot.as_ref(),g.maximum_copy_bytes)?;
    if !funds(g,demand){return Ok(false);}
@@ -47,9 +48,9 @@ impl<P:RetireOwned+Send+Sync+'static,M:ArtifactCanonicalJsonTree+RetireOwned+Sen
             4=>{self.publication_post=Some(Arc::new(post.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original exclusive post missing before shared publication birth"))?));self.stage=5;progress=invoice;},
             5=>{let original=inverse.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original inverse vector missing before publication handoff"))?;let turn=OriginalVectorCursor::admit(original,g);work=work.saturating_add(turn.work);match turn.result {Ok((owner,receipt))=>{self.publication_inverse=Some(Box::new(owner));progress=RetainedCloneProgress{copied_bytes:receipt.copied_bytes+size_of::<OriginalVectorCursor<M>>(),retained_capacity_bytes:size_of::<OriginalVectorCursor<M>>(),..receipt};self.stage=6;},Err((error,original))=>{*inverse=Some(original);return Err(error);}}},
             6=>{let(owner,receipt)=NativeEditMetadata::<M>::admit(authority_slot.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original authority missing at metadata admission"))?,g)?;self.publication_metadata=Some(owner);progress=receipt;self.stage=7;},
-            7=>{let owner=self.publication_metadata.as_mut().unwrap();if owner.ready(){let(original,receipt)=owner.take(g)?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original metadata take lacks grant"))?;self.publication_edit=Some(original);progress=receipt;self.stage=8;}else{progress=owner.step(authority_slot.as_ref().unwrap(),forward,self.publication_inverse.as_mut().unwrap(),g)?;if progress==Default::default(){return Ok(false);}}},
+            7=>{let owner=self.publication_metadata.as_mut().unwrap();if owner.ready(){let(original,receipt)=owner.take(g)?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original metadata take lacks grant"))?;self.publication_edit=Some(original);progress=receipt;self.stage=8;}else{progress=owner.step(authority_slot.as_ref().unwrap(),forward,self.publication_inverse.as_mut().unwrap(),effect)?;if progress==Default::default(){return Ok(false);}}},
             8=>{if !self.publication_metadata.as_ref().unwrap().terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original metadata frame still retains fields before release"));}self.publication_metadata=None;self.stage=9;progress=invoice;},
-            9=>{let owner=self.publication_inverse.as_mut().ok_or_else(||ValueError::invariant("publication_inverse absent"))?;if owner.terminal_is_empty(){self.stage=10;progress=invoice;}else{owner.begin_close();let turn=owner.step(RetainedCloneGrant{maximum_items:1,maximum_depth:g.maximum_depth-1,..g});work=work.saturating_add(turn.work);progress=turn.result?.progress();}},
+            9=>{let owner=self.publication_inverse.as_mut().ok_or_else(||ValueError::invariant("publication_inverse absent"))?;if owner.terminal_is_empty(){self.stage=10;progress=invoice;}else{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:g.maximum_depth-1,..g};if !owner.close_started(){progress=owner.begin_close_paid(&mut effect.nested(child)).result?;}else{progress=match owner.step(&mut effect.nested(child)){RetainedWorkPoll::Pending{..}=>RetainedCloneStep::Progress(Default::default()),RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|failure|failure.into_value_error())?}.progress();}}},
             10=>{if !self.publication_inverse.as_ref().unwrap().terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original inverse frame retains backing before release"));}self.publication_inverse=None;self.stage=11;progress=invoice;},
             11=>{if authority_slot.is_none()||self.publication_edit.is_none()||self.publication_post.is_none()||mutations.is_none()||snapshots.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original publication seal is missing an original owner"));}let authority=authority_slot.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original publication authority missing at seal"))?;let original=self.publication_edit.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original publication edit missing at seal"))?;let post=self.publication_post.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original publication post missing at seal"))?;let mutation_retirement=mutations.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original mutation factory missing at seal"))?;let snapshot_retirement=snapshots.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original snapshot factory missing at seal"))?;match ArtifactStoreOneItemSealer::admit(authority,original,post,mutation_retirement,snapshot_retirement,g){Ok((owner,receipt))=>{self.sealer=Some(owner);progress=RetainedCloneProgress{copied_bytes:demand.copy_bytes,..receipt};self.stage=12;},Err((error,authority,original,post,mutation_retirement,snapshot_retirement))=>{*authority_slot=Some(authority);self.publication_edit=Some(original);self.publication_post=Some(post);*mutations=Some(mutation_retirement);*snapshots=Some(snapshot_retirement);return Err(error);}}},
     _=>unreachable!(),
@@ -57,7 +58,7 @@ impl<P:RetireOwned+Send+Sync+'static,M:ArtifactCanonicalJsonTree+RetireOwned+Sen
    progress=admit_retained_clone_progress(g,progress,"original semantic publication assembly")?;
    Ok(true)
   })();
-  work=work.max(u64::from(progress!=Default::default()));
+  work=work.max(u128::from(progress!=Default::default()));
   RetainedWorkOutcome{result:result.map(|advanced|advanced.then_some(progress)).map_err(|error:ValueError|if error.retained_progress()==Default::default(){error.with_retained_progress(progress)}else{error}),work}
  }
  /// 📐️ Quotes the exact intermediate owner selected for cancellation.
@@ -73,26 +74,23 @@ impl<P:RetireOwned+Send+Sync+'static,M:ArtifactCanonicalJsonTree+RetireOwned+Sen
   Ok(None)
  }
  /// ♻️ Closes only the intermediate custody held here; untransferred inputs remain with the parent.
- pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
-  let mut work=0;
-  let result=(||{
-   let Some(d)=self.close_demands(g.maximum_copy_bytes)?else{return Ok(RetainedCloneStep::Complete(Default::default()));};
-   if !funds(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
-   if let Some(owner)=self.sealer.as_mut(){owner.begin_close();let result=owner.close_step(g);work=owner.last_turn_work();let step=result?;if owner.terminal_is_empty(){self.sealer=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-   let child=RetainedCloneGrant{maximum_items:1,maximum_depth:g.maximum_depth-1,..g};
-   macro_rules! controlled{
-    ($field:ident)=>{if let Some(owner)=self.$field.as_mut(){if owner.terminal_is_empty(){self.$field=None;work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}let result=owner.step(child);work=owner.last_turn_work();return result.map(|step|RetainedCloneStep::Progress(step.progress()));}};
-   }
-   controlled!(publication_metadata_close);
-   if let Some(original)=self.publication_metadata.take(){match ControlledRetirement::new(original){Ok(owner)=>self.publication_metadata_close=Some(owner),Err((error,original))=>{self.publication_metadata=Some(original);return Err(error);}}work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
-   controlled!(publication_edit_close);
-   if let Some(original)=self.publication_edit.take(){match ControlledRetirement::new(original){Ok(owner)=>self.publication_edit_close=Some(owner),Err((error,original))=>{self.publication_edit=Some(original);return Err(error);}}work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
-   if let Some(owner)=self.publication_inverse.as_mut(){if owner.terminal_is_empty(){self.publication_inverse=None;work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}));}owner.begin_close();let turn=owner.step(child);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()));}
-   controlled!(publication_post_close);
-   if let Some(original)=self.publication_post.take(){self.publication_post_close=Some(SharedControlledRetirement::new(original));work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
-   Err(ValueError::invariant("original semantic assembly lost its selected closing owner"))
-  })();
-  RetainedWorkOutcome{result,work}
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+  let g=effect.grant();
+  let Some(d)=self.close_demands(g.maximum_copy_bytes)?else{return Ok(RetainedCloneStep::Complete(Default::default()));};
+  if !funds(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
+  if let Some(owner)=self.sealer.as_mut(){owner.begin_close();let step=RetirementPollExit::resume(owner.close_step(effect))?;if owner.terminal_is_empty(){self.sealer=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+  let child=RetainedCloneGrant{maximum_items:1,maximum_depth:g.maximum_depth-1,..g};
+  macro_rules! controlled{
+   ($field:ident)=>{if let Some(owner)=self.$field.as_mut(){if owner.terminal_is_empty(){self.$field=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}let step=RetirementPollExit::resume(owner.step(&mut effect.nested(child)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}};
+  }
+  controlled!(publication_metadata_close);
+  if let Some(original)=self.publication_metadata.take(){match ControlledRetirement::new(original){Ok(owner)=>self.publication_metadata_close=Some(owner),Err((error,original))=>{self.publication_metadata=Some(original);return Err(error.into());}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
+  controlled!(publication_edit_close);
+  if let Some(original)=self.publication_edit.take(){match ControlledRetirement::new(original){Ok(owner)=>self.publication_edit_close=Some(owner),Err((error,original))=>{self.publication_edit=Some(original);return Err(error.into());}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
+  if let Some(owner)=self.publication_inverse.as_mut(){if owner.terminal_is_empty(){self.publication_inverse=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}));}if !owner.close_started(){return Ok(RetainedCloneStep::Progress(owner.begin_close_paid(&mut effect.nested(child)).result?));}let step=RetirementPollExit::resume(owner.step(&mut effect.nested(child)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+  controlled!(publication_post_close);
+  if let Some(original)=self.publication_post.take(){self.publication_post_close=Some(SharedControlledRetirement::new(original));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
+  Err(ValueError::invariant("original semantic assembly lost its selected closing owner").into())
  }
  /// 🧵️ Borrows the common canonical sealer after all original metadata has transferred.
  pub fn sealer(&self)->Option<&ArtifactStoreOneItemSealer<P,M>>{self.sealer.as_ref()}

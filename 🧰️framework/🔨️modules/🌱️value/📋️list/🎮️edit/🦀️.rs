@@ -1,7 +1,7 @@
 //! 🎮️ Moves ordered native list slots one admitted step at a time.
 
 use super::{PagedList,PagedListAllocationError,PagedListError,PagedListProgress,PagedListRefusalKind,PagedListReservationFailure,PagedListReservationOutcome};
-use semio_framework_value_control_contract::{RetainedAllocationEffect,ValueError,ValueRefusalKind};
+use semio_framework_value_control_contract::{RetainedAllocationEffect,RetainedCloneGrant,ValueError,ValueRefusalKind};
 /// 🪢️ Keeps original edit, allocation and Work refusals independent.
 #[derive(Debug)]
 pub enum PagedListEditFailure{Edit(PagedListError),Allocation{error:PagedListAllocationError,copied_bytes:usize},Work(ValueError)}
@@ -56,7 +56,7 @@ impl PagedListEditCursor {
         if self.insertion && !self.started {
             if item.is_none() { return Err(refuse("ordered list insertion lost its source owner")); }
             if !owner.has_reserved_slot() {
-                let progress = owner.reserve_one(maximum_bytes,actual).map_err(|error| error.refusal())?;
+                let selected = owner.select_reservation(N,u64::MAX).result?;let Some(selected) = selected else { return Ok(Default::default()) };let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: maximum_bytes, maximum_release_bytes: maximum_bytes, maximum_depth: 64 };let progress = owner.reserve_selected(&selected,grant,u64::MAX,actual).map_err(|error| error.refusal())?;
                 return Ok(PagedListEditStep { moved_items: usize::from(progress.progressed), progress, complete: false });
             }
             let progress = owner.place_reserved(item, maximum_bytes)?;

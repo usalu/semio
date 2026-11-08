@@ -2,7 +2,8 @@
 use super::{NativeDecodeControl,NativeReceivingEffect,NativeReceivingEffectFailure,NativeReceivingEffectPhase};
 use crate::{ValueError,ValueRefusalKind,RetirementDemand,RetainedWorkOutcome,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
-fn allocate_empty_vec<T>(count:usize,actual:&mut Option<usize>)->Result<Vec<T>,ValueError>{
+/// 📦️ Allocates exact empty vector backing and records the physical marker of the real allocation.
+pub fn allocate_empty_vec<T>(count:usize,actual:&mut Option<usize>)->Result<Vec<T>,ValueError>{
  if actual.is_some(){return Err(invalid("native backing attempt is occupied"))}if count==0||size_of::<T>()==0{return Ok(Vec::new())}let layout=std::alloc::Layout::array::<T>(count).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"native vector layout overflow"))?;let pointer=unsafe{std::alloc::alloc(layout)}.cast::<T>();*actual=Some(if pointer.is_null(){0}else{layout.size()});if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"native vector backing allocation refused"))}Ok(unsafe{Vec::from_raw_parts(pointer,0,count)})
 }
 /// 🧾️ Holds the real backing step or its independent original receiving failures.
@@ -13,9 +14,10 @@ impl NativeDecodeControl<'_>{
  fn admit_backing<R>(&mut self,output:&mut Option<R>,demand:RetirementDemand,grant:RetainedCloneGrant,frame:&mut NativeReceivingEffect,allocate:impl FnOnce(&mut Option<usize>)->Result<R,ValueError>)->NativeBackingTurn{
   if output.is_some(){return failure(invalid("native backing admission requires an empty destination"))}if !retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
   if let Err(error)=frame.quote(self,demand){return failure(error)}if frame.phase()!=NativeReceivingEffectPhase::Granted{return settled(frame,self)}
-  match self.prepare_work(1){Ok(true)=>{},Ok(false)=>{if let Err(error)=frame.cancel_unstarted(self){return failure(error)}return settled(frame,self)},Err(refusal)=>{if let Err((error,refusal))=frame.record_work_refusal(self,refusal){return RetainedWorkOutcome{result:Err(NativeReceivingEffectFailure{producer_refusal:None,child:None,work_refusal:Some(refusal),receiving:error.into()}),work:0}}if let Err(error)=frame.cancel_unstarted(self){return failure(error)}return settled(frame,self)}}
+  match frame.prepare_work(self,1){Ok(Some(true))=>{},Ok(None)=>return failure(invalid("native backing work quote stayed pending")),Ok(Some(false))=>{if let Err(error)=frame.cancel_unstarted(self){return failure(error)}return settled(frame,self)},Err(refusal)=>{if let Err((error,refusal))=frame.record_work_refusal(self,refusal){return RetainedWorkOutcome{result:Err(NativeReceivingEffectFailure{producer_refusal:None,child:None,work_refusal:Some(refusal),receiving:error.into()}),work:0}}if let Err(error)=frame.cancel_unstarted(self){return failure(error)}return settled(frame,self)}}
   let bytes=demand.capacity_bytes;let operation=|actual:&mut Option<usize>,_|{let result=match allocate(actual){Ok(value)=>{*output=Some(value);Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:bytes,..Default::default()}))},Err(error)=>Err(error)};RetainedWorkOutcome{result,work:1}};let turn=if bytes==0{frame.effect_unallocated(self,operation)}else{frame.effect(self,operation)};
   if let Err(error)=turn{if let Err(cancel)=frame.cancel_unperformed_work(self){return RetainedWorkOutcome{result:Err(NativeReceivingEffectFailure{producer_refusal:None,child:Some(error),work_refusal:Some(cancel),receiving:ValueError::invariant("original work cancellation remains pending").into()}),work:0}}return failure(error)}if let Some(work)=frame.child_work(){if let Err(error)=frame.settle_original_work(self){return failure(error)}}else if let Err(error)=frame.cancel_unperformed_work(self){return failure(error)}
+  if frame.phase()==NativeReceivingEffectPhase::EffectStarted&&frame.allocation_progress().is_some(){if let Err(error)=frame.finish_allocation(self){return failure(error)}}
   if frame.phase()!=NativeReceivingEffectPhase::EffectFinished{return failure(invalid("native backing effect requires original allocation recovery"))}if let Err(error)=frame.receipt(self){return failure(error)}settled(frame,self)
  }
  /// 🗂️ Quotes and retains vector backing before any physical allocation effect.
@@ -23,4 +25,3 @@ impl NativeDecodeControl<'_>{
  /// 🔤️ Quotes and retains UTF8 backing before any physical allocation effect.
  pub fn admit_string(&mut self,output:&mut Option<String>,bytes:usize,grant:RetainedCloneGrant,frame:&mut NativeReceivingEffect)->NativeBackingTurn{if bytes>isize::MAX as usize{return failure(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native text size overflow"))}let demand=RetirementDemand{copy_bytes:size_of::<String>(),capacity_bytes:bytes,depth:1,..Default::default()};self.admit_backing(output,demand,grant,frame,|actual|allocate_empty_vec::<u8>(bytes,actual).map(|value|unsafe{String::from_utf8_unchecked(value)}))}
 }
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

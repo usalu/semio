@@ -40,6 +40,8 @@ pub struct NativeSnapshotFailure{
  settlement_refusal:Option<ValueError>,
  progress:RetainedCloneProgress,
 }
+/// 🪞️ The raw original fields of one snapshot failure, borrowed in declaration order.
+pub struct NativeSnapshotFailureFields<'a>{pub cause:Option<&'a NativeSnapshotCause>,pub allocation:Option<&'a NativeSnapshotAllocationFailure>,pub encode_effect:Option<&'a semio_framework_value::native_encoding::NativeEncodeEffectFailure>,pub receipt_refusal:Option<&'a ValueError>,pub context_refusal:Option<&'a ValueError>,pub work_refusal:Option<&'a ValueError>,pub settlement_refusal:Option<&'a ValueError>,pub progress:&'a RetainedCloneProgress}
 /// 🧩️ Owns a partially received failure until its original decoder publishes it.
 #[derive(Default,semio_framework_value::RetireOwned,semio_framework_value::NativeReceive)]
 #[value(rename_all="camelCase",deny_unknown_fields)]
@@ -56,6 +58,8 @@ impl<I:semio_framework_value_native_owned::native_decoding::owned::tree::NativeV
  fn receiver()->Self::Receiver{semio_framework_value_native_owned::native_decoding::owned::NativeMappedReceiver::new()}
 }
 impl NativeSnapshotFailure{
+ /// 🪞️ Borrows every raw original field without the derived fallbacks of the accessors.
+ pub fn original_fields(&self)->NativeSnapshotFailureFields<'_>{NativeSnapshotFailureFields{cause:self.cause.as_ref(),allocation:self.allocation.as_ref(),encode_effect:self.encode_effect.as_ref(),receipt_refusal:self.receipt_refusal.as_ref(),context_refusal:self.context_refusal.as_ref(),work_refusal:self.work_refusal.as_ref(),settlement_refusal:self.settlement_refusal.as_ref(),progress:&self.progress}}
  /// 🔎️ Reports whether the independent outer context slot is occupied.
  pub fn has_direct_context_refusal(&self)->bool{self.context_refusal.is_some()}
  /// 🧾️ Reports whether the independent outer receipt slot is occupied.
@@ -121,7 +125,7 @@ impl PartialEq for NativeSnapshotFailure{fn eq(&self,other:&Self)->bool{self.cau
 
 /// 🧮️ Keeps semantic producer actions independent of physical receipt items.
 #[derive(Default)]
-pub struct NativeSnapshotWork(u64);
+pub struct NativeSnapshotWork(u128);
 impl NativeSnapshotWork{
  /// 🚦️ Admits one bounded primitive through the original decoder loan before its effects.
  pub fn admit(&mut self,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(),NativeSnapshotFailure>{

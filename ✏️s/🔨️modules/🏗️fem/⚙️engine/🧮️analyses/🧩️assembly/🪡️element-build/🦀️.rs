@@ -540,7 +540,7 @@ impl<'model> AssemblyJob<'model> {
     }
 
     pub(super) fn assemble_cell(&mut self) -> Result<(), FemError> {
-        let pending = self.state.pending.as_mut().expect("pending element exists");
+        let pending = self.state.pending.as_mut().ok_or(FemError::Singular)?;
         if pending.side == 0 {
             pending.complete = true;
             self.state.element_cursor += 1;
@@ -553,7 +553,7 @@ impl<'model> AssemblyJob<'model> {
             let new_row = pending.indices_new[local_row];
             let new_col = pending.indices_new[local_col];
             let sequence = ((pending.element_index as u64) << 32) | pending.cell_cursor as u64;
-            let partition = pending.element_index % self.state.partitions.len();
+            let partition = pending.element_index.checked_rem(self.state.partitions.len()).ok_or(FemError::EmptyModel)?;
             let full = SparseTriplet { sequence, row: new_row as u32, col: new_col as u32, value };
             let free =
                 if let (Some(compact_row), Some(compact_col)) = (self.plan.compact_of_new[new_row], self.plan.compact_of_new[new_col]) { Some(SparseTriplet { sequence, row: compact_row as u32, col: compact_col as u32, value }) } else { None };

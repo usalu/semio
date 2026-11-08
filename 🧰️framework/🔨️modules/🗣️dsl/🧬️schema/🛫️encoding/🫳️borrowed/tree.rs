@@ -111,12 +111,18 @@ impl BorrowedRecordTree{
 mod tests{
     use super::*;
     use crate::BorrowedFieldSpec as F;
-    use semio_framework_value::native_encoding::NativeEncodeWorkRecipient;
+    use semio_framework_value::native_encoding::{OriginalWorkAuthority,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalSourceTurnIdentity};
     struct Loan(u64);
-    impl NativeEncodeWorkRecipient for Loan{
-        fn admits(&mut self,_:u64,work:u64)->Result<bool,ValueError>{Ok(self.0>=work)}
-        fn committed(&mut self,work:u64)->Result<(),ValueError>{self.0-=work;Ok(())}
+    struct LoanDriver;
+    impl OriginalWorkRecipient for LoanDriver{
+        type Context<'t,'s>=Loan where 's:'t;
+        fn validate_context<'t,'s>(&self,_:&Loan)->Result<(),ValueError> where 's:'t{Ok(())}
+        fn source_turn<'t,'s>(&self,_:&Loan)->Option<OriginalSourceTurnIdentity> where 's:'t{None}
+        fn admits<'r,'t,'s>(&mut self,c:&mut Loan,quote:OriginalWorkQuote<'r>,_:u64,work:u64)->OriginalWorkQuoteComplete<'r> where 's:'t{quote.complete(Ok(c.0>=work))}
+        fn settle_partial<'r,'t,'s>(&mut self,c:&mut Loan,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{let work=u64::try_from(check.delta()).unwrap_or(u64::MAX);let result=(||->Result<(),ValueError>{c.0=c.0.saturating_sub(work);Ok(())})();check.complete(result)}
+        fn recover_partial<'r,'t,'s>(&mut self,_:&mut Loan,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{check.pending()}
     }
+    fn with_work<R>(control:&mut NativeEncodeControl<'_>,issuer:&mut OriginalWorkAuthority<LoanDriver>,loan:&mut Loan,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<R,ValueError>)->Result<R,ValueError>{issuer.with_loan(loan,|work|control.with_work_recipient(work,operation))?}
     struct Source{nodes:Vec<(String,f64)>}
     impl FieldProjectionSource for Source{
         fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{match path{
@@ -128,7 +134,7 @@ mod tests{
     fn node_spec()->R{const FIELDS:&[F]=&[F::new(0,"id",H::Text),F::new(1,"x",H::Float)];R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS}}
     fn node_shape()->H{H::Record(node_spec)}
     #[test]
-    fn compound_record_list_uses_caller_slots_and_resumes(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();let mut denied_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+    fn compound_record_list_uses_caller_slots_and_resumes(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);let mut denied_issuer=OriginalWorkAuthority::new(LoanDriver);
         const FIELDS:&[F]=&[F::new(0,"nodes",H::List(node_shape))];
         let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🪆️records.json")).unwrap();
@@ -138,12 +144,12 @@ mod tests{
         let enabled=std::cell::Cell::new(true);let mut callback=|_|enabled.get();let mut control=NativeEncodeControl::new(0,&mut callback);
         let mut denied=Loan(0);let mut byte=[0u8;1];let mut output=Vec::new();
         let empty=cursor.advance(&source,schema,&mut frames[..0],&mut byte,&mut control).unwrap();assert_eq!(empty.required_frames,1);assert_eq!(empty.written_bytes,0);assert_eq!(control.actual_work(),0);
-        control.with_work_recipient(&mut denied_issuer.loan(&mut denied),|control|{
+        with_work(&mut control,&mut denied_issuer,&mut denied,|control|{
             let turn=cursor.advance(&source,schema,&mut frames,&mut byte,control).map_err(|failure|failure.reason)?;
             assert_eq!(turn.required_frames,1);assert_eq!(turn.written_bytes,0);assert!(frames[0].is_none());assert_eq!(control.actual_work(),0);Ok::<_,ValueError>(())
         }).unwrap();
         let mut loan=Loan(100000);
-        control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+        with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
             for _ in 0..100000{
                 let demand=cursor.next_output_byte_demand(&frames[..1])?;
                 let turn=cursor.advance(&source,schema,&mut frames[..1],&mut byte,control).map_err(|failure|failure.reason)?;
@@ -174,14 +180,14 @@ mod tests{
     fn leaf_spec()->R{const FIELDS:&[F]=&[F::new(0,"value",H::Text)];R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS}}
     fn middle_spec()->R{const FIELDS:&[F]=&[F::new(0,"inner",H::Record(leaf_spec))];R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS}}
     #[test]
-    fn compound_nested_records_keep_three_caller_frames(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+    fn compound_nested_records_keep_three_caller_frames(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
         const FIELDS:&[F]=&[F::new(0,"outer",H::Record(middle_spec))];
         let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🪆️deep.json")).unwrap();
         let oracle=std::process::Command::new("bun").args(["-e",r#"import{Database}from"bun:sqlite";const db=new Database(":memory:");const row=db.query("SELECT printf('outer=inner=value=%s','x') AS document").get();process.stdout.write(row.document+"\n");db.close();"#]).output().unwrap();
         assert!(oracle.status.success(),"{}",String::from_utf8_lossy(&oracle.stderr));assert_eq!(oracle.stdout,fixture["document"].as_str().unwrap().as_bytes());
         let source=DeepSource;let mut frames:[Option<BorrowedRecordFrame>;3]=[const{None};3];let mut cursor=BorrowedRecordTree::default();let mut callback=|_|true;let mut control=NativeEncodeControl::new(0,&mut callback);let mut loan=Loan(100000);let mut byte=[0u8;1];let mut output=Vec::new();let mut maximum_frames=0usize;
-        control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+        with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
             for _ in 0..100000{
                 let demand=cursor.next_output_byte_demand(&frames)?;
                 let turn=cursor.advance(&source,schema,&mut frames,&mut byte,control).map_err(|failure|failure.reason)?;
@@ -207,7 +213,7 @@ mod tests{
     fn truss_spec()->R{const FIELDS:&[F]=&[F::new(0,"id",H::Text)];R{keyword:Some("truss"),layout:RecordLayout::Inline,fields:FIELDS}}
     fn statements_shape()->H{H::Statements(&[("truss",truss_spec)])}
     #[test]
-    fn compound_block_statements_preserve_prefix_and_resume(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+    fn compound_block_statements_preserve_prefix_and_resume(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
         const FIELDS:&[F]=&[F::new(0,"elements",H::Block(statements_shape))];
         let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🧱️statements.json")).unwrap();
@@ -219,7 +225,7 @@ mod tests{
         let mut owned=crate::RecordValue::default();owned.fields.insert(0,crate::FieldValue::Block(Box::new(crate::FieldValue::Statements(entries))));assert_eq!(crate::print(&owned,&owned_schema,JoinMode::Document),fixture["document"].as_str().unwrap());
         let ids=fixture["elements"].as_array().unwrap().iter().map(|item|item["id"].as_str().unwrap().to_owned()).collect();let source=StatementSource{ids};
         let mut frames:[Option<BorrowedRecordFrame>;2]=[const{None};2];let mut cursor=BorrowedRecordTree::default();let enabled=std::cell::Cell::new(true);let mut callback=|_|enabled.get();let mut control=NativeEncodeControl::new(0,&mut callback);let mut loan=Loan(100000);let mut byte=[0u8;1];let mut output=Vec::new();
-        control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+        with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
             for _ in 0..100000{let demand=cursor.next_output_byte_demand(&frames)?;let turn=cursor.advance(&source,schema,&mut frames,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if output.ends_with(b"id=A"){break}}
             assert!(output.ends_with(b"id=A"));let before=cursor.emitted_bytes();let work=control.actual_work();enabled.set(false);
             let failure=cursor.advance(&source,schema,&mut frames,&mut byte,control).unwrap_err();assert_eq!(failure.reason.kind,ValueRefusalKind::Canceled);assert_eq!(failure.written_bytes,0);assert_eq!(cursor.emitted_bytes(),before);assert_eq!(control.actual_work(),work);enabled.set(true);
@@ -233,7 +239,7 @@ mod tests{
     fn decode_table_node_schema(control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<crate::RecordSpec,ValueError>{controlled_table_node_schema(control)}
     fn encode_table_node_schema(control:&mut NativeEncodeControl<'_>)->Result<crate::RecordSpec,ValueError>{controlled_table_node_schema(control)}
     #[test]
-    fn compound_columnar_table_preserves_prefix_and_resume(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+    fn compound_columnar_table_preserves_prefix_and_resume(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
         const FIELDS:&[F]=&[F::new(0,"nodes",H::Table(node_spec))];
         let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/📊️table.json")).unwrap();
         let nodes:Vec<(String,f64)>=fixture["nodes"].as_array().unwrap().iter().map(|node|(node["id"].as_str().unwrap().to_owned(),node["x"].as_f64().unwrap())).collect();
@@ -244,7 +250,7 @@ mod tests{
         let oracle=std::process::Command::new("bun").args(["-e",r#"import{Database}from"bun:sqlite";const db=new Database(":memory:");const row=db.query("SELECT 'nodes [id:TEXT x:NUM] {'||char(10)||'  A 1.5'||char(10)||'  B 2'||char(10)||'}'||char(10) AS document").get();process.stdout.write(row.document);db.close();"#]).output().unwrap();
         assert!(oracle.status.success(),"{}",String::from_utf8_lossy(&oracle.stderr));assert_eq!(oracle.stdout,fixture["document"].as_str().unwrap().as_bytes());
         let source=Source{nodes};let mut frames:[Option<BorrowedRecordFrame>;1]=[const{None};1];let mut cursor=BorrowedRecordTree::default();let enabled=std::cell::Cell::new(true);let mut callback=|_|enabled.get();let mut control=NativeEncodeControl::new(0,&mut callback);let mut loan=Loan(100000);let mut byte=[0u8;1];let mut output=Vec::new();
-        control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+        with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
             for _ in 0..100000{let demand=cursor.next_output_byte_demand(&frames)?;let turn=cursor.advance(&source,schema,&mut frames,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if output.ends_with(b"A 1.5"){break}}
             assert!(output.ends_with(b"A 1.5"));let before=cursor.emitted_bytes();let work=control.actual_work();enabled.set(false);
             let failure=cursor.advance(&source,schema,&mut frames,&mut byte,control).unwrap_err();assert_eq!(failure.reason.kind,ValueRefusalKind::Canceled);assert_eq!(failure.written_bytes,0);assert_eq!(cursor.emitted_bytes(),before);assert_eq!(control.actual_work(),work);enabled.set(true);
@@ -275,7 +281,7 @@ mod tests{
         fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{if path==[0,0,1,0]&&index==0{Ok("truss")}else{Err(crate::native_encoding::projection_path_error())}}
     }
     #[test]
-    fn compound_table_block_statement_cell_matches_owned_and_sqlite(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+    fn compound_table_block_statement_cell_matches_owned_and_sqlite(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
         const FIELDS:&[F]=&[F::new(0,"cases",H::Table(case_spec))];let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/📊️block-cell.json")).unwrap();
         let case_producer=crate::RecordSpecProducer{ordinary:owned_case_schema,encoding:encode_case_schema,decoding:decode_case_schema};
@@ -285,7 +291,7 @@ mod tests{
         let oracle=std::process::Command::new("bun").args(["-e",r#"import{Database}from"bun:sqlite";const db=new Database(":memory:");const row=db.query("SELECT 'cases [id:TEXT loads:BLOCK enabled:BOOL] {'||char(10)||'  C {'||char(10)||'    truss id=L'||char(10)||'  }'||char(10)||'  true'||char(10)||'}'||char(10) AS document").get();process.stdout.write(row.document);db.close();"#]).output().unwrap();
         assert!(oracle.status.success(),"{}",String::from_utf8_lossy(&oracle.stderr));assert_eq!(oracle.stdout,fixture["document"].as_str().unwrap().as_bytes());
         let source=CaseTableSource;let mut frames:[Option<BorrowedRecordFrame>;2]=[const{None};2];let mut cursor=BorrowedRecordTree::default();let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(100000);let mut byte=[0u8;1];let mut output=Vec::new();
-        control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+        with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
             for _ in 0..100000{let demand=cursor.next_output_byte_demand(&frames)?;let turn=cursor.advance(&source,schema,&mut frames,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if turn.complete{break}}
             assert_eq!(output,fixture["document"].as_str().unwrap().as_bytes());for _ in 0..100000{if cursor.close(&mut frames,control)?{break}}assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
         }).unwrap();
@@ -300,7 +306,7 @@ mod tests{
         fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{if path==[1,0]&&index==0{Ok("truss")}else{Err(crate::native_encoding::projection_path_error())}}
     }
     #[test]
-    fn compound_model_orders_block_before_table(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+    fn compound_model_orders_block_before_table(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
         const FIELDS:&[F]=&[F::new(0,"nodes",H::Table(node_spec)),F::new(1,"elements",H::Block(statements_shape))];
         let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🧩️model.json")).unwrap();
         let node_producer=crate::RecordSpecProducer{ordinary:owned_table_node_schema,encoding:encode_table_node_schema,decoding:decode_table_node_schema};let truss_producer=crate::RecordSpecProducer{ordinary:owned_truss_schema,encoding:encode_truss_schema,decoding:decode_truss_schema};
@@ -310,7 +316,7 @@ mod tests{
         let oracle=std::process::Command::new("bun").args(["-e",r#"import{Database}from"bun:sqlite";const db=new Database(":memory:");const row=db.query("SELECT 'elements {'||char(10)||'  truss id=A'||char(10)||'}'||char(10)||'nodes [id:TEXT x:NUM] {'||char(10)||'  A 1.5'||char(10)||'}'||char(10) AS document").get();process.stdout.write(row.document);db.close();"#]).output().unwrap();
         assert!(oracle.status.success(),"{}",String::from_utf8_lossy(&oracle.stderr));assert_eq!(oracle.stdout,fixture["document"].as_str().unwrap().as_bytes());
         let source=MixedModelSource;let mut frames:[Option<BorrowedRecordFrame>;2]=[const{None};2];let mut cursor=BorrowedRecordTree::default();let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(100000);let mut byte=[0u8;1];let mut output=Vec::new();
-        control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+        with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
             for _ in 0..100000{let demand=cursor.next_output_byte_demand(&frames)?;let turn=cursor.advance(&source,schema,&mut frames,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if turn.complete{break}}
             assert_eq!(output,fixture["document"].as_str().unwrap().as_bytes());for _ in 0..100000{if cursor.close(&mut frames,control)?{break}}assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
         }).unwrap();
@@ -334,7 +340,7 @@ mod tests{
             [0,0,1]=>Ok(V::Record(&[0])),[0,0,1,0]=>Ok(V::Text("hello")),_=>Err(crate::native_encoding::projection_path_error())}}
     }
     #[test]
-    fn compound_table_record_cell_keeps_glued_braces(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+    fn compound_table_record_cell_keeps_glued_braces(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
         const FIELDS:&[F]=&[F::new(0,"rows",H::Table(record_cell_spec))];let schema=R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/📊️record-cell.json")).unwrap();
         let row_producer=crate::RecordSpecProducer{ordinary:owned_record_cell_schema,encoding:encode_record_cell_schema,decoding:decode_record_cell_schema};
@@ -344,7 +350,7 @@ mod tests{
         let oracle=std::process::Command::new("bun").args(["-e",r#"import{Database}from"bun:sqlite";const db=new Database(":memory:");const row=db.query("SELECT 'rows [id:TEXT meta:REC] {'||char(10)||'  A {name=hello}'||char(10)||'}'||char(10) AS document").get();process.stdout.write(row.document);db.close();"#]).output().unwrap();
         assert!(oracle.status.success(),"{}",String::from_utf8_lossy(&oracle.stderr));assert_eq!(oracle.stdout,fixture["document"].as_str().unwrap().as_bytes());
         let source=RecordCellSource;let mut frames:[Option<BorrowedRecordFrame>;2]=[const{None};2];let mut cursor=BorrowedRecordTree::default();let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let mut loan=Loan(100000);let mut byte=[0u8;1];let mut output=Vec::new();
-        control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+        with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
             for _ in 0..100000{let demand=cursor.next_output_byte_demand(&frames)?;let turn=cursor.advance(&source,schema,&mut frames,&mut byte,control).map_err(|failure|failure.reason)?;assert_eq!(turn.written_bytes,demand);output.extend_from_slice(&byte[..turn.written_bytes]);if turn.complete{break}}
             assert_eq!(output,fixture["document"].as_str().unwrap().as_bytes());for _ in 0..100000{if cursor.close(&mut frames,control)?{break}}assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
         }).unwrap();

@@ -20,32 +20,33 @@ macro_rules! original_sqlite_receiving{
     let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original SQLite receiving extent overflow"))?;
     let settlement=crate::artifact::receiving::ReceivingSettlement::new(control,before,crate::SqliteSnapshotPhase::$phase);
     let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
-    let turn=self.scoped_native(maximum,&mut observer,|owner|owner.receive::<F,O,NativeSnapshotFailure>(&mut |slot,native,body|{
+    let mut published=None;let turn=self.scoped_native(maximum,&mut observer,|owner|owner.receive::<F,O,NativeSnapshotFailure>(&mut published,&mut |slot,output,_marker,_failure,native,body|{
      let before_work=settlement.with_control(|control|control.performed_work());
      let result=(||{
       let owned=settlement.with_control(|control|{
        let mut port=crate::artifact::receiving::Port{control,native:crate::artifact::receiving::Direction::$direction(native),body};
        port.work(1,std::mem::size_of::<F>())?;*slot=Some(construct());
-       let frame=slot.as_mut().unwrap();let status=operation(frame,&mut port);*frame.receiving_status()=Some(status);
+       let frame=slot.as_mut().ok_or_else(||ValueError::invariant("original SQL receiving frame absent"))?;let status=operation(frame,&mut port);*frame.receiving_status()=Some(status);
        Ok::<_,ValueError>(port.owned())
       })?;
-      let status=slot.as_mut().unwrap().receiving_status().take().unwrap();
+      let status=slot.as_mut().ok_or_else(||ValueError::invariant("original SQL receiving frame absent"))?.receiving_status().take().ok_or_else(||ValueError::invariant("original SQL receiving status absent"))?;
       let settled=settlement.finish_body(owned);
       match(status,settled){
-       (Err(primary),Err(receipt))=>return Err(NativeSnapshotFailure::from(primary).with_settlement_refusal(receipt).expect("original SQL body has its empty settlement slot")),
+       (Err(primary),Err(receipt))=>return Err(NativeSnapshotFailure::from(primary).with_settlement_refusal(receipt).unwrap_or_else(|(failure,_)|failure)),
        (Err(primary),Ok(()))=>return Err(primary.into()),
        (Ok(()),Err(receipt))=>return Err(NativeSnapshotFailure::from(receipt)),
        (Ok(()),Ok(()))=>{}
       }
       native.checkpoint()?;
-      settlement.with_control(|control|{
+      let value=settlement.with_control(|control|{
        let mut port=crate::artifact::receiving::Port{control,native:crate::artifact::receiving::Direction::$direction(native),body};
-       port.work(1,std::mem::size_of::<O>())?;publish(slot.as_mut().unwrap())
-      }).map_err(Into::into)
+       port.work(1,std::mem::size_of::<O>())?;publish(slot.as_mut().ok_or_else(||ValueError::invariant("original SQL receiving frame absent"))?)
+      }).map_err(NativeSnapshotFailure::from)?;
+      *output=Some(value);Ok(())
      })();
-     semio_framework_value::RetainedWorkOutcome{result,work:settlement.with_control(|control|control.performed_work()).checked_sub(before_work).expect("original SQL producer work is monotone")}
+     semio_framework_value::RetainedWorkOutcome{result,work:u128::from(settlement.with_control(|control|control.performed_work()).saturating_sub(before_work))}
     }));
-    let turn=semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|error|settlement.refused_failure(self.native().owned_bytes(),error)),work:turn.work};
+    let turn=semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|error|settlement.refused_failure(self.native().owned_bytes(),error)).and_then(|()|published.take().ok_or_else(||NativeSnapshotFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original SQL receiving published no output")))),work:turn.work};
     work.take(turn)
    })
   }

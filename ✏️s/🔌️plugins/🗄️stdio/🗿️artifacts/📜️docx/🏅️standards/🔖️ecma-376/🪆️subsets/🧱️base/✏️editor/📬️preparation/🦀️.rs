@@ -14,6 +14,7 @@ use semio_framework_value::retained_clone::{RetainedCloneRef, RetainedCloneStep}
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, RetirementDemand};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::sync::Arc;
+use semio_framework_value::{OriginalReceivingPrimary, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetirementPollExit};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 
 /// 🧭️ The element at `path` below `node`, reopened for the one in-place replacement of the retained-execution seam.
@@ -243,11 +244,11 @@ impl PagedOneItemEdit<DocxSnapshot, DocxMutation> for DocxXmlEdit {
         PagedOneItemPostMode::Mutable
     }
 
-    fn advance_demands(&self, _before: RetainedCloneRef<'_, DocxSnapshot>, _mutation: RetainedCloneRef<'_, DocxMutation>, _post: PagedOneItemPostRead<'_, DocxSnapshot>, _body: usize) -> Result<RetirementDemand, ValueError> {
+    fn advance_demands(&self, _before: RetainedCloneRef<'_, DocxSnapshot>, _mutation: RetainedCloneRef<'_, DocxMutation>, _post: PagedOneItemPostRead<'_, DocxSnapshot>, _body: usize, _maximum_work_units: u64) -> Result<RetirementDemand, ValueError> {
         Ok(RetirementDemand::default())
     }
 
-    fn advance(&mut self, _before: RetainedCloneRef<'_, DocxSnapshot>, mutation: RetainedCloneRef<'_, DocxMutation>, post: PagedOneItemPost<'_, DocxSnapshot>, _body: usize, grant: RetainedCloneGrant, receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<DocxMutation>, ValueError> {
+    fn advance(&mut self, _before: RetainedCloneRef<'_, DocxSnapshot>, mutation: RetainedCloneRef<'_, DocxMutation>, post: PagedOneItemPost<'_, DocxSnapshot>, _body: usize, grant: RetainedCloneGrant, receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<DocxMutation>, OriginalReceivingPrimary> {
         self.last_work=0;
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PagedOneItemEditStep::Progress(Default::default()))}
         if !receiving.prepare_work(if self.reserve.is_none(){2}else{3})?{return Ok(PagedOneItemEditStep::Progress(Default::default()))}
@@ -279,8 +280,8 @@ impl PagedOneItemEdit<DocxSnapshot, DocxMutation> for DocxXmlEdit {
         }
         Ok(PagedOneItemEditStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: TURN_BYTES, retained_capacity_bytes: retained, released_bytes: 0 }, prepared.inverse))
         })();
-        receiving.commit_work(self.last_work)?;
-        result
+        receiving.commit_work(u128::from(self.last_work))?;
+        result.map_err(Into::into)
     }
 
     fn last_turn_work(&self)->u64{self.last_work}
@@ -289,13 +290,27 @@ impl PagedOneItemEdit<DocxSnapshot, DocxMutation> for DocxXmlEdit {
         self.closing = true;
     }
 
-    fn close_demands(&self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<DocxMutation>, _body: usize) -> Result<RetirementDemand, ValueError> {
+    fn has_pending_receiving_recovery(&self) -> bool { false }
+
+    fn pending_receiving_demand(&self) -> Option<RetirementDemand> { None }
+
+    fn pending_receiving_recovery(&mut self) -> Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>> { None }
+
+    fn finish_receiving_recovery(&mut self, _: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> RetainedWorkOutcome<RetainedCloneProgress, OriginalReceivingPrimary> {
+        RetainedWorkOutcome { result: Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "DocxMutation edit opens every native work action atomically and never retains a pending receiving frame").into()), work: 0 }
+    }
+
+    fn close_demands(&self, _mutations: &Arc<dyn ArtifactOwnedValueRetirementFactory<DocxMutation>>, _body: usize) -> Result<RetirementDemand, ValueError> {
         Ok(RetirementDemand::default())
     }
 
-    fn close_step(&mut self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<DocxMutation>, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_work_demand(&self, _mutations: &Arc<dyn ArtifactOwnedValueRetirementFactory<DocxMutation>>, _body: usize) -> Result<u64, ValueError> {
+        Ok(0)
+    }
+
+    fn close_step(&mut self, _mutations: &Arc<dyn ArtifactOwnedValueRetirementFactory<DocxMutation>>, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         self.closing = true;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+        RetirementPollExit::settle(effect, Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())))
     }
 
     fn terminal_is_empty(&self) -> bool {

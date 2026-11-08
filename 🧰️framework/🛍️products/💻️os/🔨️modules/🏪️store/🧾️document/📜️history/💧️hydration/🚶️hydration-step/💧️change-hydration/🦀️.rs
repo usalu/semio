@@ -141,7 +141,7 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
   if donated{self.operation_index+=1}
   let mut progress=match &turn.result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
   progress.copied_items+=1;progress.copied_bytes+=overhead;
-  let receipt=cx.consume_retained(progress);cx.consume_fuel(turn.work+2);
+  let receipt=cx.consume_retained(progress);cx.consume_fuel(u64::try_from(turn.work+2).unwrap_or(u64::MAX));
   if let Err(error)=turn.result{let mut failure=semio_framework_job::OriginalTurnFailure::from(error);failure.effects=progress;failure.receipt_refusal=receipt.err();*self.original_failure=Some(failure);return self.reject(MemberOpenDiagnostic::Capacity)}
   if let Err(error)=receipt{*self.original_failure=Some(error.into());return self.reject(MemberOpenDiagnostic::Capacity)}
   PersistedDocumentHydrationStep::Pending(self.progress())
@@ -171,7 +171,7 @@ fn restore_checkpoint(source:&mut protocol::FoldCheckpoint,value:semio_os_vcs::C
 impl<P,M> RetainedPersistedDocumentHydration<P,M>
 where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr::StoreState,M:semio_os_spr::StoreMutationFor<P>{
  fn post_original_metadata(&mut self,cx:&mut StepContext<'_>,turn:semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress>)->PersistedDocumentHydrationStep<P,M>{
-  let progress=match &turn.result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};let receipt=cx.consume_retained(progress);cx.consume_fuel(turn.work);
+  let progress=match &turn.result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};let receipt=cx.consume_retained(progress);cx.consume_fuel(u64::try_from(turn.work).unwrap_or(u64::MAX));
   if let Err(error)=turn.result{let mut failure=semio_framework_job::OriginalTurnFailure::from(error);failure.effects=progress;failure.receipt_refusal=receipt.err();*self.original_failure=Some(failure);return self.reject(MemberOpenDiagnostic::Capacity)}
   if let Err(error)=receipt{*self.original_failure=Some(error.into());return self.reject(MemberOpenDiagnostic::Capacity)}
   PersistedDocumentHydrationStep::Pending(self.progress())
@@ -201,7 +201,7 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
   let mut work=semio_framework_value_persistent::work::RetainedWorkLedger::new(grant);
   let result=(||->Result<(),ValueError>{
    let author_count=source.authors.len();if let Some(author)=source.authors.get_mut(self.pin_index-1){
-    if !work.reserve_vec(&mut target.authors,author_count).map_err(|reason|ValueError::literal(ValueRefusalKind::OwnershipLimit,reason))?{return Ok(())}
+    if !work.reserve_vec(&mut target.authors,author_count,&mut None).map_err(|reason|ValueError::literal(ValueRefusalKind::OwnershipLimit,reason))?{return Ok(())}
     if !work.vec_slot(&mut target.authors).map_err(|reason|ValueError::literal(ValueRefusalKind::OwnershipLimit,reason))?||!work.copy_bytes(std::mem::size_of_val(author)+std::mem::size_of::<usize>()){return Ok(())}
     let value=semio_os_vcs::Author{id:std::mem::take(&mut author.id),name:std::mem::take(&mut author.name),avatar:author.avatar.take()};
     if let Err((reason,value))=work.vec_push(&mut target.authors,value){author.id=value.id;author.name=value.name;author.avatar=value.avatar;return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,reason))}
@@ -209,7 +209,7 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
    }else if work.copy_bytes(2*std::mem::size_of::<usize>()){self.operation_index+=1;self.pin_index=0;}
    Ok(())
   })();
-  let progress=work.receipt();self.post_original_metadata(cx,semio_framework_value::RetainedWorkOutcome{result:result.map(|()|progress).map_err(|error|error.with_retained_progress(progress)),work:work.actual_work()+1})
+  let progress=work.receipt();self.post_original_metadata(cx,semio_framework_value::RetainedWorkOutcome{result:result.map(|()|progress).map_err(|error|error.with_retained_progress(progress)),work:u128::from(work.actual_work())+1})
  }
 }
 

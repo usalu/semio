@@ -59,7 +59,8 @@ pub struct FixedCommandPage {
     len: u16,
 }
 
-struct FixedCommandPageRetirement{bytes:std::mem::ManuallyDrop<Option<Box<[u8;COMMAND_PAGE_MAXIMUM_BYTES]>>>}
+#[doc(hidden)]
+pub struct FixedCommandPageRetirement{bytes:std::mem::ManuallyDrop<Option<Box<[u8;COMMAND_PAGE_MAXIMUM_BYTES]>>>}
 
 /// 🔂️ One command's page authority, reserved ONCE for exactly the pages that command DECLARES.
 ///

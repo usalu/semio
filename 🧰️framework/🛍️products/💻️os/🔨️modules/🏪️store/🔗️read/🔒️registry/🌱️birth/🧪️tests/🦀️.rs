@@ -32,3 +32,19 @@ fn original_registry_birth_keeps_four_kib_quantum_fifo_and_exact_cumulative_cust
   caller.cancel().cancel_now();owner.begin_close();for _ in 0..100{if owner.terminal_is_empty(){break;}let g=grant(owner.close_demands().unwrap());let admitted=caller.cumulative_receipt().retained_capacity_bytes;let(step,heap)=observe(||close_original(&mut caller,&mut decoder,&mut owner,g));assert_eq!(caller.cumulative_receipt().retained_capacity_bytes-admitted,heap.requested_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress().fits(g));born+=heap.requested_bytes;released+=heap.released_bytes;}assert!(owner.terminal_is_empty());assert_eq!(born,released);assert_eq!(caller.cumulative_receipt().retained_capacity_bytes-capacity_baseline,born);while !decoder.terminal_is_empty(){caller.turn(stock(),|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(4096)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(stock());
  }
 }
+
+
+fn ledger_stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<16,maximum_release_bytes:1<<16,maximum_depth:8}}
+#[test]
+fn registry_birth_close_refuses_a_foreign_decoder_ledger_before_any_work_and_accepts_its_own(){
+ let born=NativeAllocationIdentity::issue();
+ let mut owner=SnapshotReadRegistryBirth::new();
+ owner.ledger=Some(born);
+ owner.begin_close();
+ let(foreign,performed)=semio_framework_value_clone_source_testing::with_effect(ledger_stock(),8,&mut None,|effect|owner.close_step(NativeAllocationIdentity::issue(),effect));
+ assert!(matches!(foreign,Err(ref error) if error.kind==ValueRefusalKind::InvariantViolated));
+ assert_eq!((owner.last_turn_work(),performed),(0,0));
+ let(own,_)=semio_framework_value_clone_source_testing::with_effect(ledger_stock(),8,&mut None,|effect|owner.close_step(born,effect));
+ assert!(own.is_ok());
+ assert!(owner.terminal_is_empty());
+}

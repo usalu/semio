@@ -53,12 +53,13 @@ impl ReadAuthority {
     pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {if self.view.is_some(){Ok(RetirementDemand {depth:1,..Default::default()})}else{self.owner.demands(copy)}}
 }
 impl ErasedSnapshotRetirement for ReadAuthority {
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementOutcome {let grant=effect.grant();
-        if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
-        if grant.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-        if self.view.is_some(){if grant.maximum_depth==0{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read view closure requires admitted depth").into()),work:0}}drop(self.view.take());return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
-        self.owner.step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll {let grant=effect.grant();let done=|result:Result<RetainedCloneStep,crate::OriginalRetirementFailure>,work:u128|crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work});
+        if self.terminal_is_empty(){return done(Ok(RetainedCloneStep::Complete(Default::default())),0)}
+        if grant.maximum_items==0{return done(Ok(RetainedCloneStep::Progress(Default::default())),0)}
+        if self.view.is_some(){if grant.maximum_depth==0{return done(Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read view closure requires admitted depth").into()),0)}drop(self.view.take());return done(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),1)}
+        self.owner.step(&mut effect.nested(grant))
     }
+    fn next_computational_work(&self,_:usize)->Result<u64,crate::ValueError>{Ok(u64::from(!ErasedSnapshotRetirement::terminal_is_empty(self)))}
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.copy_bytes)}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {Ok(self.demands(copy)?.capacity_bytes)}
@@ -68,7 +69,7 @@ impl ErasedSnapshotRetirement for ReadAuthority {
 }
 impl RetirementCursor for ReadAuthority {
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();let turn=ErasedSnapshotRetirement::close_step(self,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));match turn.result{Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();crate::retirement::erased_cursor_turn(ErasedSnapshotRetirement::close_step(self,&mut effect.nested(grant)))}
     fn terminal_is_empty(&self)->bool {ErasedSnapshotRetirement::terminal_is_empty(self)}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
     fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.next_capacity_byte_demand(copy).ok()}
@@ -78,7 +79,8 @@ impl RetirementCursor for ReadAuthority {
     fn terminal_release_bytes(&self)->Option<usize> {ErasedSnapshotRetirement::terminal_is_empty(self).then_some(size_of::<Self>())}
 }
 impl RetireOwned for ReadAuthority {
-    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(self)}
+    type RetirementCursor=Self;
+    fn retirement_seed(self)->Self::RetirementCursor {self}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
     fn controlled_retirement_supported()->bool {true}
 }

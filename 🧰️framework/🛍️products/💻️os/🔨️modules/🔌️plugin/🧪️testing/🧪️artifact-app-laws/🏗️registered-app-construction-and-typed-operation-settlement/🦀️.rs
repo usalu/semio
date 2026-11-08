@@ -106,7 +106,7 @@ pub fn settle_store_constructor<A: ArtifactApp, M: store::ReferenceSpaceMember +
         retain_original_ownership_receipts(app, mounted_policy, &mut receipts).expect("original fixture constructor receipts");
         if !app.store_constructor_is_pending() { return receipts; }
         assert!(std::time::Instant::now() < deadline, "registered fixture store constructor did not settle");
-        app.stores.drive_store_constructor_unit(&mut app.constructor, mounted_policy.preparation).expect("registered fixture store constructor turn");
+        app.stores.drive_store_constructor_unit_cold(&mut app.constructor, mounted_policy.preparation).expect("registered fixture store constructor turn");
     }
 }
 
@@ -119,7 +119,7 @@ where
     for _ in 0..1_000_000 {
         if store.maintenance_retirements_terminal_is_empty() { return; }
         let demand = store.maintenance_retirements_demands(4096).expect("original displaced-owner quote");
-        store.maintenance_retirements_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(4096), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }).expect("original displaced-owner step");
+        store.maintenance_retirements_step_cold(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(4096), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }).expect("original displaced-owner step");
     }
     panic!("the displaced-owner queue did not drain under its quoted grants");
 }
@@ -197,7 +197,7 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
     crate::artifact_app_laws::ensure_fixture_cancellation_issuer(app,cx)?;
     retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
     while app.has_pending_typed_operations() || !app.maintenance_terminal_is_empty() {
-        semio_framework_job::testkit::renew_turn(cx,fresh_fuel,fresh_grant)?;
+        fixture_renew_turn(cx,fresh_fuel,fresh_grant)?;
         if cx.should_yield()||turns>=maximum_turns{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement exhausted its caller opportunity").into())}turns+=1;
         let before=(cx.retained_progress(),receipt.ownership_receipts.len()+receipt.lanes.len()+receipt.effects.len()+receipt.events.len()+receipt.completions+receipt.resume_outcomes.len()+receipt.composed.len());
         if !app.has_runnable_typed_operations() {
@@ -254,7 +254,7 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
         }
         let after=(cx.retained_progress(),receipt.ownership_receipts.len()+receipt.lanes.len()+receipt.effects.len()+receipt.events.len()+receipt.completions+receipt.resume_outcomes.len()+receipt.composed.len());
         idle=if after==before{idle+1}else{0};
-        if idle>=maximum_idle{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement made no progress for its idle turn bound").into())}
+        if idle>=maximum_idle{eprintln!("[DEBUG] rb-gate settle-idle {} | close={}",app.typed_operation_diagnostic(),app.close_diagnostic());return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement made no progress for its idle turn bound").into())}
         std::thread::yield_now();
     }
     Ok(receipt)
@@ -273,7 +273,8 @@ pub fn retain_original_ownership_receipts<P: PluginApp>(app: &mut P, policy: sem
         recipient.push(TypedOperationFixtureOwnershipReceipt::Constructor { kind, phase, grant, progress });
     }
     if let Some((operation, grant, progress)) = app.take_typed_operation_preparation_receipt() {
-        if grant != policy.preparation || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture preparation receipt differs from its original caller authority")); }
+        if grant.restricted_by(policy.preparation) != grant { return Err(semio_framework::Fault::from("registered fixture preparation receipt grant exceeds its original caller authority")); }
+        if !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture preparation receipt progress exceeds its original caller grant")); }
         recipient.push(TypedOperationFixtureOwnershipReceipt::Preparation { operation, grant, progress });
     }
     if let Some((operation, grant, progress)) = app.take_typed_operation_retirement_receipt() {

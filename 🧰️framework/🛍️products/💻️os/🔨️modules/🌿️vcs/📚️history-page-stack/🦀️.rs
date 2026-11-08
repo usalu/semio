@@ -184,7 +184,7 @@ impl<T> HistoryPageStack<T> {
         let(demand,work)=match self.retained_push_demand(){Ok(q)=>q,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
         if maximum_work<work||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_depth<demand.depth{return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
         match self.try_push(input.take().unwrap()){
-            Ok(())=>RetainedWorkOutcome{result:Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}),work},
+            Ok(())=>RetainedWorkOutcome{result:Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}),work:u128::from(work)},
             Err(value)=>{*input=Some(value);let progress=RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<Option<T>>(),..Default::default()};RetainedWorkOutcome{result:Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"history push refused its admitted original slot").with_retained_progress(progress)),work:1}}
         }
     }

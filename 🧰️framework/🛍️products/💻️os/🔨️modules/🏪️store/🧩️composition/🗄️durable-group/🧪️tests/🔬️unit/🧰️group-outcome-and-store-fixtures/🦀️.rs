@@ -4,6 +4,10 @@ fn fixture() -> serde_json::Value {
     serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧫️fixtures/🔣️.json")).expect("durable group fixture")
 }
 
+fn receive_turn<R>(operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> R) -> R {
+    semio_os_store_testing_prelude::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant()).receive(operation)
+}
+
 fn copy_grant(bytes: usize) -> semio_os_store_one_item::ArtifactStoreOneItemGrant {
     semio_os_store_one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }
 }
@@ -191,7 +195,7 @@ fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutatio
     for turn in 0..law["storeClosure"]["maximumTurns"].as_u64().unwrap() {
         let demand = store.close_owned_demands(body).expect("durable fixture quotes original close frontier");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        let step = semio_os_store_space_member::lifted_store::SpaceMember::close_owned_step(store, grant).expect("durable group fixture Store closes under its bounded owner grant");
+        let step = semio_os_store_space_member::lifted_store::SpaceMember::close_owned_step_cold(store, grant).expect("durable group fixture Store closes under its bounded owner grant");
                 assert!(step.progress().fits(grant));
         assert!(step.progress() != Default::default() || matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)), "quoted fixture Store close blocked: {demand:?}, phase={}, displaced={}", store.close_owned_phase_witness(), store.close_displaced_witness());
 if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {

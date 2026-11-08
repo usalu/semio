@@ -1,6 +1,6 @@
 //! 🎟️ Encoder actions borrow the original caller's independent work loan.
 use super::{NativeEncodeControl,ValueError,ValueRefusalKind};
-pub use semio_framework_value_control_contract::{OriginalWorkActionIssuer,OriginalWorkIssuerIdentity,OriginalWorkLoan,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
+pub use semio_framework_value_control_contract::{OriginalWorkAuthority,OriginalWorkActionIssuer,OriginalWorkIssuerIdentity,OriginalWorkLoan,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalSourceTurnIdentity};
 pub(super) use semio_framework_value_control_contract::{OriginalWork as Action,OriginalWorkState as WorkState};
 pub(super) fn prepare(action:&mut Action<'_>,additional:u64)->Result<bool,ValueError>{action.prepare(additional,None)}
 pub(super) fn cancel(action:&mut Action<'_>)->Result<(),ValueError>{action.cancel()}

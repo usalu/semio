@@ -192,7 +192,7 @@ fn drive_member_close<M: SpaceMember>(member: &mut M) {
         }
         let demand = member.close_owned_demands(CEILING).expect("current independent member close frontier");
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(CEILING), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        let step = member.close_owned_step(grant).expect("member closes under its exact quoted owner grant");
+        let step = member.close_owned_step_cold(grant).expect("member closes under its exact quoted owner grant");
         assert!(step.progress().fits(grant) && step.progress().copied_items <= 1);
         last = (demand, step.progress());
         if matches!(step, RetainedCloneStep::Complete(_)) {
@@ -325,6 +325,6 @@ async fn member_owned_batch_admission_keeps_exact_source_on_wrong_type_stale_rev
     for _ in 0..1024 { if request.mutations.terminal_is_empty() { break; } assert!(request.mutations.close_granted(grant).unwrap().progress().fits(grant)); }
     assert!(request.mutations.terminal_is_empty());
     assert_eq!(member.snapshot_ref().n, Some(0));
-    for _ in 0..65_536 { if matches!(SpaceMember::close_owned_step(&mut member, physical_test_close_grant()).unwrap(), RetainedCloneStep::Complete(_)) { break; } }
+    for _ in 0..65_536 { if matches!(SpaceMember::close_owned_step_cold(&mut member, physical_test_close_grant()).unwrap(), RetainedCloneStep::Complete(_)) { break; } }
     assert!(SpaceMember::close_owned_terminal_is_empty(&member));
 }

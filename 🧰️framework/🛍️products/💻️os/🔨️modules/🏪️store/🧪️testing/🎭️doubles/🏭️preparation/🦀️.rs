@@ -49,7 +49,7 @@ impl semio_framework_value::FactoryPayloadRetirement for DemoOneItemPreparationF
         slot.preparation_demands(if state.issuers.prepared==0{self.snapshot_retirement.as_ref()}else{self.mutation_retirement.as_ref()},body)
     }
     fn close_state_preparation_work_demand(&self,state:&Self::CloseState,body:usize)->Result<u64,ValueError>{let slot=match state.issuers.prepared{0=>&state.issuers.slots[0],1=>&state.issuers.slots[1],_=>return Ok(0)};if slot.preparation_is_complete(){return Ok(1)}slot.preparation_work_demand(if state.issuers.prepared==0{self.snapshot_retirement.as_ref()}else{self.mutation_retirement.as_ref()},body)}
-    fn prepare_close_state_step(&self,state:&mut Self::CloseState,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome { let mut work=0;let result=self.prepare_result(state,grant,&mut work);semio_framework_value::RetainedWorkOutcome { result, work } }
+    fn prepare_close_state_step(&self,state:&mut Self::CloseState,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkPoll { self.prepare_poll(state,effect) }
     fn close_state_preparation_is_complete(state:&Self::CloseState)->bool { state.issuers.prepared==2 }
     fn prepare_close_state(&self)->Self::CloseState { DemoOneItemFactoryClose { published:None,published_close:DemoPublishedRootClose { weak:None,root:None },identity:None,issuers:semio_framework_value::FactoryChildTickets{slots:std::array::from_fn(|_|semio_framework_value::FactoryChildSlot::empty()),prepared:0} } }
     fn transfer_payload(value:Self,state:&mut Self::CloseState) {
@@ -68,7 +68,7 @@ impl semio_framework_value::FactoryPayloadRetirement for DemoOneItemPreparationF
         if !state.issuers.terminal_is_empty() { let mut demand=state.issuers.demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"captured issuer depth overflow"))?;return Ok(demand); }
         Ok(Default::default())
     }
-    fn close_state_step(state:&mut Self::CloseState,grant: RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome { let mut work=0;let result=DemoOneItemPreparationFactory::close_result(state,grant,&mut work);semio_framework_value::RetainedWorkOutcome { result, work } }
+    fn close_state_step(state:&mut Self::CloseState,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll { let result=DemoOneItemPreparationFactory::close_result(state,effect);semio_framework_value::RetirementPollExit::settle(effect,result) }
     fn close_state_terminal_is_empty(state:&Self::CloseState)->bool {
         use semio_framework_value::FactoryPayloadRetirement as _;
         state.published.is_none()&&DemoPublishedRootWitness::close_state_terminal_is_empty(&state.published_close)&&state.identity.is_none()&&state.issuers.terminal_is_empty()
@@ -76,39 +76,41 @@ impl semio_framework_value::FactoryPayloadRetirement for DemoOneItemPreparationF
 }
 
 impl DemoOneItemPreparationFactory {
-    fn prepare_result(&self,state:&mut DemoOneItemFactoryClose,grant:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneStep,ValueError> {
-        let index=state.issuers.prepared;
-        if index>=2{return Ok(RetainedCloneStep::Complete(Default::default()))}
+    fn prepare_poll(&self,state:&mut DemoOneItemFactoryClose,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkPoll {
+        let grant=effect.grant();let index=state.issuers.prepared;
+        let done=|result:Result<RetainedCloneStep,ValueError>,work:u128|semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work });
+        if index>=2{return done(Ok(RetainedCloneStep::Complete(Default::default())),0)}
         let slot=&mut state.issuers.slots[index];
         if slot.preparation_is_complete(){
-            if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-            state.issuers.prepared+=1;*work=1;
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));
+            if grant.maximum_items==0||grant.maximum_depth==0{return semio_framework_value::RetainedWorkPoll::Pending{work:0}}
+            if !matches!(effect.performed(1),Ok(true)){return done(Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"inline preparation header exceeded original work")),0)}
+            state.issuers.prepared+=1;
+            return done(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),effect.performed_work());
         }
-        let turn=if index==0{slot.prepare_step(self.snapshot_retirement.as_ref(),||Arc::clone(&self.snapshot_retirement)as Arc<dyn semio_framework_value::FactoryRetirement>,grant)}
-        else{slot.prepare_step(self.mutation_retirement.as_ref(),||Arc::clone(&self.mutation_retirement)as Arc<dyn semio_framework_value::FactoryRetirement>,grant)};
-        *work=turn.work;let step=turn.result?;
-        Ok(RetainedCloneStep::Progress(step.progress()))
+        let turn=if index==0{slot.prepare_step(self.snapshot_retirement.as_ref(),||Arc::clone(&self.snapshot_retirement)as Arc<dyn semio_framework_value::FactoryRetirement>,effect)}
+        else{slot.prepare_step(self.mutation_retirement.as_ref(),||Arc::clone(&self.mutation_retirement)as Arc<dyn semio_framework_value::FactoryRetirement>,effect)};
+        turn.map(|step|RetainedCloneStep::Progress(step.progress()))
     }
-    fn close_result(state:&mut DemoOneItemFactoryClose,grant:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneStep,ValueError> {
+    fn close_result(state:&mut DemoOneItemFactoryClose,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit> {
         use semio_framework_value::FactoryPayloadRetirement as _;
+        let grant=effect.grant();
         let empty=RetainedCloneProgress::default();
         if Self::close_state_terminal_is_empty(state) { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items==0 { return Ok(RetainedCloneStep::Progress(empty)); }
         let demand=Self::close_state_demands(state,grant.maximum_copy_bytes)?;
-        if grant.maximum_depth<demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"inline factory ownership exceeds supplied depth")); }
+        if grant.maximum_depth<demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"inline factory ownership exceeds supplied depth").into()); }
         if grant.maximum_release_bytes<demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         if let Some(original)=state.published.as_ref() {
-            if Arc::weak_count(original)!=0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original factory witness retains a foreign Weak")); }
+            if Arc::weak_count(original)!=0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original factory witness retains a foreign Weak").into()); }
             let released_bytes=if let Some(value)=Arc::into_inner(state.published.take().expect("funded original witness remains present")) { DemoPublishedRootWitness::transfer_payload(value,&mut state.published_close);semio_framework_value::factory_arc_birth_bytes::<DemoPublishedRootWitness>() } else { 0 };
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,released_bytes,..empty }));
         }
         if !DemoPublishedRootWitness::close_state_terminal_is_empty(&state.published_close) {
-            let turn=DemoPublishedRootWitness::close_state_step(&mut state.published_close,RetainedCloneGrant { maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant });*work=turn.work;let step=turn.result?;
+            let step=semio_framework_value::RetirementPollExit::resume(DemoPublishedRootWitness::close_state_step(&mut state.published_close,&mut effect.nested(RetainedCloneGrant { maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant })))?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(identity)=state.identity.take() { let released_bytes=identity.capacity();drop(identity);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,released_bytes,..empty })); }
-        if !state.issuers.terminal_is_empty() { let child=RetainedCloneGrant { maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant };let turn=state.issuers.close_step(child);*work=turn.work;let step=turn.result?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,state.issuers.terminal_is_empty(),"captured original preparation issuer")?;return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if !state.issuers.terminal_is_empty() { let child=RetainedCloneGrant { maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant };let step=semio_framework_value::RetirementPollExit::resume(state.issuers.close_step(&mut effect.nested(child)))?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,state.issuers.terminal_is_empty(),"captured original preparation issuer")?;return Ok(RetainedCloneStep::Progress(step.progress())); }
         Ok(RetainedCloneStep::Complete(empty))
     }
     pub fn admissible() -> Self {
@@ -217,6 +219,34 @@ impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for Demo
 }
 
 impl DemoOneItemPreparation {
+    fn close_result_value(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let empty=RetainedCloneProgress::default();let grant=effect.grant();
+
+        if !self.closing||grant.maximum_items==0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        let demand=self.close_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth<demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original preparation close depth is not funded")); }
+        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+        let child=RetainedCloneGrant { maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant };
+        if self.active_retirement.is_some() { return settled_close(artifact_retirement_box_close_step(&mut self.active_retirement,&mut effect.nested(child))); }
+        if self.semantic_refusal.is_some() { return artifact_retirement_admit_owned(&mut self.semantic_refusal, &mut self.active_retirement, &mut effect.nested(child)).result; }
+        if let Some(sealer)=self.sealer.as_mut(){if sealer.terminal_is_empty(){self.sealer=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}return settled_close(sealer.close_step(&mut effect.nested(child)));}
+        if let Some(edit)=self.pending_edit.take(){let issuer=Arc::clone(self.mutation_retirement.as_ref().expect("original pending edit issuer"));return match admit_artifact_retirement(edit,child,|original|ArtifactStoreDecodedEditRetirement::new(original,issuer)){Ok((owner,progress))=>{self.active_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{self.pending_edit=Some(original);Err(error)}};}
+        if self.pending_post.is_some(){return born(&mut self.active_retirement,semio_framework_value::factory_retire_snapshot::<DemoSnapshot>(&**self.snapshot_retirement.as_ref().expect("original pending post issuer"),&mut self.pending_post,&mut effect.nested(child)));}
+        if let Some(prepared)=self.prepared.take() {
+            let mutation=Arc::clone(self.mutation_retirement.as_ref().expect("original candidate mutation issuer"));let snapshot=Arc::clone(self.snapshot_retirement.as_ref().expect("original candidate snapshot issuer"));
+            return match prepared.admit_retirement(mutation,snapshot,child) { Ok((owner,progress))=>{self.active_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original,mutation,snapshot))=>{self.prepared = Some(original);drop((mutation,snapshot));Err(error)} };
+        }
+        if let Some(base)=self.base.take() { return match base.try_return_to_registry_witness() { Ok(witness)=>{drop(witness);Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,..empty }))},Err(original)=>{self.base=Some(original);Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original read registry return is busy"))} }; }
+        if self.mutation.is_some() { return born(&mut self.active_retirement,semio_framework_value::factory_retire_owned::<DemoMutation>(&**self.mutation_retirement.as_ref().expect("original cancellation mutation issuer"),&mut self.mutation,&mut effect.nested(child))); }
+        if let Some(authority)=self.authority.take() { return match authority.retire(child) { Ok((owner,progress))=>{self.active_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{self.authority=Some(original);Err(error)} }; }
+        if let Some(identity)=self.stamped_mutation_id.take() { let released_bytes=identity.0.capacity();drop(identity);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,released_bytes,..empty })); }
+        if let Some(witness)=self.published_root.take() { let factory:Arc<dyn semio_framework_value::FactoryRetirement>=witness;self.closing_factories[0]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,copied_bytes:demand.copy_bytes,..empty })); }
+        if let Some(snapshot)=self.snapshot_retirement.take() { let factory:Arc<dyn semio_framework_value::FactoryRetirement>=snapshot;self.closing_factories[1]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,copied_bytes:demand.copy_bytes,..empty })); }
+        if let Some(mutation)=self.mutation_retirement.take() { let factory:Arc<dyn semio_framework_value::FactoryRetirement>=mutation;self.closing_factories[2]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,copied_bytes:demand.copy_bytes,..empty })); }
+        let slot=self.closing_factories.iter_mut().find(|slot|slot.is_some()).expect("retained original issuer close capability");let factory=slot.as_mut().unwrap();let step=settled_close(factory.step(&mut effect.nested(child)))?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,factory.terminal_is_empty(),"original Demo preparation issuer close")?;if factory.terminal_is_empty(){*slot=None;}Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+    
+    }
     pub fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError> {
         use semio_framework_value::RetirementDemand;
         let nested=|mut demand:RetirementDemand|->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original preparation child depth overflow"))?;Ok(demand)};
@@ -236,7 +266,7 @@ impl DemoOneItemPreparation {
 }
 
 impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItemPreparation {
-    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
         self.last_work=0;let before=receiving.actual_work();let result=(||{
         if !grant.permits_one() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
@@ -305,7 +335,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         if inverse.is_empty(){progress.retained_capacity_bytes-=mutation_bytes+inverse_metadata;progress.released_bytes=0;}
         else{
             assert_eq!(inverse.len(),1,"bounded Demo inverse is exactly one original mutation");
-            while let Some(bytes)=inverse_list.next_exact_capacity_allocation_bytes(1).map_err(ValueError::from)?{let allocation=inverse_list.reserve_exact_capacity_one(1,bytes).map_err(|error|ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress {copied_items:1,retained_capacity_bytes:error.allocated_bytes,..Default::default()}))?;assert_eq!(allocation.allocated_bytes,bytes);}
+            while let Some(bytes)=inverse_list.next_exact_capacity_allocation_bytes(1).map_err(ValueError::from)?{let reserved=receiving.with_effect(grant.retained_grant(),1,|_,effect|inverse_list.reserve_exact_capacity_one(bytes,effect))?.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original inverse reservation is not funded"))?;match reserved.result{Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Denied)=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original inverse reservation denied")),Ok(_)=>{},Err(_)=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original inverse reservation failed").with_retained_progress(RetainedCloneProgress {copied_items:1,..Default::default()}))}}
         }
         for original in inverse{inverse_list.push_reserved(original).unwrap_or_else(|_|panic!("original inverse slot admitted before owner movement"));}
         let forward = mutation;
@@ -338,10 +368,14 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         self.pending_edit=Some(edit);self.pending_post=Some(post_snapshot);
         Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,progress))
     
-        })();let observed=receiving.actual_work().saturating_sub(before);let reported=self.last_work;self.last_work=reported.max(observed);let work=original_one_item_turn_work(reported,observed,false)?;if work>observed{receiving.commit_work(work-observed)?;}self.last_work=work;result
+        })();let observed=u64::try_from(receiving.actual_work().saturating_sub(before)).unwrap_or(u64::MAX);let reported=self.last_work;self.last_work=reported.max(observed);let work=original_one_item_turn_work(reported,observed,false)?;if work>observed{receiving.commit_work(u128::from(work-observed))?;}self.last_work=work;result.map_err(Into::into)
     }
 
     fn last_turn_work(&self)->u64{self.last_work}
+    fn has_pending_receiving_recovery(&self)->bool{false}
+    fn pending_receiving_demand(&self)->Option<semio_framework_value::RetirementDemand>{None}
+    fn pending_receiving_recovery(&mut self)->Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>>{None}
+    fn finish_receiving_recovery(&mut self,_:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,semio_framework_value::OriginalReceivingPrimary>{semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"demo preparation opens every native effect atomically and never retains a pending receiving frame to recover").into()),work:0}}
 
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint {
         self.checkpoint
@@ -365,31 +399,8 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         if let Some(sealer)=self.sealer.as_mut(){sealer.begin_close();}
     }
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
-        let empty=RetainedCloneProgress::default();let grant=grant.retained_grant();
-        if !self.closing||grant.maximum_items==0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
-        let demand=self.close_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth<demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original preparation close depth is not funded")); }
-        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        let child=RetainedCloneGrant { maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant };
-        if self.active_retirement.is_some() { return artifact_retirement_box_close_step(&mut self.active_retirement,child).result.map(|step|RetainedCloneStep::Progress(step.progress())); }
-        if self.semantic_refusal.is_some() { return artifact_retirement_admit_owned(&mut self.semantic_refusal, &mut self.active_retirement, child).result; }
-        if let Some(sealer)=self.sealer.as_mut(){if sealer.terminal_is_empty(){self.sealer=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}return sealer.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if let Some(edit)=self.pending_edit.take(){let issuer=Arc::clone(self.mutation_retirement.as_ref().expect("original pending edit issuer"));return match admit_artifact_retirement(edit,child,|original|ArtifactStoreDecodedEditRetirement::new(original,issuer)){Ok((owner,progress))=>{self.active_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{self.pending_edit=Some(original);Err(error)}};}
-        if let Some(post)=self.pending_post.take(){return match self.snapshot_retirement.as_ref().expect("original pending post issuer").retire(post,child).result{Ok((owner,progress))=>{self.active_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{self.pending_post=Some(original);Err(error)}};}
-        if let Some(prepared)=self.prepared.take() {
-            let mutation=Arc::clone(self.mutation_retirement.as_ref().expect("original candidate mutation issuer"));let snapshot=Arc::clone(self.snapshot_retirement.as_ref().expect("original candidate snapshot issuer"));
-            return match prepared.admit_retirement(mutation,snapshot,child) { Ok((owner,progress))=>{self.active_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original,mutation,snapshot))=>{self.prepared = Some(original);drop((mutation,snapshot));Err(error)} };
-        }
-        if let Some(base)=self.base.take() { return match base.try_return_to_registry_witness() { Ok(witness)=>{drop(witness);Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,..empty }))},Err(original)=>{self.base=Some(original);Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original read registry return is busy"))} }; }
-        if let Some(mutation)=self.mutation.take() { return match self.mutation_retirement.as_ref().expect("original cancellation mutation issuer").retire_owned(mutation,child).result { Ok((owner,progress))=>{self.active_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{self.mutation=Some(original);Err(error)} }; }
-        if let Some(authority)=self.authority.take() { return match authority.retire(child) { Ok((owner,progress))=>{self.active_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{self.authority=Some(original);Err(error)} }; }
-        if let Some(identity)=self.stamped_mutation_id.take() { let released_bytes=identity.0.capacity();drop(identity);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,released_bytes,..empty })); }
-        if let Some(witness)=self.published_root.take() { let factory:Arc<dyn semio_framework_value::FactoryRetirement>=witness;self.closing_factories[0]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,copied_bytes:demand.copy_bytes,..empty })); }
-        if let Some(snapshot)=self.snapshot_retirement.take() { let factory:Arc<dyn semio_framework_value::FactoryRetirement>=snapshot;self.closing_factories[1]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,copied_bytes:demand.copy_bytes,..empty })); }
-        if let Some(mutation)=self.mutation_retirement.take() { let factory:Arc<dyn semio_framework_value::FactoryRetirement>=mutation;self.closing_factories[2]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,copied_bytes:demand.copy_bytes,..empty })); }
-        let slot=self.closing_factories.iter_mut().find(|slot|slot.is_some()).expect("retained original issuer close capability");let factory=slot.as_mut().unwrap();let step=factory.step(child).result?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,factory.terminal_is_empty(),"original Demo preparation issuer close")?;if factory.terminal_is_empty(){*slot=None;}Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        let result=self.close_result_value(effect).map_err(semio_framework_value::RetirementPollExit::from);semio_framework_value::RetirementPollExit::settle(effect,result)
     }
 
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
@@ -397,4 +408,18 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
     fn terminal_is_empty(&self)->bool { self.closing&&self.semantic_refusal.is_none()&&self.base.is_none()&&self.mutation.is_none()&&self.prepared.is_none()&&self.pending_edit.is_none()&&self.pending_post.is_none()&&self.sealer.is_none()&&self.authority.is_none()&&self.stamped_mutation_id.is_none()&&self.published_root.is_none()&&self.snapshot_retirement.is_none()&&self.mutation_retirement.is_none()&&self.active_retirement.is_none()&&self.closing_factories.iter().all(Option::is_none) }
+}
+
+pub fn settled_close(poll: semio_framework_value::OriginalRetirementPoll) -> Result<RetainedCloneStep, ValueError> {
+    match poll {
+        semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(RetainedCloneStep::Progress(Default::default())),
+        semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
+    }
+}
+
+pub fn born(slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, poll: semio_framework_value::RetainedWorkPoll<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), semio_framework_value::OriginalRetirementFailure>) -> Result<RetainedCloneStep, ValueError> {
+    match poll {
+        semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(RetainedCloneStep::Progress(Default::default())),
+        semio_framework_value::RetainedWorkPoll::Complete(turn) => { let (owner, progress) = turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?; *slot = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }
+    }
 }

@@ -272,18 +272,20 @@ mod tests;
 
 mod owned_retirement {
     use super::*;
-    use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+    use semio_framework_value::retirement::RetireOwned;
     semio_framework_value::artifact_retire_leaf!(HybridLogicalTimestamp);
     impl RetireOwned for MutationId {
-        fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()}
+        type RetirementCursor=<String as RetireOwned>::RetirementCursor;
+        fn retirement_seed(self)->Self::RetirementCursor{self.0.retirement_seed()}
         fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()}
         fn controlled_retirement_supported()->bool{String::controlled_retirement_supported()}
     }
-    impl RetireOwned for ActorId { fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{semio_framework_value::SharedUtf8::controlled_retirement_supported()} }
-    impl RetireOwned for ArtifactId { fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{String::controlled_retirement_supported()} }
-    impl RetireOwned for SchemaId { fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{String::controlled_retirement_supported()} }
+    impl RetireOwned for ActorId { type RetirementCursor=<semio_framework_value::SharedUtf8 as RetireOwned>::RetirementCursor; fn retirement_seed(self)->Self::RetirementCursor{self.0.retirement_seed()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{semio_framework_value::SharedUtf8::controlled_retirement_supported()} }
+    impl RetireOwned for ArtifactId { type RetirementCursor=<String as RetireOwned>::RetirementCursor; fn retirement_seed(self)->Self::RetirementCursor{self.0.retirement_seed()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{String::controlled_retirement_supported()} }
+    impl RetireOwned for SchemaId { type RetirementCursor=<String as RetireOwned>::RetirementCursor; fn retirement_seed(self)->Self::RetirementCursor{self.0.retirement_seed()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{String::controlled_retirement_supported()} }
     impl RetireOwned for PayloadHash {
-     fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()}
+     type RetirementCursor=<[u8;32] as RetireOwned>::RetirementCursor;
+     fn retirement_seed(self)->Self::RetirementCursor{self.0.retirement_seed()}
      fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()}
      fn controlled_retirement_supported()->bool{<[u8;32]>::controlled_retirement_supported()}
     }

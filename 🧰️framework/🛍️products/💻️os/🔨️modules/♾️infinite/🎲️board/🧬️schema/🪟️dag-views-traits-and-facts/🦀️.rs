@@ -18,11 +18,6 @@ semio_framework_value::artifact_retire_struct!(DagScreenHitJson{node,draggable,h
 
 semio_framework_value::artifact_retire_struct!(DagComputingProgress{active,stale});
 
-impl RetireOwned for DagNodeEvaluationStatus{
-    fn retirement(self)->Box<dyn RetirementCursor>{match self{Self::Ok{}|Self::Queued{}|Self::Computing{}=>sequence(vec![]),Self::Error{message}=>sequence(vec![deferred(message)]),Self::Blocked{ports}=>sequence(vec![deferred(ports)])}}
-    fn retirement_birth_bytes(&self)->Option<usize>{match self{Self::Ok{}|Self::Queued{}|Self::Computing{}=>sequence_birth_bytes(&[]),Self::Error{message}=>sequence_birth_bytes(&[deferred_birth_bytes_for(message)]),Self::Blocked{ports}=>sequence_birth_bytes(&[deferred_birth_bytes_for(ports)])}}
-    fn controlled_retirement_supported()->bool{true}
-}
 
 #[derive(Clone,Debug,Default,PartialEq,FromValue,ToValue)]
 #[cfg_attr(any(test, feature = "testkit"),derive(Serialize,Deserialize))]
@@ -81,7 +76,7 @@ impl DagChannelRef {
     pub fn is_output(&self)->bool{self.direction==DagChannelDirection::Out}
 }
 
-#[derive(Clone,Debug,PartialEq,Serialize,Deserialize,ToValue,FromValue)]
+#[derive(Clone,Debug,PartialEq,Serialize,Deserialize,ToValue,FromValue,semio_framework_value::RetireOwned)]
 #[serde(tag="status",rename_all="camelCase",deny_unknown_fields)]
 #[value(tag="status",rename_all="camelCase",deny_unknown_fields)]
 pub enum DagNodeEvaluationStatus {Ok{},Queued{},Computing{},Error{message:String},Blocked{ports:Vec<String>}}

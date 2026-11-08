@@ -10,7 +10,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         entry.port.wake();
         match self.tools.build_tool_run_job_slot(&*self.stores, &*self.child_composition, entry, ToolRunJobPurpose::Run) {
             Ok(Some(job)) => {
-                selected_entry_mut!(self.tool_runs).expect("live slot").job = Some(job);
+                selected_entry_required!(self.tool_runs,"job admission")?.job = Some(job);
                 if state == ToolRunState::Starting {
                     self.apply_tool_run_driver_event(ToolRunEvent::JobAdmitted { run, generation });
                 }
@@ -91,8 +91,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// nothing moves no UI that would provoke the next pass.
     fn complete_tool_run_job(&mut self, run: u64, generation: u32) {
         let resident = selected_entry_mut!(self.tool_runs).is_some_and(|entry| entry.definition.mutating && entry.job.as_mut().is_some_and(|job| job.retargetable().is_some()));
-        if resident {
-            selected_entry_mut!(self.tool_runs).expect("a resident job has a slot").settle_refold();
+        if let Some(entry) = selected_entry_mut!(self.tool_runs).filter(|_| resident) {
+            entry.settle_refold();
         } else {
             self.tool_runs.close_current_job();
         }
@@ -101,7 +101,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             entry.pending_step = false;
         }
         if selected_entry!(self.tool_runs).is_some_and(|entry| !entry.definition.mutating && entry.slot.state == ToolRunState::Complete) {
-            let (run, generation) = self.tool_runs.slot().map(|slot| (slot.run, slot.generation)).expect("a complete run has a slot");
+            let (run, generation) = self.tool_runs.slot().map_or((run, generation), |slot| (slot.run, slot.generation));
             if let Some(ToolRunEffect::BeginFinalize) = self.apply_tool_run_driver_event(ToolRunEvent::Finalize { run, generation }) {
                 if let Some(entry) = selected_entry_mut!(self.tool_runs) {
                     entry.finalize = Some(ToolRunFinalize { phase: ToolRunFinalizePhase::Pending, publication: None, ingress:Default::default(),rejected:false,retracted: 0, published: false });
@@ -135,7 +135,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let grant=cx.retained_grant();
         let store_generation = self.stores.store.generation();
         let member_generation = self.shared().tool_run_member_generation();
-        let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
+        let entry = selected_entry_required!(self.tool_runs,"finalize")?;
         let phase = entry.finalize.as_ref().map_or(ToolRunFinalizePhase::Pending, |finalize| finalize.phase);
         let moved = match (entry.member.as_ref(), member_generation) {
             (Some(member), Some(generation)) => member.base_generation != generation,
@@ -170,14 +170,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     self.tool_runs.close_current_job();
                     return Ok(());
                 }
-                let entry = selected_entry!(self.tool_runs).expect("finalizing slot");
+                let entry = selected_entry!(self.tool_runs).ok_or_else(|| tool_run_slot_lost("finalize pending"))?;
                 let (run, generation) = (entry.slot.run, entry.slot.generation);
-                let entry=selected_entry_mut!(self.tool_runs).expect("finalizing original slot");
+                let entry=selected_entry_required!(self.tool_runs,"finalize preparation")?;
                 if entry.member.is_none()&&!entry.operations.prepare_finalization(&self.stores.store,&mut entry.provisional,cx)?{return Ok(())}
                 let next = if entry.definition.revalidate_job.is_some() && !(entry.provisional.is_empty() && entry.member.as_ref().is_none_or(|member| member.ops.is_empty())) {
                     match self.tools.build_tool_run_job_slot(&*self.stores, &*self.child_composition, entry, ToolRunJobPurpose::Revalidate) {
                         Ok(Some(job)) => {
-                            selected_entry_mut!(self.tool_runs).expect("finalizing slot").job = Some(job);
+                            selected_entry_required!(self.tool_runs,"revalidate admission")?.job = Some(job);
                             ToolRunFinalizePhase::Revalidating
                         }
                         Ok(None) | Err(_) => return self.reject_tool_run_publication(run, generation).map_err(Into::into),

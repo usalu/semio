@@ -38,9 +38,20 @@ impl<A: ArtifactApp> PendingReserved<A> {
             ids.into_iter().filter(|&id| self.pending_reserved.get(id).is_some_and(|pending| pending.action == action || (id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS == slot && INTERACTION_ACTION_IDS.contains(&pending.action.as_str())))).collect();
         for id in retire {
             if let Some(pending) = self.pending_reserved.remove(id) {
-                pending.permit.finish();
+                self.retire_pending_reserved(pending);
             }
         }
+    }
+
+    /// 🏁️ Queues a refused or superseded pending route behind the commits: its lease retires through the paid cursor, never by drop.
+    pub fn retire_pending_reserved(&mut self, pending: PendingFrameworkReserved) {
+        let PendingFrameworkReserved { action, args, meta, permit } = pending;
+        self.reserved_commits.push_back(FrameworkReservedCommit { action, args, meta, permit, log_generation_before: 0, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: Some(None) });
+    }
+
+    /// 🏁️ Queues a producer permit that ended without a commit so its lease retires through the paid cursor.
+    pub fn retire_reserved_permit(&mut self, permit: semio_plugin_job::reserved_jobs::FrameworkReservedCommitPermit) {
+        self.reserved_commits.push_back(FrameworkReservedCommit { action: String::new(), args: None, meta: semio_plugin_decl_emission::ActionMeta::default(), permit, log_generation_before: 0, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: Some(None) });
     }
 
     /// 🕰️ Hands one finished framework-reserved spawn-job to the app's commit queue. Nothing here
@@ -51,15 +62,16 @@ impl<A: ArtifactApp> PendingReserved<A> {
             return Ok(false);
         };
         if let Err(fault) = output {
-            pending.permit.finish();
+            self.retire_pending_reserved(pending);
             return Err(fault);
         }
         if self.reserved_commits.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS {
-            pending.permit.finish();
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-commit-capacity"), format!("framework route '{}' found the reserved commit queue full", pending.action)));
+            let fault = Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-commit-capacity"), format!("framework route '{}' found the reserved commit queue full", pending.action));
+            self.retire_pending_reserved(pending);
+            return Err(fault);
         }
         let PendingFrameworkReserved { action, args, meta, permit } = pending;
-        self.reserved_commits.push_back(FrameworkReservedCommit { action, args, meta, permit, log_generation_before: history.log_generation, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1 });
+        self.reserved_commits.push_back(FrameworkReservedCommit { action, args, meta, permit, log_generation_before: history.log_generation, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: None });
         Ok(true)
     }
 

@@ -2,6 +2,15 @@
 pub use semio_os_history_schema::*;
 pub use semio_os_history_codec::*;
 pub use semio_os_history_identity as identity;
+/// 🧾️ Records the work a step claims beyond what its children already performed in the turn's effect, once, and returns the step's own work.
+pub fn settle_since(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,start:u128,claimed:u128)->Result<u128,semio_framework_value::ValueError>{
+ let refused=||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original History record step exceeded its work ceiling");
+ let regressed=||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original History record effect work moved backwards");
+ let done=effect.performed_work().checked_sub(start).ok_or_else(regressed)?;
+ let owed=claimed.saturating_sub(done);
+ if owed!=0&&!effect.performed(u64::try_from(owed).map_err(|_|refused())?)?{return Err(refused())}
+ effect.performed_work().checked_sub(start).ok_or_else(regressed)
+}
 #[path="../📋️records/🦀️.rs"]
 mod retained_history_records;
 pub use retained_history_records::{RetainedHistoryRecords,RetainedHistoryRecordsStep};

@@ -1,7 +1,7 @@
 //! 🎵️ Subspace-iteration eigensolver for the generalized problem `Kφ=λBφ` (modal and buckling), with the modal
 //! input construction that feeds it and the dense cyclic-Jacobi oracle of its tests.
 
-use semio_s_fem_sparse::{NUMERICAL_CHECKPOINT_HEADER_BYTES, NumericalMatrixRestore, SPARSE_INDEX_SPACE, SparseColumns, advance_paged_pair_owner, close_paged_owner_step, numerical_restore_admit, numerical_restore_control, paged_owner_retirement_demand, restore_paged_pair_entry, restore_paged_usize_entry};
+use semio_s_fem_sparse::{reserve_funded_page, NUMERICAL_CHECKPOINT_HEADER_BYTES, NumericalMatrixRestore, SPARSE_INDEX_SPACE, SparseColumns, advance_paged_pair_owner, close_paged_owner_step, numerical_restore_admit, numerical_restore_control, paged_owner_retirement_demand, restore_paged_pair_entry, restore_paged_usize_entry};
 use semio_s_fem_payload_turns::{numerical_grant_covers};
 use semio_framework_job::OriginalTurnFailure;
 use semio_framework_value::ValueRefusalKind;

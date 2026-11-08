@@ -36,3 +36,4 @@ semio-plugin-instance-app = { path = "../../../📦️packages/🦀️rust" }
 semio-plugin-instance-initialization = { path = "../../../🌱️initialization/📦️packages/🦀️rust" }
 semio-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
 semio-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
+semio-plugin-tool-machine = { path = "../../../../🛠️tool-machine/📦️packages/🦀️rust" }

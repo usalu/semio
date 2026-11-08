@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {"label": "parent above receipt", "parent": 3, "receipt": 2, "spent": 0, "wholeCeilingAdmitted": false, "nestedCeiling": 2},
+    {"label": "parent above receipt after work", "parent": 3, "receipt": 5, "spent": 1, "wholeCeilingAdmitted": false, "nestedCeiling": 2},
+    {"label": "untouched parent equals receipt", "parent": 2, "receipt": 2, "spent": 0, "wholeCeilingAdmitted": true, "nestedCeiling": 2},
+    {"label": "parent spent half", "parent": 2, "receipt": 2, "spent": 1, "wholeCeilingAdmitted": false, "nestedCeiling": 1},
+    {"label": "parent fully spent", "parent": 2, "receipt": 5, "spent": 2, "wholeCeilingAdmitted": false, "nestedCeiling": 0},
+    {"label": "parent overspent", "parent": 1, "receipt": 5, "spent": 2, "wholeCeilingAdmitted": false, "nestedCeiling": 0}
+  ]
+}

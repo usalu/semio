@@ -178,7 +178,7 @@ impl store::ColdMutation<TestSnapshot> for ReloadCountedOp {
 /// 🧹️ Closes a counted store under its bounded owners.
 fn close_reload_counted_store(store:&mut store::ArtifactStore<TestSnapshot,ReloadCountedOp>){
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:4096};
-    for _ in 0..65536{let step=store.close_owned_store_step(grant).expect("counted original Store full grant close");assert!(step.progress().fits(grant));let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,store.close_owned_store_terminal_is_empty(),"counted original Store").expect("counted original Store receipt");if matches!(step,RetainedCloneStep::Complete(_)){assert!(store.close_owned_store_terminal_is_empty());return;}}
+    for _ in 0..65536{let step=store.close_owned_step_cold(grant).expect("counted original Store full grant close");assert!(step.progress().fits(grant));let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,store.close_owned_store_terminal_is_empty(),"counted original Store").expect("counted original Store receipt");if matches!(step,RetainedCloneStep::Complete(_)){assert!(store.close_owned_store_terminal_is_empty());return;}}
     panic!("the counted store did not close under its original fixed grant");
 }
 

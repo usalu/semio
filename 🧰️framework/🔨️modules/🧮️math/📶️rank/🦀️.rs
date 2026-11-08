@@ -1,6 +1,6 @@
 //! 📶️ Original scalar columns prepare quantile bands through admitted pages and one shared sort frontier per turn.
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step}};
-use semio_framework_value_persistent::list::PagedList;
+use semio_framework_value::{RetainedAllocationEffect, RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step}};
+use semio_framework_value_persistent::list::{PagedList,PagedListReleaseFailure,PagedListReleaseOutcome,PagedListReservationFailure,PagedListReservationOutcome};
 use semio_framework_value_edit::{sort::HeapSortCursor, sort::HeapSortWork};
 use std::mem::size_of;
 const CONTROL:usize=8*size_of::<usize>()+5*size_of::<f64>()+2*size_of::<u8>()+2*size_of::<bool>();
@@ -10,6 +10,10 @@ fn scalar(bytes:usize,depth:usize)->RetirementDemand{RetirementDemand{copy_bytes
 fn reserve<T>(list:&PagedList<T,{usize::MAX}>)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:list.next_reserve_copy_byte_demand().map_err(|_|invalid())?+CONTROL,capacity_bytes:list.next_allocation_bytes().map_err(|_|invalid())?,depth:list.next_reserve_depth_demand().map_err(|_|invalid())?+1,..Default::default()})}
 fn child(g:Grant)->Grant{Grant{maximum_copy_bytes:g.maximum_copy_bytes-CONTROL,maximum_depth:g.maximum_depth-1,..g}}
 fn receipt(mut p:Progress)->Progress{p.copied_bytes+=CONTROL;p}
+fn reserve_fault(error:PagedListReservationFailure)->ValueError{match error{PagedListReservationFailure::Work(error)=>error,PagedListReservationFailure::Allocation{error,..}=>ValueError::from(error.refusal())}}
+fn release_fault(error:PagedListReleaseFailure)->ValueError{match error{PagedListReleaseFailure::Work(error)=>error,PagedListReleaseFailure::Release(error)=>ValueError::from(error)}}
+fn reserved(outcome:PagedListReservationOutcome<Progress>)->Step{Step::Progress(match outcome{PagedListReservationOutcome::Ready(p)=>receipt(p),PagedListReservationOutcome::Denied=>Default::default()})}
+fn record(effect:&mut RetainedAllocationEffect<'_>)->Result<(),ValueError>{if effect.performed(1)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"scalar rank exceeded its original work"))}}
 
 /// 🪪️ Read costs and immutable source identity come from the original first-party numeric owner.
 pub trait ScalarRankSource{
@@ -57,16 +61,18 @@ impl ScalarRankCursor{
    7=>Default::default(),_=>return Err(invalid()),
   })
  }
- pub fn advance(&mut self,source:&impl ScalarRankSource,g:Grant)->Result<Step,ValueError>{
-  let d=self.demand(source)?;if !fits(d,g){return Ok(Step::Progress(Default::default()));}if self.complete(){return Ok(Step::Complete(Default::default()));}
+ pub fn advance(&mut self,source:&impl ScalarRankSource,effect:&mut RetainedAllocationEffect<'_>)->Result<Step,ValueError>{
+  let g=effect.grant();let d=self.demand(source)?;if !fits(d,g){return Ok(Step::Progress(Default::default()));}if self.complete(){return Ok(Step::Complete(Default::default()));}
   let p=Progress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
+  let child_turn=(self.phase==1&&self.index!=self.length&&self.bands.len()==self.bands.capacity())||(self.phase==2&&self.index!=self.length&&self.values.len()==self.values.capacity());
+  if !child_turn{record(effect)?;}
   match self.phase{
    0=>{self.identity=Some(source.original_identity());self.length=source.len();self.phase=1;},
    1 if self.index==self.length=>{self.index=0;self.phase=2;},
-   1 if self.bands.len()==self.bands.capacity()=>return self.bands.reserve_one_funded(child(g)).map(|p|Step::Progress(receipt(p))).map_err(|_|invalid()),
+   1 if self.bands.len()==self.bands.capacity()=>return self.bands.reserve_one_funded(&mut effect.nested(child(g))).result.map(reserved).map_err(reserve_fault),
    1=>{self.bands.push_reserved(255).map_err(|_|invalid())?;self.index+=1;},
    2 if self.index==self.length=>{if !self.nonzero{self.phase=7;}else{self.sort=HeapSortCursor::new(self.values.len());self.phase=3;}},
-   2 if self.values.len()==self.values.capacity()=>return self.values.reserve_one_funded(child(g)).map(|p|Step::Progress(receipt(p))).map_err(|_|invalid()),
+   2 if self.values.len()==self.values.capacity()=>return self.values.reserve_one_funded(&mut effect.nested(child(g))).result.map(reserved).map_err(reserve_fault),
    2=>{let value=source.value(self.index)?;if value.is_finite(){self.nonzero|=value!=0.;self.values.push_reserved(Entry{index:self.index,value,rank:0}).map_err(|_|invalid())?;}self.index+=1;},
    3=>match self.sort.next(){HeapSortWork::Compare{left,right}=>{let a=self.values.get(left).ok_or_else(invalid)?;let b=self.values.get(right).ok_or_else(invalid)?;self.sort.advance(Some(a.value.total_cmp(&b.value).then(a.index.cmp(&b.index)))).map_err(|_|invalid())?;},HeapSortWork::Swap{left,right}=>{self.values.swap(left,right);self.sort.advance(None).map_err(|_|invalid())?;},HeapSortWork::Advance=>self.sort.advance(None).map_err(|_|invalid())?,HeapSortWork::Complete=>{self.phase=4;}},
    4=>{if !self.values.is_empty(){self.minimum=self.values.get(0).ok_or_else(invalid)?.value;self.maximum=self.values.get(self.values.len()-1).ok_or_else(invalid)?.value;self.epsilon=(self.maximum*self.epsilon_factor-self.minimum*self.epsilon_factor).abs();}self.index=0;self.phase=5;},
@@ -89,10 +95,11 @@ impl ScalarRankCursor{
   if !self.bands.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:CONTROL,release_bytes:self.bands.next_release_allocation_bytes().map_err(|_|invalid())?,depth:self.bands.next_release_depth_demand().map_err(|_|invalid())?+1,..Default::default()});}
   Ok(Default::default())
  }
- pub fn close_step(&mut self,g:Grant)->Result<Step,ValueError>{
-  if !self.closing{return Err(invalid());}let d=self.close_demand()?;if !fits(d,g){return Ok(Step::Progress(Default::default()));}if self.terminal_is_empty(){return Ok(Step::Complete(Default::default()));}
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<Step,ValueError>{
+  let g=effect.grant();if !self.closing{return Err(invalid());}let d=self.close_demand()?;if !fits(d,g){return Ok(Step::Progress(Default::default()));}if self.terminal_is_empty(){return Ok(Step::Complete(Default::default()));}
   let mut p=Progress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
-  if !self.values.is_empty(){self.values.pop();}else if !self.values.terminal_is_empty(){p.released_bytes=self.values.release_empty_page(g.maximum_release_bytes).map_err(|_|invalid())?.released_allocation_bytes;}else if !self.bands.is_empty(){self.bands.pop();}else{p.released_bytes=self.bands.release_empty_page(g.maximum_release_bytes).map_err(|_|invalid())?.released_allocation_bytes;}
+  let released=|outcome:PagedListReleaseOutcome|match outcome{PagedListReleaseOutcome::Ready(progress)=>progress.released_allocation_bytes,PagedListReleaseOutcome::Denied=>0};
+  if !self.values.is_empty(){record(effect)?;self.values.pop();}else if !self.values.terminal_is_empty(){p.released_bytes=released(self.values.release_empty_page(&mut effect.nested(g)).result.map_err(release_fault)?);}else if !self.bands.is_empty(){record(effect)?;self.bands.pop();}else{p.released_bytes=released(self.bands.release_empty_page(&mut effect.nested(g)).result.map_err(release_fault)?);}
   Ok(if self.terminal_is_empty(){Step::Complete(p)}else{Step::Progress(p)})
  }
 }

@@ -77,16 +77,24 @@ pub trait SpaceMember {
     fn snapshot_read_erased_for_publication(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<Option<(u64, [u8; 32], ErasedSnapshotRead, RetainedCloneProgress)>, ValueError>;
     /// ↩️ Returns a private candidate lease before its exact staged snapshot may be aborted.
     fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>, snapshot: ErasedSnapshotRead, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)>;
-    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, original:&mut ::semio_framework_value::OriginalRetirementCloseLoan<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, original:&mut ::semio_framework_value::OriginalRetirementCloseLoan<'_>, effect: &mut ::semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ::semio_framework_value::RetirementPollExit>;
     /// 🧵️ The live typed snapshot behind an opaque immutable ownership boundary.
     fn snapshot_read_erased_now(&self) -> Result<ErasedSnapshotRead, String>;
     async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String>;
-    fn retire_snapshot_read_erased(&mut self, snapshot: &mut Option<ErasedSnapshotRead>, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>;
-    fn take_returned_snapshot_read_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>;
+    fn retire_snapshot_read_erased(&mut self, snapshot: &mut Option<ErasedSnapshotRead>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>;
+    fn take_returned_snapshot_read_retirement(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>;
     fn snapshot_read_retirement_demand(&self) -> semio_framework_value::RetirementDemand;
     fn returned_snapshot_read_retirement_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError>;
     fn snapshot_read_leases_terminal_is_empty(&self) -> bool;
-    fn close_owned_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn close_owned_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll;
+    /// 🧊️ Advances this member's owned close outside any Job turn under one explicit authoring wallet whose stock is `grant`; callers inside a turn pass their own effect to [`Self::close_owned_step`].
+    fn close_owned_step_cold(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 64);
+        match wallet.run_settled(grant, 64, |effect| self.close_owned_step(effect))? {
+            Some((turn, _)) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
+            None => Ok(RetainedCloneStep::Progress(Default::default())),
+        }
+    }
     fn close_owned_terminal_is_empty(&self) -> bool;
     fn close_owned_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
     /// 🧬️ Fixed-size, restart-stable identity for the member's current history cursor.

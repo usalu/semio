@@ -63,14 +63,15 @@ impl MeshTessellationJob{
     /// 🧾️ Keeps the actual child receipt on success or failure through the original normal result boundary.
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_receipt.0}
     /// ⏱️ Executes one actual original producer event with the caller's unchanged full wallet and source custody.
-    pub fn step(&mut self,grant:RetainedCloneGrant)->Result<(MeshTessellationStep,RetainedCloneProgress),ValueError>{
-        self.normal_receipt.0=Default::default();if self.cancelled{return Ok((MeshTessellationStep::Cancelled(self.progress()),self.normal_receipt.0));}
+    pub fn step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(MeshTessellationStep,RetainedCloneProgress),ValueError>{
+        let grant=effect.grant();self.normal_receipt.0=Default::default();if self.cancelled{return Ok((MeshTessellationStep::Cancelled(self.progress()),self.normal_receipt.0));}
         if grant.maximum_items==0||grant.maximum_capacity_bytes<self.next_normal_capacity_byte_demand(grant.maximum_copy_bytes)?||grant.maximum_release_bytes<self.next_normal_release_byte_demand()?||grant.maximum_depth<self.next_normal_depth_demand()?||(self.normal_output_is_atomic()&&grant.maximum_copy_bytes<self.next_normal_copy_byte_demand()?){return Ok((MeshTessellationStep::Working(self.progress()),self.normal_receipt.0));}
         let frontier=self.normal_frontier()?;let added=match frontier{Frontier::Corner(local)=>self.next_corner_copy_byte_demand(local)?-size_of::<u32>(),Frontier::TriangleIndices=>4*size_of::<u32>(),Frontier::Edge(_)if self.edge_pending.is_some()=>10*size_of::<f32>()+size_of::<u32>()+size_of::<u8>(),Frontier::Attribute if self.attribute_stage==2=>self.next_attribute_copy_byte_demand()?,_=>0};
         let output_bytes=self.normal_output_bytes.checked_add(added).ok_or_else(||refusal("original mesh preview byte extent overflow"))?;if output_bytes>self.maximum_preview_bytes{return Err(refusal("original mesh preview exceeds admitted output extent"));}
-        let before=self.done;let result=self.normal_event(frontier,grant);match result{Ok(step)=>{self.normal_output_bytes=output_bytes;if self.done==before&&self.normal_receipt.0.copied_items!=0{self.done=self.done.checked_add(1).ok_or_else(||refusal("original normal progress overflow").with_retained_progress(self.normal_receipt.0))?;}Ok((step.unwrap_or_else(||MeshTessellationStep::Working(self.progress())),self.normal_receipt.0))},Err(error)=>{self.normal_receipt.0=error.retained_progress();Err(error)}}
+        let before=self.done;let result=self.normal_event(frontier,effect);match result{Ok(step)=>{self.normal_output_bytes=output_bytes;if self.done==before&&self.normal_receipt.0.copied_items!=0{self.done=self.done.checked_add(1).ok_or_else(||refusal("original normal progress overflow").with_retained_progress(self.normal_receipt.0))?;}Ok((step.unwrap_or_else(||MeshTessellationStep::Working(self.progress())),self.normal_receipt.0))},Err(error)=>{self.normal_receipt.0=error.retained_progress();Err(error)}}
     }
-    fn normal_event(&mut self,frontier:Frontier,grant:RetainedCloneGrant)->Result<Option<MeshTessellationStep>,ValueError>{
+    fn normal_event(&mut self,frontier:Frontier,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<MeshTessellationStep>,ValueError>{
+        let grant=effect.grant();
         let one=RetainedCloneProgress {copied_items:1,..Default::default()};
         self.normal_receipt.0=match frontier{
             Frontier::Buffer=>self.reserve_buffer_step(grant)?.progress(),Frontier::Metadata=>self.capture_metadata_step(grant)?.progress(),Frontier::Face=>self.prepare_face_step(grant)?.progress(),
@@ -80,7 +81,7 @@ impl MeshTessellationJob{
             Frontier::TriangleFinish=>{let frame=self.triangle_pending.take().unwrap();let copy=if frame.finish==TriangleFinish::Clip{2*size_of::<usize>()}else{0};self.finish_triangle(frame.finish,frame.locals);RetainedCloneProgress {copied_bytes:copy,..one}},
             Frontier::Ear=>{if self.phase==7{self.smooth_corners_done();}else if self.choose_triangle().is_some(){self.phase=12;}one},
             Frontier::Edge(local)=>{let step=self.emit_edge_step(local,grant)?;if matches!(step,RetainedCloneStep::Complete(_)){self.finish_edge();}step.progress()},
-            Frontier::Attribute=>self.project_attribute_step(grant)?.progress(),
+            Frontier::Attribute=>self.project_attribute_step(effect)?.progress(),
             Frontier::Materials=>{let out=self.output.as_mut().unwrap();if !out.materials.terminal_is_empty(){return Err(refusal("original output material destination is not empty"));}out.materials=std::mem::take(&mut self.mesh.materials);self.normal_metadata_phase=2;one},
             Frontier::Textures=>{let out=self.output.as_mut().unwrap();if !out.textures.terminal_is_empty(){return Err(refusal("original output texture destination is not empty"));}out.textures=std::mem::take(&mut self.mesh.textures);self.normal_metadata_phase=3;one},
             Frontier::Mark=>{self.metadata_done=true;one},

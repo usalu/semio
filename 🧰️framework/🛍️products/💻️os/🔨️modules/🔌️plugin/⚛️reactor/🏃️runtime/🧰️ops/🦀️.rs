@@ -12,14 +12,11 @@ pub(crate) fn built_with<O>(cx:&mut semio_framework_job::StepContext<'_>,output:
 pub(crate) fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
 pub(crate) fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
-#[path = "🛡️wire-limits/🦀️.rs"]
-pub mod ops_wire_limits;
-#[path = "📄️document/🦀️.rs"]
-pub mod ops_document;
+pub use semio_plugin_runtime_ops_wire as ops_wire_limits;
+pub use semio_plugin_runtime_ops_document as ops_document;
 #[path = "🎞️media/🦀️.rs"]
 pub mod ops_media;
-#[path = "🖥️surface-render/🦀️.rs"]
-pub mod ops_surface_render;
+pub use semio_plugin_runtime_ops_surface as ops_surface_render;
 #[path = "📥️ingress/🦀️.rs"]
 pub mod ops_ingress;
 #[path = "🧾️typed-operations/🦀️.rs"]

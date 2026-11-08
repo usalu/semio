@@ -17,15 +17,16 @@ impl ParamsBoxRetirement{
 }
 impl RetirementCursor for ParamsBoxRetirement{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(self.demand())}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
+ fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+  let grant=effect.grant();
   let action=self.action();if matches!(action,Action::Done){return RetirementStep::Complete(0)}
   let demand=self.demand();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
   let progress=match action{
-   Action::Take=>{let Some(source)=self.source.as_mut()else{return RetirementStep::Failure(ValueError::invariant("diagnostic retirement source absent"),0)};self.values=unsafe{source.take_field(|root|std::ptr::addr_of_mut!((*root).0))};self.taken=true;P{copied_items:1,..Default::default()}},
-   Action::Text(key,bytes)=>{let Some(pair)=self.values.last_mut()else{return RetirementStep::Failure(ValueError::invariant("diagnostic retirement row absent"),0)};let text=if key{&mut pair.0}else{&mut pair.1};*text=String::new();P{copied_items:1,released_bytes:bytes,..Default::default()}},
+   Action::Take=>{let Some(source)=self.source.as_mut()else{return RetirementStep::Failure(ValueError::invariant("diagnostic retirement source absent").into(),0)};self.values=unsafe{source.take_field(|root|std::ptr::addr_of_mut!((*root).0))};self.taken=true;P{copied_items:1,..Default::default()}},
+   Action::Text(key,bytes)=>{let Some(pair)=self.values.last_mut()else{return RetirementStep::Failure(ValueError::invariant("diagnostic retirement row absent").into(),0)};let text=if key{&mut pair.0}else{&mut pair.1};*text=String::new();P{copied_items:1,released_bytes:bytes,..Default::default()}},
    Action::Row=>{self.values.pop();P{copied_items:1,..Default::default()}},
    Action::Vector(bytes)=>{self.values=Vec::new();P{copied_items:1,released_bytes:bytes,..Default::default()}},
-   Action::Shell=>{let Some(source)=self.source.as_mut()else{return RetirementStep::Failure(ValueError::invariant("diagnostic retirement source absent"),0)};unsafe{source.release_empty(grant)}},
+   Action::Shell=>{let Some(source)=self.source.as_mut()else{return RetirementStep::Failure(ValueError::invariant("diagnostic retirement source absent").into(),0)};unsafe{source.release_empty(grant)}},
    Action::Clear=>{self.source=None;P{copied_items:1,..Default::default()}},
    Action::Done=>return RetirementStep::Complete(0),
   };RetirementStep::Progress(progress,1)

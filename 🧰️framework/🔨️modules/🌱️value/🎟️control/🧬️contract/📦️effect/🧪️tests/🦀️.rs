@@ -23,3 +23,25 @@ fn nested_effect_uses_only_the_actual_remaining_original_work(){let mut authorit
 fn performed_boundary_rejects_a_different_original_receipt(){
  let mut first=OriginalWorkAuthority::new(Producer);let mut second=OriginalWorkAuthority::new(Producer);first.with_loan(&mut (),|a|second.with_loan(&mut (),|b|{let(mut a,mut b)=(a.reborrow(),b.reborrow());let(mut wa,mut wb)=(OriginalWork::empty(),OriginalWork::empty());wa.recipient=Some(&mut a);wb.recipient=Some(&mut b);let(mut aa,mut ab,mut ra,mut rb)=(None,None,None,None);assert_eq!(wa.prepare_for_action(1,&mut aa).unwrap(),Some(true));assert_eq!(wb.prepare_for_action(1,&mut ab).unwrap(),Some(true));wa.issue_performed_for_action(aa,&mut ra).unwrap();wb.issue_performed_for_action(ab,&mut rb).unwrap();let(mut ma,mut mb)=(None,None);{let ea=RetainedAllocationEffect::new(Default::default(),1,&mut ma,ra.as_mut().unwrap());let eb=RetainedAllocationEffect::new(Default::default(),1,&mut mb,rb.as_mut().unwrap());assert!(eb.performed_since(ea.performed_boundary()).is_err())}wa.claim_performed_for_action(aa,&mut ra).unwrap();wb.claim_performed_for_action(ab,&mut rb).unwrap();wa.cancel_for_action(&mut aa).unwrap();wb.cancel_for_action(&mut ab).unwrap()}).unwrap()).unwrap();assert!(!first.has_live_actions()&&!second.has_live_actions())
 }
+
+#[test]
+fn nested_effect_gets_exactly_the_live_remaining_work_where_the_whole_ceiling_is_rejected(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("work-nested.json")).unwrap();
+ for row in law["cases"].as_array().unwrap(){
+  let(parent,receipt,spent)=(row["parent"].as_u64().unwrap(),row["receipt"].as_u64().unwrap(),row["spent"].as_u64().unwrap());let label=row["label"].as_str().unwrap();
+  let mut authority=OriginalWorkAuthority::new(Producer);
+  authority.with_loan(&mut (),|loan|{let mut loan=loan.reborrow();let mut work=OriginalWork::empty();work.recipient=Some(&mut loan);let(mut action,mut receipt_slot,mut proof)=(None,None,None);assert_eq!(work.prepare_for_action(receipt,&mut action).unwrap(),Some(true));work.issue_performed_for_action(action,&mut receipt_slot).unwrap();let mut actual=None;
+   {let grant=RetainedCloneGrant::default();let mut effect=RetainedAllocationEffect::new(grant,parent,&mut actual,receipt_slot.as_mut().unwrap());if spent>0{effect.performed(spent).unwrap();}
+    assert_eq!(effect.reborrow(grant,parent).is_ok(),row["wholeCeilingAdmitted"].as_bool().unwrap(),"{label}");
+    let child=effect.nested(grant);assert_eq!(child.maximum_work_units(),row["nestedCeiling"].as_u64().unwrap(),"{label}");assert_eq!(child.performed_work(),0,"{label}");let ceiling=row["nestedCeiling"].as_u64().unwrap();assert_eq!(effect.nested_within(grant,1).maximum_work_units(),ceiling.min(1),"{label}");assert_eq!(effect.nested_within(grant,u64::MAX).maximum_work_units(),ceiling,"{label}")}
+   work.claim_performed_for_action(action,&mut receipt_slot).unwrap();
+   if spent==0{work.cancel_for_action(&mut action).unwrap()}else{let mut partial=None;work.settle_partial_for_action_into(action,&mut partial).unwrap();let outcome=partial.take().unwrap();if outcome.admitted(){assert!(work.commit_for_action(spent.into(),action,&mut proof).unwrap());work.finish_for_action(&mut proof,&mut action).unwrap()}else{assert!(!work.commit_for_action(spent.into(),action,&mut proof).unwrap());work.finish_for_action(&mut proof,&mut action).unwrap()}}
+  }).unwrap();assert!(!authority.has_live_actions(),"{label}");
+ }
+ let grant=RetainedCloneGrant{maximum_items:4,maximum_depth:2,..Default::default()};let wide=RetainedCloneGrant{maximum_items:9,maximum_depth:7,..Default::default()};
+ let mut authority=OriginalWorkAuthority::new(Producer);
+ authority.with_loan(&mut (),|loan|{let mut loan=loan.reborrow();let mut work=OriginalWork::empty();work.recipient=Some(&mut loan);let(mut action,mut receipt_slot)=(None,None);assert_eq!(work.prepare_for_action(1,&mut action).unwrap(),Some(true));work.issue_performed_for_action(action,&mut receipt_slot).unwrap();let mut actual=None;
+  {let mut effect=RetainedAllocationEffect::new(grant,1,&mut actual,receipt_slot.as_mut().unwrap());let child=effect.nested(wide);assert_eq!(child.grant(),grant)}
+  work.claim_performed_for_action(action,&mut receipt_slot).unwrap();work.cancel_for_action(&mut action).unwrap()
+ }).unwrap();assert!(!authority.has_live_actions());
+}

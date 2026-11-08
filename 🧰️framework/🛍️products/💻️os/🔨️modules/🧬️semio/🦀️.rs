@@ -241,7 +241,8 @@ pub fn wrap_text_controlled(envelope_id:&str,component:Component,version:u16,bod
 }
 
 /// 🧵️ Owns one declared Text body until physical bytes and source retirement finish.
-struct RetainedTextEnvelopeSources { identity: Option<String>, body: Option<String> }
+#[doc(hidden)]
+pub struct RetainedTextEnvelopeSources { identity: Option<String>, body: Option<String> }
 semio_framework_value::artifact_retire_struct!(RetainedTextEnvelopeSources { identity, body });
 
 /// 📜️ Carries the original Text framing and its admitted source frontier.
@@ -270,44 +271,46 @@ impl RetainedTextEnvelope {
     pub fn remaining_grant(&self)->semio_framework_value::RetainedCloneGrant{semio_framework_value::RetainedCloneGrant{maximum_items:self.grant.maximum_items-self.progress.copied_items,maximum_copy_bytes:self.grant.maximum_copy_bytes-self.progress.copied_bytes,maximum_capacity_bytes:self.grant.maximum_capacity_bytes-self.progress.retained_capacity_bytes,maximum_release_bytes:self.grant.maximum_release_bytes-self.progress.released_bytes,maximum_depth:self.grant.maximum_depth}}
     fn admit(&self,items:usize,demand:semio_framework_value::RetirementDemand)->Result<(),ValueError>{let grant=self.remaining_grant();if items>grant.maximum_items{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"text envelope exhausted original work"))}if demand.depth>grant.maximum_depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"text envelope exceeds original depth"))}if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"text envelope exceeds original physical grant"))}Ok(())}
     fn record(&mut self,progress:semio_framework_value::RetainedCloneProgress)->Result<(),ValueError>{if !progress.fits(self.remaining_grant()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"text envelope performed an ungranted receipt").with_retained_progress(progress))}self.progress=self.progress.checked_add(progress)?;Ok(())}
-    /// ⏱️ Uses body quanta and atomic headers only within the same original grant.
-    pub fn step(&mut self,maximum_units:usize,maximum_copy_bytes:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<Option<String>,ValueError>{let before=self.progress;let result=self.advance(maximum_units,maximum_copy_bytes,control);let actual=semio_framework_value::RetainedCloneProgress{copied_items:self.progress.copied_items-before.copied_items,copied_bytes:self.progress.copied_bytes-before.copied_bytes,retained_capacity_bytes:self.progress.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:self.progress.released_bytes-before.released_bytes};result.map_err(|error|error.with_retained_progress(actual))}
-    fn advance(&mut self,maximum_units:usize,maximum_copy_bytes:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<Option<String>,ValueError>{
-        use semio_framework_value::{RetirementDemand,RetainedCloneProgress};
+    /// ⏱️ Uses body quanta and atomic headers only within the same original grant and the caller's one effect.
+    pub fn step(&mut self,maximum_units:usize,maximum_copy_bytes:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<String>,ValueError>{let before=self.progress;let result=self.advance(maximum_units,maximum_copy_bytes,control,effect);let actual=semio_framework_value::RetainedCloneProgress{copied_items:self.progress.copied_items-before.copied_items,copied_bytes:self.progress.copied_bytes-before.copied_bytes,retained_capacity_bytes:self.progress.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:self.progress.released_bytes-before.released_bytes};result.map_err(|error|error.with_retained_progress(actual))}
+    fn advance(&mut self,maximum_units:usize,maximum_copy_bytes:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<String>,ValueError>{
+        use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneGrant,RetainedWorkPoll};
         if maximum_units==0||maximum_copy_bytes==0||self.complete{return Ok(None)}
         for _ in 0..maximum_units{
             control.checkpoint()?;
             if !self.admitted{
-                let identity=self.identity.as_deref().expect("declared identity retained");
+                let (Some(identity),Some(body))=(self.identity.as_deref(),self.body.as_deref())else{return Err(retained_source_missing())};
                 if !identity.contains('.')||!self.component.is_text(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"invalid declared text envelope identity"))}
-                let length=6usize.checked_add(identity.len()).and_then(|length|length.checked_add(self.component.as_str().len()+4+self.digits.len()-self.digit_start)).and_then(|length|length.checked_add(self.body.as_ref().expect("declared body retained").len())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native text envelope length overflow"))?;
+                let length=6usize.checked_add(identity.len()).and_then(|length|length.checked_add(self.component.as_str().len()+4+self.digits.len()-self.digit_start)).and_then(|length|length.checked_add(body.len())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native text envelope length overflow"))?;
                 self.admit(1,RetirementDemand{capacity_bytes:length,depth:1,..Default::default()})?;
                 control.charge(length)?;
                 let mut output=String::new();output.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native text envelope allocation failed"))?;
                 let capacity=output.capacity();self.output=Some(output);self.admitted=true;
                 self.record(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})?;
             }else if self.retirement.is_some(){
-                if self.retirement.as_ref().unwrap().terminal_is_empty(){
+                if self.retirement.as_ref().is_some_and(|owner|owner.terminal_is_empty()){
                     self.admit(1,RetirementDemand{copy_bytes:size_of::<Option<String>>(),depth:1,..Default::default()})?;
                     control.step()?;
                     self.retirement.take();let output=self.output.take();self.complete=true;
                     self.record(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<String>>(),..Default::default()})?;
                     return Ok(output)
                 }
-                let original=self.remaining_grant();let owner=self.retirement.as_ref().unwrap();let copy=owner.next_copy_byte_demand()?;let quantum=maximum_copy_bytes.max(copy).min(original.maximum_copy_bytes);
-                let demand=RetirementDemand{copy_bytes:copy,capacity_bytes:owner.next_capacity_byte_demand(quantum)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?};
+                let original=self.remaining_grant();
+                let (demand,quantum)={let Some(owner)=self.retirement.as_ref()else{return Err(retained_source_missing())};let copy=owner.next_copy_byte_demand()?;let quantum=maximum_copy_bytes.max(copy).min(original.maximum_copy_bytes);(RetirementDemand{copy_bytes:copy,capacity_bytes:owner.next_capacity_byte_demand(quantum)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?},quantum)};
                 self.admit(1,demand)?;control.charge(demand.capacity_bytes)?;
-                let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quantum,..original};
-                match self.retirement.as_mut().unwrap().step(grant){Ok(step)=>self.record(step.progress())?,Err(error)=>{self.record(error.retained_progress())?;return Err(error)}}
+                let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quantum,..original};
+                let Some(owner)=self.retirement.as_mut()else{return Err(retained_source_missing())};
+                let poll=owner.step(&mut effect.nested(grant));
+                match poll{RetainedWorkPoll::Pending{..}=>return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"text envelope source retirement stayed pending on a synchronous recipient")),RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>self.record(step.progress())?,Err(failure)=>{let progress=failure.retained_progress();self.record(progress)?;return Err(failure_error(failure).with_retained_progress(progress))}}}
             }else if self.segment==8{
                 let copy=size_of::<RetainedTextEnvelopeSources>();self.admit(1,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()})?;
                 let sources=RetainedTextEnvelopeSources{identity:self.identity.take(),body:self.body.take()};
                 let owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(sources).map_err(|(error,sources)|{self.identity=sources.identity;self.body=sources.body;error})?;self.retirement=Some(owner);
                 self.record(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;
             }else{
-                let text=match self.segment{0=>"semio ",1=>self.identity.as_deref().expect("identity retained"),2=>".",3=>self.component.as_str(),4=>" v",5=>std::str::from_utf8(&self.digits[self.digit_start..]).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"native version is not ASCII"))?,6=>"\n",7=>self.body.as_deref().expect("body retained"),_=>unreachable!()};
+                let text=match self.segment{0=>"semio ",1=>self.identity.as_deref().ok_or_else(retained_source_missing)?,2=>".",3=>self.component.as_str(),4=>" v",5=>std::str::from_utf8(&self.digits[self.digit_start..]).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"native version is not ASCII"))?,6=>"\n",7=>self.body.as_deref().ok_or_else(retained_source_missing)?,_=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"text envelope segment exceeded its declaration"))};
                 let character=text[self.offset..].chars().next();let bytes=character.map_or(0,char::len_utf8);self.admit(1,RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()})?;
-                if let Some(character)=character{self.output.as_mut().expect("output admitted").push(character);self.offset+=bytes;self.position+=bytes;}else{self.segment+=1;self.offset=0;}
+                if let Some(character)=character{self.output.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"text envelope output was not admitted"))?.push(character);self.offset+=bytes;self.position+=bytes;}else{self.segment+=1;self.offset=0;}
                 self.record(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
             }
             control.step()?;
@@ -315,11 +318,14 @@ impl RetainedTextEnvelope {
         Ok(None)
     }
 }
+fn retained_source_missing()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"text envelope declared source was not retained")}
+fn failure_error(failure:semio_framework_value::OriginalRetirementFailure)->ValueError{
+    let (primary,work,receipt,allocation,child,_)=failure.into_parts();
+    primary.or(work).or(receipt).or_else(||child.map(|child|failure_error(*child))).unwrap_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,if allocation.is_some(){"text envelope retirement allocation was refused"}else{"text envelope retirement failed without a cause"}))
+}
 impl semio_framework_value::retirement::RetireOwned for RetainedTextEnvelope {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        use semio_framework_value::retirement::{sequence,deferred};sequence(vec![deferred(self.identity),deferred(self.body),deferred(self.output),deferred(self.retirement)])
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> { use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.identity),deferred_birth_bytes_for(&self.body),deferred_birth_bytes_for(&self.output),deferred_birth_bytes_for(&self.retirement)]) }
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(Option<String>,Option<String>,Option<String>,Option<semio_framework_value::retirement::controlled::ControlledRetirement<RetainedTextEnvelopeSources>>);
+    fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement_fields_seed!(self.identity,self.body,self.output,self.retirement)}
     fn controlled_retirement_supported() -> bool { true }
 }
 

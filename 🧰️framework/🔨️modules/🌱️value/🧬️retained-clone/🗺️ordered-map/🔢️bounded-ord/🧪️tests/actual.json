@@ -27,7 +27,7 @@
   "maximumTurns": 10000,
   "deniedWork": 0,
   "cachedWork": 0,
-  "maximumTurnWork": 1,
+  "maximumTurnWork": 3,
   "serdeOracle": true,
   "birth": {
     "work": 1,

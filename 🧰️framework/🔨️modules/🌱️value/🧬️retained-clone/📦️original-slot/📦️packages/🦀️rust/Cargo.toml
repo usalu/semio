@@ -30,3 +30,4 @@ semio-framework-value-factory = { path = "../../../../♻️retirement/🏭️fa
 [dev-dependencies]
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }

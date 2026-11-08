@@ -457,12 +457,9 @@ impl InteractiveJob for PreparedRenderJob {
     }
 
     fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<CloseStep,semio_framework_job::OriginalTurnFailure> {
-        let grant=cx.retained_grant();
-        if cx.should_yield(){return Ok(CloseStep::Pending{progress:Default::default()})}
-        let step=self.close_granted(grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
-        let step=step.admit(grant,self.terminal_is_empty()).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
-        cx.consume_retained(step.progress()).map_err(semio_framework_job::OriginalTurnFailure::from)?;
-        if step.progress().copied_items!=0{cx.consume_fuel(1)}
+        let quote=self.next_close_demands(0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+        let step=prepared_close_turn(cx,quote,|effect|self.close_granted(effect))?;
+        if matches!(step,CloseStep::Complete{..})&&!PreparedRenderJob::terminal_is_empty(self){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job close completed with a non-empty terminal witness").into())}
         Ok(step)
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { self.next_close_demands(0).map(|grant| grant.maximum_copy_bytes) }

@@ -96,7 +96,8 @@ impl<T:RetireOwned+Sync> ReadOwnershipRegistry<T> {
 }
 impl<T:RetireOwned+Sync> Drop for ReadOwnershipRegistry<T> {fn drop(&mut self){let state=self.state.state.get_mut();assert!(std::thread::panicking()||state.free_len==READ_LEASE_CAPACITY&&state.slots.is_none(),"read registry must close every original typed root and fixed backing");}}
 
-struct RegistryRetirement<T:RetireOwned+Sync> {pub owner:ManuallyDrop<ReadOwnershipRegistry<T>>,active:Option<SharedControlledRetirement<T>>}
+#[doc(hidden)]
+pub struct RegistryRetirement<T:RetireOwned+Sync> {pub owner:ManuallyDrop<ReadOwnershipRegistry<T>>,active:Option<SharedControlledRetirement<T>>}
 impl<T:RetireOwned+Sync> RetirementCursor for RegistryRetirement<T> {
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if let Some(owner)=self.active.as_ref(){if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.next_demand(body)}}else{Ok(RetirementDemand{release_bytes:if unsafe{&*self.owner.state.state.get()}.free_len==READ_LEASE_CAPACITY&&!self.terminal_is_empty(){size_of::<[Option<Slot<T>>;READ_LEASE_CAPACITY]>()}else{0},depth:1,..Default::default()})}}
     fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();
@@ -104,13 +105,14 @@ impl<T:RetireOwned+Sync> RetirementCursor for RegistryRetirement<T> {
         if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let demand=match RetirementCursor::next_demand(self,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};if grant.maximum_depth<demand.depth||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return RetirementStep::BudgetExhausted;}
         if let Some(active)=self.active.as_mut(){
             if active.terminal_is_empty(){self.active=None;return RetirementStep::Advanced;}
-            let result=active.step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));let work=active.last_turn_work();return match result{Ok(step)=>RetirementStep::Progress(step.progress(),work),Err(error)=>RetirementStep::Failure(error,work)};
+            return crate::retirement::erased_cursor_turn(active.step(&mut effect.nested(grant)));
         }
         let state=self.owner.state.state.get_mut();
         if let Some(index)=state.next_index(){let slot=state.take(index);if slot.returned{self.owner.returned.fetch_sub(1,Ordering::AcqRel);}self.active=Some(SharedControlledRetirement::lease(slot.owner));return RetirementStep::Advanced;}
         let bytes=size_of::<[Option<Slot<T>>;READ_LEASE_CAPACITY]>();if grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(state.slots.take());RetirementStep::Bytes(bytes)
     }
     fn terminal_is_empty(&self)->bool {self.active.is_none()&&unsafe{&*self.owner.state.state.get()}.slots.is_none()}
+    fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if self.terminal_is_empty(){return Ok(0)}match self.active.as_ref(){Some(active)if !active.terminal_is_empty()=>active.next_computational_work(body),_=>Ok(1)}}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.active.as_ref().map_or(Ok(0),SharedControlledRetirement::next_copy_byte_demand)}
     fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.active.as_ref().map_or(Some(0),|active|active.next_capacity_byte_demand(copy).ok())}
     fn next_close_byte_demand(&self)->Option<usize> {self.active.as_ref().map_or_else(||Some(if unsafe{&*self.owner.state.state.get()}.free_len==READ_LEASE_CAPACITY&&!self.terminal_is_empty(){size_of::<[Option<Slot<T>>;READ_LEASE_CAPACITY]>()}else{0}),|active|active.next_release_byte_demand().ok())}
@@ -120,7 +122,8 @@ impl<T:RetireOwned+Sync> RetirementCursor for RegistryRetirement<T> {
 }
 impl<T:RetireOwned+Sync> Drop for RegistryRetirement<T> {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"typed registry cursor abandoned physical ownership");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owner);}}}}
 impl<T:RetireOwned+Sync> RetireOwned for ReadOwnershipRegistry<T> {
-    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(RegistryRetirement {owner:ManuallyDrop::new(self),active:None})}
+    type RetirementCursor=RegistryRetirement<T>;
+    fn retirement_seed(self)->Self::RetirementCursor {RegistryRetirement {owner:ManuallyDrop::new(self),active:None}}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<RegistryRetirement<T>>())}
     fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
@@ -131,26 +134,28 @@ impl<T:RetireOwned+Sync> crate::FactoryPayloadRetirement for ReadOwnershipRegist
     fn close_state_constructor_depth(&self)->usize {0}
     fn close_state_constructor_copy_bytes(&self)->usize {0}
     fn close_state_preparation_demands(&self,_:&Self::CloseState,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
-    fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:RetainedCloneGrant)->RetainedWorkOutcome{RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+    fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkPoll{crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})}
     fn close_state_preparation_is_complete(_:&Self::CloseState)->bool{true}
     fn prepare_close_state(&self)->Self::CloseState {None}
     fn transfer_payload(value:Self,state:&mut Self::CloseState) {*state=Some(crate::retirement::controlled::ControlledRetirement::retain(value));}
     fn close_state_demands(state:&Self::CloseState,copy:usize)->Result<RetirementDemand,ValueError> {state.as_ref().map_or(Ok(Default::default()),|owner|if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.next_demand(copy)})}
     fn close_state_requires_original_control(state:&Self::CloseState)->bool{state.as_ref().is_some_and(|owner|!owner.terminal_is_empty()&&crate::ErasedSnapshotRetirement::requires_original_control(owner))}
     fn close_state_work_demand(state:&Self::CloseState,body:usize)->Result<u64,ValueError>{match state.as_ref(){Some(owner)if owner.terminal_is_empty()=>Ok(1),Some(owner)=>owner.next_computational_work(body),None=>Ok(0)}}
-    fn close_state_step_controlled(state:&mut Self::CloseState,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->semio_framework_value_retirement::OriginalRetirementOutcome{match state.as_mut(){Some(owner)if !owner.terminal_is_empty()=>{let turn=crate::ErasedSnapshotRetirement::close_step_controlled(owner,grant,control);RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}},_=>RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"read registry has no selected original child").into()),work:0}}}
-    fn close_state_original_step(state:&mut Self::CloseState,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome{match state.as_mut(){Some(owner)if !owner.terminal_is_empty()=>{let turn=crate::ErasedSnapshotRetirement::close_original_step(owner,original,grant);RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}},_=>RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"read registry has no selected original child").into()),work:0}}}
-    fn close_state_step(state:&mut Self::CloseState,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome {
-        let Some(owner)=state.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
-        if owner.terminal_is_empty(){if grant.maximum_items==0||grant.maximum_depth==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}state.take();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
-        let result=owner.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));RetainedWorkOutcome{result,work:owner.last_turn_work()}
+    fn close_state_step_controlled(state:&mut Self::CloseState,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->semio_framework_value_retirement::OriginalRetirementPoll{match state.as_mut(){Some(owner)if !owner.terminal_is_empty()=>crate::ErasedSnapshotRetirement::close_step_controlled(owner,effect,control).map(|step|RetainedCloneStep::Progress(step.progress())),_=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"read registry has no selected original child").into()),work:0})}}
+    fn close_state_original_step(state:&mut Self::CloseState,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll{match state.as_mut(){Some(owner)if !owner.terminal_is_empty()=>crate::ErasedSnapshotRetirement::close_original_step(owner,original,effect).map(|step|RetainedCloneStep::Progress(step.progress())),_=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"read registry has no selected original child").into()),work:0})}}
+    fn close_state_step(state:&mut Self::CloseState,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll {
+        let grant=effect.grant();let done=|result:Result<RetainedCloneStep,crate::OriginalRetirementFailure>,work:u128|crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work});
+        let Some(owner)=state.as_mut()else{return done(Ok(RetainedCloneStep::Complete(Default::default())),0)};
+        if owner.terminal_is_empty(){if grant.maximum_items==0||grant.maximum_depth==0{return done(Ok(RetainedCloneStep::Progress(Default::default())),0)}state.take();return done(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),1)}
+        owner.step(effect).map(|step|RetainedCloneStep::Progress(step.progress()))
     }
     fn close_state_terminal_is_empty(state:&Self::CloseState)->bool {state.is_none()}
 }
 
 struct RegistryAuthority<T:RetireOwned+Sync>(Arc<ReadOwnershipRegistry<T>>);
 impl<T:RetireOwned+Sync> RetireOwned for RegistryAuthority<T> {
-    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(SharedControlledRetirement::lease(self.0))}
+    type RetirementCursor=SharedControlledRetirement<ReadOwnershipRegistry<T>>;
+    fn retirement_seed(self)->Self::RetirementCursor {SharedControlledRetirement::lease(self.0)}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<SharedControlledRetirement<ReadOwnershipRegistry<T>>>())}
     fn controlled_retirement_supported()->bool {true}
 }
@@ -175,7 +180,17 @@ impl<T:RetireOwned+Sync> ReadLease<T> {
 }
 impl<T:RetireOwned+Sync> ErasedSnapshotRetirement for ReadLease<T> {
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementOutcome {let grant=effect.grant();
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll {crate::RetainedWorkPoll::Complete(self.close_outcome(effect))}
+    fn next_computational_work(&self,_:usize)->Result<u64,crate::ValueError>{Ok(u64::from(!ErasedSnapshotRetirement::terminal_is_empty(self)))}
+    fn terminal_is_empty(&self)->bool {self.owner.is_none()&&self.registry.is_none()&&self.closing.is_none()}
+    fn next_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.copy_bytes)}
+    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {Ok(self.demands(copy)?.capacity_bytes)}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.release_bytes)}
+    fn next_depth_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.depth)}
+}
+impl<T:RetireOwned+Sync> ReadLease<T> {
+    /// 🧷️ A read closure outcome cannot carry an unresolved producer reply, so a registry close that left its reply pending refuses typed.
+    fn close_outcome(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementOutcome {let grant=effect.grant();
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
         if grant.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
         let demand=match self.demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};
@@ -188,13 +203,8 @@ impl<T:RetireOwned+Sync> ErasedSnapshotRetirement for ReadLease<T> {
         }
         if self.closing.is_none(){*self.closing=Some(SharedControlledRetirement::lease(match self.registry.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("registry absent").into()),work:0}}));return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
         let close=match self.closing.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("closing absent").into()),work:0}};if close.terminal_is_empty(){self.closing.take();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
-        let result=close.step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));RetainedWorkOutcome{result,work:close.last_turn_work()}
+        match close.step(&mut effect.nested(grant)){crate::RetainedWorkPoll::Complete(turn)=>turn,crate::RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"read registry close left its producer reply pending").into()),work}}
     }
-    fn terminal_is_empty(&self)->bool {self.owner.is_none()&&self.registry.is_none()&&self.closing.is_none()}
-    fn next_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.copy_bytes)}
-    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {Ok(self.demands(copy)?.capacity_bytes)}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.release_bytes)}
-    fn next_depth_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.depth)}
 }
 impl<T:RetireOwned+Sync> Drop for ReadLease<T> {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"read lease must finish explicitly granted closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owner);ManuallyDrop::drop(&mut self.registry);ManuallyDrop::drop(&mut self.closing);}}}}
 

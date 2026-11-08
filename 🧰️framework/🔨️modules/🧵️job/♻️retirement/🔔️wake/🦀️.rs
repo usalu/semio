@@ -5,7 +5,7 @@ use semio_framework_value::{ValueError,retirement::{RetireOwned,controlled::Cont
 pub trait RetainedWorkerWake:Send{
  fn wake_by_ref(&self);
  fn retirement_demands(&self,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ fn close_step(&mut self,effect:&mut semio_framework_value::retained_clone::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>;
  fn terminal_is_empty(&self)->bool;
  fn frame_release_bytes(&self)->usize;
 }
@@ -18,15 +18,15 @@ impl<T:std::task::Wake+RetireOwned+Sync> RetainedWorkerWake for OriginalWorkerWa
   if let Some(payload)=self.payload.as_ref(){return if payload.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<T>>>(),depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:payload.next_copy_byte_demand()?,capacity_bytes:payload.next_capacity_byte_demand(maximum_copy_bytes)?,release_bytes:payload.next_release_byte_demand()?,depth:payload.next_depth_demand()?})}}
   Ok(Default::default())
  }
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+ fn close_step(&mut self,effect:&mut semio_framework_value::retained_clone::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+  let grant=effect.grant();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}
   if self.waker.is_some(){drop(self.waker.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
   if let Some(source)=self.source.as_ref(){if Arc::strong_count(source)!=1||Arc::weak_count(source)!=0{return Ok(RetainedCloneStep::Progress(Default::default()))}match Arc::try_unwrap(self.source.take().unwrap()){Ok(original)=>{*self.payload=Some(ControlledRetirement::new(original).unwrap_or_else(|_|panic!("admitted original wake payload retains its authority")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))},Err(original)=>{*self.source=Some(original);return Ok(RetainedCloneStep::Progress(Default::default()))}}}
   let payload=self.payload.as_mut().unwrap();
   if payload.terminal_is_empty(){drop(self.payload.take());return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
-  let step=payload.step(grant)?;let progress=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,payload.terminal_is_empty(),"original worker wake payload")?.progress();Ok(RetainedCloneStep::Progress(progress))
+  let step=match payload.step(effect){semio_framework_value::retained_clone::RetainedWorkPoll::Pending{..}=>RetainedCloneStep::Progress(Default::default()),semio_framework_value::retained_clone::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>step,Err(failure)=>{let progress=failure.retained_progress();drop(failure);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker wake payload close was refused").with_retained_progress(progress))}}};let progress=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,payload.terminal_is_empty(),"original worker wake payload")?.progress();Ok(RetainedCloneStep::Progress(progress))
  }
  fn terminal_is_empty(&self)->bool{self.waker.is_none()&&self.source.is_none()&&self.payload.is_none()}
  fn frame_release_bytes(&self)->usize{size_of::<Self>()}
@@ -70,13 +70,13 @@ pub(super) fn session_retained_wake_demands<J>(inner:&WorkerJobSessionInner<J>,c
 }
 struct WakeGate<'a>(&'a AtomicBool);
 impl Drop for WakeGate<'_>{fn drop(&mut self){self.0.store(false,Ordering::Release)}}
-pub(super) fn close_session_retained_wake<J>(inner:&WorkerJobSessionInner<J>,grant:RetainedCloneGrant)->Result<Option<WorkerJobCloseStep>,ValueError>{
- let Some(demand)=session_retained_wake_demands(inner,grant.maximum_copy_bytes)?else{return Ok(None)};
+pub(super) fn close_session_retained_wake<J>(inner:&WorkerJobSessionInner<J>,cx:&mut StepContext<'_>)->Result<Option<WorkerJobCloseStep>,ValueError>{
+ let grant=cx.retained_grant();let Some(demand)=session_retained_wake_demands(inner,grant.maximum_copy_bytes)?else{return Ok(None)};
  if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Some(WorkerJobCloseStep::Pending{progress:Default::default()}))}
  if inner.wake_guard.compare_exchange(false,true,Ordering::Acquire,Ordering::Relaxed).is_err(){return Ok(Some(WorkerJobCloseStep::Blocked))}
  let _gate=WakeGate(&inner.wake_guard);let slot=unsafe{&mut *inner.retained_wake.get()};let original=slot.as_mut().expect("original retained wake admitted by its exclusive gate");
  if original.terminal_is_empty(){drop(slot.take());return Ok(Some(WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}}))}
- let step=original.close_step(grant)?;Ok(Some(WorkerJobCloseStep::Pending{progress:step.progress()}))
+ let Some((step,_performed))=cx.with_original_effect(grant,|_,effect|original.close_step(effect))? else{return Ok(Some(WorkerJobCloseStep::Pending{progress:Default::default()}))};Ok(Some(WorkerJobCloseStep::Pending{progress:step?.progress()}))
 }
 
 #[cfg(test)]

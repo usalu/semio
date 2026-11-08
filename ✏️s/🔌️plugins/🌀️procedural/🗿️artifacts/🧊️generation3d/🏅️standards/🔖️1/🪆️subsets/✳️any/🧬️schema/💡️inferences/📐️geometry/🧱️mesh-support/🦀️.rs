@@ -18,7 +18,7 @@ use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d::mesh::{HalfedgeMesh, MeshKernelError, MeshModelingJob, MeshModelingProgress, MeshModelingStep, MeshTessellationJob, MeshTessellationStep, Vec3};
 use semio_framework_3d::mesh::MeshSurfaceJob;
 use semio_framework_mesh_engine::PolygonMeshSource;
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::retained_clone::RetainedCloneProgress;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
 #[cfg(test)]
@@ -295,23 +295,24 @@ pub fn run(kind: &Kind, build: impl FnOnce() -> Result<Box<dyn Machine>, WidgetF
 
 /// 💼️ A kernel job that turns a mesh into a mesh in budgeted units.
 pub trait Stepper: Send {
-    fn step(&mut self, budget: usize) -> Result<MeshModelingStep, MeshKernelError>;
+    fn step(&mut self, budget: usize, cx: &mut StepContext<'_>) -> Result<MeshModelingStep, MeshKernelError>;
     fn cancel(&mut self);
 }
 
-/// 🎟️ Advances a kernel modeling job by up to `budget` units under the same funding the kernel's own synchronous drivers grant it.
-pub fn modeling_slice(job: &mut MeshModelingJob, budget: usize) -> Result<MeshModelingStep, MeshKernelError> {
-    let grant = RetainedCloneGrant { maximum_items: budget.max(1), maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
-    job.step(budget, grant, &mut RetainedCloneProgress::default())
+/// 🎟️ Advances a kernel modeling job by up to `budget` units inside the caller's own turn: the turn's grant and fuel fund one original effect.
+pub fn modeling_slice(job: &mut MeshModelingJob, budget: usize, cx: &mut StepContext<'_>) -> Result<MeshModelingStep, MeshKernelError> {
+    let grant = cx.retained_grant();
+    let Some((step, _)) = cx.with_original_effect(grant, |_, effect| job.step(budget, effect, &mut RetainedCloneProgress::default())).map_err(MeshKernelError::Retained)? else { return Ok(MeshModelingStep::Working(job.progress())) };
+    step
 }
 
-/// 📣️ Advances a kernel tessellation by up to `events` producer events, each under the exact grant its own quote asks for.
-pub fn tessellation_slice(job: &mut MeshTessellationJob, events: usize) -> Result<MeshTessellationStep, MeshKernelError> {
+/// 📣️ Advances a kernel tessellation by up to `events` producer events, each inside the caller's own turn.
+pub fn tessellation_slice(job: &mut MeshTessellationJob, events: usize, cx: &mut StepContext<'_>) -> Result<MeshTessellationStep, MeshKernelError> {
     let mut last = MeshTessellationStep::Working(job.progress());
     for _ in 0..events.max(1) {
-        let copy = job.next_normal_copy_byte_demand().map_err(MeshKernelError::Retained)?.max(128);
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: job.next_normal_capacity_byte_demand(copy).map_err(MeshKernelError::Retained)?, maximum_release_bytes: job.next_normal_release_byte_demand().map_err(MeshKernelError::Retained)?, maximum_depth: job.next_normal_depth_demand().map_err(MeshKernelError::Retained)? };
-        last = job.step(grant).map_err(MeshKernelError::Retained)?.0;
+        let grant = cx.retained_grant();
+        let Some((step, _)) = cx.with_original_effect(grant, |_, effect| job.step(effect)).map_err(MeshKernelError::Retained)? else { break };
+        last = step.map_err(MeshKernelError::Retained)?.0;
         if !matches!(last, MeshTessellationStep::Working(_)) {
             break;
         }
@@ -320,8 +321,8 @@ pub fn tessellation_slice(job: &mut MeshTessellationJob, events: usize) -> Resul
 }
 
 impl Stepper for MeshModelingJob {
-    fn step(&mut self, budget: usize) -> Result<MeshModelingStep, MeshKernelError> {
-        modeling_slice(self, budget)
+    fn step(&mut self, budget: usize, cx: &mut StepContext<'_>) -> Result<MeshModelingStep, MeshKernelError> {
+        modeling_slice(self, budget, cx)
     }
 
     fn cancel(&mut self) {
@@ -330,7 +331,7 @@ impl Stepper for MeshModelingJob {
 }
 
 impl Stepper for MeshSurfaceJob {
-    fn step(&mut self, budget: usize) -> Result<MeshModelingStep, MeshKernelError> {
+    fn step(&mut self, budget: usize, _cx: &mut StepContext<'_>) -> Result<MeshModelingStep, MeshKernelError> {
         MeshSurfaceJob::step(self, budget)
     }
 
@@ -348,7 +349,7 @@ struct Modeling<J: Stepper>(J);
 
 impl<J: Stepper> Machine for Modeling<J> {
     fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
-        match self.0.step(fuel_budget(cx).saturating_mul(BATCH)).kernel()? {
+        match self.0.step(fuel_budget(cx).saturating_mul(BATCH), cx).kernel()? {
             MeshModelingStep::Working(progress) => Ok(Flow::Working(ratio(progress))),
             MeshModelingStep::Done(mesh) => Ok(Flow::Done(mesh_output(mesh))),
             MeshModelingStep::Cancelled(_) => Err(cancelled_fault()),
@@ -382,7 +383,7 @@ impl Machine for FromSource {
             }
         }
         let Some(job) = self.job.as_mut() else { return Ok(Flow::Working(0.05)) };
-        match modeling_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
+        match modeling_slice(job, fuel.saturating_mul(BATCH), cx).kernel()? {
             MeshModelingStep::Working(progress) => Ok(Flow::Working(0.05 + 0.9 * ratio(progress))),
             MeshModelingStep::Done(mesh) => Ok(Flow::Done(mesh_output(mesh))),
             MeshModelingStep::Cancelled(_) => Err(cancelled_fault()),

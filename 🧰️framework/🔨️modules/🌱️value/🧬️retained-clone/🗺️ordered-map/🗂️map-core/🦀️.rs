@@ -128,9 +128,9 @@ impl<K: Serialize, V: Serialize> Serialize for RetainedOrderedMap<K, V> {
 }
 
 impl<K: RetireOwned, V: RetireOwned> RetireOwned for RetainedOrderedMap<K, V> {
-    type Retirement=<Vec<Vec<(K,V)>> as RetireOwned>::Retirement;
-    fn retirement(self)->Self::Retirement{
-        self.pages.retirement()
+    type RetirementCursor=<Vec<Vec<(K,V)>> as RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{
+        self.pages.retirement_seed()
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { self.pages.retirement_birth_bytes() }
     fn controlled_retirement_supported() -> bool { K::controlled_retirement_supported() && V::controlled_retirement_supported() }

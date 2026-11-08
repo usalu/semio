@@ -68,8 +68,8 @@ impl semio_framework_value::FromValue for EnclosureExchangeCursor{
 impl Serialize for EnclosureExchangeCursor{fn serialize<S:serde::Serializer>(&self,serializer:S)->Result<S::Ok,S::Error>{self.snapshot().serialize(serializer)}}
 impl<'de> Deserialize<'de> for EnclosureExchangeCursor{fn deserialize<D:serde::Deserializer<'de>>(deserializer:D)->Result<Self,D::Error>{let words=<[u64;26]>::deserialize(deserializer)?;Self::from_snapshot(words).map_err(|_|serde::de::Error::custom("invalid enclosure exchange checkpoint"))}}
 impl semio_framework_value::retirement::RetireOwned for EnclosureExchangeCursor{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.snapshot())}
- fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.snapshot())}
+ type RetirementCursor=<[u64;26] as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::RetireOwned::retirement_seed(self.snapshot())}
  fn controlled_retirement_supported()->bool{true}
 }
 use serde::{Serialize,Deserialize};

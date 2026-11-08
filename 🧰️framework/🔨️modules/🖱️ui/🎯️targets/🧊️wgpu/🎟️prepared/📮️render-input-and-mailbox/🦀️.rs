@@ -99,11 +99,12 @@ impl PreparedRenderInput {
         Ok(0)
     }
 
-    pub(super) fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+    pub(super) fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> PreparedClose {
+        let grant = effect.grant();
         let demand = self.next_close_release_byte_demand();
         if let Some(step) = prepared_close_gate(grant, self.terminal_is_empty(), demand) { return step; }
         if let Some(upload) = self.uploads.last_mut() {
-            if !upload.terminal_is_empty() { return prepared_close_child(upload.close_granted(grant)); }
+            if !upload.terminal_is_empty() { return prepared_close_child(upload.close_granted(effect)); }
             self.uploads.pop(); return prepared_close_progress(0);
         }
         if let Some(producer) = self.raster_producers.last_mut() {
@@ -135,7 +136,7 @@ impl PreparedRenderInput {
             return prepared_close_progress(0);
         }
         if self.abandonment_slot != u8::MAX {
-            let Some(state) = PREPARED_RENDER_INPUT_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared input abandonment slot is absent")); };
+            let Some(state) = PREPARED_RENDER_INPUT_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared input abandonment slot is absent").into()); };
             let current = state.load(Ordering::Acquire);
             if !matches!(current, 1 | 3) || state.compare_exchange(current, if current == 3 { 3 } else { 0 }, Ordering::AcqRel, Ordering::Acquire).is_err() { return Ok(CloseStep::Blocked); }
             self.abandonment_slot = u8::MAX; return prepared_close_progress(0);
@@ -269,8 +270,8 @@ impl PreparedRenderInput {
         Ok(())
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
-        self.close_granted(grant)
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> PreparedClose {
+        self.close_granted(effect)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -291,8 +292,8 @@ impl PreparedRenderInput {
         prepared_abandoned_demands(PREPARED_RENDER_INPUT_ABANDONMENT_STATE.iter().zip(PREPARED_RENDER_INPUT_ABANDONMENT_OWNER.iter()), 2, copy, Self::next_close_demands, Self::terminal_is_empty)
     }
 
-    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
-        prepared_abandoned_close(PREPARED_RENDER_INPUT_ABANDONMENT_STATE.iter().zip(PREPARED_RENDER_INPUT_ABANDONMENT_OWNER.iter()), 2, grant, Self::terminal_is_empty, Self::close_granted)
+    pub fn close_abandoned_step(effect: &mut RetainedAllocationEffect<'_>) -> PreparedClose {
+        prepared_abandoned_close(PREPARED_RENDER_INPUT_ABANDONMENT_STATE.iter().zip(PREPARED_RENDER_INPUT_ABANDONMENT_OWNER.iter()), 2, effect, Self::terminal_is_empty, Self::close_granted)
     }
 }
 
@@ -382,10 +383,11 @@ impl PreparedRenderReceiver {
         demand
     }
 
-    pub(super) fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+    pub(super) fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> PreparedClose {
+        let grant = effect.grant();
         if !self.owned { return Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() }); }
         if grant.maximum_items == 0 { return Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }); }
-        if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original prepared mailbox close requires depth")); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original prepared mailbox close requires depth").into()); }
         let Some(slot) = PREPARED_RENDER_MAILBOX.get(usize::from(self.slot)) else { self.owned = false; return prepared_close_progress(0); };
         if slot.generation.load(Ordering::Acquire) != self.generation { self.owned = false; return prepared_close_progress(0); }
         if slot.state.load(Ordering::Acquire) == 1 && slot.packet.load(Ordering::Acquire).is_null() {
@@ -406,7 +408,7 @@ impl PreparedRenderReceiver {
                 slot.state.store(1, Ordering::Release);
                 return prepared_close_progress(size_of::<PreparedRenderPacket>());
             }
-        } else { prepared_close_child(packet.close_granted(grant)) };
+        } else { prepared_close_child(packet.close_granted(effect)) };
         slot.state.store(2, Ordering::Release);
         step
     }
@@ -477,8 +479,8 @@ impl PreparedRenderReceiver {
     pub fn next_abandoned_close_demands(copy: usize) -> Result<RetainedCloneGrant, ValueError> {
         prepared_abandoned_demands(PREPARED_RENDER_MAILBOX.iter().map(|slot| (&slot.state, &slot.packet)), 4, copy, PreparedRenderPacket::next_close_demands, PreparedRenderPacket::retirement_is_empty)
     }
-    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
-        prepared_abandoned_close(PREPARED_RENDER_MAILBOX.iter().map(|slot| (&slot.state, &slot.packet)), 4, grant, PreparedRenderPacket::retirement_is_empty, PreparedRenderPacket::close_granted)
+    pub fn close_abandoned_step(effect: &mut RetainedAllocationEffect<'_>) -> PreparedClose {
+        prepared_abandoned_close(PREPARED_RENDER_MAILBOX.iter().map(|slot| (&slot.state, &slot.packet)), 4, effect, PreparedRenderPacket::retirement_is_empty, PreparedRenderPacket::close_granted)
     }
 
 }

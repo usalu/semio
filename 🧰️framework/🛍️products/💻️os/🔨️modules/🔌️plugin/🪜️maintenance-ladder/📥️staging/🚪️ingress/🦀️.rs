@@ -20,15 +20,15 @@ use semio_plugin_time_travel as time_travel;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// 🌳️ Supplies the exact live and saved previews to the common original child disposer.
-    pub(crate) fn child_root_retirement_unit(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn child_root_retirement_unit(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, closing: bool) -> Result<RetainedCloneStep, Fault> {
         let member = self.time_travel.member.as_ref().and_then(|member| member.children.as_ref());
         let review = self.time_travel.member.as_ref().and_then(|member| member.review_children.as_ref().map(|review|&review.view));
-        advance_original_child_root_retirement(&mut self.child_composition.child_content_retirements, &mut self.child_composition.children, Some(&mut self.child_composition.child_member_retirements), &self.child_composition.child_content_root, member, review, &mut self.maintenance.maintenance_child_root_cursor, grant, closing)
+        advance_original_child_root_retirement(&mut self.child_composition.child_content_retirements, &mut self.child_composition.children, Some(&mut self.child_composition.child_member_retirements), &self.child_composition.child_content_root, member, review, &mut self.maintenance.maintenance_child_root_cursor, effect, closing)
     }
 
     /// 🎟️ Advances one child-member retirement under the caller's unchanged grant.
-    pub fn child_member_retirement_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, Fault> {
-        self.child_composition.child_member_retirement_unit(grant, self.close.close_child_root_detached).map(|step| step.progress())
+    pub fn child_member_retirement_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, Fault> {
+        self.child_composition.child_member_retirement_unit(effect, self.close.close_child_root_detached).map(|step| step.progress())
     }
 }
 
@@ -58,7 +58,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// 🎟️ Advances one child-root retirement under the caller's unchanged grant.
-    pub fn child_root_retirement_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, Fault> {
-        self.child_root_retirement_unit(grant, self.close.close_child_root_detached).map(|step| step.progress())
+    pub fn child_root_retirement_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, Fault> {
+        self.child_root_retirement_unit(effect, self.close.close_child_root_detached).map(|step| step.progress())
     }
 }

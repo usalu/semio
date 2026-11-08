@@ -5,7 +5,7 @@ use semio_framework_value_persistent::list::PagedList;
 use std::{borrow::Borrow,ops::RangeBounds};
 
 /// 📝️ Current inputs reference original rows; superseded rows remain owned until controlled retirement.
-#[derive(Clone,Debug,Default)]
+#[derive(Clone,Debug,Default,semio_framework_value::RetireOwned)]
 pub struct HistoryInputDrafts {
     epoch:u64,
     index:HistoryFoldIndex<MutationId,usize>,
@@ -54,12 +54,6 @@ impl<'a> Iterator for HistoryInputDraftIter<'a> {type Item=(&'a MutationId,&'a I
 impl DoubleEndedIterator for HistoryInputDraftIter<'_> {fn next_back(&mut self)->Option<Self::Item> {self.index.next_back().map(|(key,row)|(key,self.rows.get(*row).and_then(Option::as_ref).expect("current original draft row")))}}
 impl ExactSizeIterator for HistoryInputDraftIter<'_> {}
 impl<'a> IntoIterator for &'a HistoryInputDrafts {type Item=(&'a MutationId,&'a InputReplacement);type IntoIter=HistoryInputDraftIter<'a>;fn into_iter(self)->Self::IntoIter {self.iter()}}
-impl RetireOwned for HistoryInputDrafts {
-    fn retirement(self)->Box<dyn RetirementCursor> {sequence(vec![deferred(self.index),deferred(self.rows)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {sequence_birth_bytes(&[deferred_birth_bytes_for(&self.index),deferred_birth_bytes_for(&self.rows)])}
-    fn controlled_retirement_supported()->bool {true}
-}
-
 #[cfg(feature = "testkit")]
 impl HistoryInputDrafts {
     /// 🪝️ The paged replacement rows, for the companion crate.

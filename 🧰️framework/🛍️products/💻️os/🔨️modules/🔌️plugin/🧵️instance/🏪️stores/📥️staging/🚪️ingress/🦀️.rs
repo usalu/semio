@@ -58,9 +58,25 @@ impl<A: ArtifactApp> InstanceStores<A> {
         if constructor.constructor_lane>=4{return Ok(true)}let extra=std::mem::size_of::<usize>();let g=cx.retained_grant();if cx.should_yield()||g.maximum_copy_bytes<extra+std::mem::size_of::<bool>()||g.maximum_depth==0||g.maximum_items==0{return Ok(false)}let child=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-extra,..g};let mut p=match constructor.constructor_lane{0=>constructor.constructor_document.acknowledge_installed(&self.store,child)?,1=>constructor.constructor_config.acknowledge_installed(&self.config_store,child)?,2=>constructor.constructor_draft.acknowledge_installed(&self.draft_store,child)?,_=>constructor.constructor_interaction.acknowledge_installed(&self.interaction_store,child)?};if p.copied_items!=0{constructor.constructor_lane+=1;p.copied_bytes+=extra;cx.consume_retained(p)?;cx.consume_fuel(p.copied_items as u64);}Ok(false)
     }
 
-    pub fn drive_store_constructor_unit(&mut self, constructor: &mut ConstructorState<A>,grant:RetainedCloneGrant)->Result<bool,ValueError> {self.drive_store_constructor_unit_in_phase(constructor, grant, ArtifactStoreConstructorPhase::Preparation)}
+    /// 🪙️ Advances one original store constructor unit inside the turn's own performed-work effect; the performed work is its one fuel debit.
+    pub fn drive_store_constructor_unit(&mut self, constructor: &mut ConstructorState<A>,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<bool,ValueError> {
+        match cx.with_original_effect(grant,|_,effect|self.drive_store_constructor_unit_in_phase(constructor,effect,ArtifactStoreConstructorPhase::Preparation))? {
+            Some((result,performed))=>{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));result}
+            None=>Ok(true),
+        }
+    }
 
-    pub(crate) fn drive_store_constructor_unit_in_phase(&mut self, constructor: &mut ConstructorState<A>,grant:RetainedCloneGrant,phase:ArtifactStoreConstructorPhase)->Result<bool,ValueError> {
+    /// 🧊️ [`Self::drive_store_constructor_unit`] outside any Job turn under one explicit authoring wallet whose stock is `grant`.
+    pub fn drive_store_constructor_unit_cold(&mut self, constructor: &mut ConstructorState<A>,grant:RetainedCloneGrant)->Result<bool,ValueError> {
+        let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);
+        match wallet.run(grant,64,|effect|self.drive_store_constructor_unit_in_phase(constructor,effect,ArtifactStoreConstructorPhase::Preparation))? {
+            Some(done)=>done.output,
+            None=>Ok(true),
+        }
+    }
+
+    pub(crate) fn drive_store_constructor_unit_in_phase(&mut self, constructor: &mut ConstructorState<A>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,phase:ArtifactStoreConstructorPhase)->Result<bool,ValueError> {
+        let grant=effect.grant();
         if constructor.has_constructor_receipt(){return Ok(true)}
         if !constructor.constructor_recipient_admitted {
             let copied_bytes=0usize;
@@ -73,10 +89,10 @@ impl<A: ArtifactApp> InstanceStores<A> {
         if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth<2{return Ok(true)}
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-copied_bytes,maximum_depth:grant.maximum_depth-1,..grant};
         let (kind,mut receipt,done)=match constructor.constructor_lane {
-            0=>{let receipt=constructor.constructor_document.advance(&mut self.store,child,A::build_document_store_owners)?;(ArtifactStoreConstructorKind::Document,receipt,constructor.constructor_document.terminal_is_empty())},
-            1=>{let receipt=constructor.constructor_config.advance(&mut self.config_store,child,A::build_config_store_owners)?;(ArtifactStoreConstructorKind::Config,receipt,constructor.constructor_config.terminal_is_empty())},
-            2=>{let receipt=constructor.constructor_draft.advance(&mut self.draft_store,child,A::build_draft_store_owners)?;(ArtifactStoreConstructorKind::Draft,receipt,constructor.constructor_draft.terminal_is_empty())},
-            _=>{let receipt=constructor.constructor_interaction.advance(&mut self.interaction_store,child,|grant|Some(semio_plugin_interaction::retirement::interaction_store_owners(grant)))?;(ArtifactStoreConstructorKind::Interaction,receipt,constructor.constructor_interaction.terminal_is_empty())},
+            0=>{let receipt=constructor.constructor_document.advance(&mut self.store,&mut effect.nested(child),A::build_document_store_owners)?;(ArtifactStoreConstructorKind::Document,receipt,constructor.constructor_document.terminal_is_empty())},
+            1=>{let receipt=constructor.constructor_config.advance(&mut self.config_store,&mut effect.nested(child),A::build_config_store_owners)?;(ArtifactStoreConstructorKind::Config,receipt,constructor.constructor_config.terminal_is_empty())},
+            2=>{let receipt=constructor.constructor_draft.advance(&mut self.draft_store,&mut effect.nested(child),A::build_draft_store_owners)?;(ArtifactStoreConstructorKind::Draft,receipt,constructor.constructor_draft.terminal_is_empty())},
+            _=>{let receipt=constructor.constructor_interaction.advance(&mut self.interaction_store,&mut effect.nested(child),|grant|Some(semio_plugin_interaction::retirement::interaction_store_owners(grant)))?;(ArtifactStoreConstructorKind::Interaction,receipt,constructor.constructor_interaction.terminal_is_empty())},
         };
         if receipt==Default::default(){return Ok(true)}
         if !receipt.fits(child){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original catalog parent exceeded its full grant"))}
@@ -95,13 +111,14 @@ impl<A: ArtifactApp> InstanceStores<A> {
         demand.copy_bytes=demand.copy_bytes.checked_add(parent).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"constructor close parent quote overflow"))?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"constructor close parent depth overflow"))?;Ok(demand)
     }
 
-    pub fn close_store_constructor_unit(&mut self, constructor: &mut ConstructorState<A>,grant:RetainedCloneGrant)->Result<bool,ValueError>{
+    pub fn close_store_constructor_unit(&mut self, constructor: &mut ConstructorState<A>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,ValueError>{
+        let grant=effect.grant();
         let phase=ArtifactStoreConstructorPhase::Close;
         if constructor.has_constructor_receipt(){return Ok(true)}
         if constructor.constructor_recipient_retired{return Ok(false)}
         let installed=match constructor.constructor_lane{0=>self.store.owned_disposer_installed(),1=>self.config_store.owned_disposer_installed(),2=>self.draft_store.owned_disposer_installed(),_=>self.interaction_store.owned_disposer_installed()};
-        if constructor.constructor_lane<4&&!installed{return self.drive_store_constructor_unit_in_phase(constructor, grant, ArtifactStoreConstructorPhase::Close)}
-        if !constructor.constructor_recipient_admitted{return self.drive_store_constructor_unit_in_phase(constructor, grant, ArtifactStoreConstructorPhase::Close)}
+        if constructor.constructor_lane<4&&!installed{return self.drive_store_constructor_unit_in_phase(constructor, effect, ArtifactStoreConstructorPhase::Close)}
+        if !constructor.constructor_recipient_admitted{return self.drive_store_constructor_unit_in_phase(constructor, effect, ArtifactStoreConstructorPhase::Close)}
         if constructor.constructor_lane>=4{
             let copied_bytes=0usize;
             if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(true)}
@@ -110,7 +127,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
         let parent=0usize;
         if grant.maximum_items==0||grant.maximum_copy_bytes<parent||grant.maximum_depth<2{return Ok(true)}
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent,maximum_depth:grant.maximum_depth-1,..grant};
-        let (kind,mut receipt,done)=match constructor.constructor_lane{0=>{let receipt=constructor.constructor_document.close(child)?;(ArtifactStoreConstructorKind::Document,receipt,constructor.constructor_document.terminal_is_empty())},1=>{let receipt=constructor.constructor_config.close(child)?;(ArtifactStoreConstructorKind::Config,receipt,constructor.constructor_config.terminal_is_empty())},2=>{let receipt=constructor.constructor_draft.close(child)?;(ArtifactStoreConstructorKind::Draft,receipt,constructor.constructor_draft.terminal_is_empty())},_=>{let receipt=constructor.constructor_interaction.close(child)?;(ArtifactStoreConstructorKind::Interaction,receipt,constructor.constructor_interaction.terminal_is_empty())}};
+        let (kind,mut receipt,done)=match constructor.constructor_lane{0=>{let receipt=constructor.constructor_document.close(&mut effect.nested(child))?;(ArtifactStoreConstructorKind::Document,receipt,constructor.constructor_document.terminal_is_empty())},1=>{let receipt=constructor.constructor_config.close(&mut effect.nested(child))?;(ArtifactStoreConstructorKind::Config,receipt,constructor.constructor_config.terminal_is_empty())},2=>{let receipt=constructor.constructor_draft.close(&mut effect.nested(child))?;(ArtifactStoreConstructorKind::Draft,receipt,constructor.constructor_draft.terminal_is_empty())},_=>{let receipt=constructor.constructor_interaction.close(&mut effect.nested(child))?;(ArtifactStoreConstructorKind::Interaction,receipt,constructor.constructor_interaction.terminal_is_empty())}};
         if receipt==Default::default(){return Ok(true)}
         if !receipt.fits(child){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original catalog close exceeded its full grant"))}
         if done{constructor.constructor_lane+=1}receipt.copied_bytes+=parent;unsafe{constructor.constructor_receipts.assume_init_mut()[0]=Some((kind,phase,grant,receipt));}Ok(true)
@@ -157,18 +174,19 @@ impl<A: ArtifactApp> InstanceStores<A> {
     }
 
     /// 📐️ Quotes the next actual pin-source, publication or final frame retirement before mounted cancellation.
-    pub fn checkpoint_composition_pins_close_demands(&self,pins:&Option<Vec<vcs::CompositionPin>>,publication:&Option<Box<semio_os_store_engine_replay::repin::OriginalRepinPublication<A::Mutation>>>,retirement:&semio_framework_value::retained_clone::RetainedCloneClose,closing:bool,body:usize)->Result<RetirementDemand,ValueError>{
-        if !closing{return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()})}if !retirement.is_empty(){return retirement.demands(body)}if let Some(owner)=publication.as_ref(){return if owner.terminal_is_empty(){Ok(semio_os_store_engine_replay::repin::OriginalRepinPublication::<A::Mutation>::boxed_release_demands())}else{owner.close_demands(&self.store,body)}}if pins.is_some(){return retirement.next_owner_demands::<Vec<vcs::CompositionPin>>(true,&None,body)}Ok(Default::default())
+    pub fn checkpoint_composition_pins_close_demands(&self,pins:&Option<Vec<vcs::CompositionPin>>,publication:&Option<Box<semio_os_store_engine_replay::repin::OriginalRepinPublication<A::Mutation>>>,retirement:&semio_framework_value::retained_clone::RetainedCloneClose,resident:&semio_os_store_engine_replay::OriginalReplayResident,closing:bool,body:usize)->Result<RetirementDemand,ValueError>{
+        if !closing{return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()})}if !retirement.is_empty(){return retirement.demands(body)}if let Some(owner)=publication.as_ref(){return if owner.terminal_is_empty(){Ok(semio_os_store_engine_replay::repin::OriginalRepinPublication::<A::Mutation>::boxed_release_demands())}else{owner.close_demands(&self.store,body)}}if pins.is_some(){return retirement.next_owner_demands::<Vec<vcs::CompositionPin>>(true,&None,body)}if !resident.terminal_is_empty(){return Ok(resident.close_demands(body))}Ok(Default::default())
     }
 
     /// 📌️ The original pin vector and current canonical checkpoint advance through the actual native Job until full closure.
-    pub fn checkpoint_composition_pins_unit(&mut self,pins:&mut Option<Vec<vcs::CompositionPin>>,publication:&mut Option<Box<semio_os_store_engine_replay::repin::OriginalRepinPublication<A::Mutation>>>,retirement:&mut semio_framework_value::retained_clone::RetainedCloneClose,closing:&mut bool,publish:bool,body:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn checkpoint_composition_pins_unit(&mut self,pins:&mut Option<Vec<vcs::CompositionPin>>,publication:&mut Option<Box<semio_os_store_engine_replay::repin::OriginalRepinPublication<A::Mutation>>>,retirement:&mut semio_framework_value::retained_clone::RetainedCloneClose,resident:&mut semio_os_store_engine_replay::OriginalReplayResident,closing:&mut bool,publish:bool,body:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::close_original_retained_step;
         use semio_framework_value::RetainedCloneStep;
-        if pins.is_none()&&publication.is_none()&&retirement.is_empty(){return Ok(true)}
+        if pins.is_none()&&publication.is_none()&&retirement.is_empty()&&resident.terminal_is_empty(){return Ok(true)}
         if !*closing&&(!publish||cx.is_cancelled()||publication.as_ref().is_some_and(|owner|owner.published())){let d=RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()};cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|_|{*closing=true;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}))?;return Ok(false)}
-        if !*closing{if let Some(owner)=publication.as_mut(){if owner.prepared(){owner.publish(&mut self.store,cx)?;}else{owner.advance(&mut self.store,cx)?;}}else{semio_os_store_engine_replay::repin::OriginalRepinPublication::admit_current(&self.store,pins,cx,publication)?;}return Ok(false)}
-        cx.with_original_retirement(|cx|{let d=self.checkpoint_composition_pins_close_demands(pins,publication,retirement,*closing,body)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),d){return Ok(false)}if !retirement.is_empty(){let selection=retirement.select(body)?;close_original_retained_step(cx,d,|g|selection.step(g))?;}else if let Some(owner)=publication.as_mut(){if !owner.terminal_is_empty(){owner.close_step(&mut self.store,body,cx)?;}else{close_original_retained_step(cx,d,|_|{*publication=None;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}})?;}}else if pins.is_some(){close_original_retained_step(cx,d,|g|{let o=retirement.begin_granted(pins,g);semio_framework_value::RetainedWorkOutcome{result:o.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:o.work}})?;}Ok(pins.is_none()&&publication.is_none()&&retirement.is_empty())})
+        if !*closing&&resident.constructing(){resident.settle(cx)?;return Ok(false)}
+        if !*closing{if let Some(owner)=publication.as_mut(){if owner.prepared(){owner.publish(&mut self.store,cx)?;}else{owner.advance(&mut self.store,cx)?;}}else{semio_os_store_engine_replay::repin::OriginalRepinPublication::admit_current(&self.store,pins,cx,publication,resident)?;}return Ok(false)}
+        cx.with_original_retirement(|cx|{let d=self.checkpoint_composition_pins_close_demands(pins,publication,retirement,resident,*closing,body)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),d){return Ok(false)}if !retirement.is_empty(){let selection=retirement.select(body)?;close_original_retained_step(cx,d,|g|selection.step(g))?;}else if let Some(owner)=publication.as_mut(){if !owner.terminal_is_empty(){owner.close_step(&mut self.store,body,cx)?;}else{close_original_retained_step(cx,d,|_|{*publication=None;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}})?;}}else if pins.is_none()&&!resident.terminal_is_empty(){resident.close_step(cx)?;}else if pins.is_some(){close_original_retained_step(cx,d,|g|{let o=retirement.begin_granted(pins,g);semio_framework_value::RetainedWorkOutcome{result:o.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:o.work}})?;}Ok(pins.is_none()&&publication.is_none()&&retirement.is_empty()&&resident.terminal_is_empty())})
     }
 }
 

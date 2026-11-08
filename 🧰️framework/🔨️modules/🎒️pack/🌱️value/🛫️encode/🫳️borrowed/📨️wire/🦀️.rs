@@ -1,7 +1,8 @@
 //! 📨️ One original typed source is measured and encoded by the existing Pack codec before its exact ownership returns.
 use super::{BorrowedProjectedPackCursor,BorrowedProjectedPackFailure};
 use semio_framework_dsl_record::native_encoding::FieldProjectionSource;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+use semio_framework_value::{RetainedAllocationEffect,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+use semio_framework_value_persistent::list::{PagedListReleaseFailure,PagedListReleaseOutcome,PagedListReservationFailure,PagedListReservationOutcome};
 use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneSourceTake};
 use std::mem::{ManuallyDrop,size_of};
@@ -12,6 +13,9 @@ fn page_error(error:semio_framework_value_persistent::list::PagedListError)->Val
 fn header()->RetirementDemand{RetirementDemand{depth:1,..Default::default()}}
 fn item()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 fn invalid(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
+fn act(effect:&mut RetainedAllocationEffect<'_>)->Result<(),ValueError>{if effect.performed(1)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Pack action exceeded its original work"))}}
+fn owe(effect:&mut RetainedAllocationEffect<'_>,work:u128)->Result<(),ValueError>{let owed=u64::try_from(work.saturating_sub(effect.performed_work())).map_err(|_|invalid("original Pack child work overflow"))?;if owed==0||effect.performed(owed)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Pack child work exceeded its original work"))}}
+fn settled(poll:semio_framework_value::OriginalRetirementPoll)->Result<RetainedCloneProgress,BorrowedProjectedPackFailure>{match poll{RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|step.progress()).map_err(Into::into),RetainedWorkPoll::Pending{..}=>Err(invalid("original Pack close cannot resume a pending effect").into())}}
 fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items!=0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 
 /// 🫴️ The caller receives the identical typed owner and encoded wire after all codec symbols and source leases close.
@@ -52,48 +56,49 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
    _=>Default::default(),
   })
  }
- fn advance_one(&mut self,grant:RetainedCloneGrant)->Result<OwnedProjectedPackWireStep<T>,BorrowedProjectedPackFailure>{
-  let none=|progress|OwnedProjectedPackWireStep{ready:None,progress};let demand=self.next_demand(grant.maximum_copy_bytes)?;if !permits(grant,demand){return Ok(none(Default::default()))}if self.closing{return self.close_one(grant).map(none)}
-  if matches!(self.phase,6|7)&&self.pending_offset<self.pending_length{let count=(self.pending_length-self.pending_offset).min(grant.maximum_copy_bytes);for index in self.pending_offset..self.pending_offset+count{self.wire.push_reserved(self.scratch[index]).map_err(|_|invalid("original Pack output lost its paid page"))?;}self.pending_offset+=count;return Ok(none(RetainedCloneProgress{copied_bytes:count,..item()}))}
+ fn advance_one(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<OwnedProjectedPackWireStep<T>,BorrowedProjectedPackFailure>{
+  let grant=effect.grant();let none=|progress|OwnedProjectedPackWireStep{ready:None,progress};let demand=self.next_demand(grant.maximum_copy_bytes)?;if !permits(grant,demand){return Ok(none(Default::default()))}if self.closing{return self.close_one(effect).map(none)}
+  if matches!(self.phase,6|7)&&self.pending_offset<self.pending_length{act(effect)?;let count=(self.pending_length-self.pending_offset).min(grant.maximum_copy_bytes);for index in self.pending_offset..self.pending_offset+count{self.wire.push_reserved(self.scratch[index]).map_err(|_|invalid("original Pack output lost its paid page"))?;}self.pending_offset+=count;return Ok(none(RetainedCloneProgress{copied_bytes:count,..item()}))}
   match self.phase{
    0=>{
-    if self.admission.is_none(){let original=self.original.take().ok_or_else(||invalid("original Pack input is absent"))?;*self.admission=Some(RetainedCloneSource::<T>::admission_owned(original,()));return Ok(none(item()))}
+    if self.admission.is_none(){act(effect)?;let original=self.original.take().ok_or_else(||invalid("original Pack input is absent"))?;*self.admission=Some(RetainedCloneSource::<T>::admission_owned(original,()));return Ok(none(item()))}
     let admission=self.admission.as_mut().ok_or_else(||invalid("original Pack admission is absent"))?;
-    if admission.phase()=="ready"{let turn=admission.take_output(&mut self.source,grant);let step=turn.result?;if admission.terminal_is_empty(){self.admission.take();*self.cursor=Some(Default::default());self.phase=1;}Ok(none(step.progress()))}else{let turn=admission.advance(grant);turn.result.map(|step|none(step.progress())).map_err(Into::into)}
+    if admission.phase()=="ready"{let turn=admission.take_output(&mut self.source,grant);owe(effect,turn.work)?;let step=turn.result?;if admission.terminal_is_empty(){self.admission.take();*self.cursor=Some(Default::default());self.phase=1;}Ok(none(step.progress()))}else{let turn=admission.advance(effect);turn.result.map(|step|none(step.progress())).map_err(Into::into)}
    },
    1|6=>{
     let source=self.source.as_ref().ok_or_else(||invalid("original Pack source is absent"))?.try_borrow()?;let cursor=self.cursor.as_mut().ok_or_else(||invalid("original Pack codec is absent"))?;
-    let result=cursor.advance_intrinsic(source.get(),self.field_id,&mut self.scratch,grant);
+    let result=cursor.advance_intrinsic(source.get(),self.field_id,&mut self.scratch,effect);
     match result{Ok(step)=>{if self.phase==1{self.length=self.length.checked_add(step.written_bytes).ok_or_else(||invalid("original Pack measured length overflow").with_retained_progress(step.progress))?}else{self.pending_length=step.written_bytes;self.pending_offset=0;self.written=self.written.checked_add(step.written_bytes).filter(|written|*written<=self.length).ok_or_else(||invalid("original Pack source exceeded measured length").with_retained_progress(step.progress))?}if step.complete{if self.phase==6&&self.written!=self.length{return Err(invalid("original Pack source changed its measured length").with_retained_progress(step.progress).into())}self.phase+=1;}Ok(none(step.progress))},Err(original)=>{if self.phase==1{self.length=self.length.saturating_add(original.written_bytes)}else{self.written=self.written.saturating_add(original.written_bytes)}Err(original)}}
    },
-   2|7=>{let cursor=self.cursor.as_mut().ok_or_else(||invalid("original Pack symbol close is absent"))?;if cursor.terminal_is_empty(){self.cursor.take();self.phase+=1;return Ok(none(item()))}cursor.close(grant).map(|step|none(step.progress))},
-   3=>{if demand.capacity_bytes==0{self.phase=4;return Ok(none(item()))}let step=self.wire.reserve_exact_capacity_one(self.length,grant.maximum_capacity_bytes).map_err(|error|page_error(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}))?;Ok(none(RetainedCloneProgress{retained_capacity_bytes:step.allocated_bytes,..item()}))},
-   4=>{self.phase=5;Ok(none(item()))},
-   5=>{*self.cursor=Some(Default::default());self.phase=6;Ok(none(item()))},
-   8=>{let source=self.source.as_mut().ok_or_else(||invalid("original Pack source return is absent"))?;match source.take_authority(grant).result?{RetainedCloneSourceTake::Pending(receipt)=>Ok(none(receipt)),RetainedCloneSourceTake::Ready(original,receipt)=>{assert!(source.terminal_is_empty());self.source.take();*self.original=Some(original);self.phase=9;Ok(none(receipt))}}},
-   9=>{let source=self.original.take().ok_or_else(||invalid("original Pack returned input is absent"))?;let wire=WireBytes::from_retained_bytes(std::mem::replace(&mut*self.wire,WirePages::empty()));self.phase=10;Ok(OwnedProjectedPackWireStep{ready:Some(OwnedProjectedPackWireReady{source,wire}),progress:item()})},
+   2|7=>{let cursor=self.cursor.as_mut().ok_or_else(||invalid("original Pack symbol close is absent"))?;if cursor.terminal_is_empty(){act(effect)?;self.cursor.take();self.phase+=1;return Ok(none(item()))}cursor.close(effect).map(|step|none(step.progress))},
+   3=>{if demand.capacity_bytes==0{act(effect)?;self.phase=4;return Ok(none(item()))}match self.wire.reserve_exact_capacity_one(self.length,&mut effect.nested(grant)).result{Ok(PagedListReservationOutcome::Ready(step))=>Ok(none(RetainedCloneProgress{retained_capacity_bytes:step.allocated_bytes,..item()})),Ok(PagedListReservationOutcome::Denied)=>Ok(none(Default::default())),Err(PagedListReservationFailure::Work(error))=>Err(error.into()),Err(PagedListReservationFailure::Allocation{error,copied_bytes})=>Err(page_error(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,copied_bytes,..Default::default()}).into())}},
+   4=>{act(effect)?;self.phase=5;Ok(none(item()))},
+   5=>{act(effect)?;*self.cursor=Some(Default::default());self.phase=6;Ok(none(item()))},
+   8=>{let source=self.source.as_mut().ok_or_else(||invalid("original Pack source return is absent"))?;match match source.take_authority(effect){RetainedWorkPoll::Complete(turn)=>turn.result?,RetainedWorkPoll::Pending{..}=>return Err(invalid("original Pack source return cannot resume a pending effect").into())}{RetainedCloneSourceTake::Pending(receipt)=>Ok(none(receipt)),RetainedCloneSourceTake::Ready(original,receipt)=>{assert!(source.terminal_is_empty());self.source.take();*self.original=Some(original);self.phase=9;Ok(none(receipt))}}},
+   9=>{act(effect)?;let source=self.original.take().ok_or_else(||invalid("original Pack returned input is absent"))?;let wire=WireBytes::from_retained_bytes(std::mem::replace(&mut*self.wire,WirePages::empty()));self.phase=10;Ok(OwnedProjectedPackWireStep{ready:Some(OwnedProjectedPackWireReady{source,wire}),progress:item()})},
    _=>Ok(none(Default::default())),
   }
  }
  /// ✍️ Returns every native codec cause whole while retaining original source and initialized partial bytes for paid close.
- pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<OwnedProjectedPackWireStep<T>,BorrowedProjectedPackFailure>{let result=self.advance_one(grant);if result.is_err(){self.begin_close()}result}
- fn close_one(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,BorrowedProjectedPackFailure>{
-  if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,grant);if let Some((original,()))=returned{*self.original=Some(original);}if admission.terminal_is_empty(){self.admission.take();}return turn.result.map(|step|step.progress()).map_err(Into::into)}
-  if let Some(cursor)=self.cursor.as_mut(){if cursor.terminal_is_empty(){self.cursor.take();return Ok(item())}return cursor.close(grant).map(|step|step.progress)}
-  if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source.take();return Ok(item())}return source.close_step(grant).result.map(|step|step.progress()).map_err(Into::into)}
-  if let Some(owner)=self.original_close.as_mut(){if owner.terminal_is_empty(){self.original_close.take();return Ok(item())}return owner.step(grant).map(|step|step.progress()).map_err(Into::into)}
-  if self.original.is_some(){let original=self.original.take().unwrap();match ControlledRetirement::new(original){Ok(owner)=>{*self.original_close=Some(owner);return Ok(item())},Err((error,original))=>{*self.original=Some(original);return Err(error.into())}}}
-  if !self.wire.is_empty(){let count=self.wire.len().min(grant.maximum_copy_bytes).min(64);for _ in 0..count{self.wire.pop();}return Ok(RetainedCloneProgress{copied_bytes:count,..item()})}if !self.wire.terminal_is_empty(){let step=self.wire.release_empty_page(grant.maximum_release_bytes).map_err(page_error)?;return Ok(RetainedCloneProgress{released_bytes:step.released_allocation_bytes,..item()})}Ok(Default::default())
+ pub fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<OwnedProjectedPackWireStep<T>,BorrowedProjectedPackFailure>{let result=self.advance_one(effect);if result.is_err(){self.begin_close()}result}
+ fn close_one(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,BorrowedProjectedPackFailure>{
+  let grant=effect.grant();
+  if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,effect);if let Some((original,()))=returned{*self.original=Some(original);}if admission.terminal_is_empty(){self.admission.take();}return turn.result.map(|step|step.progress()).map_err(Into::into)}
+  if let Some(cursor)=self.cursor.as_mut(){if cursor.terminal_is_empty(){act(effect)?;self.cursor.take();return Ok(item())}return cursor.close(effect).map(|step|step.progress)}
+  if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){act(effect)?;self.source.take();return Ok(item())}return settled(source.close_step(effect))}
+  if let Some(owner)=self.original_close.as_mut(){if owner.terminal_is_empty(){act(effect)?;self.original_close.take();return Ok(item())}return settled(owner.step(effect))}
+  if self.original.is_some(){act(effect)?;let original=self.original.take().ok_or_else(||invalid("original Pack input is absent"))?;match ControlledRetirement::new(original){Ok(owner)=>{*self.original_close=Some(owner);return Ok(item())},Err((error,original))=>{*self.original=Some(original);return Err(error.into())}}}
+  if !self.wire.is_empty(){act(effect)?;let count=self.wire.len().min(grant.maximum_copy_bytes).min(64);for _ in 0..count{self.wire.pop();}return Ok(RetainedCloneProgress{copied_bytes:count,..item()})}if !self.wire.terminal_is_empty(){return match self.wire.release_empty_page(effect).result{Ok(PagedListReleaseOutcome::Ready(step))=>Ok(RetainedCloneProgress{released_bytes:step.released_allocation_bytes,..item()}),Ok(PagedListReleaseOutcome::Denied)=>Ok(Default::default()),Err(PagedListReleaseFailure::Work(error))=>Err(error.into()),Err(PagedListReleaseFailure::Release(error))=>Err(page_error(error).into())}}Ok(Default::default())
  }
  /// ♻️ Closes the same source, symbols and partial output under the original caller's grant.
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,BorrowedProjectedPackFailure>{self.begin_close();let demand=self.close_demand(grant.maximum_copy_bytes)?;if !permits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}let receipt=self.close_one(grant)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(receipt)}else{RetainedCloneStep::Progress(receipt)})}
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,BorrowedProjectedPackFailure>{let grant=effect.grant();self.begin_close();let demand=self.close_demand(grant.maximum_copy_bytes)?;if !permits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}let receipt=self.close_one(effect)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(receipt)}else{RetainedCloneStep::Progress(receipt)})}
 }
 impl<T:FieldProjectionSource+RetireOwned+Sync> Drop for OwnedProjectedPackWireCursor<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original Pack source and partial wire require paid terminal close")}}
 
-struct OwnedProjectedPackWireRetirement<T:FieldProjectionSource+RetireOwned+Sync>(ManuallyDrop<OwnedProjectedPackWireCursor<T>>);
+#[doc(hidden)]pub struct OwnedProjectedPackWireRetirement<T:FieldProjectionSource+RetireOwned+Sync>(ManuallyDrop<OwnedProjectedPackWireCursor<T>>);
 impl<T:FieldProjectionSource+RetireOwned+Sync> semio_framework_value::retirement::RetirementCursor for OwnedProjectedPackWireRetirement<T>{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.close_demand(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep as Step;match self.0.close_step(grant){Err(failure)=>Step::Failure(failure.reason,0),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>Step::Complete(0),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Step::Progress(progress,1)}}
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep as Step;let turn=self.0.close_step(effect);let work=effect.performed_work();match turn{Err(failure)=>Step::Failure(failure.reason.into(),work),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>Step::Complete(work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Step::Progress(progress,work)}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demand(usize::MAX)?.copy_bytes)}
  fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.0.close_demand(body)?.copy_bytes)}
@@ -105,7 +110,8 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> semio_framework_value::retirement
 }
 impl<T:FieldProjectionSource+RetireOwned+Sync> Drop for OwnedProjectedPackWireRetirement<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.0.terminal_is_empty(),"original Pack wire cursor abandoned its paid closure");if self.0.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.0)}}}}
 impl<T:FieldProjectionSource+RetireOwned+Sync> RetireOwned for OwnedProjectedPackWireCursor<T>{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(OwnedProjectedPackWireRetirement(ManuallyDrop::new(self)))}
+ type RetirementCursor=OwnedProjectedPackWireRetirement<T>;
+ fn retirement_seed(self)->Self::RetirementCursor{OwnedProjectedPackWireRetirement(ManuallyDrop::new(self))}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OwnedProjectedPackWireRetirement<T>>())}
  fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
 }

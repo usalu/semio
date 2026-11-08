@@ -39,7 +39,7 @@ fn add<T>(target: &mut PagedVec<T>, value: T, progress: &mut RetainedCloneProgre
 
 fn reserve<T>(target: &mut PagedVec<T>, progress: &mut RetainedCloneProgress) -> Result<(), RetainedOutputError> {
     let bytes = target.next_allocation_bytes().map_err(|_| RetainedOutputError::Capacity)?;
-    match target.reserve_one(bytes) {
+    match target.reserve_one_cold(bytes) {
         Ok(value) => { progress.retained_capacity_bytes = value.allocated_bytes; progress.copied_bytes = value.placed_bytes; Ok(()) },
         Err(error) => { progress.retained_capacity_bytes = error.allocated_bytes; Err(RetainedOutputError::Allocation) },
     }
@@ -118,8 +118,7 @@ impl DrawList {
         }
         if matches!(work.phase, 0 | 4 | 6 | 8) { result.maximum_depth = result.maximum_depth.max(32); }
         if work.phase == 1 && work.piece.is_none() { result.maximum_copy_bytes = size_of::<ScissorRect>(); result.maximum_depth = 16; }
-        if work.phase == 1 && work.local_clip.is_some() && work.left == usize::MAX {
-            let clip = work.local_clip.as_ref().unwrap();
+        if let (1, usize::MAX, Some(clip)) = (work.phase, work.left, work.local_clip.as_ref()) {
             result.maximum_release_bytes = if clip.scissors.is_empty() { clip.scissors.next_release_allocation_bytes().map_err(|_| RetainedOutputError::Capacity)? } else { 0 };
         }
         if work.phase == 10 {
@@ -206,7 +205,7 @@ impl DrawList {
                             if clip.scissors.terminal_is_empty() { work.local_clip = None; work.phase = 2; }
                             else {
                                 let bytes = clip.scissors.next_release_allocation_bytes().map_err(|_| RetainedOutputError::Capacity)?;
-                                let result = clip.scissors.release_empty_page(bytes).map_err(|_| RetainedOutputError::Capacity)?;
+                                let result = clip.scissors.release_empty_page_leased(bytes).map_err(|_| RetainedOutputError::Capacity)?;
                                 progress.released_bytes = result.released_allocation_bytes;
                             }
                         }
@@ -302,7 +301,7 @@ impl DrawList {
                 if clip.scissors.terminal_is_empty() { work.local_clip = None; }
                 else {
                     let bytes = clip.scissors.next_release_allocation_bytes().map_err(|_| RetainedOutputError::Capacity)?;
-                    progress.released_bytes = clip.scissors.release_empty_page(bytes).map_err(|_| RetainedOutputError::Capacity)?.released_allocation_bytes;
+                    progress.released_bytes = clip.scissors.release_empty_page_leased(bytes).map_err(|_| RetainedOutputError::Capacity)?.released_allocation_bytes;
                 }
             }
         } else if work.pending.is_some() || self.layers.len() > work.layer_base {

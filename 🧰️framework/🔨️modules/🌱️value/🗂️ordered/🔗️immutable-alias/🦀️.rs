@@ -33,7 +33,7 @@ impl<T> SharedOwner<T> {
         let grant=effect.grant();if !crate::retained_clone::retained_clone_grant_admits(grant,demand)||effect.maximum_work_units()==0{return crate::RetainedWorkOutcome{result:Ok(None),work:0}}
         if effect.actual().is_some(){return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("shared admission requires the original empty actual marker")),work:0}}
         let performed=match effect.performed(1){Ok(performed)=>performed,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:1}};if !performed{return crate::RetainedWorkOutcome{result:Ok(None),work:1}}
-        *effect.actual()=Some(0);let mut storage=match crate::retirement::arc_custody::try_uninitialized_arc::<T>(){Ok(storage)=>storage,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:1}};
+        let turn=crate::retirement::arc_custody::try_uninitialized_arc::<T>(grant,effect.actual());let mut storage=match turn.result{Ok((storage,_))=>storage,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:1}};
         *effect.actual()=Some(Self::allocation_bytes());let slot=Arc::get_mut(&mut storage).expect("new shared storage is uniquely owned");slot.write(input.take().expect("checked original shared input remains resident"));*output=Some(Self{value:ManuallyDrop::new(Some(unsafe{storage.assume_init()}))});
         crate::RetainedWorkOutcome{result:Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:Self::allocation_bytes(),..Default::default()})),work:1}
     }
@@ -50,7 +50,6 @@ impl<T> SharedOwner<T> {
      let turn=crate::retirement::arc_custody::try_uninitialized_arc::<T>(grant,actual);let mut storage=match turn.result{Ok((storage,_))=>storage,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:turn.work}};
      let value=input.take().expect("ordered shared original validated before allocation");Arc::get_mut(&mut storage).expect("fresh shared allocation has one owner").write(value);*output=Some(Self{value:ManuallyDrop::new(Some(unsafe{storage.assume_init()}))});
      crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})),work:turn.work+3}
-    }
     }
 
     /// 🧊️ Constructs one shared allocation at an explicitly synchronous boundary.

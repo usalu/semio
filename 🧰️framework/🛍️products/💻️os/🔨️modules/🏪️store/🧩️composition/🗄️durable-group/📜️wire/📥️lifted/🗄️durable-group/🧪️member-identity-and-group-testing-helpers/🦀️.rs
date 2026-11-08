@@ -54,7 +54,7 @@ where
     P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     Mutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
-    let mut owners = semio_framework_os_store_one_item_batch::OneItemOwners::from_returned(member.edit, member.post_snapshot, member.mutation_retirement, member.snapshot_retirement);
+    let mut owners = semio_framework_os_store_one_item_batch::paged_one_item::OneItemOwners::from_returned(member.edit, member.post_snapshot, member.mutation_retirement, member.snapshot_retirement);
     let outcome = (|| {
         let (edit, _) = owners.refused.as_ref().expect("original fixture candidates");
         let actor = edit.actor.clone().ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?;
@@ -75,7 +75,7 @@ where
         let copy = owners.close_demands(0).expect("fixture original copy quote").copy_bytes;
         let demand = owners.close_demands(copy).expect("fixture original close quote");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        let step = owners.close_step(grant).expect("caller-issued fixture original closure");
+        let step = semio_framework_value::AuthoringWallet::new(grant, 64).run_settled(grant, 64, |effect| owners.close_step(effect)).expect("authored fixture original closure").expect("admitted fixture original closure").0.result.expect("caller-issued fixture original closure");
         assert!(step.progress().fits(grant));
     }
     outcome

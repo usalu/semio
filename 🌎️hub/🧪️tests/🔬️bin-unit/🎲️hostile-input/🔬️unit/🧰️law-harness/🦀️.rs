@@ -121,7 +121,7 @@ async fn check_in_map_edits(fixture: &CheckInFixture, ids: &[&str]) -> Vec<Mutat
     while !store.close_owned_terminal_is_empty() {
         let demand = store.close_owned_demands(0).expect("the store quotes its next close turn");
         let grant = directory::os_store::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        store.close_owned_step(grant).expect("editor store closes");
+        store.close_owned_step_cold(grant).expect("editor store closes");
     }
     drop(store);
     applied.expect("editor edits apply");

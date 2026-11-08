@@ -42,17 +42,19 @@ impl FaultMessageOwner{
  }
 }
 impl Drop for FaultMessageOwner{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Fault construction retains its original candidate or partial backing");}}
-struct FaultMessageRetirement{owner:FaultMessageOwner}
+#[doc(hidden)]
+pub struct FaultMessageRetirement{owner:FaultMessageOwner}
 impl RetirementCursor for FaultMessageRetirement{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(self.owner.close_demand())}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let turn=self.owner.close_step(grant);match turn.result{Ok(step)=>{if self.owner.terminal_is_empty()&&step.progress()==Default::default(){RetirementStep::Complete(turn.work)}else{RetirementStep::Progress(step.progress(),turn.work)}},Err(error)=>RetirementStep::Failure(error,turn.work)}}
+ fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{let turn=self.owner.close_step(effect.grant());match turn.result{Ok(step)=>{if self.owner.terminal_is_empty()&&step.progress()==Default::default(){RetirementStep::Complete(turn.work)}else{RetirementStep::Progress(step.progress(),turn.work)}},Err(error)=>RetirementStep::Failure(error.into(),turn.work)}}
  fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
  fn next_close_byte_demand(&self)->Option<usize>{Some(self.owner.close_demand().release_bytes)}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
 }
 impl RetireOwned for FaultMessageOwner{
- fn retirement(self)->Box<dyn RetirementCursor>{Box::new(FaultMessageRetirement{owner:self})}
+ type RetirementCursor=FaultMessageRetirement;
+ fn retirement_seed(self)->FaultMessageRetirement{FaultMessageRetirement{owner:self}}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<FaultMessageRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }

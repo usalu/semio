@@ -171,11 +171,12 @@ impl Drop for ArtifactCursor {
 artifact_retire_struct!(ArtifactCursorOwners { applied_edit_ids, redo_edit_ids, checkpoint_id });
 artifact_retire_struct!(ArtifactCursorGroupRoot { visibility, owners });
 impl RetireOwned for ArtifactCursor {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
+    type RetirementCursor = Box<dyn RetirementCursor>;
+    fn retirement_seed(self) -> Self::RetirementCursor {
         let mut original = ManuallyDrop::new(self);
         let owners = unsafe { ManuallyDrop::take(&mut original.owners) };
         let group = unsafe { ManuallyDrop::take(&mut original.group) };
-        sequence(vec![semio_framework_value::retirement::deferred(owners), semio_framework_value::retirement::deferred(group)])
+        sequence(vec![Box::new(semio_framework_value::retirement::deferred(owners)), Box::new(semio_framework_value::retirement::deferred(group))])
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&*self.owners), semio_framework_value::retirement::deferred_birth_bytes_for(&*self.group)]) }
     fn controlled_retirement_supported() -> bool { true }

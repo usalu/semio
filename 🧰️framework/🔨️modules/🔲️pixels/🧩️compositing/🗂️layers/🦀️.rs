@@ -1,7 +1,8 @@
 //! 🗂️ Retained preparation of centered raster layers for the shared compositor.
 use super::*;
 use crate::retirement::MaskBytes;
-use semio_framework_value::RetainedCloneGrant;
+use semio_framework_value::{AuthoringWallet,RetainedCloneGrant};
+const CLOSE_WORK:u64=1<<20;
 
 /// 🎭️ Effective coverage of an imported RGBA mask, shared by compositing and mask authoring.
 pub fn mask_coverage(pixel:[u8;4])->u8 {
@@ -77,24 +78,24 @@ impl RasterStackJob {
     pub fn last_turn_semantic_work(&self)->u64 {self.last_semantic}
     pub fn failure_pending(&self)->bool {self.failed.is_some()}
     pub fn settlement_pending(&self)->bool {self.composite.as_ref().is_some_and(CompositeJob::settlement_pending)}
-    fn mask(&mut self,image:RasterLease,work:&mut RetainedWorkLedger)->Result<bool,PixelEditError> {
+    fn mask(&mut self,image:RasterLease,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,PixelEditError> {
         if self.building.is_none() {
             validate_image(&image)?;let count=validate_extent(image.width,image.height)?;
             if self.coverage_total+count>MASK_BUDGET{return Err(PixelEditError::Invalid("Mask coverage exceeds 64 MiB preparation budget"));}
             self.coverage_total+=count;self.building=Some(Building {image,bytes:Vec::new(),count});self.step_cpu=1;return Ok(true);
         }
         let Some(building)=self.building.as_mut() else {return Err(refused("Mask preparation vanished"));};
-        if building.bytes.capacity()<building.count&&!work.reserve_vec(&mut building.bytes,building.count).map_err(refused)?{return Ok(false);}
+        if building.bytes.capacity()<building.count&&!work.reserve_vec(&mut building.bytes,building.count,alloc).map_err(refused)?{return Ok(false);}
         if building.bytes.len()<building.count {
             let have=building.bytes.len();let take=(building.count-have).min(MASK_CHUNK);
             if !work.copy_bytes(take){return Ok(false);}
             for index in have..have+take {let at=index*4;let pixel=&building.image.pixels;building.bytes.push(mask_coverage([pixel[at],pixel[at+1],pixel[at+2],pixel[at+3]]));}
             self.planned+=1;self.step_cpu=1;return Ok(true);
         }
-        if self.prepared.capacity()==self.prepared.len() {let target=self.prepared.len().checked_mul(2).ok_or(refused("Mask table overflow"))?.max(4);if !work.reserve_vec(&mut self.prepared,target).map_err(refused)?{return Ok(false);}}
+        if self.prepared.capacity()==self.prepared.len() {let target=self.prepared.len().checked_mul(2).ok_or(refused("Mask table overflow"))?.max(4);if !work.reserve_vec(&mut self.prepared,target,alloc).map_err(refused)?{return Ok(false);}}
         if !work.arc_ready::<MaskBytes>().map_err(refused)?||!work.vec_slot(&mut self.prepared).map_err(refused)?{return Ok(false);}
         let Some(finished)=self.building.take() else {return Err(refused("Mask preparation vanished"));};
-        let lease=MaskLease(work.arc_new(MaskBytes(finished.bytes)).map_err(|(error,_)|refused(error))?);
+        let lease=MaskLease(work.arc_new(MaskBytes(finished.bytes),alloc).map_err(|(error,_)|refused(error))?);
         work.vec_push(&mut self.prepared,(finished.image,lease)).map_err(|(error,_)|refused(error))?;
         self.step_cpu=1;Ok(true)
     }
@@ -109,15 +110,15 @@ impl RasterStackJob {
         self.composite=Some(CompositeJob::new_owned(width,height,origin,std::mem::take(&mut self.input.images),std::mem::take(&mut self.layers)));
         self.phase="compositing";Ok(true)
     }
-    fn plan(&mut self,work:&mut RetainedWorkLedger)->Result<bool,PixelEditError> {
-        if self.building.is_some(){let image=self.building.as_ref().map(|b|b.image.clone());return match image {Some(image)=>self.mask(image,work),None=>Ok(false)};}
+    fn plan(&mut self,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,PixelEditError> {
+        if self.building.is_some(){let image=self.building.as_ref().map(|b|b.image.clone());return match image {Some(image)=>self.mask(image,work,alloc),None=>Ok(false)};}
         if self.phase=="measuring"{return self.measure();}
         let d=self.depth;
         let Some(level)=siblings(&self.input.layers,&self.at[..d]) else {return Err(refused("Layer tree diverged from its plan"));};
         let at=self.at[d];
         if at==level.len() {self.step_cpu=1;if d==0{self.phase="measuring";}else{self.depth=d-1;self.at[d-1]+=1;}return Ok(true);}
         let Some(destination)=destination(&mut self.layers,&self.at[..d]) else {return Err(refused("Layer tree diverged from its plan"));};
-        if destination.capacity()<level.len()&&!work.reserve_vec(destination,level.len()).map_err(refused)?{return Ok(false);}
+        if destination.capacity()<level.len()&&!work.reserve_vec(destination,level.len(),alloc).map_err(refused)?{return Ok(false);}
         let layer=&level[at];
         if layer.id.is_empty()||seen(&self.input.layers,&self.at[..=d],&layer.id)||self.nodes>=1024{return Err(PixelEditError::Invalid("Layer identifiers must be unique within 1024 nodes"));}
         if !layer.opacity.is_finite()||!(0.0..=1.0).contains(&layer.opacity){return Err(PixelEditError::Invalid("Invalid layer opacity"));}
@@ -146,14 +147,14 @@ impl RasterStackJob {
                 let image=source(&self.input.images,key)?.clone();
                 let mapping=multiply(inverse(local)?,multiply(if spec.linked{transform}else{IDENTITY},centered(placement,spec.width.unwrap_or(image.width),spec.height.unwrap_or(image.height),image.width,image.height)?));
                 inverse(mapping)?;inverse(multiply(world,mapping))?;
-                let Some(coverage)=self.prepared.iter().find(|(prepared,_)|Arc::ptr_eq(&prepared.0,&image.0)).map(|(_,coverage)|coverage.clone()) else {return self.mask(image,work);};
+                let Some(coverage)=self.prepared.iter().find(|(prepared,_)|Arc::ptr_eq(&prepared.0,&image.0)).map(|(_,coverage)|coverage.clone()) else {return self.mask(image,work,alloc);};
                 mask=Some(CompositeMask {width:image.width,height:image.height,coverage,transform:mapping,invert:spec.invert});
             }
         }
         let mut blend=layer.blend_mode;
         let content=match &layer.content {
             RasterStackContent::Pixel {image_key:Some(key),..}=>{
-                if self.scratch.capacity()<key.len()&&!work.reserve_string(&mut self.scratch,key.len()).map_err(refused)?{return Ok(false);}
+                if self.scratch.capacity()<key.len()&&!work.reserve_string(&mut self.scratch,key.len(),alloc).map_err(refused)?{return Ok(false);}
                 if self.scratch.is_empty()&&!work.string_push(&mut self.scratch,key).map_err(refused)?{return Ok(false);}
                 CompositeContent::Pixels(std::mem::take(&mut self.scratch))
             },
@@ -170,7 +171,7 @@ impl RasterStackJob {
         if matches!(layer.content,RasterStackContent::Group(_)) {self.frames[d+1]=Frame {world,enabled:visible,paint:active};self.depth=d+1;self.at[d+1]=0;}else{self.at[d]+=1;}
         Ok(true)
     }
-    pub fn advance(&mut self,mut budget:usize,work:&mut RetainedWorkLedger)->Result<PixelProgress,PixelEditError> {
+    pub fn advance(&mut self,mut budget:usize,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<PixelProgress,PixelEditError> {
         self.last_work=0;self.last_semantic=0;
         if self.cancelled{return Err(PixelEditError::Cancelled);}
         if let Some(error)=&self.failed{return Err(error.clone());}
@@ -181,7 +182,7 @@ impl RasterStackJob {
             let mut used=0;
             let result=(||{for _ in 0..budget {
                 if self.composite.is_some()||!work.can_step(){break;}
-                used+=1;self.step_cpu=0;let before=work.receipt();let result=self.plan(work);
+                used+=1;self.step_cpu=0;let before=work.receipt();let result=self.plan(work,alloc);
                 if self.step_cpu>0||!matches!(&result,Ok(false))||work.receipt()!=before {self.last_work+=1;work.note_source(root);}
                 if matches!(&result,Ok(true)){self.last_semantic+=1;}
                 self.pending=work.next_demand();
@@ -192,7 +193,7 @@ impl RasterStackJob {
         }
         if budget>0&&!work.blocked() {
             if let Some(job)=self.composite.as_mut() {
-                let outcome=job.advance(budget,work);
+                let outcome=job.advance(budget,work,alloc);
                 self.last_work+=job.last_turn_work();self.last_semantic+=job.last_turn_semantic_work();self.pending=job.next_work_demand();
                 match outcome {
                     Err(error)=>{self.failed=Some(error.clone());return Err(error);},
@@ -216,14 +217,17 @@ impl RasterStackJob {
         let output=if !self.cancelled&&self.failed.is_none()&&self.phase=="complete"{self.output.take()}else{None};
         self.cancelled=true;(RasterStackRetirement::new(self),output)
     }
-    /// 🎁️ Returns the finished output after paying each retirement step with the exact grant it quotes.
-    pub fn into_result(self)->Result<RasterStackResult,PixelEditError> {
+    /// 🎁️ Returns the finished output after paying each retirement step from the caller's explicit authoring wallet.
+    pub fn into_result(self,wallet:&mut AuthoringWallet)->Result<RasterStackResult,PixelEditError> {
         let status=self.result().map(|_|());let(mut retired,output)=self.into_retirement();
+        let denied=|_|refused("Stack retirement refused its authoring wallet");
         while !retired.terminal_is_empty() {
-            let copy=retired.next_copy_byte_demand().map_err(|_|refused("Stack retirement refused its demand"))?;let release=retired.next_release_byte_demand().map_err(|_|refused("Stack retirement refused its demand"))?;
-            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retired.next_capacity_byte_demand(if copy>0{copy}else{release}).map_err(|_|refused("Stack retirement refused its demand"))?,maximum_release_bytes:release,maximum_depth:retired.next_depth_demand().map_err(|_|refused("Stack retirement refused its demand"))?};
-            let step=retired.close_step(grant).map_err(|_|refused("Stack retirement refused its physical grant"))?;
-            if step.progress()==Default::default(){return Err(refused("Stack retirement made no funded progress"));}
+            let copy=retired.next_copy_byte_demand().map_err(denied)?;let release=retired.next_release_byte_demand().map_err(denied)?;
+            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retired.next_capacity_byte_demand(if copy>0{copy}else{release}).map_err(denied)?,maximum_release_bytes:release,maximum_depth:retired.next_depth_demand().map_err(denied)?};
+            let Some((turn,_))=wallet.run_settled(grant,CLOSE_WORK,|effect|retired.close_step(effect)).map_err(denied)? else {return Err(refused("Stack retirement exceeded its authoring wallet"));};
+            let work=turn.work;let step=turn.result.map_err(|_|refused("Stack retirement refused its physical grant"))?;
+            wallet.post(step.progress()).map_err(denied)?;
+            if work==0 {return Err(refused("Stack retirement made no funded progress"));}
         }
         status?;output.ok_or(PixelEditError::Incomplete)
     }

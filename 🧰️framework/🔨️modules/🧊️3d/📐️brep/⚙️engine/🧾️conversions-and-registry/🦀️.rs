@@ -154,7 +154,7 @@ impl Brep {
     /// still named, which emptied the preview of every example built on it
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️slider-reevaluation-correctness-2026-09-15.md`).
     pub(super) fn compact_unreachable(&mut self) {
-        if self.pending_mutations>0 {return;}
+        if self.pending_mutations.count()>0 {return;}
         let body = &self.body;
         let mut changed=false;for slot in 0..self.live.slot_count() {if let Some(original)=self.live.extract_slot_if(slot,|_,entity|label_of_entity(body,entity).is_some()){drop(original);changed=true;}}if changed{self.advance_live_revision();}
         let roots = self.live_roots();

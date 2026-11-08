@@ -26,6 +26,24 @@ enum Phase{Reserve,Fill,Sort,Validate,Settled}
 /// 🧳️ The caller retains the original immutable coordinate sources and admits every action before advancing.
 pub struct IndexedEditPlan{shape:IndexedEditShape,orders:ManuallyDrop<[Option<Vec<IndexedEditEntry>>;3]>,kind:IndexedEditKind,phase:Phase,cursor:usize,removal:usize,sort:HeapSortCursor,fault:Option<IndexedEditFault>,output_len:Option<usize>,closing:bool,retirement:RetainedCloneClose}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"indexed edit plan lacks its live admitted phase")}
+/// 🧾️ Settles a child turn whether it already settled or may still be pending, so a pending close inside one action is an invariant failure.
+pub(crate) trait Settle<T,E>{fn settled(self)->crate::RetainedWorkOutcome<T,E>;}
+impl<T,E> Settle<T,E> for crate::RetainedWorkOutcome<T,E>{fn settled(self)->crate::RetainedWorkOutcome<T,E>{self}}
+impl<T,E:From<ValueError>> Settle<T,E> for crate::retained_clone::RetainedWorkPoll<T,E>{fn settled(self)->crate::RetainedWorkOutcome<T,E>{match self{crate::retained_clone::RetainedWorkPoll::Complete(turn)=>turn,crate::retained_clone::RetainedWorkPoll::Pending{work}=>crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original child close left its producer reply pending inside one action").into()),work}}}}
+/// 🔁️ Lifts a settled or pending child turn into a poll so a pending close keeps propagating to the original driver.
+pub(crate) trait Polled<T,E>{fn polled(self)->crate::retained_clone::RetainedWorkPoll<T,E>;}
+impl<T,E> Polled<T,E> for crate::RetainedWorkOutcome<T,E>{fn polled(self)->crate::retained_clone::RetainedWorkPoll<T,E>{crate::retained_clone::RetainedWorkPoll::Complete(self)}}
+impl<T,E> Polled<T,E> for crate::retained_clone::RetainedWorkPoll<T,E>{fn polled(self)->crate::retained_clone::RetainedWorkPoll<T,E>{self}}
+/// 🚪️ Exits a close action early when a child stays pending and otherwise yields its settled turn.
+pub(crate) trait Exit{fn exit(self)->Result<crate::OriginalRetirementOutcome,semio_framework_value_retirement::RetirementPollExit>;}
+impl Exit for crate::OriginalRetirementOutcome{fn exit(self)->Result<crate::OriginalRetirementOutcome,semio_framework_value_retirement::RetirementPollExit>{Ok(self)}}
+impl Exit for crate::retained_clone::RetainedWorkPoll<crate::retained_clone::RetainedCloneStep,crate::OriginalRetirementFailure>{fn exit(self)->Result<crate::OriginalRetirementOutcome,semio_framework_value_retirement::RetirementPollExit>{semio_framework_value_retirement::RetirementPollExit::settled(self)}}
+/// 💳️ Records on the original effect exactly the work this action owes beyond what its children already recorded.
+pub(crate) fn record_owed(effect:&mut crate::RetainedAllocationEffect<'_>,work:u128)->Result<(),ValueError>{let done=effect.performed_work();if done>work{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"indexed edit recorded more work than it reports"))}let owed=u64::try_from(work-done).map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"indexed edit work does not fit one original unit"))?;if owed==0||effect.performed(owed)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"indexed edit work exceeded its original authority"))}}
+/// 🧾️ Settles one action so the reported work equals the work its original effect recorded.
+pub(crate) fn finish<T,E:From<ValueError>>(effect:&mut crate::RetainedAllocationEffect<'_>,work:u128,result:Result<T,E>)->crate::RetainedWorkOutcome<T,E>{let recorded=record_owed(effect,work);crate::RetainedWorkOutcome{result:match(result,recorded){(Ok(value),Ok(()))=>Ok(value),(Err(error),_)=>Err(error),(Ok(_),Err(error))=>Err(error.into())},work}}
+/// 📦️ Allocates one empty vector through the original allocation marker, recording the real bytes even on refusal.
+pub(crate) fn allocate_empty_vec<T>(count:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->Result<Vec<T>,ValueError>{let actual=effect.actual();if actual.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"indexed edit allocation attempt is occupied"))}if count==0||size_of::<T>()==0{return Ok(Vec::new())}let layout=std::alloc::Layout::array::<T>(count).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"indexed edit vector layout overflow"))?;let pointer=unsafe{std::alloc::alloc(layout)}.cast::<T>();*actual=Some(if pointer.is_null(){0}else{layout.size()});if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"indexed edit vector backing allocation refused"))}Ok(unsafe{Vec::from_raw_parts(pointer,0,count)})}
 impl IndexedEditPlan{
  pub fn new(shape:IndexedEditShape)->Self{Self{shape,orders:ManuallyDrop::new([None,None,None]),kind:IndexedEditKind::Removed,phase:Phase::Reserve,cursor:0,removal:0,sort:HeapSortCursor::new(0),fault:None,output_len:None,closing:false,retirement:Default::default()}}
  pub fn shape(&self)->IndexedEditShape{self.shape}
@@ -42,20 +60,20 @@ impl IndexedEditPlan{
   Ok(RetirementDemand{copy_bytes:Self::fixed(),capacity_bytes,depth:1,..Default::default()})
  }
  fn refuse(&mut self,p:RetainedCloneProgress)->IndexedEditStep{let fault=match self.kind{IndexedEditKind::Removed=>IndexedEditFault::Remove,IndexedEditKind::Modified=>IndexedEditFault::Modify,IndexedEditKind::Added=>IndexedEditFault::Add};self.fault=Some(fault);self.phase=Phase::Settled;IndexedEditStep::Refused(fault,p)}
- pub fn advance(&mut self,grant:RetainedCloneGrant,coordinate:impl FnOnce(IndexedEditKind,usize)->crate::RetainedWorkOutcome<usize>)->crate::RetainedWorkOutcome<IndexedEditStep>{let mut work=0;let result=(||{
+ pub fn advance(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,coordinate:impl FnOnce(IndexedEditKind,usize)->crate::RetainedWorkOutcome<usize>)->crate::RetainedWorkOutcome<IndexedEditStep>{let grant=effect.grant();let mut work=0;let result=(||{
   let demand=self.demand()?;if !retained_clone_grant_admits(grant,demand){return Ok(IndexedEditStep::Progress(Default::default()));}
   work=1;let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};let kind=self.kind.index();
   match self.phase{
    Phase::Reserve=>{
     if self.kind==IndexedEditKind::Removed&&self.shape.removed>self.shape.base_len{return Ok(self.refuse(progress));}
-    let mut order=Vec::new();order.try_reserve_exact(self.count()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"indexed coordinate directory reservation refused"))?;progress.retained_capacity_bytes=order.capacity()*size_of::<IndexedEditEntry>();self.orders[kind]=Some(order);self.phase=Phase::Fill;
+    let order=crate::allocate_empty_vec::<IndexedEditEntry>(self.count(),effect)?;progress.retained_capacity_bytes=order.capacity()*size_of::<IndexedEditEntry>();self.orders[kind]=Some(order);self.phase=Phase::Fill;
    },
    Phase::Fill=>{
-    if self.cursor<self.count(){let turn=coordinate(self.kind,self.cursor);work+=turn.work;let entry=IndexedEditEntry{index:turn.result?,ordinal:self.cursor};self.orders[kind].as_mut().unwrap().push(entry);self.cursor+=1;}
+    if self.cursor<self.count(){let turn=coordinate(self.kind,self.cursor);work+=turn.work;let entry=IndexedEditEntry{index:turn.result?,ordinal:self.cursor};self.orders[kind].as_mut().ok_or_else(invalid)?.push(entry);self.cursor+=1;}
     else{self.sort=HeapSortCursor::new(self.count());self.phase=Phase::Sort;}
    },
    Phase::Sort=>{
-    let order=self.orders[kind].as_mut().unwrap();match self.sort.next(){
+    let order=self.orders[kind].as_mut().ok_or_else(invalid)?;match self.sort.next(){
      HeapSortWork::Complete=>{self.cursor=0;self.phase=Phase::Validate;},
      HeapSortWork::Compare{left,right}=>{let a=order[left];let b=order[right];self.sort.advance(Some((a.index,a.ordinal).cmp(&(b.index,b.ordinal)))).map_err(|_|invalid())?;},
      HeapSortWork::Swap{left,right}=>{order.swap(left,right);self.sort.advance(None).map_err(|_|invalid())?;},
@@ -67,7 +85,7 @@ impl IndexedEditPlan{
      if let Some(next)=self.kind.next(){self.kind=next;self.cursor=0;self.phase=Phase::Reserve;}
      else{self.output_len=Some(self.shape.base_len.checked_sub(self.shape.removed).and_then(|n|n.checked_add(self.shape.added)).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"indexed final cardinality overflow"))?);self.phase=Phase::Settled;return Ok(IndexedEditStep::Admitted(progress));}
     }else{
-     let order=self.orders[kind].as_ref().unwrap();let row=order[self.cursor];let removed=self.orders[0].as_ref().unwrap();
+     let order=self.orders[kind].as_ref().ok_or_else(invalid)?;let row=order[self.cursor];let removed=self.orders[0].as_ref().ok_or_else(invalid)?;
      if self.kind==IndexedEditKind::Modified&&removed.get(self.removal).is_some_and(|r|r.index<row.index){self.removal+=1;return Ok(IndexedEditStep::Progress(progress));}
      let duplicate=self.cursor>0&&order[self.cursor-1].index==row.index;
      let bad=duplicate||match self.kind{IndexedEditKind::Removed=>row.index>=self.shape.base_len,IndexedEditKind::Modified=>row.index>=self.shape.base_len||removed.get(self.removal).is_some_and(|r|r.index==row.index),IndexedEditKind::Added=>row.index>self.shape.base_len-self.shape.removed+self.cursor};
@@ -77,22 +95,22 @@ impl IndexedEditPlan{
    Phase::Settled=>return Err(invalid()),
   }
   Ok(IndexedEditStep::Progress(progress))
- })();crate::RetainedWorkOutcome{result,work}}
+ })();crate::finish(effect,work,result)}
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}self.retirement.next_owner_demands::<Vec<IndexedEditEntry>>(self.orders.iter().any(Option::is_some),&None,body)}
  pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(invalid())}self.retirement.next_owner_work::<Vec<IndexedEditEntry>>(self.orders.iter().any(Option::is_some),&None,body)}
  pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result:Result<RetainedCloneStep,crate::OriginalRetirementFailure>=(||{
   if !self.closing{return Err(invalid().into());}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if !self.retirement.is_empty(){let turn=self.retirement.step_granted(effect);work+=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()));}
+  if !self.retirement.is_empty(){let turn=crate::retained_clone::settle_child_close(self.retirement.step_granted(effect));work+=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()));}
   for order in self.orders.iter_mut(){let turn=self.retirement.begin_granted(order,effect);work+=turn.work;if let Some(step)=turn.result?{return Ok(RetainedCloneStep::Progress(step.progress()));}}
   Ok(RetainedCloneStep::Complete(Default::default()))
- })();crate::RetainedWorkOutcome{result,work}}
+ })();crate::finish(effect,work,result)}
 
  pub fn requires_original_birth(&self)->bool{self.retirement.requires_original_birth()}
- pub fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{self.retirement.step_original_birth(original,grant)}
+ pub fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{crate::Settle::settled(self.retirement.step_original_birth(original,grant))}
  pub fn requires_original_control(&self)->bool{self.retirement.requires_original_control()}
- pub fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{if self.requires_original_birth(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"settle original birth first").into()),work:0}}if self.requires_original_control(){return self.retirement.step_original(original,effect)}self.close_step(effect)}
+ pub fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{if self.requires_original_birth(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"settle original birth first").into()),work:0}}if self.requires_original_control(){return crate::Settle::settled(self.retirement.step_original(original,effect))}self.close_step(effect)}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.orders.iter().all(Option::is_none)&&self.retirement.is_empty()}
 }
 impl Drop for IndexedEditPlan{fn drop(&mut self){let empty=self.orders.iter().all(Option::is_none)&&self.retirement.is_empty();assert!(std::thread::panicking()||empty,"indexed edit directories require funded original closure");if empty{unsafe{ManuallyDrop::drop(&mut self.orders);}}}}

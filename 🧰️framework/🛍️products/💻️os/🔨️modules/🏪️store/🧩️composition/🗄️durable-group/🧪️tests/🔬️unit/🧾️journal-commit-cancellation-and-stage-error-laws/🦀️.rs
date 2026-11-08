@@ -49,10 +49,10 @@ async fn durable_store_private_committed_record_recovers_all_three_stores_withou
     };
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::StagingParent));
-    assert!(matches!(host.advance(grant), DurableOwnedMapRecoveryAdvanceV1::Progress(_)), "committed parent stages before a recoverable drawing dependency fault");
+    assert!(matches!(receive_turn(|receiving| host.advance(grant, receiving)), DurableOwnedMapRecoveryAdvanceV1::Progress(_)), "committed parent stages before a recoverable drawing dependency fault");
     assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing));
     let drawing_retirement_factory = host.operation.as_mut().and_then(|operation| operation.drawing.as_mut()).and_then(|drawing| drawing.owners.snapshot_retirement_factory.take());
-    assert_eq!(host.advance(grant), DurableOwnedMapRecoveryAdvanceV1::Fault(DurableOwnedGroupDecisionError::InvalidFrontier));
+    assert_eq!(receive_turn(|receiving| host.advance(grant, receiving)), DurableOwnedMapRecoveryAdvanceV1::Fault(DurableOwnedGroupDecisionError::InvalidFrontier));
     assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing));
     let all_old = host.capture_snapshot().expect("pre-visibility recovery fault keeps one complete old triple visible");
     assert_eq!([all_old.parent.n, all_old.drawing.n, all_old.value.n], [Some(0), Some(0), Some(0)]);
@@ -61,14 +61,14 @@ async fn durable_store_private_committed_record_recovers_all_three_stores_withou
     for _ in 0..4096 {
         if !observed_post_visibility_retry && host.phase() == Some(DurableOwnedThreeStoreCommitPhaseV1::AdoptingDrawing) {
             let drawing_retirement_factory = host.operation.as_mut().and_then(|operation| operation.drawing.as_mut()).and_then(|drawing| drawing.owners.snapshot_retirement_factory.take());
-            assert_eq!(host.advance(grant), DurableOwnedMapRecoveryAdvanceV1::Fault(DurableOwnedGroupDecisionError::InvalidOutcome));
+            assert_eq!(receive_turn(|receiving| host.advance(grant, receiving)), DurableOwnedMapRecoveryAdvanceV1::Fault(DurableOwnedGroupDecisionError::InvalidOutcome));
             assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::AdoptingDrawing));
             let all_new = host.capture_snapshot().expect("post-visibility recovery fault keeps one complete new triple visible");
             assert_eq!([all_new.parent.n, all_new.drawing.n, all_new.value.n], [Some(7), Some(11), Some(13)]);
             *host.operation.as_mut().and_then(|operation| operation.drawing.as_mut()).expect("retained recovery keeps the exact drawing Store after visibility").owners.snapshot_retirement_factory = drawing_retirement_factory;
             observed_post_visibility_retry = true;
         }
-        match host.advance(grant) {
+        match receive_turn(|receiving| host.advance(grant, receiving)) {
             DurableOwnedMapRecoveryAdvanceV1::AwaitingAcknowledgement => assert!(host.acknowledge_restoration(&receipt)),
             DurableOwnedMapRecoveryAdvanceV1::Complete => break,
             DurableOwnedMapRecoveryAdvanceV1::Progress(_) | DurableOwnedMapRecoveryAdvanceV1::DiagnosticProgress(_, _) | DurableOwnedMapRecoveryAdvanceV1::Blocked => {}
@@ -123,19 +123,19 @@ async fn durable_store_group_journal_commit_flips_one_shared_root_then_adopts_ex
     let mut sink = FakeJournalSink { resolution: FakeJournalResolution::Commit, state: Arc::clone(&state) };
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     while coordinator.phase() != DurableOwnedThreeStoreCommitPhaseV1::StartingJournal {
-        coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("fixed-three staging turn");
+        receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).expect("fixed-three staging turn");
         let read = capture_store_owned_three_snapshot(&parent, &drawing, &value).expect("pending partial staging reads all-old");
         assert_eq!([read.parent.n, read.drawing.n, read.value.n], [Some(0), Some(0), Some(0)]);
     }
     let decision_bytes = coordinator.decision_pack.as_ref().expect("starting journal retains decision bytes").len();
     let one_byte = copy_grant(1);
-    assert_eq!(coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, one_byte).unwrap(), DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
+    assert_eq!(receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, one_byte, receiving)).unwrap(), DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
     assert_eq!(state.lock().unwrap().begins, 0);
     let insufficient = copy_grant(decision_bytes - 1);
-    assert_eq!(coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, insufficient).unwrap(), DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
+    assert_eq!(receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, insufficient, receiving)).unwrap(), DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
     assert_eq!(state.lock().unwrap().begins, 0);
     let exact = copy_grant(decision_bytes);
-    assert_eq!(coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, exact).unwrap(), DurableOwnedThreeStoreCommitAdvanceV1::Progress(DurableOwnedThreeStoreCommitPhaseV1::Journal));
+    assert_eq!(receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, exact, receiving)).unwrap(), DurableOwnedThreeStoreCommitAdvanceV1::Progress(DurableOwnedThreeStoreCommitPhaseV1::Journal));
     assert_eq!(state.lock().unwrap().begins, 1);
     let mut observed_pending = false;
     let mut observed_committed = false;
@@ -143,7 +143,7 @@ async fn durable_store_group_journal_commit_flips_one_shared_root_then_adopts_ex
     let mut rejected_foreign_visibility = false;
     let mut rejected_structurally_false_adoption = false;
     for _ in 0..4096 {
-        let step = coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("retained group commit turn");
+        let step = receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).expect("retained group commit turn");
         let read = capture_store_owned_three_snapshot(&parent, &drawing, &value).expect("one captured group read");
         if coordinator.phase() == DurableOwnedThreeStoreCommitPhaseV1::Journal {
             assert_eq!([read.parent.n, read.drawing.n, read.value.n], [Some(0), Some(0), Some(0)]);
@@ -218,11 +218,11 @@ async fn durable_store_group_cancellation_waits_for_trusted_absence_then_restore
     let mut sink = FakeJournalSink { resolution: FakeJournalResolution::AbsentAfterCancel, state: Arc::clone(&state) };
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     while coordinator.phase() != DurableOwnedThreeStoreCommitPhaseV1::Journal {
-        coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("pre-journal stage");
+        receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).expect("pre-journal stage");
     }
     assert!(coordinator.cancel());
     for _ in 0..4096 {
-        coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("cancel resolution turn");
+        receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).expect("cancel resolution turn");
         let read = capture_store_owned_three_snapshot(&parent, &drawing, &value).expect("cancelled captured group read");
         assert_eq!([read.parent.n, read.drawing.n, read.value.n], [Some(0), Some(0), Some(0)]);
         if coordinator.terminal_is_empty() {
@@ -249,18 +249,18 @@ async fn durable_store_group_stage_error_retains_abort_owner_until_every_root_is
     let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
     let mut sink = FakeJournalSink { resolution: FakeJournalResolution::Commit, state: Arc::clone(&state) };
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
-    coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("parent stages before injected drawing failure");
+    receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).expect("parent stages before injected drawing failure");
     assert_eq!(coordinator.phase(), DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing);
         assert!(parent.wire.durable_group_root.as_ref().unwrap().retirement.as_ref().unwrap().planning_output.is_some(),"staged candidate retains its original encoded packet for controlled retirement");
 let drawing_retirement_factory = drawing.owners.snapshot_retirement_factory.take();
-    assert_eq!(coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant), Err(DurableOwnedGroupDecisionError::InvalidFrontier));
+    assert_eq!(receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)), Err(DurableOwnedGroupDecisionError::InvalidFrontier));
     assert_eq!(coordinator.phase(), DurableOwnedThreeStoreCommitPhaseV1::AbortingValue);
     *drawing.owners.snapshot_retirement_factory = drawing_retirement_factory;
     let value_addresses=coordinator.value.as_ref().map(|outcome|[outcome.prepared.edit()as*const _ as usize,Arc::as_ptr(outcome.prepared.post_snapshot())as usize,outcome.recovery_pack.as_ptr()as usize]).unwrap();
-    let(denied,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||coordinator.advance(&mut parent,&mut drawing,&mut value,&mut sink,copy_grant(0)).unwrap());assert!(matches!(denied,DurableOwnedThreeStoreCommitAdvanceV1::Blocked));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(coordinator.value.as_ref().map(|outcome|[outcome.prepared.edit()as*const _ as usize,Arc::as_ptr(outcome.prepared.post_snapshot())as usize,outcome.recovery_pack.as_ptr()as usize]).unwrap(),value_addresses);
-    let(receipt,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||coordinator.advance(&mut parent,&mut drawing,&mut value,&mut sink,grant).unwrap());let DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(_,receipt)=receipt else{panic!("unstaged original transfer must report actual ownership work");};assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
+    let(denied,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||receive_turn(|receiving| coordinator.advance(&mut parent,&mut drawing,&mut value,&mut sink,copy_grant(0), receiving)).unwrap());assert!(matches!(denied,DurableOwnedThreeStoreCommitAdvanceV1::Blocked));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(coordinator.value.as_ref().map(|outcome|[outcome.prepared.edit()as*const _ as usize,Arc::as_ptr(outcome.prepared.post_snapshot())as usize,outcome.recovery_pack.as_ptr()as usize]).unwrap(),value_addresses);
+    let(receipt,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||receive_turn(|receiving| coordinator.advance(&mut parent,&mut drawing,&mut value,&mut sink,grant, receiving)).unwrap());let DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(_,receipt)=receipt else{panic!("unstaged original transfer must report actual ownership work");};assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
     for _ in 0..4096 {
-        coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("retained stage-error owner continues abort cleanup");
+        receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).expect("retained stage-error owner continues abort cleanup");
         if coordinator.terminal_is_empty() {
             break;
         }
@@ -284,10 +284,10 @@ async fn durable_store_group_uncertain_journal_error_retries_same_owner_without_
     let mut sink = FakeJournalSink { resolution: FakeJournalResolution::ErrorThenCommit, state: Arc::clone(&state) };
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     while coordinator.phase() != DurableOwnedThreeStoreCommitPhaseV1::Journal {
-        coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("pre-journal stage");
+        receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).expect("pre-journal stage");
     }
-    coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("journal first pending turn");
-    assert!(coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).is_err());
+    receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).expect("journal first pending turn");
+    assert!(receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).is_err());
     assert_eq!(coordinator.phase(), DurableOwnedThreeStoreCommitPhaseV1::Journal);
     let pending = capture_store_owned_three_snapshot(&parent, &drawing, &value).expect("uncertain journal read remains coherent");
     assert_eq!([pending.parent.n, pending.drawing.n, pending.value.n], [Some(0), Some(0), Some(0)]);
@@ -296,7 +296,7 @@ async fn durable_store_group_uncertain_journal_error_retries_same_owner_without_
         assert_eq!((journal.begins, journal.advances), (1, 2));
     }
     for _ in 0..4096 {
-        let step = coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("same journal owner retries");
+        let step = receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).expect("same journal owner retries");
         if let DurableOwnedThreeStoreCommitAdvanceV1::AwaitingAck(receipt) = step {
             assert!(coordinator.acknowledge(&receipt));
         }

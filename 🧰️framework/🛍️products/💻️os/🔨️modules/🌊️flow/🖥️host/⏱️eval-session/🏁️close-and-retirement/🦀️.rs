@@ -68,8 +68,15 @@ impl FlowEvalSession {
     /// ♻️ Forwards the existing live retirement engine's real work independently of its result.
     pub fn retirement_original_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{let result=self.retirement.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:self.retirement.work}}
 
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,ValueError>{
+    /// 🧊️ [`Self::close_step`] outside any Job turn under one explicit authoring wallet whose stock is `grant`.
+    pub fn close_step_cold(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,ValueError>{
+        let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);
+        match wallet.run(grant,64,|effect|self.close_step(effect))?{Some(done)=>done.output,None=>Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
+    }
+
+    pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,ValueError>{
         use semio_framework_job::InteractiveJobCloseStep as Step;
+        let grant=effect.grant();
         let empty=RetainedCloneProgress::default();
         if !self.closing{return Ok(Step::Blocked)}
         if grant.maximum_items==0{return Ok(Step::Pending{progress:empty})}
@@ -80,7 +87,7 @@ impl FlowEvalSession {
         if let Some(source)=self.state.pending_tick_snapshot.take(){self.state.pending_tick_snapshot_retirement=Some(ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!()));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
         if self.state.pending_tick_snapshot_origin.take().is_some(){return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
         if let Some(host)=self.state.retiring_host.as_mut(){
-            let result=host.close_step(grant).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,host.terminal_is_empty(),"Flow session original pending Host"));
+            let result=host.close_step(effect).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,host.terminal_is_empty(),"Flow session original pending Host"));
             if host.terminal_is_empty(){self.state.retiring_host=None;}
             return match result{Ok(step)=>if self.terminal_is_empty(){Ok(Step::Complete{progress:step.progress()})}else{Ok(Step::Pending{progress:step.progress()})},Err(error)=>Err(error)}
         }

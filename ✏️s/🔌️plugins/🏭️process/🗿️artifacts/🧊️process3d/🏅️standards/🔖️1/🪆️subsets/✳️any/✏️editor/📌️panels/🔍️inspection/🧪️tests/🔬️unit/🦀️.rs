@@ -1,3 +1,4 @@
+semio_plugin::install_fixture_heap_witness!();
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as protocol;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]

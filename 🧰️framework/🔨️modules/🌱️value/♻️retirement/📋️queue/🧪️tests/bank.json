@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "stock": {
+    "items": 1000000,
+    "copyBytes": 1073741824,
+    "capacityBytes": 1073741824,
+    "releaseBytes": 1073741824,
+    "depth": 128,
+    "fuel": 1000000000
+  }
+}

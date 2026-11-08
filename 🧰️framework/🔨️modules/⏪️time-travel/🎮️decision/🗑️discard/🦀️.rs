@@ -1,6 +1,6 @@
 //! 🗑️ Original Discard ownership commits separately from admitted displaced-session retirement.
 use crate::{TimeTravelBase,TimeTravelEvent,TimeTravelPending,TimeTravelRefusal,TimeTravelSession,TimeTravelStage};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 /// 🎟️ Keeps the original command and displaced native fields until each granted frontier empties.
 pub struct TimeTravelDiscardCursor {
@@ -91,21 +91,25 @@ impl TimeTravelDiscardCursor {
         self.pending.as_ref().filter(|owner|!owner.terminal_is_empty()).map(|owner|owner as &dyn semio_framework_value::ErasedSnapshotRetirement)
     }
     /// ♻️ One granted original child unit precedes a distinct zero-allocation header turn.
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+        let grant=effect.grant();
+        let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
         if self.done{return Ok(RetainedCloneStep::Complete(Default::default()))}
         let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if !admits(demand,grant){return Ok(idle())}
         if !self.closing{self.begin_close();return Ok(RetainedCloneStep::Progress(copied(demand.copy_bytes)))}
-        if let Some(owner)=self.session.as_mut(){if !owner.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original Discard Session")?;return Ok(RetainedCloneStep::Progress(step.progress()))}self.session=None;return Ok(RetainedCloneStep::Progress(copied(demand.copy_bytes)))}
-        if let Some(owner)=self.pending.as_mut(){if !owner.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original Discard pending")?;return Ok(RetainedCloneStep::Progress(step.progress()))}self.pending=None;return Ok(RetainedCloneStep::Progress(copied(demand.copy_bytes)))}
+        if let Some(owner)=self.session.as_mut(){if !owner.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=RetirementPollExit::resume(owner.step(&mut effect.nested(child)))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original Discard Session")?;return Ok(RetainedCloneStep::Progress(step.progress()))}self.session=None;return Ok(RetainedCloneStep::Progress(copied(demand.copy_bytes)))}
+        if let Some(owner)=self.pending.as_mut(){if !owner.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=RetirementPollExit::resume(owner.step(&mut effect.nested(child)))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original Discard pending")?;return Ok(RetainedCloneStep::Progress(step.progress()))}self.pending=None;return Ok(RetainedCloneStep::Progress(copied(demand.copy_bytes)))}
         self.event=None;self.bound=None;self.planned_stage=None;self.done=true;
         Ok(RetainedCloneStep::Complete(copied(demand.copy_bytes)))
+        })();
+        RetirementPollExit::settle(effect,result)
     }
 }
 impl semio_framework_value::ErasedSnapshotRetirement for TimeTravelDiscardCursor {
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.retirement_demands(body)}
 
-    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{let result=Self::close_step(self,grant);let work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=semio_framework_value::RetainedCloneProgress::default()));semio_framework_value::RetainedWorkOutcome{result,work}}
+    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{Self::close_step(self,effect)}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.close_header_copy_bytes().map_or_else(||self.residue().map_or(Ok(0),|owner|owner.next_copy_byte_demand()),Ok)}
     fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if self.close_header_copy_bytes().is_some(){return Ok(0)}self.residue().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(body))}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{if self.close_header_copy_bytes().is_some(){return Ok(0)}self.residue().map_or(Ok(0),|owner|owner.next_release_byte_demand())}

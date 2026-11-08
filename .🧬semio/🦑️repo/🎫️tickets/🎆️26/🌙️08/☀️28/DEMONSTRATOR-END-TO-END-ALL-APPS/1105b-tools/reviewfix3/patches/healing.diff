@@ -1,0 +1,11 @@
+--- patches/orig/healing.rs	2026-11-07 14:11:42
++++ patches/new/healing.rs	2026-11-07 14:11:42
+@@ -66,7 +66,7 @@
+     fn register_import_entity(&mut self,entity:EntityRef)->Result<GeometryHandle,BrepError> {match entity {EntityRef::Solid(solid)=>Ok(self.register_solid(solid)),EntityRef::Shell(shell)=>Ok(self.register_shell(shell)),_=>Err(BrepError::InvalidInput("mesh import requires shell or solid".into()))}}
+     /// 📦 Advances original production work and publishes its completed original entity.
+     pub fn step_mesh_import_sync(&mut self,cursor:&mut MeshImportCursor,budget:usize)->Result<Option<GeometryHandle>,BrepError> {
+-        if budget>0 && !cursor.is_active() && !cursor.retirement_complete() {cursor.set_active(true);self.pending_mutations+=1;}
++        if budget>0 && !cursor.is_active() && !cursor.cleanup_complete() {cursor.set_active(true);self.pending_mutations+=1;}
+         let result=cursor.step(&mut self.body,budget).map_err(|error|map_err(&error));
+         if cursor.cleanup_complete() && cursor.is_active() {cursor.set_active(false);self.pending_mutations=self.pending_mutations.checked_sub(1).expect("owned import mutation");}
+         match result? {MeshImportStep::Done(entity)=>self.register_import_entity(entity).map(Some),_=>Ok(None)}

@@ -24,6 +24,7 @@ pub use draw_list_and_retained_output::{
 };
 use draw_list_and_retained_output::prepared_scene_pass_usage;
 use draw_list_and_retained_output::SharedBorderPaint;
+use draw_list_and_retained_output::RetainedOutputGrant;
 
 #[path = "🗑️retained-retirement/🦀️.rs"]
 mod retained_retirement;

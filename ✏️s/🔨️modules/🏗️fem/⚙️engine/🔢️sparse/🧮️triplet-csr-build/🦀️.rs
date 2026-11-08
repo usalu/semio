@@ -140,19 +140,18 @@ impl CsrTripletBuild {
         }
     }
 
-    fn reserve<T>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, target: usize, refusal: &'static [u8]) -> Result<bool, &'static [u8]> {
+    fn reserve<T>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, target: usize, refusal: &'static [u8], effect: &mut RetainedAllocationEffect<'_>) -> Result<bool, &'static [u8]> {
         if owner.capacity() >= target {
             return Ok(true);
         }
-        let progress = owner.reserve_capacity_one(target, SPARSE_PAGE_BYTES).map_err(|_| refusal)?;
-        if progress.progressed { Ok(false) } else { Err(refusal) }
+        match owner.reserve_capacity_one(target, effect).result { Ok(PagedListReservationOutcome::Ready(progress)) if progress.progressed => Ok(false), _ => Err(refusal) }
     }
 
-    fn advance(&mut self) -> Result<bool, &'static [u8]> {
+    fn advance(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<bool, &'static [u8]> {
         let n = self.n;
         match self.stage {
             CsrTripletBuildStage::ReserveRows => {
-                if Self::reserve(&mut self.row_counts, n, b"fem.triplet-csr-row-allocation")? {
+                if Self::reserve(&mut self.row_counts, n, b"fem.triplet-csr-row-allocation", effect)? {
                     self.stage = CsrTripletBuildStage::InitializeRows;
                 }
             }
@@ -192,12 +191,12 @@ impl CsrTripletBuild {
                 }
             }
             CsrTripletBuildStage::ReserveIndices => {
-                if Self::reserve(&mut self.indices, self.unique_count, b"fem.triplet-csr-index-allocation")? {
+                if Self::reserve(&mut self.indices, self.unique_count, b"fem.triplet-csr-index-allocation", effect)? {
                     self.stage = CsrTripletBuildStage::ReserveValues;
                 }
             }
             CsrTripletBuildStage::ReserveValues => {
-                if Self::reserve(&mut self.values, self.unique_count, b"fem.triplet-csr-value-allocation")? {
+                if Self::reserve(&mut self.values, self.unique_count, b"fem.triplet-csr-value-allocation", effect)? {
                     self.stage = CsrTripletBuildStage::Merge;
                 }
             }
@@ -224,7 +223,7 @@ impl CsrTripletBuild {
             }
             CsrTripletBuildStage::ReserveIndptr => {
                 let required = n.checked_add(1).ok_or(b"fem.triplet-csr-indptr-overflow" as &'static [u8])?;
-                if Self::reserve(&mut self.indptr, required, b"fem.triplet-csr-indptr-allocation")? {
+                if Self::reserve(&mut self.indptr, required, b"fem.triplet-csr-indptr-allocation", effect)? {
                     self.indptr.push_reserved(0).map_err(|_| b"fem.triplet-csr-indptr-placement" as &'static [u8])?;
                     self.stage = CsrTripletBuildStage::Indptr;
                 }
@@ -245,17 +244,25 @@ impl CsrTripletBuild {
         Ok(self.stage == CsrTripletBuildStage::Complete)
     }
 
-    /// 🎟️ Runs the next quoted action only when the grant covers every axis of its quote; a denied axis changes nothing and reports no progress.
+    /// 🎟️ Runs the next quoted action inside a standalone effect that this grant funds; turns use `step_one_in` with their own effect.
     pub fn step_one_funded(&mut self, grant: RetainedCloneGrant) -> Result<(bool, RetainedCloneProgress), &'static [u8]> {
+        match AuthoringWallet::new(grant, 64).run(grant, 64, |effect| self.step_one_in(effect)).map_err(|_| &b"fem.triplet-csr-quote"[..])? {
+            Some(done) => done.output,
+            None => Ok((false, RetainedCloneProgress::default())),
+        }
+    }
+
+    /// 🎟️ Runs the next quoted action only when the effect's grant covers every axis of its quote; a denied axis changes nothing and reports no progress.
+    pub fn step_one_in(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<(bool, RetainedCloneProgress), &'static [u8]> {
         if self.stage == CsrTripletBuildStage::Complete {
             return Ok((true, RetainedCloneProgress::default()));
         }
         let demand = self.next_demands()?;
-        if !numerical_grant_covers(grant, demand) {
+        if !numerical_grant_covers(effect.grant(), demand) {
             return Ok((false, RetainedCloneProgress::default()));
         }
         let before = self.allocated_bytes();
-        let complete = self.advance()?;
+        let complete = self.advance(effect)?;
         Ok((complete, RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: self.allocated_bytes().saturating_sub(before), released_bytes: 0 }))
     }
 

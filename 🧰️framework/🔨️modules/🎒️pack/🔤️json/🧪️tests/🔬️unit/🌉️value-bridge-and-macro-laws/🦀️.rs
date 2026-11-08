@@ -5,13 +5,13 @@
 /// yet — this exercises the structural walk this region's `to_json_string`/`from_json_str`
 /// are built on.
 #[test]
-fn from_dsl_value_and_to_dsl_value_round_trip_every_shape() {
+fn from_dsl_value_and_to_dsl_value_round_trip_every_shape() {crate::warm();
     let value = DslValue::object([("a".to_string(), DslValue::uint(1)), ("b".to_string(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null, DslValue::String("x".to_string())]))]);
     assert_eq!(to_dsl_value(&from_dsl_value(&value)), value);
 }
 
 #[test]
-fn to_json_string_and_from_json_str_round_trip_a_dsl_value() {
+fn to_json_string_and_from_json_str_round_trip_a_dsl_value() {crate::warm();
     let value = DslValue::object([("count".to_string(), DslValue::uint(3)), ("label".to_string(), DslValue::String("ok".to_string()))]);
     let text = to_json_string(&value);
     let parsed: DslValue = from_json_str(&text, crate::JsonMemberPolicy::Replace).unwrap();
@@ -19,7 +19,7 @@ fn to_json_string_and_from_json_str_round_trip_a_dsl_value() {
 }
 
 #[test]
-fn from_json_str_reports_a_value_error_on_malformed_text() {
+fn from_json_str_reports_a_value_error_on_malformed_text() {crate::warm();
     assert!(from_json_str::<DslValue>("not json", crate::JsonMemberPolicy::Replace).is_err());
 }
 
@@ -30,7 +30,7 @@ fn from_json_str_reports_a_value_error_on_malformed_text() {
 /// `"ttlSecs":3600.0` — a real Rust/serde hub rejects a float literal for a `u64` field. A
 /// genuine `f64` field must keep its `.0` so it never collapses onto its integer twin.
 #[test]
-fn u64_field_through_to_value_and_to_json_string_renders_as_a_bare_integer() {
+fn u64_field_through_to_value_and_to_json_string_renders_as_a_bare_integer() {crate::warm();
     let ttl_secs: u64 = 3600;
     let text = to_json_string(&DslValue::object([("ttlSecs".to_string(), ttl_secs.to_value())]));
     assert_eq!(text, r#"{"ttlSecs":3600}"#);
@@ -44,7 +44,7 @@ fn u64_field_through_to_value_and_to_json_string_renders_as_a_bare_integer() {
 
 //#region 🔖️JsonMacro
 #[test]
-fn json_macro_builds_scalars_and_null() {
+fn json_macro_builds_scalars_and_null() {crate::warm();
     assert_eq!(crate::json!(null), Value::Null);
     assert_eq!(crate::json!(true), Value::Bool(true));
     assert_eq!(crate::json!(false), Value::Bool(false));
@@ -54,14 +54,14 @@ fn json_macro_builds_scalars_and_null() {
 }
 
 #[test]
-fn json_macro_builds_arrays_incl_empty_and_nested() {
+fn json_macro_builds_arrays_incl_empty_and_nested() {crate::warm();
     assert_eq!(crate::json!([]), Value::Array(vec![]));
     assert_eq!(crate::json!([1, 2, 3]), Value::Array(vec![Value::Number(Number::Int(1)), Value::Number(Number::Int(2)), Value::Number(Number::Int(3))]));
     assert_eq!(crate::json!([[1], [2, 3]]), Value::Array(vec![Value::Array(vec![Value::Number(Number::Int(1))]), Value::Array(vec![Value::Number(Number::Int(2)), Value::Number(Number::Int(3))])]));
 }
 
 #[test]
-fn json_macro_builds_objects_incl_empty_and_trailing_commas() {
+fn json_macro_builds_objects_incl_empty_and_trailing_commas() {crate::warm();
     assert_eq!(crate::json!({}), Value::Object(Object::new()));
     let value = crate::json!({
         "a": 1,
@@ -72,7 +72,7 @@ fn json_macro_builds_objects_incl_empty_and_trailing_commas() {
 }
 
 #[test]
-fn json_macro_evaluates_arbitrary_expressions_and_options() {
+fn json_macro_evaluates_arbitrary_expressions_and_options() {crate::warm();
     let index = 3;
     let value = crate::json!({
         "id": format!("semio_text-{index}"),
@@ -94,13 +94,13 @@ fn json_macro_evaluates_arbitrary_expressions_and_options() {
 }
 
 #[test]
-fn json_macro_matches_to_string_of_equivalent_hand_built_value() {
+fn json_macro_matches_to_string_of_equivalent_hand_built_value() {crate::warm();
     let via_macro = crate::json!({"a": 1, "b": [true, null, "x"]});
     let hand_built = Value::Object(Object::from_iter([("a".to_string(), Value::Number(Number::Int(1))), ("b".to_string(), Value::Array(vec![Value::Bool(true), Value::Null, Value::String("x".to_string())]))]));
     assert_eq!(to_string(&via_macro), to_string(&hand_built));
 }
 #[test]
-fn value_eq_ignoring_object_order_is_order_insensitive_but_still_structural() {
+fn value_eq_ignoring_object_order_is_order_insensitive_but_still_structural() {crate::warm();
     let a = crate::json!({"x": 1, "y": [1, 2, {"p": true, "q": "s"}]});
     let b = crate::json!({"y": [1, 2, {"q": "s", "p": true}], "x": 1});
     assert!(value_eq_ignoring_object_order(&a, &b));
@@ -111,7 +111,7 @@ fn value_eq_ignoring_object_order_is_order_insensitive_but_still_structural() {
 }
 
 #[test]
-fn mutable_accessors_update_nested_members() {
+fn mutable_accessors_update_nested_members() {crate::warm();
     let mut value = crate::json!({ "items": [{ "state": "before" }] });
     value.get_mut("items").and_then(Value::as_array_mut).and_then(|items| items.first_mut()).and_then(Value::as_object_mut).and_then(|item| item.get_mut("state")).expect("nested state").clone_from(&Value::String("after".to_string()));
     assert_eq!(to_string(&value), r#"{"items":[{"state":"after"}]}"#);
@@ -123,7 +123,7 @@ fn mutable_accessors_update_nested_members() {
 /// serde_json::Value` path (`🌱️value/🦀️.rs`'s `impl From<DslValue> for
 /// serde_json::Value`), the oracle every framework-internal caller still speaks.
 #[test]
-fn to_json_string_bytes_match_the_serde_json_bridge() {
+fn to_json_string_bytes_match_the_serde_json_bridge() {crate::warm();
     let value = DslValue::object([("nested".to_string(), DslValue::Array(vec![DslValue::uint(1), DslValue::float(2.5)]))]);
     let mine = to_json_string(&value);
     let theirs = serde_json::to_string(&serde_json::Value::from(value)).unwrap();

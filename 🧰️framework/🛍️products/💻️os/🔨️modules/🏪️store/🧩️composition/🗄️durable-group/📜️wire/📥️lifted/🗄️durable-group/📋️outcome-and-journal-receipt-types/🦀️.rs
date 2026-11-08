@@ -134,12 +134,13 @@ pub trait DurableOwnedGroupJournalCommitV1: semio_framework_value::ErasedSnapsho
 }
 
 /// 🎟️ Closes the retained journal body and its original Box allocation in separate admitted turns.
-pub fn close_journal_owner(owner: &mut Option<Box<dyn DurableOwnedGroupJournalCommitV1>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+pub fn close_journal_owner(owner: &mut Option<Box<dyn DurableOwnedGroupJournalCommitV1>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
     use semio_framework_value::retained_clone::RetainedCloneStep;
+    let grant = effect.grant();
     if owner.is_none() { return Ok(RetainedCloneStep::Complete(Default::default())); }
     let demand = semio_framework_value::factory_ticket_demands(owner.as_ref().unwrap(), grant.maximum_copy_bytes)?;
     if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-    semio_framework_value::close_factory_ticket(owner, grant).result
+    semio_os_store_read::settle_close_poll(semio_framework_value::close_factory_ticket(owner, effect))
 }
 
 /// 🗄️ Kernel-owned journal port implemented by a storage owner with an exclusive writer permit.

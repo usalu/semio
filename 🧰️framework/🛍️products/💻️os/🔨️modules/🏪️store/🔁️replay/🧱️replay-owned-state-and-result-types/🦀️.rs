@@ -80,7 +80,7 @@ where
     Mutation: super::Mutation<P>,
 {
     pub original_history:Option<(usize,u64)>,
-    pub original_decode:Option<(u64,u64)>,
+    pub original_decode:Option<(semio_framework_value::retained_clone::NativeAllocationIdentity,u64)>,
     pub original_selection:Option<semio_os_vcs::OriginalHistoryEditSelection>,
     pub original_order:Option<(usize,usize)>,
     pub conflict_target:Vec<String>,

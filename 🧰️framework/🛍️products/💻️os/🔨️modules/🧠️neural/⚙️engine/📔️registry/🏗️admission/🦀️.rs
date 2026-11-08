@@ -46,7 +46,7 @@ impl SharedRegistryIssuer{
    1=>{let mut root=Arc::<FinalRootSlot,ShellAllocator>::try_new_uninit_in(ShellAllocator::default()).map_err(|_|allocation())?;let bytes=Arc::allocator(&root).0.load(Ordering::Acquire);Arc::get_mut(&mut root).unwrap().write(FinalRootSlot{registry:OnceLock::new(),shell:OnceLock::new(),registry_bytes:AtomicUsize::new(0)});self.final_root=ManuallyDrop::new(Some(unsafe{root.assume_init()}));receipt.retained_capacity_bytes=bytes;},
    2=>{let final_root=self.final_root.as_ref().unwrap();let root=Arc::<Registry,RegistryAllocator>::try_new_uninit_in(RegistryAllocator{final_root:Arc::as_ptr(final_root)as usize}).map_err(|_|allocation())?;self.uninit=ManuallyDrop::new(Some(root));receipt.retained_capacity_bytes=final_root.registry_bytes.load(Ordering::Acquire);},
    3=>{let mut root=self.uninit.take().unwrap();Arc::get_mut(&mut root).unwrap().write(source.take().unwrap());self.root=ManuallyDrop::new(Some(unsafe{root.assume_init()}));},
-   4=>{self.retirement=ManuallyDrop::new(Some(RegistryRetirement{final_root:ManuallyDrop::new(Some(Arc::clone(self.final_root.as_ref().unwrap()))),registry:None,work:0}));},
+   4=>{self.retirement=ManuallyDrop::new(Some(RegistryRetirement{final_root:ManuallyDrop::new(Some(Arc::clone(self.final_root.as_ref().unwrap()))),registry:None}));},
    5=>{},
    _=>return Err(refused("invalid original registry birth event")),
   }self.phase+=1;Ok(receipt)

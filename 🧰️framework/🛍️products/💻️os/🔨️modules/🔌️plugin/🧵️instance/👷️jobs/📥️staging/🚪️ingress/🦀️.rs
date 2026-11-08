@@ -46,9 +46,9 @@ impl<A: ArtifactApp> ToolOperations<A> {
     }
 
     /// 🏁️ Returns a reserved producer's original slot and keyed cancellation authority after ordinary completion.
-    pub fn finish_reserved_emit_producer(&mut self, permit: FrameworkReservedCommitPermit) {
+    pub fn finish_reserved_emit_producer(&mut self, pending: &mut crate::jobs_components::PendingReserved<A>, permit: FrameworkReservedCommitPermit) {
         self.release_reserved_emit_slot(permit.operation.operation.0);
-        permit.finish();
+        pending.retire_reserved_permit(permit);
     }
 
 
@@ -156,7 +156,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// 📏️ Quotes the next retiring typed-operation turn: its private child group's close, one owner hand-off, or the operation's own retirement.
     pub fn typed_operation_retirement_demands<M: SpaceMember + MemberFactory + 'static>(&self, child_composition: &ChildComposition<M>, operation_id: u64, stores:&InstanceStores<A>, body: usize) -> Result<RetirementDemand, Fault> {
         let operation = self.tool_operations.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-retirement-authority"), "typed operation owner changed before its retirement quote"))?;
-        if operation.pending_stream_abort.is_some(){return operation.stream_abort_close_demands(&stores.store,body).map_err(plugin_retirement_fault)}
+        if operation.stream_abort_open(){return operation.stream_abort_close_demands(&stores.store,body).map_err(plugin_retirement_fault)}
         if operation.terminal_is_empty(){return Ok(operation.original_frame_release_demands())}
         if operation.close_fault_pending(){return operation.close_fault_demands(body).map_err(plugin_retirement_fault);}
         if let Some(group) = operation.owned_child_group {

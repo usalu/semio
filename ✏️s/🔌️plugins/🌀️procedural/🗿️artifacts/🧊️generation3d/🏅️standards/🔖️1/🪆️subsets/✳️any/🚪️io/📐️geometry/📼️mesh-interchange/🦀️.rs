@@ -111,7 +111,7 @@ impl Machine for ExportBinary {
     fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
         let fuel = fuel_budget(cx);
         if let Some(job) = self.tessellation.as_mut() {
-            return match tessellation_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
+            return match tessellation_slice(job, fuel.saturating_mul(BATCH), cx).kernel()? {
                 MeshTessellationStep::Working(progress) => Ok(Flow::Working(0.4 * ratio(progress))),
                 MeshTessellationStep::Cancelled(_) => Err(semio_s_artifact_procedural_3d_mesh_support::cancelled_fault()),
                 MeshTessellationStep::Done(transfer) => {
@@ -202,7 +202,7 @@ impl Machine for ImportBinary {
             return Ok(Flow::Working(0.35));
         }
         let Some(job) = self.job.as_mut() else { return Ok(Flow::Working(0.35)) };
-        match modeling_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
+        match modeling_slice(job, fuel.saturating_mul(BATCH), cx).kernel()? {
             MeshModelingStep::Working(progress) => Ok(Flow::Working(0.35 + 0.65 * ratio(progress))),
             MeshModelingStep::Done(mesh) => Ok(Flow::Done(mesh_output(mesh))),
             MeshModelingStep::Cancelled(_) => Err(semio_s_artifact_procedural_3d_mesh_support::cancelled_fault()),

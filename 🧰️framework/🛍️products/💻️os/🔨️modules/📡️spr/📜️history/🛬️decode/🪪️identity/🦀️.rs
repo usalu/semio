@@ -1,4 +1,5 @@
 //! 🪪️ Original History identifiers retain archive ranges or prior typed edit bytes until their funded native String recipient receives custody.
+use semio_framework_value::RetainedAllocationEffect;
 use super::OriginalHistoryEdits;
 use super::HistoryEdit;
 use ::protocol::{codec::{RetainedWireFieldDecode,RetainedWireByteSource,OriginalWireSourceIdentity},dictionary::RetainedSourceDictionary};
@@ -47,7 +48,7 @@ impl RetainedHistoryIdDecode{
   if let Some(field)=self.field.as_ref(){let input=Self::input(self.input,source,original_prior_edits)?;let mut demand=if self.closing{field.close_demands()}else{field.demands(&input,maximum_copy_bytes)?};demand.depth=demand.depth.checked_add(1).ok_or_else(||Self::fault("original History identity nested depth overflow"))?;if let OriginalIdInput::PriorEdit(ordinal)=self.input{demand.depth=demand.depth.max(original_prior_edits.original_depth(ordinal)?.checked_add(1).ok_or_else(||Self::fault("original History ordinal depth overflows"))?);}Ok(demand)}else{Ok(RetirementDemand{depth:1,..Default::default()})}
  }
  /// 🧵️ Writes only the next funded original bytes, then removes the already paid empty child under separate authority.
- pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,original_prior_edits:&dyn OriginalHistoryEdits,grant:RetainedCloneGrant)->Result<RetainedHistoryIdDecodeStep,ValueError>{
+ pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,original_prior_edits:&dyn OriginalHistoryEdits,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedHistoryIdDecodeStep,ValueError>{let grant=effect.grant();
   self.validate_source(source)?;if self.closed||self.closing||self.receipt.is_some(){return Ok(RetainedHistoryIdDecodeStep::Blocked)}let demand=self.demands(source,original_prior_edits,grant.maximum_copy_bytes)?;if !Self::covers(grant,demand){return Ok(RetainedHistoryIdDecodeStep::Blocked)}
   if self.field.as_ref().is_some_and(RetainedWireFieldDecode::terminal_is_empty){drop(self.field.take());self.closed=true;self.record(grant,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(RetainedHistoryIdDecodeStep::Closed)}
   if self.is_ready(){return Ok(RetainedHistoryIdDecodeStep::Ready)}
@@ -59,10 +60,10 @@ impl RetainedHistoryIdDecode{
  }
  pub fn cancel(&mut self){self.closing=true;if let Some(field)=self.field.as_mut(){field.cancel()}}
  /// ♻️ Pays the genuine nested native backing release before the separate parent terminal metadata receipt.
- pub fn close_step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,original_prior_edits:&dyn OriginalHistoryEdits,grant:RetainedCloneGrant)->Result<RetainedHistoryIdDecodeStep,ValueError>{
+ pub fn close_step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,original_prior_edits:&dyn OriginalHistoryEdits,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedHistoryIdDecodeStep,ValueError>{let grant=effect.grant();
   self.validate_source(source)?;if self.closed{return Ok(RetainedHistoryIdDecodeStep::Closed)}if !self.closing||self.receipt.is_some(){return Ok(RetainedHistoryIdDecodeStep::Blocked)}let demand=self.demands(source,original_prior_edits,grant.maximum_copy_bytes)?;if !Self::covers(grant,demand){return Ok(RetainedHistoryIdDecodeStep::Blocked)}
   if self.field.as_ref().is_some_and(RetainedWireFieldDecode::terminal_is_empty){drop(self.field.take());self.closed=true;self.record(grant,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(RetainedHistoryIdDecodeStep::Closed)}
-  let child_grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let result=self.field.as_mut().ok_or_else(||Self::fault("original History identity field disappeared before paid close"))?.close_step(child_grant);if let Some((_,progress))=self.field.as_mut().unwrap().take_receipt(){self.record(grant,progress)?}result?;Ok(if self.receipt.is_some(){RetainedHistoryIdDecodeStep::Progress}else{RetainedHistoryIdDecodeStep::Blocked})
+  let child_grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let result=self.field.as_mut().ok_or_else(||Self::fault("original History identity field disappeared before paid close"))?.close_step(&mut effect.nested(child_grant));if let Some((_,progress))=self.field.as_mut().unwrap().take_receipt(){self.record(grant,progress)?}result?;Ok(if self.receipt.is_some(){RetainedHistoryIdDecodeStep::Progress}else{RetainedHistoryIdDecodeStep::Blocked})
  }
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.field.is_none()&&self.receipt.is_none()}
 }

@@ -1,0 +1,177 @@
+{
+  "texts": {
+    "playTutorial": {
+      "en": "Play Tutorial",
+      "de": "Tutorial abspielen"
+    },
+    "vortexShow": {
+      "en": "Show connection points",
+      "de": "Verbindungspunkte anzeigen"
+    },
+    "always": {
+      "en": "Always",
+      "de": "Immer"
+    },
+    "selected": {
+      "en": "Selected",
+      "de": "Auswahl"
+    },
+    "move": {
+      "en": "Move",
+      "de": "Verschieben"
+    },
+    "rotate": {
+      "en": "Rotate",
+      "de": "Drehen"
+    },
+    "searchPlaceholder": {
+      "en": "Search…",
+      "de": "Suchen…"
+    },
+    "allTypologies": {
+      "en": "All Typologies",
+      "de": "Alle Typologien"
+    },
+    "routes": {
+      "en": "Routes",
+      "de": "Routen"
+    },
+    "nodesSection": {
+      "en": "^Nodes \\(\\d+\\)$",
+      "de": "^Knoten \\(\\d+\\)$"
+    },
+    "caption": {
+      "en": "^Case: dead$",
+      "de": "^Lastfall: dead$"
+    },
+    "execute": {
+      "en": "Execute",
+      "de": "Ausführen"
+    },
+    "renameZone": {
+      "en": "Rename zone",
+      "de": "Zone umbenennen"
+    }
+  },
+  "tour": {
+    "paneId": "aggregator",
+    "tutorialTitleKey": "demonstrator.brand.tutorial.aggregatorTour.title",
+    "descriptionKey": "demonstrator.brand.tutorial.aggregatorTour.description",
+    "describedChapterIds": [
+      "viewport",
+      "catalogue-objects",
+      "transform-utility",
+      "verbindungspunkte",
+      "fill-tool"
+    ],
+    "seekChapterId": "catalogue-objects",
+    "seekPanelTabId": "framework.panel.catalogue"
+  },
+  "transform": {
+    "paneId": "aggregator",
+    "windowId": "puzzle3d-main-top",
+    "utilityId": "transform",
+    "flagIds": [
+      "puzzle3d-transform-move",
+      "puzzle3d-transform-rotate"
+    ]
+  },
+  "vortexShow": {
+    "paneId": "aggregator",
+    "windowId": "puzzle3d-main-top",
+    "measureId": "puzzle3d-play-vortex-show",
+    "initial": "selected",
+    "changed": "always"
+  },
+  "fill": {
+    "paneId": "aggregator",
+    "windowId": "puzzle3d-main-top",
+    "toolCategoryId": "framework.category.tool",
+    "toolTabId": "tool.fill",
+    "countId": "puzzle3d-fill-count",
+    "extraCount": 3
+  },
+  "filter": {
+    "paneId": "aussuchen",
+    "poolRowIds": [
+      "beam-glulam-gl24h",
+      "beam-kvh-c24",
+      "beam-steel-ipe200",
+      "beam-steel-hea160",
+      "window-casement-100x120",
+      "window-fixed-150x150",
+      "window-tilt-turn-120x140",
+      "slab-concrete-240",
+      "slab-clt-160",
+      "slab-hollow-core-265",
+      "hexagonal-cut-concrete-forest-left",
+      "hexagonal-cut-concrete-forest-right"
+    ],
+    "query": {
+      "text": "Glulam",
+      "rowIds": [
+        "beam-glulam-gl24h"
+      ]
+    },
+    "module": {
+      "id": "slabs",
+      "rowIds": [
+        "slab-clt-160",
+        "slab-concrete-240",
+        "slab-hollow-core-265"
+      ]
+    },
+    "typology": {
+      "path": "beams/steel",
+      "rowIds": [
+        "beam-steel-hea160",
+        "beam-steel-ipe200"
+      ]
+    }
+  },
+  "chain": {
+    "paneId": "bearbeiten",
+    "catalogueRowId": "process3d-catalogue.wallSaw.wallCut",
+    "stepIds": [
+      "wall-saw-cut",
+      "beam-relief-cut",
+      "column-wire-cut",
+      "core-sample",
+      "anchor-hole",
+      "anchor-set",
+      "surface-grind"
+    ]
+  },
+  "routes": {
+    "paneId": "verfolgen",
+    "collection": "routes",
+    "label": "Acceptance Reuse Route",
+    "delta": 1
+  },
+  "model": {
+    "paneId": "statik",
+    "modelWindowId": "fem3d-model",
+    "resultsWindowId": "fem3d-results",
+    "coordinates": {
+      "x": 12.5,
+      "y": 3.25,
+      "z": 0
+    },
+    "delta": 1
+  },
+  "lifecycle": {
+    "firstPaneId": "generator",
+    "warmPaneId": "koordinator",
+    "openedPaneId": "bearbeiten",
+    "otherPaneId": "energie"
+  },
+  "cycle": {
+    "energie": {
+      "paneId": "energie",
+      "zoneWindowId": "framework.window.table",
+      "modelWindowId": "energy.model.3d",
+      "actionId": "rename-zone",
+      "newName": "Acceptance Zone"
+    }
+  }
+}

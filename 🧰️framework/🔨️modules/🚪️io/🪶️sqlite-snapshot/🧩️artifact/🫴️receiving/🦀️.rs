@@ -28,7 +28,7 @@ impl<'a,'b> ReceivingSettlement<'a,'b>{
   error
  }
 }
-#[doc(hidden)] pub type Result<T>=std::result::Result<T,ValueError>;
+#[doc(hidden)] pub type Result<T,E=ValueError>=std::result::Result<T,E>;
 #[doc(hidden)] pub fn error(kind:ValueRefusalKind,message:&'static str)->ValueError{ValueError::literal(kind,message)}
 fn invalid(message:&'static str)->ValueError{error(ValueRefusalKind::InvalidValue,message)}
 /// 📬️ Runs paid destination operations through an existing original wallet without creating authority.
@@ -69,13 +69,13 @@ impl<B:ReceivingWallet> Port<'_,'_,'_,B>{
 impl Port<'_,'_,'_,semio_framework_io_control::NativeSnapshotBodyWallet>{
  /// 🧾️ Quotes one bounded effect whose borrowed callback records every actual action and physical prefix.
  pub fn effect(&mut self,demand:RetainedCloneGrant,progress:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind_failure:&mut Option<semio_framework_io_control::NativeSnapshotFailure>,effect:&mut impl FnMut(&mut bool,&mut RetainedCloneProgress)->Result<()>)->semio_framework_value::RetainedWorkOutcome<(),semio_framework_io_control::NativeSnapshotFailure>{
-  use semio_framework_io_control::{NativeSnapshotDecodeEffectQuote,NativeSnapshotEncodeEffectQuote};
+  use semio_framework_io_control::NativeSnapshotDecodeEffectQuote;
   use semio_framework_value::RetainedWorkOutcome;
   if progress.performed||progress.physical!=RetainedCloneProgress::default()||unwind_failure.is_some(){return RetainedWorkOutcome{work:0,result:Err(error(ValueRefusalKind::InvariantViolated,"SQLite effect requires empty retained progress and failure slots").into())}}
   let phase=self.phase();if let Err(cause)=self.control.checkpoint(phase,0,0){return RetainedWorkOutcome{work:0,result:Err(cause.into())}}
   match &mut self.native{
    Direction::Decode(native)=>match NativeSnapshotDecodeEffectQuote::decode(self.body,native,demand){Ok(quote)=>quote.run(progress,unwind_failure,effect),Err(error)=>RetainedWorkOutcome{work:0,result:Err(error)}},
-   Direction::Encode(native)=>match NativeSnapshotEncodeEffectQuote::encode(self.body,native,demand){Ok(quote)=>quote.run(progress,unwind_failure,effect),Err(error)=>RetainedWorkOutcome{work:0,result:Err(error)}}
+   Direction::Encode(native)=>self.body.effect_encoded(native,demand,progress,unwind_failure,effect)
   }
  }
 }

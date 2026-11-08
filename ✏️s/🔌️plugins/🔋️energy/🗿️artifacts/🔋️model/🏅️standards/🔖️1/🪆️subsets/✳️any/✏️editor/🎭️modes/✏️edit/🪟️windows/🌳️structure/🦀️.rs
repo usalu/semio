@@ -79,8 +79,8 @@ pub fn definition() -> WindowKindDefinition {
 /// the site line, then the grouped collection overview — the one tree `crate::energy_structure_tree`
 /// derives for both surfaces, grouped so no node exceeds the kit's 32-sibling ceiling (the 33rd
 /// sibling faults `tree-window.siblings` and the window would render empty).
-pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
-    TreeWindowKit::render(&crate::snapshot::energy_structure_tree(&document.model.read()))
+pub fn render(document: &EnergyModelSnapshot, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
+    TreeWindowKit::render(&semio_s_artifact_energy_model_structure::energy_structure_tree(&document.model.read(), locale))
 }
 //#endregion 🔖️Render
 

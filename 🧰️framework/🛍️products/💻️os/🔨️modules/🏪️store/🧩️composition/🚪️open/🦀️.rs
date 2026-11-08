@@ -45,10 +45,26 @@ pub fn record_member_step(cx: &mut StepContext<'_>, progress: RetainedCloneProgr
     Ok(())
 }
 
+/// 🪙️ Records a completed member step whose work ran inside the context's own performed-work effect: the performed work is its one fuel debit.
+pub fn record_member_step_performed(cx: &mut StepContext<'_>, progress: RetainedCloneProgress, performed: u128) -> Result<(), MemberOpenDiagnostic> {
+    cx.consume_retained(progress).map_err(|_| MemberOpenDiagnostic::Capacity)?;
+    cx.consume_fuel(u64::try_from(performed.max(1)).unwrap_or(u64::MAX));
+    Ok(())
+}
+
 /// 🧾️ Receives a generated member shell's actual paid release with its complete original refusal carrier.
 pub fn receive_member_close(cx:&mut StepContext<'_>,result:Result<RetainedCloneStep,semio_framework_value::ValueError>)->Result<RetainedCloneStep,OriginalTurnFailure>{
+    receive_member_close_fueled(cx,result,|progress|progress.copied_items.saturating_add(progress.copied_bytes)as u64)
+}
+
+/// 🪙️ Receives a member close that ran inside the context's own performed-work effect: the performed work is its one fuel debit, never the receipt's item and byte counts.
+pub fn receive_member_close_performed(cx:&mut StepContext<'_>,result:Result<RetainedCloneStep,semio_framework_value::ValueError>,performed:u128)->Result<RetainedCloneStep,OriginalTurnFailure>{
+    receive_member_close_fueled(cx,result,|_|u64::try_from(performed.max(1)).unwrap_or(u64::MAX))
+}
+
+fn receive_member_close_fueled(cx:&mut StepContext<'_>,result:Result<RetainedCloneStep,semio_framework_value::ValueError>,fuel:impl FnOnce(RetainedCloneProgress)->u64)->Result<RetainedCloneStep,OriginalTurnFailure>{
     let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
-    cx.consume_fuel(progress.copied_items.saturating_add(progress.copied_bytes)as u64);
+    cx.consume_fuel(fuel(progress));
     let receipt_refusal=cx.consume_retained(progress).err();
     match result{Err(primary)=>Err({let original=OriginalTurnFailure::from(primary);OriginalTurnFailure{receipt_refusal,context_refusal:None,..original}}),Ok(step)=>match receipt_refusal{None=>Ok(step),Some(refusal)=>Err({let original=OriginalTurnFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original member close receipt was refused").with_retained_progress(progress));OriginalTurnFailure{receipt_refusal:Some(refusal),context_refusal:None,..original}})}}
 }
@@ -456,7 +472,7 @@ impl MemberOpenRequest {
 
 impl ErasedSnapshotRetirement for MemberOpenRequest {
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:MemberOpenRequest::next_copy_byte_demand(self)?,capacity_bytes:MemberOpenRequest::next_capacity_byte_demand(self,body)?,release_bytes:MemberOpenRequest::next_release_byte_demand(self)?,depth:MemberOpenRequest::next_depth_demand(self)?})}
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::ValueError> { MemberOpenRequest::close_step(self, grant) })(); let work = self.last_turn_work(); semio_framework_value::RetainedWorkOutcome { result, work } }
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = MemberOpenRequest::close_step(self, effect.grant()); let result = match effect.performed(self.last_turn_work()) { Ok(true) => result, Ok(false) => result.and_then(|_| Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "member request close exceeds its work grant"))), Err(error) => Err(error) }; semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work: effect.performed_work() }) }
     fn terminal_is_empty(&self) -> bool { MemberOpenRequest::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { MemberOpenRequest::next_copy_byte_demand(self) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { MemberOpenRequest::next_capacity_byte_demand(self, body) }

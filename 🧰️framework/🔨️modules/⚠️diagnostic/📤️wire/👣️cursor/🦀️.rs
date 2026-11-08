@@ -132,7 +132,7 @@ impl FaultWireCursor{
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
   if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
   if grant.maximum_items==0||grant.maximum_depth<1{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  let work=self.retirement_work_demand();self.binding=None;self.phase=0;self.index=0;self.part=0;self.token=Default::default();self.written=0;self.drained=0;self.domain=DomainCursor::new();self.scalar_ready=false;self.scalar.length=0;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work}
+  let work=u128::from(self.retirement_work_demand());self.binding=None;self.phase=0;self.index=0;self.part=0;self.token=Default::default();self.written=0;self.drained=0;self.domain=DomainCursor::new();self.scalar_ready=false;self.scalar.length=0;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work}
  }
 }
 impl Default for FaultWireCursor{fn default()->Self{Self::new()}}

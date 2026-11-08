@@ -9,6 +9,12 @@ use semio_framework_value::native_encoding::NativeEncodeContinuation;
 use semio_framework_value::{NativeEncodeControl, ErasedSnapshotRetirement, retained_clone::RetainedCloneGrant, retirement::{RetireOwned, admit_owned_retirement}};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
+/// 🪙️ A guest budget carries no job fuel, so each input step spends its own explicit finite wallet bounded by the step grant.
+fn authored_input(grant:RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,semio_framework_value::ValueError>)->Result<bool,semio_framework_value::ValueError>{
+    let maximum=u64::try_from(grant.maximum_copy_bytes).unwrap_or(u64::MAX).saturating_add(u64::try_from(grant.maximum_capacity_bytes).unwrap_or(u64::MAX)).saturating_add(1);
+    match semio_framework_value::AuthoringWallet::new(grant,u128::from(maximum)).run(grant,maximum,operation)?{Some(done)=>done.output,None=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"DAG input work quote was not admitted"))}
+}
+
 pub struct FlowDagAction{
     pub operation:u16,admission:Option<FlowFeatureAdmission>,input_ceiling:usize,output_ceiling:usize,program:FlowProgramState,observer:Rc<FlowOperationObserver>,
     input:Option<DagInputCursor>,output:Option<JsonBorrowedWriteCursor>,kind:Option<DagOutputKind>,
@@ -41,7 +47,7 @@ impl FlowDagAction{
             let observer=self.observer.clone();let mut observe=|_|observer.observe();
             let mut control=match self.decode.take(){Some(receipt)=>NativeDecodeControl::resume(receipt,&mut observe),None if !self.decode_started=>{self.decode_started=true;Ok(NativeDecodeControl::new_retained(&mut observe))},None=>return self.program.finish_domain(Err(abi_failure(AbiErrorCode::Busy)))};
             let grant=match control.as_ref(){Ok(control)=>RetainedCloneGrant{maximum_capacity_bytes:budget.retained.maximum_capacity_bytes.min(self.input_ceiling.saturating_sub(control.owned_bytes())),..budget.retained},Err(_)=>budget.retained};
-            let result=match control.as_mut(){Ok(control)=>if let Some(application)=self.application.as_mut(){application.step(&domain.host.dag.viewport,&domain.host.dag.graph,1,control,grant)}else{self.input.as_mut().unwrap().step(source,1,control,grant)},Err(error)=>Err(semio_framework_value::ValueError::literal(error.kind,"DAG input continuation refused"))};
+            let result=match control.as_mut(){Ok(control)=>authored_input(grant,|effect|if let Some(application)=self.application.as_mut(){application.step(&domain.host.dag.viewport,&domain.host.dag.graph,1,control,effect)}else{self.input.as_mut().unwrap().step(source,1,control,effect)}),Err(error)=>Err(semio_framework_value::ValueError::literal(error.kind,"DAG input continuation refused"))};
             let progress=self.application.as_ref().map(DagInputApplication::normal_step_progress).unwrap_or_else(||self.input.as_ref().unwrap().normal_step_progress());self.receipt=match self.receipt.checked_add(progress){Ok(receipt)=>receipt,Err(error)=>return self.program.finish_domain(Err(self.failure(error)))};
             if let Ok(control)=control{match control.pause(){Ok(receipt)=>self.decode=Some(receipt),Err(error)=>return self.program.finish_domain(Err(dag_input_failure(error)))}}
             match result{

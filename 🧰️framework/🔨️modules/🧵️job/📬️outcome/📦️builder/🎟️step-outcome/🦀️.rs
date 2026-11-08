@@ -64,7 +64,7 @@ impl InteractiveJobCloseStep {
     pub fn progress(self)->RetainedCloneProgress {match self{Self::Pending{progress}|Self::Complete{progress}=>progress,Self::Blocked=>RetainedCloneProgress::default()}}
     /// 🛡️ See `README.md`.
     pub fn admit(self,grant:RetainedCloneGrant,terminal_is_empty:bool)->Result<Self,ValueError>{
-        if !self.progress().fits(grant)||matches!(self,Self::Complete{..})&&!terminal_is_empty{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job close receipt or terminal witness refused").with_retained_progress(self.progress()))}else{Ok(self)}
+        if !self.progress().fits(grant){Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job close receipt exceeds its grant").with_retained_progress(self.progress()))}else if matches!(self,Self::Complete{..})&&!terminal_is_empty{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job close completed with a non-empty terminal witness").with_retained_progress(self.progress()))}else{Ok(self)}
     }
 }
 

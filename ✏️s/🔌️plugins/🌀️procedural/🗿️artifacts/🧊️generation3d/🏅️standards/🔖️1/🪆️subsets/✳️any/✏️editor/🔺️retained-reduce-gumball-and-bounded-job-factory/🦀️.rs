@@ -118,7 +118,7 @@ pub(super) struct Generation3dSessionCommandWork {
     pub(super) tool_id: &'static str,
     pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) consumed: bool,
-    source_read:Option<Box<semio_os_flow::FlowSourceRead>>,
+    source_read:Option<semio_os_flow::FlowSourceReadOwner>,
     source_read_ready:bool,
     pub(super) closing:bool,
 }
@@ -148,7 +148,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
     }
 
     fn work_demands(&self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        if let Generation3dCommand::AddWidget(payload)=input.command{if payload.source_widget.is_some(){return match self.source_read.as_ref(){Some(source)if !self.source_read_ready=>source.next_demands(&input.snapshot.host_snapshot,maximum_copy_bytes),Some(source)=>{let read=source.next_demands(&input.snapshot.host_snapshot,maximum_copy_bytes)?;let command=command_work_step_demands::<EditorApp<Generation3dPlayApp>>()?;Ok(semio_framework_value::RetirementDemand{copy_bytes:read.copy_bytes.saturating_add(command.copy_bytes),capacity_bytes:read.capacity_bytes.saturating_add(command.capacity_bytes),release_bytes:read.release_bytes.saturating_add(command.release_bytes),depth:read.depth.max(command.depth)})},None=>Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<semio_os_flow::FlowSourceRead>(),depth:1,..Default::default()})}}}
+        if let Generation3dCommand::AddWidget(payload)=input.command{if payload.source_widget.is_some(){return match self.source_read.as_ref(){Some(source)if !self.source_read_ready=>source.next_demands(&input.snapshot.host_snapshot,maximum_copy_bytes),Some(source)=>{let read=source.next_demands(&input.snapshot.host_snapshot,maximum_copy_bytes)?;let command=command_work_step_demands::<EditorApp<Generation3dPlayApp>>()?;Ok(semio_framework_value::RetirementDemand{copy_bytes:read.copy_bytes.saturating_add(command.copy_bytes),capacity_bytes:read.capacity_bytes.saturating_add(command.capacity_bytes),release_bytes:read.release_bytes.saturating_add(command.release_bytes),depth:read.depth.max(command.depth)})},None=>Ok(semio_os_flow::FlowSourceReadOwner::birth_demand())}}}
         command_work_step_demands::<EditorApp<Generation3dPlayApp>>()
     }
 
@@ -162,8 +162,8 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
             return Err(Fault::from("generation3d-session-command-work-repeated"));
         }
         if let Generation3dCommand::AddWidget(payload)=input.command{if let Some(request)=payload.source_request()?{
-            if self.source_read.is_none(){let grant=_cx.retained_grant();let bytes=size_of::<semio_os_flow::FlowSourceRead>();if _cx.is_cancelled()||_cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(ArtifactCommandWorkStep::Replay{stage:"generation3d-analysis-source",preview:r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes()})}self.source_read=Some(Box::new(semio_os_flow::FlowSourceRead::new(payload.source_revision_bytes()?)));_cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}).map_err(|error|Fault::from(error.to_string()))?;return Ok(ArtifactCommandWorkStep::Progress{stage:"generation3d-analysis-source",preview:r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes()})}
-            let read=self.source_read.as_mut().unwrap();
+            if self.source_read.is_none(){let preview=r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes();let Some(owner)=semio_os_flow::FlowSourceReadOwner::admit(payload.source_revision_bytes()?,_cx).map_err(|error|Fault::from(error.to_string()))?else{return Ok(ArtifactCommandWorkStep::Replay{stage:"generation3d-analysis-source",preview})};self.source_read=Some(owner);return Ok(ArtifactCommandWorkStep::Progress{stage:"generation3d-analysis-source",preview})}
+            let Some(read)=self.source_read.as_mut()else{return Err(Fault::from("generation3d-analysis-source-missing"))};
             if !self.source_read_ready{
                 let step=self.instance_owner.with_mut::<Generation3dInstanceOperationOwner,_>(|owner|owner.with_session_and_gumball(|session,_|read.step(&input.snapshot.host_snapshot,input.operation.canonical_base_revision,session,&request,_cx).map_err(|error|Fault::from(error.to_string()))))??;
                 let preview=r#"{"en":"Checking current geometry","de":"Aktuelle Geometrie wird geprüft"}"#.as_bytes();

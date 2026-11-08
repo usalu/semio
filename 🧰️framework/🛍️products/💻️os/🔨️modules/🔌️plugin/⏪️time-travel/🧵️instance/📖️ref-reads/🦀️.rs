@@ -41,7 +41,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
         if self.time_travel.document.discard_issuer_missing(){self.stores.store.owned_mutation_retirement_factory()?;return Ok(RetirementDemand{depth:1,..Default::default()});}
         let demand=self.time_travel.retirement_demands(body)?;if demand!=RetirementDemand::default(){return Ok(demand);}
         if let Some(demand)=self.member_subject_retirement_demands(body)?{return Ok(demand)}
-        if self.time_travel.closing&&!self.time_travel.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"time travel close retains an undeclared original session editor preview or authoring frontier"));}
+        if self.time_travel.closing&&!self.time_travel.terminal_is_empty(){eprintln!("[DEBUG] runtime time-travel residue {:?}",self.time_travel.residue());return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"time travel close retains an undeclared original session editor preview or authoring frontier"));}
         Ok(Default::default())
     }
 

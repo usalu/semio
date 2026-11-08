@@ -33,7 +33,7 @@ impl<T: RetainedClone> VecCursor<T> {
         let count = remaining.min(bulk_run_elements(RetainedCloneGrant{maximum_copy_bytes:body,..grant}, width).max(1)).min(usize::try_from(maximum_work_units).unwrap_or(usize::MAX)/width.max(1));
         if remaining > 0 && count == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let end = self.index + count;
-        work+=count.saturating_mul(width.max(1)) as u64;if !T::bitwise_extend(&mut self.values, &source[self.index..end]) {
+        work+=count.saturating_mul(width.max(1)) as u128;if !T::bitwise_extend(&mut self.values, &source[self.index..end]) {
             return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "bitwise vector element lacks its bitwise copy"));
         }
         self.index = end;
@@ -56,11 +56,11 @@ impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
      Ok(RetirementDemand{depth:1,..Default::default()})
     }
 
-    fn advance_work_demand(&self,source:RetainedCloneRef<'_,Vec<T>>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{
-     let demand=self.advance_demands(source,body,maximum_work_units)?;if maximum_work_units==0{return Ok(0)}if self.source.is_none(){return Ok(1)}let original=source.get();
+    fn advance_work_demand(&self,source:RetainedCloneRef<'_,Vec<T>>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{let selected=(||->Result<u64,ValueError>{
+     let demand=self.advance_demands(source,body,maximum_work_units)?;if maximum_work_units==0{return Ok(0)}if self.source.is_none(){let w=source.binding_work_demand(&self.source)?;return Ok(if w<=maximum_work_units{w}else{0})}let original=source.get();
      if self.phase==0{return Ok(1)}if self.phase==2||self.index==original.len(){return Ok(u64::from(self.output.is_none()))}if T::BITWISE{let width=size_of::<T>();return Ok(if width==0{(original.len()-self.index).min(bulk_run_elements(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,..Default::default()},width).max(1)).min(usize::try_from(maximum_work_units).unwrap_or(usize::MAX)) as u64}else{demand.copy_bytes as u64})}
      let Some(child)=self.child.as_ref()else{return Ok(1)};if self.child_value.is_some(){if !self.child_closing{return child_close_start_work(child)}return if child.terminal_is_empty(){Ok(1)}else{child.close_work_demand(body)}}
-     if child.output_ready(){return child.take_work_demand()?.checked_add(1).ok_or_else(||ValueError::invariant("vector child transfer work overflow"))}child.advance_work_demand(source.project(self.index+1,|values|&values[self.index]),body,maximum_work_units)
+     if child.output_ready(){return child.take_work_demand()?.checked_add(1).ok_or_else(||ValueError::invariant("vector child transfer work overflow"))}child.advance_work_demand(source.project(self.index+1,|values|&values[self.index]),body,maximum_work_units)})();selected.map(|work|if work<=maximum_work_units{work}else{0})
     }
 
     fn advance(&mut self, source: RetainedCloneRef<'_, Vec<T>>, body: usize, maximum_work_units:u64, effect:&mut crate::RetainedAllocationEffect<'_>) ->crate::OriginalRetirementOutcome{let grant=effect.grant();let maximum_work_units=maximum_work_units.min(effect.maximum_work_units());let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
@@ -70,7 +70,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
             return Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "retained vector clone cursor is closing")).into());
         }
         if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress)={let turn=source.bind(&mut self.source,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
+        if let Some(progress)={let turn=source.bind(&mut self.source,effect);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
         let source_value = source.get();
         if self.phase == 0 {
             let planned = source_value.len().checked_mul(size_of::<T>()).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "retained vector clone capacity overflow"))?;
@@ -98,14 +98,14 @@ impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
         if T::BITWISE { return {let turn=self.advance_bitwise(source_value, body, maximum_work_units, grant);work+=turn.work;turn.result.map_err(Into::into)}; }
         if self.child_value.is_some(){
          let child=self.child.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"vector original child absent"))?;
-         if !self.child_closing{let turn=start_child_close(child,&mut self.child_closing,grant);work+=turn.work;let progress=turn.result?;return Ok(RetainedCloneStep::Progress(progress))}
-         if !child.terminal_is_empty(){let turn=child.close_step(&mut effect.reborrow(grant,effect.maximum_work_units().saturating_sub(work))?);work+=turn.work;let step=turn.result?;return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant,step,child.terminal_is_empty(),"retained vector child scaffold close")?.progress()))}
+         if !self.child_closing{let turn=start_child_close(child,&mut self.child_closing,effect);work+=turn.work;let progress=turn.result?;return Ok(RetainedCloneStep::Progress(progress))}
+         if !child.terminal_is_empty(){let turn=settle_child_close(child.close_step(&mut effect.nested(grant)));work+=turn.work;let step=turn.result?;return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant,step,child.terminal_is_empty(),"retained vector child scaffold close")?.progress()))}
          self.child=None;self.child_closing=false;let value=self.child_value.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained vector child owner is missing"))?;self.values.push(value);self.index+=1;work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<T>(),..Default::default()}))
         }
         if self.child.is_none(){self.child=Some(T::retained_clone_cursor());work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
         let child=self.child.as_mut().ok_or_else(||ValueError::invariant("child absent"))?;
-        if child.output_ready(){let turn=child.take(grant);work+=turn.work;let Some((value,p))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.child_value=Some(value);work+=1;return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant,p,"vector child output handoff")?))}
-        let turn=child.advance(source.project(self.index+1,|values|&values[self.index]),body,maximum_work_units,&mut effect.reborrow(grant,maximum_work_units)?);work+=turn.work;Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant,turn.result?.progress(),"retained vector child")?))
+        if child.output_ready(){let Some(p)=take_child_output(child,&mut self.child_value,grant,effect)?else{return Ok(RetainedCloneStep::Progress(Default::default()))};work+=1;return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant,p,"vector child output handoff")?))}
+        let turn=child.advance(source.project(self.index+1,|values|&values[self.index]),body,maximum_work_units,&mut effect.nested_within(grant,maximum_work_units));work+=turn.work;Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant,turn.result?.progress(),"retained vector child")?))
     })();RetainedWorkOutcome{result,work}}
 
     fn take_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(self.output_ready()))}
@@ -129,42 +129,28 @@ fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->
         self.close.next_owner_demands::<Vec<T>>(self.output.is_some()||!self.values.is_empty()||(size_of::<T>()!=0&&self.values.capacity()>0),&self.source,body)
     }
 
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result=(||{
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "native owner must begin close before granted retirement").into()); }
         if !retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(child) = self.child.as_mut() {
-            if !self.child_closing {let turn=start_child_close(child,&mut self.child_closing,grant);work+=turn.work;let progress=turn.result?; return Ok(RetainedCloneStep::Progress(progress)); }
-            if !child.terminal_is_empty() { let turn=child.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;let step=turn.result?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained child close")?.progress())); }
+            if !self.child_closing {let turn=start_child_close(child,&mut self.child_closing,effect);work+=turn.work;let progress=turn.result?; return Ok(RetainedCloneStep::Progress(progress)); }
+            if !child.terminal_is_empty() { let turn=crate::RetirementPollExit::settled(child.close_step(&mut effect.nested(grant)))?;work+=turn.work;let step=turn.result?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained child close")?.progress())); }
             let progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
             self.child = None;self.child_closing=false;work+=1;
             return Ok(RetainedCloneStep::Progress(progress));
         }
-        if !self.close.is_empty() { let turn=self.close.step_granted(effect);work+=turn.work;return turn.result; }
+        if !self.close.is_empty() { let turn=crate::RetirementPollExit::settled(self.close.step_granted(effect))?;work+=turn.work;return turn.result.map_err(Into::into); }
         {let turn=self.close.begin_granted(&mut self.child_value,effect);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
         {let turn=self.close.begin_granted(&mut self.output,effect);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
         if !self.values.is_empty() || (size_of::<T>() != 0 && self.values.capacity() > 0) { {let turn=self.close.begin_empty_granted(&mut self.values,effect);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}} }
-        {let turn=close_retained_binding(&mut self.source,effect);work+=turn.work;turn.result}
-    })();RetainedWorkOutcome{result,work}}
+        {let turn=crate::RetirementPollExit::settled(close_retained_binding(&mut self.source,effect))?;work+=turn.work;turn.result.map_err(Into::into)}
+    })();crate::RetirementPollExit::finish(result,work)}
 
-    fn next_close_depth_demand(&self)->Result<usize,ValueError>{if !self.closing {return Ok(0);} if let Some(child)=self.child.as_ref(){return child.next_close_depth_demand();} self.close.next_owner_depth_with_binding(self.child_value.is_some()||self.output.is_some()||!self.values.is_empty()||(size_of::<T>()!=0&&self.values.capacity()>0),&self.source)}
-    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        if let Some(child) = self.child.as_ref() { return if child.terminal_is_empty() { Ok(0) } else { child.next_close_copy_byte_demand() }; }
-        self.close.next_copy_with_binding(&self.source)
-    }
-    fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        if let Some(child)=self.child.as_ref() { return if child.terminal_is_empty() { Ok(0) } else { child.next_close_capacity_byte_demand(maximum_release_bytes) }; }
-        if !self.close.is_empty() { return self.close.next_capacity_byte_demand(maximum_release_bytes); }
-        if self.child_value.is_some() { return self.close.next_owner_capacity_with_binding::<T>(true,maximum_release_bytes,&self.source); }
-        self.close.next_owner_capacity_with_binding::<Vec<T>>(self.output.is_some()||!self.values.is_empty()||(size_of::<T>()!=0&&self.values.capacity()!=0),maximum_release_bytes,&self.source)
-    }
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        if let Some(child)=self.child.as_ref() { return if child.terminal_is_empty() { Ok(0) } else { child.next_close_release_byte_demand() }; }
-        self.close.next_release_with_binding(&self.source)
-    }
+    fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.depth)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     fn terminal_is_empty(&self) -> bool { self.closing && self.values.is_empty() && (size_of::<T>() == 0 || self.values.capacity() == 0) && self.child.is_none() && self.child_value.is_none() && self.output.is_none() && self.close.is_empty() && self.source.is_none() }
 }
 

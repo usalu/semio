@@ -29,9 +29,9 @@ where
     fn close_host_initial_snapshot_retirement_factory(&self) -> Option<&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>;
     fn snapshot_read_leases_terminal_is_empty(&self) -> bool;
     fn maintenance_retirements_terminal_is_empty(&self) -> bool;
-    fn maintenance_retirements_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn maintenance_retirements_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll;
     fn close_take_backbone_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>;
-    fn close_cursor_admit(&mut self, phase: ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>;
+    fn close_cursor_admit(&mut self, phase: ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), semio_framework_value::RetirementPollExit>;
     fn close_cursor_demands(&self, phase: ArtifactStoreCursorDisposerPhase, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
     fn owned_roots_terminal_is_empty(&self) -> bool;
 }
@@ -67,10 +67,10 @@ where
     P: ToValue,
     Mutation: ToValue + FromValue + self::Mutation<P>,
 {
-    fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll;
     fn terminal_is_empty(&self, store: &dyn ArtifactStoreCloseHost<P, Mutation>) -> bool;
     fn demands(&self, store: &dyn ArtifactStoreCloseHost<P, Mutation>, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
-    fn close_uninstalled_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn close_uninstalled_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>;
     fn uninstalled_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
     fn uninstalled_terminal_is_empty(&self) -> bool;
 
@@ -104,38 +104,39 @@ impl<P, Mutation> ArtifactStoreCursorDisposer<P, Mutation> {
 
 }
 
-impl<P, Mutation> ArtifactStoreOwnedDisposer<P, Mutation> for ArtifactStoreCursorDisposer<P, Mutation>
+impl<P, Mutation> ArtifactStoreCursorDisposer<P, Mutation>
 where
     P: ToValue + Send + Sync + 'static,
     Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn close_step(&mut self, view: &mut ArtifactStoreCloseView<'_, P, Mutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_inner(&mut self, view: &mut ArtifactStoreCloseView<'_, P, Mutation>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty(&*view.store) { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         let demand = self.demands(&*view.store, grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "installed cursor exceeds admitted owner depth")); }
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "installed cursor exceeds admitted owner depth").into()); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.started = true;
-        if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, RetainedCloneGrant { maximum_items: 1, ..grant }).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, &mut effect.nested(RetainedCloneGrant { maximum_items: 1, ..grant }))).map(|step| RetainedCloneStep::Progress(step.progress())); }
         let store = &mut *view.store;
         match self.phase {
             ArtifactStoreCursorDisposerPhase::ReturnedReads => {
                 if store.snapshot_read_leases_terminal_is_empty() { self.phase = ArtifactStoreCursorDisposerPhase::Displaced; }
                 else {
                     let factory = store.close_host_initial_snapshot_retirement_factory().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "returned read requires installed snapshot factory"))?;
-                    return advance_returned_snapshot_read(store.close_host_snapshot_read_leases(), &mut self.active, factory, grant).result.map(|step| RetainedCloneStep::Progress(step.progress()));
+                    return semio_framework_value::RetirementPollExit::resume(advance_returned_snapshot_read(store.close_host_snapshot_read_leases(), &mut self.active, factory, effect)).map(|step| RetainedCloneStep::Progress(step.progress()));
                 }
             }
             ArtifactStoreCursorDisposerPhase::Displaced => {
-                if !store.maintenance_retirements_terminal_is_empty() { return store.maintenance_retirements_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+                if !store.maintenance_retirements_terminal_is_empty() { return semio_framework_value::RetirementPollExit::resume(store.maintenance_retirements_step(effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
                 self.phase = ArtifactStoreCursorDisposerPhase::RuntimeOwners(0);
             }
             ArtifactStoreCursorDisposerPhase::Complete => return Ok(RetainedCloneStep::Complete(empty)),
             phase => {
-                let (owner, receipt) = store.close_cursor_admit(phase, RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant })?;
+                let (owner, receipt) = store.close_cursor_admit(phase, RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant }, effect)?;
                 *self.active = owner;
-                if !receipt.fits(grant) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "installed cursor birth exceeded original grant")); }
+                if !receipt.fits(grant) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "installed cursor birth exceeded original grant").into()); }
                 self.phase = match phase {
                     ArtifactStoreCursorDisposerPhase::RuntimeOwners(lane) if lane < 7 => ArtifactStoreCursorDisposerPhase::RuntimeOwners(lane + 1),
                     ArtifactStoreCursorDisposerPhase::RuntimeOwners(_) => ArtifactStoreCursorDisposerPhase::PrefixSnapshots,
@@ -152,6 +153,17 @@ where
         }
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }))
     }
+}
+
+impl<P, Mutation> ArtifactStoreOwnedDisposer<P, Mutation> for ArtifactStoreCursorDisposer<P, Mutation>
+where
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+{
+    fn close_step(&mut self, view: &mut ArtifactStoreCloseView<'_, P, Mutation>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        let result = self.close_inner(view, effect);
+        semio_framework_value::RetirementPollExit::settle(effect, result)
+    }
 
     fn demands(&self, store: &dyn ArtifactStoreCloseHost<P, Mutation>, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, maximum_body_bytes); }
@@ -162,7 +174,8 @@ where
         self.phase == ArtifactStoreCursorDisposerPhase::Complete && self.active.is_none() && store.owned_roots_terminal_is_empty()
     }
 
-    fn close_uninstalled_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_uninstalled_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.started || self.active.is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "installed store disposer cannot retire as uninstalled")); }
         if self.phase == ArtifactStoreCursorDisposerPhase::Complete { return Ok(RetainedCloneStep::Complete(empty)); }

@@ -31,7 +31,7 @@ fn replay_outcome_with(factory: paged::ColdMutationApplyFactory<PlainDocument, D
     let mut input = None;
     for _ in 0..64 {
         if source.ready() { source.take(&mut input, retained(source.demands(4096).unwrap())).unwrap(); break; }
-        source.advance(retained(source.demands(4096).unwrap())).unwrap();
+        {let grant=retained(source.demands(4096).unwrap());effect::with_effect(grant,effect::CPU,|e|source.advance(e)).0.result.unwrap();}
     }
     let registry = SnapshotReadRegistryHandle::new();
     let lease = registry.try_issue(Arc::clone(&base)).unwrap_or_else(|_| panic!("replay registry admission"));
@@ -43,7 +43,7 @@ fn replay_outcome_with(factory: paged::ColdMutationApplyFactory<PlainDocument, D
     let mut prepared = None;
     let mut copied = 0;
     for _ in 0..10_000 {
-        let grant = retained(cursor.advance_demands(4096).unwrap());
+        let grant = retained(cursor.advance_demands(4096, effect::CPU).unwrap());
         let step = receiver.run(grant, |control| cursor.advance(4096, one_item(grant), control)).unwrap();
         copied += step.progress().copied_bytes;
         if let ArtifactReplayPreparationStep::Prepared(_) = step { prepared = cursor.take_prepared(); break; }
@@ -59,7 +59,7 @@ fn replay_outcome_with(factory: paged::ColdMutationApplyFactory<PlainDocument, D
     for _ in 0..10_000 {
         if cursor.terminal_is_empty() { break; }
         let grant = retained(cursor.close_demands(4096).unwrap());
-        receiver.run(grant, |control| control.with_retirement(grant, |receiving| cursor.close_step(grant, receiving))).unwrap();
+        receiver.retire(grant, |effect, receiving| cursor.close_step(effect, receiving)).unwrap();
     }
     assert!(cursor.terminal_is_empty());
     drop(cursor);
@@ -67,7 +67,7 @@ fn replay_outcome_with(factory: paged::ColdMutationApplyFactory<PlainDocument, D
     for _ in 0..10_000 {
         if !registry.has_returned() && active.is_none() { break; }
         let demand = if let Some(active) = active.as_ref() { semio_framework_value_snapshot_read::artifact_retirement_box_demands(active, 4096).unwrap() } else { registry.returned_admission_demands::<PlainDocument>(|_| RetirementDemand { capacity_bytes: semio_framework_value::factory::FactorySharedRetirement::<PlainDocument>::constructor_capacity_bytes(), depth: 1, ..Default::default() }).unwrap() };
-        semio_framework_value_snapshot_read::advance_returned_snapshot_read(&registry, &mut active, &snapshots, retained(demand)).result.unwrap();
+        effect::settled(effect::with_effect(retained(demand), effect::CPU, |e| semio_framework_value_snapshot_read::advance_returned_snapshot_read(&registry, &mut active, &snapshots, e)).0).result.unwrap();
     }
     assert!(!registry.has_returned() && active.is_none());
     receiver.finish();
@@ -75,7 +75,7 @@ fn replay_outcome_with(factory: paged::ColdMutationApplyFactory<PlainDocument, D
     for _ in 0..10_000 {
         if source.terminal_is_empty() { break; }
         let grant = retained(source.close_demand(4096).unwrap());
-        source.close_step(grant).unwrap();
+        effect::settled(effect::with_effect(grant, effect::CPU, |effect| source.close_step(effect)).0).result.unwrap();
     }
     assert!(source.terminal_is_empty());
     drain_fixture(base);

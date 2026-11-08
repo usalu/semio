@@ -583,7 +583,7 @@ fn bounded_history_fold_obeys_the_neutral_law() {
         let done = job.completed();
         job.request_cancel();
         let mut closed = false;
-        for _ in 0..100000 { if matches!(job.close_step(job.next_step_grant(1,7).unwrap()).result.unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { closed = true; break; } }
+        for _ in 0..100000 { if matches!(job.close_cold(job.next_step_grant(1,7).unwrap()).result.unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { closed = true; break; } }
         assert!(closed && job.terminal_is_empty());
         assert_eq!(job.completed(), done);
     }
@@ -662,7 +662,7 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
             for _ in 0..stop.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1,1).unwrap(),1, &mut || false).unwrap(); }
             let completed = job.completed();
             job.request_cancel();
-            for _ in 0..100000 { if matches!(job.close_step(job.next_step_grant(1,7).unwrap()).result.unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { break; } }
+            for _ in 0..100000 { if matches!(job.close_cold(job.next_step_grant(1,7).unwrap()).result.unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { break; } }
             assert!(job.terminal_is_empty());
             assert_eq!(job.completed(), completed);
         }
@@ -706,13 +706,13 @@ fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
             let original = match job.rejection().unwrap() { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => { assert_eq!(detail.capacity(), 37); detail.as_ptr() }, _ => panic!("same original refusal") };
             assert_eq!(Some(original), pointer);
             let denied = RetainedCloneGrant { maximum_release_bytes: 36, ..grant };
-            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.close_step(denied).result.unwrap());
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.close_cold(denied).result.unwrap());
             assert_eq!(step.progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
             assert_eq!(match job.rejection().unwrap() { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() }, original);
             for _ in 0..4 {
                 if job.terminal_is_empty() { break; }
-                let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.close_step(grant).result.unwrap());
+                let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.close_cold(grant).result.unwrap());
                 assert!(step.progress().fits(grant));
                 assert_eq!(step.progress().retained_capacity_bytes, allocated);
                 assert_eq!(step.progress().released_bytes, released);

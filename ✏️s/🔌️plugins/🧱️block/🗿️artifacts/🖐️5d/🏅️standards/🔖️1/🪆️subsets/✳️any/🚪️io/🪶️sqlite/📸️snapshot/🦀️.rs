@@ -383,23 +383,20 @@ fn admit_native_rows(record: &semio_framework_dsl_record::RecordValue, maximum: 
 }
 impl ArtifactSqliteSnapshotHost for Block5dSnapshot {
     
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+        let maximum = c.limits().max_rows;if let Err(error)=(||->Result<(),semio_framework_value::ValueError>{
         admit_schema(c)?;
-        c.check_rows(7)?;
-        let maximum = c.limits().max_rows;
-        work.take(store::decode_sqlite_snapshot_record_native(
+        c.check_rows(7)?;Ok(())})(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}store::decode_sqlite_snapshot_record_native(
             payload,
             <Self as pack::snapshot::ArtifactDsl>::envelope_id(),
-            Self::__dsl_spec_producer(),
-            |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+            Self::__dsl_spec_producer(), &mut |record,snapshot_output,native| { let constructed: Result<_, ValueError> = (|| {
                 admit_native_rows(record, maximum, native)?;
                 Self::__dsl_from_record_controlled(record, native)
             })(); *snapshot_output = Some(constructed?); Ok(()) },
             c,
-        native_control))})}
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
-        forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;
-        work.take(store::encode_sqlite_snapshot_record_native(encoding, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner))})}
+        native_control,output)}
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {if let Err(error)=(||->Result<(),semio_framework_value::ValueError>{
+        forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;Ok(())})(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}store::encode_sqlite_snapshot_record_native(encoding, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), &mut |native| self.__dsl_to_record_controlled(native), c,native_owner,output)}
     
     
     fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {

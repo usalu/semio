@@ -78,7 +78,7 @@ fn close_started(&self) -> bool { self.closing }
         let demand = self.advance_demands(source,body,maximum_work_units)?;
         if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !super::retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress)={let turn=source.bind(&mut self.source,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
+        if let Some(progress)={let turn=source.bind(&mut self.source,effect);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
         match self.phase {
             0 => {
                 let source = source.get().retained_bytes();
@@ -90,11 +90,8 @@ fn close_started(&self) -> bool { self.closing }
                     if required > grant.maximum_capacity_bytes {
                         return Ok(RetainedCloneStep::Progress(Default::default()));
                     }
-                    let progress=match self.bytes.reserve_capacity_one(source.len(),grant.maximum_capacity_bytes,effect.actual()){Ok(p)=>{work+=p.work;p},Err(error)=>{work+=error.work;return Err((ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()})).into())}};
-                    if !progress.progressed {
-                        return Ok(RetainedCloneStep::Progress(Default::default()));
-                    }
-                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: progress.allocated_bytes, ..Default::default() }));
+                    let turn=self.bytes.reserve_capacity_one_funded(source.len(),effect);work+=turn.work;
+                    return match turn.result{Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(progress))=>Ok(RetainedCloneStep::Progress(progress)),Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Denied)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(semio_framework_value_persistent::list::PagedListReservationFailure::Work(error))=>Err(error.into()),Err(semio_framework_value_persistent::list::PagedListReservationFailure::Allocation{error,..})=>Err((ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()})).into())};
                 }
                 if self.bytes.len() < source.len() {
                     if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 {
@@ -126,16 +123,16 @@ fn close_started(&self) -> bool { self.closing }
 
     
 
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result=(||{
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged owner must begin close before granted retirement")); }
+        if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged owner must begin close before granted retirement").into()); }
         if !super::retained_clone_grant_admits(grant,super::retained_clone_close_demands::<PagedBytes<N>>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if !self.close.is_empty() { return {let turn=self.close.step_granted(effect);work+=turn.work;turn.result}; }
+        if !self.close.is_empty() { return {let turn=crate::RetirementPollExit::settled(self.close.step_granted(effect))?;work+=turn.work;turn.result.map_err(Into::into)}; }
         let state = &mut *self.state;
         if !state.bytes.terminal_is_empty() { if let Some(step) = {let turn=state.close.begin_empty_granted(&mut state.bytes,effect);work+=turn.work;turn.result}? { return Ok(step); } }
         if let Some(step) = {let turn=state.close.begin_granted(&mut state.output,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        {let turn=super::close_retained_binding(&mut state.source,effect);work+=turn.work;turn.result}
-    })();crate::RetainedWorkOutcome{result,work}}
+        {let turn=crate::RetirementPollExit::settled(super::close_retained_binding(&mut state.source,effect))?;work+=turn.work;turn.result.map_err(Into::into)}
+    })();crate::RetirementPollExit::finish(result,work)}
 
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
@@ -145,9 +142,9 @@ fn close_started(&self) -> bool { self.closing }
 }
 
 impl<const N: usize> RetireOwned for PagedBytes<N> {
-    type Retirement=<PagedList<u8,N> as RetireOwned>::Retirement;
-    fn retirement(self)->Self::Retirement{
-        self.into_retained_bytes().retirement()
+    type RetirementCursor=<PagedList<u8,N> as RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{
+        self.into_retained_bytes().retirement_seed()
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<crate::retirement::PagedListRetirement<u8, N>>()) }
     fn controlled_retirement_supported() -> bool { true }
@@ -213,9 +210,9 @@ fn close_started(&self) -> bool { self.closing }
         let demand = self.advance_demands(source,body,maximum_work_units)?;
         if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !super::retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress)={let turn=source.bind(&mut self.source,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
+        if let Some(progress)={let turn=source.bind(&mut self.source,effect);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
         match self.phase {
-            0 => match {let turn=self.inner.advance(source.project(1, PagedUtf8::retained_chunks),body,maximum_work_units,&mut effect.reborrow(super::nested_retained_clone_grant(grant)?,maximum_work_units)?);work+=turn.work;turn.result}? {
+            0 => match {let turn=self.inner.advance(source.project(1, PagedUtf8::retained_chunks),body,maximum_work_units,&mut effect.nested_within(super::nested_retained_clone_grant(grant)?,maximum_work_units));work+=turn.work;turn.result}? {
                 RetainedCloneStep::Progress(progress) => Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant, progress, "paged UTF-8 chunks")?)),
                 RetainedCloneStep::Complete(progress) => {
                     let progress = admit_retained_clone_progress(grant, progress, "paged UTF-8 chunks")?;
@@ -225,15 +222,15 @@ fn close_started(&self) -> bool { self.closing }
             },
             5 => {
                 if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                let nested=super::nested_retained_clone_grant(grant)?;let turn=self.inner.take(nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.chunks=Some(value);
+                let nested=super::nested_retained_clone_grant(grant)?;let Some(progress)=super::take_child_output(&mut self.inner,&mut self.chunks,nested,effect)? else{return Ok(RetainedCloneStep::Progress(Default::default()))};
                 
                 self.phase = 1;
                 Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"paged UTF-8 chunk cursor take")?))
             }
             1 => {
                 if !self.inner.terminal_is_empty() {
-                    if !self.inner.close_started(){let turn=self.inner.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-                    let step = {let turn=self.inner.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;
+                    if !self.inner.close_started(){let turn=self.inner.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+                    let step = {let turn=super::settle_child_close(self.inner.close_step(&mut effect.nested(super::nested_retained_clone_grant(grant)?)));work+=turn.work;turn.result}?;
                     return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), "paged UTF-8 chunk cursor close")?.progress()));
                 }
                 if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -260,17 +257,17 @@ fn close_started(&self) -> bool { self.closing }
 
     
 
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result=(||{
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged owner must begin close before granted retirement")); }
+        if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged owner must begin close before granted retirement").into()); }
         if !super::retained_clone_grant_admits(grant,super::retained_clone_close_demands::<PagedUtf8<N>>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if !self.inner.terminal_is_empty() { if !self.inner.close_started(){let turn=self.inner.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-                    let step = {let turn=self.inner.close_step(&mut effect.reborrow(super::nested_retained_clone_grant(grant)?,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result}?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), "retained child close")?.progress())); }
-        if !self.close.is_empty() { return {let turn=self.close.step_granted(effect);work+=turn.work;turn.result}; }
+        if !self.inner.terminal_is_empty() { if !self.inner.close_started(){let turn=self.inner.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+                    let step = {let turn=crate::RetirementPollExit::settled(self.inner.close_step(&mut effect.nested(super::nested_retained_clone_grant(grant)?)))?;work+=turn.work;turn.result}?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), "retained child close")?.progress())); }
+        if !self.close.is_empty() { return {let turn=crate::RetirementPollExit::settled(self.close.step_granted(effect))?;work+=turn.work;turn.result.map_err(Into::into)}; }
         if let Some(step) = {let turn=self.close.begin_granted(&mut self.chunks,effect);work+=turn.work;turn.result}? { return Ok(step); }
         if let Some(step) = {let turn=self.close.begin_granted(&mut self.output,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        {let turn=super::close_retained_binding(&mut self.source,effect);work+=turn.work;turn.result}
-    })();crate::RetainedWorkOutcome{result,work}}
+        {let turn=crate::RetirementPollExit::settled(super::close_retained_binding(&mut self.source,effect))?;work+=turn.work;turn.result.map_err(Into::into)}
+    })();crate::RetirementPollExit::finish(result,work)}
 
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
@@ -280,9 +277,9 @@ fn close_started(&self) -> bool { self.closing }
 }
 
 impl<const N: usize> RetireOwned for PagedUtf8<N> {
-    type Retirement=<PagedList<String,N> as RetireOwned>::Retirement;
-    fn retirement(self)->Self::Retirement{
-        self.into_retained_chunks().retirement()
+    type RetirementCursor=<PagedList<String,N> as RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{
+        self.into_retained_chunks().retirement_seed()
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<crate::retirement::PagedListRetirement<String, N>>()) }
     fn controlled_retirement_supported() -> bool { true }
@@ -311,6 +308,7 @@ pub struct PagedUtf8BoundedOrdCursor<const N: usize> {
 }
 
 impl<const N: usize> super::ordered_map::BoundedOrdCursor<PagedUtf8<N>> for PagedUtf8BoundedOrdCursor<N> {
+ fn begin_close(&mut self)->bool{let started=!self.closing;self.closing=true;started}
  fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{RetainedCloneBinding::close_demand(if self.left.is_some(){&self.left}else{&self.right},body)}
 fn advance_retirement_demands(&self,_body:usize)->Result<crate::RetirementDemand,ValueError>{Ok(if self.left.is_none()||self.right.is_none(){crate::RetirementDemand{copy_bytes:super::RetainedCloneSource::<u64>::constructor_copy_bytes(),depth:1,..Default::default()}}else{Default::default()})}
 
@@ -319,14 +317,15 @@ fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{R
 fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::release_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn next_close_depth_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::depth_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn terminal_is_empty(&self)->bool{self.left.is_none()&&self.right.is_none()}
-fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let grant=effect.grant();let mut work=0;let result=(||{if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"comparator must begin close"));}let step={let turn=super::close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant);work+=turn.work;turn.result}?;Ok(if self.left.is_none()&&self.right.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})})();crate::RetainedWorkOutcome{result,work}}
-    fn compare(&mut self, left: RetainedCloneRef<'_, PagedUtf8<N>>, right: RetainedCloneRef<'_, PagedUtf8<N>>, grant: super::ordered_map::BoundedOrdGrant, retirement:RetainedCloneGrant) -> crate::RetainedWorkOutcome<super::ordered_map::BoundedOrdStep, ValueError> {let mut work=0;let result=(||{
+fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing||self.terminal_is_empty(){return Ok(0)}RetainedCloneBinding::close_work_demand(if self.left.is_some(){&self.left}else{&self.right},body)}
+fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"comparator must begin close").into());}let step={let turn=crate::RetirementPollExit::settled(super::close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},effect))?;work+=turn.work;turn.result}?;Ok(if self.left.is_none()&&self.right.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})})();crate::RetirementPollExit::finish(result,work)}
+    fn compare(&mut self, left: RetainedCloneRef<'_, PagedUtf8<N>>, right: RetainedCloneRef<'_, PagedUtf8<N>>, grant: super::ordered_map::BoundedOrdGrant, effect:&mut crate::RetainedAllocationEffect<'_>) -> crate::RetainedWorkOutcome<super::ordered_map::BoundedOrdStep, ValueError> {let mut work=0;let result=(||{
         use super::ordered_map::{BoundedOrdProgress, BoundedOrdStep};
         if self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged identifier comparator is closing")); }
         let first = !self.initialized;
         if first && grant.maximum_items == 0 { return Ok(BoundedOrdStep::Progress(BoundedOrdProgress::default())); }
-        if let Some(progress)={let turn=left.bind(&mut self.left,retirement);work+=turn.work;turn.result}?{return Ok(BoundedOrdStep::Authority(progress));}
-        if let Some(progress)={let turn=right.bind(&mut self.right,retirement);work+=turn.work;turn.result}?{return Ok(BoundedOrdStep::Authority(progress));}
+        if let Some(progress)={let turn=left.bind(&mut self.left,effect);work+=turn.work;turn.result}?{return Ok(BoundedOrdStep::Authority(progress));}
+        if let Some(progress)={let turn=right.bind(&mut self.right,effect);work+=turn.work;turn.result}?{return Ok(BoundedOrdStep::Authority(progress));}
         if let Some(ordering) = self.complete { return Ok(BoundedOrdStep::Complete { ordering, progress: BoundedOrdProgress::default() }); }
         if first {work+=1;self.initialized=true; return Ok(BoundedOrdStep::Progress(BoundedOrdProgress { compared_items: 1, compared_bytes: 0 })); }
         let left = left.get().retained_chunks();
@@ -436,9 +435,9 @@ fn close_started(&self) -> bool { self.closing }
         let demand = self.advance_demands(source,body,maximum_work_units)?;
         if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !super::retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress)={let turn=source.bind(&mut self.source,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
+        if let Some(progress)={let turn=source.bind(&mut self.source,effect);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
         match self.phase {
-            0 => match {let turn=self.inner.advance(source.project(1, PagedMap::retained_entries),body,maximum_work_units,&mut effect.reborrow(super::nested_retained_clone_grant(grant)?,maximum_work_units)?);work+=turn.work;turn.result}? {
+            0 => match {let turn=self.inner.advance(source.project(1, PagedMap::retained_entries),body,maximum_work_units,&mut effect.nested_within(super::nested_retained_clone_grant(grant)?,maximum_work_units));work+=turn.work;turn.result}? {
                 RetainedCloneStep::Progress(progress) => Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant, progress, "paged map entries")?)),
                 RetainedCloneStep::Complete(progress) => {
                     let progress = admit_retained_clone_progress(grant, progress, "paged map entries")?;
@@ -448,15 +447,15 @@ fn close_started(&self) -> bool { self.closing }
             },
             5 => {
                 if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                let nested=super::nested_retained_clone_grant(grant)?;let turn=self.inner.take(nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.entries=Some(value);
+                let nested=super::nested_retained_clone_grant(grant)?;let Some(progress)=super::take_child_output(&mut self.inner,&mut self.entries,nested,effect)? else{return Ok(RetainedCloneStep::Progress(Default::default()))};
                 
                 self.phase = 1;
                 Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"paged map entry cursor take")?))
             }
             1 => {
                 if !self.inner.terminal_is_empty() {
-                    if !self.inner.close_started(){let turn=self.inner.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-                    let step = {let turn=self.inner.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;
+                    if !self.inner.close_started(){let turn=self.inner.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+                    let step = {let turn=super::settle_child_close(self.inner.close_step(&mut effect.nested(super::nested_retained_clone_grant(grant)?)));work+=turn.work;turn.result}?;
                     return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), "paged object entry cursor close")?.progress()));
                 }
                 if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -483,17 +482,17 @@ fn close_started(&self) -> bool { self.closing }
 
     
 
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result=(||{
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged owner must begin close before granted retirement")); }
+        if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged owner must begin close before granted retirement").into()); }
         if !super::retained_clone_grant_admits(grant,super::retained_clone_close_demands::<PagedMap<V,N>>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if !self.inner.terminal_is_empty() { if !self.inner.close_started(){let turn=self.inner.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-                    let step = {let turn=self.inner.close_step(&mut effect.reborrow(super::nested_retained_clone_grant(grant)?,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result}?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), "retained child close")?.progress())); }
-        if !self.close.is_empty() { return {let turn=self.close.step_granted(effect);work+=turn.work;turn.result}; }
+        if !self.inner.terminal_is_empty() { if !self.inner.close_started(){let turn=self.inner.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+                    let step = {let turn=crate::RetirementPollExit::settled(self.inner.close_step(&mut effect.nested(super::nested_retained_clone_grant(grant)?)))?;work+=turn.work;turn.result}?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), "retained child close")?.progress())); }
+        if !self.close.is_empty() { return {let turn=crate::RetirementPollExit::settled(self.close.step_granted(effect))?;work+=turn.work;turn.result.map_err(Into::into)}; }
         if let Some(step) = {let turn=self.close.begin_granted(&mut self.entries,effect);work+=turn.work;turn.result}? { return Ok(step); }
         if let Some(step) = {let turn=self.close.begin_granted(&mut self.output,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        {let turn=super::close_retained_binding(&mut self.source,effect);work+=turn.work;turn.result}
-    })();crate::RetainedWorkOutcome{result,work}}
+        {let turn=crate::RetirementPollExit::settled(super::close_retained_binding(&mut self.source,effect))?;work+=turn.work;turn.result.map_err(Into::into)}
+    })();crate::RetirementPollExit::finish(result,work)}
 
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
@@ -503,9 +502,9 @@ fn close_started(&self) -> bool { self.closing }
 }
 
 impl<V: RetireOwned + Send + Sync + 'static, const N: usize> RetireOwned for PagedMap<V, N> {
-    type Retirement=<PagedList<(PagedUtf8<{usize::MAX}>,V),N> as RetireOwned>::Retirement;
-    fn retirement(self)->Self::Retirement{
-        self.into_retained_entries().retirement()
+    type RetirementCursor=<PagedList<(PagedUtf8<{usize::MAX}>,V),N> as RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{
+        self.into_retained_entries().retirement_seed()
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<crate::retirement::PagedListRetirement<(PagedUtf8<{usize::MAX}>, V), N>>()) }
     fn controlled_retirement_supported() -> bool { crate::retirement::support::controlled_retirement_supported::<Self>() }

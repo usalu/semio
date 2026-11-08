@@ -1,7 +1,7 @@
 //! 📦️ Original operation octets retain each supplied-grant backing until paid handoff or closure.
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,RetainedAllocationEffect};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
-use semio_framework_value_persistent::{list::PagedList, list::PagedListError};
+use semio_framework_value_persistent::{list::PagedList, list::PagedListError, list::{PagedListReservationOutcome,PagedListReservationFailure,PagedListReleaseOutcome,PagedListReleaseFailure}};
 use std::mem::ManuallyDrop;
 #[path="📋️operations/🦀️.rs"]
 mod operations;
@@ -50,7 +50,8 @@ impl ArtifactPreparedOperationOutput {
     }
 
     /// 🛂️ Admits one original page birth or at most sixty-four initialized octets.
-    pub fn append(&mut self,source:&[u8],grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+    pub fn append(&mut self,source:&[u8],effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
+        let grant=effect.grant();
         if self.closing||self.closed||self.contiguous.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"operation output is closing or transferring"));}
         if source.is_empty()||grant.maximum_items==0{return Ok(Default::default());}
         if source.len()>self.maximum_payload_bytes-self.bytes.len(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"operation output payload extent exhausted"));}
@@ -60,8 +61,12 @@ impl ArtifactPreparedOperationOutput {
             let required=self.bytes.next_exact_capacity_allocation_bytes(self.maximum_payload_bytes).map_err(refusal)?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"operation output lost its unfunded payload page"))?;
             if self.bytes.allocated_bytes().checked_add(required).is_none_or(|total|total>self.maximum_capacity_bytes){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"operation output total backing authority exhausted"));}
             if grant.maximum_capacity_bytes<required{return Ok(Default::default());}
-            let capacity=grant.maximum_capacity_bytes.min(self.maximum_capacity_bytes-self.bytes.allocated_bytes());
-            let step=self.bytes.reserve_exact_capacity_one(self.maximum_payload_bytes,capacity).map_err(|error|refusal(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()}))?;
+            let step=match self.bytes.reserve_exact_capacity_one(self.maximum_payload_bytes,effect).result{
+                Ok(PagedListReservationOutcome::Ready(step))=>step,
+                Ok(PagedListReservationOutcome::Denied)=>return Ok(Default::default()),
+                Err(PagedListReservationFailure::Work(error))=>return Err(error),
+                Err(PagedListReservationFailure::Allocation{error,..})=>return Err(refusal(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()})),
+            };
             let progress=RetainedCloneProgress{copied_items:usize::from(step.progressed),retained_capacity_bytes:step.allocated_bytes,..Default::default()};
             if self.bytes.allocated_bytes()>self.maximum_capacity_bytes||!progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"operation output retained actual backing beyond supplied authority").with_retained_progress(progress));}
             return Ok(progress);
@@ -89,7 +94,8 @@ impl ArtifactPreparedOperationOutput {
     pub fn contiguous_prefix(&self)->Option<&[u8]>{self.contiguous.as_ref().map(Vec::as_slice)}
 
     /// 📬️ Pays the genuine contiguous protocol backing and every copied byte before releasing original pages.
-    pub fn prepare_contiguous(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn prepare_contiguous(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
         if self.closing||self.closed{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"contiguous operation transfer requires its live original owner"));}
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.contiguous.is_none(){
@@ -120,7 +126,7 @@ impl ArtifactPreparedOperationOutput {
             }
             return Ok(RetainedCloneStep::Progress(progress));
         }
-        self.close_paged_one(grant)
+        self.close_paged_one(effect)
     }
 
     /// 🤝️ Hands the exact already funded contiguous buffer to the actual protocol recipient.
@@ -137,13 +143,14 @@ impl ArtifactPreparedOperationOutput {
         Ok(RetirementDemand{copy_bytes,release_bytes,depth:depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"operation output retirement depth overflow"))?,..Default::default()})
     }
 
-    fn close_paged_one(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    fn close_paged_one(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
         if self.bytes.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         let demand=self.paged_demands()?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
         let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};
         if !self.bytes.is_empty(){self.bytes.pop();progress.copied_bytes=1;}
-        else{let step=self.bytes.release_empty_page(grant.maximum_release_bytes).map_err(|error|refusal(error).with_retained_progress(progress))?;progress.released_bytes=step.released_allocation_bytes;}
+        else{match self.bytes.release_empty_page(effect).result{Ok(PagedListReleaseOutcome::Ready(step))=>progress.released_bytes=step.released_allocation_bytes,Ok(PagedListReleaseOutcome::Denied)=>return Ok(RetainedCloneStep::Progress(Default::default())),Err(PagedListReleaseFailure::Work(error))=>return Err(error),Err(PagedListReleaseFailure::Release(error))=>return Err(refusal(error).with_retained_progress(progress))}}
         Ok(if self.bytes.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
     }
 
@@ -162,16 +169,16 @@ impl ErasedSnapshotRetirement for ArtifactPreparedOperationOutput {
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement_demands()?.release_bytes)}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.retirement_demands()?.depth)}
     fn terminal_is_empty(&self)->bool{self.closed&&self.contiguous.is_none()&&self.bytes.terminal_is_empty()}
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()));}
         let demand=self.retirement_demands()?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
         self.closing=true;
         if self.contiguous.is_some(){drop(self.contiguous.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
-        let step=self.close_paged_one(grant)?;
+        let step=self.close_paged_one(effect)?;
         if self.bytes.terminal_is_empty(){self.closed=true;}
         Ok(if self.closed{RetainedCloneStep::Complete(step.progress())}else{step})
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
 }
 
 impl Drop for ArtifactPreparedOperationOutput {

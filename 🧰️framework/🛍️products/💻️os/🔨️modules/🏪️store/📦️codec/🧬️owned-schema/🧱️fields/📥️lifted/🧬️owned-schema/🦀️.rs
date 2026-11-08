@@ -4,6 +4,7 @@ use semio_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::FromValue;
+use semio_framework_value::{OriginalRetirementFailure, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, ValueRefusalKind};
 use semio_framework_value::ValueError;
 use semio_os_spr::{Edit, Mutation};
 use std::marker::PhantomData;
@@ -18,6 +19,7 @@ use semio_framework_pack_json_retained_schema::*;
 #[path = "🗂️envelope-field-constants-and-authority-traits/🦀️.rs"]
 mod envelope_field_constants_and_authority_traits;
 pub use envelope_field_constants_and_authority_traits::{
+    ArtifactEnvelopeCloseExit, ArtifactEnvelopeClosePoll, artifact_envelope_close_finish, artifact_envelope_close_resume, artifact_envelope_close_resume_with, artifact_envelope_close_charge, artifact_envelope_close_settle, artifact_envelope_close_work_error, artifact_envelope_factory_retire, artifact_envelope_retirement_settle, artifact_envelope_failure_diagnostic, artifact_envelope_failure_error,
     artifact_bounded_history_entry_decoder, artifact_envelope_owned_schema,
     ArtifactEnvelopeDecodedRecordTarget, ArtifactEnvelopeFieldDecodeStep,
     ArtifactEnvelopeFieldReservation, ArtifactEnvelopeMutationFieldAuthority,

@@ -1,6 +1,6 @@
 //! 🪪️ Publication metadata retains its original strings through typed controlled retirement.
 use super::ArtifactStoreOneItemLiveAuthority;
-use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement}};
+use semio_framework_value::{ValueError,RetainedAllocationEffect,retirement::{RetireOwned,RetirementCursor,RetirementStep,erased_cursor_turn,controlled::ControlledRetirement}};
 
 impl semio_os_spr::command::ArtifactCanonicalEditAuthority for ArtifactStoreOneItemLiveAuthority {
     fn sequence_number(&self)->i32{self.next_sequence_number}
@@ -11,18 +11,19 @@ impl semio_os_spr::command::ArtifactCanonicalEditAuthority for ArtifactStoreOneI
 }
 
 type AuthorityFields=(semio_framework_value::SharedUtf8,Option<String>,Option<String>,Option<String>);
-struct PublicationAuthorityFieldsRetirement(ControlledRetirement<AuthorityFields>);
+pub struct PublicationAuthorityFieldsRetirement(ControlledRetirement<AuthorityFields>);
 impl RetireOwned for ArtifactStoreOneItemLiveAuthority {
-    fn retirement(self)->Box<dyn RetirementCursor>{
+    type RetirementCursor=PublicationAuthorityFieldsRetirement;
+    fn retirement_seed(self)->PublicationAuthorityFieldsRetirement{
         let Self{actor,line,group_id,stamped_edit_id,..}=self;
-        Box::new(PublicationAuthorityFieldsRetirement(ControlledRetirement::new((actor,line,group_id,stamped_edit_id)).unwrap_or_else(|_|unreachable!("publication fields support controlled retirement"))))
+        PublicationAuthorityFieldsRetirement(ControlledRetirement::new((actor,line,group_id,stamped_edit_id)).unwrap_or_else(|_|unreachable!("publication fields support controlled retirement")))
     }
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<PublicationAuthorityFieldsRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
 impl RetirementCursor for PublicationAuthorityFieldsRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.next_demand(body) }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.step(grant){Err(error)=>RetirementStep::Failure(error,0),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(0),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,1)}}
+    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{erased_cursor_turn(self.0.step(effect))}
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.0.next_copy_byte_demand()}
     fn allows_admitted_narrow_work(&self)->bool{true}

@@ -18,7 +18,7 @@ impl<P:Send,C:RetirementCursor> NativeEncodeRetirement<P,C>{
   let Self::Pending(owner)=self else{return RetainedWorkOutcome{result:Err(ValueError::invariant("encoding retirement has no pending original")),work:1}};
   if owner.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:1}}
   *output=owner.take();
-  RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:quote}
+  RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:u128::from(quote)}
  }
 }
 impl<P:Send,C:RetirementCursor> RetirementCursor for NativeEncodeRetirement<P,C>{
@@ -31,9 +31,9 @@ impl<P:Send,C:RetirementCursor> RetirementCursor for NativeEncodeRetirement<P,C>
  fn next_birth_bytes(&self,body:usize)->Option<usize>{match self{Self::Pending(None)=>Some(0),Self::Pending(Some(_))=>None,Self::Ready(cursor)=>cursor.next_birth_bytes(body)}}
  fn next_close_byte_demand(&self)->Option<usize>{match self{Self::Pending(None)=>Some(0),Self::Pending(Some(_))=>None,Self::Ready(cursor)=>cursor.next_close_byte_demand()}}
  fn allows_admitted_narrow_work(&self)->bool{match self{Self::Pending(_)=>false,Self::Ready(cursor)=>cursor.allows_admitted_narrow_work()}}
- fn close_step(&mut self,g:RetainedCloneGrant,actual:&mut Option<usize>)->RetirementStep{match self{Self::Pending(None)=>RetirementStep::Complete(0),Self::Pending(Some(_))=>RetirementStep::Failure(pending().into(),0),Self::Ready(cursor)=>cursor.close_step(g,actual)}}
- fn close_step_controlled(&mut self,g:RetainedCloneGrant,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl,actual:&mut Option<usize>)->RetirementStep{match self{Self::Pending(None)=>RetirementStep::Complete(0),Self::Pending(Some(_))=>RetirementStep::Failure(pending().into(),0),Self::Ready(cursor)=>cursor.close_step_controlled(g,control,actual)}}
- fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,g:RetainedCloneGrant,actual:&mut Option<usize>)->RetirementStep{match self{Self::Pending(None)=>RetirementStep::Complete(0),Self::Pending(Some(_))=>RetirementStep::Failure(pending().into(),0),Self::Ready(cursor)=>cursor.close_original_step(original,g,actual)}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{match self{Self::Pending(None)=>RetirementStep::Complete(0),Self::Pending(Some(_))=>RetirementStep::Failure(pending().into(),0),Self::Ready(cursor)=>cursor.close_step(effect)}}
+ fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->RetirementStep{match self{Self::Pending(None)=>RetirementStep::Complete(0),Self::Pending(Some(_))=>RetirementStep::Failure(pending().into(),0),Self::Ready(cursor)=>cursor.close_step_controlled(effect,control)}}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{match self{Self::Pending(None)=>RetirementStep::Complete(0),Self::Pending(Some(_))=>RetirementStep::Failure(pending().into(),0),Self::Ready(cursor)=>cursor.close_original_step(original,effect)}}
  fn terminal_is_empty(&self)->bool{match self{Self::Pending(owner)=>owner.is_none(),Self::Ready(cursor)=>cursor.terminal_is_empty()}}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
 }

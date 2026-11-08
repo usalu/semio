@@ -1,6 +1,7 @@
 //! 🗄️ Cache and session of the inference cache: the owned value erasure, the content-addressed cache with its statistics and the per-session entry tables. See [`super`].
 
 use super::*;
+use semio_framework_value::{RetainedCloneProgress,RetirementDemand,ValueError};
 
 //#region 🔖️Cache
 /// 🧬️ Concrete inference values carry a mandatory typed retirement producer through erasure.
@@ -8,19 +9,45 @@ trait InferenceOwnedValue:Any+Send+Sync {
  fn as_any(&self)->&dyn Any;
  fn into_any(self:Box<Self>)->Box<dyn Any+Send+Sync>;
  fn boxed_retirement_birth_bytes(&self)->usize;
- fn retire_boxed(self:Box<Self>)->Box<dyn RetirementCursor>;
+ fn admit_retirement(self:Box<Self>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->(Option<Box<dyn InferenceOwnedValue>>,semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn RetirementCursor>,RetainedCloneProgress)>>);
 }
 
 impl<T:RetireOwned+Sync> InferenceOwnedValue for T {
  fn as_any(&self)->&dyn Any{self}
  fn into_any(self:Box<Self>)->Box<dyn Any+Send+Sync>{self}
  fn boxed_retirement_birth_bytes(&self)->usize{semio_framework_value::retirement::boxed_owner_birth_bytes::<T>()}
- fn retire_boxed(self:Box<Self>)->Box<dyn RetirementCursor>{self.retirement()}
+ fn admit_retirement(self:Box<Self>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->(Option<Box<dyn InferenceOwnedValue>>,semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn RetirementCursor>,RetainedCloneProgress)>>){let mut original=Some(self);let turn=semio_framework_value::retirement::admit_retirement_cursor(&mut original,effect);(original.map(|original|original as Box<dyn InferenceOwnedValue>),turn)}
 }
 
+/// 🌱️ Keeps the erased original inline until its exact typed owner cursor is funded by the closing effect.
+pub(super) struct InferenceValueRetirement{original:std::mem::ManuallyDrop<Option<Box<dyn InferenceOwnedValue>>>}
+impl InferenceValueRetirement{
+ fn demand(&self)->RetirementDemand{let Some(original)=self.original.as_ref()else{return Default::default()};let capacity_bytes=original.boxed_retirement_birth_bytes();RetirementDemand{copy_bytes:size_of::<Option<Box<dyn InferenceOwnedValue>>>()+capacity_bytes,capacity_bytes,depth:2,..Default::default()}}
+}
+impl RetirementCursor for InferenceValueRetirement{
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(self.original.is_some()))}
+ fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(self.demand())}
+ fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+  use semio_framework_value::retirement::RetirementStep;
+  let Some(original)=self.original.take()else{return RetirementStep::Complete(0)};
+  let grant=effect.grant();
+  if grant.maximum_depth<2{*self.original=Some(original);return RetirementStep::BudgetExhausted}
+  let mut child=effect.nested(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth.saturating_sub(1),..grant});
+  let(rest,turn)=original.admit_retirement(&mut child);*self.original=rest;
+  match turn.result{Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress,turn.work),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)}
+ }
+ fn terminal_is_empty(&self)->bool{self.original.is_none()}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
+ fn next_birth_bytes(&self,_:usize)->Option<usize>{self.original.as_ref().map_or(Some(0),|original|Some(original.boxed_retirement_birth_bytes()))}
+ fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(if self.original.is_some(){2}else{0})}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl Drop for InferenceValueRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"inference value abandoned before terminal-empty");if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.original)}}}}
 impl RetireOwned for Box<dyn InferenceOwnedValue>{
- fn retirement(self)->Box<dyn RetirementCursor>{self.retire_boxed()}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(self.as_ref().boxed_retirement_birth_bytes())}
+ type RetirementCursor=InferenceValueRetirement;
+ fn retirement_seed(self)->Self::RetirementCursor{InferenceValueRetirement{original:std::mem::ManuallyDrop::new(Some(self))}}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<InferenceValueRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }
 

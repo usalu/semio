@@ -70,7 +70,7 @@ pub struct TransitionPin {
 /// artifact aggregate op re-encoded canonically (`schema` names the artifact schema, `payload` holds
 /// its `OpBinary` bytes), or a withdrawal that folds the operation as a no-op. The superseded
 /// operation itself is never rewritten.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum InputReplacement {
     Input { schema: String, payload: Vec<u8> },
     Withdrawn,
@@ -127,7 +127,7 @@ impl TransitionSupersede {
 
 /// 🕰️ One structural history step. Every variant is a pure function of the fold state it
 /// lands on, so replicas holding the same event set converge regardless of arrival order.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum HistoryTransition {
     /// ⏪️ The author withdraws its own operations (undo).
     Revert { mutation_ids: Vec<MutationId> },
@@ -606,7 +606,6 @@ pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transition
 
 mod owned_retirement {
     use super::*;
-    use semio_framework_value::retirement::{RetireOwned, RetirementCursor, sequence, deferred, deferred_birth_bytes_for, sequence_birth_bytes};
     semio_framework_value::artifact_retire_struct!(HistoryFold { applied, redo, refused, checkpoint, alternative, trunk, changes, checkpoints, alternatives, supersessions });
     semio_framework_value::artifact_retire_struct!(EffectiveSupersession { transition_id, actor, timestamp, scope, replacement });
     semio_framework_value::artifact_retire_struct!(FoldChange { id, edit_ids, description, saved_at });
@@ -614,42 +613,9 @@ mod owned_retirement {
     semio_framework_value::artifact_retire_struct!(FoldAlternative { id, name, checkpoint_ids });
     semio_framework_value::artifact_retire_struct!(Author { id, name, avatar });
     semio_framework_value::artifact_retire_struct!(TransitionPin { child_uri, checkpoint_id });
-    impl RetireOwned for InputReplacement {
-        fn retirement(self) -> Box<dyn RetirementCursor> {
-            match self {
-                Self::Input { schema, payload } => sequence(vec![deferred(schema), deferred(payload)]),
-                Self::Withdrawn => sequence(Vec::new()),
-            }
-        }
-        fn retirement_birth_bytes(&self) -> Option<usize> { match self { Self::Input { schema, payload } => sequence_birth_bytes(&[deferred_birth_bytes_for(schema), deferred_birth_bytes_for(payload)]), Self::Withdrawn => sequence_birth_bytes(&[]) } }
-        fn controlled_retirement_supported() -> bool { true }
-    }
     semio_framework_value::artifact_retire_struct!(FoldEdit { id, actor, timestamp, mutation_ids, line });
     semio_framework_value::artifact_retire_struct!(TransitionCheckpoint { checkpoint_id, parent_id, change_id, mutation_ids, description, saved_at, authors, message, timestamp, line_id });
     semio_framework_value::artifact_retire_struct!(TransitionSupersede { scope, inputs });
     semio_framework_value::artifact_retire_struct!(SupersededInput { target, replacement });
-    impl RetireOwned for HistoryTransition {
-        fn retirement(self)->Box<dyn RetirementCursor>{
-            match self{
-                Self::Revert{mutation_ids}|Self::Reinstate{mutation_ids}=>mutation_ids.retirement(),
-                Self::Commit(checkpoint)=>checkpoint.retirement(),
-                Self::Branch{alternative_id,name,checkpoint_id}=>sequence(vec![deferred(alternative_id),deferred(name),deferred(checkpoint_id)]),
-                Self::Checkout{checkpoint_id,alternative_id}=>sequence(vec![deferred(checkpoint_id),deferred(alternative_id)]),
-                Self::Repin{checkpoint_id,pinned_checkpoint_id,pins}=>sequence(vec![deferred(checkpoint_id),deferred(pinned_checkpoint_id),deferred(pins)]),
-                Self::Supersede(supersede)=>supersede.retirement(),
-            }
-        }
-        fn retirement_birth_bytes(&self)->Option<usize>{
-            match self{
-                Self::Revert{mutation_ids}|Self::Reinstate{mutation_ids}=>mutation_ids.retirement_birth_bytes(),
-                Self::Commit(checkpoint)=>checkpoint.retirement_birth_bytes(),
-                Self::Branch{alternative_id,name,checkpoint_id}=>sequence_birth_bytes(&[deferred_birth_bytes_for(alternative_id),deferred_birth_bytes_for(name),deferred_birth_bytes_for(checkpoint_id)]),
-                Self::Checkout{checkpoint_id,alternative_id}=>sequence_birth_bytes(&[deferred_birth_bytes_for(checkpoint_id),deferred_birth_bytes_for(alternative_id)]),
-                Self::Repin{checkpoint_id,pinned_checkpoint_id,pins}=>sequence_birth_bytes(&[deferred_birth_bytes_for(checkpoint_id),deferred_birth_bytes_for(pinned_checkpoint_id),deferred_birth_bytes_for(pins)]),
-                Self::Supersede(supersede)=>supersede.retirement_birth_bytes(),
-            }
-        }
-        fn controlled_retirement_supported()->bool{true}
-    }
     semio_framework_value::artifact_retire_struct!(ViewerHead { line_id, checkpoint_id });
 }

@@ -1,17 +1,24 @@
-//! 🪧️ Verfolgen pane smoke: the bundled GIS map demo loads, one `AddFeature` applies, undo restores the loaded snapshot and the app closes through its exact retained close.
+//! 🪧️ Verfolgen pane smoke: the bundled GIS map demo loads through `setActiveExample`, one `AddFeature` applies, undo, redo and a second undo restore it and the app closes, in en and de, through its exact retained close.
 
 use crate::unit_tests::context::app;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::example::set_active_example;
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::features::add_feature;
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::Gis2dCommand;
 
-/// 🌍️ LAW: the Verfolgen pane loads its bundled demo map, adds one position, undoes it and closes with the store drop witness satisfied.
+/// 🌍️ LAW: the Verfolgen pane loads its bundled demo map, adds one position, undoes, redoes and closes in en and de with the store drop witness satisfied.
 #[semio_framework_async_macros::async_test]
 async fn verfolgen_pane_loads_applies_undoes_and_closes() {
-    let mut app = app().await;
-    let command = Gis2dCommand::AddFeature(add_feature::AddFeature { collection: "positions".into(), label: "Depot".into(), lon: 7.5, lat: 51.0, span: 0.01 });
-    let (loaded, applied) = semio_plugin::artifact_app_laws::assert_pane_smoke(&mut app.0, semio_s_artifact_gis_gismap_demo_asset::DEMO_DSL, command, |app| app.snapshot().expect("projection"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
-    assert!(!loaded.positions.is_empty(), "the loaded demo carries its positions");
-    assert_eq!(applied.positions.len(), loaded.positions.len() + 1);
+    for locale in semio_plugin::artifact_app_laws::PANE_SMOKE_LOCALES {
+        let mut app = app().await;
+        let view = semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native);
+        let labels = semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels(&view);
+        let language = semio_plugin::artifact_app_laws::PaneSmokeLanguage { body_key: semio_s_artifact_gis_gismap_gis2d::editor::gis2d::panels::artifact::GIS2D_PLAY_BODY_ARTIFACT, catalog: vec![labels.layer_water.as_str().into(), labels.layer_roads.as_str().into()], view };
+        let command = Gis2dCommand::AddFeature(add_feature::AddFeature { collection: "positions".into(), label: "Depot".into(), lon: 7.5, lat: 51.0, span: 0.01 });
+        let example = Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::example::DEFAULT_EXAMPLE_ID.into() });
+        let (loaded, applied) = semio_plugin::artifact_app_laws::assert_pane_smoke_by_example(&mut app.0, &language, example, command, |app| app.snapshot().expect("projection"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        assert!(!loaded.positions.is_empty(), "the loaded demo carries its positions");
+        assert_eq!(applied.positions.len(), loaded.positions.len() + 1);
+    }
 }
 
 /// 🌐️ LAW: the Verfolgen map body renders from the loaded demo in every locale of `🧫️cases.json` and carries each case's expected strings.

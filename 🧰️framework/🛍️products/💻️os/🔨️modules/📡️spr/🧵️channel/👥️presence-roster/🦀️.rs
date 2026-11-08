@@ -11,7 +11,7 @@ pub const PRESENCE_ROSTER_MAXIMUM_BYTES: usize = PRESENCE_ROSTER_MAXIMUM_ITEMS *
 #[derive(Debug, PartialEq)]
 #[derive(semio_framework_value::RetireOwned)]
 pub struct PresenceRosterWire {
-    pub(super) entries: [Option<Box<[u8]>>; PRESENCE_ROSTER_MAXIMUM_ITEMS],
+    pub(super) entries: [Option<Vec<u8>>; PRESENCE_ROSTER_MAXIMUM_ITEMS],
     len: usize,
     pub(super) bytes: usize,
 }
@@ -47,19 +47,17 @@ impl PresenceRosterWire {
             return Err(PresenceRosterPushRejected { entry, reason: "presence roster exceeds its fixed byte authority" });
         }
         let bytes = entry.len();
-        self.entries[self.len] = Some(entry.into_boxed_slice());
+        self.entries[self.len] = Some(entry);
         self.len += 1;
         self.bytes += bytes;
         Ok(())
     }
 
-    pub fn pop_back(&mut self) -> Option<Box<[u8]>> {
-        if self.len == 0 {
-            return None;
-        }
-        self.len -= 1;
-        let entry = self.entries[self.len].take().expect("occupied presence roster slot");
-        self.bytes -= entry.len();
+    pub fn pop_back(&mut self) -> Option<Vec<u8>> {
+        let index = self.len.checked_sub(1)?;
+        let entry = self.entries[index].take()?;
+        self.len = index;
+        self.bytes = self.bytes.saturating_sub(entry.len());
         Some(entry)
     }
 

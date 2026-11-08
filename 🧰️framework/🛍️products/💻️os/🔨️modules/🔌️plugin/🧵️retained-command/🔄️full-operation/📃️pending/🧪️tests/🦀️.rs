@@ -6,7 +6,7 @@ use semio_plugin_result_page::pending_result_page::*;
 use semio_framework_actor::typed_operation_page::{TypedOperationResultToken,TypedOperationResultLane};
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_value::{RetainedCloneGrant,RetainedWorkOutcome,RetirementDemand,ValueError};
-use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,StepContext,OriginalTurnFailure,OriginalConstructionDemand,OperationId,Generation,admit_original_construction,close_original_retained_step};
+use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,StepContext,OriginalTurnFailure,OriginalConstructionDemand,OperationId,Generation,admit_original_construction,close_original_retained_step,close_original_effect_step};
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn demand(d:RetirementDemand)->OriginalConstructionDemand{OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth}}
 fn caller()->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(44781),Generation(8),RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:4096},||Some(1),u64::MAX,1<<20)}
@@ -73,7 +73,7 @@ fn pending_original_page_preserves_accepted_intent_token_and_canonical_bytes_und
   assert!(owner.is_framed());assert_eq!(owner.written_bytes(),expected.len());
   for _ in 0..65536{
    if owner.ready_to_handoff(){break}
-   let d=owner.traversal_close_demands(32768).unwrap();let g=grant(d);turn(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{close_original_retained_step(cx,d,|issued|owner.close_traversal(issued))?;Ok(())}));
+   let d=owner.traversal_close_demands(32768).unwrap();let g=grant(d);turn(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{close_original_effect_step(cx,d,|effect|owner.close_traversal(effect))?;Ok(())}));
   }
   assert!(owner.ready_to_handoff());let d=owner.handoff_demands().unwrap();let g=grant(d);
   let denied=RetainedCloneGrant{maximum_copy_bytes:0,..g};let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_page(denied));assert!(step.result.unwrap().is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.plan(),Some(plan));
@@ -148,7 +148,7 @@ fn pending_original_page_delivers_accepted_receipt_after_original_cancellation()
    }));assert_eq!(owner.plan(),Some(plan));assert_eq!(decoder.receiving_identity(),decoder_identity);
   }
   assert!(owner.is_framed());assert!(!owner.write_refused());
-  for _ in 0..65536{if owner.ready_to_handoff(){break}let d=owner.traversal_close_demands(32768).unwrap();let g=grant(d);turn(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{close_original_retained_step(cx,d,|issued|owner.close_traversal(issued))?;Ok(())}));}
+  for _ in 0..65536{if owner.ready_to_handoff(){break}let d=owner.traversal_close_demands(32768).unwrap();let g=grant(d);turn(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{close_original_effect_step(cx,d,|effect|owner.close_traversal(effect))?;Ok(())}));}
   assert!(owner.ready_to_handoff());let mut d=owner.handoff_demands().unwrap();let parent_copy=std::mem::size_of::<Option<semio_framework_actor::typed_operation_page::TypedOperationResultPage>>();d.copy_bytes+=parent_copy;let g=grant(d);let mut output=None;
   turn(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{
    close_original_retained_step(cx,d,|issued|{let step=owner.take_page(RetainedCloneGrant{maximum_copy_bytes:issued.maximum_copy_bytes-parent_copy,..issued});RetainedWorkOutcome{work:step.work,result:step.result.map(|page|{let(page,mut progress)=page.unwrap();output=Some(page);progress.copied_bytes+=parent_copy;semio_framework_value::RetainedCloneStep::Progress(progress)})}})?;Ok(())

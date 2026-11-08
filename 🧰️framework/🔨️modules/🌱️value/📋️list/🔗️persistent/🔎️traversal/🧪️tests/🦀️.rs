@@ -11,7 +11,7 @@ fn grant()->RetainedCloneGrant{wallet::available()}
 fn make(case:&serde_json::Value,law:&serde_json::Value)->PersistentList<Row>{
  let mut rank=0;let mut pages=Vec::new();
  for len in std::iter::repeat_n(PERSISTENT_PAGE_FANOUT,case["fullLeaves"].as_u64().unwrap()as usize).chain(case["tailLeaves"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as usize)){
-  let rows=std::array::from_fn(|slot|if slot<len{let row=Row{rank:rank*law["stride"].as_i64().unwrap(),label:format!("{}{rank}",law["prefix"].as_str().unwrap())};rank+=1;Some(wallet::paid(SealedShared::admit(row,SharedIssuer::owned(),grant())).result.unwrap_or_else(|_|panic!("table row issuance")).0)}else{None});
+  let rows=std::array::from_fn(|slot|if slot<len{let row=Row{rank:rank*law["stride"].as_i64().unwrap(),label:format!("{}{rank}",law["prefix"].as_str().unwrap())};rank+=1;Some(wallet::paid(crate::admit_funded(row,SharedIssuer::owned(),grant())).result.unwrap_or_else(|_|panic!("table row issuance")).0)}else{None});
   pages.push(wallet::paid(PersistentList::admit_leaf(rows,len,grant(),&mut None)).result.unwrap_or_else(|_|panic!("table leaf issuance")).0);
  }
  while pages.len()>1{let mut originals=pages.into_iter();let mut parents=Vec::new();loop{let children=std::array::from_fn(|_|originals.next());if children[0].is_none(){break;}parents.push(wallet::paid(PersistentList::admit_branch(children,grant(),&mut None)).result.unwrap_or_else(|_|panic!("table branch issuance")).0);}pages=parents;}
@@ -20,7 +20,7 @@ fn make(case:&serde_json::Value,law:&serde_json::Value)->PersistentList<Row>{
 fn close<T:RetireOwned+Send+Sync+'static>(source:&mut RetainedCloneSource<T>){
  let mut idle=0;for _ in 0..1000000{
   if source.terminal_is_empty(){return;}let mut d=source.next_close_demand(4096).unwrap();let copy=4096.max(d.copy_bytes);if copy!=4096{d=source.next_close_demand(copy).unwrap();}
-  let g=wallet::cap(RetainedCloneGrant{maximum_copy_bytes:copy,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth,..grant()});let p=wallet::paid(source.close_step(g)).result.unwrap().progress();assert!(p.fits(g));if p==Default::default(){idle+=1;assert!(idle<8,"table original source repeats an inert quote: {g:?}");}else{idle=0;}
+  let g=wallet::cap(RetainedCloneGrant{maximum_copy_bytes:copy,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth,..grant()});let p=wallet::paid(crate::effect::settle(g,|effect|source.close_step(effect))).result.unwrap().progress();assert!(p.fits(g));if p==Default::default(){idle+=1;assert!(idle<8,"table original source repeats an inert quote: {g:?}");}else{idle=0;}
  }
  panic!("table original source did not close");
 }
@@ -48,7 +48,7 @@ fn persistent_table_traversal_preserves_original_rows_and_linear_zero_heap_scan(
 fn persistent_table_traversal_projects_borrowed_records_and_controlled_wire_without_payload_clone(){
  let _initial_bank=wallet::case(1);
  let law=law();let independent=oracle(&law);
- let sealed=wallet::paid(SealedShared::admit(Row{rank:law["stride"].as_i64().unwrap(),label:format!("{}1",law["prefix"].as_str().unwrap())},SharedIssuer::owned(),grant())).result.unwrap_or_else(|_|panic!("sealed record issuance")).0;
+ let sealed=wallet::paid(crate::admit_funded(Row{rank:law["stride"].as_i64().unwrap(),label:format!("{}1",law["prefix"].as_str().unwrap())},SharedIssuer::owned(),grant())).result.unwrap_or_else(|_|panic!("sealed record issuance")).0;
  let mut sealed_source=wallet::paid(semio_framework_value_clone_source_testing::admit_owned(sealed,(),grant())).result.unwrap_or_else(|_|panic!("sealed record source")).0;
  let mut accepted=|_|true;let mut control=semio_framework_value_native_encoding::native_encoding::NativeEncodeControl::new(65536,&mut accepted);let borrowed=sealed_source.borrow();let row=borrowed.get();
  let(shape,heap)=crate::value::observe_retirement_allocations(||row.value_shape_at_path(&["label"]).unwrap());assert_eq!(shape,ValueShape::String);assert_eq!(heap,(0,0));

@@ -1,0 +1,31 @@
+STATUS: operation-wire lib VERIFIED native (store5-3). Gateway (store5-6, rc 1): testing-laws path is red only in semio-os-store-replay (57, store3) and semio-os-store-paged-one-item (157, unported). engine bundle/message + engine/branch EDITED-unverified (not reached by store5-6). op-wire tests unported.
+
+## Claim
+store5 took the whole store/🧵️operation-wire crate (store4 stays in one-item/publication/lifted/operation-wire + snapshot-clone). Logged in 1105b-claims.md.
+
+## Ported (EDITED-unverified), all in store/🧵️operation-wire
+- 📦️output/ + 📋️operations: append / append_original / prepare_contiguous / prepare_handoff / close_paged_one take `&mut RetainedAllocationEffect` and call PagedList reserve_exact_capacity_one(limit, effect) / release_empty_page(effect), mapping PagedListReservationOutcome/ReleaseOutcome and their Work/Allocation/Release failures.
+- 🦀️.rs (root): ArtifactPreparedOperationCursor::advance/advance_pack/close take effect (pack cursor advance/close(effect), close via effect.nested depth-1). New pub(crate) `completed(poll)` helper.
+- 🧳️original: ArtifactOriginalOperationBytes::advance/close_step(effect) (nested child grants).
+- 📤️edit + 🧳️custody + 🚪️admission: ArtifactOriginalEditWire / ArtifactOriginalEditMessage advance/close_step(effect); `ArtifactStoreBatchMessage::advance_message(.., effect)` (trait in one-item/publication batch_digest:102, additive edit of store4's file).
+- 📜️history (transition payload advance_*/close_step), 📜️history/📤️batch, 📜️history/✉️envelope, 🎯️common, 🧳️replacement/⚖️canonical: advance/close_step(effect).
+- 🧳️replacement (OriginalReplacementReceiving): advance_native(.., maximum_work) runs each pure phase in `control.with_allocated_effect`, source admission via admission.advance(effect)/take_output/return_inputs(effect), retain_original(effect); receiver advance/close via the store4 trait (Poll). close_native(row, control, effect)->OriginalRetirementPoll. Job boundary advance/take_input/close rewritten to the current `with_native_receiving(&mut outcome, ..)` + `settle_receiving_scope` and `with_original_effect` + `with_native_retirement` protocol (binding ledger is NativeAllocationIdentity). Public job signatures unchanged.
+
+## Not done / downstream
+- engine/🧳️bundle/📤️message/🦀️.rs:18 still calls owner.advance_message(.., grant.retained_grant()) and :16 owner.close_step(grant).result: engine is grant-shaped (ArtifactStoreOneItemGrant), needs a control.with_allocated_effect wrapper (not claimed by me).
+- operation-wire in-crate tests (tests/🦀️.rs, 🧳️original/🧪️.rs, 📤️edit/🧪️.rs, history/common/canonical tests) still call the grant forms; they are not on the plugin-testing-laws lib path.
+- store-read derived-snapshots and branch/transitions callers of the changed history/common/envelope methods: not checked.
+
+## Audit 1107-audit-stubs: replacement receiver pending (CONFIRMED real)
+🧳️replacement/🦀️.rs advance_native mapped RetainedWorkPoll::Pending to silent zero-progress Ok. Fixed (EDITED-unverified): new `pending_work` field, `settle_receive(poll)` keeps the receiver and sums pending work, clears it on Complete; job `advance` charges the pending work and returns Ok(false) (retry, state kept); `pending_receive_work()` accessor. Law: unit test `a_receive_that_pends_first_keeps_its_state_and_then_completes` in the same file (not yet run; needs the op-wire lib to compile first).
+Compile status: store5-2 (log 🗑️generated/1105b/store5-2.txt) was blocked upstream by semio-framework-job-context (peer mid-edit: OriginalSizedClaimReserve::actual_bytes in job context 📦️return/🎟️place:12), so the op-wire lib verdict after the admission.rs fix is still pending.
+
+## Step 2 verdict (store5-5, manifest 🧪️testing/📦️packages/🦀️rust/Cargo.toml, native, `-p semio-plugin-testing-laws --tests`)
+Log 🗑️generated/1105b/store5-5.txt: the only red crate is semio-os-history (1 error, a missing comma at spr/📜️history/🦀️.rs:151 from sprhistory's concurrent edit; the file has the comma now). store crates (operation-wire, snapshot-clone, space-history) no longer appear. Whether testing-laws itself type-checks is unknown until history is green. Rerun: 1105b-tools/chk.sh store5-6 <that manifest> native -p semio-plugin-testing-laws --tests (each queue wait was about 30 min).
+Note: `-p semio-plugin-testing-laws` needs the testing crate's own manifest, not 🧰️framework/Cargo.toml (store5-4 rc 1, package not matched).
+Downstream callers of the changed op-wire methods (engine/branch/transitions, history/replay publication, replay report, store-read derived snapshots, engine bundle message) are grant-shaped and unported; they are not on this crate's path so were not reached.
+
+## Round 2 (coordinator: rerun gateway, port callers, tests)
+- store5-6 (log 🗑️generated/1105b/store5-6.txt, rc 1): operation-wire, history, snapshot-clone, space-history no longer red. Red: semio-os-store-replay (57 errors, store3 claims replay) and semio-os-store-paged-one-item (157: ❄️cold-apply 36, 🦀️ root 58, 🧬️mutation-apply 63). testing-laws itself not reached.
+- EDITED-unverified (not compiled; engine crates were behind the red ones): engine/🧳️bundle (🦀️, 📤️message, 📬️commit): `receiving` control threaded into prepare_original_outgoing/message; advance_message and close_step run in `receiving.with_allocated_effect(demand, step_work(demand), ..)`. engine/🌿️branch (+📜️transitions): action/built/retired helpers rewritten on `cx.with_original_effect` / `close_original_effect_step`; all 86 call-site closures now take (grant, effect); the op-wire header/payload advance/close calls pass the effect. Other branch children (OriginalTransitionIds, vcs facts/change/checkpoint/pending cursors, observed/dependencies) still call grant forms and will show up red once branch is reached.
+- NOT done: store-read derived snapshots and engine/📥️lifted/🏪️store retire_derived_report_replay ladder (grant-shaped, calls op-wire target/replacement_wire close_step(grant); entangled with store3's replay callers in history/replay/abort.rs); history/replay publication + replay report (store3's files); op-wire in-crate tests (a shared test helper via OriginalJobFixtureCaller + cx.with_original_effect is the plan; the pending-receive law therefore has not run); paged-one-item (released, see claims).

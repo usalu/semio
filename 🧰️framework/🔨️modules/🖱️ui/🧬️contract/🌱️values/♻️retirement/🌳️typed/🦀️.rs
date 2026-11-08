@@ -234,7 +234,7 @@ impl<T: UiTypedRetire, const N: usize> UiTypedRetire for UiFixedList<T, N> {
             return Ok(UiValueRetirementStep::progress(1, 0));
         }
         let Some(field) = self.last_mut() else {
-            let released = self.release_empty_page(usize::MAX).map_err(|error| error.reason)?;
+            let released = self.release_empty_page_leased(usize::MAX).map_err(|error| error.reason)?;
             return Ok(UiValueRetirementStep { complete: self.terminal_is_empty(), progressed: released.progressed, released_items: usize::from(released.progressed), released_bytes: 0 });
         };
         let mut step = field.retire_typed(path, value, bytes)?;

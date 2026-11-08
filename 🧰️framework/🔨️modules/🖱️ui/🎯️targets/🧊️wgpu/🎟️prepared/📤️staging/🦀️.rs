@@ -1,7 +1,7 @@
 //! 📤️ Original atlas and raster upload staging with independent credits and retirement.
 use semio_ui_scene_mesh::Mesh3dLease;
 use semio_framework_job::{InteractiveJobCloseStep as CloseStep, RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect, ValueError, ValueRefusalKind};
 use std::mem::size_of;
 use std::sync::atomic::{AtomicPtr, AtomicU64, AtomicU8, Ordering};
 use std::sync::{LazyLock, Mutex};

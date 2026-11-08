@@ -205,6 +205,7 @@ const settled = async (box: Locator): Promise<void> => {
   const phase = await box.locator('[data-slot="world-compute-status"]').first().getAttribute("data-compute-phase", { timeout: 1500 }).catch(() => null);
   if (phase && /cancel|fault|fail|error/i.test(phase)) throw new Error(`compute phase ${phase}`);
 };
+const pausedTokens = (words: Words, language: string): RegExp => new RegExp(`^${word(words, language).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}( / \\S+)?$`);
 const tokens = (words: Words, language: string): RegExp => new RegExp(`^${word(words, language).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`);
 
 const actions: Readonly<Record<string, (ctx: Ctx) => Promise<void>>> = {
@@ -256,7 +257,7 @@ const actions: Readonly<Record<string, (ctx: Ctx) => Promise<void>>> = {
     for (const box of gains) await until(() => instanceIds(box), (ids) => ids.includes(added), timeouts.action, "new instance in every gaining window");
     await docTab(ctx, "artifact");
     const row = ctx.at(added);
-    const rowText = String(param<string | undefined>(ctx, "rowText") ?? k[param<string>(ctx, "rowTextKey")]);
+    const rowText = String(word(param<Words | undefined>(ctx, "rowText") ?? {}, ctx.language) || k[param<string>(ctx, "rowTextKey")]);
     await until(() => text(row), (t) => new RegExp(rowText).test(t), timeouts.action, "document row for the new instance");
     if (k.seedId !== undefined) {
       if (!/^puzzle3d\.object\.[0-9a-f]+$/.test(added)) throw new Error(`new instance id ${added}`);
@@ -381,7 +382,7 @@ const actions: Readonly<Record<string, (ctx: Ctx) => Promise<void>>> = {
     await until(() => caption.isVisible(), Boolean, timeouts.content, "solved caption");
     await caption.click();
     await paneTab(ctx, k.panelCategoryId, k.panelTabId);
-    await until(() => text(ctx.at(param(ctx, "transportId"))), (t) => tokens(param<Words>(ctx, "paused"), ctx.language).test(t), timeouts.action, "playback paused");
+    await until(() => text(ctx.at(param(ctx, "transportId"))), (t) => pausedTokens(param<Words>(ctx, "paused"), ctx.language).test(t), timeouts.action, "playback paused");
     await phase.press("Home");
     await phase.press("PageUp");
     await until(() => phase.getAttribute("aria-valuenow"), (v) => v === String(k.phase), timeouts.action, "phase value");
@@ -400,7 +401,7 @@ const actions: Readonly<Record<string, (ctx: Ctx) => Promise<void>>> = {
       await until(() => projection(results), (v) => v === geometry, timeouts.action, `deformation after ${direction}`);
       await until(() => caption.isVisible(), Boolean, timeouts.action, `caption current after ${direction}`);
       await until(() => phase.getAttribute("aria-valuenow"), (v) => v === String(k.phase), timeouts.action, `phase kept after ${direction}`);
-      await until(() => text(ctx.at(param(ctx, "transportId"))), (t) => tokens(param<Words>(ctx, "paused"), ctx.language).test(t), timeouts.action, `playback paused after ${direction}`);
+      await until(() => text(ctx.at(param(ctx, "transportId"))), (t) => pausedTokens(param<Words>(ctx, "paused"), ctx.language).test(t), timeouts.action, `playback paused after ${direction}`);
     }
   },
 
@@ -816,7 +817,7 @@ async function main(): Promise<number> {
       for (const lang of languages) emit(await runFunding(browser, baseUrl, lang, shotDir));
     }
     for (const pane of expectation.panes.filter((p) => !paneFilter || paneFilter.includes(p.id))) {
-      for (const [index, lang] of languages.entries()) emit(await runPane(browser, baseUrl, pane, lang, all, shotDir, index === 0 || process.env.E2E_ACTIONS_ALL_LANGUAGES === "1"));
+      for (const lang of languages) emit(await runPane(browser, baseUrl, pane, lang, all, shotDir, true));
     }
   } finally { await browser.close(); }
   const table = renderTable(rows);

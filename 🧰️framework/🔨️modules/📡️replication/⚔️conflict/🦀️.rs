@@ -68,7 +68,7 @@ impl ConflictId {
 /// without ever relaying it. `Degraded`: the batch WAS applied (its worst level was below the
 /// policy's reject floor but still `>= Warning`), so `edit_ids` names the already-durable edits worth
 /// a human's attention — resolving only acknowledges/dismisses the flag, it never rewrites history.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum ConflictKind {
     Quarantined { envelopes: Vec<semio_framework_replication_causal::MutationEnvelope> },
     Degraded { edit_ids: Vec<String> },
@@ -504,17 +504,12 @@ mod report_retirement;
 
 mod owned_retirement {
     use super::*;
-    use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+    use semio_framework_value::retirement::RetireOwned;
     semio_framework_value::artifact_retire_leaf!(ConflictResolution);
     semio_framework_value::artifact_retire_struct!(EditMessages { edit_id, messages });
     semio_framework_value::artifact_retire_struct!(Conflict { id, kind, status, messages, actors, timestamp });
     semio_framework_value::artifact_retire_leaf!(ConflictStatus);
-    impl RetireOwned for ConflictId { fn retirement(self) -> Box<dyn RetirementCursor> { self.0.retirement() } fn retirement_birth_bytes(&self) -> Option<usize> { self.0.retirement_birth_bytes() } fn controlled_retirement_supported() -> bool { String::controlled_retirement_supported() } }
-    impl RetireOwned for ConflictKind {
-        fn retirement(self) -> Box<dyn RetirementCursor> { match self { Self::Quarantined { envelopes } => envelopes.retirement(), Self::Degraded { edit_ids } => edit_ids.retirement() } }
-        fn retirement_birth_bytes(&self) -> Option<usize> { match self { Self::Quarantined { envelopes } => envelopes.retirement_birth_bytes(), Self::Degraded { edit_ids } => edit_ids.retirement_birth_bytes() } }
-        fn controlled_retirement_supported() -> bool { true }
-    }
+    impl RetireOwned for ConflictId { type RetirementCursor = <String as RetireOwned>::RetirementCursor; fn retirement_seed(self) -> Self::RetirementCursor { self.0.retirement_seed() } fn retirement_birth_bytes(&self) -> Option<usize> { self.0.retirement_birth_bytes() } fn controlled_retirement_supported() -> bool { String::controlled_retirement_supported() } }
 }
 
 #[cfg(test)]

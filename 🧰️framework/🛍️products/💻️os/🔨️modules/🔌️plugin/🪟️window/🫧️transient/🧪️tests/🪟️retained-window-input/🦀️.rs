@@ -89,7 +89,7 @@ fn retained_window_input_preserves_owner_generation() {
     assert_eq!(digests.len(), identities.len());
     let mut disposer = transient_store_disposer::<_, semio_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation>(ReplacementWindow::build_owners().state_retirement);
     for _ in 0..128 {
-        if matches!(disposer.close_step(&mut owner, original_transient_grant()).unwrap(), PluginLifecycleStep::Complete(_)) {
+        if matches!(disposer.close_step_cold(&mut owner, original_transient_grant()).unwrap(), PluginLifecycleStep::Complete(_)) {
             break;
         }
     }
@@ -187,7 +187,7 @@ struct PausedPartitionDisposer {
 }
 
 impl ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>> for PausedPartitionDisposer {
-    fn close_step(&mut self, owner: &mut WindowTransientStore<ReplacementWindow>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn close_step(&mut self, owner: &mut WindowTransientStore<ReplacementWindow>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, Fault> {
         if self.paused.load(std::sync::atomic::Ordering::Acquire) {
             return Ok(PluginLifecycleStep::AwaitingInput { reason: "original paused transient disposer" });
         }
@@ -199,7 +199,7 @@ impl ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>> for PausedPa
             self.inner = None;
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }));
         }
-        inner.close_step(owner, grant)
+        inner.close_step(owner, effect)
     }
 
     fn retirement_demands(&self, owner: &WindowTransientStore<ReplacementWindow>, body: usize) -> Result<RetirementDemand, ValueError> {

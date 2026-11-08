@@ -94,7 +94,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
     let before = store.finish_derived_history_preview(&mut preview).unwrap();
     assert!(preview.as_ref().unwrap().state.is_none());
     let grant=physical_test_close_grant();
-    let (residue,receipt)=store.retire_derived_history_preview(&mut preview,grant).unwrap().unwrap();assert!(receipt.fits(grant));drive_retirement_terminal(residue);
+    let (residue,receipt)={let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);wallet.run(grant,64,|effect|store.retire_derived_history_preview(&mut preview,effect)).unwrap().unwrap().output}.unwrap().unwrap();assert!(receipt.fits(grant));drive_retirement_terminal(residue);
     assert_eq!(before.snapshot().n, Some(law["expected"]["before"].as_i64().unwrap() as i32));
     let replacement = DemoMutation::from_value(law["replacement"].clone().into()).unwrap();
     let (next, _) = store.derive_reference_history_snapshot(&before, &replacement).unwrap();
@@ -156,7 +156,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
             if matches!(semio_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_history_preview(cancelled.as_mut().unwrap(), grant, control, &mut || true)).unwrap(), ReplayStep::Finished(_)) { break; }
         }
         let grant=physical_test_close_grant();
-        let(mut retirement,birth)=store.retire_derived_history_preview(&mut cancelled,grant).unwrap().unwrap();assert!(birth.fits(grant));
+        let(mut retirement,birth)={let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);wallet.run(grant,64,|effect|store.retire_derived_history_preview(&mut cancelled,effect)).unwrap().unwrap().output}.unwrap().unwrap();assert!(birth.fits(grant));
         assert!(cancelled.is_none(), "cancellation transfers ownership before any metadata drain");
         let mut turns = 0;
         loop {
@@ -177,7 +177,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
             if matches!(semio_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_report_replay(cancelled.as_mut().unwrap(), grant, control, &mut || true)).unwrap(), ReplayStep::Finished(_)) { break; }
         }
         let grant=physical_test_close_grant();
-        let(mut retirement,birth)=store.retire_derived_report_replay(&mut cancelled,grant).unwrap().unwrap();assert!(birth.fits(grant));
+        let(mut retirement,birth)={let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);wallet.run(grant,64,|effect|store.retire_derived_report_replay(&mut cancelled,effect)).unwrap().unwrap().output}.unwrap().unwrap();assert!(birth.fits(grant));
         assert!(cancelled.is_none());
         let mut turns = 0;
         loop {

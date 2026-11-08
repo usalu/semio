@@ -21,11 +21,11 @@ impl ArtifactEphemeralPreparationTask<DemoSnapshot, DemoMutation> for FaultingEp
 
 impl ErasedSnapshotRetirement for FaultingEphemeralTask {
         fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })}
-fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         assert!(self.closing);
         let empty = RetainedCloneProgress::default();
         Ok(if grant.maximum_items == 0 { RetainedCloneStep::Progress(empty) } else { RetainedCloneStep::Complete(empty) })
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
     fn terminal_is_empty(&self) -> bool {
         self.closing
     }

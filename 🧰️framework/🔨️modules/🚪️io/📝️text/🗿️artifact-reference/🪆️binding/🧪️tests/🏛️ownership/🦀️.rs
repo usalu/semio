@@ -24,3 +24,30 @@ fn artifact_reference_borrowed_schema_matches_the_literal_binding_corpus(){
  assert_eq!(serde_json::json!(actual),expected["fields"]["ArtifactRef"]);
  assert!(matches!(<ArtifactRef as semio_framework_dsl_record::BorrowedDslField>::SHAPE,semio_framework_dsl_record::BorrowedShape::Record(_)));
 }
+
+#[test]
+fn artifact_reference_original_receiving_moves_the_literal_identity_and_agrees_with_the_codec_and_json_corpus(){
+ use semio_framework_dsl_record::receiving::owned::OwnedScalar;
+ let fixture=fixture();
+ for case in fixture["cases"].as_array().unwrap(){
+  let reference=reference(&case["value"]);let value=<ArtifactRef as DslField>::to_value(&reference);
+  let mut source=Some(value.clone());let received=<ArtifactRef as OwnedScalar>::take_source(&mut source).unwrap();
+  assert_eq!(received,reference);assert_eq!(received,<ArtifactRef as DslField>::from_value(&value).unwrap());
+  let Some(FieldValue::Record(shell))=source else{panic!("the emptied shell stays with its owner")};
+  assert!(shell.fields.values().all(|field|matches!(field,FieldValue::Text(text) if text.is_empty())));
+ }
+}
+#[test]
+fn artifact_reference_original_receiving_refuses_foreign_shapes_and_keeps_the_source(){
+ use semio_framework_dsl_record::receiving::owned::OwnedScalar;
+ let fixture=fixture();let value=<ArtifactRef as DslField>::to_value(&reference(&fixture["cases"][0]["value"]));
+ let mut missing=value.clone();if let FieldValue::Record(record)=&mut missing{record.fields.remove(&3);}
+ let mut mistyped=value.clone();if let FieldValue::Record(record)=&mut mistyped{record.fields.insert(2,FieldValue::Bool(true));}
+ let mut extra=value.clone();if let FieldValue::Record(record)=&mut extra{record.fields.insert(4,FieldValue::Text("x".into()));}
+ for foreign in [FieldValue::Bool(true),missing,mistyped,extra]{
+  let mut source=Some(foreign.clone());
+  assert!(<ArtifactRef as OwnedScalar>::take_source(&mut source).is_err(),"refused: {foreign:?}");
+  assert_eq!(format!("{source:?}"),format!("{:?}",Some(foreign)));
+ }
+ assert!(<ArtifactRef as OwnedScalar>::take_source(&mut None).is_err());
+}

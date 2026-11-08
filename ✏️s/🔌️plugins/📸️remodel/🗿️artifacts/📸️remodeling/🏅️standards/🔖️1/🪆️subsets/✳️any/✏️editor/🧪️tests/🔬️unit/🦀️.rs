@@ -493,6 +493,21 @@ async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_o
         let body = store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
         RetainedCloneGrant { maximum_items: remaining.maximum_items.min(1), maximum_copy_bytes: remaining.maximum_copy_bytes.min(body), maximum_capacity_bytes: remaining.maximum_capacity_bytes.min(body), maximum_release_bytes: remaining.maximum_release_bytes.min(body), maximum_depth: remaining.maximum_depth.min(16) }
     }
+    fn close_effect(cx: &mut semio_framework_job::StepContext<'_>, demand: RetirementDemand, advance: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll) -> bool {
+        cx.with_original_retirement(|cx| {
+            let grant = offered(cx);
+            assert!(cx.retained_work_can_enter(demand));
+            assert!(semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand));
+            let Some((poll, performed)) = cx.with_original_effect(grant, |_, effect| advance(effect))? else { return Ok(false) };
+            let step = match poll {
+                semio_framework_value::RetainedWorkPoll::Pending { .. } => RetainedCloneStep::Progress(Default::default()),
+                semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?,
+            };
+            cx.consume_retained(step.progress())?;
+            cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX).max(1));
+            Ok(matches!(step, RetainedCloneStep::Complete(_)))
+        }).expect("Remodel original caller pays quoted close")
+    }
     fn close(cx: &mut semio_framework_job::StepContext<'_>, demand: RetirementDemand, advance: impl FnOnce(RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>) -> bool {
         cx.with_original_retirement(|cx| {
             let grant = offered(cx);
@@ -564,7 +579,7 @@ async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_o
     for _ in 0..semio_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
         if document.close_owned_terminal_is_empty() { break; }
         let demand = document.close_owned_demands(offered(scope.cx()).maximum_copy_bytes).expect("Remodel Store close quote");
-        if close(scope.cx(), demand, |grant| document.close_owned_step(grant)) { break; }
+        if close_effect(scope.cx(), demand, |effect| document.close_owned_step(effect)) { break; }
     }
     assert!(document.close_owned_terminal_is_empty());
 }

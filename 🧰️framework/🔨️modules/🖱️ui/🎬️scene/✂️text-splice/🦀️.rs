@@ -262,7 +262,8 @@ pub fn rebase_text_edits(remote: &str, unapplied: &[TextSplice], local: &str, an
 //#region ✂️DraftChangeSet
 /// 📙️ One range of an explicit draft's change set: in the coordinates of the text the draft STARTED from (ascending, never overlapping),
 /// `delete` scalars at `offset` were replaced by `insert`. Twin of the TS `DraftChangeV1`.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, protocol::value::RetireOwned)]
+#[value(crate = "::protocol::value")]
 pub struct DraftChange {
     pub offset: usize,
     pub delete: usize,
@@ -424,23 +425,16 @@ where F:FnMut(&[u8],&mut protocol::value::NativeEncodeControl<'_>)->Result<(),E>
     semio_framework_pack_json_source_sink::write_json_source_into(&DraftChangesBorrowed(changes),maximum_bytes,maximum_depth,maximum_items,output,control)
 }
 
+#[derive(protocol::value::RetireOwned)]
+#[value(crate="::protocol::value")]
 struct DraftChangesOwner(Vec<DraftChange>);
 impl semio_framework_pack_json::JsonWriteSource for DraftChangesOwner{
     fn node_at_path(&self,path:&[usize])->Result<semio_framework_pack_json::JsonWriteNode<'_>,protocol::value::ValueError>{draft_change_node(&self.0,path)}
     fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,protocol::value::ValueError>{draft_change_key(&self.0,path,index)}
 }
-impl protocol::value::retirement::RetireOwned for DraftChange{
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor>{use protocol::value::retirement::RetireOwned;(self.offset,self.delete,self.insert).retirement()}
-    fn retirement_birth_bytes(&self)->Option<usize>{use protocol::value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes::<usize>(),deferred_birth_bytes::<usize>(),deferred_birth_bytes::<String>()])}
-    fn controlled_retirement_supported()->bool{true}
-}
-impl protocol::value::retirement::RetireOwned for DraftChangesOwner{
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor>{use protocol::value::retirement::RetireOwned;self.0.retirement()}
-    fn retirement_birth_bytes(&self)->Option<usize>{use protocol::value::retirement::RetireOwned;self.0.retirement_birth_bytes()}
-    fn controlled_retirement_supported()->bool{true}
-}
-
 /// 📄️ Retains the original typed changes and canonical JSON frontier across caller-controlled frame hops.
+#[derive(protocol::value::RetireOwned)]
+#[value(crate="::protocol::value")]
 pub struct DraftChangesJsonCursor{writer:semio_framework_pack_json::JsonWriteCursor<DraftChangesOwner>,complete:bool}
 impl DraftChangesJsonCursor{
     /// 🌱️ Moves existing ranges without allocation, refusing structural policy before consuming their owner.
@@ -461,12 +455,6 @@ impl DraftChangesJsonCursor{
     /// 📤️ Returns the same typed ranges once the complete wire owner has transferred.
     pub fn take_changes(&mut self)->Option<Vec<DraftChange>>{self.writer.take_source().map(|owner|owner.0)}
 }
-impl protocol::value::retirement::RetireOwned for DraftChangesJsonCursor{
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor>{use protocol::value::retirement::RetireOwned;self.writer.retirement()}
-    fn retirement_birth_bytes(&self)->Option<usize>{use protocol::value::retirement::RetireOwned;self.writer.retirement_birth_bytes()}
-    fn controlled_retirement_supported()->bool{true}
-}
-
 /// 📝️ Applies a change set (ranges in the coordinates of `text`) to `text`; `None` when a range leaves the text or overlaps the previous one.
 pub fn apply_draft_changes(text: &str, changes: &[DraftChange]) -> Option<String> {
     let hay: Vec<char> = text.chars().collect();

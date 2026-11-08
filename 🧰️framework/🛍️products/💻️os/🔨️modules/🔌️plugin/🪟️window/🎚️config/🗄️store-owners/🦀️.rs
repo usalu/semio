@@ -4,7 +4,6 @@ use super::*;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use crate::owner_contract_and_mutation::WindowConfigAuthorityIdentity;
 use crate::owner_contract_and_mutation::WindowConfigBorrow;
-fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 pub type WindowConfigStore<O> = store::ConfigStore<<O as WindowConfigOwner>::State, <O as WindowConfigOwner>::Mutation>;
@@ -46,17 +45,17 @@ impl<O:WindowConfigOwner> WindowConfigPartition<O>{
                 else { disposer.retirement_demands(&self.store, body) }
             });
     }
-    pub fn original_close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{let demand=self.original_close_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;if !registry::fits(grant,demand){return Ok(PluginLifecycleStep::Progress(Default::default()));}
-            if let Some(catalog)=self.catalog.as_mut(){if catalog.uninstalled_owners_terminal_is_empty(){self.catalog=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}let step=catalog.close_uninstalled_owners_step(grant).map_err(ValueError::into_fault)?;return Ok(PluginLifecycleStep::retained(step,false));}
+    pub fn original_close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<PluginLifecycleStep,Fault>{let grant=effect.grant();let demand=self.original_close_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;if !registry::fits(grant,demand){return Ok(PluginLifecycleStep::Progress(Default::default()));}
+            if let Some(catalog)=self.catalog.as_mut(){if catalog.uninstalled_owners_terminal_is_empty(){self.catalog=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}let step=catalog.close_uninstalled_owners_step(effect).map_err(ValueError::into_fault)?;return Ok(PluginLifecycleStep::retained(step,false));}
             if self.preview_close_pending() { return self.preview_close_step(grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_fault); }
-            if self.returned_read_pending() { return self.returned_read_step(grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_fault); }
+            if self.returned_read_pending() { return self.returned_read_step(effect).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_fault); }
             if let Some(address)=self.address.as_mut(){if address.terminal_is_empty(){self.address=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}return address.step(grant).map(|step|PluginLifecycleStep::retained(step,false)).map_err(ValueError::into_fault);}
             if let Some(disposer) = self.disposer.as_mut() {
                 if disposer.terminal_is_empty(&self.store) {
                     drop(self.disposer.take());
                     return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
                 }
-                let step = disposer.close_step(&mut self.store, grant)?;
+                let step = disposer.close_step(&mut self.store, effect)?;
                 return Ok(match step { PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), other => other });
             }
         self.store.box_close_step(grant).map(|step|PluginLifecycleStep::retained(step,false)).map_err(ValueError::into_fault)
@@ -64,9 +63,9 @@ impl<O:WindowConfigOwner> WindowConfigPartition<O>{
     pub fn original_terminal(&self)->bool{self.catalog.is_none()&&!self.preview_close_pending()&&!self.returned_read_pending()&&self.address.is_none()&&self.disposer.is_none()&&self.store.terminal_is_empty()}
     pub fn returned_read_pending(&self)->bool {self.returned_read_retirement.is_some()||(!self.store.terminal_is_empty()&&self.store.returned_snapshot_read_retirement_demand().map_or(true,|demand|demand!=RetirementDemand::default()))}
     pub fn returned_read_demands(&self,body:usize)->Result<RetirementDemand,ValueError> {match self.returned_read_retirement.as_ref(){Some(owner)=>store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body),None=>self.store.returned_snapshot_read_retirement_demand()}}
-    pub fn returned_read_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        if self.returned_read_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.returned_read_retirement,grant).result;}
-        let(owner,progress)=self.store.take_returned_snapshot_read_retirement(grant)?;
+    pub fn returned_read_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError> {
+        if self.returned_read_retirement.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.returned_read_retirement,effect));}
+        let(owner,progress)=self.store.take_returned_snapshot_read_retirement(effect)?;
         self.returned_read_retirement=owner;
         Ok(RetainedCloneStep::Progress(progress))
     }
@@ -75,10 +74,10 @@ impl<O:WindowConfigOwner> WindowConfigPartition<O>{
         if let Some(catalog)=self.catalog.as_ref(){return if catalog.constructor_is_complete(){Ok(RetirementDemand{copy_bytes:2*size_of::<store::os_store::document_store_owners::DocumentStoreOwners<O::State,O::Mutation>>(),depth:1,..Default::default()})}else{catalog.constructor_demands(body)};}
         let mut d=store::os_store::document_store_owners::bounded_artifact_store_owners_source_demands::<O::State,O::Mutation>()?;let extra=O::preparation_source_birth();d.capacity_bytes=d.capacity_bytes.checked_add(extra.capacity_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original Window source catalog birth overflow"))?;d.copy_bytes=2*size_of::<store::os_store::document_store_owners::DocumentStoreOwners<O::State,O::Mutation>>();d.depth=d.depth.max(extra.depth);Ok(d)
     }
-    pub fn catalog_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        if self.store.owned_disposer_installed(){return Ok(RetainedCloneStep::Complete(Default::default()));}let d=self.catalog_demands(grant.maximum_copy_bytes)?;if !registry::fits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
+    pub fn catalog_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();if self.store.owned_disposer_installed(){return Ok(RetainedCloneStep::Complete(Default::default()));}let d=self.catalog_demands(grant.maximum_copy_bytes)?;if !registry::fits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.catalog.is_none(){return match O::build_store_owners(grant){Ok((owners,p))=>{self.catalog=Some(owners);Ok(RetainedCloneStep::Progress(p))},Err(error)=>{self.catalog=error.owners;Err(error.error.with_retained_progress(error.progress))}};}
-        let owners=self.catalog.as_mut().unwrap();if !owners.constructor_is_complete(){return owners.admit_constructor(grant).map(RetainedCloneStep::Progress).map_err(|(error,p)|error.with_retained_progress(p));}
+        let owners=self.catalog.as_mut().unwrap();if !owners.constructor_is_complete(){return owners.admit_constructor(effect).map(RetainedCloneStep::Progress).map_err(|(error,p)|error.with_retained_progress(p));}
         let original=self.catalog.take().unwrap();match self.store.install_document_store_owners_exact(original){Ok(())=>Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),Err((error,owners))=>{self.catalog=Some(owners);Err(error)}}
     }
     pub fn preview_finish_demands(&self,epoch:u64,body:usize)->Result<RetirementDemand,ValueError>{
@@ -163,13 +162,13 @@ impl<O:WindowConfigOwner> WindowConfigPartition<O>{
 }
 
 pub trait ErasedWindowConfigStoreOwner: Send {
-    fn admit_retained_load(&mut self,lifetime:u64,pack:&mut Option<WindowConfigPack>,actor:&protocol::ActorId,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<WindowConfigPackLoad>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
+    fn admit_retained_load(&mut self,lifetime:u64,pack:&mut Option<WindowConfigPack>,actor:&protocol::ActorId,cx:&mut semio_framework_job::StepContext<'_>,admission:&mut retained::WindowConfigLoadAdmission,output:&mut Option<WindowConfigPackLoad>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
     fn retained_load_commit_demands(&self,load:&dyn retained::ErasedWindowConfigPackLoad)->Result<RetirementDemand,ValueError>;
     fn retained_load_insert_demands(&self,load:&dyn retained::ErasedWindowConfigPackLoad)->Result<Option<RetirementDemand>,ValueError>;
     fn cancel_retained_load_insert(&mut self,load:&mut dyn retained::ErasedWindowConfigPackLoad,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>;
     fn ensure_partition(&mut self,window:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
     fn close_step_context(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>;
-    fn admit_catalog(&mut self,authority:&WindowConfigAuthority,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>;
+    fn admit_catalog(&mut self,authority:&WindowConfigAuthority,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>;
     fn borrow<'a>(&'a self, window_id: &'a str) -> Option<WindowConfigBorrow<'a>>;
     fn borrow_preview<'a>(&'a self,window:&'a str,epoch:u64)->Option<WindowConfigBorrow<'a>>;
     fn capture<'a>(&'a mut self, window_id: &'a str) -> Pin<Box<dyn Future<Output = Result<WindowConfigAuthority, Fault>> + 'a>>;
@@ -179,18 +178,18 @@ pub trait ErasedWindowConfigStoreOwner: Send {
     fn admit_begin(&mut self, operation: semio_framework_job::OperationId, actor: &mut Option<ControlledRetirement<semio_framework_value::SharedUtf8>>, mutations: &mut Vec<WindowConfigMutation>, authority: &WindowConfigAuthority, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedWindowConfigPublication>,RetainedCloneProgress)>,ValueError>;
     fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, body:usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault>;
     fn refresh_demands(&self,authority:&WindowConfigAuthority,body:usize)->Result<RetirementDemand,ValueError>;
-    fn refresh(&mut self,authority:&mut WindowConfigAuthority,grant:RetainedCloneGrant)->Result<crate::window_mutation::WindowAuthorityRefreshStep,Fault>;
+    fn refresh(&mut self,authority:&mut WindowConfigAuthority,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<crate::window_mutation::WindowAuthorityRefreshStep,Fault>;
     fn packs<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<Vec<WindowConfigPack>, Fault>> + 'a>>;
-    fn commit_retained_load(&mut self, registry_lifetime: u64, load: &mut dyn retained::ErasedWindowConfigPackLoad,grant:RetainedCloneGrant) -> Result<WindowConfigPackLoadStep, WindowConfigPackLoadDiagnostic>;
+    fn commit_retained_load(&mut self, registry_lifetime: u64, load: &mut dyn retained::ErasedWindowConfigPackLoad,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<WindowConfigPackLoadStep, WindowConfigPackLoadDiagnostic>;
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, Fault>;
     fn direct_ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
-    fn close_direct_ingress(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+    fn close_direct_ingress(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>;
     fn direct_ingress_terminal_is_empty(&self)->bool;
     fn direct_ingress_quiescent(&self)->bool;
     fn terminal_is_empty(&self) -> bool;
     fn maintenance_retirements_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
-    fn maintenance_retirements_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault>;
+    fn maintenance_retirements_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, Fault>;
     fn maintenance_retirements_terminal_is_empty(&self) -> bool;
     fn maintenance_retirements_under_pressure(&self) -> bool;
     fn pointer_values(&self, pointers: &[String]) -> Vec<(String, Vec<Option<semio_framework_value::DslValue>>)>;
@@ -223,7 +222,9 @@ pub struct DirectIngress<M:Send+'static>{#[doc(hidden)] pub mutations:Vec<Window
 
 #[doc(hidden)]
 pub struct TypedWindowConfigStoreOwner<O: WindowConfigOwner> {
+    #[doc(hidden)] pub construction:retained::Construction,
     #[doc(hidden)] pub initializing:Option<Box<WindowConfigPartitionBirth<O>>>,
+    #[doc(hidden)] pub birth:semio_plugin_ownership::original_store_genesis::OriginalStoreBirth,
     #[doc(hidden)] pub initialized_window:Option<String>,
     #[doc(hidden)] pub initialized_store:Option<Box<WindowConfigStore<O>>>,
     #[doc(hidden)] pub initialized_address:Option<semio_framework_value::SharedUtf8>,
@@ -247,7 +248,7 @@ pub struct TypedWindowConfigStoreOwner<O: WindowConfigOwner> {
 
 impl<O: WindowConfigOwner> TypedWindowConfigStoreOwner<O> {
     /// 🏠️ Registers only the source owner; concrete partitions are born by their mounted caller.
-    pub fn new(actor:protocol::ActorId)->Self{Self{initializing:None,initialized_window:None,initialized_store:None,initialized_address:None,registry_address:None,pending_partition:None,partition_inserting:false,initialization_residue:None,direct_ingress:ControlledRetirement::new(DirectIngress{mutations:Vec::new(),allocations:Vec::new(),addresses:Vec::new()}).map_err(|(error,_)|error).expect("direct ingress declares controlled retirement"),partitions:WindowRegistry::new(),partition_close_cursor:0,partition_address_retirement:None,actor:Some(actor),actor_retirement:None}}
+    pub fn new(actor:protocol::ActorId)->Self{Self{construction:Default::default(),initializing:None,birth:Default::default(),initialized_window:None,initialized_store:None,initialized_address:None,registry_address:None,pending_partition:None,partition_inserting:false,initialization_residue:None,direct_ingress:ControlledRetirement::new(DirectIngress{mutations:Vec::new(),allocations:Vec::new(),addresses:Vec::new()}).map_err(|(error,_)|error).expect("direct ingress declares controlled retirement"),partitions:WindowRegistry::new(),partition_close_cursor:0,partition_address_retirement:None,actor:Some(actor),actor_retirement:None}}
     #[doc(hidden)]
     pub async fn partition(&mut self,window_id:&str)->Result<&mut WindowConfigPartition<O>,Fault>{self.partitions.get_mut(window_id).ok_or_else(||Fault::new(FaultOrigin::Framework,FaultCode::new("window-config.owned-initialization"),"window partition requires its original mounted initialization"))}
     fn initialization_pending(&self)->bool{self.initializing.is_some()||self.initialized_window.is_some()||self.initialized_store.is_some()||self.initialized_address.is_some()||self.registry_address.is_some()||self.pending_partition.is_some()||self.partition_inserting||self.initialization_residue.is_some()}
@@ -262,36 +263,43 @@ impl<O: WindowConfigOwner> TypedWindowConfigStoreOwner<O> {
     }
     fn ensure_original_partition(&mut self,window:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if cx.should_yield(){return Ok(false);}
+        if self.construction.resume(){self.construction.settle(cx)?;return Ok(false);}
         if !self.initialization_pending()&&self.partitions.contains_key(window){return Ok(true);}
         if let Some(owner)=self.initializing.as_mut(){
             if owner.terminal_is_empty(){let d=WindowConfigPartitionBirth::<O>::boxed_release_demands();retired(cx,d,|_|{self.initializing=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;return Ok(false);}
             if !owner.window_id().is_empty()&&owner.window_id()!=window{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Window initialization retains another mounted address").into());}
             if let Some((address,store))=owner.step(cx)?{self.initialized_window=Some(address);self.initialized_store=Some(store);}return Ok(false);
         }
-        if self.initialized_window.is_some(){let d=semio_framework_value::SharedUtf8::admission_demand();let grant=cx.retained_grant();let mut admitted=None;semio_framework_job::admit_original_construction(cx,&mut admitted,window_construction(d),|_|{let Some(original)=self.initialized_window.take()else{return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::invariant("initialized_window absent")),work:0}};let turn=semio_framework_value::SharedUtf8::admit(original,grant);let result=match turn.result{Ok((address,receipt))=>{self.initialized_address=Some(address);Ok(((),receipt))},Err((error,original))=>{self.initialized_window=Some(original);Err(error)}};semio_framework_value::RetainedWorkOutcome{result,work:turn.work}})?;return Ok(false);}
-        if self.registry_address.is_none()&&self.initialized_address.is_some(){let d=semio_framework_value::SharedUtf8::lease_demand();let grant=cx.retained_grant();let mut admitted=None;built(cx,&mut admitted,window_construction(d),||{let(address,receipt)=self.initialized_address.as_ref().unwrap().admit_clone(grant).result?;self.registry_address=Some(address);Ok(((),receipt))})?;return Ok(false);}
-        if self.pending_partition.is_none()&&self.initialized_store.is_some(){let mut d=O::store_disposer_birth()?;d.copy_bytes=d.copy_bytes.checked_add(size_of::<WindowConfigPartition<O>>()+size_of::<Box<WindowConfigStore<O>>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original Window partition birth extent overflow"))?;d.depth=d.depth.max(1);let mut admitted=None;built(cx,&mut admitted,window_construction(d),||{let authority=WindowConfigAuthorityIdentity::issue().ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original Window partition authority exhausted"))?;self.pending_partition=Some(WindowConfigPartition{catalog:None,address:Some(ControlledRetirement::new(self.initialized_address.take().unwrap()).map_err(|(error,_)|error).expect("original Window address supports controlled closure")),semantic_preview:None,semantic_epoch:0,published_preview:None,published_epoch:0,prepared_preview:None,prepared_epoch:0,finish_preview_base:None,finish_preview_read:None,authority,store:WindowConfigStoreBox::<O>::from_original(self.initialized_store.take().unwrap()),disposer:Some(O::build_store_disposer()),pending_preview:None,pending_preview_reads:None,pending_preview_projection:None,pending_preview_projection_read:None,preview_retirement:None,returned_read_retirement:None});self.partition_inserting=true;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))})?;return Ok(false);}
-        if self.partition_inserting{let d=self.partitions.insert_original_demands()?;let grant=cx.retained_grant();let mut ready=None;built(cx,&mut ready,window_construction(d),||self.partitions.insert_original(&mut self.registry_address,&mut self.pending_partition,grant))?;if ready==Some(true){self.partition_inserting=false;return Ok(true);}return Ok(false);}
-        self.initializing=WindowConfigPartitionBirth::<O>::admit(window,self.actor.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Window session actor absent"))?,cx)?;Ok(false)
+        if self.initialized_window.is_some(){let d=semio_framework_value::SharedUtf8::admission_demand();self.construction.run_unit(cx,d,|grant,actual|{let Some(original)=self.initialized_window.take()else{return Err(ValueError::invariant("initialized_window absent"))};let turn=semio_framework_value::SharedUtf8::admit(original,grant,actual);match turn.result{Ok((address,receipt))=>{self.initialized_address=Some(address);Ok(((),receipt))},Err((error,original))=>{self.initialized_window=Some(original);Err(error)}}})?;return Ok(false);}
+        if self.registry_address.is_none()&&self.initialized_address.is_some(){if !crate::registry::fits(cx.retained_grant(),semio_framework_value::SharedUtf8::lease_demand()){return Ok(false);}semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|{let(address,receipt)=self.initialized_address.as_ref().unwrap().admit_clone(effect).result?;self.registry_address=Some(address);Ok::<_,ValueError>(RetainedCloneStep::Progress(receipt))})?;return Ok(false);}
+        if self.pending_partition.is_none()&&self.initialized_store.is_some(){let mut d=O::store_disposer_birth()?;d.copy_bytes=d.copy_bytes.checked_add(size_of::<WindowConfigPartition<O>>()+size_of::<Box<WindowConfigStore<O>>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original Window partition birth extent overflow"))?;d.depth=d.depth.max(1);self.construction.run_unit(cx,d,|_,_|{let authority=WindowConfigAuthorityIdentity::issue().ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original Window partition authority exhausted"))?;self.pending_partition=Some(WindowConfigPartition{catalog:None,address:Some(ControlledRetirement::new(self.initialized_address.take().unwrap()).map_err(|(error,_)|error).expect("original Window address supports controlled closure")),semantic_preview:None,semantic_epoch:0,published_preview:None,published_epoch:0,prepared_preview:None,prepared_epoch:0,finish_preview_base:None,finish_preview_read:None,authority,store:WindowConfigStoreBox::<O>::from_original(self.initialized_store.take().unwrap()),disposer:Some(O::build_store_disposer()),pending_preview:None,pending_preview_reads:None,pending_preview_projection:None,pending_preview_projection_read:None,preview_retirement:None,returned_read_retirement:None});self.partition_inserting=true;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))})?;return Ok(false);}
+        if self.partition_inserting{let grant=cx.retained_grant();let Some(((turn,ready),_))=cx.with_original_effect(grant,|_,effect|{let result=self.partitions.insert_original(&mut self.registry_address,&mut self.pending_partition,effect);let work=effect.performed_work();let ready=result.as_ref().is_ok_and(|(ready,_)|*ready);(semio_framework_value::RetainedWorkOutcome{result:result.map(|(_,progress)|RetainedCloneStep::Progress(progress)),work},ready)})?else{return Ok(false)};semio_framework_job::receive_original_retained_work(cx,turn)?;if ready{self.partition_inserting=false;return Ok(true)}return Ok(false);}
+        WindowConfigPartitionBirth::<O>::admit(window,self.actor.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Window session actor absent"))?,cx,&mut self.birth,&mut self.initializing)?;Ok(false)
     }
 
 }
 
 impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigStoreOwner<O> {
-    fn admit_retained_load(&mut self,lifetime:u64,pack:&mut Option<WindowConfigPack>,actor:&protocol::ActorId,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<WindowConfigPackLoad>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let generation=pack.as_ref().and_then(|pack|self.partitions.get(&pack.window_id)).map(|partition|partition.store.generation());retained::admit_typed_window_config_pack_load::<O>(lifetime,generation,pack,actor,cx,output)}
+    fn admit_retained_load(&mut self,lifetime:u64,pack:&mut Option<WindowConfigPack>,actor:&protocol::ActorId,cx:&mut semio_framework_job::StepContext<'_>,admission:&mut retained::WindowConfigLoadAdmission,output:&mut Option<WindowConfigPackLoad>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let generation=pack.as_ref().and_then(|pack|self.partitions.get(&pack.window_id)).map(|partition|partition.store.generation());retained::admit_typed_window_config_pack_load::<O>(lifetime,generation,pack,actor,cx,admission,output)}
     fn retained_load_commit_demands(&self,load:&dyn retained::ErasedWindowConfigPackLoad)->Result<RetirementDemand,ValueError>{retained::typed_window_config_pack_load_commit_demands::<O>(&self.partitions,load)}
     fn retained_load_insert_demands(&self,load:&dyn retained::ErasedWindowConfigPackLoad)->Result<Option<RetirementDemand>,ValueError>{if !load.insertion_pending(){return Ok(None);}let mut demand=self.partitions.cancel_insert_original_demands()?;demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<bool>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original Window load cancellation extent overflow"))?;demand.depth=demand.depth.max(1);Ok(Some(demand))}
     fn cancel_retained_load_insert(&mut self,load:&mut dyn retained::ErasedWindowConfigPackLoad,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{retained::cancel_typed_window_config_pack_load::<O>(&mut self.partitions,load,grant)}
     fn ensure_partition(&mut self,window:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.ensure_original_partition(window,cx)}
     fn close_step_context(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+        if !self.construction.close(cx)?{return Ok(PluginLifecycleStep::Progress(Default::default()));}
+        if self.initializing.is_none()&&!self.birth.terminal_is_empty(){self.birth.close_step(cx)?;return Ok(PluginLifecycleStep::Progress(Default::default()));}
         if let Some(owner)=self.initializing.as_mut(){if !owner.terminal_is_empty(){return owner.close_step(cx).map(|step|PluginLifecycleStep::retained(step,false)).map_err(Into::into);}let d=WindowConfigPartitionBirth::<O>::boxed_release_demands();return retired(cx,d,|_|{self.initializing=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
-        if self.partition_inserting{let mut d=self.partitions.cancel_insert_original_demands()?;d.copy_bytes+=size_of::<bool>();let before=cx.retained_progress();let mut done=None;built(cx,&mut done,window_construction(d),||{let(ready,mut p)=self.partitions.cancel_insert_original(&mut self.registry_address,&mut self.pending_partition,grant)?;if ready{self.partition_inserting=false;}p.copied_bytes+=size_of::<bool>();Ok((ready,p))})?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));}
-        if let Some(partition)=self.pending_partition.as_ref(){let terminal=partition.original_terminal();let d=if terminal{RetirementDemand{copy_bytes:size_of::<Option<WindowConfigPartition<O>>>(),depth:1,..Default::default()}}else{partition.original_close_demands(grant.maximum_copy_bytes)?};return semio_framework_job::close_original_retained_turn(cx,d,|g|{if terminal{self.pending_partition=None;return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1};}semio_framework_value::RetainedWorkOutcome{result:self.pending_partition.as_mut().unwrap().original_close_step(g).map(|step|RetainedCloneStep::Progress(step.progress().unwrap_or_default())).map_err(Into::into),work:1}}).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
+        if self.partition_inserting{let mut d=self.partitions.cancel_insert_original_demands()?;d.copy_bytes+=size_of::<bool>();let step=semio_framework_job::close_original_retained_turn(cx,d,|grant|{let result=self.partitions.cancel_insert_original(&mut self.registry_address,&mut self.pending_partition,grant).map(|(ready,mut p)|{if ready{self.partition_inserting=false;}p.copied_bytes+=size_of::<bool>();RetainedCloneStep::Progress(p)});semio_framework_value::RetainedWorkOutcome{result,work:1}})?;return Ok(PluginLifecycleStep::Progress(step.progress()));}
+        if let Some(partition)=self.pending_partition.as_ref(){let terminal=partition.original_terminal();let d=if terminal{RetirementDemand{copy_bytes:size_of::<Option<WindowConfigPartition<O>>>(),depth:1,..Default::default()}}else{partition.original_close_demands(grant.maximum_copy_bytes)?};if terminal{return semio_framework_job::close_original_retained_turn(cx,d,|_|{self.pending_partition=None;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
+        return semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|self.pending_partition.as_mut().unwrap().original_close_step(effect).map(|step|RetainedCloneStep::Progress(step.progress().unwrap_or_default()))).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
         if let Some(store)=self.initialized_store.as_ref(){let terminal=store.close_owned_store_terminal_is_empty();let d=if terminal{RetirementDemand{copy_bytes:size_of::<Option<Box<WindowConfigStore<O>>>>(),release_bytes:size_of::<WindowConfigStore<O>>(),depth:1,..Default::default()}}else{store.close_owned_demands(grant.maximum_copy_bytes)?};return retired(cx,d,|g|{if terminal{self.initialized_store=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}));}self.initialized_store.as_mut().unwrap().close_owned_store_step(g)}).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
         if self.initialized_window.is_some()||self.initialized_address.is_some()||self.registry_address.is_some(){let d=RetirementDemand{copy_bytes:size_of::<ControlledRetirement<(Option<String>,Option<semio_framework_value::SharedUtf8>,Option<semio_framework_value::SharedUtf8>)>>()+2*size_of::<(Option<String>,Option<semio_framework_value::SharedUtf8>,Option<semio_framework_value::SharedUtf8>)>(),depth:1,..Default::default()};return retired(cx,d,|_|{let original=(self.initialized_window.take(),self.initialized_address.take(),self.registry_address.take());self.initialization_residue=Some(ControlledRetirement::new(original).map_err(|(error,_)|error).expect("Window initialization text declares controlled retirement"));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
         if let Some(owner)=self.initialization_residue.as_ref(){let terminal=owner.terminal_is_empty();let d=if terminal{RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<(Option<String>,Option<semio_framework_value::SharedUtf8>,Option<semio_framework_value::SharedUtf8>)>>>(),depth:1,..Default::default()}}else{owner.next_demand(grant.maximum_copy_bytes)?};return retired(cx,d,|g|{if terminal{self.initialization_residue=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}self.initialization_residue.as_mut().unwrap().step(g)}).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
         let d=self.retirement_demands(grant.maximum_copy_bytes)?;
-        semio_framework_job::close_original_retained_turn(cx,d,|grant|semio_framework_value::RetainedWorkOutcome{result:self.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress().unwrap_or_default())).map_err(Into::into),work:1}).map(|step|PluginLifecycleStep::retained(RetainedCloneStep::Progress(step.progress()),self.terminal_is_empty())).map_err(Into::into)
+        let mut fault=None;
+        let step=semio_framework_job::close_original_effect_step(cx,d,|effect|{let result=self.close_step(effect);let work=effect.performed_work();semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:match result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress().unwrap_or_default())),Err(error)=>{let progress=error.retained_progress();fault=Some(error);Err(ValueError::invariant("window close fault is retained by its caller").with_retained_progress(progress).into())}},work})});
+        if let Some(error)=fault{return Err(semio_framework_job::OriginalTurnFailure::from(error).into())}
+        step.map(|step|PluginLifecycleStep::retained(RetainedCloneStep::Progress(step.progress()),self.terminal_is_empty())).map_err(Into::into)
     }
     fn borrow<'a>(&'a self, window_id: &'a str) -> Option<WindowConfigBorrow<'a>> {
         let partition = self.partitions.get(window_id)?;
@@ -301,11 +309,11 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
     fn capture_original_header(&self,window_id:&str,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<WindowConfigAuthority>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let partition=self.partitions.get(window_id).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Window capture requires its existing native partition"))?;
         let copy=2*size_of::<WindowConfigAuthority>()+size_of::<WindowConfigSnapshot>();
-        built(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:0,release_bytes:0,depth:1},||{
+        retained::direct_unit(cx,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()},|_|{
             let address=partition.address.as_ref().and_then(ControlledRetirement::original).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Window capture lost its registered address"))?;
             let snapshot=partition.store.snapshot_read_original()?.into_erased();
-            Ok((WindowConfigAuthority{window_id:String::new(),window_kind_id:String::new(),generation:partition.store.generation_now(),revision:partition.store.content_revision_now(),snapshot:WindowConfigSnapshot{authority:partition.authority,window_id:address.clone(),window_kind_id:O::WINDOW_KIND_ID,generation:partition.store.generation_now(),revision:partition.store.content_revision_now(),snapshot},pending_snapshot:None,retired_snapshots:Default::default()},RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))
-        })
+            *output=Some(WindowConfigAuthority{window_id:String::new(),window_kind_id:String::new(),generation:partition.store.generation_now(),revision:partition.store.content_revision_now(),snapshot:WindowConfigSnapshot{authority:partition.authority,window_id:address.clone(),window_kind_id:O::WINDOW_KIND_ID,generation:partition.store.generation_now(),revision:partition.store.content_revision_now(),snapshot},pending_snapshot:None,retired_snapshots:Default::default()});Ok(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})
+        })?;Ok(output.is_some())
     }
     fn capture<'a>(&'a mut self, window_id: &'a str) -> Pin<Box<dyn Future<Output = Result<WindowConfigAuthority, Fault>> + 'a>> {
         Box::pin(async move {
@@ -331,7 +339,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
     fn dispatch<'a, 'b>(&'a mut self,_actor:&'a str,mutation:WindowConfigMutation,_identity:&'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>)->Pin<Box<dyn Future<Output=Result<(),Fault>>+'a>>{
         Box::pin(async move{self.direct_ingress.original_mut().expect("live direct ingress remains original").mutations.push(mutation);Err(Fault::new(FaultOrigin::Framework,FaultCode::new("window-config.owned-operation"),"window configuration publication requires its original mounted operation"))})
     }
-    fn admit_catalog(&mut self,authority:&WindowConfigAuthority,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{let partition=self.partitions.get_mut(&authority.window_id).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Window catalog requires its captured partition"))?;if partition.store.owned_disposer_installed(){return Ok(None);}partition.catalog_step(grant).map(|step|Some(step.progress()))}
+    fn admit_catalog(&mut self,authority:&WindowConfigAuthority,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{let partition=self.partitions.get_mut(&authority.window_id).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Window catalog requires its captured partition"))?;if partition.store.owned_disposer_installed(){return Ok(None);}partition.catalog_step(effect).map(|step|Some(step.progress()))}
     /// 🎟️ Admits one original typed frame and stops before the separately paid Store constructor.
     fn admit_begin(
         &mut self, operation: semio_framework_job::OperationId,
@@ -376,7 +384,8 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
     }
 
     fn refresh_demands(&self,authority:&WindowConfigAuthority,_body:usize)->Result<RetirementDemand,ValueError>{crate::window_mutation::refresh::refresh_demands(&authority.pending_snapshot,&authority.retired_snapshots)}
-    fn refresh(&mut self,authority:&mut WindowConfigAuthority,grant:RetainedCloneGrant)->Result<crate::window_mutation::WindowAuthorityRefreshStep,Fault>{
+    fn refresh(&mut self,authority:&mut WindowConfigAuthority,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<crate::window_mutation::WindowAuthorityRefreshStep,Fault>{
+        let grant=effect.grant();
         let demand=self.refresh_demands(authority,grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
         if grant.maximum_depth<demand.depth{return Err(Fault::new(FaultOrigin::Framework,FaultCode::new("window-config.depth"),"window config refresh exceeds its admitted depth"));}
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(crate::window_mutation::WindowAuthorityRefreshStep::Pending(Default::default()));}
@@ -386,7 +395,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
             authority.pending_snapshot=Some(WindowConfigSnapshot{authority:partition.authority,window_id:semio_framework_value::SharedUtf8::default(),window_kind_id:O::WINDOW_KIND_ID,generation:partition.store.generation(),revision:partition.store.content_revision_now(),snapshot});
             return Ok(crate::window_mutation::WindowAuthorityRefreshStep::Pending(RetainedCloneProgress{copied_items:1,..Default::default()}));
         }
-        let step=crate::window_mutation::refresh::refresh_transfer(&mut authority.snapshot,&mut authority.pending_snapshot,&mut authority.retired_snapshots,grant).map_err(ValueError::into_fault)?;
+        let step=crate::window_mutation::refresh::refresh_transfer(&mut authority.snapshot,&mut authority.pending_snapshot,&mut authority.retired_snapshots,effect).result.map_err(ValueError::into_fault)?;
         if matches!(step,crate::window_mutation::WindowAuthorityRefreshStep::Ready(_)){authority.generation=authority.snapshot.generation;authority.revision=authority.snapshot.revision;}
         Ok(step)
     }
@@ -401,8 +410,8 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         })
     }
 
-    fn commit_retained_load(&mut self, registry_lifetime: u64, load: &mut dyn retained::ErasedWindowConfigPackLoad,grant:RetainedCloneGrant) -> Result<WindowConfigPackLoadStep, WindowConfigPackLoadDiagnostic> {
-        retained::commit_typed_window_config_pack_load::<O>(registry_lifetime, &mut self.partitions, load,grant)
+    fn commit_retained_load(&mut self, registry_lifetime: u64, load: &mut dyn retained::ErasedWindowConfigPackLoad,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<WindowConfigPackLoadStep, WindowConfigPackLoadDiagnostic> {
+        retained::commit_typed_window_config_pack_load::<O>(registry_lifetime, &mut self.partitions, load,effect)
     }
 
     fn snapshot(&self, window_id: &str) -> Option<WindowConfigSnapshot> {
@@ -455,18 +464,19 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         window_actor_demands(&self.actor, &self.actor_retirement, body)
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, Fault> {
+        let grant = effect.grant();
         if self.initialization_pending(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Window initialization retirement requires its original mounted context").into_fault());}
 
         let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
         if !registry::fits(grant, demand) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
-        if !self.direct_ingress.terminal_is_empty() { return self.direct_ingress.step(grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_fault); }
+        if !self.direct_ingress.terminal_is_empty() { return registry::settle_step(self.direct_ingress.step(&mut effect.nested(grant))).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_fault); }
         if let Some(owner) = self.partition_address_retirement.as_mut() {
-            let step = owner.step(grant).map_err(ValueError::into_fault)?;
+            let step = registry::settle_step(owner.step(&mut effect.nested(grant))).map_err(ValueError::into_fault)?;
             if owner.terminal_is_empty() { self.partition_address_retirement = None; }
             return Ok(PluginLifecycleStep::retained(step, false));
         }
-        if let Some(partition)=self.partitions.get_index_mut(self.partition_close_cursor){if !partition.original_terminal(){return partition.original_close_step(grant);}self.partition_close_cursor+=1;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+        if let Some(partition)=self.partitions.get_index_mut(self.partition_close_cursor){if !partition.original_terminal(){return partition.original_close_step(effect);}self.partition_close_cursor+=1;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
         if !self.partitions.is_empty() {
             let Some(((address, partition), progress)) = self.partitions.pop_original(grant).map_err(ValueError::into_fault)? else { return Ok(PluginLifecycleStep::Progress(Default::default())); };
             assert!(partition.disposer.is_none() && !partition.preview_retirement_pending() && !partition.returned_read_pending());
@@ -474,16 +484,16 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
             self.partition_address_retirement = Some(ControlledRetirement::new(address).map_err(|(error, _)| error).expect("original address has controlled retirement"));
             return Ok(PluginLifecycleStep::Progress(progress));
         }
-        if !self.partitions.terminal_is_empty() { return self.partitions.close_backing_step(grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_fault); }
-        close_window_actor(&mut self.actor, &mut self.actor_retirement, grant)
+        if !self.partitions.terminal_is_empty() { return self.partitions.close_backing_step(effect).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_fault); }
+        close_window_actor(&mut self.actor, &mut self.actor_retirement, effect)
     }
 
     fn direct_ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{Ok(self.direct_ingress.next_demand(body)?)}
-    fn close_direct_ingress(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.direct_ingress.step(grant)}
+    fn close_direct_ingress(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{registry::settle_step(self.direct_ingress.step(effect))}
     fn direct_ingress_terminal_is_empty(&self)->bool{self.direct_ingress.terminal_is_empty()}
     fn direct_ingress_quiescent(&self)->bool{self.direct_ingress.terminal_is_empty()||(self.direct_ingress.original_is_untouched()&&self.direct_ingress.original().is_some_and(|ingress|ingress.mutations.is_empty()&&ingress.allocations.is_empty()&&ingress.addresses.is_empty()))}
     fn terminal_is_empty(&self) -> bool {
-        !self.initialization_pending() && self.partitions.terminal_is_empty() && self.partition_address_retirement.is_none() && self.direct_ingress.terminal_is_empty() && self.actor.is_none() && self.actor_retirement.is_none()
+        !self.initialization_pending() && self.birth.terminal_is_empty() && self.construction.terminal_is_empty() && self.partitions.terminal_is_empty() && self.partition_address_retirement.is_none() && self.direct_ingress.terminal_is_empty() && self.actor.is_none() && self.actor_retirement.is_none()
     }
 
     /// 🧹️ Retires the displaced owners a LIVE partition accumulates — every coalesced amend (a
@@ -493,11 +503,12 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
     fn maintenance_retirements_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         self.partitions.values().find(|partition| partition.returned_read_pending() || !partition.store.maintenance_retirements_terminal_is_empty()).map_or(Ok(Default::default()), |partition| if partition.returned_read_pending() { partition.returned_read_demands(body) } else { partition.store.maintenance_retirements_demands(body) })
     }
-    fn maintenance_retirements_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    fn maintenance_retirements_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, Fault> {
+        let grant = effect.grant();
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let Some(partition) = self.partitions.values_mut().find(|partition| partition.returned_read_pending() || !partition.store.maintenance_retirements_terminal_is_empty()) else { return Ok(RetainedCloneStep::Complete(Default::default())) };
-        if partition.returned_read_pending() { return partition.returned_read_step(grant).map_err(ValueError::into_fault); }
-        partition.store.maintenance_retirements_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|message| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.maintenance-retirement"), message.into_message()))
+        if partition.returned_read_pending() { return partition.returned_read_step(effect).map_err(ValueError::into_fault); }
+        semio_plugin_ownership::bounded_ownership::plugin_settle_value(partition.store.maintenance_retirements_step(effect)).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|message| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.maintenance-retirement"), message.into_message()))
     }
 
     fn maintenance_retirements_terminal_is_empty(&self) -> bool {

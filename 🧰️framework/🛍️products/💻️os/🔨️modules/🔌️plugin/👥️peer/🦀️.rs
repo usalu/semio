@@ -60,20 +60,22 @@ impl PeerPresenceRootRetirement {
         Ok(Default::default())
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, ValueError> {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(PluginLifecycleStep::Complete(empty)); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(PluginLifecycleStep::Progress(empty)); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Ok(PluginLifecycleStep::Progress(empty)); }
         if let Some(entry) = self.entry.as_mut() {
-            if entry.terminal_is_empty(){self.entry.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
+            if entry.terminal_is_empty(){semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect)?;self.entry.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = entry.step(child)?;
+            let step = semio_plugin_ownership::bounded_ownership::plugin_settle_value(entry.step(&mut effect.nested(child)))?;
             let progress = step.progress();
             return Ok(PluginLifecycleStep::Progress(progress));
         }
         if self.owned.is_none() {
+            semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect)?;
             let root = self.root.as_mut().expect("peer root retains its original backing");
             if std::sync::Arc::get_mut(root).is_none() { return Ok(PluginLifecycleStep::Blocked { reason: "peer-presence root remains captured by a live operation" }); }
             let release = semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<PeerPresenceRoot>();
@@ -85,6 +87,7 @@ impl PeerPresenceRootRetirement {
             }
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: release, ..empty }));
         }
+        semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect)?;
         let root = self.owned.as_mut().expect("unique peer root remains inline");
         if self.cursor < root.len {
             let index = self.cursor;
@@ -731,21 +734,22 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
     }
 
     /// 🎟️ Releases one retained roster owner under the caller's unchanged grant; a refusal keeps every owner in place.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        self.close_value_step(grant).map_err(plugin_retirement_fault)
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, Fault> {
+        self.close_value_step(effect).map_err(plugin_retirement_fault)
     }
 
-    fn close_value_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, ValueError> {
+    fn close_value_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, ValueError> {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(PluginLifecycleStep::Complete(empty)); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(PluginLifecycleStep::Progress(empty)); }
         if let Some(retirement) = self.retirement.as_mut() {
-            let step = retirement.close_step(grant)?;
+            let step = retirement.close_step(effect)?;
             if retirement.terminal_is_empty() { drop(self.retirement.take()); }
             return Ok(match step { PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), other => other });
         }
         if self.rejected.is_some() {
-            let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected, grant).result?;
+            let step = semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected, effect))?;
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         if let Some(commit) = self.pending_commit.take() {
@@ -758,16 +762,16 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
             }
         }
         if self.pending_commit_retirement.is_some() {
-            return semio_framework_value_retirement_owner::retirement_owner_close(&mut self.pending_commit_retirement, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress()));
+            return semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_framework_value_retirement_owner::retirement_owner_close(&mut self.pending_commit_retirement, effect)).map(|step| PluginLifecycleStep::Progress(step.progress()));
         }
-        if self.pending_actor.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_actor, &mut self.rejected, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress())); }
-        if self.pending_presence.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_presence, &mut self.rejected, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress())); }
-        if self.pending_pack.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_pack, &mut self.rejected, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress())); }
+        if self.pending_actor.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_actor, &mut self.rejected, effect).result.map(|step| PluginLifecycleStep::Progress(step.progress())); }
+        if self.pending_presence.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_presence, &mut self.rejected, effect).result.map(|step| PluginLifecycleStep::Progress(step.progress())); }
+        if self.pending_pack.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_pack, &mut self.rejected, effect).result.map(|step| PluginLifecycleStep::Progress(step.progress())); }
         if !self.raw.terminal_is_empty() {
             return Ok(PluginLifecycleStep::Progress(self.raw.close_step(grant).progress()));
         }
         if self.pack_close.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.pack_close, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress()));
+            return semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.pack_close, effect)).map(|step| PluginLifecycleStep::Progress(step.progress()));
         }
         if self.packs_len != 0 {
             *self.pending_pack = self.packs[self.packs_len - 1].take(); self.packs_len -= 1;

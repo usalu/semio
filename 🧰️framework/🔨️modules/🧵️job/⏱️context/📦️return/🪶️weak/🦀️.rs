@@ -20,7 +20,7 @@ impl StepContext<'_>{
         let restore=OriginalNativeWeakLoan{target:std::ptr::addr_of_mut!(*self),previous:self.native_weak_parent,identity:OriginalRetainedLoanIdentity::capture(self),cancel:self.original_cancel_token()as*const _ as usize,epoch:self.source_epoch,slot,ticket};
         self.native_weak_parent=Some(OriginalNativeWeakParent{allocation:Arc::as_ptr(parent)as usize,source_type:TypeId::of::<T>(),slot,ticket,identity:OriginalRetainedLoanIdentity::capture(self),cancel:self.original_cancel_token()as*const _ as usize,epoch:self.source_epoch});
         let result=run(self);if restore.matches(){return result}
-        let refusal=||ValueError::literal(ValueRefusalKind::InvariantViolated,"native Weak return callback replaced its original initiating context");
+        let refusal=||ValueError::invariant("native Weak return callback replaced its original initiating context");
         Err(match result{Ok(_)=>OriginalTurnFailure::from(refusal()),Err(mut original)=>{if original.context_refusal.is_none(){original.context_refusal=Some(refusal())}original}})
     }
     /// 🔎️ See `README.md`.

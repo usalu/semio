@@ -69,13 +69,13 @@ impl DictionaryOwners {
 }
 impl ErasedSnapshotRetirement for DictionaryOwners {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if self.index.is_some() {
-            let step = semio_os_store_read::retirement_owner_close(&mut self.index, grant).result?;
+            let step = semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.index, effect))?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        semio_os_store_read::retirement_owner_close(&mut self.input, grant).result
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+        semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.input, effect))
+    })(); let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()))); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work }) }
     fn terminal_is_empty(&self) -> bool { DictionaryOwners::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
@@ -440,7 +440,7 @@ impl MemberHistoryDictionaryOwner {
 }
 impl ErasedSnapshotRetirement for MemberHistoryDictionaryOwner {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -470,8 +470,8 @@ impl ErasedSnapshotRetirement for MemberHistoryDictionaryOwner {
             self.ready = false;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
         }
-        semio_os_store_read::retirement_owner_close(&mut self.owners, grant).result
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+        semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.owners, effect))
+    })(); let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()))); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work }) }
     fn terminal_is_empty(&self) -> bool { self.owners.is_none() && self.pending.is_none() && self.lookup_byte.is_none() && self.delta.is_none() && self.id.is_none() && self.scanner.is_none() && self.record.is_none() && self.semantic.is_none() && self.lookup.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
@@ -536,10 +536,10 @@ impl VerifiedMemberHistoryDictionary {
 
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryDictionary {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_os_store_read::retirement_owner_demands(&self.owners, body) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; }
-        semio_os_store_read::retirement_owner_close(&mut self.owners, grant).result
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+        semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.owners, effect))
+    })(); let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()))); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work }) }
     fn terminal_is_empty(&self) -> bool { self.owners.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(semio_os_store_read::retirement_owner_demands(&self.owners, 0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(semio_os_store_read::retirement_owner_demands(&self.owners, body)?.capacity_bytes) }

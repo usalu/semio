@@ -78,7 +78,7 @@ impl<T,const N:usize>PagedList<T,N>{
    }
    self.allocated-=bytes;self.reservation_epoch=self.reservation_epoch.saturating_add(1);
    Ok(PagedListProgress{work,progressed:true,released_allocation_bytes:bytes,..Default::default()})
-  })();RetainedWorkOutcome{result,work}
+  })();RetainedWorkOutcome{result,work:u128::from(work)}
  }
 }
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

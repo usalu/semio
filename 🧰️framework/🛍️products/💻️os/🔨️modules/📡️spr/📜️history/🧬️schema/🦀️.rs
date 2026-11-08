@@ -220,14 +220,28 @@ impl HistoryLog {
     /// [`protocol::mutation_ids_for_edit`] fallback). Edits owning an operation of a
     /// non-accepted quarantined conflict are excluded.
     pub fn fold(&self) -> Result<protocol::HistoryFold, ProtocolError> {
-        use semio_framework_value::{retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant};
+        use semio_framework_value::{retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant, AuthoringWallet, RetainedWorkPoll};
+        let cold=|what:&'static str,detail:String|ProtocolError::Malformed{what,offset:0,detail};
         let (fold, transitions, replay_order, conflicts) = protocol::HistoryFoldJob::new(|control| async move { self.fold_controlled(protocol::HistoryShape::Document, &control).await }).finish_cold()?;
-        let mut retirement = ControlledRetirement::new((transitions, replay_order, conflicts)).unwrap_or_else(|_| unreachable!("normalized history declares controlled typed ownership"));
-        while !retirement.terminal_is_empty() {
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: retirement.next_capacity_byte_demand(4096).expect("normalized history constructor demand"), maximum_release_bytes: retirement.next_release_byte_demand().expect("normalized history whole release demand"), maximum_depth: retirement.next_depth_demand().expect("normalized history actual depth demand") };
-            let step = retirement.step(grant).expect("normalized cold fold owners have exact retirement");
-            assert!(step.progress().fits(grant));
+        let mut retirement = ControlledRetirement::new((transitions, replay_order, conflicts)).map_err(|(error,_)|cold("normalized history declares controlled typed ownership",error.into_message()))?;
+        let stock = RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
+        let mut wallet = AuthoringWallet::new(stock, 1 << 24);
+        let drained = (|| -> Result<(), ProtocolError> {
+            while !retirement.terminal_is_empty() {
+                let quote = |error:semio_framework_value::ValueError|cold("normalized history retirement quote",error.into_message());
+                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: retirement.next_capacity_byte_demand(4096).map_err(quote)?, maximum_release_bytes: retirement.next_release_byte_demand().map_err(quote)?, maximum_depth: retirement.next_depth_demand().map_err(quote)? };
+                let done = wallet.run(grant, 1 << 16, |effect| retirement.step(effect)).map_err(quote)?.ok_or_else(|| cold("normalized history retirement work quote was not admitted", String::new()))?;
+                match done.output {
+                    RetainedWorkPoll::Pending { .. } => return Err(cold("normalized history retirement stayed pending on a synchronous cold fold", String::new())),
+                    RetainedWorkPoll::Complete(turn) => { let step = turn.result.map_err(|failure| cold("normalized cold fold owners have exact retirement", failure.to_string()))?; if !step.progress().fits(grant) { return Err(cold("normalized history retirement exceeded its grant", String::new())); } wallet.post(step.progress()).map_err(quote)?; }
+                }
+            }
+            Ok(())
+        })();
+        if !retirement.terminal_is_empty() {
+            std::mem::forget(retirement);
         }
+        drained?;
         Ok(fold)
     }
 

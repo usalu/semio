@@ -51,7 +51,7 @@ fn close(store: &mut InteractionStore, cursor: &mut LocalInteractionCaptureCurso
         if cursor.terminal_is_empty()&&retirement.is_none()&&store.snapshot_read_leases_terminal_is_empty(){break}
     }
     assert!(cursor.terminal_is_empty());assert!(retirement.is_none());assert!(store.snapshot_read_leases_terminal_is_empty());
-    for _ in 0..1_000_000 {let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.close_owned_step(recipient.remaining_grant()).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if matches!(step,RetainedCloneStep::Complete(_)){assert!(store.close_owned_terminal_is_empty());return}}
+    for _ in 0..1_000_000 {let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.close_owned_step_cold(recipient.remaining_grant()).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if matches!(step,RetainedCloneStep::Complete(_)){assert!(store.close_owned_terminal_is_empty());return}}
     panic!("capture Store failed to close");
 }
 

@@ -1,4 +1,5 @@
-import type { PluginCatalog } from "@semio-tech/framework";
+import { consumedTopicsForApp, type PluginCatalog } from "@semio-tech/framework";
+import { contributionManifests } from "../../🐚️plugin-bridge/🎛️contributions-and-effects/🟦️.ts";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY } from "../../🫀️boot-liveness/🟦️.ts";
 import { setTurnDiagnostics, stampedTurnDiagnostics, TurnClock, TurnLedger, type TurnOutcome, WORKER_STEP_BUDGET_MS } from "../../⏱️turn-budget/🟦️.ts";
 import type { BrowserFrameUiMessage } from "../../🚚️browser-frame-transport/📋️contract/🟦️.ts";
@@ -176,7 +177,8 @@ export let explicitPluginModules: readonly WgpuPluginModule[] | undefined;
 
 export let workerCatalog: PluginCatalog | undefined;
 
-export const consumedTopics = (id: string) => [...(workerCatalog?.plugins ?? []), ...(workerCatalog?.extensions ?? [])].find(row => row.pluginId === id)?.consumes ?? [];
+export const consumedTopics = (id: string) => (appId: string): readonly string[] =>
+  consumedTopicsForApp([...(workerCatalog?.plugins ?? []), ...(workerCatalog?.extensions ?? [])], [...contributionManifests].map(([pluginId, manifest]) => ({ pluginId, manifest })), id, appId);
 
 export const assetCancellation = new BrowserAssetCancellationCursor();
 

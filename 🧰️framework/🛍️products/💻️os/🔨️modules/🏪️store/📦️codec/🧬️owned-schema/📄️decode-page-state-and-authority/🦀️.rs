@@ -72,6 +72,7 @@ pub struct ArtifactEnvelopeDecodeAuthority<P, Mutation> {
     pub(super) maximum_retained_field_close_bytes: usize,
     pub released_field_bytes: usize,
     pending_field: Option<(u16, OwnedSchemaToken, bool)>,
+    reclaiming: Option<ArtifactEnvelopeReturnedFieldDecoder<P, Mutation>>,
     pub state: ArtifactEnvelopeDecodeState,
     pub fault: semio_framework_job_payload::RetainedPayloadBuilder,
     fault_cursor: usize,
@@ -111,6 +112,7 @@ where
             maximum_retained_field_close_bytes,
             released_field_bytes: 0,
             pending_field: None,
+            reclaiming: None,
             state: ArtifactEnvelopeDecodeState::Fields,
             fault: semio_framework_job_payload::RetainedPayloadBuilder::new(semio_framework_job_payload::JobPayloadStream::Fault),
             fault_cursor: 0,
@@ -153,7 +155,7 @@ where
 
     /// 🧹️ Transfers an unstarted exact decode owner into a retained close authority.
     pub fn reject(self, diagnostic: OwnedSchemaDecodeDiagnostic) -> Result<ArtifactEnvelopeDecodeRejected<P, Mutation>, Self> {
-        if !matches!(self.state, ArtifactEnvelopeDecodeState::Fields) || self.record.is_none() || self.fields.is_none() || self.field_returned || self.pending_field.is_some() || !self.fault.terminal_is_empty() {
+        if !matches!(self.state, ArtifactEnvelopeDecodeState::Fields) || self.record.is_none() || self.fields.is_none() || self.field_returned || self.pending_field.is_some() || self.reclaiming.is_some() || !self.fault.terminal_is_empty() {
             return Err(self);
         }
         let mut source = std::mem::ManuallyDrop::new(self);
@@ -183,6 +185,7 @@ where
         self.fault.terminal_is_empty()
             && self.record.is_none()
             && self.fields.is_none()
+            && self.reclaiming.is_none()
             && self.field_returned
             && self.field_registry.ticket_reclaimed(self.field_ticket)
             && matches!(self.state, ArtifactEnvelopeDecodeState::Complete | ArtifactEnvelopeDecodeState::Cancelled | ArtifactEnvelopeDecodeState::Fault(_))
@@ -194,6 +197,10 @@ where
             let mut demand = self.fault.retirement_demands().map_err(|error| Self::diagnostic("artifact-envelope.fault-close-demand").with_native(error))?;
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| Self::diagnostic("artifact-envelope.fault-close-depth"))?;
             return Ok(demand);
+        }
+        if let Some(retired) = self.reclaiming.as_ref() {
+            let demand = retired.demands(maximum_copy_bytes).map_err(|error| Self::diagnostic("artifact-envelope.reclaim-close-demand").with_native(error))?;
+            return Ok(semio_framework_value::RetirementDemand { depth: demand.depth.checked_add(1).ok_or_else(|| Self::diagnostic("artifact-envelope.reclaim-close-depth"))?, ..demand });
         }
         if let Some(fields) = self.fields.as_ref() {
             let demand = match fields.with_owner(|owner| artifact_envelope_field_demands(owner, maximum_copy_bytes)) {
@@ -213,134 +220,140 @@ where
     pub fn released_field_bytes(&self) -> usize {
         self.released_field_bytes
     }
-    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<semio_framework_job::InteractiveJobCloseStep,ValueError> {
+    /// 🧹️ Runs one close turn inside the caller's effect: every child close borrows the same effect through `nested`, and the poll carries exactly the work that effect performed.
+    pub fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkPoll<semio_framework_job::InteractiveJobCloseStep, ValueError> {
         use semio_framework_job::InteractiveJobCloseStep as Close;
-        let empty = RetainedCloneProgress::default();
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Close::Pending { progress: empty }); }
-        if matches!(self.state,ArtifactEnvelopeDecodeState::Fields){self.state=ArtifactEnvelopeDecodeState::ReleaseCancelled;}
-        self.pending_field=None;
-        if !self.fault.terminal_is_empty() {
-            let demand = match self.close_demands(grant.maximum_copy_bytes) {
-                Ok(demand) => demand,
-                Err(diagnostic) => return Err(artifact_envelope_diagnostic_error(diagnostic)),
-            };
-            if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Ok(Close::Pending { progress: empty }); }
-            let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.fault.close_step_granted(child_grant) .result {
-                Ok(step) => Ok(Close::Pending { progress: step.progress() }),
-                Err(error) => Err(error),
-            };
-        }
-        if self.fields.is_some() {
-            if grant.maximum_items == 0 {
-                return Ok(Close::Pending { progress: empty });
+        let result = (|| -> Result<Close, ArtifactEnvelopeCloseExit<ValueError>> {
+            let grant = effect.grant();
+            let empty = RetainedCloneProgress::default();
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Close::Pending { progress: empty }); }
+            if matches!(self.state,ArtifactEnvelopeDecodeState::Fields){self.state=ArtifactEnvelopeDecodeState::ReleaseCancelled;}
+            self.pending_field=None;
+            if !self.fault.terminal_is_empty() {
+                let demand = match self.close_demands(grant.maximum_copy_bytes) {
+                    Ok(demand) => demand,
+                    Err(diagnostic) => return Err(artifact_envelope_diagnostic_error(diagnostic).into()),
+                };
+                if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Ok(Close::Pending { progress: empty }); }
+                let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+                let step = artifact_envelope_close_charge(effect, self.fault.close_step_granted(child_grant), artifact_envelope_close_work_error)?;
+                return Ok(Close::Pending { progress: step.progress() });
             }
-            let terminal = match self.fields.as_ref().expect("closing job holds its field decoder lease").with_owner(|owner| owner.terminal_is_empty()) {
-                Ok(terminal) => terminal,
-                Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Ok(Close::Blocked),
-                Err(_) => {
-                    self.record_release_fault(Self::diagnostic("artifact-envelope.decode-field-lease-invalid"));
-                    return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close refused").with_retained_progress(empty));
+            if self.fields.is_some() {
+                if grant.maximum_items == 0 {
+                    return Ok(Close::Pending { progress: empty });
                 }
-            };
-            if terminal {
-                if !self.fields.as_mut().expect("closing job holds its field decoder lease").return_now() {
-                    return Ok(Close::Blocked);
-                }
-                drop(self.fields.take());
-                self.field_returned = true;
-                return Ok(Close::Pending { progress: RetainedCloneProgress { copied_items: 1, ..empty } });
-            }
-            let demand = match self.fields.as_ref().expect("closing job holds its field decoder lease").with_owner(|owner| artifact_envelope_field_demands(owner, grant.maximum_copy_bytes)) {
-                Ok(Ok(demand)) => demand,
-                Ok(Err(diagnostic)) => {
-                    self.record_release_fault(diagnostic);
-                    return Err(artifact_envelope_diagnostic_error(diagnostic));
-                }
-                Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Ok(Close::Blocked),
-                Err(_) => {
-                    self.record_release_fault(Self::diagnostic("artifact-envelope.decode-field-lease-invalid"));
-                    return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close refused").with_retained_progress(empty));
-                }
-            };
-            let demand = match self.checked_field_close_demand(demand) {
-                Ok(demand) => demand,
-                Err(diagnostic) => {
-                    self.record_release_fault(diagnostic);
-                    return Err(artifact_envelope_diagnostic_error(diagnostic));
-                }
-            };
-            if grant.maximum_depth <= demand.depth {
-                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original decoder close refused").with_retained_progress(empty));
-            }
-            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-            if !artifact_retirement_grant_covers(child, demand) {
-                return Ok(Close::Pending { progress: empty });
-            }
-            let close = self.fields.as_ref().expect("closing job holds its field decoder lease").with_owner(|owner| {
-                let step = owner.close_step(child);
-                (step, owner.terminal_is_empty())
-            });
-            return match close {
-                Ok((Ok(step), terminal)) => {
-                    let progress = step.progress();
-                    if !progress.fits(child) || matches!(step, RetainedCloneStep::Complete(_)) && !terminal {
-                        self.record_release_fault(Self::diagnostic("artifact-envelope.decode-close-over-budget"));
-                        return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close refused").with_retained_progress(progress));
+                let terminal = match self.fields.as_ref().expect("closing job holds its field decoder lease").with_owner(|owner| owner.terminal_is_empty()) {
+                    Ok(terminal) => terminal,
+                    Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Ok(Close::Blocked),
+                    Err(_) => {
+                        self.record_release_fault(Self::diagnostic("artifact-envelope.decode-field-lease-invalid"));
+                        return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close refused").with_retained_progress(empty).into());
                     }
-                    if let Err(diagnostic) = self.record_released_field_bytes(progress.released_bytes) {
+                };
+                if terminal {
+                    if !self.fields.as_mut().expect("closing job holds its field decoder lease").return_now() {
+                        return Ok(Close::Blocked);
+                    }
+                    drop(self.fields.take());
+                    self.field_returned = true;
+                    return Ok(Close::Pending { progress: RetainedCloneProgress { copied_items: 1, ..empty } });
+                }
+                let demand = match self.fields.as_ref().expect("closing job holds its field decoder lease").with_owner(|owner| artifact_envelope_field_demands(owner, grant.maximum_copy_bytes)) {
+                    Ok(Ok(demand)) => demand,
+                    Ok(Err(diagnostic)) => {
                         self.record_release_fault(diagnostic);
-                        return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close refused").with_retained_progress(progress));
+                        return Err(artifact_envelope_diagnostic_error(diagnostic).into());
                     }
-                    Ok(Close::Pending { progress })
+                    Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Ok(Close::Blocked),
+                    Err(_) => {
+                        self.record_release_fault(Self::diagnostic("artifact-envelope.decode-field-lease-invalid"));
+                        return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close refused").with_retained_progress(empty).into());
+                    }
+                };
+                let demand = match self.checked_field_close_demand(demand) {
+                    Ok(demand) => demand,
+                    Err(diagnostic) => {
+                        self.record_release_fault(diagnostic);
+                        return Err(artifact_envelope_diagnostic_error(diagnostic).into());
+                    }
+                };
+                if grant.maximum_depth <= demand.depth {
+                    return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original decoder close refused").with_retained_progress(empty).into());
                 }
-                Ok((Err(diagnostic), _)) => {
-                    let released=self.record_released_field_bytes(diagnostic.retained_progress.released_bytes);
-                    self.record_release_fault(diagnostic);
-                    if let Err(ledger)=released{self.record_release_fault(ledger.with_progress(diagnostic.retained_progress));}
-                    Err(artifact_envelope_diagnostic_error(diagnostic))
+                let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+                if !artifact_retirement_grant_covers(child, demand) {
+                    return Ok(Close::Pending { progress: empty });
                 }
-                Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => Ok(Close::Blocked),
-                Err(_) => {
-                    self.record_release_fault(Self::diagnostic("artifact-envelope.decode-field-lease-invalid"));
-                    Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close refused").with_retained_progress(empty))
+                let close = self.fields.as_ref().expect("closing job holds its field decoder lease").with_owner(|owner| {
+                    let poll = owner.close_step(&mut effect.nested(child));
+                    (poll, owner.terminal_is_empty())
+                });
+                return match close {
+                    Ok((RetainedWorkPoll::Pending { .. }, _)) => Err(ArtifactEnvelopeCloseExit::Pending),
+                    Ok((RetainedWorkPoll::Complete(turn), terminal)) => match turn.result {
+                        Ok(step) => {
+                            let progress = step.progress();
+                            if !progress.fits(child) || matches!(step, RetainedCloneStep::Complete(_)) && !terminal {
+                                self.record_release_fault(Self::diagnostic("artifact-envelope.decode-close-over-budget"));
+                                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close refused").with_retained_progress(progress).into());
+                            }
+                            if let Err(diagnostic) = self.record_released_field_bytes(progress.released_bytes) {
+                                self.record_release_fault(diagnostic);
+                                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close refused").with_retained_progress(progress).into());
+                            }
+                            Ok(Close::Pending { progress })
+                        }
+                        Err(diagnostic) => {
+                            let released=self.record_released_field_bytes(diagnostic.retained_progress.released_bytes);
+                            self.record_release_fault(diagnostic);
+                            if let Err(ledger)=released{self.record_release_fault(ledger.with_progress(diagnostic.retained_progress));}
+                            Err(artifact_envelope_diagnostic_error(diagnostic).into())
+                        }
+                    },
+                    Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => Ok(Close::Blocked),
+                    Err(_) => {
+                        self.record_release_fault(Self::diagnostic("artifact-envelope.decode-field-lease-invalid"));
+                        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close refused").with_retained_progress(empty).into())
+                    }
+                };
+            }
+            if self.reclaiming.is_some() || !self.field_returned || !self.field_registry.ticket_reclaimed(self.field_ticket) {
+                if !self.field_returned { return Ok(Close::Blocked); }
+                let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+                let poll = self.field_registry.reclaim_returned_ticket_step(self.field_ticket, &mut self.reclaiming, &mut effect.nested(child));
+                let step = artifact_envelope_close_resume_with(poll, artifact_envelope_failure_error)?;
+                if step.progress() == empty && self.reclaiming.is_none() && !self.field_registry.ticket_reclaimed(self.field_ticket) { return Ok(Close::Blocked); }
+                return Ok(Close::Pending { progress: step.progress() });
+            }
+            if let Some(record) = self.record.as_mut() {
+                let nonterminal = !record.terminal_is_empty();
+                if grant.maximum_items == 0 || nonterminal && grant.maximum_copy_bytes < record.next_close_copy_byte_demand() {
+                    return Ok(Close::Pending { progress: empty });
                 }
+                if !nonterminal {
+                    drop(self.record.take());
+                    return Ok(Close::Pending { progress: RetainedCloneProgress { copied_items: 1, ..empty } });
+                }
+                if grant.maximum_depth < 2 {
+                    return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original decoder close refused").with_retained_progress(empty).into());
+                }
+                let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+                match record.close_step(child) {
+                    Ok(step) if step.progress().fits(child) => return Ok(Close::Pending { progress: step.progress() }),
+                    Ok(step) => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close refused").with_retained_progress(step.progress()).into()),
+                    Err(error) => return Err(error.into()),
+                }
+            }
+            let before = self.state;
+            self.state = match self.state {
+                ArtifactEnvelopeDecodeState::ReleaseSuccess | ArtifactEnvelopeDecodeState::Complete => ArtifactEnvelopeDecodeState::Complete,
+                ArtifactEnvelopeDecodeState::ReleaseFault(diagnostic) | ArtifactEnvelopeDecodeState::Fault(diagnostic) => ArtifactEnvelopeDecodeState::Fault(diagnostic),
+                _ => ArtifactEnvelopeDecodeState::Cancelled,
             };
-        }
-        if !self.field_returned || !self.field_registry.ticket_reclaimed(self.field_ticket) {
-            if self.field_returned {
-                let _ = self.field_registry.reclaim_returned_ticket_now(self.field_ticket);
-            }
-            if !self.field_returned || !self.field_registry.ticket_reclaimed(self.field_ticket) {
-                return Ok(Close::Blocked);
-            }
-        }
-        if let Some(record) = self.record.as_mut() {
-            let nonterminal = !record.terminal_is_empty();
-            if grant.maximum_items == 0 || nonterminal && grant.maximum_copy_bytes < record.next_close_copy_byte_demand() {
-                return Ok(Close::Pending { progress: empty });
-            }
-            if !nonterminal {
-                drop(self.record.take());
-                return Ok(Close::Pending { progress: RetainedCloneProgress { copied_items: 1, ..empty } });
-            }
-            if grant.maximum_depth < 2 {
-                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original decoder close refused").with_retained_progress(empty));
-            }
-            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-            match record.close_step(child) {
-                Ok(step) if step.progress().fits(child) => return Ok(Close::Pending { progress: step.progress() }),
-                Ok(step) => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close refused").with_retained_progress(step.progress())),
-                Err(error) => return Err(error),
-            }
-        }
-        let before = self.state;
-        self.state = match self.state {
-            ArtifactEnvelopeDecodeState::ReleaseSuccess | ArtifactEnvelopeDecodeState::Complete => ArtifactEnvelopeDecodeState::Complete,
-            ArtifactEnvelopeDecodeState::ReleaseFault(diagnostic) | ArtifactEnvelopeDecodeState::Fault(diagnostic) => ArtifactEnvelopeDecodeState::Fault(diagnostic),
-            _ => ArtifactEnvelopeDecodeState::Cancelled,
-        };
-        if ArtifactEnvelopeDecodeAuthority::terminal_is_empty(self) { Ok(Close::Complete { progress: RetainedCloneProgress { copied_items: usize::from(before != self.state), ..empty } }) } else { Ok(Close::Blocked) }
+            if ArtifactEnvelopeDecodeAuthority::terminal_is_empty(self) { Ok(Close::Complete { progress: RetainedCloneProgress { copied_items: usize::from(before != self.state), ..empty } }) } else { Ok(Close::Blocked) }
+        })();
+        artifact_envelope_close_finish(effect, result, |close| close.progress() != RetainedCloneProgress::default(), artifact_envelope_close_work_error)
     }
 
     fn advance_decode(&mut self, cx: &mut semio_framework_job::StepContext<'_>) {
@@ -485,13 +498,19 @@ where
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::InteractiveJobCloseStep as Close;
         let original=cx.retained_grant();
         let grant=RetainedCloneGrant{maximum_items:original.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX)),..original};
-        if cx.should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
-        let step=self.close_granted(grant).and_then(|step|step.admit(grant,ArtifactEnvelopeDecodeAuthority::terminal_is_empty(self))).map_err(|error|{cx.consume_fuel(error.retained_progress().copied_items as u64);semio_framework_job::OriginalTurnFailure::debit_original(error,cx)})?;
-        cx.consume_fuel(step.progress().copied_items as u64);
-        cx.consume_retained(step.progress()).map_err(semio_framework_job::OriginalTurnFailure::from)?;
-        Ok(step)
+        if cx.should_yield(){return Ok(Close::Pending{progress:Default::default()})}
+        let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|self.close_granted(effect))? else {return Ok(Close::Pending{progress:Default::default()})};
+        let (outcome,work)=match poll{RetainedWorkPoll::Pending{work}=>(Ok(Close::Pending{progress:Default::default()}),work),RetainedWorkPoll::Complete(turn)=>(turn.result,turn.work)};
+        let outcome=outcome.and_then(|close|close.admit(grant,ArtifactEnvelopeDecodeAuthority::terminal_is_empty(self)));
+        let close=outcome.as_ref().ok().copied();
+        let turn=RetainedWorkOutcome{result:outcome.map(|close|RetainedCloneStep::Progress(close.progress())),work};
+        let received=semio_framework_job::receive_original_retained_work(cx,turn).map(|step|close.unwrap_or(Close::Pending{progress:step.progress()}));
+        if performed<=work{return received}
+        let refusal=ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original decoder close performed more work than it settled");
+        match received{Ok(_)=>Err(semio_framework_job::OriginalTurnFailure::from(refusal)),Err(failure)=>Err(failure)}
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
@@ -518,12 +537,13 @@ where
 impl<P, Mutation> Drop for ArtifactEnvelopeDecodeAuthority<P, Mutation> {
     fn drop(&mut self) {
         if matches!(self.state, ArtifactEnvelopeDecodeState::Transferred) {
-            assert!(std::thread::panicking() || (self.record.is_none() && self.fields.is_none() && self.pending_field.is_none() && !self.field_returned), "transferred artifact envelope decode source retained an owner after exact rejection handoff");
+            assert!(std::thread::panicking() || (self.record.is_none() && self.fields.is_none() && self.pending_field.is_none() && self.reclaiming.is_none() && !self.field_returned), "transferred artifact envelope decode source retained an owner after exact rejection handoff");
             return;
         }
         let terminal = self.fault.terminal_is_empty()
             && self.record.is_none()
             && self.fields.is_none()
+            && self.reclaiming.is_none()
             && self.field_returned
             && self.field_registry.ticket_reclaimed(self.field_ticket)
             && matches!(self.state, ArtifactEnvelopeDecodeState::Complete | ArtifactEnvelopeDecodeState::Cancelled | ArtifactEnvelopeDecodeState::Fault(_));

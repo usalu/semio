@@ -51,7 +51,7 @@ where
         if cx.should_yield()||cx.fuel_remaining()<work||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<=demand.depth{return Ok(())}
         let mut input=Some(std::mem::take(id));let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-extra,maximum_depth:grant.maximum_depth-1,..grant};let turn=target.push_retained(&mut input,child,cx.fuel_remaining()-1);
         if let Some(value)=input{*id=value}else{self.operation_index+=1}
-        let performed=turn.work+1;cx.consume_fuel(performed);
+        let performed=turn.work+1;cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
         let (mut progress,failure)=match turn.result{Ok(progress)=>(progress,None),Err(error)=>(error.retained_progress(),Some(error))};
         progress.copied_items=progress.copied_items.max(1);progress.copied_bytes=progress.copied_bytes.checked_add(extra).ok_or_else(||ValueError::invariant("original cursor receipt extent overflow"))?;let receipt=cx.consume_retained(progress);
         if let Some(error)=failure{let mut failure=semio_framework_job::OriginalTurnFailure::from(error);failure.effects=progress;failure.receipt_refusal=receipt.err();return Err(failure)}receipt.map_err(Into::into)
@@ -121,9 +121,9 @@ where
         let source=&self.history.as_ref().expect("original History remains").edits[self.edit_index];let edit=self.pending_edit.as_mut().unwrap();let messages=self.pending_messages.as_mut().expect("message destination remains");
         let mut work=semio_framework_value_persistent::work::RetainedWorkLedger::new(cx.retained_grant());
         let result=(||->Result<bool,&'static str>{
-            if !work.reserve_vec(&mut edit.forwards,source.ops.len())?{return Ok(false)}
-            if !work.reserve_vec(&mut edit.mutation_meta,source.meta.as_ref().map_or(0,Vec::len))?{return Ok(false)}
-            if !work.reserve_string(&mut messages.edit_id,edit.id.len())?{return Ok(false)}
+            if !work.reserve_vec(&mut edit.forwards,source.ops.len(),&mut None)?{return Ok(false)}
+            if !work.reserve_vec(&mut edit.mutation_meta,source.meta.as_ref().map_or(0,Vec::len),&mut None)?{return Ok(false)}
+            if !work.reserve_string(&mut messages.edit_id,edit.id.len(),&mut None)?{return Ok(false)}
             if messages.edit_id.len()<edit.id.len(){
                 let start=messages.edit_id.len();let available=work.remaining().maximum_copy_bytes.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX));let mut end=start.saturating_add(available).min(edit.id.len());while end>start&&!edit.id.is_char_boundary(end){end-=1}if end==start{return Ok(false)}
                 if !work.string_push(&mut messages.edit_id,&edit.id[start..end])?{return Ok(false)}return Ok(false)
@@ -150,9 +150,12 @@ where
             let capacity=match edit.inverse.next_allocation_bytes(){Ok(value)=>value,Err(error)=>{*self.original_failure=Some(ValueError::from(error).into());return self.reject(MemberOpenDiagnostic::Capacity)}};
             let depth=match edit.inverse.next_reserve_depth_demand(){Ok(value)=>value,Err(error)=>{*self.original_failure=Some(ValueError::from(error).into());return self.reject(MemberOpenDiagnostic::Capacity)}};
             if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity||grant.maximum_depth<depth{return PersistedDocumentHydrationStep::Pending(self.progress())}
-            match edit.inverse.reserve_one(capacity){
-                Ok(step)=>{let progress=RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:step.allocated_bytes,released_bytes:step.released_allocation_bytes};if let Err(error)=cx.consume_retained(progress){*self.original_context_failure=Some(error.into())}cx.consume_fuel(step.work)},
-                Err(error)=>{let progress=RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:error.allocated_bytes,..Default::default()};let receipt=cx.consume_retained(progress);cx.consume_fuel(error.work);let mut cause=semio_framework_job::OriginalTurnFailure::from(ValueError::from(error.refusal()));cause.effects=progress;cause.receipt_refusal=receipt.err();*self.original_failure=Some(cause)}
+            let Some((turn,performed))=(match cx.with_original_effect(grant,|_,effect|edit.inverse.reserve_one_funded(effect)){Ok(value)=>value,Err(error)=>{*self.original_context_failure=Some(error.into());return self.reject(MemberOpenDiagnostic::Capacity)}}) else{return PersistedDocumentHydrationStep::Pending(self.progress())};
+            let spent=u64::try_from(performed).unwrap_or(u64::MAX);
+            match turn.result{
+                Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(progress))=>{if let Err(error)=cx.consume_retained(progress){*self.original_context_failure=Some(error.into())}cx.consume_fuel(spent)},
+                Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Denied)=>cx.consume_fuel(spent),
+                Err(failure)=>{let(error,copied_bytes)=match failure{semio_framework_value_persistent::list::PagedListReservationFailure::Work(error)=>(error,0),semio_framework_value_persistent::list::PagedListReservationFailure::Allocation{copied_bytes,..}=>(ValueError::literal(ValueRefusalKind::AllocationFailed,"retained edit inverse allocation refused"),copied_bytes)};let progress=RetainedCloneProgress{copied_items:1,copied_bytes:copied_bytes.max(copy),..Default::default()};let receipt=cx.consume_retained(progress);cx.consume_fuel(spent);let mut cause=semio_framework_job::OriginalTurnFailure::from(error);cause.effects=progress;cause.receipt_refusal=receipt.err();*self.original_failure=Some(cause)}
             }return PersistedDocumentHydrationStep::Pending(self.progress())
         }
         let bytes=std::mem::size_of::<M>()+std::mem::size_of::<Option<M>>()+std::mem::size_of::<usize>();let grant=cx.retained_grant();
@@ -213,7 +216,7 @@ where
                 }
                 let turn=self.envelope.as_mut().expect("hydrated envelope remains retained").vcs.edits.admit_owned_row(&mut self.pending_edit,cx.retained_grant());
                 let progress=match &turn.result { Ok(progress)=>*progress,Err(error)=>error.retained_progress() };
-                let receipt=cx.consume_retained(progress); cx.consume_fuel(turn.work);
+                let receipt=cx.consume_retained(progress); cx.consume_fuel(u64::try_from(turn.work).unwrap_or(u64::MAX));
                 if let Err(error)=turn.result {
                     let mut failure=semio_framework_job::OriginalTurnFailure::from(error);
                     failure.effects=progress; failure.receipt_refusal=receipt.err();
@@ -238,7 +241,7 @@ where
             }
             if !self.empty_messages.terminal_is_empty(){
                 let demand=match self.empty_messages.close_demands(cx.retained_grant().maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>{*self.original_failure=Some(error.into());return self.reject(MemberOpenDiagnostic::Capacity)}};
-                if let Err(error)=cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,demand,|grant|{let turn=self.empty_messages.close_step(grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}})){
+                if let Err(error)=cx.with_original_retirement(|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|{let poll=self.empty_messages.close_step(effect);match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}),semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkPoll::Pending{work}}})){
                     *self.original_failure=Some(error);return self.reject(MemberOpenDiagnostic::Capacity);
                 }
                 return PersistedDocumentHydrationStep::Pending(self.progress());
@@ -255,7 +258,7 @@ where
             if self.pending_messages.is_some()||ledger.original_append_pending(){
                 let turn=ledger.append_original_step(&mut self.pending_messages,cx.retained_grant(),cx.fuel_remaining());
                 let progress=match &turn.result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
-                let receipt=cx.consume_retained(progress);cx.consume_fuel(turn.work);
+                let receipt=cx.consume_retained(progress);cx.consume_fuel(u64::try_from(turn.work).unwrap_or(u64::MAX));
                 if let Err(error)=turn.result{
                     let mut failure=semio_framework_job::OriginalTurnFailure::from(error);
                     failure.effects=progress;failure.receipt_refusal=receipt.err();

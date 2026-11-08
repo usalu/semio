@@ -3,16 +3,9 @@
   "text": "Original queue α 🌱",
   "deniedWork": 0,
   "reserveNullWork": 1,
-  "transferWork": 1,
+  "transferWork": 2,
   "cachedWork": 0,
   "maximumTurns": 10000,
-  "stock": {
-    "items": 4096,
-    "copy": 16777216,
-    "capacity": 16777216,
-    "release": 16777216,
-    "depth": 128
-  },
   "serdeOracle": true,
   "sameTurnWorkThroughWrapper": true
 }

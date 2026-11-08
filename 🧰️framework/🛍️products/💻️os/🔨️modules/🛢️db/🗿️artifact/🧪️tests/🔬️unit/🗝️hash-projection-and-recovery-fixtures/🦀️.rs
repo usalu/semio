@@ -378,7 +378,7 @@ async fn committed_recovery_hash_store(id: &str, dialect: semio_framework_artifa
 fn close_committed_recovery_hash_store(store: &mut store::ArtifactStore<HashProjection, HashMutation>) {
         let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 4_096, maximum_release_bytes: 4_096, maximum_depth: 64 };
 for _ in 0..4_096 {
-        let step = store::SpaceMember::close_owned_step(store, grant).expect("committed recovery fixture Store closes");
+        let step = store::SpaceMember::close_owned_step_cold(store, grant).expect("committed recovery fixture Store closes");
         assert!(step.progress().fits(grant));
         if matches!(step, semio_framework_value::RetainedCloneStep::Complete(_)) {
             assert!(store::SpaceMember::close_owned_terminal_is_empty(store));

@@ -27,7 +27,7 @@ async fn curation_document_text_round_trips_through_a_vcs_store() {
     store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
     for _ in 0..500_000 {
-        if matches!(store::SpaceMember::close_owned_step(&mut doc_store, grant).expect("bounded store close"), semio_framework_value::RetainedCloneStep::Complete(_)) {
+        if matches!(store::SpaceMember::close_owned_step_cold(&mut doc_store, grant).expect("bounded store close"), semio_framework_value::RetainedCloneStep::Complete(_)) {
             break;
         }
     }

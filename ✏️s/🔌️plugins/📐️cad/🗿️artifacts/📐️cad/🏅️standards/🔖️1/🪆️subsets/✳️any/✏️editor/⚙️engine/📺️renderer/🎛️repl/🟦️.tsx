@@ -7,6 +7,7 @@
 import { Button, borderNormalClass, canvasHostRootClass, Checkbox, cn, CanvasPickMenu, editorShellRootClass, floatingFieldSurfaceClass, floatingMenuSurfaceClass, floatingPaneAsideClass, floatingTagClass, floatingTagOffClass, floatingTagOnClass, Input, LevelProvider, MenuItem, Select, SelectContent, SelectionMarquee, SelectItem, SelectTrigger, SelectValue, WINDOW_SEARCH_USER, type ReactNode } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 import { canvasPickTargetKey } from "@semio-tech/framework";
+import { useCadReplLabels } from "../🗣️labels/🟦️.ts";
 
 import { isShapeModelDefinition, defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
 import { qualifiedTransformationId } from "@semio-tech/s-spatial-kernel-ts/geometry/transformation-spec";
@@ -29,6 +30,7 @@ import { useReplEngagementAndKeys, type ReplCoreAfter5 } from "./🤝️engageme
 // #region 🪩️Repl
 /** 🪩️ Full spatial REPL: canvas, interaction palette, history controls, last response. */
 export function InteractionRepl(props: InteractionReplProps): ReactNode {
+  const labels = useCadReplLabels();
   const core = {} as ReplCoreAfter5;
   Object.assign(core, useReplViewState(props));
   Object.assign(core, useReplSessionLifecycle(core));
@@ -143,7 +145,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
       {showAside ? (
         <aside className={cn(floatingPaneAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-layout-floating-menu-lg shrink-0")} style={asideStyle} data-level="pane">
         <LevelProvider level="pane">
-          <strong className="text-sm font-semibold">Editor</strong>
+          <strong className="text-sm font-semibold">{labels.editor}</strong>
           <div className="flex flex-wrap gap-half">
             {transitionRows.map((row) => (
               <Button
@@ -233,7 +235,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
             {hideModelDefinitionControls ? null : (
               <>
                 <label className="flex flex-col gap-half">
-                  <span>Model definition</span>
+                  <span>{labels.modelDefinition}</span>
                   <Select
                     id="cad.modelDefinitionPicker"
                     value={activeModelDefinitionId ?? defaultModelDefinitionId()}
@@ -269,7 +271,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
                 </span>
                 {transfersFrom.length ? (
                   <label className="flex flex-col gap-half">
-                    <span>Transfer from</span>
+                    <span>{labels.transferFrom}</span>
                     <Select
                       id="cad.transferFromPicker"
                       key={transfersFromResetKey}
@@ -280,7 +282,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
                       }}
                     >
                       <SelectTrigger className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}>
-                        <SelectValue placeholder="Select incoming transformation…" />
+                        <SelectValue placeholder={labels.selectIncoming} />
                       </SelectTrigger>
                       <SelectContent>
                         {transfersFrom.map((row) => (
@@ -294,7 +296,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
                 ) : null}
                 {transfersTo.length ? (
                   <label className="flex flex-col gap-half">
-                    <span>Transfer to</span>
+                    <span>{labels.transferTo}</span>
                     <Select
                       id="cad.transferToPicker"
                       key={transfersToResetKey}
@@ -305,7 +307,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
                       }}
                     >
                       <SelectTrigger className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}>
-                        <SelectValue placeholder="Select outgoing transformation…" />
+                        <SelectValue placeholder={labels.selectOutgoing} />
                       </SelectTrigger>
                       <SelectContent>
                         {transfersTo.map((row) => (
@@ -328,7 +330,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
               <SpatialChromeMasterToggle state={primitiveShowGroupState} ariaLabel="Show all primitives" onEnabledChange={(enabled) => setFilterPrimitiveToggles(spatialToggleGroupFill(SPATIAL_PRIMITIVE_KINDS, enabled))} />
               Primitives · Show
             </label>
-            <div role="group" aria-label="Show primitives" className="flex flex-wrap gap-half">
+            <div role="group" aria-label={labels.showPrimitives} className="flex flex-wrap gap-half">
               {SPATIAL_PRIMITIVE_KINDS.map((kind) => (
                 <label key={`show-primitive-${kind}`} className={cn(floatingTagClass, filterPrimitiveToggles[kind] !== false ? floatingTagOnClass : floatingTagOffClass)}>
                   <Checkbox
@@ -362,7 +364,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
               />
               Primitives · Filter
             </label>
-            <div role="group" aria-label="Filter primitives" className="flex flex-wrap gap-half">
+            <div role="group" aria-label={labels.filterPrimitives} className="flex flex-wrap gap-half">
               {SPATIAL_PRIMITIVE_KINDS.map((kind) => (
                 <label key={`filter-primitive-${kind}`} className={cn(floatingTagClass, selectionPrimitiveToggles[kind] !== false ? floatingTagOnClass : floatingTagOffClass)}>
                   <Checkbox
@@ -385,7 +387,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
               <SpatialChromeMasterToggle state={typologyShowGroupState} ariaLabel="Show all typologies" onEnabledChange={(enabled) => setFilterTypologyToggles(spatialToggleGroupFill(scopeTypologyIds, enabled))} />
               Typologies · Show
             </label>
-            <div role="group" aria-label="Show typologies" className="flex flex-wrap gap-half">
+            <div role="group" aria-label={labels.showTypologies} className="flex flex-wrap gap-half">
               {modelDefinitionScope.typologies.map((typology) => {
                 const label = spatialTypologyToggleLabel(typology.id, typology.label);
                 return (
@@ -422,7 +424,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
               />
               Typologies · Selection
             </label>
-            <div role="group" aria-label="Selection typologies" className="flex flex-wrap gap-half">
+            <div role="group" aria-label={labels.selectionTypologies} className="flex flex-wrap gap-half">
               {modelDefinitionScope.typologies.map((typology) => {
                 const label = spatialTypologyToggleLabel(typology.id, typology.label);
                 return (
@@ -457,7 +459,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
             )}
           </div>
           <div className="border-border text-xs border-t pt-single">
-            <strong className="text-foreground">Last response</strong>
+            <strong className="text-foreground">{labels.lastResponse}</strong>
             <pre className="text-muted-foreground mt-half mb-0 max-h-layout-popover overflow-auto text-2xs">{lr ? JSON.stringify(lr, null, 2) : "—"}</pre>
             {snapshot.diagnostics.length ? (
               <ul className="text-muted-foreground m-0 list-inside list-disc text-2xs">

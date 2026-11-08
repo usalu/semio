@@ -3,7 +3,7 @@ use crate::snapshot::CadReferenceList;
 use semio_framework_dsl_record::{DslField, FieldValue, NativeSchemaControl, Shape};
 use semio_framework_value::{DslValue, FromValue, NativeEncodeControl, ToValue, ValueEdit, ValueError, ValueRefusalKind, ValueShape};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value::retirement::RetireOwned;
 use std::cmp::Ordering;
 
 #[path = "🚦️frontiers/🦀️.rs"]
@@ -70,9 +70,11 @@ impl<'a> IntoIterator for &'a CadReferenceIndex {
 }
 /// 🗂️ The keyed reference index retires through its sorted entry vector.
 impl RetireOwned for CadReferenceIndex {
-    fn controlled_retirement_supported() -> bool { <Vec<(String, CadReferenceList)> as RetireOwned>::controlled_retirement_supported() }
-    fn retirement(self) -> Box<dyn RetirementCursor> { self.entries.retirement() }
+    type RetirementCursor = <Vec<(String, CadReferenceList)> as RetireOwned>::RetirementCursor;
+    fn retirement_ready(&self) -> bool { self.entries.retirement_ready() }
+    fn retirement_seed(self) -> Self::RetirementCursor { self.entries.retirement_seed() }
     fn retirement_birth_bytes(&self) -> Option<usize> { self.entries.retirement_birth_bytes() }
+    fn controlled_retirement_supported() -> bool { <Vec<(String, CadReferenceList)> as RetireOwned>::controlled_retirement_supported() }
 }
 
 pub(crate) fn invalid(message: &'static str) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }

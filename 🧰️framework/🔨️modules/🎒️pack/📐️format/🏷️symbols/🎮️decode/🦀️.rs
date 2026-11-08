@@ -54,16 +54,17 @@ impl RetainedInlineSymbols {
 
     fn refused(&mut self, fault: InlineSymbolRefusal) -> InlineSymbolRefusal { self.fault = Some(fault); fault }
 
-    pub fn advance(&mut self, source: RetainedCloneRef<'_, Vec<u8>>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, InlineSymbolRefusal> {
+    pub fn advance(&mut self, source: RetainedCloneRef<'_, Vec<u8>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, InlineSymbolRefusal> {
+        let grant = effect.grant();
         let idle = RetainedCloneProgress::default();
         if grant.maximum_items == 0 || self.closing || self.is_finished() { return Ok(idle); }
         if let Some(fault) = self.fault { return Err(fault); }
-        if let Some(progress) = source.bind(&mut self.binding, grant).result.map_err(|_| self.refused(InlineSymbolRefusal::Source))? { return Ok(progress); }
+        if let Some(progress) = source.bind(&mut self.binding, &mut *effect).result.map_err(|_| self.refused(InlineSymbolRefusal::Source))? { return Ok(progress); }
         if self.phase == Phase::Place {
             if !self.symbols.has_reserved_slot() {
                 if grant.maximum_capacity_bytes == 0 { return Ok(idle); }
 
-                let progress = self.symbols.reserve_one(grant.maximum_capacity_bytes).map_err(|_| self.refused(InlineSymbolRefusal::Ownership))?;
+                let progress = crate::reserved(self.symbols.reserve_one(&mut *effect), Default::default()).map_err(|_| self.refused(InlineSymbolRefusal::Ownership))?;
                 return Ok(RetainedCloneProgress { copied_items: usize::from(progress.progressed), retained_capacity_bytes: progress.allocated_bytes, ..idle });
             }
             if grant.maximum_copy_bytes < size_of::<SymbolSpan>() { return Ok(idle); }
@@ -111,7 +112,7 @@ impl RetainedInlineSymbols {
     /// 🔤️ Returns the admitted original UTF8 byte span without reconstruction or rescanning.
     pub fn symbol_bytes<'source>(&mut self, source: RetainedCloneRef<'source, Vec<u8>>, index: usize) -> Result<Option<&'source [u8]>, InlineSymbolRefusal> {
         if !self.is_finished() { return Err(InlineSymbolRefusal::Source); }
-        if source.bind(&mut self.binding, Default::default()).result.map_err(|_| InlineSymbolRefusal::Source)?.is_some() { return Err(InlineSymbolRefusal::Source); }
+        if !source.check_binding(&self.binding).map_err(|_| InlineSymbolRefusal::Source)? { return Err(InlineSymbolRefusal::Source); }
         let Some(span) = self.symbols.get(index) else { return Ok(None); };
         let bytes = source.get().get(span.start..span.end).ok_or(InlineSymbolRefusal::Source)?;
         Ok(Some(bytes))
@@ -127,7 +128,8 @@ impl RetainedInlineSymbols {
         self.symbols.next_release_allocation_bytes().map_err(|_| InlineSymbolRefusal::Ownership)
     }
 
-    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, InlineSymbolRefusal> {
+    pub fn close_granted(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, InlineSymbolRefusal> {
+        let grant = effect.grant();
         let idle = RetainedCloneProgress::default();
         if !self.closing || grant.maximum_items == 0 { return Ok(idle); }
         let copied = if self.pending.is_some() || !self.symbols.is_empty() { size_of::<SymbolSpan>() } else { 0 };
@@ -137,10 +139,10 @@ impl RetainedInlineSymbols {
             return Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: copied, ..idle });
         }
         if !self.symbols.terminal_is_empty() {
-            let progress = self.symbols.release_empty_page(grant.maximum_release_bytes).map_err(|_| InlineSymbolRefusal::Ownership)?;
+            let progress = crate::released(self.symbols.release_empty_page(&mut *effect)).map_err(|_| InlineSymbolRefusal::Ownership)?;
             return Ok(RetainedCloneProgress { copied_items: usize::from(progress.progressed), released_bytes: progress.released_allocation_bytes, ..idle });
         }
-        RetainedCloneBinding::close_one(&mut self.binding, grant).result.map(|step|step.progress()).map_err(|_| InlineSymbolRefusal::Source)
+        match RetainedCloneBinding::close_one(&mut self.binding, effect) { semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map(|step| step.progress()).map_err(|_| InlineSymbolRefusal::Source), semio_framework_value::RetainedWorkPoll::Pending { .. } => Err(InlineSymbolRefusal::Source) }
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.pending.is_none() && self.symbols.terminal_is_empty() && self.binding.is_none() }

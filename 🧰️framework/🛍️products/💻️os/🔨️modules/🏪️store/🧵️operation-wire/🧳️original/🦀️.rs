@@ -1,6 +1,7 @@
 //! 🧳️ Original typed operation custody survives bounded encoding, protocol handoff and cancellation.
 use super::{ArtifactOperationWire,ArtifactPreparedOperationCursor,ArtifactPreparedOperationOutput};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,ErasedSnapshotRetirement};
+use semio_framework_value::{RetainedAllocationEffect,RetirementDemand,ValueError,ValueRefusalKind,ErasedSnapshotRetirement};
+use semio_os_store_one_item_publication::native_source::polled;
 use semio_framework_value::retained_clone::{RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits};
 use std::mem::{ManuallyDrop,size_of};
 
@@ -64,18 +65,19 @@ impl<M:Sync> ArtifactOriginalOperationBytes<M>{
     }
 
     /// ✍️ Advances one actual bounded native action; its embedding original issuer owns the receipt.
-    pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
         if self.closing{return Err(invalid())}if self.phase==5{return Ok(RetainedCloneStep::Complete(Default::default()))}
         let d=self.demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
         let metadata=size_of::<usize>()*2+size_of::<u8>();let child=RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-metadata,..grant};
         let p=match self.phase{
-            0 if self.offset<self.length=>{let p=self.output.append(&self.pending[self.offset..self.length],child)?;self.offset+=p.copied_bytes;p},
-            0 if !self.cursor.complete=>{let original=self.original.as_ref().ok_or_else(invalid)?.borrow()?;let source=self.wire.source(original.get()).ok_or_else(invalid)?;let step=self.cursor.advance(source,&mut self.pending,child).map_err(|error|error.reason)?;self.length=step.written_bytes;self.offset=0;progress(step)},
+            0 if self.offset<self.length=>{let p=self.output.append(&self.pending[self.offset..self.length],&mut effect.nested(child))?;self.offset+=p.copied_bytes;p},
+            0 if !self.cursor.complete=>{let original=self.original.as_ref().ok_or_else(invalid)?.borrow()?;let source=self.wire.source(original.get()).ok_or_else(invalid)?;let step=self.cursor.advance(source,&mut self.pending,&mut effect.nested(child)).map_err(|error|error.reason)?;self.length=step.written_bytes;self.offset=0;progress(step)},
             0=>{self.phase=1;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}},
-            1=>{let step=self.cursor.close(child).map_err(|error|error.reason)?;if step.complete{self.phase=2}progress(step)},
+            1=>{let step=self.cursor.close(&mut effect.nested(child)).map_err(|error|error.reason)?;if step.complete{self.phase=2}progress(step)},
             2 if self.paged=>{self.phase=3;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}},
-            2=>{let step=self.output.prepare_contiguous(child)?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=3}step.progress()},
-            3 if self.original.as_ref().is_some_and(|owner|!owner.terminal_is_empty())=>self.original.as_mut().ok_or_else(||ValueError::invariant("original absent"))?.close_step(child).result?.progress(),
+            2=>{let step=self.output.prepare_contiguous(&mut effect.nested(child))?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=3}step.progress()},
+            3 if self.original.as_ref().is_some_and(|owner|!owner.terminal_is_empty())=>polled(self.original.as_mut().ok_or_else(||ValueError::invariant("original absent"))?.close_step(&mut effect.nested(child)))?,
             3=>{self.original.take();self.phase=4;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<RetainedOwnedProjection<M>>>(),..Default::default()}},
             4=>{self.phase=5;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}},
             _=>return Err(invalid()),
@@ -103,11 +105,11 @@ impl<M:Sync> ArtifactOriginalOperationBytes<M>{
     }
 
     /// ♻️ Returns actual backings and original source aliases under independently supplied close currencies.
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        if !self.closing{return Err(invalid())}let d=self.close_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-        if !self.cursor.closed{return self.cursor.close(grant).map(|step|RetainedCloneStep::Progress(progress(step))).map_err(|error|error.reason)}
-        if !self.output.terminal_is_empty(){return self.output.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()))}
-        if let Some(original)=self.original.as_mut(){if !original.terminal_is_empty(){return original.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()))}self.original.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();if !self.closing{return Err(invalid())}let d=self.close_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+        if !self.cursor.closed{return self.cursor.close(effect).map(|step|RetainedCloneStep::Progress(progress(step))).map_err(|error|error.reason)}
+        if !self.output.terminal_is_empty(){return polled(self.output.close_step(effect)).map(RetainedCloneStep::Progress)}
+        if let Some(original)=self.original.as_mut(){if !original.terminal_is_empty(){return polled(original.close_step(effect)).map(RetainedCloneStep::Progress)}self.original.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
 

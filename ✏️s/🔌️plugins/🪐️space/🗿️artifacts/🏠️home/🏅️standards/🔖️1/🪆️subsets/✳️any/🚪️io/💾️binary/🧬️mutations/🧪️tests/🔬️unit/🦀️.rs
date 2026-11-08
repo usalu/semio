@@ -23,7 +23,7 @@ async fn home_document_text_round_trips_through_the_store() {
     while !store.close_owned_terminal_is_empty() {
         let demand = store.close_owned_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Home document Store quotes its exact bounded owners");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        let step = store.close_owned_step(grant).expect("Home document Store closes through its exact bounded owners");
+        let step = store.close_owned_step_cold(grant).expect("Home document Store closes through its exact bounded owners");
         assert!(step.progress().fits(grant) && step.progress().copied_items <= 1);
     }
 }

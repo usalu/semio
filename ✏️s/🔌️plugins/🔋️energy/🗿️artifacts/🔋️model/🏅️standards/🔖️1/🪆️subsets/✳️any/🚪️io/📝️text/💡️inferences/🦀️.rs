@@ -30,8 +30,10 @@ use std::hash::{Hash, Hasher};
 /// JSON; `contentDigest` = a deterministic (within-process) fingerprint over those same bytes.
 /// Std-only (`DefaultHasher`), same reasoning as `🏠️home/🆔digest`: no external hash crate needed
 /// for a single scalar byte-string digest.
-pub fn compute_energy_model_entries(snapshot: &EnergyModelSnapshot) -> EnergyModelEntries {
-    let model = &snapshot.model;
+pub fn compute_energy_model_entries(snapshot: &EnergyModelSnapshot) -> EnergyModelEntries { energy_model_entries_of(&snapshot.model) }
+
+/// 🗃️ The same entries of any canonical model value, so the empty default needs no fallible snapshot construction.
+pub fn energy_model_entries_of<M: ToValue>(model: &M) -> EnergyModelEntries {
     let json = semio_framework_pack_json::to_json_string(model);
     let bytes = json.as_bytes();
     let entry_count = match model.to_value() {
@@ -62,7 +64,7 @@ impl protocol::Inference<EnergyModelSnapshot> for EnergyModelInference {
 /// structurally" trick `AddInference` uses in `📡️spr/🎮️command/🦀️.rs`.
 impl Default for EnergyModelInference {
     fn default() -> Self {
-        Self { entries: compute_energy_model_entries(&EnergyModelSnapshot::default()) }
+        Self { entries: energy_model_entries_of(&crate::model::Model::default()) }
     }
 }
 }

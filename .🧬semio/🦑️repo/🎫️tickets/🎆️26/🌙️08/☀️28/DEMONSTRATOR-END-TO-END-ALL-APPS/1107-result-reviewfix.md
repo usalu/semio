@@ -1,0 +1,68 @@
+STATUS: GREEN native lib compile (reviewfix-104, no errors in them, only warnings) for semio-framework-value, io-control, io-sqlite-snapshot, tool-run-tick-wire, pixels; reviewfix-101 rc 0 for the presence crate. UNVERIFIED: tool-run-presentation and ui-prepared-staging (reviewfix-104 stopped upstream in semio-framework-job-context 🎟️source/🏠️native:51 MutexGuard vs RetainedOwnerGateGuard, a peer's edit), raster/energy plugin edits, tests, wasm.
+
+# 1107 reviewfix
+
+Method: each item from `1107-audit-review-3.md` was re-read in code before editing. Claims in `1105b-claims.md` (lines "reviewfix ...").
+
+## 2. `reborrow(.., effect.maximum_work_units())` -> `effect.nested`
+- CONFIRMED real (value `reborrow` refuses once the parent spent work or the receipt is smaller than the authored ceiling).
+- FIXED (static): 14 files / 45 exact-shape sites by `1105b-tools/reviewfix/nested.py` (copy of valuefix's, scope = whole value root, `--apply`), 9 `match .. {Ok(v)=>v,Err(e)=>return ..}` sites by the new fail-closed `1105b-tools/reviewfix/nested_match.py`, 4 by hand (controlled cursor, projection post `nested_within`, 4 test helpers), plus raster coverage receiving (2) and energy snapshot original (1) outside the value root. `maximum_depth-1` next to the rewritten sites is now `saturating_sub(1)`.
+- Law: `value/🎟️control/🧬️contract/📦️effect/🧪️tests/work-nested-sources.test.ts` scans every `.rs` under `🧰️framework` and `✏️s` for a reborrow with the parent's whole ceiling and compares with a `/usr/bin/grep` oracle; passes (0 hits) in ~80 s. Together with valuefix's `work-nested.json` law (semantics).
+- Compile: value lib green in reviewfix-104 (`C/🗑️generated/1105b/reviewfix-104.txt`).
+
+## 3. Presence JSON wallet (R4)
+- CONFIRMED and FIXED: `store/👥️presence/📸️snapshot/🔤️json/🦀️.rs` has no `AuthoringWallet`. `effect_step`/`effect_poll` drive every step through `native.receive_effect(demand, TURN_UNITS, &mut frame, ..)` with one `NativeReceivingEffect<ValueError>` in the `Receiving<P>` slot tuple (6th element, retired with the tuple). `Pending{work:0}` at `Granted` cancels the unstarted frame and maps to the unfunded refusal, any other `Pending` is a typed `WorkLimit` (W4). The JSON cursor runs one unit per effect (`step(text, 1, ..)`) so the quote of `normal_step_demands` covers exactly the action; the loop's own `work.performed()` (a second ledger) is gone, work reported = `effect.performed_work()`. Compiled: reviewfix-101 rc 0 (`C/🗑️generated/1105b/reviewfix-101.txt`).
+- Not done: a law that the presence decode reports work equal to the control's committed work (needs the native decode harness).
+
+## 3b. SQLite schema validation wallet (port-f)
+- VERDICT from code: kept, by runtime2's ruling. `SchemaValidationStorage::parse` has only `SqliteSnapshotControl`, which owns its producer ledger (`ledger.performed_work`); the wallet's stock is the control's own remaining allocation bytes and the work is posted into that ledger (`record_performed_work`), which `🫴️receiving` reports as the turn work (`work` = ledger delta). So it is one ledger charged once at the receiving boundary, not an uncharged side stock. Moving it to the control's `with_effect` would need `NativeDecodeControl` threaded through `SqliteSnapshotControl` (≥ 20 callers in plugin reconstruction hosts): deferred, not a fault today.
+- FIXED (panic list) in `io/sqlite-snapshot/🫴️receiving`: 4 `unwrap`/`expect` -> typed invariants, `checked_sub().expect` -> `saturating_sub`, settlement-slot `expect` -> keeps the primary failure.
+
+## 4. Pending / zero-progress closes
+- Tick receive (`tool-run/🎞️tick/🛬️receive`): `Pending{work:0}` only arises from `prepare_work -> None` (recipient not ready) or an unadmitted quote; both are per-turn recipient/fuel conditions, not a repeated-grant spin; the driver (`🛬️native` phase 1) re-enters next turn. REAL FAULT fixed: `frame.cancel_unstarted(control)?` returned before `self.frame = frame`, dropping a non-Empty frame (Drop asserts); the frame is now restored before the error propagates. Also `maximum_copy_bytes-parent`/`maximum_depth-1` -> saturating.
+- ui-prepared: the `Pending{default}` gates (`prepared_close_gate`, `_bytes`) follow the framework's yield convention (`retirement_should_yield`, grants refresh per turn; a backing is born under the same grant). REAL FAULT fixed: `prepared_close_authored` (turn-less frame retirement, finite stock) mapped an unadmitted work quote to `Pending` forever; it is now a typed `WorkLimit` refusal (W4). Users: 1 production (renderer frame-presentation, no `cx` in reach: W1 allows the wallet), rest tests/fixtures. The 64-unit per-call work stays: no turn exists to chunk against.
+- io-control `retire_decode`: `Pending{work}` dropped the physical progress (`extra` copied bytes) of the pending turn; now posted through `post(..)` before the typed pending refusal. Also `value.expect("completed snapshot retirement step")` -> typed invariant, `action_failure.take().unwrap()` -> typed invariant, two `expect` on the work counter -> `saturating_add`, three `maximum_depth -= 1` -> `saturating_sub`.
+- pack canonical tree `output.is_empty() -> Progress(default)`: caller backpressure (no output room), not a spin; left.
+- `Progress(default)` on `!funds` in value derive/enum/ordered/text: framework yield convention, left.
+
+## Open items from the `OPEN after compile` line (C/1028-coordination.md:357)
+- presence JSON wallet: FIXED (above). Tick `work:1`: already `effect.performed_work()` (ruled R6, verified in code), restore-frame bug fixed above.
+- io-control Pending progress drop: FIXED (above). Tool-run panics: presentation slot `unwrap`/`expect` (7) -> typed invariants (`🗃️slot/🦀️.rs`); `identifier()` falls back to "" instead of `expect`. The remaining ~870 phase-machine unwraps in tool-run entity/update cursors are NOT touched (list, owner port-d).
+- energy `Default` expect and swallowed `retire_decoded` refusal: NOT fixed, decision needed. `Default` cannot be fallible; removing it means a fallible `empty()` plus ~12 test call sites and `EnergyModelInference::default`. `FromValue::retire_decoded(self)` is a unit-returning framework trait method with 466 uses; a refusal cannot be propagated without a signature change. Proposed ruling for runtime2: keep `retire_decoded` infallible (document drop-time cleanup) and make the energy bridge retire through a stock large enough by construction; make `Default` use a `const` empty snapshot.
+- JPEG and source phases unrecorded: `ImageDecodeJob::advance` (pixels `🖼️image/📥️decode`) records `effect.performed(1)` for every phase that made progress and recorded no work, so JPEG/source/handoff steps are charged one unit per action (honest only for one action; the JPEG `advance(grant)` of a whole chunk is undercounted until the JPEG decoder is ported). FIXED here: 5 `unwrap` on the phase machine -> typed `Invalid` refusals, two grant subtractions saturating.
+- Pack JSON `parse`: `u128::try_from(nodes).unwrap_or(u128::MAX)` (admit-all fallback, never reachable) -> `nodes as u128`; the stock stays input-length sized.
+
+## Other panic list entries
+- window-config registry `assert!(self.insertion.is_none())`: documented cold registration precondition (`insert` is the cold reference entry, `insert_original` is the turn entry); left.
+- store owned-schema expects: under the store lane's R7 rewrite; not touched.
+- replication fold / SPR history / mesh / pixels wallets: fold `authored` is documented "Cold and test entry"; callers in turns use `lent` (port-d). Not changed.
+
+## Compile and run log
+- reviewfix-101 (presence crate, native): rc 0.
+- reviewfix-102 died on a wrong workspace for the presence package; reviewfix-103 stopped in native-decoding allocation (peer, fixed by testdebt-f); reviewfix-104 rc 1 only from job-context (peer): value, io-control, io-sqlite-snapshot, tick-wire, pixels compiled.
+- Test and wasm: not run. Rerun: `1105b-tools/chk.sh reviewfix-103 <value manifest> wasm -p semio-framework-value ...`.
+
+# Review 4 (C/1107-audit-review-4.md), second assignment
+Each item re-read in code first. Compile batch reviewfix-105 (fem assembly + fem2d editor session, wasm) is queued behind the slot semaphore; everything below is UNVERIFIED by compile unless noted.
+
+- 1 FEM mounted wallets in a turn: CONFIRMED for `AssemblyConstruction::step_one_funded` (wallet 64, work dropped). FIXED: new `step_one_in(effect)` does the reservations on the caller's effect via `effect.nested`; `step_one_funded(grant)` is now only the turn-less wrapper (tests); fem2d `stage_build_csr` runs `cx.with_original_effect(grant, |_, e| build.step_one_in(e))` and pays through `receive_original_retained_work` (single debit). The `step_one()` reservations after it are no-ops once the page is reserved (cold wallets, no work). NOT done: the same wallet in `reserve_cold_page` users in fem 3d visual-job / csr-build / mounted model (`step_one_funded` has 3 more definitions); statik please apply the `step_one_in` pattern.
+- 11 mounted page byte grant checked after allocation: not fixed (statik).
+- 2 UI draw retirement: CONFIRMED (release errors dropped, `unwrap_or(0)`, `return false`). FIXED: `DrawList::retire_step_checked() -> Result<bool, PagedListError>` propagates every release/demand error; the production close step (`draw-list-and-retained-output`) maps it to a typed `InvariantViolated`; `retire_step()` stays as the unchecked form for tests/drops. Same pattern remains in ui-runtime `retire_record_one` (fixed page bytes, bool API): allowlisted in the law, owner reacthost.
+- 3 brep/mesh: HalfedgeMesh::tessellate stock now sized from the mesh (`halfedges.len()`), no `1<<30`/`1e12`. Reachability traced: lowpoly `tessellate_transfer_json` is called from window/view builders (UV window, export), not from a job turn: the wallet stays legal there (W1). brep `into_mesh` and `Body::compact` are infallible-signature cold façades (`Option`/`Remap`), so their `expect`/`panic` cannot become typed without a signature change: NOT fixed, proposal to port-e: `try_into_mesh`/`try_compact` returning Result and size the stock from entity counts; `boolean_sync` `usize::MAX` budget not touched.
+- 4 neural: the cited `retire_value_controlled` fallback no longer exists in the tree (port-j reworked); the remaining panics are in cold Drop/cold-insert boundaries (`🧵️retirement:213,252`, `⏱️evaluation:475`, dictionary:172): left, same signature argument.
+- 5 SPR history fold: FIXED: `Pending` is a typed refusal, each step's progress is `post`ed. The `usize::MAX` stock stays (per-step grants are the quoted demands).
+- 6 drawing boolean retirement: FIXED: `wallet.post(step.progress())` per step.
+- 7 `NativeReceiveSlot` Send: NOT a fault as stated: `T: RetireOwned: Send` and `T::Receiver: NativeReceiver: Send` by supertrait, so a non-Send receiver cannot be named; the `unsafe` covers the raw-pointer producer inside `OriginalEffectAuthority`/binding. Unverified for those fields; asked nobody to change.
+- 8 paged serde `reserve_one_cold`, 9 `release_empty_page_leased` uncharged: not changed (value lane API decision: the leased forms are the documented cursor-owner-pays path).
+- 10 `OriginalEffectRun::begin` leaked the open action when `issue_performed_for_action` failed: FIXED (cancels, keeps the primary error). `with_effect` unwinding mid-run: not changed.
+- Unreached scope: os-inference (3 unwraps -> typed `changed()` refusals, `expect` on fuel monotone -> saturating), tool-typing-edit (4 phase unwraps -> `invalid()` refusals, `maximum_copy_bytes - extra` saturating; the closure unwraps at the `transform_original_edit` body stay), semio text-envelope source retirement ignored `Pending` -> typed `WorkLimit`, energy bridge loop ignored `Pending` -> `bridge_exhausted()`. store-command: panics only in header spec lookups (`expect` on own keyword) and tests; actor: `actors.get_mut(&id).unwrap()` (actor/🦀️.rs:242) and receipt parsing `try_into().unwrap()` on length-checked slices, left; ui-contract arena: no hits.
+
+## Laws (language-agnostic, `value/🎟️control/🧬️contract/📦️effect/🧪️tests/`)
+- `work-nested-sources.test.ts` (whole-ceiling reborrow, grep oracle): pass.
+- `source-hazards.test.ts`: (a) no retirement discards a `release_empty_page_leased` result (one allowlisted debt), (b) no cold driver accepts `Pending{..}=>{}`, (c) no authoring stock falls back to `u128::MAX`: 3 pass (24 s), they were red before the fixes (a: 6 draw sites, b: semio + energy bridge).
+
+## Review 4 compile status
+- reviewfix-105 (wasm, fem assembly + fem2d editor session) stopped upstream with no error in my files: errors only in semio-os-store-ledger (inverse/supersession), semio-os-store-space-history (sqlite snapshot), semio-plugin-result-page, semio-framework-kernel-json (peers' in-flight store port). `C/🗑️generated/1105b/reviewfix-105.txt`.
+- statik applied `step_one_in` to the sparse csr-build, assembly csr-build-and-run and fem3d staged-step and reports sparse + assembly compiling (statik-225 rc 0); fem3d editor (statik-226) unverified.
+- Not compiled: ui-draw-contract (`retire_step_checked`), spr-history fold, flow drawing, os-semio, os-inference, tool-typing-edit, energy bridge, `OriginalEffectRun::begin`, mesh tessellate stock. Rerun with `1105b-tools/chk.sh reviewfix-106 <manifest> native -p semio-ui-draw-contract -p semio-framework-tool-typing-edit -p semio-framework-value-control-contract` and the os workspace crates `semio-os-semio semio-os-inference`.
+- retire_record_one (ui runtime records): runtime has it on its post-e2e list; brep try_into_mesh/try_compact logged by port-e as an open request.

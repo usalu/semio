@@ -123,7 +123,7 @@ pub struct MeshImportState {
 impl MeshJobOutput {
     pub fn phase(&self)->&'static str { match self { Self::Mesh(value)=>value.phase(),Self::Analysis(value)=>value.phase() } }
     pub fn estimate(&self)->usize { match self { Self::Mesh(value)=>value.estimate(),Self::Analysis(value)=>value.estimate() } }
-    pub fn advance(&mut self)->Result<Option<Dictionary>,EvalError> { match self { Self::Mesh(value)=>value.advance(),Self::Analysis(value)=>value.advance() } }
+    pub fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Dictionary>,EvalError> { match self { Self::Mesh(value)=>value.advance(cx),Self::Analysis(value)=>value.advance(cx) } }
 }
 
 pub struct MeshAnalysisState {
@@ -153,7 +153,7 @@ impl MeshAnalysisState {
     }
     pub fn phase(&self)->&'static str { ["mesh-analysis-corners","mesh-analysis-topology","mesh-analysis-bounds","mesh-analysis-tessellate","mesh-analysis-triangles","mesh-analysis-done"][self.phase as usize] }
     pub fn estimate(&self)->usize { self.tessellation.source().halfedge_count().saturating_mul(32).saturating_add(self.tessellation.source().vertex_count()).saturating_add(1) }
-    pub fn advance(&mut self)->Result<Option<Dictionary>,EvalError> {
+    pub fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Dictionary>,EvalError> {
         let mesh=self.tessellation.source();
         match self.phase {
             0=>{
@@ -178,7 +178,7 @@ impl MeshAnalysisState {
                 if self.cursor==mesh.vertex_count() { self.phase=3; }
                 else { let point=mesh.vertex_position(VertexId(self.cursor as u32)).map_err(mesh_error)?.0;for axis in 0..3 { self.min[axis]=self.min[axis].min(point[axis]);self.max[axis]=self.max[axis].max(point[axis]); }self.cursor+=1; }
             }
-            3=>{ match tessellation_slice(&mut self.tessellation,1).map_err(mesh_error)? { MeshTessellationStep::Done(transfer)=>{self.triangles=Some(transfer);self.cursor=0;self.phase=4;},MeshTessellationStep::Working(_)=>{},MeshTessellationStep::Cancelled(_)=>return Err(invalid("analysis cancelled")) } }
+            3=>{ match tessellation_slice(&mut self.tessellation,1,cx).map_err(mesh_error)? { MeshTessellationStep::Done(transfer)=>{self.triangles=Some(transfer);self.cursor=0;self.phase=4;},MeshTessellationStep::Working(_)=>{},MeshTessellationStep::Cancelled(_)=>return Err(invalid("analysis cancelled")) } }
             4=>{
                 let triangles=self.triangles.as_ref().unwrap();
                 if self.cursor==triangles.indices.len() { self.phase=5; }
@@ -238,7 +238,7 @@ impl MeshOutputState {
     }
     pub fn phase(&self) -> &'static str { ["mesh-output-vertices", "mesh-output-face-corners", "mesh-output-face-json", "mesh-output-tessellate", "mesh-output-edge-identities", "mesh-output-pack", "mesh-output-base64", "mesh-output-done","mesh-output-metadata","mesh-output-json-done","mesh-output-obj-uv-scan","mesh-output-obj-uv"][self.phase as usize] }
     pub fn estimate(&self) -> usize { let mesh = self.tessellation.as_ref().unwrap().source(); mesh.vertex_count().saturating_add(mesh.face_count().saturating_mul(4)).saturating_add(mesh.halfedge_count().saturating_mul(24)).saturating_add(1) }
-    pub fn advance(&mut self) -> Result<Option<Dictionary>, EvalError> {
+    pub fn advance(&mut self, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<Dictionary>, EvalError> {
         match self.phase {
             0 => {
                 let mesh = self.tessellation.as_ref().unwrap().source();
@@ -273,7 +273,7 @@ impl MeshOutputState {
                 } else {self.data.push(if self.obj_only {'\n'}else {']'});self.corner_base += self.corners.len(); self.corners.clear(); self.halfedges.clear(); self.face += 1; self.phase = 1; }
             }
             3 => {
-                match tessellation_slice(self.tessellation.as_mut().unwrap(),1).map_err(mesh_error)? {
+                match tessellation_slice(self.tessellation.as_mut().unwrap(),1,cx).map_err(mesh_error)? {
                     MeshTessellationStep::Working(_) => {},
                     MeshTessellationStep::Cancelled(_) => return Err(invalid("mesh output cancelled")),
                     MeshTessellationStep::Done(transfer) => {
@@ -324,7 +324,7 @@ impl MeshOperatorJob {
         Ok(Self {job:None,brep_job:None,import:None,preparation:Some(MeshPreparation {operation,session:Some(session),input:None,source:Some(PolygonSourcePreparation::new()),reconstruction:None,next:None,input_retirement:Default::default(),retire_input:false}),retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),work:0,fault:None,modeling_base:0,output:None,progress,cancelled:false})
     }
     pub fn source_text<'a>(operation:&str,input:&'a Dictionary)->Result<&'a str,EvalError> {if operation=="construct" {return input.get("data").and_then(Value::as_dictionary).and_then(|text|text.get("value")).and_then(Value::as_atom).and_then(Atom::as_str).ok_or_else(||invalid("data must be text"));}let mesh=input.get("mesh").and_then(Value::as_dictionary).filter(|mesh|mesh.schema()==Some("mesh")).ok_or_else(||invalid("mesh requires a mesh"))?;mesh.get("data").and_then(Value::as_atom).and_then(Atom::as_str).ok_or_else(||invalid("mesh data is missing"))}
-    pub fn step_preparation(&mut self,budget:usize,grant:RetainedCloneGrant)->Result<neural_engine::OperatorJobStep,EvalError> {
+    pub fn step_preparation(&mut self,budget:usize,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<neural_engine::OperatorJobStep,EvalError> {
         if budget==0 || grant.maximum_items==0 || grant.maximum_depth==0 {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
         let child=turn_grant(grant);
         for _ in 0..budget {
@@ -374,7 +374,7 @@ impl MeshOperatorJob {
                     Err(error)=>{self.fault=Some(invalid(error));self.retirement=Some(MeshRetirement::Source(state.source.take().unwrap()));state.retire_input=true;self.progress.phase="mesh-fault-retire";},
                 }
             } else if let Some(job)=&mut state.reconstruction {
-                match modeling_slice(job,1) {
+                match modeling_slice(job,1,cx) {
                     Ok(MeshModelingStep::Working(progress))=>self.progress.phase=progress.phase,
                     Ok(MeshModelingStep::Done(mesh))=>{
                         state.next=Some(Box::new(if state.operation=="construct" {Self::output(mesh)?}else {Self::owned_plan(state.operation,state.session.as_ref().ok_or_else(||invalid("original preparation session is absent"))?.clone(),state.input.as_ref().ok_or_else(||invalid("mesh preparation lost its original input"))?,mesh)?}));
@@ -437,7 +437,7 @@ impl MeshOperatorJob {
     pub fn to_brep(session:Session,mesh:HalfedgeMesh,tolerance:f64)->Result<Self,EvalError> {
         Ok(Self {job:None,brep_job:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),work:0,fault:None,import:Some(MeshImportState {session:Some(session),tessellation:Some(MeshTessellationJob::with_preview_capacity(mesh,64_000_000)),cursor:None,tolerance,source_retirement:None,transfer_retirement:None,fault:None}),modeling_base:0,output:None,cancelled:false,progress:neural_engine::OperatorProgress {units_done:0,units_total:1,phase:"mesh-to-brep-tessellate"}})
     }
-    pub fn step_import(&mut self,budget:usize,grant:RetainedCloneGrant)->Result<neural_engine::OperatorJobStep,EvalError> {
+    pub fn step_import(&mut self,budget:usize,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<neural_engine::OperatorJobStep,EvalError> {
         if grant.maximum_items==0 || grant.maximum_depth==0 {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
         let child=turn_grant(grant);
         for _ in 0..budget {
@@ -455,7 +455,7 @@ impl MeshOperatorJob {
                 self.import=None;return Ok(neural_engine::OperatorJobStep::Cancelled(self.progress));
             } else if let Some(error)=import.fault.take() {self.import=None;return Err(error);
             } else if let Some(tessellation)=&mut import.tessellation {
-                match tessellation_slice(tessellation,1) {
+                match tessellation_slice(tessellation,1,cx) {
                     Err(error)=>{import.fault=Some(mesh_error(error));import.source_retirement=Some(MeshRetirement::Tessellation(import.tessellation.take().unwrap()));}
                     Ok(MeshTessellationStep::Cancelled(_))=>{import.source_retirement=Some(MeshRetirement::Tessellation(import.tessellation.take().unwrap()));self.cancelled=true;}
                     Ok(MeshTessellationStep::Working(_))=>{},
@@ -501,11 +501,11 @@ impl MeshOperatorJob {
 }
 
 impl MeshOperatorJob {
-    pub fn advance(&mut self,budget:usize,grant:RetainedCloneGrant)->Result<neural_engine::OperatorJobStep,EvalError> {
-        if self.preparation.is_some() {return self.step_preparation(budget,grant);}
+    pub fn advance(&mut self,budget:usize,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<neural_engine::OperatorJobStep,EvalError> {
+        if self.preparation.is_some() {return self.step_preparation(budget,grant,cx);}
         if self.fault.is_some() {return self.close_failed(grant);}
         if self.cancelled && self.import.is_none() {return self.close_cancelled(grant);}
-        if self.import.is_some() { return self.step_import(budget,grant); }
+        if self.import.is_some() { return self.step_import(budget,grant,cx); }
         if let Some(retirement)=&mut self.retirement {
             let step=retirement.step(turn_grant(grant),&mut self.work)?;
             self.receipt=add_progress(self.receipt,step.progress());
@@ -524,7 +524,7 @@ impl MeshOperatorJob {
         }
         if self.output.is_none() {
             let job = self.job.as_mut().ok_or_else(|| invalid("mesh job is retired"))?;
-            let step=match modeling_slice(job,budget) {Ok(step)=>step,Err(error)=>{self.fault=Some(mesh_error(error));self.retirement=Some(MeshRetirement::Modeling(self.job.take().unwrap()));self.progress.phase="mesh-fault-retire";return Ok(neural_engine::OperatorJobStep::Working(self.progress));}};
+            let step=match modeling_slice(job,budget,cx) {Ok(step)=>step,Err(error)=>{self.fault=Some(mesh_error(error));self.retirement=Some(MeshRetirement::Modeling(self.job.take().unwrap()));self.progress.phase="mesh-fault-retire";return Ok(neural_engine::OperatorJobStep::Working(self.progress));}};
             match step {
             MeshModelingStep::Working(progress) => {
                 self.progress = self.modeling_progress(progress);
@@ -545,7 +545,7 @@ impl MeshOperatorJob {
         }
         for _ in 0..budget {
             let output = self.output.as_mut().unwrap();
-            let result=match output.advance() {Ok(result)=>result,Err(error)=>{self.fault=Some(error);self.retirement=Some(MeshRetirement::Output(self.output.take().unwrap()));self.progress.phase="mesh-fault-retire";return Ok(neural_engine::OperatorJobStep::Working(self.progress));}};
+            let result=match output.advance(cx) {Ok(result)=>result,Err(error)=>{self.fault=Some(error);self.retirement=Some(MeshRetirement::Output(self.output.take().unwrap()));self.progress.phase="mesh-fault-retire";return Ok(neural_engine::OperatorJobStep::Working(self.progress));}};
             self.progress.units_done = self.progress.units_done.saturating_add(1);
             self.progress.units_total = if result.is_some() { self.progress.units_done } else { self.progress.units_total.max(self.progress.units_done.saturating_add(1)) };
             self.progress.phase = output.phase();
@@ -621,7 +621,7 @@ impl neural_engine::OperatorJob for MeshOperatorJob {
         self.receipt=Default::default();let grant=cx.retained_grant();
         if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok((neural_engine::OperatorJobStep::Working(self.progress),Default::default()))}
         if cx.is_cancelled(){self.cancel();}
-        let result=self.advance(1,grant);cx.consume_fuel(1);cx.consume_fuel(std::mem::take(&mut self.work));
+        let result=self.advance(1,grant,cx);cx.consume_fuel(1);cx.consume_fuel(std::mem::take(&mut self.work));
         let step=result.map_err(|primary|neural_engine::OperatorWorkFailure::debit_evaluation(primary,self.receipt,cx))?;
         cx.consume_retained(self.receipt).map_err(|primary|neural_engine::OperatorWorkFailure::Original(primary.into()))?;
         Ok((step,self.receipt))

@@ -1,5 +1,8 @@
 //! 📄️ Document operations, codecs, archive loads, backbone bindings and codec registration.
 
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+
 use semio_plugin_decl_app::ArtifactApp;
 pub use semio_plugin_document_media::OriginalDocumentArchiveAdmission;
 use semio_framework::kernel::{Effect, MessageEndpoint};
@@ -9,8 +12,7 @@ use semio_plugin_reactor_lifecycle::life_instance_registry::{PLUGIN_RUNTIME_INST
 use semio_plugin_plugin_program::{Plugin, PluginProgram, encode_wire_serialized};
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_ownership::sdk_fault::PluginAssemblyError;
-use crate::ops_typed_operations::drive_self_waking_ready;
-use crate::ops_wire_limits::find_instance;
+use semio_plugin_runtime_ops_wire::{drive_self_waking_ready,find_instance,runtime_instance_cell};
 use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 use semio_plugin_runtime_instances::inst_wire_frames::with_instances_mut;
 /// 📥️ Ingests binary-encoded remote `MutationEnvelope`s (`protocol::decode_envelopes`) into
@@ -170,7 +172,7 @@ pub async fn plugin_document_load_archive<PA: PluginApp>(runtime: &PluginRuntime
 /// 🛬️ Admits one whole-document archive load under `operation` on instance `instance_id` (`📓️api-stepped-document-load.md`)
 /// — the in-guest twin of `AppCommand::LoadDocumentArchive`.
 pub async fn plugin_begin_document_archive_load<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,operation:u64,archive:&mut protocol::DocumentArchivePack,admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-    let cell=crate::ops_wire_limits::runtime_instance_cell(runtime,instance_id)?;
+    let cell=runtime_instance_cell(runtime,instance_id)?;
     let mut instance=cell.host_instance().ok_or_else(||plugin_internal_fault("archive admission requires its exact available instance"))?;
     instance.app.begin_document_archive_load(operation,archive,admission,cx)
 }

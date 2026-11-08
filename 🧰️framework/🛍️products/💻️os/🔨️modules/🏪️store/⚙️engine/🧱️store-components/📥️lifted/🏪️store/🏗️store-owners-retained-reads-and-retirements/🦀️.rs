@@ -68,10 +68,14 @@ where
     }
 
     /// ♻️ Preserves the exact caller mutation until its installed issuer admits every frame currency.
-    pub fn retire_owned_mutation(&self,owner:&mut Option<Mutation>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{
+    pub fn retire_owned_mutation(&self,owner:&mut Option<Mutation>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{
         if owner.is_none(){return Ok(None);}
-        let factory=self.owned_mutation_retirement_factory()?;
-        semio_framework_value::FactoryOwnedRetirement::<Mutation>::admit_original(owner,factory,grant).result.map(|admitted|admitted.map(|(frame,progress)|(frame as Box<dyn ErasedSnapshotRetirement>,progress)))
+        let mut alias=Some(Arc::clone(self.owned_mutation_retirement_factory()?));
+        let mut output=None;
+        match semio_framework_value::FactoryOwnedRetirement::<Mutation>::admit_original(owner,&mut alias,&mut output,effect){
+            semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(None),
+            semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|output.take().map(|frame|(frame,step.progress()))),
+        }
     }
 
     /// 🔐️ Installs the one domain-supplied owner catalog before a store can enter
@@ -215,8 +219,8 @@ where
         }
     }
 
-    pub fn maintenance_retirements_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        self.displaced_retirements.close_step(grant)
+    pub fn maintenance_retirements_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        self.displaced_retirements.close_step(effect)
     }
 
     /// 🚚️ Transfers an interrupted publication to this Store's bounded maintenance queue before
@@ -262,11 +266,15 @@ where
         else if self.one_item_wire_preparation_factory.is_some() { drop(self.one_item_wire_preparation_factory.take()); }
     }
 
-    pub fn retire_snapshot_alias(&self,alias:&mut Option<Arc<P>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>
+    pub fn retire_snapshot_alias(&self,alias:&mut Option<Arc<P>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>
     where P:Sync {
         if alias.is_none(){return Ok(None);}
-        let factory=self.initial_snapshot_retirement_factory.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"snapshot alias retirement requires its installed exact issuer"))?;
-        ReturnedSnapshotReadRetirement::admit_original(alias,factory,grant)
+        let mut factory=Some(Arc::clone(self.initial_snapshot_retirement_factory.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"snapshot alias retirement requires its installed exact issuer"))?));
+        let mut output=None;
+        match ReturnedSnapshotReadRetirement::admit_original(alias,&mut factory,&mut output,effect){
+            semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(None),
+            semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|output.take().map(|owner|(owner,step.progress()))),
+        }
     }
 
     /// 📏️ Quotes the frame birth of retiring one captured snapshot alias.
@@ -284,21 +292,16 @@ where
     }
 
     /// 🎟️ Admits one returned original root under the caller's complete physical grant.
-    pub fn take_returned_snapshot_read_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>
+    pub fn take_returned_snapshot_read_retirement(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>
     where
         P: Sync,
     {
         if !self.snapshot_read_leases.has_returned() { return Ok((None, Default::default())); }
         let factory = self.initial_snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "returned snapshot read requires its exact installed issuer"))?;
-        match self.snapshot_read_leases.try_admit_one_returned::<P, _>(grant, |original, child| {
-            match ReturnedSnapshotReadRetirement::admit(original, Arc::clone(factory), child) {
-                Ok(admitted) => semio_framework_value::RetainedWorkOutcome { result: Ok(admitted), work: 1 },
-                Err((error, original, capability)) => { drop(capability); semio_framework_value::RetainedWorkOutcome { result: Err((error, original)), work: 0 } }
-            }
-        }).result {
-            Ok(admitted) => Ok(admitted),
-            Err(SnapshotReadLeaseRefusal::Busy) => Ok((None, Default::default())),
-            Err(refusal) => Err(refusal.into_value_error()),
+        let mut active = None;
+        match semio_framework_value_snapshot_read::advance_returned_snapshot_read::<P>(&self.snapshot_read_leases, &mut active, factory, effect) {
+            semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok((None, Default::default())),
+            semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error).map(|step| (active, step.progress())),
         }
     }
 

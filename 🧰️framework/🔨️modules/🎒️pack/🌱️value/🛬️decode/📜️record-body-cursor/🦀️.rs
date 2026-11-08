@@ -239,7 +239,7 @@ impl RetainedRecordBodyCursor {
         demand.depth=demand.depth.checked_add(1).ok_or(PackRefusal::LimitExceeded{kind:ValueRefusalKind::DepthLimit,limit:"record-body source physical depth"})?;Ok(demand)
     }
 
-    pub fn reserve_allocation(&mut self, maximum_bytes: usize) -> Result<RetainedRecordBodyAllocationStep, RetainedRecordBodyAllocationError> {
+    pub fn reserve_allocation(&mut self, maximum_bytes: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedRecordBodyAllocationStep, RetainedRecordBodyAllocationError> {
         let need = match self.allocation_need() {
             Ok(need) => need,
             Err(fault) => {
@@ -255,7 +255,7 @@ impl RetainedRecordBodyCursor {
         let step = match owner {
             RetainedRecordBodyAllocationOwner::SymbolSpans { target, offset } => self
                 .symbols
-                .reserve_symbol_capacity(target, maximum_bytes.min(remaining), offset)
+                .reserve_symbol_capacity(target, &mut effect.nested(semio_framework_value::RetainedCloneGrant { maximum_capacity_bytes: maximum_bytes.min(remaining), ..effect.grant() }), offset)
                 .map(|step| RetainedRecordBodyAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
                 .map_err(|error| RetainedRecordBodyAllocationError {
                     allocated_bytes: error.allocated_bytes,
@@ -263,7 +263,7 @@ impl RetainedRecordBodyCursor {
                 }),
             RetainedRecordBodyAllocationOwner::SymbolScalars { target, offset } => self
                 .symbols
-                .reserve_scalar_capacity(target, maximum_bytes.min(remaining), offset)
+                .reserve_scalar_capacity(target, &mut effect.nested(semio_framework_value::RetainedCloneGrant { maximum_capacity_bytes: maximum_bytes.min(remaining), ..effect.grant() }), offset)
                 .map(|step| RetainedRecordBodyAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
                 .map_err(|error| RetainedRecordBodyAllocationError {
                     allocated_bytes: error.allocated_bytes,
@@ -479,6 +479,7 @@ impl RetainedRecordBodyCursor {
         &mut self,
         maximum_items: usize,
         maximum_bytes: usize,
+        effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
     ) -> Result<semio_framework_pack_format_retained::RetainedPackCloseStep, PackRefusal> {
         use semio_framework_pack_format_retained::RetainedPackCloseStep;
         if self.phase == RetainedRecordBodyPhase::Closed {
@@ -518,7 +519,7 @@ impl RetainedRecordBodyCursor {
                     self.close_phase = RetainedRecordBodyClosePhase::SymbolsLogical;
                     return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
-                RetainedRecordBodyClosePhase::SymbolsLogical => match self.symbols.close_step(maximum_items, 0).map_err(|error|PackRefusal::from_paged_refusal(error,"retained-record-body-symbol-release",self.offset))? {
+                RetainedRecordBodyClosePhase::SymbolsLogical => match self.symbols.close_step(maximum_items, &mut effect.nested(semio_framework_value::RetainedCloneGrant { maximum_release_bytes: 0, ..effect.grant() })).map_err(|error|PackRefusal::from_paged_refusal(error,"retained-record-body-symbol-release",self.offset))? {
                     RetainedPackCloseStep::Pending { released_items, released_bytes } if released_items != 0 || released_bytes != 0 => {
                         return Ok(RetainedPackCloseStep::Pending { released_items, released_bytes });
                     }
@@ -552,7 +553,7 @@ impl RetainedRecordBodyCursor {
                     }
                     self.close_phase = RetainedRecordBodyClosePhase::SymbolsPhysical;
                 }
-                RetainedRecordBodyClosePhase::SymbolsPhysical => match self.symbols.close_step(maximum_items, maximum_bytes).map_err(|error|PackRefusal::from_paged_refusal(error,"retained-record-body-symbol-release",self.offset))? {
+                RetainedRecordBodyClosePhase::SymbolsPhysical => match self.symbols.close_step(maximum_items, &mut effect.nested(semio_framework_value::RetainedCloneGrant { maximum_release_bytes: maximum_bytes, ..effect.grant() })).map_err(|error|PackRefusal::from_paged_refusal(error,"retained-record-body-symbol-release",self.offset))? {
                     RetainedPackCloseStep::Pending { released_items, released_bytes } => {
                         return Ok(RetainedPackCloseStep::Pending { released_items, released_bytes });
                     }

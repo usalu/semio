@@ -60,12 +60,13 @@ mod child_member_registry_tests {
         use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
         use semio_framework_trace::observe_heap_allocations_on_this_thread;
         struct Work<'a,'b>(std::sync::Mutex<&'a mut semio_framework_job::StepContext<'b>>);
-        impl semio_plugin_document_media::NativeDecodeWorkRecipient for Work<'_, '_>{fn available_work(&mut self,observed:u64)->Result<u64,semio_framework_value::ValueError>{let cx=self.0.try_lock().map_err(|_|semio_framework_value::ValueError::invariant("original archive test caller is already borrowed"))?;if cx.retirement_should_yield(){return Ok(0)}cx.fuel_remaining().checked_sub(observed).ok_or_else(||semio_framework_value::ValueError::invariant("observed test work exceeds its original caller"))}
-            fn admits(&mut self,observed:u64,additional:u64)->Result<bool,semio_framework_value::ValueError>{let cx=self.0.try_lock().map_err(|_|semio_framework_value::ValueError::invariant("original archive test caller is already borrowed"))?;Ok(!cx.retirement_should_yield()&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining()))}
+        impl semio_plugin_document_media::ArchiveWorkTurn for Work<'_, '_>{
+            fn work_turn(&self)->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity>{self.0.try_lock().ok().and_then(|cx|cx.original_source_turn_identity())}
+            fn admits(&self,observed:u64,additional:u64)->Result<bool,semio_framework_value::ValueError>{let cx=self.0.try_lock().map_err(|_|semio_framework_value::ValueError::invariant("original archive test caller is already borrowed"))?;Ok(!cx.retirement_should_yield()&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining()))}
         }
         fn close(active:&mut ActiveDocumentArchiveLoad<TestSnapshot,TestMutation>,caller:&mut semio_framework_job::OriginalJobFixtureCaller,grant:RetainedCloneGrant,denied:bool)->RetainedCloneStep{
             caller.turn(grant,|cx|{
-                let mut original=Work(std::sync::Mutex::new(&mut *cx));let turn=active.close_step(grant,&mut original);drop(original);if denied{assert_eq!(turn.work,0)}else{assert!(turn.work>0)}
+                let mut original=Work(std::sync::Mutex::new(&mut *cx));let turn=active.close_step(grant,&original);drop(original);if denied{assert_eq!(turn.work,0)}else{assert!(turn.work>0)}
                 let receipt=match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
                 cx.consume_fuel(turn.work);cx.consume_retained(receipt)?;
                 Ok(turn.result?)
@@ -222,13 +223,13 @@ mod child_member_registry_tests {
             let mut denials = vec![RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..grant }, RetainedCloneGrant { maximum_depth: demand.depth - 1, ..grant }];
             if demand.release_bytes != 0 { denials.push(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }); }
             for denied in denials {
-                let (step, heap) = observe_heap_allocations_on_this_thread(|| advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor, denied, false).unwrap());
+                let (step, heap) = observe_heap_allocations_on_this_thread(|| {let mut wallet=semio_framework_value::AuthoringWallet::new(denied,64);wallet.run(denied,64,|effect|advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor,effect,false)).unwrap().unwrap().output.unwrap()});
                 assert_eq!(step.progress(), RetainedCloneProgress::default());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 assert_eq!(cursor, 0);
                 assert_eq!(std::sync::Arc::as_ptr(registry.get(7).unwrap().view.root.as_ref().unwrap()), original_pointer);
             }
-            let (step, heap) = observe_heap_allocations_on_this_thread(|| advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor, grant, false).unwrap());
+            let (step, heap) = observe_heap_allocations_on_this_thread(|| {let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);wallet.run(grant,64,|effect|advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor,effect,false)).unwrap().unwrap().output.unwrap()});
             let first = step.progress();
             assert!(first.fits(grant));
             assert!(matches!(step, RetainedCloneStep::Progress(_)));
@@ -238,26 +239,26 @@ mod child_member_registry_tests {
             assert!(registry.get(7).unwrap().terminal_is_empty());
             let (remove_demand, heap) = observe_heap_allocations_on_this_thread(|| original_child_root_retirement_demands(&registry, &children, Some(&retiring), cursor, grant.maximum_copy_bytes, false).unwrap().unwrap());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            let (denied, heap) = observe_heap_allocations_on_this_thread(|| advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor, RetainedCloneGrant { maximum_copy_bytes: remove_demand.copy_bytes - 1, ..grant }, false).unwrap());
+            let (denied, heap) = observe_heap_allocations_on_this_thread(|| {let denied_grant=RetainedCloneGrant { maximum_copy_bytes: remove_demand.copy_bytes - 1, ..grant };let mut wallet=semio_framework_value::AuthoringWallet::new(denied_grant,64);wallet.run(denied_grant,64,|effect|advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor,effect,false)).unwrap().unwrap().output.unwrap()});
             assert_eq!(denied.progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert!(registry.get(7).is_some());
-            let (removed, heap) = observe_heap_allocations_on_this_thread(|| advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor, grant, false).unwrap());
+            let (removed, heap) = observe_heap_allocations_on_this_thread(|| {let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);wallet.run(grant,64,|effect|advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor,effect,false)).unwrap().unwrap().output.unwrap()});
             assert!(removed.progress().fits(grant));
             assert_eq!(removed.progress().copied_bytes, remove_demand.copy_bytes);
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert!(registry.is_empty());
             let backing_pointer = registry.slots.as_ptr();
-            let (denied, heap) = observe_heap_allocations_on_this_thread(|| advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor, RetainedCloneGrant { maximum_release_bytes: original_registry_bytes - 1, ..grant }, true).unwrap());
+            let (denied, heap) = observe_heap_allocations_on_this_thread(|| {let denied_grant=RetainedCloneGrant { maximum_release_bytes: original_registry_bytes - 1, ..grant };let mut wallet=semio_framework_value::AuthoringWallet::new(denied_grant,64);wallet.run(denied_grant,64,|effect|advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor,effect,true)).unwrap().unwrap().output.unwrap()});
             assert_eq!(denied.progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert_eq!(registry.slots.as_ptr(), backing_pointer);
-            let (backing, heap) = observe_heap_allocations_on_this_thread(|| advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor, grant, true).unwrap());
+            let (backing, heap) = observe_heap_allocations_on_this_thread(|| {let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);wallet.run(grant,64,|effect|advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor,effect,true)).unwrap().unwrap().output.unwrap()});
             assert!(backing.progress().fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, original_registry_bytes));
             assert_eq!(backing.progress().released_bytes, original_registry_bytes);
             assert_eq!(registry.empty_backing_byte_demand(), Some(0));
-            let (complete, heap) = observe_heap_allocations_on_this_thread(|| advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor, grant, true).unwrap());
+            let (complete, heap) = observe_heap_allocations_on_this_thread(|| {let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);wallet.run(grant,64,|effect|advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor,effect,true)).unwrap().unwrap().output.unwrap()});
             assert_eq!(complete, RetainedCloneStep::Complete(Default::default()));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             let mut release = first.released_bytes + backing.progress().released_bytes;

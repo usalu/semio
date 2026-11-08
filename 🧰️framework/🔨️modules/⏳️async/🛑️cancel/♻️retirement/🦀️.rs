@@ -28,7 +28,7 @@ impl CancelTokenRetirement{
     pub fn return_alias_work_demand(&self)->Result<u64,ValueError>{Ok(self.alias_return_work())}
     pub fn return_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,CancelTokenRetirementError>{
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
-        let work=self.alias_return_work();let demand=RetirementDemand{depth:1,..Default::default()};
+        let work=u128::from(self.alias_return_work());let demand=RetirementDemand{depth:1,..Default::default()};
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
         let matches=self.current.as_ref().is_some_and(|original|Arc::ptr_eq(&original.0,&witness.0));
         if !matches{return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed cancellation root does not witness this original alias"))),work};}

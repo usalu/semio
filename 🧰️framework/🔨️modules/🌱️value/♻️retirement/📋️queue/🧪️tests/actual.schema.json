@@ -10,7 +10,6 @@
     "transferWork",
     "cachedWork",
     "maximumTurns",
-    "stock",
     "serdeOracle",
     "sameTurnWorkThroughWrapper"
   ],
@@ -28,22 +27,13 @@
       "const": 1
     },
     "transferWork": {
-      "const": 1
+      "const": 2
     },
     "cachedWork": {
       "const": 0
     },
     "maximumTurns": {
       "const": 10000
-    },
-    "stock": {
-      "const": {
-        "items": 4096,
-        "copy": 16777216,
-        "capacity": 16777216,
-        "release": 16777216,
-        "depth": 128
-      }
     },
     "serdeOracle": {
       "const": true

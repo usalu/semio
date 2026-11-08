@@ -160,8 +160,8 @@ pub struct MeshPolygonSoup {
 }
 
 impl semio_framework_value::retirement::RetireOwned for MeshPolygonSoup {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.positions),semio_framework_value::retirement::deferred(self.faces),semio_framework_value::retirement::deferred(self.normals)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.positions),semio_framework_value::retirement::deferred_birth_bytes_for(&self.faces),semio_framework_value::retirement::deferred_birth_bytes_for(&self.normals)])}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(Vec<[f32;3]>,Vec<Vec<u32>>,Vec<Vec3>);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.positions,self.faces,self.normals)}
     fn controlled_retirement_supported()->bool {true}
 }
 

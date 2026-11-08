@@ -11,8 +11,8 @@ use semio_os_kernel_neural_engine_model::{original_retirement_cursor, OperatorRe
 mod output;
 pub use output::OperatorFinishCursor;
 
-use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement,RetirementStep};
+use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetirementPollExit,ValueError,ValueRefusalKind};
+use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
 use semio_framework_value::retained_clone::admit_retained_clone_close;
 use std::mem::ManuallyDrop;
 use std::ops::Deref;
@@ -54,7 +54,7 @@ impl SharedRegistry {
     /// 🎟️ Creates readers and their unique retirement authority before any shared alias can escape.
     pub fn new(registry: Registry) -> (Self, RegistryRetirement) {
         let final_root=Arc::new_in(FinalRootSlot {registry:OnceLock::new(),shell:OnceLock::new(),registry_bytes:AtomicUsize::new(0)},ShellAllocator::default());
-        let retirement=RegistryRetirement {final_root:ManuallyDrop::new(Some(Arc::clone(&final_root))),registry:None,work:0};
+        let retirement=RegistryRetirement {final_root:ManuallyDrop::new(Some(Arc::clone(&final_root))),registry:None};
         let root=Arc::new_in(registry,RegistryAllocator {final_root:Arc::as_ptr(&final_root)as usize});
         (Self { root: Some(root), final_root }, retirement)
     }
@@ -72,9 +72,8 @@ impl Drop for SharedRegistry {
 //#region 🧹️RegistryRetirement
 /// 🧹️ Preserves the original registry payload and both allocator-recorded shells until funded closure.
 #[must_use="registry retirement must reach terminal-empty"]
-pub struct RegistryRetirement {final_root:ManuallyDrop<Option<FinalRoot>>,registry:Option<ControlledRetirement<Registry>>,work:u64}
+pub struct RegistryRetirement {final_root:ManuallyDrop<Option<FinalRoot>>,registry:Option<ControlledRetirement<Registry>>}
 impl RegistryRetirement {
-    pub fn last_turn_work(&self)->u64{self.work}
     pub fn terminal_is_empty(&self)->bool {self.final_root.is_none()&&self.registry.is_none()}
     pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {if self.final_root.is_some(){Ok(0)}else{self.registry.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand)}}
     pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {if self.final_root.is_some(){Ok(0)}else{self.registry.as_ref().map_or(Ok(0),|value|value.next_capacity_byte_demand(copy))}}
@@ -88,34 +87,47 @@ impl RegistryRetirement {
         self.registry.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand)
     }
     pub fn next_depth_demand(&self)->Result<usize,ValueError> {if self.final_root.is_some(){Ok(1)}else{self.registry.as_ref().map_or(Ok(0),ControlledRetirement::next_depth_demand)}}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        self.work=0;let empty=RetainedCloneProgress::default();
-        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
-        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
-        if grant.maximum_depth<self.next_depth_demand()? {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"registry retained ownership exceeds admitted depth"));}
-        if let Some(root)=self.final_root.as_mut() {
-            let Some(slot)=Arc::get_mut(root) else {return Ok(RetainedCloneStep::Progress(empty));};
-            if let Some(shell)=slot.shell.get() {
-                if shell.layout.size()>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
-                let shell=slot.shell.take().unwrap();
-                self.work=1;unsafe {Global.deallocate(NonNull::new_unchecked(shell.address as *mut u8),shell.layout)};
-                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:shell.layout.size(),..empty}));
+    /// ⛽️ Quotes the selected shell release or inline registry handoff.
+    pub fn next_computational_work(&self,body:usize)->Result<u64,ValueError> {
+        if self.terminal_is_empty() {return Ok(0);}
+        if self.final_root.is_some() {return Ok(1);}
+        self.registry.as_ref().map_or(Ok(0),|value|value.next_computational_work(body))
+    }
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
+        let grant=effect.grant();let empty=RetainedCloneProgress::default();
+        let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+            if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
+            if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
+            if grant.maximum_depth<self.next_depth_demand()? {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"registry retained ownership exceeds admitted depth").into());}
+            if let Some(root)=self.final_root.as_mut() {
+                let Some(slot)=Arc::get_mut(root) else {return Ok(RetainedCloneStep::Progress(empty));};
+                if let Some(shell)=slot.shell.get() {
+                    if shell.layout.size()>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
+                    if !effect.performed(1)? {return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"registry shell release exceeds its work ceiling").into());}
+                    let Some(shell)=slot.shell.take() else {return Err(ValueError::invariant("registry shell vanished").into());};
+                    unsafe {Global.deallocate(NonNull::new_unchecked(shell.address as *mut u8),shell.layout)};
+                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:shell.layout.size(),..empty}));
+                }
+                if slot.registry.get().is_some() {
+                    if !effect.performed(1)? {return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"registry typed handoff exceeds its work ceiling").into());}
+                    let Some(value)=slot.registry.take() else {return Err(ValueError::invariant("registry payload vanished").into());};
+                    self.registry=Some(ControlledRetirement::retain(ManuallyDrop::into_inner(value)));
+                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}));
+                }
+                if self.registry.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"registry final-root payload is missing").into());}
+                let bytes=Arc::allocator(root).0.load(Ordering::Acquire);
+                if bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
+                if !effect.performed(1)? {return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"registry root release exceeds its work ceiling").into());}
+                drop(self.final_root.take());
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));
             }
-            if let Some(value)=slot.registry.take() {
-                self.work=1;self.registry=Some(ControlledRetirement::new(ManuallyDrop::into_inner(value)).unwrap_or_else(|(error,_)|panic!("original registry typed ownership refused: {error}")));
-                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}));
-            }
-            if self.registry.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"registry final-root payload is missing"));}
-            let bytes=Arc::allocator(root).0.load(Ordering::Acquire);
-            if bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
-            self.work=1;drop(self.final_root.take());
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));
-        }
-        let value=self.registry.as_mut().unwrap();
-        let result=value.step(grant);self.work=value.last_turn_work();let step=result?;
-        let progress=admit_retained_clone_close(grant,step,value.terminal_is_empty(),"original registry fields")?.progress();
-        if value.terminal_is_empty(){self.registry=None;}
-        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+            let Some(value)=self.registry.as_mut() else {return Err(ValueError::invariant("registry payload absent").into());};
+            let step=RetirementPollExit::resume(value.step(effect))?;
+            let progress=admit_retained_clone_close(grant,step,value.terminal_is_empty(),"original registry fields")?.progress();
+            if value.terminal_is_empty(){self.registry=None;}
+            Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+        })();
+        RetirementPollExit::settle(effect,result)
     }
 }
 impl Drop for RegistryRetirement {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"registry must finish explicit retirement before drop");if self.terminal_is_empty(){unsafe {ManuallyDrop::drop(&mut self.final_root);}}}}
@@ -130,19 +142,26 @@ impl RegistryLeaseRetirement {
     pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}
     pub fn next_depth_demand(&self)->Result<usize,ValueError> {Ok(usize::from(self.source.is_some()))}
     pub fn terminal_is_empty(&self)->bool {self.source.is_none()}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        let empty=RetainedCloneProgress::default();
-        let Some(source)=self.source.as_ref() else {return Ok(RetainedCloneStep::Complete(empty));};
-        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
-        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"registry reader handoff requires admitted depth"));}
-        if Arc::strong_count(&source.final_root)<2{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"registry reader has no retained external shell authority"));}
-        drop(self.source.take());
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,..empty}))
+    /// ⛽️ Quotes the one lease handoff.
+    pub fn next_computational_work(&self,_:usize)->Result<u64,ValueError> {Ok(u64::from(self.source.is_some()))}
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
+        let grant=effect.grant();let empty=RetainedCloneProgress::default();
+        let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+            let Some(source)=self.source.as_ref() else {return Ok(RetainedCloneStep::Complete(empty));};
+            if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
+            if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"registry reader handoff requires admitted depth").into());}
+            if Arc::strong_count(&source.final_root)<2{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"registry reader has no retained external shell authority").into());}
+            if !effect.performed(1)? {return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"registry reader handoff exceeds its work ceiling").into());}
+            drop(self.source.take());
+            Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,..empty}))
+        })();
+        RetirementPollExit::settle(effect,result)
     }
 }
 impl Drop for RegistryLeaseRetirement {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"registry source lease abandoned before explicit handoff");}}
 impl RetireOwned for SharedRegistry {
-    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(self.into_retirement())}
+    type RetirementCursor=RegistryLeaseRetirement;
+    fn retirement_seed(self)->RegistryLeaseRetirement {self.into_retirement()}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<RegistryLeaseRetirement>())}
     fn controlled_retirement_supported()->bool {true}
 }
@@ -409,12 +428,15 @@ impl Operator for SchemaComponent {
     fn next_retire_capacity_byte_demand(&self,_copy:usize)->Result<usize,ValueError> {Ok(0)}
     fn next_retire_release_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}
     fn next_retire_depth_demand(&self)->Result<usize,ValueError> {Ok(usize::from(!self.retirement_is_empty()))}
-    fn retire_step(&mut self,grant:RetainedCloneGrant,values:&mut ValueRetirement)->Result<RetainedCloneStep,ValueError> {
+    fn retire_step(&mut self,effect:&mut RetainedAllocationEffect<'_>,values:&mut ValueRetirement)->Result<RetainedCloneStep,RetirementPollExit> {
+        let grant=effect.grant();
         if self.retirement_is_empty() {return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));}
         if grant.maximum_items==0 {return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));}
-        if grant.maximum_depth==0 {return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"Schema component handoff requires admitted depth"));}
-        let schema=std::mem::take(&mut self.schema);
-        match values.push_schema(schema,grant) {Ok(progress)=>Ok(RetainedCloneStep::Complete(progress)),Err((error,schema))=>{self.schema=schema;Err(error)}}
+        if grant.maximum_depth==0 {return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"Schema component handoff requires admitted depth").into());}
+        let mut schema=Some(std::mem::take(&mut self.schema));
+        let turn=values.push_schema(&mut schema,effect);
+        if let Some(schema)=schema {self.schema=schema;}
+        Ok(match turn.result? {Some(progress)=>RetainedCloneStep::Complete(progress),None=>RetainedCloneStep::Progress(RetainedCloneProgress::default())})
     }
 
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {

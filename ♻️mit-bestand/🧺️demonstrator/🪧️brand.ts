@@ -48,11 +48,11 @@ export function isEntwerfenMitBestandBrandId(id: string | undefined): id is Entw
   return id !== undefined && (ENTWERFEN_MIT_BESTAND_BRAND_IDS as readonly string[]).includes(id);
 }
 
-/** 🏷️ The project name, the same proper noun in every locale. */
-export const ENTWERFEN_MIT_BESTAND_NAME = "Entwerfen mit Bestand";
+/** 🏷️ Language-neutral title naming the project in both languages, used where no viewer language is resolved. */
+export const DEMONSTRATOR_NEUTRAL_TITLE = `${demonstratorText("demonstrator.brand.name", "en")} · ${demonstratorText("demonstrator.brand.name", "de")}`;
 
 /** ✒️ Semio emblem shared across demonstrator brands and the landing page. */
-export const ENTWERFEN_MIT_BESTAND_LOGO_SVG = `<svg viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Entwerfen mit Bestand"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
+export const ENTWERFEN_MIT_BESTAND_LOGO_SVG = `<svg viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
 
 const demonstratorLogoUrl = (file: string) => `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/${file}`;
 
@@ -353,7 +353,7 @@ export const ENTWERFEN_MIT_BESTAND_TUTORIAL: TutorialDefinition = {
 /** 🏷️ Aggregator (puzzle3d): reuse terminology, app-specific introduction, recorded tutorial, Abbau Aufbau default example. */
 export const ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-aggregator",
-  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
+  windowTitle: DEMONSTRATOR_NEUTRAL_TITLE,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "concrete-forest" },
@@ -511,7 +511,7 @@ const CAD_SHAPE_WINDOW_ID = "cad-play-shape";
 /** 🏷️ Generator (generation3d): parametric flow editor for reuse-oriented component generation. */
 export const ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-generator",
-  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
+  windowTitle: DEMONSTRATOR_NEUTRAL_TITLE,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "hexagonal-mushroom-column" },
@@ -560,7 +560,7 @@ export const ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND: ShellBrand = {
 /** 🏷️ Koordinator (cad): multi-model coordination for shape, building, energy, and structure views. */
 export const ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-koordinator",
-  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
+  windowTitle: DEMONSTRATOR_NEUTRAL_TITLE,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "demo" },
@@ -613,7 +613,7 @@ const GIS2D_MAIN_WINDOW_ID = "gis2d-main";
 /** 🏷️ Aussuchen (sourcing): curating reclaimed building components from available stock. */
 export const ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-aussuchen",
-  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
+  windowTitle: DEMONSTRATOR_NEUTRAL_TITLE,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "demo" },
@@ -656,7 +656,7 @@ export const ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND: ShellBrand = {
 /** 🏷️ Bearbeiten (process3d): machining steps that adapt a reclaimed component to its new use. */
 export const ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-bearbeiten",
-  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
+  windowTitle: DEMONSTRATOR_NEUTRAL_TITLE,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "concrete-forest" },
@@ -705,7 +705,7 @@ export const ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND: ShellBrand = {
 /** 🏷️ Verfolgen (gis2d): tracking where reclaimed components come from and where they go. */
 export const ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-verfolgen",
-  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
+  windowTitle: DEMONSTRATOR_NEUTRAL_TITLE,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "demo" },
@@ -771,7 +771,7 @@ const FEM3D_MODEL_WINDOW_ID = "fem3d-model";
 /** 🏷️ Energie (energy): thermal simulation of designs made from reused building components. */
 export const ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-energie",
-  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
+  windowTitle: DEMONSTRATOR_NEUTRAL_TITLE,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "bestest-600" },
@@ -820,7 +820,7 @@ export const ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND: ShellBrand = {
 /** 🏷️ Statik (fem3d): structural analysis of the Tragwerk assembled from reused building components. */
 export const ENTWERFEN_MIT_BESTAND_STATIK_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-statik",
-  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
+  windowTitle: DEMONSTRATOR_NEUTRAL_TITLE,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "concrete-forest" },

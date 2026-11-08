@@ -14,3 +14,5 @@ impl OpBinary for SpaceHistoryMutation {
         FromValue::from_value(renormalize_whole_number_floats(value)).map_err(|error| semio_os_spr::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })
     }
 }
+
+semio_os_dsl::original_pack_value_operation_receiving!(SpaceHistoryMutation);

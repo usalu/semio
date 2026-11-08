@@ -63,8 +63,8 @@ pub const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️ful
             let mut output = None;
             let demand = mounted.result_page_presentation_demands().unwrap();
             let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
-                semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |_, grant| {
-                    let (page, progress) = mounted.take_result_page(grant)?;
+                semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx, grant, demand, |_, effect| {
+                    let (page, progress) = mounted.take_result_page(effect)?;
                     let complete = page.is_some();
                     output = page;
                     Ok((if complete { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) }, complete))

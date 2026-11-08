@@ -54,9 +54,17 @@ fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full(
         }
     };
     for owner in &mut reservations {
-        while !owner.close_step(1).unwrap().complete {}
+        loop {
+            let step = owner.close_step(1).unwrap();
+            if step.complete { break; }
+            assert!(step.progressed, "a reservation close step under one item made no progress");
+        }
     }
-    while !outputs.close_step(1, 4096).unwrap().complete {}
+    loop {
+        let step = outputs.close_step(1, 4096).unwrap();
+        if step.complete { break; }
+        assert!(step.progressed, "an output close step under one item and 4096 bytes made no progress");
+    }
     close_instance_to_empty(&tracker, 71,cx);
     assert_eq!(admitted, fixture["extraInvocation"].as_bool().unwrap());
 

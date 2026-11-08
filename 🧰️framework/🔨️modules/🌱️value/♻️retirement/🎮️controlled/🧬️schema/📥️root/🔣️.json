@@ -11,7 +11,7 @@
     "heapClone",
     "coldFallback",
     "childNarrowDelegation",
-    "rootCopyBytes",
+    "rootCopyIsHeaderQuote",
     "unsupportedOriginal"
   ],
   "properties": {
@@ -43,8 +43,8 @@
     "childNarrowDelegation": {
       "const": true
     },
-    "rootCopyBytes": {
-      "const": 0
+    "rootCopyIsHeaderQuote": {
+      "const": true
     },
     "unsupportedOriginal": {
       "type": "object",

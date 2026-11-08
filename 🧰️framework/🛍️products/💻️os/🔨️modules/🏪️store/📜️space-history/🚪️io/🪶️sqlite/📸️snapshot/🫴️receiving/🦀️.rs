@@ -6,19 +6,19 @@ use semio_framework_io_sqlite_snapshot::artifact::receiving::{Port, Direction, P
 use super::settlement::TypedFileSettlement;
 use semio_framework_value::ValueError;
 use std::mem::size_of;
-type Result<T>=std::result::Result<T,ValueError>;
+type Fallible<T>=std::result::Result<T,ValueError>;
 type Paid<'a,'b,'c>=Port<'a,'b,'c,NativeSnapshotBodyWallet>;
 const SQL:&str=include_str!("../🗄️.sql");
 use validation::{TABLES,add,invalid,table,text};
 #[derive(semio_framework_value::RetireOwned)]
-struct Frame{indexes:validation::Frame,projection:Projection,snapshot:SpaceHistorySnapshot,result:Option<Result<()>>}
+struct Frame{indexes:validation::Frame,projection:Projection,snapshot:SpaceHistorySnapshot,result:Option<std::result::Result<(),ValueError>>}
 impl Frame{fn new()->Self{Self{indexes:validation::Frame::new(),projection:Projection::new(),snapshot:SpaceHistorySnapshot{checkpoints:Vec::new(),alternatives:Vec::new(),active_alternative_id:None},result:None}}}
 fn definition(index:usize)->&'static str{SQL.split(';').map(str::trim).filter(|sql|!sql.is_empty()).nth(index).unwrap()}
-fn id(index:usize)->Result<i64>{ordinal(add(index,1)?)}
-fn prefix(output:&mut Projection,table:usize,index:usize,parent:i64,port:&mut Paid<'_,'_,'_>)->Result<()>{row(output,id(index)?,TABLES[table].1,port)?;cell(output,Scalar::Integer(parent),port)?;cell(output,Scalar::Integer(ordinal(index)?),port)}
-fn optional(value:Option<&str>,output:&mut Projection,port:&mut Paid<'_,'_,'_>)->Result<()>{if let Some(value)=value{text_cell(output,value,port)}else{cell(output,Scalar::Null,port)}}
-fn words(value:u64,output:&mut Projection,port:&mut Paid<'_,'_,'_>)->Result<()>{cell(output,Scalar::Integer((value>>32)as i64),port)?;cell(output,Scalar::Integer((value&u64::from(u32::MAX))as i64),port)}
-fn project(source:&SpaceHistorySnapshot,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Result<()>{
+fn id(index:usize)->Fallible<i64>{ordinal(add(index,1)?)}
+fn prefix(output:&mut Projection,table:usize,index:usize,parent:i64,port:&mut Paid<'_,'_,'_>)->Fallible<()>{row(output,id(index)?,TABLES[table].1,port)?;cell(output,Scalar::Integer(parent),port)?;cell(output,Scalar::Integer(ordinal(index)?),port)}
+fn optional(value:Option<&str>,output:&mut Projection,port:&mut Paid<'_,'_,'_>)->Fallible<()>{if let Some(value)=value{text_cell(output,value,port)}else{cell(output,Scalar::Null,port)}}
+fn words(value:u64,output:&mut Projection,port:&mut Paid<'_,'_,'_>)->Fallible<()>{cell(output,Scalar::Integer((value>>32)as i64),port)?;cell(output,Scalar::Integer((value&u64::from(u32::MAX))as i64),port)}
+fn project(source:&SpaceHistorySnapshot,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Fallible<()>{
  let(mut authors,mut members,mut pins)=(0,0,0);for checkpoint in &source.checkpoints{port.work(1,0)?;authors=add(authors,checkpoint.authors.len())?;members=add(members,checkpoint.members.len())?;}for alternative in &source.alternatives{port.work(1,0)?;pins=add(pins,alternative.checkpoint_ids.len())?;}let counts=[1,source.checkpoints.len(),source.checkpoints.len(),authors,members,source.alternatives.len(),pins];let total=counts.iter().try_fold(0usize,|sum,count|add(sum,*count))?;port.control.check_rows(total)?;let limits=port.control.limits();let bytes=TABLES.iter().enumerate().try_fold(0usize,|sum,(index,(name,_))|add(sum,add(name.len(),definition(index).len())?))?;if limits.max_tables<7||limits.max_columns<7||bytes>limits.max_schema_bytes||SQL.len()>limits.max_schema_bytes{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"space history receiving schema exceeds original ceiling"))}
  let output=&mut frame.projection;port.vector(7,&mut output.database.tables,1)?;for(index,(name,_))in TABLES.iter().enumerate(){port.work(2,size_of::<SqliteTable>())?;output.database.tables.push(SqliteTable{name:String::new(),sql:String::new(),rows:Vec::new()});let table=&mut output.database.tables[index];port.text(name,&mut table.name,2)?;port.text(definition(index),&mut table.sql,2)?;port.vector(counts[index],&mut table.rows,2)?;}
  row(output,1,2,port)?;optional(source.active_alternative_id.as_deref(),output,port)?;push_row(output,0,port)?;let(mut author_id,mut member_id,mut pin_id)=(0,0,0);
@@ -28,11 +28,11 @@ fn project(source:&SpaceHistorySnapshot,frame:&mut Frame,port:&mut Paid<'_,'_,'_
  }
  for(index,alternative)in source.alternatives.iter().enumerate(){let parent=id(index)?;prefix(output,5,index,1,port)?;text_cell(output,&alternative.id,port)?;text_cell(output,&alternative.name,port)?;push_row(output,5,port)?;for(index,pin)in alternative.checkpoint_ids.iter().enumerate(){row(output,id(pin_id)?,4,port)?;pin_id=add(pin_id,1)?;cell(output,Scalar::Integer(parent),port)?;cell(output,Scalar::Integer(ordinal(index)?),port)?;text_cell(output,pin,port)?;push_row(output,6,port)?;}}port.control.checkpoint(port.phase(),total,total)
 }
-fn sequence(database:&SqliteDatabase,indexes:&validation::Frame,table_index:usize,order:usize,parent:i64,port:&mut Paid<'_,'_,'_>)->Result<std::ops::Range<usize>>{let rows=&table(database,table_index)?.rows;let range=parent_range(rows,&indexes.ordered[order],parent,1,port)?;for(index,row)in indexes.ordered[order][range.start..range.end].iter().enumerate(){port.work(2,0)?;if integer(&rows[*row],2)?!=ordinal(index)?{return Err(invalid())}}Ok(range)}
-fn copy(value:&str,output:&mut String,port:&mut Paid<'_,'_,'_>)->Result<()>{port.control.admit_reconstruction_bytes(value.len())?;port.text(value,output,3)}
-fn copy_optional(value:&SqliteValue,output:&mut Option<String>,port:&mut Paid<'_,'_,'_>)->Result<()>{match value{SqliteValue::Null=>Ok(()),SqliteValue::Text(value)=>{*output=Some(String::new());copy(value,output.as_mut().unwrap(),port)},_=>Err(invalid())}}
-fn word(row:&SqliteRow,column:usize)->Result<u64>{Ok(u64::from(u32::try_from(integer(row,column)?).map_err(|_|invalid())?)<<32|u64::from(u32::try_from(integer(row,column+1)?).map_err(|_|invalid())?))}
-fn reconstruct(database:&SqliteDatabase,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Result<()>{
+fn sequence(database:&SqliteDatabase,indexes:&validation::Frame,table_index:usize,order:usize,parent:i64,port:&mut Paid<'_,'_,'_>)->Fallible<std::ops::Range<usize>>{let rows=&table(database,table_index)?.rows;let range=parent_range(rows,&indexes.ordered[order],parent,1,port)?;for(index,row)in indexes.ordered[order][range.start..range.end].iter().enumerate(){port.work(2,0)?;if integer(&rows[*row],2)?!=ordinal(index)?{return Err(invalid())}}Ok(range)}
+fn copy(value:&str,output:&mut String,port:&mut Paid<'_,'_,'_>)->Fallible<()>{port.control.admit_reconstruction_bytes(value.len())?;port.text(value,output,3)}
+fn copy_optional(value:&SqliteValue,output:&mut Option<String>,port:&mut Paid<'_,'_,'_>)->Fallible<()>{match value{SqliteValue::Null=>Ok(()),SqliteValue::Text(value)=>{*output=Some(String::new());copy(value,output.as_mut().unwrap(),port)},_=>Err(invalid())}}
+fn word(row:&SqliteRow,column:usize)->Fallible<u64>{Ok(u64::from(u32::try_from(integer(row,column)?).map_err(|_|invalid())?)<<32|u64::from(u32::try_from(integer(row,column+1)?).map_err(|_|invalid())?))}
+fn reconstruct(database:&SqliteDatabase,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Fallible<()>{
  let tables=validation::indexed(database,&mut frame.indexes,port)?;let document=&tables[0].rows[0];copy_optional(&document.values[1],&mut frame.snapshot.active_alternative_id,port)?;let checkpoints=sequence(database,&frame.indexes,1,0,document.rowid,port)?;port.vector(checkpoints.len(),&mut frame.snapshot.checkpoints,2)?;
  for index in checkpoints{let row=&tables[1].rows[frame.indexes.ordered[0][index]];let clock=identity_position(&tables[2].rows,&frame.indexes.ids[2],row.rowid,port)?.ok_or_else(invalid)?;let clock=&tables[2].rows[clock];port.work(2,size_of::<SpaceCheckpoint>())?;frame.snapshot.checkpoints.push(SpaceCheckpoint{id:String::new(),parent_id:None,message:String::new(),timestamp:HybridLogicalTimestamp{actor:word(clock,1)?,physical_ms:word(clock,3)?,logical:word(clock,5)?},authors:Vec::new(),members:Vec::new()});let checkpoint=frame.snapshot.checkpoints.last_mut().unwrap();copy(text(row,3)?,&mut checkpoint.id,port)?;copy_optional(&row.values[4],&mut checkpoint.parent_id,port)?;copy(text(row,5)?,&mut checkpoint.message,port)?;
   let authors=sequence(database,&frame.indexes,3,1,row.rowid,port)?;port.vector(authors.len(),&mut checkpoint.authors,3)?;for index in authors{let author=&tables[3].rows[frame.indexes.ordered[1][index]];port.work(3,size_of::<Author>())?;checkpoint.authors.push(Author{id:String::new(),name:String::new(),avatar:None});let output=checkpoint.authors.last_mut().unwrap();copy(text(author,3)?,&mut output.id,port)?;copy(text(author,4)?,&mut output.name,port)?;copy_optional(&author.values[5],&mut output.avatar,port)?;}
@@ -50,15 +50,15 @@ macro_rules! receive{
   type Inner=Stage<$output,NativeSnapshotFailure>;
   let before=owner.native().owned_bytes();let Some(maximum)=before.checked_add(control.allocation_remaining_bytes())else{return RetainedWorkOutcome{result:Err(Stage::NotStarted(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"space history receiving original SQL ceiling overflow"))),work:0}};
   let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
-  let turn=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Frame,std::result::Result<$output,Inner>,NativeSnapshotFailure>(output,&mut |slot,published,native,body|{
+  let turn=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Frame,std::result::Result<$output,Inner>,NativeSnapshotFailure>(output,&mut |slot,published,_marker,_unwind,native,body|{
    let before_work=settlement.control.borrow().performed_work();
    let result=(||->std::result::Result<(),NativeSnapshotFailure>{
     let mut control=settlement.control.borrow_mut();let mut port=Paid{control:&mut **control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<$output>())?;frame.result=Some(($operation)(source,database,frame,&mut port));let owned=port.owned();drop(port);drop(control);
-    let operation=frame.result.take().unwrap().and_then(|()|($publish)(frame)).map_err(|error|Stage::Operation(NativeSnapshotFailure::from(error)));
-    *published=Some(match settlement.finish_body(owned){Ok(())=>operation,Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
+    let operation=frame.result.take().unwrap().and_then(|()|($publish)(frame)).map_err(NativeSnapshotFailure::from);
+    *published=Some(match settlement.finish_body(owned){Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
     Ok(())
    })();
-   RetainedWorkOutcome{result,work:settlement.control.borrow().performed_work().checked_sub(before_work).expect("original SQL producer work is monotone")}
+   RetainedWorkOutcome{result,work:u128::from(settlement.control.borrow().performed_work().checked_sub(before_work).expect("original SQL producer work is monotone"))}
   }));
   let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal,receipt:None}),None=>turn.result.map_err(Stage::Operation)};
   RetainedWorkOutcome{result,work:turn.work}

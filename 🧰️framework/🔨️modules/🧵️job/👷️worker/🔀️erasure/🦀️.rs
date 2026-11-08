@@ -108,7 +108,7 @@ impl ErasedBatchJobSession{
   let Some(session)=self.session.as_mut()else{return Ok(WorkerJobCloseStep::Complete{progress:Default::default()})};
   if !session.terminal_is_empty(){return Ok(match session.close_step(cx)?{WorkerJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},step=>step})}
   let demand=RetirementDemand{release_bytes:self.allocated_bytes,depth:1,..Default::default()};
-  let step=close_original_retained_step(cx,demand,|_|{drop(self.session.take());semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{released_bytes:demand.release_bytes,..transferred()})),work:1}})?;
+  let step=close_original_retained_step(cx,demand,|_|{drop(self.session.take());semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{released_bytes:demand.release_bytes,..transferred()})),work:1}})?;
   Ok(match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>if self.terminal_is_empty(){WorkerJobCloseStep::Complete{progress}}else{WorkerJobCloseStep::Pending{progress}},InteractiveJobCloseStep::Blocked=>WorkerJobCloseStep::Blocked})
  }
  pub fn terminal_is_empty(&self)->bool{self.session.is_none()}

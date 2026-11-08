@@ -611,23 +611,7 @@ pub async fn plugin_acknowledge_typed_operation_result<PA: PluginApp>(runtime: &
     })
     .await
 }
-/// 🏃️ Drives a self-waking guest future to completion inside one wasm poll. `resolve_ready`
-/// samples once; framework-reserved routes yield through [`plugin_job_yield_once`] before their
-/// commit, so a single poll would drop the job and the host would see `command-complete` without
-/// [`commit_framework_history_route`].
-pub fn drive_self_waking_ready<F: std::future::Future>(fut: F) -> F::Output {
-    use std::task::{Context, Poll, Waker};
-    let waker = Waker::noop();
-    let mut cx = Context::from_waker(&waker);
-    let mut fut = std::pin::pin!(fut);
-    for _ in 0..1_048_576 {
-        match fut.as_mut().poll(&mut cx) {
-            Poll::Ready(value) => return value,
-            Poll::Pending => continue,
-        }
-    }
-    panic!("drive_self_waking_ready: exceeded the self-wake bound");
-}
+pub use semio_plugin_runtime_ops_wire::drive_self_waking_ready;
 #[doc(hidden)]
 pub fn media_export_handle_from_wire(handle: protocol::MediaExportHandleWire) -> ArtifactMediaExportHandle {
     ArtifactMediaExportHandle {

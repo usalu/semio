@@ -76,7 +76,7 @@ impl<const N:usize> MutationMessageConcat<N>{
    if self.output.is_some(){work=1;drop(self.output.take());return Ok(RetainedCloneStep::Progress(p));}
    if self.close_index<N{work=1;let input=&mut self.inputs[self.close_index];if let Some(rows)=input{if let Some(row)=rows.next(){self.active=Some(MutationMessageRetirement::new(row));}else{drop(input.take());self.close_index+=1;}}else{self.close_index+=1;}return Ok(RetainedCloneStep::Progress(p));}
    Ok(RetainedCloneStep::Complete(Default::default()))
-  })();semio_framework_value::RetainedWorkOutcome{result,work}
+  })();semio_framework_value::RetainedWorkOutcome{result,work:u128::from(work)}
  }
  /// 🫙️ No batch backing, joined vector, original row or retirement child remains.
  pub fn terminal_is_empty(&self)->bool{(self.taken||self.close_index==N)&&self.output.is_none()&&self.pending.is_none()&&self.active.is_none()}

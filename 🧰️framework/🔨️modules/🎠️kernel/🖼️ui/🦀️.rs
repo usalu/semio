@@ -322,7 +322,8 @@ impl UiTurnPatchRetireArena {
             let Some(next) = index.checked_add(1) else { return false };
             self.close_cursor = next % UI_TURN_PATCH_RETIRE_SLOTS;
             let contents = slot.contents.as_mut().expect("selected returned patch owner");
-            if contents.close_step(items, bytes).expect("exact returned patch retirement").complete && contents.terminal_is_empty() {
+            let Ok(step) = contents.close_step(items, bytes) else { return false };
+            if step.complete && contents.terminal_is_empty() {
                 slot.contents = None;
                 slot.reserved = false;
             }
@@ -850,7 +851,7 @@ impl UiTurnPatches {
     }
 
     pub fn close_step(&mut self) -> bool {
-        self.close_step_with_grant(1, 4096).expect("exact turn patch retirement").complete
+        self.close_step_with_grant(1, 4096).is_ok_and(|step| step.complete)
     }
 
     pub fn close_step_with_grant(&mut self, items: usize, bytes: usize) -> Result<semio_ui_contract::UiValueRetirementStep, &'static str> {

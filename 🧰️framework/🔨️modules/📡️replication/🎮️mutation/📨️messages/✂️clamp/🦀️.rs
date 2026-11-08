@@ -2,7 +2,7 @@
 use semio_framework_replication_mutation::{MutationMessage, MUTATION_MESSAGE_ENTRY_BYTES, MUTATION_MESSAGE_OWNER_BYTES, MUTATION_MESSAGE_TARGET_BYTES};
 use super::{MutationMessageRetirement, ReplayMessageAccumulator};
 use semio_framework_diagnostic::Severity;
-use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress}, ValueError, ValueRefusalKind};
+use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress}, RetainedAllocationEffect, ValueError, ValueRefusalKind};
 use std::mem::{ManuallyDrop, size_of};
 const ROWS: usize = MUTATION_MESSAGE_ENTRY_BYTES / MUTATION_MESSAGE_OWNER_BYTES;
 const CASCADE: &str = "mutation.cascade";
@@ -13,7 +13,7 @@ pub trait FinalMessageSource {
     fn pop(&mut self)->Option<MutationMessage>;
     fn release_copy_demand(&self)->usize;
     fn release_byte_demand(&self)->Result<usize,ValueError>;
-    fn release(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>;
+    fn release(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>;
     fn terminal_is_empty(&self)->bool;
 }
 impl FinalMessageSource for ReplayMessageAccumulator {
@@ -22,7 +22,7 @@ impl FinalMessageSource for ReplayMessageAccumulator {
     fn pop(&mut self)->Option<MutationMessage>{self.rows_mut().pop()}
     fn release_copy_demand(&self)->usize{0}
     fn release_byte_demand(&self)->Result<usize,ValueError>{self.rows().next_release_allocation_bytes().map_err(ValueError::from)}
-    fn release(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let step=self.rows_mut().release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..Default::default()})}
+    fn release(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{let turn=self.rows_mut().release_empty_page(effect);match turn.result{Ok(semio_framework_value_persistent::list::PagedListReleaseOutcome::Denied)=>Ok(Default::default()),Ok(semio_framework_value_persistent::list::PagedListReleaseOutcome::Ready(step))=>Ok(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..Default::default()}),Err(failure)=>Err(crate::replay_retirement::release_error(failure))}}
     fn terminal_is_empty(&self)->bool{ReplayMessageAccumulator::terminal_is_empty(self)}
 }
 impl FinalMessageSource for Vec<MutationMessage> {
@@ -31,7 +31,7 @@ impl FinalMessageSource for Vec<MutationMessage> {
     fn pop(&mut self)->Option<MutationMessage>{Vec::pop(self)}
     fn release_copy_demand(&self)->usize{usize::from(self.capacity()!=0)*size_of::<Vec<MutationMessage>>()}
     fn release_byte_demand(&self)->Result<usize,ValueError>{self.capacity().checked_mul(size_of::<MutationMessage>()).ok_or_else(failure)}
-    fn release(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{if !self.is_empty(){return Err(failure());}let copy=self.release_copy_demand();let bytes=self.release_byte_demand()?;if grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<bytes{return Ok(Default::default());}drop(std::mem::take(self));Ok(RetainedCloneProgress{copied_items:usize::from(bytes!=0),copied_bytes:copy,released_bytes:bytes,..Default::default()})}
+    fn release(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{let grant=effect.grant();if !self.is_empty(){return Err(failure());}let copy=self.release_copy_demand();let bytes=self.release_byte_demand()?;if grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<bytes{return Ok(Default::default());}drop(std::mem::take(self));Ok(RetainedCloneProgress{copied_items:usize::from(bytes!=0),copied_bytes:copy,released_bytes:bytes,..Default::default()})}
     fn terminal_is_empty(&self)->bool{self.is_empty()&&self.capacity()==0}
 }
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -80,7 +80,8 @@ impl FinalMessageSelection {
     }
     pub fn next_release_byte_demand(&self, source: &impl FinalMessageSource) -> Result<usize, ValueError> { if let Some(active) = self.active.as_ref().filter(|_| !matches!(self.phase, Phase::PrefixReserve | Phase::PrefixCopy)) { return Ok(active.next_release_byte_demand()); } if self.phase == Phase::Pages { source.release_byte_demand() } else { Ok(0) } }
     pub fn next_depth_demand(&self) -> usize { usize::from(!self.is_finished()) }
-    pub fn step(&mut self, source: &mut impl FinalMessageSource, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+    pub fn step(&mut self, source: &mut impl FinalMessageSource, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
+        let grant = effect.grant();
         let idle = RetainedCloneProgress::default();
         if self.closing || self.is_finished() || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(idle); }
         let capacity = self.next_capacity_byte_demand(); let copy = self.next_copy_byte_demand(source); let release = self.next_release_byte_demand(source)?;
@@ -125,7 +126,7 @@ impl FinalMessageSelection {
             Phase::BodyCopy => { let row = self.pending.as_mut().ok_or_else(failure)?; if row.message.len() < self.summary_len { row.message.push(self.summary[row.message.len()] as char); progress.copied_bytes = 1; } else { self.phase = Phase::SummaryPlace; } }
             Phase::SummaryPlace => { self.cut = self.output.len(); self.phase = Phase::Reverse; self.index = 0; }
             Phase::Reverse => { if self.index < self.cut/2 { let last = self.cut - self.index - 1; self.output.swap(self.index, last); self.index += 1; progress.copied_bytes = 2 * size_of::<MutationMessage>(); } else if let Some(row) = self.pending.take() { self.push(row)?; progress.copied_bytes = size_of::<MutationMessage>(); } else { self.phase = Phase::Pages; } }
-            Phase::Pages => { progress=source.release(grant)?; if source.terminal_is_empty() { self.phase = Phase::Finished; } }
+            Phase::Pages => { progress=source.release(effect)?; if source.terminal_is_empty() { self.phase = Phase::Finished; } }
             Phase::Finished => {}
         }
         self.work = self.work.saturating_add(progress.copied_items as u64); Ok(progress)

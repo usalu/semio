@@ -161,6 +161,16 @@
       { "env": "SEMIO_TEST_LEVEL" },
       { "env": "SEMIO_TEST_BUDGET_MS" },
       { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "reads": [
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/🧰️framework/**/*.{ts,tsx,json}",
+      "{workspaceRoot}/✏️s/**/*.{ts,tsx,json}",
+      {
+        "externalDependencies": [
+          "typescript"
+        ]
+      }
     ]
   },
   "targets": {

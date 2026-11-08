@@ -16,6 +16,23 @@ fn allocation_refused(primary:ValueError)->NativeDecodeAllocationOutcome{NativeD
 impl NativeDecodeControl<'_>{
  /// 📦️ Quotes and settles a caller-retained allocation effect.
  pub fn allocate_effect(&mut self,bytes:usize,actual:&mut Option<usize>,progress:&mut Option<NativeDecodeAllocationProgress>,operation:&mut impl FnMut(&mut Option<usize>)->Result<(),ValueError>)->NativeDecodeAllocationOutcome{self.allocate_effect_gated(bytes,actual,progress,&mut |actual|operation(actual).map(|()|true)).expect("ungated allocation always returns its outcome")}
+ /// 🪢️ One-shot allocating effect: quotes the demand's capacity through this control's own (possibly forwarded) allocation port, runs the closure inside one original Work action and settles the physical marker once; `None` means the work quote was not admitted, the allocation quote is then cancelled.
+pub fn with_allocated_effect<R>(&mut self,demand:crate::RetirementDemand,maximum_work:u64,run:impl FnOnce(&mut Self,&mut crate::RetainedAllocationEffect<'_>)->R)->Result<Option<R>,ValueError>{
+  let refusal=|message:&'static str|ValueError::literal(ValueRefusalKind::InvariantViolated,message);
+  let grant=crate::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+  if demand.capacity_bytes==0{return self.with_effect(grant,maximum_work,run)}
+  let mut progress=None;
+  match self.prepare_allocation_effect(demand.capacity_bytes,&None,&mut progress,true){NativeDecodeAllocationAdmission::Admitted=>{},NativeDecodeAllocationAdmission::Refused(outcome)=>return Err(outcome.primary.or(outcome.extent_refusal).or_else(||outcome.quote_refusal.map(|port|ValueError::new(ValueRefusalKind::AllocationFailed,format!("{port:?}")))).or_else(||outcome.settlement_refusal.map(|port|ValueError::new(ValueRefusalKind::AllocationFailed,format!("{port:?}")))).unwrap_or_else(||refusal("decoder allocation quote was refused"))),NativeDecodeAllocationAdmission::Pending=>return Err(refusal("decoder allocation quote stayed pending"))}
+  let opened=semio_framework_value_control_contract::OriginalEffectRun::begin(&mut self.work,grant,maximum_work);
+  let mut open=match opened{Ok(Some(open))=>open,Ok(None)=>{if let Some(state)=progress.as_mut(){let _=self.settle_allocation_progress(state,None)?;}return Ok(None)},Err(error)=>{if let Some(state)=progress.as_mut(){let _=state.record_primary(error.clone());let _=self.settle_allocation_progress(state,None);}return Err(error)}};
+  let started=progress.as_mut().ok_or_else(||refusal("decoder allocation quote is absent"))?.start_operation();
+  let output={let mut effect=open.effect()?;run(self,&mut effect)};
+  let actual=open.actual();let mut spent=0;let finished=open.finish(&mut self.work,&mut spent);
+  let state=progress.as_mut().ok_or_else(||refusal("decoder allocation quote is absent"))?;
+  started?;state.record_actual(actual)?;
+  if !self.settle_allocation_progress(state,actual)?{return Err(refusal("decoder allocation settlement stayed pending"))}
+  finished?;Ok(Some(output))
+ }
  /// 🧭️ Keeps an original quote pending when a child receipt cannot yet be reconciled.
  /// 🪑️ Retains the original quote before lending the decoder and its actual effect to a child.
  pub(super) fn prepare_allocation_effect(&mut self,bytes:usize,actual:&Option<usize>,progress:&mut Option<NativeDecodeAllocationProgress>,cancellable:bool)->NativeDecodeAllocationAdmission{

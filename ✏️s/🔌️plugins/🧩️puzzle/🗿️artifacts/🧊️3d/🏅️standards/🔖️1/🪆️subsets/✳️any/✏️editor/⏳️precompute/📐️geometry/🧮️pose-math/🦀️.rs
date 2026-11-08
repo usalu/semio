@@ -142,7 +142,8 @@ impl std::ops::Deref for CollisionMesh {
 
 const COLLISION_MESH_TREE_STACK: usize = 64;
 
-struct CollisionMeshRetirement {
+#[doc(hidden)]
+pub struct CollisionMeshRetirement {
     shared: std::mem::ManuallyDrop<Option<std::sync::Arc<collision::TriMesh>>>,
     vertices: std::mem::ManuallyDrop<Vec<rigid::Point3>>,
     triangles: std::mem::ManuallyDrop<Vec<[u32; 3]>>,
@@ -151,18 +152,31 @@ struct CollisionMeshRetirement {
 
 impl CollisionMeshRetirement {
     fn birth_bytes() -> usize {
-        size_of::<Self>() + COLLISION_MESH_TREE_STACK * size_of::<collision::BvhTree>()
+        size_of::<Self>()
     }
 }
 
 impl semio_framework_value::retirement::RetirementCursor for CollisionMeshRetirement {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep;
+        let grant = effect.grant();
         if self.terminal_is_empty() {
             return RetirementStep::Complete(0);
         }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || effect.maximum_work_units() == 0 {
             return RetirementStep::BudgetExhausted;
+        }
+        match effect.performed(1) {
+            Ok(true) => {}
+            Ok(false) => return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "collision mesh retirement exceeded its original work").into(), 1),
+            Err(error) => return RetirementStep::Failure(error.into(), 1),
+        }
+        if self.shared.as_ref().is_some_and(|shared| std::sync::Arc::strong_count(shared) == 1) && self.tree.capacity() == 0 {
+            if self.tree.try_reserve_exact(COLLISION_MESH_TREE_STACK).is_err() {
+                return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "collision mesh retirement stack allocation refused").into(), 1);
+            }
+            *effect.actual() = Some(self.tree.capacity() * size_of::<collision::BvhTree>());
+            return RetirementStep::Advanced;
         }
         if let Some(shared) = self.shared.take() {
             match std::sync::Arc::try_unwrap(shared) {
@@ -193,7 +207,7 @@ impl semio_framework_value::retirement::RetirementCursor for CollisionMeshRetire
             collision::BvhTreeStep::Leaf => {}
             collision::BvhTreeStep::Branch(left, right) => {
                 if self.tree.len() + 2 > self.tree.capacity() {
-                    return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "collision mesh tree exceeds its retirement stack"), 1);
+                    return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "collision mesh tree exceeds its retirement stack").into(), 1);
                 }
                 self.tree.push(right);
                 self.tree.push(left);
@@ -221,7 +235,7 @@ impl semio_framework_value::retirement::RetirementCursor for CollisionMeshRetire
     }
 
     fn next_birth_bytes(&self, _: usize) -> Option<usize> {
-        Some(0)
+        Some(if self.shared.as_ref().is_some_and(|shared| std::sync::Arc::strong_count(shared) == 1) && self.tree.capacity() == 0 { COLLISION_MESH_TREE_STACK * size_of::<collision::BvhTree>() } else { 0 })
     }
 
     fn terminal_release_bytes(&self) -> Option<usize> {
@@ -242,13 +256,14 @@ impl Drop for CollisionMeshRetirement {
 }
 
 impl semio_framework_value::retirement::RetireOwned for CollisionMesh {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        Box::new(CollisionMeshRetirement {
+    type RetirementCursor = CollisionMeshRetirement;
+    fn retirement_seed(self) -> CollisionMeshRetirement {
+        CollisionMeshRetirement {
             shared: std::mem::ManuallyDrop::new(Some(self.0)),
             vertices: std::mem::ManuallyDrop::new(Vec::new()),
             triangles: std::mem::ManuallyDrop::new(Vec::new()),
-            tree: std::mem::ManuallyDrop::new(Vec::with_capacity(COLLISION_MESH_TREE_STACK)),
-        })
+            tree: std::mem::ManuallyDrop::new(Vec::new()),
+        }
     }
 
     fn retirement_birth_bytes(&self) -> Option<usize> {

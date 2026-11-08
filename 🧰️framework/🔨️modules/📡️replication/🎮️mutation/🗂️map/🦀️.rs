@@ -26,11 +26,11 @@ impl MapPresence {
 }
 
 /// ✍️ Final value action after the original-base precondition succeeds.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum MapEntryOperation<V> { Set(V), Remove, Reject }
 
 /// 🎯️ A single-key partial transformation.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct MapEntryDelta<V> { precondition: MapPresence, operation: MapEntryOperation<V> }
 
 impl<V> MapEntryDelta<V> {
@@ -48,7 +48,7 @@ impl<V> MapEntryDelta<V> {
 }
 
 /// 🗃️ Sorted, duplicate-free changed entries with one compact transformation per key.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct MapDelta<V> { entries: BTreeMap<String, MapEntryDelta<V>> }
 
 impl<V> Default for MapDelta<V> {
@@ -200,35 +200,4 @@ mod dsl;
 #[path = "🧪️tests/🧪️shared-map-delta-native/🦀️.rs"]
 mod tests;
 
-mod owned_retirement {
-    use super::*;
-    use semio_framework_value::retirement::{RetireOwned, RetirementCursor, sequence, leaf, deferred, deferred_birth_bytes_for, sequence_birth_bytes};
-    /// 🗾️ A map delta retires through its ordered entry tree, so it is controlled exactly when its value type is.
-    impl<V: RetireOwned> RetireOwned for MapDelta<V> {
-        fn controlled_retirement_supported() -> bool { <std::collections::BTreeMap<String, MapEntryDelta<V>> as RetireOwned>::controlled_retirement_supported() }
-        fn retirement(self) -> Box<dyn RetirementCursor> {
-            self.into_entries().retirement()
-        }
-        fn retirement_birth_bytes(&self) -> Option<usize> { self.entries().retirement_birth_bytes() }
-    }
-    impl<V: RetireOwned> RetireOwned for MapEntryDelta<V> {
-        fn retirement(self) -> Box<dyn RetirementCursor> {
-            let (precondition, operation) = self.into_parts();
-            sequence(vec![deferred(precondition), deferred(operation)])
-        }
-        fn retirement_birth_bytes(&self) -> Option<usize> { sequence_birth_bytes(&[deferred_birth_bytes_for(&self.precondition()), deferred_birth_bytes_for(self.operation())]) }
-        fn controlled_retirement_supported() -> bool { V::controlled_retirement_supported() }
-    }
-    impl<V: RetireOwned> RetireOwned for MapEntryOperation<V> {
-        fn retirement(self) -> Box<dyn RetirementCursor> {
-            match self {
-                MapEntryOperation::Set(value) => sequence(vec![deferred(0u8), deferred(value)]),
-                MapEntryOperation::Remove => leaf(1u8),
-                MapEntryOperation::Reject => leaf(2u8),
-            }
-        }
-        fn retirement_birth_bytes(&self) -> Option<usize> { match self { Self::Set(value) => sequence_birth_bytes(&[deferred_birth_bytes_for(&0u8), deferred_birth_bytes_for(value)]), Self::Remove | Self::Reject => Some(semio_framework_value::retirement::leaf_birth_bytes::<u8>()) } }
-        fn controlled_retirement_supported() -> bool { V::controlled_retirement_supported() }
-    }
-    semio_framework_value::artifact_retire_leaf!(MapPresence);
-}
+semio_framework_value::artifact_retire_leaf!(MapPresence);

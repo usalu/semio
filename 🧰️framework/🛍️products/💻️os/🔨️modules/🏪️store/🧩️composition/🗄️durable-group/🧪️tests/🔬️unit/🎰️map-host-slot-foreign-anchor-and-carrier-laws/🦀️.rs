@@ -11,7 +11,7 @@ async fn durable_map_fixed_host_slot_retains_every_live_owner_across_request_err
     let mut observed_uncertain_error = false;
     let mut observed_committed = false;
     for _ in 0..4096 {
-        let request_observation = host.advance(grant);
+        let request_observation = receive_turn(|receiving| host.advance(grant, receiving));
         match request_observation {
             Err(DurableOwnedGroupDecisionError::Codec(error)) if error == "uncertain sync result" => {
                 observed_uncertain_error = true;
@@ -56,7 +56,7 @@ async fn durable_map_fixed_host_slot_cancellation_after_uncertain_io_waits_for_t
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     let mut dropped_uncertain_request = false;
     for _ in 0..4096 {
-        match host.advance(grant) {
+        match receive_turn(|receiving| host.advance(grant, receiving)) {
             Err(DurableOwnedGroupDecisionError::Codec(error)) if error == "uncertain sync result" => {
                 dropped_uncertain_request = true;
                 assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::Journal));
@@ -95,16 +95,16 @@ async fn durable_store_group_rejects_foreign_anchor_receipt_before_visibility_an
     let mut sink = FakeJournalSink { resolution: FakeJournalResolution::WrongAnchorThenAbsentAfterCancel, state: Arc::clone(&state) };
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     while coordinator.phase() != DurableOwnedThreeStoreCommitPhaseV1::Journal {
-        coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("pre-journal stage");
+        receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).expect("pre-journal stage");
     }
-    coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("journal first pending turn");
-    assert_eq!(coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant), Err(DurableOwnedGroupDecisionError::InvalidHash));
+    receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).expect("journal first pending turn");
+    assert_eq!(receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)), Err(DurableOwnedGroupDecisionError::InvalidHash));
     assert_eq!(coordinator.phase(), DurableOwnedThreeStoreCommitPhaseV1::Journal);
     let pending = capture_store_owned_three_snapshot(&parent, &drawing, &value).expect("foreign receipt cannot flip visibility");
     assert_eq!([pending.parent.n, pending.drawing.n, pending.value.n], [Some(0), Some(0), Some(0)]);
     assert!(coordinator.cancel());
     for _ in 0..4096 {
-        coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("trusted absence cleanup turn");
+        receive_turn(|receiving| coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant, receiving)).expect("trusted absence cleanup turn");
         if coordinator.terminal_is_empty() {
             break;
         }

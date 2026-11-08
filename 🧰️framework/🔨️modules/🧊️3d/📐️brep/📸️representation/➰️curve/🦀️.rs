@@ -34,7 +34,7 @@ use bspline::{curve_derivatives_rational, de_boor, KnotVector};
 /// 🌀️ A 3D curve. Each variant's *natural* domain is documented on the variant; a curve's actual
 /// used range (e.g. an edge's `(t0, t1)`) is stored by the topology layer, not here — this keeps
 /// geometry shareable between edges that trim the same underlying curve differently.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(crate = "::semio_framework_value")]
 pub enum Curve3 {
     /// 🌀️ `origin + t·dir`. Natural domain `(-∞, ∞)`. `dir` need not be unit.
@@ -48,7 +48,6 @@ pub enum Curve3 {
     Nurbs { knots: KnotVector, controls: Vec<Pnt3>, weights: Vec<f64> },
 }
 
-semio_framework_3d_brep_vector::retire_geometry_variants!(Curve3 {Line {origin,dir},Circle {frame,radius},Ellipse {frame,major_radius,minor_radius},Nurbs {knots,controls,weights}});
 
 /// 🌀️ An explicit rational-NURBS representation, returned by [`Curve3::to_nurbs`] /
 /// [`Curve2::to_nurbs`] — every curve kind's common denominator.
@@ -256,7 +255,7 @@ fn arc_to_nurbs_with_span(frame: &Frame3, radius_x: f64, radius_y: f64, domain: 
 // #region 🔖️Curve2
 
 /// 🌀️ A 2D curve, used as the pcurve type: a curve living in a face's `(u, v)` parameter domain.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(crate = "::semio_framework_value")]
 pub enum Curve2 {
     Line { origin: Pnt2, dir: Vec2 },
@@ -265,7 +264,6 @@ pub enum Curve2 {
     Nurbs { knots: KnotVector, controls: Vec<Pnt2>, weights: Vec<f64> },
 }
 
-semio_framework_3d_brep_vector::retire_geometry_variants!(Curve2 {Line {origin,dir},Circle {center,radius},Ellipse {center,x_axis,major_radius,minor_radius},Nurbs {knots,controls,weights}});
 
 impl Curve2 {
     /// ➰️ The same curve translated by `delta` in parameter space — the exact operation, per

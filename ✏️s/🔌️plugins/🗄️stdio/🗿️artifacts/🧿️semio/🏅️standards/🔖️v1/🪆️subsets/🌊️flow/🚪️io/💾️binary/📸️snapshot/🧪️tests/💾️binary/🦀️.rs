@@ -123,7 +123,7 @@ fn close_open(open: &mut impl MemberOpenOperation, grants: &[usize]) -> usize {
 fn close_member(member: &mut SemioMembers) {
     for _ in 0..100_000 {
         let grant = retirement_policy();
-        let (step, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| member.close_owned_step(grant).expect("bounded member close"));
+        let (step, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| member.close_owned_step_cold(grant).expect("bounded member close"));
         assert!(step.progress().fits(grant));
         assert_eq!(physical.requested_bytes, step.progress().retained_capacity_bytes);
         assert_eq!(physical.released_bytes, step.progress().released_bytes);

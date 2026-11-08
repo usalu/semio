@@ -20,7 +20,7 @@ use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_instance_render::render_bundle::{RenderCtx, RenderRef};
 use semio_plugin_time_travel_turns::time_travel_bundle::{TimeTravelCtx, TimeTravelRef};
 use semio_plugin_time_travel::TimeTravelLedger;
-use semio_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_plugin_tool_machine::ToolMachineRuntime;
 use semio_plugin_tool_run_turns::tool_run_bundle::{ToolRunCtx, ToolRunRef};
 use semio_plugin_tool_run::ToolRunLedger;
 use semio_plugin_instance_typed_ops::typed_bundle::TypedCtx;

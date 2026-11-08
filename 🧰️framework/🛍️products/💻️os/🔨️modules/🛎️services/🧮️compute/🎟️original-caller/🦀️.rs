@@ -37,10 +37,11 @@ impl ComputeOriginalCaller{
         if stock.maximum_items<3||stock.maximum_capacity_bytes<capacity||stock.maximum_depth==0{return Ok(None)}
         let Some((cancel,receipt))=CancelToken::admit_root(stock).result?else{return Ok(None)};
         let mut spent=RetainedCloneProgress::default().checked_add(receipt)?;
-        let admitted=JobPayloadAuthority::admit(operation,generation,remaining(stock,spent)).result;
+        let mut payload_actual=None;let mut parent_actual=None;
+        let admitted=JobPayloadAuthority::admit(operation,generation,remaining(stock,spent),&mut payload_actual).result;
         let (authority,receipt)=match admitted{Ok(Some(born))=>born,Ok(None)=>{retire_roots(None,Some(cancel),stock);return Ok(None)},Err(error)=>{retire_roots(None,Some(cancel),stock);return Err(error)}};
         spent=spent.checked_add(receipt)?;
-        match OriginalCallerSourceParent::admit(authority,cancel,remaining(stock,spent)).result{
+        match OriginalCallerSourceParent::admit(authority,cancel,remaining(stock,spent),&mut parent_actual).result{
             Ok((parent,receipt))=>{
                 spent=spent.checked_add(receipt)?;
                 Ok(Some(Self{parent:ManuallyDrop::new(Some(parent)),sequence:0,clock_binding:NEXT_COMPUTE_CLOCK_BINDING.fetch_add(1,Ordering::Relaxed),deadline,fuel:COMPUTE_CALLER_FUEL,stride:ClockStride::new(),stock,spent,last:receipt}))
@@ -117,7 +118,7 @@ impl ComputeOriginalCaller{
         let grant=narrow(recipient.remaining_grant()?,self.remaining_grant());
         if grant.maximum_items==0||grant.maximum_depth==0||self.fuel==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
         let turn=if self.parent.as_ref().is_some_and(OriginalCallerSourceParent::terminal_is_empty){drop(self.parent.take());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}else{match self.parent.as_mut(){Some(parent)=>parent.close_step(grant),None=>return Err(refused("compute caller parent already closed"))}};
-        self.fuel=self.fuel.saturating_sub(turn.work);
+        self.fuel=self.fuel.saturating_sub(u64::try_from(turn.work).unwrap_or(u64::MAX));
         let step=turn.result?;let receipt=step.progress();
         self.spent=self.spent.checked_add(receipt)?;self.last=receipt;
         recipient.record_progress(receipt)?;

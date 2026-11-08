@@ -17,7 +17,8 @@ impl GuestRelayOperationAdmission{
  /// ⏳️ The caller owns this admission and output before the first suspension.
  pub async fn admit(&mut self,out:&mut Option<GuestRelayOperation>)->GuestRelayOperationStatus{
   let Some(driver)=self.driver.as_ref()else{return if self.phase==Phase::Consumed{GuestRelayOperationStatus::Complete}else{GuestRelayOperationStatus::Failed}};let mut guard=Guard{driver,armed:true};
-  loop{match reserve(driver,self.origin,&mut self.phase,&mut*self.failure){GuestRelayOperationStatus::Pending=>semio_framework_async::yield_once().await,GuestRelayOperationStatus::Failed=>return GuestRelayOperationStatus::Failed,GuestRelayOperationStatus::Complete=>break}}
+  let mut idle=0u32;let mut last=None;
+  loop{match reserve(driver,self.origin,&mut self.phase,&mut*self.failure){GuestRelayOperationStatus::Pending=>{let now=driver.original_remaining().ok();if now.is_some()&&now==last{idle+=1}else{idle=0;last=now}if idle>=65536{*self.failure=Some(stalled().into());driver.abandon_operation();return GuestRelayOperationStatus::Failed}semio_framework_async::yield_once().await},GuestRelayOperationStatus::Failed=>return GuestRelayOperationStatus::Failed,GuestRelayOperationStatus::Complete=>break}}
   guard.armed=false;drop(guard);self.take_step(out)
  }
  /// 👁️ Borrows one complete failure only within a paid receiving callback.
@@ -36,4 +37,5 @@ fn reserve(driver:&GuestRelayWakeDriver,origin:GuestRelayNativeOrigin,phase:&mut
 }
 struct Guard<'a>{driver:&'a GuestRelayWakeDriver,armed:bool}
 impl Drop for Guard<'_>{fn drop(&mut self){if self.armed{self.driver.abandon_operation()}}}
+fn stalled()->ValueError{ValueError::literal(ValueRefusalKind::WorkLimit,"operation admission made no progress: the treasury stayed unchanged for 65536 consecutive turns")}
 fn refused()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"operation admission changed its paid transfer")}

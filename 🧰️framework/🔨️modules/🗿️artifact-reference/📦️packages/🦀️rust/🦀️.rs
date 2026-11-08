@@ -26,6 +26,7 @@ mod tests;
 
 #[path="../../../🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🦀️.rs"]
 mod reference_binding;
+pub use reference_binding::{is_artifact_ref_value,take_artifact_ref};
 
 #[cfg(test)]
 #[path="../../../🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🧪️tests/🏛️ownership/🦀️.rs"]

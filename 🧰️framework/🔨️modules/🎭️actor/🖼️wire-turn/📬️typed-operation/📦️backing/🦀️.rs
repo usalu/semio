@@ -1,8 +1,9 @@
 //! 📦️ Original fixed page storage is born, initialized, moved and physically returned under explicit caller grants.
 use super::{TypedOperationResultPage,TypedOperationResultToken,TypedOperationResultLane,TYPED_OPERATION_RESULT_PAGE_BYTES};
-use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::{ManuallyDrop,size_of};
+fn one(effect:&mut RetainedAllocationEffect<'_>)->Result<(),ValueError>{if effect.performed(1)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"page backing close exceeds its effect quote"))}}
 
 /// 🪙️ The producer retains every partially initialized original allocation until funded handoff or closure.
 pub struct OriginalResultPageBacking{
@@ -66,20 +67,23 @@ impl OriginalResultPageBacking{
         Ok(Default::default())
     }
     /// ♻️ The same typed retirement returns empty, partial and fully initialized backing.
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>{
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep>{let grant=effect.grant();
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
         let d=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
         if !fits(d,grant){return paused()}
-        if self.bytes.is_some(){
-            self.closing=Some(ControlledRetirement::retain(self.bytes.take().unwrap()));
-            return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}
+        if let Some(bytes)=self.bytes.take(){
+            if let Err(error)=one(effect){*self.bytes=Some(bytes);return RetainedWorkOutcome{result:Err(error),work:effect.performed_work()}}
+            self.closing=Some(ControlledRetirement::retain(bytes));
+            return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:effect.performed_work()}
         }
-        if self.closing.as_ref().unwrap().terminal_is_empty(){
-            self.closing=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}
+        if self.closing.as_ref().is_some_and(ControlledRetirement::terminal_is_empty){
+            if let Err(error)=one(effect){return RetainedWorkOutcome{result:Err(error),work:effect.performed_work()}}
+            self.closing=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:effect.performed_work()}
         }
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Option<ControlledRetirement<Vec<u8>>>>(),..grant};
-        let result=self.closing.as_mut().unwrap().step(child);
-        RetainedWorkOutcome{result,work:self.closing.as_ref().unwrap().last_turn_work()}
+        let Some(owner)=self.closing.as_mut()else{return RetainedWorkOutcome{result:Err(ValueError::invariant("page backing close owner absent")),work:effect.performed_work()}};
+        let result=super::poll_step(owner.step(&mut effect.nested(child)));
+        RetainedWorkOutcome{result,work:effect.performed_work()}
     }
 }
 impl Drop for OriginalResultPageBacking{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original page backing retains its allocation until funded handoff or closure")}}

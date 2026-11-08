@@ -26,6 +26,7 @@ import { computeStat, formatStatOutputValue, listStatDefinitionsForModelDefiniti
 import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
 import { listAttributeDefinitionsForModelDefinitionEntity, attributeDefinitionEditorKind, attributeDefinitionValueOptions, validateAttributeValue } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-ownership";
 import { derivePropertyValue, listApplicablePropertyDefinitionsForModelDefinition } from "@semio-tech/s-spatial-kernel-ts/geometry/primitive-document";
+import { useCadReplLabels } from "../🗣️labels/🟦️.ts";
 import { type SelectionTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
 import { type SpatialKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";
 import { primaryAttributeSelectionTarget } from "../../🎬️actions/🧲️selection-targets/🟦️.ts";
@@ -42,6 +43,7 @@ export interface SelectionAttributesPaneProps {
 
 /** 🏷️ Edits {@link Model.metadata} fields for the primary selection using active model-definition attribute assets. */
 export function SelectionAttributesPane({ model, activeModelDefinitionId, selection, selectionCount, onModelChange }: SelectionAttributesPaneProps): ReactNode {
+  const labels = useCadReplLabels();
   const target = reactHostPort.useMemo(() => primaryAttributeSelectionTarget(selection), [selection]);
   const definitions = reactHostPort.useMemo(() => (target ? listAttributeDefinitionsForModelDefinitionEntity(activeModelDefinitionId, target.kind) : []), [activeModelDefinitionId, target]);
   if (!target) {
@@ -74,8 +76,8 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
       <div className="flex items-center justify-between gap-single">
         <span className="text-xs font-medium">{defn.label}</span>
         {current !== undefined ? (
-          <Button id={`cad.attribute.${defn.id}.clear`} type="button" variant="outline" icon="x" className="h-auto px-half py-0 text-2xs" onClick={() => clearField(defn)}>
-            Clear
+          <Button id={`cad.attribute.${defn.id}.clear`} type="button" variant="outline" icon="x" className="h-auto px-half py-0 text-2xs" aria-label={labels.clearField(defn.label)} onClick={() => clearField(defn)}>
+            {labels.clear}
           </Button>
         ) : null}
       </div>
@@ -84,10 +86,10 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
   );
   return (
     <div className="flex flex-col gap-single text-xs">
-      <span className="text-foreground text-sm font-semibold">Attributes</span>
+      <span className="text-foreground text-sm font-semibold">{labels.attributes}</span>
       <span className="text-muted-foreground text-2xs">
         {target.kind} · <code className="text-foreground">{target.id}</code>
-        {count > 1 ? ` · ${count} selected` : ""}
+        {count > 1 ? ` · ${labels.selected(count)}` : ""}
       </span>
       {definitions.map((defn) => {
         const editor = attributeDefinitionEditorKind(defn);
@@ -141,7 +143,7 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
             current,
             <label className="flex items-center gap-single">
               <Checkbox checked={current === true} onChange={(event) => setField(defn, event.target.checked)} />
-              <span>Enabled</span>
+              <span>{labels.enabled}</span>
             </label>,
           );
         }
@@ -183,6 +185,7 @@ export interface ModelStatsPaneProps {
 
 /** 📊️ Displays live model-definition stats for whole-model and selection scopes. */
 export function ModelStatsPane({ model, kernel, activeModelDefinitionId, selection, selectionCount }: ModelStatsPaneProps): ReactNode {
+  const labels = useCadReplLabels();
   const definitions = reactHostPort.useMemo(() => listStatDefinitionsForModelDefinition(activeModelDefinitionId), [activeModelDefinitionId]);
   const selectionObjects = reactHostPort.useMemo(() => {
     const objectTargets = selection.filter((row) => row.kind === "object");
@@ -217,13 +220,13 @@ export function ModelStatsPane({ model, kernel, activeModelDefinitionId, selecti
   const count = selectionCount ?? selection.length;
   return (
     <div className="flex flex-col gap-single text-xs">
-      <span className="text-foreground text-sm font-semibold">Stats</span>
+      <span className="text-foreground text-sm font-semibold">{labels.stats}</span>
       {definitions.map((defn) => (
         <div key={defn.id} className="flex flex-col gap-half">
           <span className="font-medium">{defn.label}</span>
           {statDefinitionAppliesToScope(defn, "model") ? (
             <div className="flex flex-col gap-half">
-              <span className="text-muted-foreground text-2xs">Model</span>
+              <span className="text-muted-foreground text-2xs">{labels.model}</span>
               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-single gap-y-half">
                 {defn.outputs.map((output) => (
                   <Fragment key={`${defn.id}:model:${output.key}`}>
@@ -239,7 +242,7 @@ export function ModelStatsPane({ model, kernel, activeModelDefinitionId, selecti
           ) : null}
           {statDefinitionAppliesToScope(defn, "selection") && selectionObjects.length > 0 ? (
             <div className="flex flex-col gap-half">
-              <span className="text-muted-foreground text-2xs">Selection{count > 1 ? ` · ${count} selected` : ""}</span>
+              <span className="text-muted-foreground text-2xs">{labels.selection}{count > 1 ? ` · ${labels.selected(count)}` : ""}</span>
               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-single gap-y-half">
                 {defn.outputs.map((output) => (
                   <Fragment key={`${defn.id}:selection:${output.key}`}>
@@ -260,6 +263,7 @@ export function ModelStatsPane({ model, kernel, activeModelDefinitionId, selecti
 }
 
 export function SelectionPropertiesPane({ model, kernel, activeModelDefinitionId, selection, selectionCount }: SelectionPropertiesPaneProps): ReactNode {
+  const labels = useCadReplLabels();
   const objectRow = reactHostPort.useMemo(() => {
     const objectTarget = selection.find((row) => row.kind === "object");
     return objectTarget ? (model.objects[objectTarget.id] ?? null) : null;
@@ -287,10 +291,10 @@ export function SelectionPropertiesPane({ model, kernel, activeModelDefinitionId
   const count = selectionCount ?? selection.length;
   return (
     <div className="flex flex-col gap-single text-xs">
-      <span className="text-foreground text-sm font-semibold">Properties</span>
+      <span className="text-foreground text-sm font-semibold">{labels.properties}</span>
       <span className="text-muted-foreground text-2xs">
         object · <code className="text-foreground">{objectRow.id}</code>
-        {count > 1 ? ` · ${count} selected` : ""}
+        {count > 1 ? ` · ${labels.selected(count)}` : ""}
       </span>
       {definitions.map((defn) => (
         <div key={defn.id} className="flex flex-col gap-half">

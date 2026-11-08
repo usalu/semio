@@ -20,7 +20,7 @@ use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_instance_render::render_bundle::RenderCtx;
 use semio_plugin_time_travel_turns::time_travel_bundle::TimeTravelCtx;
 use semio_plugin_time_travel::TimeTravelLedger;
-use semio_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_plugin_tool_machine::ToolMachineRuntime;
 use semio_plugin_tool_run::ToolRunLedger;
 use semio_plugin_instance_typed_ops::typed_bundle::TypedCtx;
 use semio_ui_contract::*;
@@ -36,7 +36,7 @@ pub struct CommandCtx<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFact
     pub original_typing:&'ctx mut semio_plugin_instance_typed_ops::original_typing::OriginalTypingDispatch<A>,
     pub original_emission:&'ctx mut semio_plugin_job::original_emission::OriginalEmissionSource<A>,
     pub original_typed_command:&'ctx mut semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,
-    pub original_typed_tag:&'ctx mut std::mem::ManuallyDrop<Option<semio_plugin_tool_run::tool_jobs_tool_machine::ToolTag>>,
+    pub original_typed_tag:&'ctx mut std::mem::ManuallyDrop<Option<semio_plugin_tool_machine::ToolTag>>,
     pub interaction: &'ctx mut LocalInteraction<A>,
     pub history: &'ctx mut CommandHistory<A>,
     pub host_events: &'ctx mut HostEvents,

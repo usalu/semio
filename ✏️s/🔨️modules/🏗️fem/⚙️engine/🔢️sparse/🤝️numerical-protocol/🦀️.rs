@@ -65,12 +65,13 @@ pub fn numerical_close_demand(job: &impl InteractiveJob) -> Result<RetirementDem
 /// when that wallet covers the job's quote, its effects are debited once, and a terminal owner reports `Complete`.
 pub fn numerical_close_original<J>(cx: &mut StepContext<'_>, owner: &mut J, demand: RetirementDemand, turn: impl FnOnce(&mut J, RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError>, terminal: impl FnOnce(&J) -> bool) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
     let step = close_original_retained_step(cx, demand, |grant| {
-        let result = turn(owner, grant).map(|step| match step {
-            InteractiveJobCloseStep::Complete { progress } => RetainedCloneStep::Complete(progress),
-            InteractiveJobCloseStep::Pending { progress } => RetainedCloneStep::Progress(progress),
-            InteractiveJobCloseStep::Blocked => RetainedCloneStep::Progress(RetainedCloneProgress::default()),
+        let result = turn(owner, grant).and_then(|step| match step {
+            InteractiveJobCloseStep::Complete { progress } => Ok(RetainedCloneStep::Complete(progress)),
+            InteractiveJobCloseStep::Pending { progress } => Ok(RetainedCloneStep::Progress(progress)),
+            InteractiveJobCloseStep::Blocked => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "numerical close owner refused its own retirement")),
         });
-        RetainedWorkOutcome { result, work: 1 }
+        let work = u128::from(result.as_ref().is_ok_and(|step| matches!(step, RetainedCloneStep::Complete(_)) || step.progress() != RetainedCloneProgress::default()));
+        RetainedWorkOutcome { result, work }
     })?;
     Ok(if terminal(owner) { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
 }
@@ -79,14 +80,15 @@ pub fn numerical_close_original<J>(cx: &mut StepContext<'_>, owner: &mut J, dema
 pub fn numerical_owner_turn(rung: Result<Option<(usize, usize)>, ()>) -> Option<InteractiveJobCloseStep> {
     match rung {
         Ok(Some((items, bytes))) => Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: items, released_bytes: bytes, ..Default::default() } }),
-        Err(()) => Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }),
+        Err(()) => Some(InteractiveJobCloseStep::Blocked),
         Ok(None) => None,
     }
 }
 
-/// 🪜️ Maps a `(complete, items, bytes)` ladder turn onto the job close vocabulary.
+/// 🪜️ Maps a `(complete, items, bytes)` ladder turn onto the job close vocabulary; a turn that neither completes nor progresses is an owner refusal and blocks.
 pub fn numerical_ladder_turn(turn: (bool, usize, usize)) -> InteractiveJobCloseStep {
     let (complete, items, bytes) = turn;
+    if !complete && items == 0 && bytes == 0 { return InteractiveJobCloseStep::Blocked; }
     let progress = RetainedCloneProgress { copied_items: items, released_bytes: bytes, ..Default::default() };
     if complete { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } }
 }
@@ -300,11 +302,33 @@ pub fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Resu
     Ok(Some((1, bytes)))
 }
 
+/// 🪙️ Reserves one cold page of an exclusively owned list through a bounded authoring stock; true once the page progressed.
+pub fn reserve_cold_page<T, const N: usize>(owner: &mut PagedList<T, N>, target: usize) -> Result<semio_framework_value_persistent::list::PagedListProgress, ValueError> {
+    let failure = |error: semio_framework_value_persistent::list::PagedListError| ValueError::literal(ValueRefusalKind::InvariantViolated, error.reason);
+    let Some(capacity_bytes) = owner.next_capacity_allocation_bytes(target).map_err(failure)? else { return Ok(Default::default()) };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: owner.next_capacity_copy_byte_demand(target).map_err(failure)?, maximum_capacity_bytes: capacity_bytes, maximum_release_bytes: 0, maximum_depth: owner.next_capacity_depth_demand(target).map_err(failure)? };
+    let Some(done) = AuthoringWallet::new(grant, 64).run(grant, 64, |effect| owner.reserve_capacity_one(target, effect))? else { return Ok(Default::default()) };
+    match done.output.result {
+        Ok(PagedListReservationOutcome::Ready(progress)) => Ok(progress),
+        Ok(PagedListReservationOutcome::Denied) => Ok(Default::default()),
+        Err(_) => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "cold page reservation was refused")),
+    }
+}
+
+/// 🎟️ Reserves one page of a job-owned list inside the job's original effect and posts its single work debit.
+pub fn reserve_funded_page<T, const N: usize>(owner: &mut PagedList<T, N>, target: usize, context: &mut StepContext<'_>) -> Result<RetainedCloneProgress, ()> {
+    let grant = context.retained_grant();
+    let Some((turn, performed)) = context.with_original_effect(grant, |_, effect| owner.reserve_capacity_one_funded(target, effect)).map_err(|_| ())? else { return Ok(Default::default()) };
+    let progress = match turn.result { Ok(PagedListReservationOutcome::Ready(progress)) => progress, Ok(PagedListReservationOutcome::Denied) => return Ok(Default::default()), Err(_) => return Err(()) };
+    receive_original_retained_work(context, RetainedWorkOutcome { result: Ok::<_, ValueError>(RetainedCloneStep::Progress(progress)), work: performed }).map_err(|_| ())?;
+    Ok(progress)
+}
+
 pub fn close_paged_owner_step<T, const N: usize>(owner: &mut PagedList<T, N>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
     if owner.pop().is_some() {
         return Ok(Some((1, 0)));
     }
-    let progress = owner.release_empty_page(maximum_bytes).map_err(|_| ())?;
+    let progress = owner.release_empty_page_leased(maximum_bytes).map_err(|_| ())?;
     if progress.progressed {
         return Ok(Some((0, progress.released_allocation_bytes)));
     }
@@ -321,7 +345,7 @@ pub fn paged_from_values<T, I: IntoIterator<Item = T>>(values: I) -> PagedList<T
     let target = values.len();
     let mut owner = PagedList::default();
     while owner.capacity() < target {
-        owner.reserve_capacity_one(target, SPARSE_PAGE_BYTES).expect("cold CSR page allocation");
+        assert!(reserve_cold_page(&mut owner, target).expect("cold CSR page allocation").progressed, "cold CSR page allocation made no progress");
     }
     for value in values {
         owner.push_reserved(value).unwrap_or_else(|_| unreachable!("cold CSR reserved exact slot"));

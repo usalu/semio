@@ -4,14 +4,14 @@ use super::*;
 
 //#region 🔖️Events
 /// 🏁️ How a finalize publishes the accepted drafts.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::RetireOwned)]
 pub enum TimeTravelChoice {
     Overwrite,
     Alternative { name: String },
 }
 
 /// 🎞️ User actions and driver observations; see the module docs for which carry a generation.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum TimeTravelEvent {
     Begin { target: TimeTravelTarget, original: InputReplacement },
     BeginWithdrawn { target: TimeTravelTarget, original: InputReplacement },

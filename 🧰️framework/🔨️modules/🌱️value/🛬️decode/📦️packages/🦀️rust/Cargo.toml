@@ -38,3 +38,11 @@ semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾
 [[test]]
 name = "original-work-view"
 path = "../../🎟️work/🧪️tests/view.rs"
+
+[[test]]
+name = "native-backing"
+path = "../../🏭️construction/📦️backing/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "native-continuation"
+path = "../../🫴️recipient/🔁️continuation/🧪️tests/🦀️.rs"

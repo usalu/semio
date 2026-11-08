@@ -1,8 +1,9 @@
 //! 🧬️ Concrete standard clone cursors own exact payload copies and original alias custody.
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_intrinsic::{DslValue,Number,dsl_value};
-pub use semio_framework_value_retirement::{OriginalRetirementControl,retirement_fields_type,retirement_fields_seed,OriginalRetirementOutcome,RetainedWorkOutcome,retirement,RetirementSelection,select_factory_ticket,ErasedSnapshotRetirement,factory_ticket_demands,close_factory_ticket,owned_retirement_birth_bytes,admit_owned_retirement};
+pub use semio_framework_value_retirement::{OriginalRetirementControl,retirement_fields_type,retirement_fields_seed,OriginalRetirementOutcome,OriginalRetirementPoll,RetainedWorkOutcome,retirement,RetirementSelection,select_factory_ticket,ErasedSnapshotRetirement,factory_ticket_demands,close_factory_ticket,owned_retirement_birth_bytes,admit_owned_retirement};
 pub use semio_framework_value_shared_issuance as shared_issuance;
+pub use semio_framework_value_retirement::retirement_contract::RetirementPollExit;
 #[path="../../🦀️.rs"]
 pub mod retained_clone;
 pub use retained_clone::*;

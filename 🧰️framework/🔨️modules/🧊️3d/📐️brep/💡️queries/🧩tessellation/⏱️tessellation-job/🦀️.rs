@@ -277,11 +277,13 @@ impl TessellationJob {
 
     /// 📤 Takes the finished mesh — `None` unless the job reached `Complete`.
     pub fn into_mesh(mut self)->Option<(MeshTransfer,TessellationReport)> {
-        let output=self.take_mesh();let mut owner=self.detach_retirement();
+        let output=self.take_mesh();let mut owner=self.detach_retirement();let mut wallet=semio_framework_value::AuthoringWallet::new(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1<<30,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:1<<10},1_000_000_000_000);
+        let mut stall=0;
         while !owner.terminal_is_empty() {
-            let copy=owner.next_copy_byte_demand().expect("original tessellation copy demand");
-            let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).expect("original tessellation capacity demand"),maximum_release_bytes:owner.next_release_byte_demand().expect("original tessellation release demand"),maximum_depth:owner.next_depth_demand().expect("original tessellation depth demand")};
-            owner.step(grant).expect("original cold tessellation retirement");
+            let demand={let first=owner.next_demand(0).expect("original tessellation selected demand");owner.next_demand(first.copy_bytes).expect("original tessellation selected demand")};
+            let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+            let Some((turn,_))=wallet.run_settled(grant,1<<20,|effect|owner.step(effect)).expect("original cold tessellation retirement")else{panic!("original cold tessellation retirement quote refused")};let step=turn.result.expect("original cold tessellation retirement step");wallet.post(step.progress()).expect("original cold tessellation retirement stock");
+            if step.progress()==Default::default(){stall+=1;assert!(stall<64,"cold tessellation retirement stalled without progress: grant={grant:?}");}else{stall=0;}
         }
         output
     }

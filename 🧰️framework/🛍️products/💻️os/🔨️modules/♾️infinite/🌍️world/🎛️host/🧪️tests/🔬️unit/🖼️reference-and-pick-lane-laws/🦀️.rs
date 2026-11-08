@@ -71,7 +71,7 @@ fn six_reference_gpu_residents_progress_through_two_cpu_slots_and_a_lost_texture
         drop(input);
         let mut retired = false;
         for _ in 0..64 {
-            if matches!(semio_ui_prepared::PreparedRenderInput::close_abandoned_step(world_original_fixture_grant()),semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
+            if matches!(semio_ui_prepared::retirement::prepared_close_authored(world_original_fixture_grant(),semio_ui_prepared::PreparedRenderInput::close_abandoned_step),Ok(semio_framework_job::InteractiveJobCloseStep::Complete{..})) {
                 retired = true;
                 break;
             }

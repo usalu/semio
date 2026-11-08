@@ -2,7 +2,7 @@
 use super::{NumericIndex,Node,Ordering};
 use semio_framework_value_persistent::work::RetainedWorkLedger;
 use crate::{RetirementDemand,ValueError};
-use crate::retirement::{RetireOwned,RetirementCursor};
+use crate::retirement::RetireOwned;
 fn repair_one<K:Copy+Ord,V>(index:&mut NumericIndex<K,V>,current:usize)->Option<usize>{
  index.update(current);let(left,right)={let node=index.node(current);(node.left,node.right)};let balance=index.height(left)as i16-index.height(right)as i16;
  let top=match(balance,left,right){
@@ -41,9 +41,9 @@ impl<K:Copy+Ord,V> NumericWorkInsertCursor<K,V>{
  }
 }
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for NumericWorkInsertCursor<K,V>{
- type Retirement=<(K,Option<V>,Option<V>,Option<usize>,Option<usize>,u8)as RetireOwned>::Retirement;
- fn retirement(self)->Self::Retirement{(self.key,self.value,self.previous,self.current,self.parent,self.phase).retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self::Retirement>())}
+ type RetirementCursor=<(K,Option<V>,Option<V>,Option<usize>,Option<usize>,u8)as RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{(self.key,self.value,self.previous,self.current,self.parent,self.phase).retirement_seed()}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }
 /// 🧹️ Tombstones one actual key while retaining its former payload through paid ancestor repair.
@@ -72,8 +72,8 @@ impl<K:Copy+Ord,V> NumericWorkRemoveCursor<K,V>{
  }
 }
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for NumericWorkRemoveCursor<K,V>{
- type Retirement=<(K,Option<V>,Option<usize>,u8)as RetireOwned>::Retirement;
- fn retirement(self)->Self::Retirement{(self.key,self.value,self.current,self.phase).retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self::Retirement>())}
+ type RetirementCursor=<(K,Option<V>,Option<usize>,u8)as RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{(self.key,self.value,self.current,self.phase).retirement_seed()}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }

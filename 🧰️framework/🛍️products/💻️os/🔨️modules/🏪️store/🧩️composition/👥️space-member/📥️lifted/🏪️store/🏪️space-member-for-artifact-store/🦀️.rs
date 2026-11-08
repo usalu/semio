@@ -184,24 +184,26 @@ where
         self.parts().adopt_apply_batch_group(&mut publication.publication, visibility, grant)
     }
 
-    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, original:&mut ::semio_framework_value::OriginalRetirementCloseLoan<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, original:&mut ::semio_framework_value::OriginalRetirementCloseLoan<'_>, effect: &mut ::semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ::semio_framework_value::RetirementPollExit> {
+        let grant = effect.grant();
+        let pure = (|| -> Result<Option<RetainedCloneStep>, ValueError> {
         let publication = publication
             .as_any_mut()
             .downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>()
             .ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort concrete owner type does not match"))?;
         if publication.terminal_is_empty() {
-            return Ok(RetainedCloneStep::Complete(Default::default()));
+            return Ok(Some(RetainedCloneStep::Complete(Default::default())));
         }
         if !publication.member.as_ref().is_some_and(|member| member.ptr_eq(&self.owners.snapshot_read_leases)) {
             return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort belongs to a different exact store authority"));
         }
         if publication.publication.group_preparation.is_some() {
-            let demand=publication.retirement_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}original.charge(demand.capacity_bytes)?;
-            return self.parts().abort_apply_batch_group(&mut publication.publication, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+            let demand=publication.retirement_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())))}original.charge(demand.capacity_bytes)?;
+            return self.parts().abort_apply_batch_group(&mut publication.publication, grant).map(|step| Some(RetainedCloneStep::Progress(step.progress())));
         }
         publication.publication.begin_close();
         if grant.maximum_items == 0 {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
+            return Ok(Some(RetainedCloneStep::Progress(Default::default())));
         }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "member abort requires admitted depth")); }
         if let Some(reservation) = publication.group_history.take() {
@@ -211,13 +213,21 @@ where
                 return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort lost its exact history reservation"));
             }
             self.owners.displaced_retirements.release_owner_slots(rejected_owner).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))?;
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+            return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })));
         }
         if let Some(reservation) = publication.group_displaced.take() {
             self.owners.displaced_retirements.release_owner_slots(reservation).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))?;
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+            return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })));
         }
-        publication.close_original_step(original,RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant })
+        Ok(None)
+        })()?;
+        if let Some(step) = pure {
+            if step.progress() != RetainedCloneProgress::default() { ::semio_framework_value::RetirementPollExit::pay(effect, 1)?; }
+            return Ok(step);
+        }
+        let child = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
+        let publication = publication.as_any_mut().downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>().ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort concrete owner type does not match"))?;
+        publication.close_original_step(original, &mut effect.nested(child))
     }
 
     fn snapshot_read_erased_for_publication(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<Option<(u64, [u8; 32], ErasedSnapshotRead, RetainedCloneProgress)>, ValueError> {
@@ -264,17 +274,17 @@ where
         self.snapshot_read_erased_now()
     }
 
-    fn retire_snapshot_read_erased(&mut self, snapshot: &mut Option<ErasedSnapshotRead>, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
+    fn retire_snapshot_read_erased(&mut self, snapshot: &mut Option<ErasedSnapshotRead>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
         let Some(read) = snapshot.as_mut() else { return Ok((None, Default::default())); };
-        if grant.maximum_items == 0 { return Ok((None, Default::default())); }
+        if effect.grant().maximum_items == 0 { return Ok((None, Default::default())); }
         let factory = self.owners.initial_snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "read admission requires its installed original factory"))?;
-        let admitted = read.admit_retirement::<P>(&self.owners.snapshot_read_leases, factory, grant)?;
-        snapshot.take();
-        Ok((Some(admitted.0), admitted.1))
+        let turn = read.admit_retirement::<P>(&self.owners.snapshot_read_leases, factory, effect);
+        let admitted = turn.result.map_err(|_| ValueError::invariant("read admission retirement was refused by its original owner"))?;
+        match admitted { Some((ticket, progress)) => { snapshot.take(); Ok((Some(ticket), progress)) }, None => Ok((None, Default::default())) }
     }
 
-    fn take_returned_snapshot_read_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
-        ArtifactStore::take_returned_snapshot_read_retirement(self, grant)
+    fn take_returned_snapshot_read_retirement(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
+        ArtifactStore::take_returned_snapshot_read_retirement(self, effect)
     }
 
     fn snapshot_read_retirement_demand(&self) -> semio_framework_value::RetirementDemand {
@@ -289,8 +299,8 @@ where
         ArtifactStore::snapshot_read_leases_terminal_is_empty(self)
     }
 
-    fn close_owned_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        self.close_owned_store_step(grant)
+    fn close_owned_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        self.close_owned_store_step(effect)
     }
 
     fn close_owned_terminal_is_empty(&self) -> bool {

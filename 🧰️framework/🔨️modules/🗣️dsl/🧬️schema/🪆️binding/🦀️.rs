@@ -241,7 +241,7 @@ impl<T: DslField, const N: usize> DslField for semio_framework_value::paged::Pag
         for (key, value) in entries {
             control.step()?;
             if output.as_mut().iter().any(|entry| entry.0.eq_str(key)) { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "duplicate paged map field key")); }
-            while !output.as_mut().has_reserved_slot() { let bytes = output.as_mut().next_allocation_bytes()?; control.charge(bytes)?; output.as_mut().reserve_one(bytes).map_err(|error| ValueError::from(error.refusal()))?; }
+            while !output.as_mut().has_reserved_slot() { let bytes = output.as_mut().next_allocation_bytes()?; control.charge(bytes)?; output.as_mut().reserve_one_cold(bytes).map_err(|error| ValueError::from(error.refusal()))?; }
             let key = semio_framework_value::paged::PagedUtf8::try_from_str_controlled(key, control)?;
             let value = T::from_value_controlled(value, control)?;
             output.as_mut().push_reserved((key, value)).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "paged map decoder lost its admitted slot"))?;

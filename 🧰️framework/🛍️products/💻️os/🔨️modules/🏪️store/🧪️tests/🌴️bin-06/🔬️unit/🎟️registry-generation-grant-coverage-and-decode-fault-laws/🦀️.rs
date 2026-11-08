@@ -60,10 +60,11 @@ fn field_close_failure_preserves_real_receipts_through_the_original_decode_job()
         fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,OwnedSchemaDecodeDiagnostic> { Ok(self.owner.next_capacity_byte_demand(copy).unwrap()) }
         fn next_close_release_byte_demand(&self)->Result<usize,OwnedSchemaDecodeDiagnostic> { Ok(self.owner.next_release_byte_demand().unwrap()) }
         fn next_close_depth_demand(&self)->Result<usize,OwnedSchemaDecodeDiagnostic> { Ok(self.owner.next_depth_demand().unwrap()) }
-        fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,OwnedSchemaDecodeDiagnostic> {
-            let step=self.owner.step(grant).unwrap();
-            if std::mem::take(&mut self.fail_once) { return Err(OwnedSchemaDecodeDiagnostic { code:"field.close-after-original-birth",offset:0,line:0,column:0,path:OwnedSchemaPath::ROOT,retained_progress:step.progress(), refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated }); }
-            Ok(step)
+        fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->ArtifactEnvelopeClosePoll {
+            let RetainedWorkPoll::Complete(turn)=self.owner.step(effect) else { return RetainedWorkPoll::Pending { work: effect.performed_work() } };
+            let step=turn.result.unwrap();
+            let result=if std::mem::take(&mut self.fail_once) { Err(OwnedSchemaDecodeDiagnostic { code:"field.close-after-original-birth",offset:0,line:0,column:0,path:OwnedSchemaPath::ROOT,retained_progress:step.progress(), refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated }) } else { Ok(step) };
+            RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: turn.work })
         }
         fn terminal_is_empty(&self)->bool { self.owner.terminal_is_empty() }
     }
@@ -101,11 +102,15 @@ fn normal_decode_release_records_original_wallet_even_after_child_fault(){
   fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,OwnedSchemaDecodeDiagnostic>{self.demand(copy).map(|d|d.capacity_bytes).map_err(|e|OwnedSchemaDecodeDiagnostic::before("wallet.capacity",OwnedSchemaPath::ROOT).with_native(e))}
   fn next_close_release_byte_demand(&self)->Result<usize,OwnedSchemaDecodeDiagnostic>{self.demand(0).map(|d|d.release_bytes).map_err(|e|OwnedSchemaDecodeDiagnostic::before("wallet.release",OwnedSchemaPath::ROOT).with_native(e))}
   fn next_close_depth_demand(&self)->Result<usize,OwnedSchemaDecodeDiagnostic>{self.demand(0).map(|d|d.depth).map_err(|e|OwnedSchemaDecodeDiagnostic::before("wallet.depth",OwnedSchemaPath::ROOT).with_native(e))}
-  fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,OwnedSchemaDecodeDiagnostic>{
-   if !self.first{return self.owned.as_mut().unwrap().step(grant).map_err(|e|OwnedSchemaDecodeDiagnostic::before("wallet.cleanup",OwnedSchemaPath::ROOT).with_native(e))}
+  fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->ArtifactEnvelopeClosePoll{
+   let grant=effect.grant();
+   let result=(||->Result<RetainedCloneStep,ArtifactEnvelopeCloseExit>{
+   if !self.first{return artifact_envelope_close_resume_with(self.owned.as_mut().unwrap().step(effect),|e|OwnedSchemaDecodeDiagnostic::before("wallet.cleanup",OwnedSchemaPath::ROOT).with_native(artifact_envelope_failure_error(e)))}
    if !artifact_retirement_grant_covers(grant,self.demand(grant.maximum_copy_bytes).unwrap()){return Ok(RetainedCloneStep::Progress(Default::default()))}
    let mut original=Vec::new();original.try_reserve_exact(64).unwrap();original.extend_from_slice(b"original field payload!");let freed=self.old.capacity();drop(std::mem::take(&mut self.old));let born=original.capacity();self.owned=Some(ControlledRetirement::new(original).unwrap());self.first=false;
-   Err(OwnedSchemaDecodeDiagnostic::before("field.wallet-after-real-turn",OwnedSchemaPath::ROOT).with_progress(RetainedCloneProgress{copied_items:1,copied_bytes:23,retained_capacity_bytes:born,released_bytes:freed}))
+   Err(OwnedSchemaDecodeDiagnostic::before("field.wallet-after-real-turn",OwnedSchemaPath::ROOT).with_progress(RetainedCloneProgress{copied_items:1,copied_bytes:23,retained_capacity_bytes:born,released_bytes:freed}).into())
+   })();
+   artifact_envelope_close_settle(effect,result)
   }
   fn terminal_is_empty(&self)->bool{!self.first&&self.owned.as_ref().is_some_and(ControlledRetirement::terminal_is_empty)}
  }

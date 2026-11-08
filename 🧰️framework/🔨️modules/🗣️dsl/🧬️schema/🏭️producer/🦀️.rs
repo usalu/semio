@@ -75,19 +75,24 @@ pub fn boxed<C:NativeSchemaControl>(shape:super::Shape,control:&mut C)->Result<B
 #[cfg(test)]
 mod work_tests{
  use super::*;
- use semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient;
+ use semio_framework_value_native_owned::native_decoding::{OriginalWorkAuthority,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalSourceTurnIdentity};
  struct Loan(u64);
- impl NativeDecodeWorkRecipient for Loan{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.0;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
+ impl OriginalWorkRecipient for Loan{type Context<'a,'b>=() where 'b:'a;
+  fn validate_context<'a,'b>(&self,_:&())->Result<(),ValueError> where 'b:'a{Ok(())}
+  fn source_turn<'a,'b>(&self,_:&())->Option<OriginalSourceTurnIdentity> where 'b:'a{None}
+  fn admits<'r,'a,'b>(&mut self,_:&mut (),q:OriginalWorkQuote<'r>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'r> where 'b:'a{q.complete(Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0)))}
+  fn settle_partial<'r,'a,'b>(&mut self,_:&mut (),c:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 'b:'a{c.complete(Ok(()))}
+  fn recover_partial<'r,'a,'b>(&mut self,_:&mut (),c:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 'b:'a{c.pending()}}
  #[test]
  fn original_schema_field_selection_obeys_real_work_loan(){
   let f:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🏭️producer/🎟️work.json")).unwrap();
   for case in f["cases"].as_array().unwrap(){
-   let mut observer=|_|true;let mut native=NativeDecodeControl::new(1024,&mut observer);let mut loan=Loan(case["allowance"].as_u64().unwrap());
-   native.with_work_recipient(&mut loan,|native|{
+   let mut observer=|_|true;let mut native=NativeDecodeControl::new(1024,&mut observer);let mut authority=OriginalWorkAuthority::new(Loan(case["allowance"].as_u64().unwrap()));
+   authority.with_loan(&mut (),|loan|native.with_work_recipient(loan,|native|{
     let result=field(1,f["key"].as_str().unwrap(),super::super::Shape::Text,native);
     let kind=match result{Ok(field)=>{assert_eq!(field.key,f["key"].as_str().unwrap());let grant=serde_json::from_value(f["close"].clone()).unwrap();let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(field).ok().unwrap();for _ in 0..4096{if owner.terminal_is_empty(){break}owner.step(grant).unwrap();}assert!(owner.terminal_is_empty());"success"},Err(error)=>{assert_eq!(native.owned_bytes(),0);assert_eq!(error.kind.as_str(),case["kind"].as_str().unwrap());"workLimit"}};
     assert_eq!(serde_json::json!({"allowance":case["allowance"],"work":native.actual_work(),"kind":kind}),*case);Ok::<(),ValueError>(())
-   }).unwrap();
+   })).unwrap().unwrap();
   }
  }
 }

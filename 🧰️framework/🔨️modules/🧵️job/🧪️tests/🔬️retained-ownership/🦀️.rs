@@ -1,7 +1,7 @@
 //! 🧪️ Real payload storage retains every original backing and independent stream under one finite issuer.
 use semio_framework_job::*;
 use semio_framework_test_fixtures::fixture_text;
-#[path="../../../📬️outcome/📦️builder/🧪️testing/🦀️.rs"]
+#[path="../../📬️outcome/📦️builder/🧪️testing/🦀️.rs"]
 mod payload_case;
 use payload_case::PayloadCase;
 fn physical_close_grant(release:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:release,maximum_depth:64}}

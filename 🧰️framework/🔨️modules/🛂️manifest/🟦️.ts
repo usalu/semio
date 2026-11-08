@@ -56,3 +56,4 @@ export { UI_REFRESH_SECTIONS, panelTabKindId, sectionViewContext } from "./📋�
 export type { PanelTabKind, PluginUiRefreshFormRequest, PluginUiRefreshRequest, PluginUiRefreshResponse } from "./📋️app-definition-refresh-and-context-menu/🟦️.ts";
 export { exampleBodyAssetPrefix, examplesForApp } from "./🗣️contributions-and-examples/🟦️.ts";
 export type { PluginManifest, ProgramContributionEntry } from "./🗣️contributions-and-examples/🟦️.ts";
+export type { MediaType } from "./🤖️generated/🪪️manifest/🟦️.ts";

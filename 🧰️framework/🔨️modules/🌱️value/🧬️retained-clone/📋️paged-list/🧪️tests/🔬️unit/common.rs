@@ -9,17 +9,17 @@ use std::{
     },
 };
 
-fn close_fixture<T: RetainedClone>(cursor: &mut impl RetainedCloneCursor<T>, items: usize, work: usize) -> Result<RetainedCloneStep, crate::ValueError> {
+fn close_fixture<T: RetainedClone>(cursor: &mut impl RetainedCloneCursor<T>, items: usize, work: usize) -> Result<RetainedCloneStep, crate::OriginalRetirementFailure> {
     let d=cursor.close_demands(work)?;
     let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes)?,d);
-    let quote=cursor.close_work_demand(work)?;let turn=cursor.close_step(grant);assert!(turn.work<=quote);let step=turn.result?;
+    let quote=cursor.close_work_demand(work)?;let turn=effect::close_step(cursor,grant);assert!(turn.work<=u128::from(quote));let step=turn.result?;
     assert!(step.progress().fits(grant));
     Ok(step)
 }
 
-fn retire_fixture<T: RetireOwned>(owner: &mut crate::retirement::controlled::ControlledRetirement<T>, items: usize, work: usize) -> Result<RetainedCloneStep, crate::ValueError> {
+fn retire_fixture<T: RetireOwned>(owner: &mut crate::retirement::controlled::ControlledRetirement<T>, items: usize, work: usize) -> Result<RetainedCloneStep, crate::OriginalRetirementFailure> {
     let d=owner.selected_demand(work)?;let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert_eq!(owner.selected_demand(grant.maximum_copy_bytes)?,d);
-    let result=owner.step(grant);assert!(owner.last_turn_work()<=1);let step=result?;
+    let result=effect::settle(grant,|e|owner.step(e)).result;assert!(owner.last_turn_work()<=1);let step=result?;
     assert!(step.progress().fits(grant));
     Ok(step)
 }
@@ -57,8 +57,7 @@ fn source(fixture: &Fixture) -> PagedList<String, 1024> {
     let mut source = PagedList::default();
     for ordinal in 0..fixture.entry_count {
         while !source.has_reserved_slot() {
-            let required = source.next_allocation_bytes().expect("fixture capacity");
-            assert!(source.reserve_one(required).expect("fixture reserve").progressed);
+            assert!(effect::progressed(&effect::run(effect::STOCK,|e|source.reserve_one(e)).result.expect("fixture reserve")));
         }
         source.push_reserved(format!("{}{}", fixture.value_prefix, ordinal)).expect("fixture placement");
     }

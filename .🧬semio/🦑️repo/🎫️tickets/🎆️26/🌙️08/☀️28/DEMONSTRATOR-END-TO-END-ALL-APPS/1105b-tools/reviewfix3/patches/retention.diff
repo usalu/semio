@@ -1,0 +1,11 @@
+--- patches/orig/retention.rs	2026-11-07 14:11:42
++++ patches/new/retention.rs	2026-11-07 14:11:42
+@@ -47,7 +47,7 @@
+     fn step_retained(&mut self,kernel:&mut Brep,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+         let grant=effect.grant();
+         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+-        if kernel.pending_mutations!=0&&!self.cancelled{return Ok(RetainedCloneStep::Progress(Default::default()));}
++        if kernel.pending_mutations!=0&&!self.cancelled{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"an open mesh import blocks retention until it closes"));}
+         if let Some(owner)=&mut self.removed{let result=settled(owner.step(effect));self.receipt.0=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.removed=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+         if let Some(owner)=&mut self.closing_walk{let result=settled(owner.step(effect));self.receipt.0=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.closing_walk=None;}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())});}
+         if self.revision!=kernel.retention_source_revision(){self.restarting=true;}

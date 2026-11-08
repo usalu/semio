@@ -1,7 +1,7 @@
 //! 📥️ Original budgeted neuron input assembly with retained immutable dictionary entries.
 
 use super::{Dictionary,Value,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement};
 use semio_framework_value_ordered::ordered::UpdateCursor;
 use std::mem::ManuallyDrop;
@@ -29,18 +29,19 @@ impl BudgetedInputMerge {
         Ok(RetirementDemand{depth:usize::from(self.phase!=4),..Default::default()})
     }
     /// ⏱️ Advances one existing merge event and saves its actual physical receipt through refusal.
-    pub fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.progress=Default::default();let result=self.advance(grant);if let Ok(step)=&result{self.progress=step.progress()}result.map_err(|error|error.with_retained_progress(self.progress))}
-    fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        let empty=RetainedCloneProgress::default();if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original input merge is closing"))}if self.is_complete(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
-        if let Some(owner)=self.child.as_mut(){let result=owner.step(grant);self.progress=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.child=None;}return Ok(RetainedCloneStep::Progress(step.progress()))}
-        let demand=self.next_demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original input merge requires admitted depth"))}if grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_copy_bytes<demand.copy_bytes{return Ok(RetainedCloneStep::Progress(empty))}
+    pub fn step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{self.progress=Default::default();let result=self.advance(effect);if let Ok(step)=&result{self.progress=step.progress()}result.map_err(|exit|match exit{RetirementPollExit::Failed(failure)=>RetirementPollExit::Failed(failure.with_retained_progress(self.progress)),pending=>pending})}
+    fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+        let grant=effect.grant();let empty=RetainedCloneProgress::default();if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original input merge is closing").into())}if self.is_complete(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
+        if let Some(owner)=self.child.as_mut(){let result=RetirementPollExit::resume(owner.step(effect));self.progress=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.child=None;}return Ok(RetainedCloneStep::Progress(step.progress()))}
+        let demand=self.next_demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original input merge requires admitted depth").into())}if grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_copy_bytes<demand.copy_bytes{return Ok(RetainedCloneStep::Progress(empty))}
         let progress=RetainedCloneProgress{copied_items:1,..empty};
+        let absent=|message:&'static str|RetirementPollExit::from(ValueError::invariant(message));
         match self.phase {
-            0=>{let overlay=self.owners.overlay.as_ref().unwrap();if self.rank==overlay.len(){self.phase=4;}else{let(key,value)=overlay.pairs().entry_shared_at_rank(self.rank).unwrap();self.owners.update=Some(self.owners.output.as_ref().unwrap().pairs().begin_set_shared(key,value));self.phase=1;}},
-            1=>{let update=self.owners.update.as_mut().ok_or_else(||ValueError::invariant("update absent"))?;let step=update.advance(grant).result?;if update.is_complete(){self.phase=2;}return Ok(RetainedCloneStep::Progress(step.progress()));},
-            2=>{let result=self.owners.update.as_mut().unwrap().take_result().unwrap();let displaced=std::mem::replace(&mut self.owners.output.as_mut().unwrap().pairs,result);self.child=Some(ControlledRetirement::new(InputClose::Dictionary(Dictionary{pairs:displaced})).unwrap_or_else(|_|unreachable!("original dictionary fields declare retirement")));self.phase=3;},
-            3=>{self.child=Some(ControlledRetirement::new(InputClose::Update(self.owners.update.take().unwrap())).unwrap_or_else(|_|unreachable!("original update declares retirement")));self.rank+=1;self.phase=0;},
-            _=>unreachable!(),
+            0=>{let overlay=self.owners.overlay.as_ref().ok_or_else(||absent("overlay absent"))?;if self.rank==overlay.len(){self.phase=4;}else{let(key,value)=overlay.pairs().entry_shared_at_rank(self.rank).ok_or_else(||absent("overlay entry absent"))?;let output=self.owners.output.as_ref().ok_or_else(||absent("output absent"))?;self.owners.update=Some(output.pairs().begin_set_shared(key,value));self.phase=1;}},
+            1=>{let update=self.owners.update.as_mut().ok_or_else(||absent("update absent"))?;let turn=update.advance(grant,effect.remaining_work_units()?);RetirementPollExit::pay(effect,turn.work)?;let step=turn.result?;if update.is_complete(){self.phase=2;}return Ok(RetainedCloneStep::Progress(step.progress()));},
+            2=>{let result=self.owners.update.as_mut().and_then(UpdateCursor::take_result).ok_or_else(||absent("update result absent"))?;let output=self.owners.output.as_mut().ok_or_else(||absent("output absent"))?;let displaced=std::mem::replace(&mut output.pairs,result);self.child=Some(ControlledRetirement::retain(InputClose::Dictionary(Dictionary{pairs:displaced})));self.phase=3;},
+            3=>{let update=self.owners.update.take().ok_or_else(||absent("update absent"))?;self.child=Some(ControlledRetirement::retain(InputClose::Update(update)));self.rank+=1;self.phase=0;},
+            _=>return Err(absent("original input merge phase")),
         }
         Ok(if self.is_complete(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
     }
@@ -49,22 +50,32 @@ impl BudgetedInputMerge {
     /// 🛑️ Requests closure without decomposing or dropping any original source.
     pub fn begin_close(&mut self){self.closing=true;}
     pub fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=&self.child{return Self::demands(owner,copy)}if let Some(owner)=&self.closure{return Self::demands(owner,copy)}Ok(RetirementDemand{depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
+    /// ⛽️ Quotes the selected child step or the one field handoff.
+    pub fn next_close_work(&self,body:usize)->Result<u64,ValueError>{if let Some(owner)=&self.child{return owner.next_computational_work(body)}if let Some(owner)=&self.closure{return owner.next_computational_work(body)}Ok(u64::from(!self.terminal_is_empty()))}
     /// 🧹️ Closes an actual child before handing off all remaining original fields.
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.progress=Default::default();let result=self.close_source(grant);if let Ok(step)=&result{self.progress=step.progress()}result.map_err(|error|error.with_retained_progress(self.progress))}
-    fn close_source(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        let empty=RetainedCloneProgress::default();if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original input close was not requested"))}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
-        if let Some(owner)=self.child.as_mut(){let result=owner.step(grant);self.progress=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.child=None;}return Ok(RetainedCloneStep::Progress(step.progress()))}
-        if let Some(owner)=self.closure.as_mut(){let result=owner.step(grant);self.progress=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.closure=None;}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
-        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original input close handoff requires admitted depth"))}
-        let fields=InputOwners{output:self.owners.output.take(),overlay:self.owners.overlay.take(),update:self.owners.update.take()};self.closure=Some(ControlledRetirement::new(fields).unwrap_or_else(|_|unreachable!("original input schema declares every field")));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+        self.progress=Default::default();let grant=effect.grant();let empty=RetainedCloneProgress::default();
+        let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+            if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original input close was not requested").into())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
+            if let Some(owner)=self.child.as_mut(){let result=RetirementPollExit::resume(owner.step(effect));self.progress=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.child=None;}return Ok(RetainedCloneStep::Progress(step.progress()))}
+            if let Some(owner)=self.closure.as_mut(){let result=RetirementPollExit::resume(owner.step(effect));self.progress=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.closure=None;}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+            if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original input close handoff requires admitted depth").into())}
+            if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original input close handoff exceeds its work ceiling").into())}
+            let fields=InputOwners{output:self.owners.output.take(),overlay:self.owners.overlay.take(),update:self.owners.update.take()};self.closure=Some(ControlledRetirement::retain(fields));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
+        })();
+        let poll=RetirementPollExit::settle(effect,result);
+        if let semio_framework_value::RetainedWorkPoll::Complete(turn)=&poll{self.progress=turn.result.as_ref().map_or_else(|failure|failure.retained_progress(),|step|step.progress())}
+        poll
     }
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.child.is_none()&&self.closure.is_none()&&self.owners.output.is_none()&&self.owners.overlay.is_none()&&self.owners.update.is_none()}
 }
 impl Drop for BudgetedInputMerge{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original input merge must reach physical terminal emptiness");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}
-struct InputRetirement(BudgetedInputMerge);
+/// 🧹️ Owns a closing input merge as its retirement cursor.
+pub struct InputRetirement(BudgetedInputMerge);
 impl RetirementCursor for InputRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.next_close_demands(body) }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step) if step.progress()!=RetainedCloneProgress::default()=>RetirementStep::Progress(step.progress(),1),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete(0),Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error,0)}}
+    fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.0.next_close_work(body)}
+    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{semio_framework_value::retirement::erased_cursor_turn(self.0.close_step(effect))}
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}
     fn allows_admitted_narrow_work(&self)->bool{true}
@@ -74,7 +85,8 @@ impl RetirementCursor for InputRetirement {
     fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl RetireOwned for BudgetedInputMerge {
-    fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(InputRetirement(self))}
+    type RetirementCursor=InputRetirement;
+    fn retirement_seed(mut self)->InputRetirement{self.begin_close();InputRetirement(self)}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<InputRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
@@ -89,17 +101,16 @@ impl BudgetedOwnedEntry{
  /// 📥️ Moves the actual original shared entry into the same update owner.
  pub fn from_shared(base:Dictionary,key:semio_framework_value_ordered::ordered::SharedOwner<String>,value:semio_framework_value_ordered::ordered::SharedOwner<Value>)->Self{Self{entry:semio_framework_value_ordered::ordered::OriginalOwnedEntry::from_shared(base.pairs,key,value)}}
  pub fn step_progress(&self)->RetainedCloneProgress{self.entry.step_progress()}
- pub fn last_turn_work(&self)->u64{self.entry.last_turn_work()}
  pub fn next_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{self.entry.next_demands(copy)}
  /// ⏱️ Publishes the exact map as a dictionary without cloning source or replacement ownership.
- pub fn step(&mut self,grant:RetainedCloneGrant)->Result<Option<Dictionary>,ValueError>{self.entry.advance(grant).result.map(|output|output.map(|pairs|Dictionary{pairs}))}
- pub fn begin_close(&mut self){self.entry.begin_close()}
+ pub fn step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkPoll<Option<Dictionary>,semio_framework_value::OriginalRetirementFailure>{self.entry.advance(effect).map(|output|output.map(|pairs|Dictionary{pairs}))}
  pub fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{self.entry.next_close_demands(copy)}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.entry.close_step(grant).result}
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.entry.close_step(effect)}
  pub fn terminal_is_empty(&self)->bool{self.entry.terminal_is_empty()}
 }
 impl RetireOwned for BudgetedOwnedEntry{
- fn retirement(self)->Box<dyn RetirementCursor>{self.entry.retirement()}
+ type RetirementCursor=<semio_framework_value_ordered::ordered::OriginalOwnedEntry<Value> as RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{self.entry.retirement_seed()}
  fn retirement_birth_bytes(&self)->Option<usize>{self.entry.retirement_birth_bytes()}
  fn controlled_retirement_supported()->bool{<semio_framework_value_ordered::ordered::OriginalOwnedEntry<Value>as RetireOwned>::controlled_retirement_supported()}
 }

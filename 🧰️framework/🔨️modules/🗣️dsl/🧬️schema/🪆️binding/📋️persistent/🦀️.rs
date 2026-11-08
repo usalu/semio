@@ -3,10 +3,6 @@ use super::*;
 use semio_framework_value::persistent::{PersistentList,PersistentListIter};
 use semio_framework_value::retirement::RetireOwned;
 
-impl<T:RetireOwned+Send+Sync+'static> DslSequenceView<T> for PersistentList<T>{
-    type Iter<'a>=PersistentListIter<'a,T> where T:'a;
-    fn field_items(&self)->Self::Iter<'_>{self.iter()}
-}
 impl<T:BorrowedDslField+RetireOwned+Send+Sync+'static> BorrowedDslField for PersistentList<T>{const SHAPE:BorrowedShape=BorrowedShape::List(borrowed_field_shape::<T>);}
 impl<T:DslField+RetireOwned+Send+Sync+'static> DslField for PersistentList<T>{
     fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if path.is_empty(){return Ok(native_encoding::FieldProjectionView::List(self.len()))}self.get(path[0]).ok_or_else(native_encoding::projection_path_error)?.projection_view(&path[1..])}

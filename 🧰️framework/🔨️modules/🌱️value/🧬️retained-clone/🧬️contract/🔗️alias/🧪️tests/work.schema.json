@@ -19,7 +19,7 @@
       "minimum": 1
     },
     "expectedStages": {
-      "const": 3
+      "const": 2
     }
   }
 }

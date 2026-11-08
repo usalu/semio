@@ -18,12 +18,16 @@ impl<S:JsonReadSource+Copy,V:JsonParsedValue> JsonSourceCursor<S,V>{
     pub fn normal_step_progress(&self)->super::RetainedCloneProgress{self.parser.normal_step_progress()}
     pub fn last_turn_work(&self)->u64{self.parser.last_turn_work()}
     pub fn normal_step_demands(&self)->Result<super::RetirementDemand,JsonError>{self.parser.normal_step_demands(&self.source)}
-    pub fn step(&mut self,maximum_units:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:super::RetainedCloneGrant)->Result<Option<V>,JsonError>{self.parser.step_source(&self.source,maximum_units,control,grant,false)}
+    pub fn step(&mut self,maximum_units:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<V>,JsonError>{self.parser.step_source(&self.source,maximum_units,control,effect,false)}
     pub fn retirement_birth_bytes(&self)->usize{semio_framework_value::owned_retirement_birth_bytes::<super::JsonGrammarCursor<V>>()}
-    pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Self)>{
-        let Self{source,parser}=self;
-        let turn=semio_framework_value::admit_owned_retirement(parser,grant);
-        semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,parser)|(error,Self{source,parser})),work:turn.work}
+    /// 📏️ Quotes the complete physical grant that funds this cursor's controlled retirement frame.
+    pub fn retirement_birth_demand(&self)->Result<super::RetirementDemand,semio_framework_value::ValueError>{semio_framework_value::retirement::controlled::controlled_retirement_birth_demand(&self.parser)}
+    pub fn into_retirement(self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Self)>{
+        let Self{source,parser}=self;let policy=parser.policy;let mut slot=Some(parser);let grant=effect.grant();
+        let turn=semio_framework_value::admit_owned_retirement(&mut slot,effect);
+        let restore=|slot:&mut Option<super::JsonGrammarCursor<V>>|Self{source,parser:slot.take().unwrap_or_else(||super::JsonGrammarCursor::new(policy))};
+        let result=match turn.result{Ok(Some((owner,progress)))=>Ok((owner,progress)),Ok(None)=>Err((if grant.maximum_items==0{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"JSON grammar retirement requires one admitted item")}else if grant.maximum_depth==0{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"JSON grammar retirement requires admitted depth")}else{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"JSON grammar retirement exceeds its admitted grant")},restore(&mut slot))),Err(error)=>Err((error,restore(&mut slot)))};
+        semio_framework_value::RetainedWorkOutcome{result,work:turn.work}
     }
 }
 

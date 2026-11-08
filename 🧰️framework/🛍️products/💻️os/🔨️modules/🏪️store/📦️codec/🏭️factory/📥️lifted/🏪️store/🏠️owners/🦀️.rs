@@ -24,7 +24,7 @@ where P:ToValue+Send+Sync+'static,M:ToValue+FromValue+Mutation<P>+Send+Sync+'sta
  for _ in 0..1024 {
   if owners.constructor_is_complete(){return Ok(owners)}
   let demand=match owners.constructor_demands(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES){Ok(demand)=>demand,Err(error)=>{close_unscheduled_catalog(owners);return Err(error)}};
-  if let Err((error,_))=owners.admit_constructor(grant(demand)){close_unscheduled_catalog(owners);return Err(error)}
+  if let Err((error,_))=owners.admit_constructor_cold(grant(demand)){close_unscheduled_catalog(owners);return Err(error)}
  }
  close_unscheduled_catalog(owners);
  Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"codec original owner constructor did not terminate"))

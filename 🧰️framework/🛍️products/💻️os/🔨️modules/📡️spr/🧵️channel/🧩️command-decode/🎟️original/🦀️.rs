@@ -2,7 +2,7 @@
 use super::*;
 use std::mem::size_of;
 use semio_framework_job::{StepContext,OriginalTurnFailure};
-use semio_framework_value::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress,RetainedCloneStep as Step,RetainedWorkOutcome as Turn,RetirementDemand as Demand,ValueError,ValueRefusalKind,retained_clone_grant_admits,retirement::{RetireOwned,controlled::ControlledRetirement}};
+use semio_framework_value::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress,RetainedCloneStep as Step,RetainedWorkOutcome as Turn,RetirementDemand as Demand,ValueError,ValueRefusalKind,RetirementPollExit,retained_clone::retained_clone_grant_admits,retirement::{RetireOwned,controlled::ControlledRetirement}};
 use ::protocol::wire::command_ingress::{OriginalCommandField,OriginalCommandVarint};
 #[derive(Debug,Default,semio_framework_value::RetireOwned)]
 #[value(crate="::semio_framework_value")]
@@ -12,7 +12,18 @@ pub(super) type OriginalCursorClose=ControlledRetirement<(PagedCommandReader,Pag
 enum Atom{Bytes(usize),Text(usize),Number(usize),Selection,Ops,Archive,Finish}
 fn invalid(message:&'static str)->OriginalTurnFailure{ValueError::literal(ValueRefusalKind::InvalidValue,message).into()}
 fn pay(cx:&mut StepContext<'_>,bytes:usize,work:u64)->Result<bool,OriginalTurnFailure>{if cx.fuel_remaining()<work||!retained_clone_grant_admits(cx.retained_grant(),Demand{copy_bytes:bytes,depth:1,..Default::default()}){return Ok(false)}cx.consume_retained(Progress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(work);Ok(true)}
-fn debit(turn:Turn<Step>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{cx.consume_fuel(turn.work);match turn.result{Ok(step)=>cx.consume_retained(step.progress()).map_err(Into::into),Err(error)=>Err(OriginalTurnFailure::debit_original(error,cx))}}
+/// 🪙️ Steps one retained cleanup owner inside the context's own performed-work effect and settles its receipt once.
+pub(super) fn close_controlled<U:RetireOwned>(owner:&mut ControlledRetirement<U>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+ let grant=cx.retained_grant();
+ let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|owner.step(effect))?else{return Ok(())};
+ let Ok(turn)=RetirementPollExit::settled(poll)else{return Err(invalid("original command cleanup left its producer reply pending"))};
+ let overrun=performed>turn.work;
+ let settled=semio_framework_job::receive_original_retained_work(cx,turn).map(|_|());
+ if !overrun{return settled}
+ let refusal=ValueError::literal(ValueRefusalKind::InvariantViolated,"original command cleanup performed more work than it settled");
+ match settled{Ok(())=>Err(refusal.into()),Err(mut failure)=>{failure.work_refusal=Some(refusal);Err(failure)}}
+}
+fn debit(turn:Turn<Step>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{cx.consume_work(turn.work);match turn.result{Ok(step)=>cx.consume_retained(step.progress()).map_err(Into::into),Err(error)=>Err(OriginalTurnFailure::debit_original(error,cx))}}
 fn reserve<T>(out:&mut Vec<T>,count:usize,ready:&mut bool,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if *ready{return Ok(true)}if !out.is_empty()||out.capacity()!=0{return Err(invalid("command roster reserve requires an empty original home"))}let capacity=count.checked_mul(size_of::<T>()).ok_or_else(||invalid("command roster extent overflow"))?;let bytes=size_of::<Vec<T>>()+size_of::<bool>();let grant=cx.retained_grant();if cx.fuel_remaining()<1||!retained_clone_grant_admits(grant,Demand{copy_bytes:bytes,capacity_bytes:capacity,depth:1,..Default::default()}){return Ok(false)}cx.consume_fuel(1);if out.try_reserve_exact(count).is_err(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"command roster backing allocation refused").into())}let progress=Progress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:out.capacity()*size_of::<T>(),..Default::default()};*ready=true;if !progress.fits(grant){return Err(OriginalTurnFailure::debit_original(ValueError::literal(ValueRefusalKind::InvariantViolated,"command roster allocation exceeded its funded quote").with_retained_progress(progress),cx))}cx.consume_retained(progress)?;Ok(false)}
 impl OriginalCommandDecode{
  fn plan(&self)->Result<Atom,OriginalTurnFailure>{use Atom::*;let i=self.index;Ok(match self.tag.unwrap(){
@@ -56,8 +67,8 @@ impl PagedAppCommandDecodeCursor{
  pub fn close_original_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.original_retired{return Ok(true)}if cx.retirement_should_yield(){return Ok(false)}
   if self.original_close.is_none(){let bytes=size_of::<PagedCommandReader>()+size_of::<PagedAppCommandDecodeState>()+size_of::<OriginalCommandDecode>()+size_of::<Option<OriginalCursorClose>>();if !<(PagedCommandReader,PagedAppCommandDecodeState,OriginalCommandDecode)>::controlled_retirement_supported(){return Err(invalid("original command cursor lacks a complete retirement graph"))}if !pay(cx,bytes,1)?{return Ok(false)}let reader=std::mem::replace(&mut self.reader,PagedCommandReader::empty_source_home());let state=std::mem::replace(&mut self.state,PagedAppCommandDecodeState::Terminal);let original=std::mem::take(&mut self.original);self.original_close=Some(ControlledRetirement::retain((reader,state,original)));return Ok(false)}
-  let owner=self.original_close.as_mut().unwrap();if owner.terminal_is_empty(){let bytes=size_of::<Option<OriginalCursorClose>>()+2*size_of::<bool>();if !pay(cx,bytes,1)?{return Ok(false)}self.original_close.take();self.original_active=false;self.original_retired=true;return Ok(true)}
-  let grant=cx.retained_grant();let demand=owner.next_demand(grant.maximum_copy_bytes)?;let work=owner.next_computational_work(grant.maximum_copy_bytes)?;if cx.fuel_remaining()<work||!retained_clone_grant_admits(grant,demand){return Ok(false)}let result=owner.step(grant);cx.consume_fuel(owner.last_turn_work());match result{Ok(step)=>cx.consume_retained(step.progress())?,Err(failure)=>return Err(OriginalTurnFailure::debit_original(failure,cx))}Ok(false)
+  let Some(owner)=self.original_close.as_mut()else{return Err(invalid("original command cleanup lost its retained cursor"))};if owner.terminal_is_empty(){let bytes=size_of::<Option<OriginalCursorClose>>()+2*size_of::<bool>();if !pay(cx,bytes,1)?{return Ok(false)}self.original_close.take();self.original_active=false;self.original_retired=true;return Ok(true)}
+  let grant=cx.retained_grant();let demand=owner.next_demand(grant.maximum_copy_bytes)?;let work=owner.next_computational_work(grant.maximum_copy_bytes)?;if cx.fuel_remaining()<work||!retained_clone_grant_admits(grant,demand){return Ok(false)}close_controlled(owner,cx)?;Ok(false)
  }
 }
 #[path="🏗️.rs"]

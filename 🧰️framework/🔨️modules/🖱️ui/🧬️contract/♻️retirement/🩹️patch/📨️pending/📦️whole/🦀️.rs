@@ -63,7 +63,7 @@ impl UiPendingPatch {
             let metadata=size_of::<UiTypedRetirementCursor>()+size_of::<bool>();
             if grant.maximum_items==0||grant.maximum_copy_bytes<=metadata||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}
             let step=self.close_step(1,grant.maximum_copy_bytes-metadata).map_err(|error|ValueError::literal(ValueRefusalKind::InvariantViolated,error))?;
-            work=u64::from(step.progressed);
+            work=u128::from(step.progressed);
             let progress=if step.progressed{RetainedCloneProgress{copied_items:1,copied_bytes:metadata+step.released_bytes,released_bytes:demand.release_bytes,..Default::default()}}else{Default::default()};
             Ok(if step.complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
         })();

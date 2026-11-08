@@ -1,5 +1,5 @@
 //! 📦️ Original native slots retain one payload and its genuine captured read issuer.
-pub use semio_framework_value_control_contract::{RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,RetainedAllocationEffect,OriginalRetirementFailure};
+pub use semio_framework_value_control_contract::{RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind,RetainedAllocationEffect,OriginalRetirementFailure};
 pub use semio_framework_value_factory::{ArtifactOwnedValueRetirementFactory,FactoryAuthority};
 pub use semio_framework_value_factory::owned::{FactoryOwnedRetirement,FactoryOwnedSourceAuthority};
 pub use semio_framework_value_retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneSourceTake,RetainedCloneStep,retained_clone_grant_admits};

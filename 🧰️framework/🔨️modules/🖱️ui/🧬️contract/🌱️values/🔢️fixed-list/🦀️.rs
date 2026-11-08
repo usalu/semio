@@ -1,6 +1,10 @@
 //! 🔢️ Fixed list: the `UiFixedList` paged list with its iterators, indexing, serde and value conversions. See [`super`].
 
 use super::*;
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneStep,RetirementDemand,ValueError};
+use semio_framework_value::retained_clone::retained_clone_grant_admits;
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::native_decoding::{NativeReceive,owned::{NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,NativeMappedReceiver,NativeReceiveMap,tree::{NativeValueSource,fixed,receipt}}};
 
 pub struct UiFixedList<T, const N: usize = UI_FIXED_LIST_ITEMS> {
     pub(super) storage: fixed_list_storage::PagedList<T, N>,
@@ -60,16 +64,17 @@ impl<T, const N: usize> UiFixedList<T, N> {
     pub fn next_allocation_bytes(&self) -> Result<usize, PagedListError> {
         self.storage.next_allocation_bytes()
     }
+    /// 🧊️ Cold page admission at an explicitly synchronous boundary whose caller already charged the exact page bytes; retained owners use try_reserve_one_funded.
     pub fn try_reserve_one(&mut self, bytes: usize) -> Result<PagedListProgress, PagedListAllocationError> {
-        self.storage.reserve_one(bytes)
+        self.storage.reserve_one_cold(bytes)
     }
-    /// 🎟️ Admits at most one backing page under the caller's own grant and returns the exact funded receipt; a grant that cannot carry the page leaves the list untouched and returns the empty receipt.
-    pub fn try_reserve_one_funded(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, PagedListAllocationError> {
-        self.storage.reserve_one_funded(grant)
+    /// 🎟️ Admits at most one backing page under the caller's own effect and returns the exact funded receipt; a grant that cannot carry the page leaves the list untouched and reports `Denied`.
+    pub fn try_reserve_one_funded(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome<PagedListReservationOutcome<RetainedCloneProgress>, PagedListReservationFailure> {
+        self.storage.reserve_one_funded(effect)
     }
-    /// ↩️ Admits at most one backing page toward `capacity` slots under the caller's own grant and returns the exact funded receipt, whether or not a slot is already free; a list that already holds `capacity` slots, or a grant that cannot carry the page, returns the empty receipt and leaves the list untouched.
-    pub fn try_reserve_capacity_one_funded(&mut self, capacity: usize, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, PagedListAllocationError> {
-        self.storage.reserve_capacity_one_funded(capacity, grant)
+    /// ↩️ Admits at most one backing page toward `capacity` slots under the caller's own effect, whether or not a slot is already free; a list that already holds `capacity` slots, or a grant that cannot carry the page, leaves the list untouched.
+    pub fn try_reserve_capacity_one_funded(&mut self, capacity: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome<PagedListReservationOutcome<RetainedCloneProgress>, PagedListReservationFailure> {
+        self.storage.reserve_capacity_one_funded(capacity, effect)
     }
     pub fn try_place_reserved(&mut self, source: &mut Option<T>, bytes: usize) -> Result<PagedListProgress, PagedListError> {
         self.storage.place_reserved(source, bytes)
@@ -79,8 +84,13 @@ impl<T, const N: usize> UiFixedList<T, N> {
     pub fn next_pop_depth_demand(&self)->Result<usize,PagedListError>{self.storage.next_pop_depth_demand()}
     /// 👣️ Borrows the original native page path depth before physical release.
     pub fn next_release_depth_demand(&self)->Result<usize,PagedListError>{self.storage.next_release_depth_demand()}
-    pub fn release_empty_page(&mut self, maximum_bytes: usize) -> Result<PagedListProgress, PagedListError> {
-        self.storage.release_empty_page(maximum_bytes)
+    /// ♻️ Releases the selected empty page through the caller's own effect.
+    pub fn release_empty_page(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome<PagedListReleaseOutcome, PagedListReleaseFailure> {
+        self.storage.release_empty_page(effect)
+    }
+    /// 🪶️ Releases one empty page inside an exclusive arena lease whose cursor owner pays one unit per progressed step.
+    pub fn release_empty_page_leased(&mut self, maximum_bytes: usize) -> Result<PagedListProgress, PagedListError> {
+        self.storage.release_empty_page_leased(maximum_bytes)
     }
     pub(crate) fn truncate_retired_last(&mut self) -> Result<(), PagedListError> {
         self.storage.truncate_retired_last()
@@ -123,7 +133,7 @@ impl<T, const N: usize> UiFixedList<T, N> {
         }
         let released = !self.terminal_is_empty();
         while !self.terminal_is_empty() {
-            self.release_empty_page(usize::MAX)?;
+            self.release_empty_page_leased(usize::MAX)?;
         }
         Ok(released)
     }
@@ -333,23 +343,30 @@ impl<T: ::semio_framework_value::FromValue, const N: usize> ::semio_framework_va
     }
 }
 
-impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> semio_framework_value::retirement::RetireOwned for UiFixedList<T,N>{fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.storage)}fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.storage)}fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}}
+impl<T:RetireOwned,const N:usize> RetireOwned for UiFixedList<T,N>{
+    type RetirementCursor=<fixed_list_storage::PagedList<T,N> as RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{self.storage.retirement_seed()}
+    fn retirement_ready(&self)->bool{self.storage.retirement_ready()}
+    fn retirement_birth_bytes(&self)->Option<usize>{self.storage.retirement_birth_bytes()}
+    fn controlled_retirement_supported()->bool{<fixed_list_storage::PagedList<T,N> as RetireOwned>::controlled_retirement_supported()}
+}
 
-impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> semio_framework_value::native_decoding::owned::NativeReceiveMap<fixed_list_storage::PagedList<T,N>> for UiFixedList<T,N>{fn mapping_demand(_:&fixed_list_storage::PagedList<T,N>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_value::native_decoding::owned::native_mapping_demand::<fixed_list_storage::PagedList<T,N>,Self>(0)}fn mapping_work_demand(_:&fixed_list_storage::PagedList<T,N>)->Result<u64,semio_framework_value::ValueError>{semio_framework_value::native_decoding::owned::native_mapping_work_demand(0)}fn map_step(input:&mut Option<fixed_list_storage::PagedList<T,N>>,output:&mut Option<Self>,g:semio_framework_value::RetainedCloneGrant,maximum:u64,_:Option<&mut Option<usize>>)->semio_framework_value::RetainedWorkOutcome{let d=semio_framework_value::native_decoding::owned::native_mapping_demand::<fixed_list_storage::PagedList<T,N>,Self>(0).unwrap();let q=semio_framework_value::native_decoding::owned::native_mapping_work_demand(0).unwrap();semio_framework_value::native_decoding::owned::map_native_owner(input,output,g,maximum,d,q,|storage|Self{storage})}}
+impl<T:RetireOwned,const N:usize> NativeReceiveMap<fixed_list_storage::PagedList<T,N>> for UiFixedList<T,N>{fn from_native(storage:fixed_list_storage::PagedList<T,N>)->Self{Self{storage}}}
 
-impl<I:semio_framework_value::native_decoding::owned::tree::NativeValueSource+?Sized,T:semio_framework_value::native_decoding::NativeReceive<dyn semio_framework_value::native_decoding::owned::tree::NativeValueSource>,const N:usize> semio_framework_value::native_decoding::NativeReceive<I> for UiFixedList<T,N>{
-    type Receiver=semio_framework_value::native_decoding::owned::NativeMappedReceiver<I,fixed_list_storage::PagedList<T,N>,Self>;
+impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,const N:usize> NativeReceive<I> for UiFixedList<T,N>{
+    type Receiver=NativeMappedReceiver<I,fixed_list_storage::PagedList<T,N>,Self>;
     fn receiver()->Self::Receiver{Self::Receiver::new()}
 }
 
-impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> semio_framework_value::native_decoding::owned::NativeDefaultValue for UiFixedList<T,N>{
-    fn default_demand()->semio_framework_value::RetirementDemand{semio_framework_value::native_decoding::owned::tree::fixed(0)}
-    fn admit_default(output:&mut Option<Self>,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
-        use semio_framework_value::{RetainedCloneStep,RetainedWorkOutcome,retained_clone::retained_clone_grant_admits};
+impl<T:RetireOwned,const N:usize> NativeDefaultValue for UiFixedList<T,N>{
+    fn default_demand()->RetirementDemand{fixed(size_of::<Option<Self>>())}
+    fn default_work_demand()->Result<u64,ValueError>{Ok(1)}
+    fn default_allocates()->bool{false}
+    fn admit_default(output:&mut Option<Self>,grant:RetainedCloneGrant,_actual:Option<&mut Option<usize>>)->RetainedWorkOutcome{
         if output.is_some(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
-        let demand=<Self as semio_framework_value::native_decoding::owned::NativeDefaultValue>::default_demand();
+        let demand=Self::default_demand();
         if !retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-        *output=Some(Self::empty());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(semio_framework_value::native_decoding::owned::tree::receipt(demand))),work:1}
+        *output=Some(Self::empty());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(demand))),work:1}
     }
 }
-impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> semio_framework_value::native_decoding::owned::NativeDefault for UiFixedList<T,N>{type Cursor=semio_framework_value::native_decoding::owned::NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{Self::Cursor::new()}}
+impl<T:RetireOwned,const N:usize> NativeDefault for UiFixedList<T,N>{type Cursor=NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{Self::Cursor::new()}}

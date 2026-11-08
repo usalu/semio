@@ -33,7 +33,7 @@ window.mountMediaTransportOracle = async (input) => {
       const running = poll < input.running.progress.length;
       const index = poll++;
       calls.push(`poll:${index}`);
-      return { handle, state: running ? "running" : "complete", applied_progress: BigInt(input.running.progress[Math.min(index, input.running.progress.length - 1)] ?? 0), checkpoint_available: false, descriptor: [], mime_type: input.media.mediaType, total_bytes: BigInt(input.output.totalBytes), detail: running ? input.running.detail[index] ?? "" : "complete" };
+      return { handle, state: running ? "running" : "complete", applied_progress: BigInt(input.running.progress[Math.min(index, input.running.progress.length - 1)] ?? 0), checkpoint_available: false, descriptor: [1, 2, 3], mime_type: input.media.mediaType, total_bytes: BigInt(input.output.totalBytes), detail: running ? input.running.detail[index] ?? "" : "complete" };
     },
     cancelMediaExport: async () => { calls.push("cancel"); },
     takeMediaExportChunk: async () => {

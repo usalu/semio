@@ -615,8 +615,9 @@ impl AppActionRegistry {
     /// releases each detached identifier allocation whole on the release axis; a turn granted below the quoted
     /// release demand yields instead of refusing the row for ever.
     #[doc(hidden)]
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
-        if let Some(native)=self.native.as_mut(){return native.close_step(grant).map_err(|error|plugin_sdk_fault(error.to_string()))}
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, Fault> {
+        let grant = effect.grant();
+        if let Some(native)=self.native.as_mut(){return native.close_step(effect).map_err(|error|plugin_sdk_fault(error.to_string()))}
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
         }
@@ -627,6 +628,7 @@ impl AppActionRegistry {
         if grant.maximum_items == 0 || grant.maximum_release_bytes < demand.release_bytes {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
+        semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect).map_err(|error| plugin_sdk_fault(error.to_string()))?;
         if let Some(identifier) = self.retiring.pop() {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: identifier.capacity(), ..Default::default() }));
         }

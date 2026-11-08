@@ -1,6 +1,7 @@
 //! 🧮️ Canonical expression bytes retain only paged traversal metadata and borrow the original AST each turn.
 use super::super::{ExprValue,ExprOp};
-use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress, RetainedWorkOutcome, RetirementDemand};
+use semio_framework_value_persistent::list::{PagedListReleaseFailure,PagedListReleaseOutcome,PagedListReservationFailure,PagedListReservationOutcome};
 use semio_framework_value_paged_text::paged_text::TextReadView;
 use semio_framework_value_persistent::list::PagedList;
 /// 🌿️ One original node lends its scalar, name and child count without constructing a formula mirror.
@@ -11,13 +12,11 @@ pub trait BorrowedExpressionSource{fn expression_view(&self,path:&[usize])->Resu
 impl BorrowedExpressionSource for ExprValue{fn expression_view(&self,path:&[usize])->Result<BorrowedExpressionView<'_>,ValueError>{let mut node=self;for ordinal in path{node=match(node,*ordinal){(Self::Neg(child),0)=>child,(Self::Binary(_,left,_),0)=>left,(Self::Binary(_,_,right),1)=>right,(Self::Call(_,children),index)=>children.get(index).ok_or_else(invalid)?,_=>return Err(invalid())};}Ok(match node{Self::Num(value)=>BorrowedExpressionView::Number(*value),Self::Var(name)=>BorrowedExpressionView::Name(TextReadView::from_str(name)),Self::Neg(_)=>BorrowedExpressionView::Negate,Self::Binary(op,_,_)=>BorrowedExpressionView::Binary(*op),Self::Call(name,children)=>BorrowedExpressionView::Call(TextReadView::from_str(name),children.len())})}}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original expression traversal changed")}
 fn paged(error:semio_framework_value_persistent::list::PagedListError)->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason)}
+/// ⛽️ Records one pure transition on the surrounding effect; false means no work remains and nothing moved.
+fn pure(effect:&mut RetainedAllocationEffect<'_>)->Result<bool,ValueError>{if effect.remaining_work_units()?==0{return Ok(false)}if effect.performed(1)?{Ok(true)}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original expression transition exceeded its work"))}}
 #[derive(Clone,Copy,Default)]
-struct Frame{phase:u8,minimum:u8,bracket:bool,quoted:bool,ordinal:usize,offset:usize,index:usize}
-impl semio_framework_value::retirement::RetireOwned for Frame{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
-    fn controlled_retirement_supported()->bool{true}
-}
+#[doc(hidden)]pub struct Frame{phase:u8,minimum:u8,bracket:bool,quoted:bool,ordinal:usize,offset:usize,index:usize}
+semio_framework_value::artifact_retire_leaf!(Frame);
 /// 🎟️ One admitted source, traversal or output event keeps its original physical receipt.
 #[derive(Default)]
 pub struct RetainedExpressionStep{pub progress:RetainedCloneProgress,pub written_bytes:usize,pub complete:bool}
@@ -35,12 +34,15 @@ impl RetainedExpressionCursor{
  fn push(&mut self,ordinal:usize,minimum:u8)->Result<(),ValueError>{if self.depth+1>self.maximum_depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original expression exceeds caller source depth"));}self.depth+=1;self.frames[self.depth]=Frame{ordinal,minimum,..Default::default()};Ok(())}
  fn finish(&mut self){if self.depth==0{self.phase=3;}else{self.depth-=1;}}
  fn queue(&mut self,bytes:&[u8]){self.pending[..bytes.len()].copy_from_slice(bytes);self.pending_length=bytes.len();self.pending_offset=0;}
- pub fn advance(&mut self,source:&dyn BorrowedExpressionSource,output:&mut[u8],grant:RetainedCloneGrant)->Result<RetainedExpressionStep,ValueError>{
+ pub fn advance(&mut self,source:&dyn BorrowedExpressionSource,output:&mut[u8],effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedExpressionStep>{let mut work=0;let result=self.advance_inner(source,output,effect,&mut work);RetainedWorkOutcome{result,work}}
+ fn advance_inner(&mut self,source:&dyn BorrowedExpressionSource,output:&mut[u8],effect:&mut RetainedAllocationEffect<'_>,work:&mut u128)->Result<RetainedExpressionStep,ValueError>{let grant=effect.grant();
   if self.phase>=4{return Err(invalid());}if self.is_complete(){return Ok(RetainedExpressionStep{complete:true,..Default::default()});}if self.identity.is_some_and(|identity|identity!=source.expression_identity()){return Err(invalid());}
   let capacity=self.next_capacity_byte_demand()?;let copy=self.next_copy_byte_demand()?;if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity||grant.maximum_depth<self.next_depth_demand()?||output.is_empty(){return Ok(Default::default());}
   self.identity=Some(source.expression_identity());let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};let mut byte=None;
+  if self.phase==0&&!self.frames.has_reserved_slot(){let mut child=effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});let turn=self.frames.reserve_one_funded(&mut child);*work=turn.work;return match turn.result{Ok(PagedListReservationOutcome::Ready(progress))=>Ok(RetainedExpressionStep{progress,..Default::default()}),Ok(PagedListReservationOutcome::Denied)=>Ok(Default::default()),Err(PagedListReservationFailure::Work(error))=>Err(error),Err(PagedListReservationFailure::Allocation{error,copied_bytes})=>Err(paged(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,copied_bytes,..Default::default()}))};}
+  if !pure(effect)?{return Ok(Default::default())}*work=1;
   if self.pending_offset<self.pending_length{output[0]=self.pending[self.pending_offset];self.pending_offset+=1;return Ok(RetainedExpressionStep{progress:RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()},written_bytes:1,complete:self.is_complete()});}
-  if self.phase==0{if !self.frames.has_reserved_slot(){let result=self.frames.reserve_one_funded(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});return match result{Ok(progress)=>Ok(RetainedExpressionStep{progress,..Default::default()}),Err(error)=>Err(paged(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}))};}self.frames.push_reserved(Frame::default()).map_err(|_|invalid())?;if self.frames.len()==64{self.phase=2;}progress.copied_bytes=size_of::<Frame>();return Ok(RetainedExpressionStep{progress,..Default::default()});}
+  if self.phase==0{self.frames.push_reserved(Frame::default()).map_err(|_|invalid())?;if self.frames.len()==64{self.phase=2;}progress.copied_bytes=size_of::<Frame>();return Ok(RetainedExpressionStep{progress,..Default::default()});}
   if self.phase==1{self.frames[self.reset]=Frame::default();self.reset+=1;if self.reset==64{self.phase=2;}progress.copied_bytes=size_of::<Frame>();return Ok(RetainedExpressionStep{progress,..Default::default()});}
   let mut path=[0;64];for index in 0..self.depth{path[index]=self.frames[index+1].ordinal;}let frame=self.frames[self.depth];progress.copied_bytes=self.depth*size_of::<usize>()+size_of::<Frame>();let result=(||->Result<RetainedExpressionStep,ValueError>{let view=source.expression_view(&path[..self.depth])?;let precedence=match view{BorrowedExpressionView::Number(value)if value.is_sign_negative()&&!value.is_nan()=>3,BorrowedExpressionView::Negate=>3,BorrowedExpressionView::Binary(ExprOp::Add|ExprOp::Sub)=>1,BorrowedExpressionView::Binary(_)=>2,_=>255};
   match frame.phase{
@@ -63,12 +65,21 @@ impl RetainedExpressionCursor{
   if let Some(byte)=byte{output[0]=byte;progress.copied_bytes+=1;}Ok(RetainedExpressionStep{progress,written_bytes:usize::from(byte.is_some()),complete:self.is_complete()})})();result.map_err(|reason|{let receipt=progress.checked_add(reason.retained_progress()).expect("bounded expression refusal receipt");reason.with_retained_progress(receipt)})
  }
  pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{if self.frames.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}Ok(RetirementDemand{copy_bytes:if self.frames.is_empty(){0}else{size_of::<Frame>()},release_bytes:if self.frames.is_empty(){self.frames.next_release_allocation_bytes().map_err(paged)?}else{0},depth:if self.frames.is_empty(){self.frames.next_release_depth_demand().map_err(paged)?}else{self.frames.next_pop_depth_demand().map_err(paged)?}+1,..Default::default()})}
- pub fn close(&mut self,grant:RetainedCloneGrant)->Result<RetainedExpressionStep,ValueError>{if self.terminal_is_empty(){return Ok(RetainedExpressionStep{complete:true,..Default::default()});}let demand=self.retirement_demands()?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default());}self.phase=4;let released=if self.frames.pop().is_some(){0}else if !self.frames.terminal_is_empty(){self.frames.release_empty_page(grant.maximum_release_bytes).map_err(paged)?.released_allocation_bytes}else{self.phase=5;self.identity=None;0};Ok(RetainedExpressionStep{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:released,..Default::default()},complete:self.terminal_is_empty(),written_bytes:0})}
+ pub fn close(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedExpressionStep>{let mut work=0;let result=self.close_inner(effect,&mut work);RetainedWorkOutcome{result,work}}
+ fn close_inner(&mut self,effect:&mut RetainedAllocationEffect<'_>,work:&mut u128)->Result<RetainedExpressionStep,ValueError>{
+  if self.terminal_is_empty(){return Ok(RetainedExpressionStep{complete:true,..Default::default()});}
+  let grant=effect.grant();let demand=self.retirement_demands()?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default());}
+  let mut released=0;
+  if self.frames.is_empty()&&!self.frames.terminal_is_empty(){let turn=self.frames.release_empty_page(effect);*work=turn.work;match turn.result{Ok(PagedListReleaseOutcome::Ready(step))=>released=step.released_allocation_bytes,Ok(PagedListReleaseOutcome::Denied)=>return Ok(Default::default()),Err(PagedListReleaseFailure::Work(error))=>return Err(error),Err(PagedListReleaseFailure::Release(error))=>return Err(paged(error))}self.phase=4;}
+  else{if !pure(effect)?{return Ok(Default::default())}*work=1;self.phase=4;if self.frames.pop().is_none(){self.phase=5;self.identity=None;}}
+  Ok(RetainedExpressionStep{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:released,..Default::default()},complete:self.terminal_is_empty(),written_bytes:0})
+ }
 }
 impl Drop for RetainedExpressionCursor{fn drop(&mut self){assert!(self.frames.terminal_is_empty(),"original expression backing requires funded terminal retirement");}}
 /// ♻️ Physical retirement hands the paged traversal frames to their controlled owner.
 impl semio_framework_value::retirement::RetireOwned for RetainedExpressionCursor{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let owner=std::mem::ManuallyDrop::new(self);let frames=unsafe{std::ptr::read(&owner.frames)};semio_framework_value::retirement::RetireOwned::retirement(frames)}
+ type RetirementCursor=<PagedList<Frame,64> as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{let owner=std::mem::ManuallyDrop::new(self);let frames=unsafe{std::ptr::read(&owner.frames)};semio_framework_value::retirement::RetireOwned::retirement_seed(frames)}
  fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.frames)}
  fn controlled_retirement_supported()->bool{true}
 }

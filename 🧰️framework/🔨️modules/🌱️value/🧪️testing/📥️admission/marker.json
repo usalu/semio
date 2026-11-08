@@ -3,15 +3,12 @@
   "value": 17,
   "stock": {"items": 10000, "copyBytes": 1048576, "capacityBytes": 1048576, "releaseBytes": 1048576, "depth": 64, "fuel": 10000},
   "actions": [
-    {"name": "owner", "work": 2},
-    {"name": "clear-owner-marker", "work": 1},
-    {"name": "alias", "work": 1},
+    {"name": "owner", "work": 4},
+    {"name": "alias", "work": 3},
     {"name": "payload", "work": 1},
-    {"name": "clear-payload-marker", "work": 1},
-    {"name": "lease", "work": 2},
-    {"name": "clear-lease-marker", "work": 1},
-    {"name": "publication", "work": 2},
+    {"name": "lease", "work": 4},
+    {"name": "publication", "work": 5},
     {"name": "take", "work": 1}
   ],
-  "expected": {"work": 12, "turns": 9, "births": 3}
+  "expected": {"work": 18, "turns": 6, "births": 3}
 }

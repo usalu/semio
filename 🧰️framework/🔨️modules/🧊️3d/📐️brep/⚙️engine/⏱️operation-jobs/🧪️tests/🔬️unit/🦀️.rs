@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 /// 📸️ Everything observable about a session: the whole body, the live handle set and the pending mutations. Two equal
 /// snapshots mean the session is byte-identical.
 fn snapshot(kernel: &Brep) -> String {
-    format!("{:?}|{:?}|{}", kernel.body, kernel.live.keys().collect::<Vec<_>>(), kernel.pending_mutations)
+    format!("{:?}|{:?}|{}", kernel.body, kernel.live.keys().collect::<Vec<_>>(), kernel.pending_mutations.count())
 }
 
 

@@ -1,5 +1,5 @@
 //! 🔗️ Captured context roots retain the exact original Store read issuer.
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement},retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedAllocationEffect,RetainedWorkPoll,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement},retained_clone::RetainedCloneProgress};
 use std::{mem::ManuallyDrop,sync::Arc};
 
 /// 📸️ An immutable projection cannot retire before its exact original read is bound.
@@ -14,24 +14,34 @@ impl<T:Send+Sync+'static> std::ops::Deref for SnapshotReadProjection<T>{type Tar
 impl<T:Send+Sync+'static> AsRef<T> for SnapshotReadProjection<T>{fn as_ref(&self)->&T{self.get()}}
 impl<T:Send+Sync+'static> Drop for SnapshotReadProjection<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.projection.is_none()&&self.read.is_none()),"context root retains its original projection or Store issuer");if self.projection.is_none()&&self.read.is_none(){unsafe{ManuallyDrop::drop(&mut self.projection);ManuallyDrop::drop(&mut self.read);}}}}
 
-struct Cursor<T:Send+Sync+'static>{root:SnapshotReadProjection<T>,active:ManuallyDrop<Option<ControlledRetirement<crate::ErasedSnapshotRead>>>}
+#[doc(hidden)]
+pub struct Cursor<T:Send+Sync+'static>{root:SnapshotReadProjection<T>,active:ManuallyDrop<Option<ControlledRetirement<crate::ErasedSnapshotRead>>>}
 impl<T:Send+Sync+'static> Cursor<T>{
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.root.projection.is_some(){return if self.root.has_original_issuer(){Ok(RetirementDemand{depth:1,..Default::default()})}else{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"context projection retains no matching original Store issuer"))};}
   if self.root.read.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
   self.active.as_ref().map_or(Ok(Default::default()),|owner|Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?}))
  }
- fn step(&mut self,grant:RetainedCloneGrant)->Result<(RetainedCloneProgress,u64),ValueError>{
-  let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok((Default::default(),0));}
-  if self.root.projection.is_some(){drop(self.root.projection.take());return Ok((RetainedCloneProgress{copied_items:1,..Default::default()},1));}
-  if let Some(read)=self.root.read.take(){return match ControlledRetirement::new(read){Ok(owner)=>{*self.active=Some(owner);Ok((RetainedCloneProgress{copied_items:1,..Default::default()},1))},Err((error,read))=>{*self.root.read=Some(read);Err(error)}};}
-  let Some(owner)=self.active.as_mut()else{return Ok((Default::default(),0))};if owner.terminal_is_empty(){drop(self.active.take());return Ok((RetainedCloneProgress{copied_items:1,..Default::default()},1));}owner.step(grant).map(|step|(step.progress(),owner.last_turn_work()))
+ fn step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
+  let grant=effect.grant();let mut work=0;
+  let demand=match self.demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};
+  if grant.maximum_items==0||effect.maximum_work_units()==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return RetirementStep::Progress(Default::default(),0);}
+  let moved=|work:u128|RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},work);
+  if self.root.projection.is_some(){if let Err(error)=crate::pay_pure_work(effect,&mut work){return RetirementStep::Failure(error.into(),work);}drop(self.root.projection.take());return moved(work);}
+  if let Some(read)=self.root.read.take(){
+   if let Err(error)=crate::pay_pure_work(effect,&mut work){*self.root.read=Some(read);return RetirementStep::Failure(error.into(),work);}
+   return match ControlledRetirement::new(read){Ok(owner)=>{*self.active=Some(owner);moved(work)},Err((error,read))=>{*self.root.read=Some(read);RetirementStep::Failure(error.into(),work)}};
+  }
+  let Some(owner)=self.active.as_mut()else{return RetirementStep::Progress(Default::default(),0)};
+  if owner.terminal_is_empty(){if let Err(error)=crate::pay_pure_work(effect,&mut work){return RetirementStep::Failure(error.into(),work);}drop(self.active.take());return moved(work);}
+  match owner.step(effect){RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
  }
 }
-impl<T:Send+Sync+'static> RetireOwned for SnapshotReadProjection<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor{root:self,active:ManuallyDrop::new(None)})}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<T>>())}fn controlled_retirement_supported()->bool{true}}
+impl<T:Send+Sync+'static> RetireOwned for SnapshotReadProjection<T>{type RetirementCursor=Cursor<T>;fn retirement_seed(self)->Self::RetirementCursor{Cursor{root:self,active:ManuallyDrop::new(None)}}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<T>>())}fn controlled_retirement_supported()->bool{true}}
 impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
     fn next_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.demands(body) }
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0);}match self.step(grant){Ok((progress,work))=>RetirementStep::Progress(progress,work),Err(error)=>RetirementStep::Failure(error,0)}}
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0);}self.step(effect)}
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if self.terminal_is_empty(){return Ok(0)}match self.active.as_ref(){Some(owner)if !owner.terminal_is_empty()=>owner.next_computational_work(body),_=>Ok(1)}}
  fn terminal_is_empty(&self)->bool{self.root.projection.is_none()&&self.root.read.is_none()&&self.active.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.demands(body).ok().map(|demand|demand.capacity_bytes)}

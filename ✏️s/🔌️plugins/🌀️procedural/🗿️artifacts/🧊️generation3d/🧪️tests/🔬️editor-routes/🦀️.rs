@@ -1,5 +1,6 @@
 //! 🧪️ Editor route laws: the retained command, flow-eval, document-io and contributions routes, their work capacity and the fold contract, driven through the composed app.
 
+semio_plugin::install_fixture_heap_witness!();
 extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;

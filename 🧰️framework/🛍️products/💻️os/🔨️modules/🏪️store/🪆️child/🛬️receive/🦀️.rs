@@ -1,9 +1,8 @@
 //! 🛬️ Persisted child headers receive from their original fields without inventing local materialization.
 use super::ArtifactChild;
 use semio_framework_artifact_reference::ArtifactRef;
-use semio_framework_value::{RetainedWorkOutcome, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, retained_clone::RetainedCloneRef};
-use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::NativeReceiver, native_decoding::OriginalReceivingPrimary, native_decoding::owned::NativeRecordFields, native_decoding::owned::tree::NativeValueSource, native_decoding::owned::mapped::{NativeMappedReceiver,NativeReceiveMap}};
-use semio_framework_value::native_decoding::owned::{NativeClosePermit,NativeRecoveryLoan};
+use semio_framework_value::{OriginalRetirementCloseLoan, OriginalRetirementPoll, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneStep, RetainedWorkPoll, RetirementDemand, ValueError, retained_clone::RetainedCloneRef};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::NativeReceiver, native_decoding::OriginalReceivingPrimary,native_decoding::OriginalEffectReply,native_decoding::OriginalEffectReplyComplete,native_decoding::owned::NativeAdvanceSelection, native_decoding::owned::NativeRecordFields, native_decoding::owned::tree::NativeValueSource, native_decoding::owned::mapped::{NativeMappedReceiver,NativeReceiveMap}};
 use std::marker::PhantomData;
 
 #[derive(semio_framework_value::RetireOwned,semio_framework_value::NativeReceive)]
@@ -31,20 +30,24 @@ impl<I:NativeValueSource+?Sized,S:Send+'static> NativeReceive<I> for ArtifactChi
 }
 
 impl<I:NativeValueSource+?Sized,S:Send+'static> NativeReceiver<I,ArtifactChild<S>> for ArtifactChildNativeReceiver<I,S> {
-    fn advance_work_demand(&self,original:RetainedCloneRef<'_,I>,body:usize,maximum:u64)->Result<u64,ValueError> { self.header.advance_work_demand(original,body,maximum) }
-    fn take_work_demand(&self)->Result<u64,ValueError> { self.header.take_work_demand() }
-    fn close_work_demand(&self,body:usize)->Result<u64,ValueError> { self.header.close_work_demand(body) }
     fn demands(&self,original:RetainedCloneRef<'_,I>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError> { self.header.demands(original,body,maximum) }
-    fn advance(&mut self,original:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary> { self.header.advance(original,control,body,maximum,grant) }
+    fn select_advance(&self,original:RetainedCloneRef<'_,I>,body:usize,maximum:u64)->Result<NativeAdvanceSelection,ValueError> { self.header.select_advance(original,body,maximum) }
+    fn advance_nested(&mut self,original:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<RetainedCloneStep,OriginalReceivingPrimary> { self.header.advance_nested(original,control,body,maximum,grant) }
+    fn advance_local<'reply>(&mut self,original:RetainedCloneRef<'_,I>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError> { self.header.advance_local(original,body,effect,reply) }
+    fn recover_advance_local<'reply>(&mut self,original:RetainedCloneRef<'_,I>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError> { self.header.recover_advance_local(original,body,effect,reply) }
     fn output_ready(&self)->bool { self.header.output_ready() }
     fn take_demand(&self)->Result<RetirementDemand,ValueError> { self.header.take_demand() }
-    fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(ArtifactChild<S>,RetainedCloneProgress)>> { self.header.take(grant) }
- fn has_pending_recovery(&self)->bool{self.header.has_pending_recovery()}
- fn pending_recovery(&mut self)->Option<NativeRecoveryLoan<'_>>{self.header.pending_recovery()}
- fn resume_recovery(&mut self,control:&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{self.header.resume_recovery(control)}
- fn begin_close_admitted(&mut self,_permit:NativeClosePermit)->Result<(),ValueError>{self.header.begin_close()}
+    fn take_work_demand(&self)->Result<u64,ValueError> { self.header.take_work_demand() }
+    fn take<'reply>(&mut self,output:&mut Option<ArtifactChild<S>>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError> { self.header.take(output,effect,reply) }
+    fn recover_take<'reply>(&mut self,output:&mut Option<ArtifactChild<S>>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError> { self.header.recover_take(output,effect,reply) }
+    fn begin_close(&mut self) { self.header.begin_close() }
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError> { self.header.close_demands(body) }
-    fn close_step(&mut self,grant:RetainedCloneGrant,actual:&mut Option<usize>)->semio_framework_value::OriginalRetirementOutcome { self.header.close_step(grant,actual) }
+    fn close_work_demand(&self,body:usize)->Result<u64,ValueError> { self.header.close_work_demand(body) }
+    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll { self.header.close_step(effect) }
+    fn requires_original_control(&self)->bool { self.header.requires_original_control() }
+    fn requires_original_birth(&self)->bool { self.header.requires_original_birth() }
+    fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll { self.header.close_original_birth_step(original,grant) }
+    fn close_original_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll { self.header.close_original_step(original,effect) }
     fn terminal_is_empty(&self)->bool { self.header.terminal_is_empty() }
 }
 

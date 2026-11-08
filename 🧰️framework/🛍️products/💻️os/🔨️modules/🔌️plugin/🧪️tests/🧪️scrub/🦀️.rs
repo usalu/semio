@@ -4,7 +4,7 @@
 //! bounded and taken once.
 
 use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_plugin_tool_run::tool_jobs_tool_machine::ScrubTag;
+use semio_plugin_tool_machine::ScrubTag;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::kernel::ActorId;
 use std::sync::Arc;
@@ -33,9 +33,9 @@ use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutation
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use semio_framework_tool_machine::{ScrubInput, ToolAbortReason, ToolStep};
-use semio_plugin_tool_run::tool_jobs_tool_machine::PressLeaf;
-use semio_plugin_tool_run::tool_jobs_tool_machine::ToolTag;
-use semio_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_plugin_tool_machine::PressLeaf;
+use semio_plugin_tool_machine::ToolTag;
+use semio_plugin_tool_machine::ToolMachineRuntime;
 
 #[doc(hidden)]
 pub type Runtime = ToolMachineRuntime<TestSnapshot, TestMutation, TestSnapshot, TestMutation>;

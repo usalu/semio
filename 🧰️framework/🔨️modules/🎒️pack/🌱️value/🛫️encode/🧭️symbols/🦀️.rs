@@ -1,6 +1,7 @@
 //! 🧭️ Retained paged symbol identities resolved through the same immutable operation source.
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource,FieldProjectionView};
-use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl,RetainedAllocationEffect,ValueError,ValueRefusalKind};
+use semio_framework_value_persistent::list::{PagedListReleaseFailure,PagedListReleaseOutcome};
 use semio_framework_value_persistent::list::PagedList;
 use std::cmp::Ordering;
 use semio_framework_value_paged_text::paged_text::TextReadView;
@@ -42,12 +43,14 @@ pub(super) fn compare_text(left:TextReadView<'_>,right:TextReadView<'_>,control:
 }
 fn invalid(reason:&str)->ValueError{ValueError::new(ValueRefusalKind::InvariantViolated,reason)}
 fn paged_refusal(reason:&'static str)->ValueError{ValueError::new(ValueRefusalKind::AllocationFailed,reason)}
+fn release_fault(error:PagedListReleaseFailure)->ValueError{match error{PagedListReleaseFailure::Work(error)=>error,PagedListReleaseFailure::Release(error)=>paged_refusal(error.reason)}}
+fn record(effect:&mut RetainedAllocationEffect<'_>)->Result<(),ValueError>{if effect.performed(1)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"symbol scratch exceeded its original work"))}}
 fn push<T>(owner:&mut PagedList<T,SYMBOL_CAPACITY>,value:T,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{
  while !owner.has_reserved_slot(){
   let required=owner.next_allocation_bytes().map_err(|error|paged_refusal(error.reason))?;
   if required>4096{return Err(invalid("symbol scratch page exceeds its physical grant"))}
   control.charge(required)?;control.checkpoint()?;
-  let progress=owner.reserve_one(required).map_err(|error|paged_refusal(error.reason))?;
+  let progress=owner.reserve_one_cold(required).map_err(|error|paged_refusal(error.reason))?;
   if !progress.progressed||progress.allocated_bytes>required{return Err(invalid("symbol scratch allocation disagrees with paid admission"))}
  }
  owner.push_reserved(value).map_err(|_|invalid("admitted symbol scratch slot disappeared"))
@@ -100,12 +103,13 @@ impl ProjectedSymbolScratch{
   let(mut low,mut high)=(0,self.len()?);while low<high{let middle=low+(high-low)/2;match compare_text(self.locator(middle)?.resolve(source)?,text,control)?{Ordering::Less=>low=middle+1,Ordering::Greater=>high=middle,Ordering::Equal=>return Ok(Some(middle as u64))}}Ok(None)
  }
  /// ♻️ Drains one scalar item or one real empty page within the explicit physical byte grant.
- pub fn retire_one(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<(bool,usize,usize),ValueError>{
-  if maximum_items==0||maximum_bytes==0{return Ok((false,0,0))}self.phase=ScratchPhase::Retiring;
-  if !self.indices.is_empty(){self.indices.pop();return Ok((true,1,0))}
-  if self.indices.allocated_bytes()>0{let step=self.indices.release_empty_page(maximum_bytes).map_err(|error|paged_refusal(error.reason))?;return Ok((step.progressed,usize::from(step.progressed),step.released_allocation_bytes))}
-  if !self.symbols.is_empty(){self.symbols.pop();return Ok((true,1,0))}
-  if self.symbols.allocated_bytes()>0{let step=self.symbols.release_empty_page(maximum_bytes).map_err(|error|paged_refusal(error.reason))?;return Ok((step.progressed,usize::from(step.progressed),step.released_allocation_bytes))}
+ pub fn retire_one(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<(bool,usize,usize),ValueError>{
+  let grant=effect.grant();if grant.maximum_items==0||grant.maximum_release_bytes==0{return Ok((false,0,0))}self.phase=ScratchPhase::Retiring;
+  let released=|outcome:PagedListReleaseOutcome|match outcome{PagedListReleaseOutcome::Ready(step)=>(step.progressed,usize::from(step.progressed),step.released_allocation_bytes),PagedListReleaseOutcome::Denied=>(false,0,0)};
+  if !self.indices.is_empty(){record(effect)?;self.indices.pop();return Ok((true,1,0))}
+  if self.indices.allocated_bytes()>0{return Ok(released(self.indices.release_empty_page(&mut effect.nested(grant)).result.map_err(release_fault)?))}
+  if !self.symbols.is_empty(){record(effect)?;self.symbols.pop();return Ok((true,1,0))}
+  if self.symbols.allocated_bytes()>0{return Ok(released(self.symbols.release_empty_page(&mut effect.nested(grant)).result.map_err(release_fault)?))}
   Ok((false,0,0))
  }
  /// 🏠️ Hands one genuine empty backing to the explicit pre-admitted parent recipient.

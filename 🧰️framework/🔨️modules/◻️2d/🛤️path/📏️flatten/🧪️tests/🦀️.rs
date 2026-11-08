@@ -4,8 +4,8 @@ use super::*;
 mod funding;
 funding::physical_close!(PathFlattenRetirement,funding::PhysicalClose);
 fn funded(input:PathFlattenInput)->funding::Funded<PathFlattenJob>{funding::Funded::new(PathFlattenJob::new(input),include_str!("🎟️work/🔣️.json"))}
-fn assert_refused(input:PathFlattenInput){let mut job=funded(input);let mut refused=false;for _ in 0..job.turn_bound(){match job.turn(1,|job,work|job.advance(1,work)){Err(PathFlattenError::Invalid(_))=>{refused=true;break;},Err(error)=>panic!("unexpected invalid-source refusal: {error:?}"),Ok(progress)=>assert!(!progress.done,"invalid source published completed geometry")}}assert!(refused,"declared invalid source never reached real validation refusal");assert!(matches!(job.result(),Err(PathFlattenError::Invalid(_))));job.finish();}
-fn at_semantic_work(job:&mut funding::Funded<PathFlattenJob>,target:u64)->Result<PathFlattenProgress,PathFlattenError>{if target==0{return Ok(job.progress());}for _ in 0..job.turn_bound(){let progress=job.turn(1,|job,work|job.advance(1,work))?;if progress.work>=target||progress.done{return Ok(progress);}}panic!("Semantic checkpoint did not settle within its declared turn bound")}
+fn assert_refused(input:PathFlattenInput){let mut job=funded(input);let mut refused=false;for _ in 0..job.turn_bound(){match job.turn(1,|job,work,alloc|job.advance(1,work,alloc)){Err(PathFlattenError::Invalid(_))=>{refused=true;break;},Err(error)=>panic!("unexpected invalid-source refusal: {error:?}"),Ok(progress)=>assert!(!progress.done,"invalid source published completed geometry")}}assert!(refused,"declared invalid source never reached real validation refusal");assert!(matches!(job.result(),Err(PathFlattenError::Invalid(_))));job.finish();}
+fn at_semantic_work(job:&mut funding::Funded<PathFlattenJob>,target:u64)->Result<PathFlattenProgress,PathFlattenError>{if target==0{return Ok(job.progress());}for _ in 0..job.turn_bound(){let progress=job.turn(1,|job,work,alloc|job.advance(1,work,alloc))?;if progress.work>=target||progress.done{return Ok(progress);}}panic!("Semantic checkpoint did not settle within its declared turn bound")}
 
 fn fixtures()->serde_json::Value {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn point(v:&serde_json::Value)->Vec2 {[v[0].as_f64().unwrap(),v[1].as_f64().unwrap()]}
@@ -22,7 +22,7 @@ fn input(v:&serde_json::Value)->PathFlattenInput {
 fn shared_contours_are_budget_independent() {
  for row in fixtures().as_array().unwrap() {for grant in [1,7,4096] {
   let mut job=funded(input(row));let mut work=0;let mut done=false;
-  for _ in 0..200000 {let p=job.turn(grant,|job,work|job.advance(grant,work)).unwrap();assert!(p.work-work<=grant as u64);work=p.work;if p.done {done=true;break;}}
+  for _ in 0..200000 {let p=job.turn(grant,|job,work,alloc|job.advance(grant,work,alloc)).unwrap();assert!(p.work-work<=grant as u64);work=p.work;if p.done {done=true;break;}}
   assert!(done,"{}",row["name"]);let actual=job.result().unwrap();let expected=row["expected"].as_array().unwrap();assert_eq!(actual.len(),expected.len());
   for (contour,expected) in actual.iter().zip(expected) {
    assert_eq!(contour.closed,expected["closed"].as_bool().unwrap());let points=expected["points"].as_array().unwrap();assert_eq!(contour.points.len(),points.len(),"{}",row["name"]);
@@ -36,7 +36,7 @@ fn partial_and_cancelled_contours_are_unavailable() {
  let rows=fixtures();
  for steps in [0,1,2,3] {
   let mut job=funded(input(&rows[7]));assert_eq!(job.result(),Err(PathFlattenError::Incomplete));
-  at_semantic_work(&mut job,steps as u64).unwrap();job.cancel();assert_eq!(job.turn(1,|job,work|job.advance(1,work)),Err(PathFlattenError::Cancelled));assert_eq!(job.result(),Err(PathFlattenError::Cancelled));job.finish();
+  at_semantic_work(&mut job,steps as u64).unwrap();job.cancel();assert_eq!(job.turn(1,|job,work,alloc|job.advance(1,work,alloc)),Err(PathFlattenError::Cancelled));assert_eq!(job.result(),Err(PathFlattenError::Cancelled));job.finish();
  }
 }
 #[test]
@@ -45,14 +45,14 @@ fn invalid_contracts_points_and_output_budgets_are_rejected() {
  for tolerance in [0.0,f64::INFINITY] {let mut bad=base.clone();bad.tolerance=tolerance;assert_refused(bad);}
  let mut bad=base.clone();bad.transform[4]=f64::NAN;assert_refused(bad);
  let mut bad=base.clone();bad.segments=vec![PathSegment::Close;65537];assert_refused(bad);
- let mut bad=base.clone();bad.segments=vec![PathSegment::Move{to:[f64::NAN,0.0]}];let mut job=funded(bad);assert!(job.turn(4096,|job,work|job.advance(4096,work)).is_err());assert!(job.result().is_err());job.finish();
- let mut job=funded(base.clone());assert!(job.turn(0,|job,work|job.advance(0,work)).is_err());job.finish();
+ let mut bad=base.clone();bad.segments=vec![PathSegment::Move{to:[f64::NAN,0.0]}];let mut job=funded(bad);assert!(job.turn(4096,|job,work,alloc|job.advance(4096,work,alloc)).is_err());assert!(job.result().is_err());job.finish();
+ let mut job=funded(base.clone());assert!(job.turn(0,|job,work,alloc|job.advance(0,work,alloc)).is_err());job.finish();
  for(name,segments,message,completed,points,contours)in [
   ("contour budget",vec![PathSegment::Move{to:[0.0,0.0]};4097],"Path preparation exceeds output budget",4096,4096,4096),
   ("point budget",vec![PathSegment::Line{to:[1.0,0.0]};65536],"Path preparation exceeds point budget",65535,65536,1),
  ]{
   let mut job=funded(PathFlattenInput{segments,..base.clone()});let mut error=None;
-  for _ in 0..job.turn_bound(){match job.turn(4096,|job,work|job.advance(4096,work)){Ok(progress)=>{assert!(!progress.done,"{name} published invalid geometry");assert!(job.last_turn_work()>0,"{name} exhausted its declared physical stock");},Err(refusal)=>{error=Some(refusal);break;}}}
+  for _ in 0..job.turn_bound(){match job.turn(4096,|job,work,alloc|job.advance(4096,work,alloc)){Ok(progress)=>{assert!(!progress.done,"{name} published invalid geometry");assert!(job.last_turn_work()>0,"{name} exhausted its declared physical stock");},Err(refusal)=>{error=Some(refusal);break;}}}
   assert_eq!(error,Some(PathFlattenError::Invalid(message)),"{name} did not reach its exact guard");assert_eq!((job.progress().completed,job.progress().points,job.contours.len()),(completed,points,contours),"{name} changed its semantic frontier");assert_eq!(job.result(),Err(PathFlattenError::Invalid(message)));job.finish();
  }
 }
@@ -68,11 +68,11 @@ fn flatten_retirement_preserves_owned_contours_and_drains_private_curves_under_g
 
 #[test]
 fn cancellation_retains_actual_private_buffers_until_consuming_retirement(){
- let rows=fixtures();for completed in [false,true]{let mut job=funded(input(&rows[7]));if completed{while !job.turn(4096,|job,work|job.advance(4096,work)).unwrap().done{}}else{at_semantic_work(&mut job,2).unwrap();}let segments=job.input.segments.as_ptr();let contours=job.contours.as_ptr();let points=job.contours[0].points.as_ptr();let stack=job.stack.as_ptr();let count=job.contours.len();job.cancel();assert_eq!(job.input.segments.as_ptr(),segments);assert_eq!(job.contours.as_ptr(),contours);assert_eq!(job.contours[0].points.as_ptr(),points);assert_eq!(job.stack.as_ptr(),stack);assert_eq!(job.result(),Err(PathFlattenError::Cancelled));let(mut retired,output)=job.retire_with(|job|job.into_retirement());assert!(output.is_none());assert_eq!(retired.owner.original().unwrap().contours.as_ptr(),contours);let mut progress=retired.close_turn(1).unwrap();while !progress.done{progress=retired.close_turn(1).unwrap();}assert!(progress.work>0);assert!(retired.terminal_is_empty());let mut wallet=retired.finish();wallet.close_owned(output);}
+ let rows=fixtures();for completed in [false,true]{let mut job=funded(input(&rows[7]));if completed{while !job.turn(4096,|job,work,alloc|job.advance(4096,work,alloc)).unwrap().done{}}else{at_semantic_work(&mut job,2).unwrap();}let segments=job.input.segments.as_ptr();let contours=job.contours.as_ptr();let points=job.contours[0].points.as_ptr();let stack=job.stack.as_ptr();let count=job.contours.len();job.cancel();assert_eq!(job.input.segments.as_ptr(),segments);assert_eq!(job.contours.as_ptr(),contours);assert_eq!(job.contours[0].points.as_ptr(),points);assert_eq!(job.stack.as_ptr(),stack);assert_eq!(job.result(),Err(PathFlattenError::Cancelled));let(mut retired,output)=job.retire_with(|job|job.into_retirement());assert!(output.is_none());assert_eq!(retired.owner.original().unwrap().contours.as_ptr(),contours);let mut progress=retired.close_turn(1).unwrap();while !progress.done{progress=retired.close_turn(1).unwrap();}assert!(progress.work>0);assert!(retired.terminal_is_empty());let mut wallet=retired.finish();wallet.close_owned(output);}
 }
 
 #[test]
-fn retained_admission_keeps_refused_flatten_source(){let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧹️retire/🧪️tests/🧫️fixtures/📥️admission/🔣️.json")).unwrap();for row in fixture["cases"].as_array().unwrap(){if row["kind"]!="flatten"{continue;}let source=PathFlattenInput{segments:vec![PathSegment::Move{to:[3.0,7.0]}],transform:[1.0,0.0,0.0,1.0,0.0,0.0],tolerance:row["tolerance"].as_f64().unwrap()};let segments=source.segments.as_ptr();let mut job=funded(source);assert_eq!(job.input.segments.as_ptr(),segments);assert!(job.turn(1,|job,work|job.advance(1,work)).is_err());assert!(job.result().is_err());let(mut close,output)=job.retire_with(|job|job.into_retirement());assert!(output.is_none());assert_eq!(close.owner.original().unwrap().input.segments.as_ptr(),segments);while !close.close_turn(1).unwrap().done{}assert!(close.terminal_is_empty());let mut wallet=close.finish();wallet.close_owned(output);}}
+fn retained_admission_keeps_refused_flatten_source(){let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧹️retire/🧪️tests/🧫️fixtures/📥️admission/🔣️.json")).unwrap();for row in fixture["cases"].as_array().unwrap(){if row["kind"]!="flatten"{continue;}let source=PathFlattenInput{segments:vec![PathSegment::Move{to:[3.0,7.0]}],transform:[1.0,0.0,0.0,1.0,0.0,0.0],tolerance:row["tolerance"].as_f64().unwrap()};let segments=source.segments.as_ptr();let mut job=funded(source);assert_eq!(job.input.segments.as_ptr(),segments);assert!(job.turn(1,|job,work,alloc|job.advance(1,work,alloc)).is_err());assert!(job.result().is_err());let(mut close,output)=job.retire_with(|job|job.into_retirement());assert!(output.is_none());assert_eq!(close.owner.original().unwrap().input.segments.as_ptr(),segments);while !close.close_turn(1).unwrap().done{}assert!(close.terminal_is_empty());let mut wallet=close.finish();wallet.close_owned(output);}}
 
 #[path="🎟️work/🦀️.rs"]
 mod work;

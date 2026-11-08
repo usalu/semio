@@ -1,11 +1,12 @@
 //! 📸️ Caller-funded JPEG reconstruction owns source, coefficients, samples and private output.
 use crate::RasterImage;
-use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::RetainedAllocationEffect;
 #[derive(Debug,semio_framework_value::RetireOwned)]
 pub struct JpegDecodeInput {pub data:Vec<u8>,pub max_pixels:usize,pub max_bytes:usize,pub max_segments:usize,pub max_working_bytes:usize}
 #[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
-pub enum JpegDecodeError {Invalid(&'static str),Unsupported(&'static str),Incomplete,Cancelled}
-impl std::fmt::Display for JpegDecodeError {fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match self{Self::Invalid(message)|Self::Unsupported(message)=>f.write_str(message),Self::Incomplete=>f.write_str("JPEG decode incomplete"),Self::Cancelled=>f.write_str("JPEG decode cancelled")}}}
+pub enum JpegDecodeError {Invalid(&'static str),Unsupported(&'static str),Incomplete,Cancelled,WorkLimit}
+impl std::fmt::Display for JpegDecodeError {fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match self{Self::Invalid(message)|Self::Unsupported(message)=>f.write_str(message),Self::Incomplete=>f.write_str("JPEG decode incomplete"),Self::Cancelled=>f.write_str("JPEG decode cancelled"),Self::WorkLimit=>f.write_str("JPEG decode exceeds its original work authority")}}}
 impl std::error::Error for JpegDecodeError {}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct JpegDecodeProgress {pub phase:&'static str,pub bytes:usize,pub total_bytes:usize,pub blocks:usize,pub pixels:usize,pub total_pixels:usize,pub work:u64,pub done:bool}
@@ -36,17 +37,23 @@ impl JpegDecodeJob {
  pub fn next_release_byte_demand(&self)->usize{0}
  pub fn next_depth_demand(&self)->usize{usize::from(self.phase!="complete"&&self.phase!="transferred")}
  fn check(&self)->Result<(),JpegDecodeError>{if self.cancelled{Err(JpegDecodeError::Cancelled)}else if let Some(error)=self.failure{Err(error)}else{Ok(())}}
- pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<(JpegDecodeProgress,RetainedCloneProgress),JpegDecodeError>{
-  self.check()?;let mut receipt=RetainedCloneProgress::default();
-  for _ in 0..grant.maximum_items{if matches!(self.phase,"complete"|"transferred"){break;}let copy=self.next_copy_byte_demand();let capacity=self.next_capacity_byte_demand();if grant.maximum_depth<1||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}if let Err(error)=self.step(){self.failure=Some(error);return Err(error);}self.work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=capacity;}
+ /// ⛽️ Runs funded actions and records the actions' honest work (source bytes read, samples produced, pixels converted) once per turn on the caller's effect.
+ pub fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<(JpegDecodeProgress,RetainedCloneProgress),JpegDecodeError>{
+  let grant=effect.grant();self.check()?;let mut receipt=RetainedCloneProgress::default();let mut charged=0u64;let budget=effect.remaining_work_units().unwrap_or(0);
+  for _ in 0..grant.maximum_items{if matches!(self.phase,"complete"|"transferred")||charged>=budget{break;}let copy=self.next_copy_byte_demand();let capacity=self.next_capacity_byte_demand();if grant.maximum_depth<1||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}let work=match self.step(){Ok(work)=>work,Err(error)=>{self.failure=Some(error);let _=effect.performed(charged+1);return Err(error);}};charged+=work;self.work+=work;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=capacity;}
+  if charged>0{if let Err(error)=Self::record(effect,charged){self.failure=Some(error);return Err(error);}}
   Ok((self.progress(),receipt))
  }
  pub fn cancel(&mut self){self.cancelled=true;}
  pub fn result(&self)->Result<&RasterImage,JpegDecodeError>{self.check()?;if self.phase!="complete"{return Err(JpegDecodeError::Incomplete);}Ok(&self.image)}
- pub fn take_result(&mut self,grant:RetainedCloneGrant)->Result<Option<(RasterImage,RetainedCloneProgress)>,JpegDecodeError>{self.result()?;if grant.maximum_items<1||grant.maximum_copy_bytes<size_of::<RasterImage>()||grant.maximum_depth<1{return Ok(None);}let image=std::mem::take(&mut self.image);self.phase="transferred";Ok(Some((image,RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RasterImage>(),..Default::default()})))}
+ pub fn take_result(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<(RasterImage,RetainedCloneProgress)>,JpegDecodeError>{let grant=effect.grant();self.result()?;if grant.maximum_items<1||grant.maximum_copy_bytes<size_of::<RasterImage>()||grant.maximum_depth<1{return Ok(None);}Self::record(effect,1)?;self.work+=1;let image=std::mem::take(&mut self.image);self.phase="transferred";Ok(Some((image,RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RasterImage>(),..Default::default()})))}
  fn byte(&mut self)->Result<u8,JpegDecodeError>{let value=*self.input.data.get(self.at).ok_or_else(||invalid("Truncated JPEG source"))?;self.at+=1;self.consumed=self.consumed.max(self.at);Ok(value)}
  fn u16(&mut self)->Result<usize,JpegDecodeError>{Ok(usize::from(self.byte()?)*256+usize::from(self.byte()?))}
- fn step(&mut self)->Result<(),JpegDecodeError>{match self.phase{"markers"=>self.marker_step(),"tables"=>self.table_step(),"allocate"=>self.allocate_step(),"initialize"=>{self.initialize_step();Ok(())},"entropy"=>self.entropy_step(),"transform"=>self.transform_step(),"pixels"=>{self.pixel_step();Ok(())},_=>Err(invalid("Invalid JPEG phase"))}}
+ /// ⛽️ Records performed work; only an exhausted authority is a work limit, any other receipt fault stays its own refusal.
+ fn record(effect:&mut RetainedAllocationEffect<'_>,work:u64)->Result<(),JpegDecodeError>{match effect.performed(work){Ok(true)=>Ok(()),Ok(false)=>Err(JpegDecodeError::WorkLimit),Err(error)=>Err(if matches!(error.kind,semio_framework_value::ValueRefusalKind::WorkLimit){JpegDecodeError::WorkLimit}else{invalid("JPEG work could not be recorded")})}}
+ /// ⛽️ One action and the work it truly did: source bytes consumed, samples or elements produced, pixels converted.
+ fn step(&mut self)->Result<u64,JpegDecodeError>{let at=self.at;match self.phase{"markers"=>self.marker_step().map(|_|self.read_since(at)),"tables"=>self.table_step().map(|_|self.read_since(at)),"allocate"=>self.allocate_step().map(|_|1),"initialize"=>Ok(self.initialize_step()),"entropy"=>self.entropy_step().map(|_|self.read_since(at)),"transform"=>self.transform_step(),"pixels"=>{self.pixel_step();Ok(1)},_=>Err(invalid("Invalid JPEG phase"))}}
+ fn read_since(&self,at:usize)->u64{self.at.saturating_sub(at).max(1)as u64}
  fn marker_step(&mut self)->Result<(),JpegDecodeError>{
   if self.byte()?!=255{return Err(invalid("JPEG marker prefix missing"));}let marker=self.byte()?;if marker==255{self.at-=1;return Ok(());}
   if marker==217{if !self.framed||!self.scanned||self.at!=self.input.data.len(){return Err(invalid("Invalid JPEG end marker"));}self.phase="transform";return Ok(());}
@@ -78,9 +85,9 @@ impl JpegDecodeJob {
   if self.allocate_at<self.component_count*2{let c=&mut self.components[self.allocate_at/2];if self.allocate_at%2==0{c.coefficients.try_reserve_exact(c.cols*c.rows).map_err(|_|invalid("JPEG coefficient allocation refused"))?;}else{c.samples.try_reserve_exact(c.cols*c.rows*64).map_err(|_|invalid("JPEG sample allocation refused"))?;}self.allocate_at+=1;return Ok(());}
   self.image.width=self.width as u32;self.image.height=self.height as u32;self.image.pixels.try_reserve_exact(self.width*self.height*4).map_err(|_|invalid("JPEG output allocation refused"))?;self.phase="initialize";Ok(())
  }
- fn initialize_step(&mut self){
-  if self.initialize_at<self.component_count*2{let c=&mut self.components[self.initialize_at/2];if self.initialize_at%2==0{if c.coefficients.len()<c.cols*c.rows{c.coefficients.push([0;64]);return;}}else if c.samples.len()<c.cols*c.rows*64{c.samples.resize((c.samples.len()+64).min(c.cols*c.rows*64),0);return;}self.initialize_at+=1;return;}
-  if self.image.pixels.len()<self.width*self.height*4{self.image.pixels.resize((self.image.pixels.len()+256).min(self.width*self.height*4),0);return;}self.phase="entropy";
+ fn initialize_step(&mut self)->u64{
+  if self.initialize_at<self.component_count*2{let c=&mut self.components[self.initialize_at/2];if self.initialize_at%2==0{if c.coefficients.len()<c.cols*c.rows{c.coefficients.push([0;64]);return 1;}}else if c.samples.len()<c.cols*c.rows*64{let before=c.samples.len();c.samples.resize((before+64).min(c.cols*c.rows*64),0);return(c.samples.len()-before)as u64;}self.initialize_at+=1;return 1;}
+  if self.image.pixels.len()<self.width*self.height*4{let before=self.image.pixels.len();self.image.pixels.resize((before+256).min(self.width*self.height*4),0);return(self.image.pixels.len()-before)as u64;}self.phase="entropy";1
  }
  fn read_bit(&mut self)->Result<i32,JpegDecodeError>{if self.bit_count==0{self.bits=self.byte()?;if self.bits==255&&self.byte()?!=0{return Err(invalid("Unexpected JPEG entropy marker"));}self.bit_count=8;}self.bit_count-=1;Ok(i32::from(self.bits>>self.bit_count&1))}
  fn read_bits(&mut self,count:u8)->Result<i32,JpegDecodeError>{let mut value=0;for _ in 0..count{value=value*2+self.read_bit()?;}Ok(value)}
@@ -101,11 +108,11 @@ impl JpegDecodeJob {
   if self.scan_component==0&&self.sub_block==0&&self.restart_interval>0&&self.restart_units==self.restart_interval{self.bits=0;self.bit_count=0;if self.byte()?!=255||self.byte()?!=208+self.restart_index{return Err(invalid("Invalid JPEG restart marker sequence"));}self.restart_index=(self.restart_index+1)%8;self.restart_units=0;self.eob_run=0;for c in &mut self.components[..self.component_count]{c.predictor=0;}return Ok(());}
   let index=self.scan[self.scan_component];let c=&self.components[index];let block=if self.scan_count==1{self.unit/c.actual_cols*c.cols+self.unit%c.actual_cols}else{(self.unit/self.mcus_x*c.v+self.sub_block/c.h)*c.cols+self.unit%self.mcus_x*c.h+self.sub_block%c.h};let block_count=if self.scan_count==1{1}else{c.h*c.v};self.decode_block(index,block)?;self.blocks+=1;self.sub_block+=1;if self.sub_block==block_count{self.sub_block=0;self.scan_component+=1;if self.scan_component==self.scan_count{self.scan_component=0;self.unit+=1;self.restart_units+=1;}}Ok(())
  }
- fn transform_step(&mut self)->Result<(),JpegDecodeError>{
-  if self.transform_component==self.component_count{self.phase="pixels";return Ok(());}let c=&mut self.components[self.transform_component];if c.bands[0]==-1{return Err(invalid("JPEG component missing DC scan"));}let coeff=&c.coefficients[self.transform_block];let q=&self.quant[c.quant];for z in 0..64{self.natural[ZIGZAG[z]]=f64::from(coeff[ZIGZAG[z]])*f64::from(q[z]);}
+ fn transform_step(&mut self)->Result<u64,JpegDecodeError>{
+  if self.transform_component==self.component_count{self.phase="pixels";return Ok(1);}let c=&mut self.components[self.transform_component];if c.bands[0]==-1{return Err(invalid("JPEG component missing DC scan"));}let coeff=&c.coefficients[self.transform_block];let q=&self.quant[c.quant];for z in 0..64{self.natural[ZIGZAG[z]]=f64::from(coeff[ZIGZAG[z]])*f64::from(q[z]);}
   for y in 0..8{for x in 0..8{let mut value=0.;for u in 0..8{value+=if u==0{std::f64::consts::FRAC_1_SQRT_2}else{1.}*self.natural[y*8+u]*((2*x+1)as f64*u as f64*std::f64::consts::PI/16.).cos();}self.temporary[y*8+x]=value/2.;}}
   let bx=self.transform_block%c.cols*8;let by=self.transform_block/c.cols*8;let stride=c.cols*8;for y in 0..8{for x in 0..8{let mut value=0.;for u in 0..8{value+=if u==0{std::f64::consts::FRAC_1_SQRT_2}else{1.}*self.temporary[u*8+x]*((2*y+1)as f64*u as f64*std::f64::consts::PI/16.).cos();}c.samples[(by+y)*stride+bx+x]=(value/2.+128.).round().clamp(0.,255.)as u8;}}
-  self.transform_block+=1;if self.transform_block==c.cols*c.rows{self.transform_block=0;self.transform_component+=1;}Ok(())
+  self.transform_block+=1;if self.transform_block==c.cols*c.rows{self.transform_block=0;self.transform_component+=1;}Ok(64)
  }
  fn pixel_step(&mut self){
   if self.pixels==self.width*self.height{self.phase="complete";return;}let x=self.pixels%self.width;let y=self.pixels/self.width;let mut values=[0.;3];for (index,c)in self.components[..self.component_count].iter().enumerate(){values[index]=f64::from(c.samples[y*c.v/self.vmax*c.cols*8+x*c.h/self.hmax]);}let [mut r,mut g,mut b]=values;if self.component_count==1{g=r;b=r;}else if self.adobe==1||self.adobe!=0&&(self.jfif||self.components[0].id!=b'R'||self.components[1].id!=b'G'||self.components[2].id!=b'B'){let cb=g-128.;let cr=b-128.;g=r-0.344136*cb-0.714136*cr;b=r+1.772*cb;r+=1.402*cr;}let at=self.pixels*4;self.image.pixels[at..at+4].copy_from_slice(&[r.round().clamp(0.,255.)as u8,g.round().clamp(0.,255.)as u8,b.round().clamp(0.,255.)as u8,255]);self.pixels+=1;

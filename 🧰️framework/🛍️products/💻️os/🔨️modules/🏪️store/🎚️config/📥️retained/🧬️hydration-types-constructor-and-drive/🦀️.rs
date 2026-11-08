@@ -205,7 +205,16 @@ where
 
     pub fn drive_active(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, ConfigStoreHydrationDiagnostic> {
         if self.active.is_none() { return Ok(None); }
-        semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result.map(|step| Some(step.progress())).map_err(|_| ConfigStoreHydrationDiagnostic::Initialization)
+        match Self::authored(grant, |effect| semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, effect)) {
+            Ok(Some(turn)) => turn.result.map(|step| Some(step.progress())).map_err(|_| ConfigStoreHydrationDiagnostic::Initialization),
+            Ok(None) => Ok(Some(Default::default())),
+            Err(_) => Err(ConfigStoreHydrationDiagnostic::Initialization),
+        }
+    }
+
+    pub(super) fn authored<T, E>(grant: RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkPoll<T, E>) -> Result<Option<semio_framework_value::RetainedWorkOutcome<T, E>>, ValueError> {
+        let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 64);
+        Ok(wallet.run_settled(grant, 64, operation)?.map(|(turn, _)| turn))
     }
 
     pub(super) fn admit_input<T: semio_framework_value::retirement::RetireOwned>(source: &mut Option<T>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress)>, ValueError> {
@@ -214,10 +223,9 @@ where
         let capacity = semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<T>();
         if grant.maximum_capacity_bytes < capacity { return Ok(None); }
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let value = source.take().expect("observed original config input");
-        match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, child) .result {
-            Ok((owner, progress)) => Ok(Some((owner, progress))),
-            Err((error, value)) => { *source = Some(value); Err(error) }
+        match Self::authored(child, |effect| semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::retirement::admit_owned_retirement(source, effect)))? {
+            Some(turn) => turn.result,
+            None => Ok(None),
         }
     }
 
@@ -229,7 +237,8 @@ where
         if grant.maximum_items == 0 { return Ok((false, Default::default())); }
         if grant.maximum_depth < depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "config source depth refused")); }
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = owner.close_step(child).result?;
+        let Some(turn) = Self::authored(child, |effect| owner.close_step(effect))? else { return Ok((false, Default::default())); };
+        let step = turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;
         let terminal = owner.terminal_is_empty();
         semio_framework_value::retained_clone::admit_retained_clone_close(child, step, terminal, "config original source iterator")?;
         if terminal { drop(source.take()); }

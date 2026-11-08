@@ -261,7 +261,7 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
         }
         let child = store::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(candidate) = self.candidate.as_mut() {
-            let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, candidate.close_owned_step(child)?, candidate.close_owned_terminal_is_empty(), "composed parent initializer candidate")?;
+            let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, candidate.close_owned_step_cold(child)?, candidate.close_owned_terminal_is_empty(), "composed parent initializer candidate")?;
             if matches!(step, store::RetainedCloneStep::Complete(_)) {
                 drop(self.candidate.take());
             }

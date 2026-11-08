@@ -4,6 +4,7 @@ pub use semio_framework_job_recorded_clock::{OriginalClockAction,OriginalClockOb
 pub use semio_framework_job_recorded_clock::{admit_original_host_clock,OriginalErasedHostClock,OriginalHostClock,OriginalHostClockProducer,OriginalSystemClockContext};
 #[cfg(any(not(target_arch="wasm32"),target_env="p2"))]
 pub use semio_framework_job_recorded_clock::OriginalSystemClock;
+pub use semio_framework_job_recorded_clock::OriginalSourceClock;
 
 #[path="🪜️stride/🦀️.rs"]
 mod stride;

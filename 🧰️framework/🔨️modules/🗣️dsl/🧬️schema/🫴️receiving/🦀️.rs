@@ -1,6 +1,6 @@
 //! 🫴️ Typed fields retain partial destinations, performed work and every original refusal.
 use crate::{FieldValue,RecordValue};
-pub use semio_framework_io_control::{NativeSnapshotDecodeOwner,NativeSnapshotFailure,NativeSnapshotEffectProgress,NativeSnapshotDecodeEffectQuote,NativeSnapshotEncodeEffectQuote,NativeSnapshotDecodeWorkQuote,NativeSnapshotEncodeWorkQuote};
+pub use semio_framework_io_control::{NativeSnapshotDecodeOwner,NativeSnapshotFailure,NativeSnapshotEffectProgress,NativeSnapshotDecodeEffectQuote,NativeSnapshotDecodeWorkQuote,NativeSnapshotEncodeWorkQuote};
 use semio_framework_value::{DslValue,FromValue,RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,ValueError,ValueRefusalKind,retirement::RetireOwned};
 #[path="📥️owned/🦀️.rs"]
 pub mod owned;
@@ -86,6 +86,14 @@ impl<T:DslReceivingField+Copy,const N:usize> DslReceivingField for [T;N]{
    meter.take(owner.receive_copy(output,slots.map(|slot|slot.expect("fixed array receiving filled every slot"))))?;Ok(())
   })
  }
+}
+/// 🎁️ A newtype over a borrowed-family field receives its inner value in place, validates it, and wraps it in one fixed effect.
+pub fn receive_wrapped<I:DslReceivingField,W:RetireOwned>(value:&FieldValue,output:&mut Option<W>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>,check:fn(&I)->Result<(),ValueError>,wrap:fn(I)->W)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
+ owner.receive_nested::<I,W,NativeSnapshotFailure>(output,&mut |slot,result,marker,failure,original|receiving_turn(|meter|{
+  meter.take(I::receive_value(value,slot,original))?;
+  check(slot.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"typed wrapper lost its retained inner value"))?)?;
+  meter.take(original.effect(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()},marker,failure,&mut |performed,physical|{*result=slot.take().map(wrap);*performed=true;*physical=RetainedCloneProgress{copied_items:1,..Default::default()};Ok(())}))?;Ok(())
+ }))
 }
 #[derive(semio_framework_value::RetireOwned)]
 struct Sequence<T:RetireOwned>{backing:Option<Vec<T>>,child:Option<T>,effect:semio_framework_io_control::NativeSnapshotEffectProgress,unwind:Option<NativeSnapshotFailure>}

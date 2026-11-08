@@ -25,7 +25,7 @@ pub fn numerical_turn_error(failure: OriginalTurnFailure) -> ValueError {
         OriginalTurnPrimary::Value(error) => error,
         OriginalTurnPrimary::Fault(fault) => ValueError::new(ValueRefusalKind::InvariantViolated, fault.message.to_string()),
         OriginalTurnPrimary::Domain(original) => ValueError::new(ValueRefusalKind::InvariantViolated, original.message().to_owned()),
-        OriginalTurnPrimary::Receiving(original) => ValueError::new(ValueRefusalKind::InvariantViolated, original.message().to_owned()),
+        other => ValueError::new(ValueRefusalKind::InvariantViolated, other.message().to_owned()),
     };
     error.with_retained_progress(effects)
 }
@@ -70,7 +70,7 @@ pub fn numerical_finish_writer(slot: &mut NumericalPayloadSlot, lent: &mut Optio
         let demand = RetainedPayloadBuilder::boxed_release_demands();
         let released = close_original_retained_step(context, demand, |_| {
             drop(slot.take());
-            RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })), work: 1 }
+            RetainedWorkOutcome::<RetainedCloneStep, ValueError> { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })), work: 1 }
         });
         released.map_err(numerical_turn_error)?;
         return Ok(slot.is_none());

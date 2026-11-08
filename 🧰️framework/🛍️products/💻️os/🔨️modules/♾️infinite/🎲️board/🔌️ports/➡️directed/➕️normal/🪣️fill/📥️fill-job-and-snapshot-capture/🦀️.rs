@@ -34,12 +34,12 @@ impl BoardFillSnapshotCapture {
         let mut demand = BoardFillSnapshot::descriptor_demands(); demand.copy_bytes += size_of::<Self>(); Ok(demand)
     }
     pub fn admit_original(suggestion_offset: f64, naming: &'static BoardNaming, output: &mut Option<Self>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-        use semio_framework_action_bus::{admit_original_tool_construction_scoped, ToolJobAdmissionDemand};
+        use semio_framework_action_bus::{admit_original_tool_construction_settled, ToolJobAdmissionDemand};
         use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
         let demand = Self::admission_demands()?;
         let mut allocation_failed = false;
         let mut constructed_progress = RetainedCloneProgress::default();
-        let admitted = admit_original_tool_construction_scoped(cx, output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
+        let admitted = admit_original_tool_construction_settled(cx, &mut Default::default(), output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
             scope.admit_owner(demand)?;
             let mut candidate = Self::unallocated(suggestion_offset, naming);
             let snapshot = candidate.snapshot.as_mut().expect("original snapshot construction carrier");
@@ -377,7 +377,7 @@ impl BoardFillSnapshotCapture {
     }
 
     pub fn step(&mut self, scene: &BoardSceneState, style: &BoardStyleState, brush: &BoardBrushState, cx: &mut semio_framework_job::StepContext<'_>) -> Result<BoardFillCaptureStep, semio_framework_job::OriginalTurnFailure> {
-        use semio_framework_action_bus::{admit_original_tool_construction_scoped, ToolJobAdmissionDemand};
+        use semio_framework_action_bus::{admit_original_tool_construction_settled, ToolJobAdmissionDemand};
         use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
         cx.original_source_parent()?.validate_borrowed_context(cx)?;
         let snapshot = self.snapshot.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "board capture original snapshot is absent"))?;
@@ -386,7 +386,7 @@ impl BoardFillSnapshotCapture {
         if matches!(self.phase, BoardFillCapturePhase::Complete) { return Ok(BoardFillCaptureStep::Complete); }
         let demand = self.next_step_demands(style)?;
         let mut output = None;
-        admit_original_tool_construction_scoped(cx, &mut output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
+        admit_original_tool_construction_settled(cx, &mut Default::default(), &mut output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
             scope.admit_owner(demand)?;
             let result = match self.phase {
                 BoardFillCapturePhase::Nodes => self.capture_node(scene, style),

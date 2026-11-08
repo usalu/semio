@@ -67,12 +67,12 @@ fn retained_fixed_list_pages_preserve_order_without_all_n_allocation() {
     assert_eq!(values.get(599), Some(&599));
     assert!(values.get(600).is_none());
     assert_eq!(values.iter().rev().next(), Some(&599));
-    assert!(values.release_empty_page(usize::MAX).is_err());
+    assert!(values.release_empty_page_leased(usize::MAX).is_err());
     while values.pop().is_some() {}
     let mut released = 0;
     while !values.terminal_is_empty() {
         let before = values.allocated_bytes();
-        let step = values.release_empty_page(usize::MAX).unwrap();
+        let step = values.release_empty_page_leased(usize::MAX).unwrap();
         assert!(step.progressed);
         assert_eq!(before - values.allocated_bytes(), step.released_allocation_bytes);
         released += usize::from(step.released_allocation_bytes != 0);
@@ -98,7 +98,7 @@ fn retained_fixed_list_pages_refuse_oversized_payload_without_losing_owner() {
     assert_eq!(source.as_ref().unwrap()[32768], 7);
     assert!(values.is_empty());
     while !values.terminal_is_empty() {
-        values.release_empty_page(usize::MAX).unwrap();
+        values.release_empty_page_leased(usize::MAX).unwrap();
     }
 }
 
@@ -129,7 +129,7 @@ fn retained_fixed_list_pages_admit_binding_sized_payloads_and_safe_mutable_itera
     assert!(allocated > 32 * 2072, "metadata backing is not erased from the resident count");
     while values.pop().is_some() {}
     while !values.terminal_is_empty() {
-        values.release_empty_page(usize::MAX).unwrap();
+        values.release_empty_page_leased(usize::MAX).unwrap();
     }
 }
 #[test]
@@ -154,10 +154,10 @@ fn retained_fixed_list_pages_zero_zst_and_empty_tail_reuse_preserve_exact_storag
         assert!(step.progressed && owner.is_none());
         assert_eq!(step.placed_bytes, 0);
     }
-    assert!(zst.release_empty_page(usize::MAX).is_err());
+    assert!(zst.release_empty_page_leased(usize::MAX).is_err());
     while zst.pop().is_some() {}
     while !zst.terminal_is_empty() {
-        assert!(zst.release_empty_page(usize::MAX).unwrap().progressed);
+        assert!(zst.release_empty_page_leased(usize::MAX).unwrap().progressed);
     }
     let mut values = UiFixedList::<u64, 600>::default();
     for index in 0..data["tailCount"].as_u64().unwrap() {
@@ -172,12 +172,12 @@ fn retained_fixed_list_pages_zero_zst_and_empty_tail_reuse_preserve_exact_storag
     }
     let first_pointer = values.get(0).unwrap() as *const u64;
     let before = values.allocated_bytes();
-    let payload_release = values.release_empty_page(usize::MAX).unwrap();
+    let payload_release = values.release_empty_page_leased(usize::MAX).unwrap();
     assert_eq!(payload_release.released_allocation_bytes, (600 - retained) * size_of::<u64>());
     assert_eq!(before - values.allocated_bytes(), payload_release.released_allocation_bytes);
-    let metadata_release = values.release_empty_page(usize::MAX).unwrap();
+    let metadata_release = values.release_empty_page_leased(usize::MAX).unwrap();
     assert!(metadata_release.progressed && metadata_release.released_allocation_bytes != 0);
-    assert!(values.release_empty_page(usize::MAX).is_err());
+    assert!(values.release_empty_page_leased(usize::MAX).is_err());
     assert_eq!(values.get(0).unwrap() as *const u64, first_pointer);
     while !values.has_reserved_slot() {
         values.try_reserve_one(4096).unwrap();
@@ -188,7 +188,7 @@ fn retained_fixed_list_pages_zero_zst_and_empty_tail_reuse_preserve_exact_storag
     assert_eq!(values.get(0).unwrap() as *const u64, first_pointer);
     while values.pop().is_some() {}
     while !values.terminal_is_empty() {
-        values.release_empty_page(usize::MAX).unwrap();
+        values.release_empty_page_leased(usize::MAX).unwrap();
     }
 }
 //#endregion 🧪️PagedStorageLaws

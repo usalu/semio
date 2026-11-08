@@ -19,4 +19,4 @@ impl NodeHashCursor{
   _=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original hash was already handed off")),
  }Ok(None)}
 }
-impl RetireOwned for NodeHashCursor{fn retirement(self)->Box<dyn RetirementCursor>{self.path.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.path.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}
+impl RetireOwned for NodeHashCursor{type RetirementCursor=<Vec<usize> as RetireOwned>::RetirementCursor;fn retirement_seed(self)->Self::RetirementCursor{self.path.retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{self.path.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}

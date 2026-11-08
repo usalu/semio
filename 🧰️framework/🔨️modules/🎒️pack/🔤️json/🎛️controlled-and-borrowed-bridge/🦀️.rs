@@ -2,6 +2,9 @@
 
 use super::*;
 
+/// 🪢️ Starts the original allocation, or resumes the still-pending quote of an earlier turn instead of refusing it.
+macro_rules! allocate_or_resume{($owner:expr,$control:expr,$bytes:expr,$operation:expr)=>{if $owner.allocation_progress.is_some(){$control.continue_allocation_effect(&mut $owner.allocation_actual,&mut $owner.allocation_progress,$operation)}else{$control.allocate_effect($bytes,&mut $owner.allocation_actual,&mut $owner.allocation_progress,$operation)}}}
+
 pub fn to_json_string<T: ToValue>(value: &T) -> String {
     to_string(&from_dsl_value(&value.to_value()))
 }
@@ -24,9 +27,9 @@ pub fn from_json_str_controlled<T: FromValue>(text: &str, policy: JsonMemberPoli
 pub fn to_json_string_controlled<T: ToValue>(value: &T, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<String, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(0)?; let value = value.to_value_controlled(control)?.guard_decoded();
-        let mut measure = ControlledWriter { bytes: 0, output: None, metadata:0, pending:None, pending_work:0, pending_performed:false }; measure.value(value.get(), control)?;
+        let mut measure = ControlledWriter { bytes: 0, output: None, metadata:0, pending:None, pending_work:0, pending_performed:false, ceiling:isize::MAX as usize }; measure.value(value.get(), control)?;
         control.charge(measure.bytes)?; let mut output = String::new(); output.try_reserve_exact(measure.bytes).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "controlled JSON output allocation failed"))?;
-        let mut writer = ControlledWriter { bytes: 0, output: Some(output), metadata:0, pending:None, pending_work:0, pending_performed:false }; writer.value(value.get(), control)?;
+        let mut writer = ControlledWriter { bytes: 0, output: Some(output), metadata:0, pending:None, pending_work:0, pending_performed:false, ceiling:control.maximum_bytes() }; writer.value(value.get(), control)?;
         if writer.bytes != measure.bytes { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "controlled JSON output changed after admission")); } Ok(writer.output.unwrap())
     })
 }
@@ -81,7 +84,7 @@ fn writer_metadata_demand<S:JsonWriteSource+?Sized>(cursor:&JsonBorrowedWriteCur
   (0,JsonWriteNode::String(_)|JsonWriteNode::NativeString(_)|JsonWriteNode::Array(_)|JsonWriteNode::Object(_))=>(size_of::<u8>(),1),
   (1,JsonWriteNode::Array(length))=>if frame.index==*length{(finish,1)}else{(word+child,usize::from(frame.index!=0))},
   (2,JsonWriteNode::Object(length))=>if frame.index==*length{(finish,1)}else{(size_of::<u8>()+word,1+usize::from(frame.index!=0))},
-  (3,JsonWriteNode::Object(_))=>{let text=source.object_key_at_path(&cursor.path,frame.index)?;let remaining=text.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON object key position changed"))?;if remaining.is_empty(){(size_of::<u8>(),2)}else{(word,1)}},
+  (3,JsonWriteNode::Object(_))=>{let text=source.object_key_at_path(&cursor.path,frame.source_index)?;let remaining=text.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON object key position changed"))?;if remaining.is_empty(){(size_of::<u8>(),2)}else{(word,1)}},
   (5,JsonWriteNode::String(text))=>{let remaining=text.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON text position changed"))?;if remaining.is_empty(){(finish,1)}else{(word,1)}},
   (4,JsonWriteNode::Object(_))=>(size_of::<u8>()+word+child,0),
   (6,JsonWriteNode::NativeString(text))=>{if frame.index==text.text_chunk_count(){(finish,1)}else{let remaining=text.text_chunk(frame.index).and_then(|text|text.get(frame.position..)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON native text position changed"))?;if remaining.is_empty(){(2*word,0)}else{(word,1)}}},
@@ -91,7 +94,7 @@ fn writer_metadata_demand<S:JsonWriteSource+?Sized>(cursor:&JsonBorrowedWriteCur
 impl JsonBorrowedWriteCursor {
     fn retain_bound_progress(&mut self){if self.pending_action.is_some(){self.writer.pending=Some(self.normal_step_progress);self.writer.pending_performed=self.last_work!=0;self.writer.pending_work=self.last_work}}
     /// ▶️ Starts without copying or scanning a source owner.
-    pub fn new() -> Self { Self { frames: Vec::new(), path: Vec::new(), writer: ControlledWriter { bytes: 0, output: None, metadata:0, pending:None, pending_work:0, pending_performed:false }, phase: 0, normal_step_progress:Default::default(),last_work:0,pending_action:None,pending_extra:Default::default(),allocation_actual:None,allocation_progress:None,allocation_pending:None } }
+    pub fn new() -> Self { Self { frames: Vec::new(), path: Vec::new(), writer: ControlledWriter { bytes: 0, output: None, metadata:0, pending:None, pending_work:0, pending_performed:false, ceiling:isize::MAX as usize }, phase: 0, normal_step_progress:Default::default(),last_work:0,pending_action:None,pending_extra:Default::default(),allocation_actual:None,allocation_progress:None,allocation_pending:None } }
     /// 📍️ Returns the current canonical output byte count and measure/write phase.
     pub fn progress(&self) -> (usize, bool) { (self.writer.bytes, self.phase == 2) }
     pub fn measured_bytes(&self)->Option<usize>{(self.phase==1&&self.frames.is_empty()).then_some(self.writer.bytes)}
@@ -105,6 +108,8 @@ impl JsonBorrowedWriteCursor {
         Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<JsonWriteFrame>()+size_of::<usize>(),..Default::default()})
     }
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.writer.pending.unwrap_or(self.normal_step_progress)}
+    /// 🧱️ Carries the caller's ceiling on the whole output across turns; a larger output is a typed refusal, never a per-turn limit.
+    pub fn set_output_ceiling(&mut self,bytes:usize){self.writer.ceiling=bytes.min(isize::MAX as usize)}
     pub fn last_turn_work(&self)->u64{if self.writer.pending_performed{self.writer.pending_work}else{self.last_work}}
     /// 🧳️ Lends the original allocation markers for explicit original-port recovery.
     pub fn allocation_state_mut(&mut self)->(&mut Option<usize>,&mut Option<semio_framework_value::native_encoding::NativeEncodeAllocationProgress>,&mut Option<semio_framework_value::native_encoding::NativeEncodeAllocationOutcome>){(&mut self.allocation_actual,&mut self.allocation_progress,&mut self.allocation_pending)}
@@ -121,18 +126,18 @@ impl JsonBorrowedWriteCursor {
     pub fn normal_step_demands_with_copy<S:JsonWriteSource+?Sized>(&self,source:&S,copy:usize)->Result<RetirementDemand,ValueError>{
         let mut demand=RetirementDemand{depth:self.path.len()+1,..Default::default()};
         if self.phase==0{demand.capacity_bytes=(MAX_DEPTH as usize+1)*size_of::<JsonWriteFrame>();demand.copy_bytes=size_of::<Vec<JsonWriteFrame>>()+size_of::<u8>();return Ok(demand);}if self.phase==4{demand.capacity_bytes=MAX_DEPTH as usize*size_of::<usize>();demand.copy_bytes=size_of::<Vec<usize>>()+size_of::<u8>();return Ok(demand);}if self.phase==5{demand.copy_bytes=size_of::<JsonWriteFrame>()+size_of::<u8>();return Ok(demand);}
-        if self.frames.is_empty(){if self.phase==1{demand.capacity_bytes=self.writer.bytes;demand.copy_bytes=size_of::<ControlledWriter>()+size_of::<JsonWriteFrame>()+size_of::<u8>();}else if self.phase==2{demand.copy_bytes=size_of::<Option<String>>()+size_of::<u8>();}return Ok(demand);}
+        if self.frames.is_empty(){if self.phase==1{demand.capacity_bytes=self.writer.bytes;demand.copy_bytes=WRITER_BIRTH_COPY_BYTES;}else if self.phase==2{demand.copy_bytes=size_of::<Option<String>>()+size_of::<u8>();}return Ok(demand);}
         let frame=*self.frames.last().unwrap();let node=source.node_at_path(&self.path)?;let(metadata,raw)=writer_metadata_demand(self,frame,&node,source)?;
-        let mut measured=ControlledWriter{bytes:0,output:None,metadata:0,pending:None,pending_work:0,pending_performed:false};let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(isize::MAX as usize,&mut accepted);
+        let writing=self.phase==2;let mut measured=ControlledWriter{bytes:0,output:None,metadata:0,pending:None,pending_work:0,pending_performed:false,ceiling:isize::MAX as usize};let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(isize::MAX as usize,&mut accepted);
         match frame.state{
             0=>match node{JsonWriteNode::Null=>measured.raw("null",&mut control)?,JsonWriteNode::Bool(value)=>measured.raw(if value{"true"}else{"false"},&mut control)?,JsonWriteNode::Number(value)=>measured.number(value,&mut control)?,JsonWriteNode::Float32(value)=>JsonWriteOutput::float32(&mut measured,value,&mut control)?,JsonWriteNode::QuotedUnsigned(value)=>JsonWriteOutput::quoted_unsigned(&mut measured,value,&mut control)?,_=>measured.bytes=1},
             1=>{let JsonWriteNode::Array(length)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next array source changed"));};measured.bytes=usize::from(frame.index==length||frame.index!=0);},
             2=>{let JsonWriteNode::Object(length)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next object source changed"));};measured.bytes=if frame.index==length{1}else{1+usize::from(frame.index!=0)};},
-            3|5=>{let text=if frame.state==3{source.object_key_at_path(&self.path,frame.source_index)?}else{let JsonWriteNode::String(text)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next string source changed"));};text};let remaining=text.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next text position changed"))?;if remaining.is_empty(){measured.bytes=if frame.state==3{2}else{1};}else{let length=json_text_block(remaining,copy).0;for character in remaining[..length].chars(){measured.character(character,&mut control)?;}}},
-            6=>{let JsonWriteNode::NativeString(text)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next native string source changed"));};if frame.index==text.text_chunk_count(){measured.bytes=1;}else{let body=text.text_chunk(frame.index).and_then(|text|text.get(frame.position..)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next native text position changed"))?;if !body.is_empty(){let length=json_text_block(body,copy).0;for character in body[..length].chars(){measured.character(character,&mut control)?;}}}},
+            3|5=>{let text=if frame.state==3{source.object_key_at_path(&self.path,frame.source_index)?}else{let JsonWriteNode::String(text)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next string source changed"));};text};let remaining=text.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next text position changed"))?;if remaining.is_empty(){measured.bytes=if frame.state==3{2}else{1};}else{let length=json_text_block(remaining,copy,writing).0;for character in remaining[..length].chars(){measured.character(character,&mut control)?;}}},
+            6=>{let JsonWriteNode::NativeString(text)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next native string source changed"));};if frame.index==text.text_chunk_count(){measured.bytes=1;}else{let body=text.text_chunk(frame.index).and_then(|text|text.get(frame.position..)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next native text position changed"))?;if !body.is_empty(){let length=json_text_block(body,copy,writing).0;for character in body[..length].chars(){measured.character(character,&mut control)?;}}}},
             _=>{},
         }
-        let writing=self.phase==2;let raw_metadata=raw.checked_mul(size_of::<usize>()).and_then(|value|value.checked_mul(1+usize::from(writing))).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON writer metadata demand overflow"))?;demand.copy_bytes=metadata.checked_add(raw_metadata).and_then(|value|value.checked_add(if writing{measured.bytes}else{0})).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON writer copy demand overflow"))?;let _=copy;Ok(demand)
+        let raw=if measured.metadata>0{measured.metadata/size_of::<usize>()}else{raw};let raw_metadata=raw.checked_mul(size_of::<usize>()).and_then(|value|value.checked_mul(1+usize::from(writing))).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON writer metadata demand overflow"))?;demand.copy_bytes=metadata.checked_add(raw_metadata).and_then(|value|value.checked_add(if writing{measured.bytes}else{0})).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON writer copy demand overflow"))?;let _=copy;Ok(demand)
     }
     #[doc(hidden)] pub fn retained_capacity_bytes(&self)->Result<usize,ValueError>{
         self.frames.capacity().checked_mul(size_of::<JsonWriteFrame>()).and_then(|frames|self.path.capacity().checked_mul(size_of::<usize>()).and_then(|path|frames.checked_add(path))).and_then(|bytes|bytes.checked_add(self.writer.output.as_ref().map_or(0,|output|output.capacity()))).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON writer physical backing extent overflow"))
@@ -158,24 +163,24 @@ impl JsonBorrowedWriteCursor {
                 self.normal_step_progress=self.normal_step_progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<String>>()+size_of::<u8>(),..Default::default()})?;
                 self.phase=3;self.last_work=next_work;self.retain_bound_progress();return Ok(self.writer.output.take());
             }
-            if self.allocation_actual.is_some()||self.allocation_progress.is_some()||self.allocation_pending.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON writer original allocation is unsettled"))}
+            if self.allocation_actual.is_some()||self.allocation_pending.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON writer original allocation is unsettled"))}
             if self.phase==0||self.phase==4{
                 let frames=self.phase==0;let count=if frames{MAX_DEPTH as usize+1}else{MAX_DEPTH as usize};let layout=if frames{std::alloc::Layout::array::<JsonWriteFrame>(count)}else{std::alloc::Layout::array::<usize>(count)}.map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON writer frontier extent overflow"))?;let bytes=layout.size();let copied=if frames{size_of::<Vec<JsonWriteFrame>>()}else{size_of::<Vec<usize>>()}+size_of::<u8>();
                 let receipt=self.normal_step_progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:copied,retained_capacity_bytes:bytes,released_bytes:0})?;
-                let outcome=control.allocate_effect(bytes,&mut self.allocation_actual,&mut self.allocation_progress,&mut |actual|{let pointer=unsafe{std::alloc::alloc(layout)};if pointer.is_null(){*actual=Some(0);self.last_work=next_work;return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"JSON writer frontier allocation failed"))}if frames{self.frames=unsafe{Vec::from_raw_parts(pointer.cast::<JsonWriteFrame>(),0,count)};self.phase=4}else{self.path=unsafe{Vec::from_raw_parts(pointer.cast::<usize>(),0,count)};self.phase=5}*actual=Some(bytes);self.normal_step_progress=receipt;self.last_work=next_work;if self.pending_action.is_some(){self.writer.pending=Some(receipt);self.writer.pending_performed=true;self.writer.pending_work=next_work}Ok(())});
-                if !outcome.admitted||outcome.primary.is_some()||outcome.forwarded_quote.is_some()||outcome.scoped_quote.is_some()||outcome.extent_refusal.is_some()||outcome.forwarded_refusal.is_some()||outcome.scoped_refusal.is_some()||outcome.actual!=Some(bytes){self.allocation_pending=Some(outcome);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON writer original allocation refused"))}self.allocation_actual=None;normal_remaining(grant,self.normal_step_progress)?;control.step()?;continue
+                let Some(outcome)=allocate_or_resume!(self,control,bytes,&mut |actual,_turn|{let pointer=unsafe{std::alloc::alloc(layout)};if pointer.is_null(){*actual=Some(0);self.last_work=next_work;return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"JSON writer frontier allocation failed"))}if frames{self.frames=unsafe{Vec::from_raw_parts(pointer.cast::<JsonWriteFrame>(),0,count)};self.phase=4}else{self.path=unsafe{Vec::from_raw_parts(pointer.cast::<usize>(),0,count)};self.phase=5}*actual=Some(bytes);self.normal_step_progress=receipt;self.last_work=next_work;if self.pending_action.is_some(){self.writer.pending=Some(receipt);self.writer.pending_performed=true;self.writer.pending_work=next_work}Ok(true)})? else{if self.allocation_actual.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON writer original allocation settlement is still pending"))}break};
+                if !outcome.admitted||outcome.primary.is_some()||outcome.forwarded_quote.is_some()||outcome.scoped_quote.is_some()||outcome.extent_refusal.is_some()||outcome.forwarded_refusal.is_some()||outcome.scoped_refusal.is_some()||outcome.actual!=Some(bytes){let error=refused_allocation(&outcome,"JSON writer original allocation refused");self.allocation_pending=Some(outcome);return Err(error)}self.allocation_actual=None;normal_remaining(grant,self.normal_step_progress)?;control.step()?;continue
             }
             if self.phase==5{let receipt=self.normal_step_progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<JsonWriteFrame>()+size_of::<u8>(),..Default::default()})?;self.frames.push(JsonWriteFrame{state:0,index:0,position:0,source_index:0,next_cursor:0});self.phase=1;self.normal_step_progress=receipt;self.last_work=next_work;self.retain_bound_progress();normal_remaining(grant,self.normal_step_progress)?;control.step()?;continue}
             if self.frames.is_empty()&&self.phase==1{
-                let bytes=self.writer.bytes;let layout=std::alloc::Layout::array::<u8>(bytes).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON output extent overflow"))?;let receipt=self.normal_step_progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ControlledWriter>()+size_of::<JsonWriteFrame>()+size_of::<u8>(),retained_capacity_bytes:bytes,released_bytes:0})?;
-                let outcome=control.allocate_effect(bytes,&mut self.allocation_actual,&mut self.allocation_progress,&mut |actual|{let output=if bytes==0{String::new()}else{let pointer=unsafe{std::alloc::alloc(layout)};if pointer.is_null(){*actual=Some(0);self.last_work=next_work;if self.pending_action.is_some(){self.writer.pending=Some(self.normal_step_progress);self.writer.pending_performed=true;self.writer.pending_work=next_work}return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"controlled JSON output allocation failed"))}unsafe{String::from_raw_parts(pointer,0,bytes)}};*actual=Some(bytes);self.writer=ControlledWriter{bytes:0,output:Some(output),metadata:self.writer.metadata,pending:None,pending_work:0,pending_performed:false};self.frames.push(JsonWriteFrame{state:0,index:0,position:0,source_index:0,next_cursor:0});self.phase=2;self.normal_step_progress=receipt;self.last_work=next_work;if self.pending_action.is_some(){self.writer.pending=Some(receipt);self.writer.pending_performed=true;self.writer.pending_work=next_work}Ok(())});
-                if !outcome.admitted||outcome.primary.is_some()||outcome.forwarded_quote.is_some()||outcome.scoped_quote.is_some()||outcome.extent_refusal.is_some()||outcome.forwarded_refusal.is_some()||outcome.scoped_refusal.is_some()||outcome.actual!=Some(bytes){self.allocation_pending=Some(outcome);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON writer original output allocation refused"))}self.allocation_actual=None;normal_remaining(grant,self.normal_step_progress)?;control.step()?;continue
+                let bytes=self.writer.bytes;let layout=std::alloc::Layout::array::<u8>(bytes).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON output extent overflow"))?;let receipt=self.normal_step_progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:WRITER_BIRTH_COPY_BYTES,retained_capacity_bytes:bytes,released_bytes:0})?;
+                let Some(outcome)=allocate_or_resume!(self,control,bytes,&mut |actual,_turn|{let output=if bytes==0{String::new()}else{let pointer=unsafe{std::alloc::alloc(layout)};if pointer.is_null(){*actual=Some(0);self.last_work=next_work;if self.pending_action.is_some(){self.writer.pending=Some(self.normal_step_progress);self.writer.pending_performed=true;self.writer.pending_work=next_work}return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"controlled JSON output allocation failed"))}unsafe{String::from_raw_parts(pointer,0,bytes)}};*actual=Some(bytes);self.writer=ControlledWriter{bytes:0,output:Some(output),metadata:self.writer.metadata,pending:None,pending_work:0,pending_performed:false,ceiling:self.writer.ceiling};self.frames.push(JsonWriteFrame{state:0,index:0,position:0,source_index:0,next_cursor:0});self.phase=2;self.normal_step_progress=receipt;self.last_work=next_work;if self.pending_action.is_some(){self.writer.pending=Some(receipt);self.writer.pending_performed=true;self.writer.pending_work=next_work}Ok(true)})? else{if self.allocation_actual.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON writer original allocation settlement is still pending"))}break};
+                if !outcome.admitted||outcome.primary.is_some()||outcome.forwarded_quote.is_some()||outcome.scoped_quote.is_some()||outcome.extent_refusal.is_some()||outcome.forwarded_refusal.is_some()||outcome.scoped_refusal.is_some()||outcome.actual!=Some(bytes){let error=refused_allocation(&outcome,"JSON writer original output allocation refused");self.allocation_pending=Some(outcome);return Err(error)}self.allocation_actual=None;normal_remaining(grant,self.normal_step_progress)?;control.step()?;continue
             }
             let retained_before=self.retained_capacity_bytes()?;
             let copied_before=self.writer.output.as_ref().map_or(0,|output|output.len());let metadata_before=self.writer.metadata;let mut frame_copied=0usize;if !self.frames.is_empty(){self.writer.pending=Some(self.normal_step_progress);self.writer.pending_work=next_work;self.writer.pending_performed=false;}
             let frontier_before=(self.phase,self.frames.len(),self.path.len(),self.writer.bytes);
             let result=(||->Result<(),ValueError>{
-                match self.advance(source,control,remaining.maximum_copy_bytes){Ok(copied)=>frame_copied=copied,Err(error)=>{frame_copied=error.retained_progress().copied_bytes;return Err(error)}}
+                match self.advance(source,control,remaining.maximum_copy_bytes,self.phase==2){Ok(copied)=>frame_copied=copied,Err(error)=>{frame_copied=error.retained_progress().copied_bytes;return Err(error)}}
                 Ok(())
             })();
             let retained_after=self.retained_capacity_bytes()?;
@@ -194,7 +199,7 @@ impl JsonBorrowedWriteCursor {
         if self.path.len() >= MAX_DEPTH as usize { return Err(ValueError::new(ValueRefusalKind::DepthLimit, "retained JSON writer exceeds depth limit")); }
         self.path.push(index); self.frames.push(JsonWriteFrame{state:0,index:0,position:0,source_index:0,next_cursor:0}); Ok(())
     }
-    pub(super) fn advance<S:JsonWriteSource+?Sized>(&mut self, source:&S, control: &mut semio_framework_value::NativeEncodeControl<'_>,copy:usize) -> Result<usize, ValueError> {advance_source(&mut self.frames,&mut self.path,&mut self.writer,source,control,copy)}
+    pub(super) fn advance<S:JsonWriteSource+?Sized>(&mut self, source:&S, control: &mut semio_framework_value::NativeEncodeControl<'_>,copy:usize,writing:bool) -> Result<usize, ValueError> {advance_source(&mut self.frames,&mut self.path,&mut self.writer,source,control,copy,writing)}
 }
 
 pub struct JsonWriteCursor<S:JsonWriteSource>{#[doc(hidden)] pub source:Option<S>,#[doc(hidden)] pub state:JsonBorrowedWriteCursor}
@@ -211,37 +216,39 @@ impl<S:JsonWriteSource> JsonWriteCursor<S>{
     }
 }
 
-impl semio_framework_value::retirement::RetireOwned for JsonWriteFrame {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { semio_framework_value::retirement::leaf(self) }
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
-    fn controlled_retirement_supported()->bool{true}
-}
+semio_framework_value::artifact_retire_leaf!(JsonWriteFrame);
 
 impl Drop for JsonBorrowedWriteCursor{fn drop(&mut self){assert!(std::thread::panicking()||semio_framework_value::retirement::RetireOwned::retirement_ready(self),"original JSON cursor receipt remains unresolved")}}
 impl semio_framework_value::retirement::RetireOwned for JsonBorrowedWriteCursor {
     fn retirement_ready(&self)->bool{self.writer.pending.is_none()&&self.pending_action.is_none()&&semio_framework_value::retirement::RetireOwned::retirement_ready(&self.allocation_progress)}
-    fn retirement(mut self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;sequence(vec![deferred(std::mem::take(&mut self.frames)),deferred(JsonProjectionIterator::new(std::mem::take(&mut self.path))),deferred(self.writer.output.take()),deferred(self.allocation_progress.take()),deferred(self.allocation_pending.take())])}
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes_for(&self.frames),deferred_birth_bytes::<JsonProjectionIterator<usize>>(),deferred_birth_bytes_for(&self.writer.output),deferred_birth_bytes_for(&self.allocation_progress),deferred_birth_bytes_for(&self.allocation_pending)])}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(Vec<JsonWriteFrame>,JsonProjectionIterator<usize>,Option<String>,Option<semio_framework_value::native_encoding::NativeEncodeAllocationProgress>,Option<semio_framework_value::native_encoding::NativeEncodeAllocationOutcome>);
+    fn retirement_seed(mut self)->Self::RetirementCursor{semio_framework_value::retirement_fields_seed!(std::mem::take(&mut self.frames),JsonProjectionIterator::new(std::mem::take(&mut self.path)),self.writer.output.take(),self.allocation_progress.take(),self.allocation_pending.take())}
     fn controlled_retirement_supported()->bool{true}
 }
 
 impl<S:JsonWriteSource+semio_framework_value::retirement::RetireOwned+'static> semio_framework_value::retirement::RetireOwned for JsonWriteCursor<S> {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { use semio_framework_value::retirement::*;sequence(vec![deferred(self.source),deferred(self.state.frames),deferred(JsonProjectionIterator::new(self.state.path)),deferred(self.state.writer.output),deferred(self.state.allocation_progress),deferred(self.state.allocation_pending)]) }
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes_for(&self.source),deferred_birth_bytes_for(&self.state.frames),deferred_birth_bytes::<JsonProjectionIterator<usize>>(),deferred_birth_bytes_for(&self.state.writer.output),deferred_birth_bytes_for(&self.state.allocation_progress),deferred_birth_bytes_for(&self.state.allocation_pending)])}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(Option<S>,Vec<JsonWriteFrame>,JsonProjectionIterator<usize>,Option<String>,Option<semio_framework_value::native_encoding::NativeEncodeAllocationProgress>,Option<semio_framework_value::native_encoding::NativeEncodeAllocationOutcome>);
+    fn retirement_seed(mut self)->Self::RetirementCursor{semio_framework_value::retirement_fields_seed!(self.source.take(),std::mem::take(&mut self.state.frames),JsonProjectionIterator::new(std::mem::take(&mut self.state.path)),self.state.writer.output.take(),self.state.allocation_progress.take(),self.state.allocation_pending.take())}
     fn controlled_retirement_supported()->bool{S::controlled_retirement_supported()}
     fn retirement_ready(&self)->bool{self.source.as_ref().is_none_or(semio_framework_value::retirement::RetireOwned::retirement_ready)&&semio_framework_value::retirement::RetireOwned::retirement_ready(&self.state)}
 }
 
-fn json_text_block(text:&str,copy:usize)->(usize,usize){let(mut source,mut encoded)=(0,0);for character in text.chars(){let bytes=character.len_utf8();let escaped=match character{'"'|'\\'|'\u{0008}'|'\u{000c}'|'\n'|'\r'|'\t'=>2,c if(c as u32)<0x20=>6,_=>bytes};if source+bytes>64||source!=0&&encoded+escaped>copy{break}source+=bytes;encoded+=escaped;if encoded>copy{break}}(source,encoded)}
+/// 🚫️ Surfaces the typed refusal the control recorded for a denied allocation instead of a generic invariant violation.
+fn refused_allocation(outcome:&semio_framework_value::native_encoding::NativeEncodeAllocationOutcome,reason:&'static str)->ValueError{let kind=outcome.primary.as_ref().or(outcome.extent_refusal.as_ref()).map_or(ValueRefusalKind::InvariantViolated,|error|error.kind);ValueError::literal(kind,reason)}
 
-struct ControlledWriter { pub bytes: usize, pub output: Option<String>, metadata:usize, pending:Option<RetainedCloneProgress>, pending_work:u64, pending_performed:bool }
+/// ✂️ Chooses the longest block of at most 64 source bytes whose frame, per-character metadata and encoded payload fit the caller's copy ceiling; the first character is always taken.
+fn json_text_block(text:&str,copy:usize,writing:bool)->(usize,usize){let per_character=size_of::<usize>()*(1+usize::from(writing));let budget=copy.saturating_sub(size_of::<JsonWriteFrame>()+size_of::<usize>());let(mut source,mut encoded,mut characters)=(0,0,0usize);for character in text.chars(){let bytes=character.len_utf8();let escaped=match character{'"'|'\\'|'\u{0008}'|'\u{000c}'|'\n'|'\r'|'\t'=>2,c if(c as u32)<0x20=>6,_=>bytes};if source+bytes>64||source!=0&&encoded+escaped+(characters+1)*per_character>budget{break}source+=bytes;encoded+=escaped;characters+=1}(source,encoded)}
+
+/// 🪪️ The payload the output birth moves into place: the output backing, both counters and the first frame.
+const WRITER_BIRTH_COPY_BYTES:usize=size_of::<Option<String>>()+2*size_of::<usize>()+size_of::<JsonWriteFrame>()+size_of::<u8>();
+struct ControlledWriter { pub bytes: usize, pub output: Option<String>, metadata:usize, pending:Option<RetainedCloneProgress>, pending_work:u64, pending_performed:bool, ceiling:usize }
 
 impl ControlledWriter {
     fn next_pending(&self,bytes:usize)->Result<Option<RetainedCloneProgress>,ValueError>{let Some(mut progress)=self.pending else{return Ok(None)};if !self.pending_performed{progress.copied_items=progress.copied_items.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON writer item receipt overflow"))?}progress.copied_bytes=progress.copied_bytes.checked_add(bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON writer copy receipt overflow"))?;Ok(Some(progress))}
     fn mark_pending(&mut self,progress:Option<RetainedCloneProgress>){if let Some(progress)=progress{self.pending=Some(progress);self.pending_performed=true}}
     pub(super) fn character(&mut self, character: char, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {JsonWriteOutput::character(self,character,control)}
     pub(super) fn raw(&mut self, text: &str, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {
-        let bytes=self.bytes.checked_add(text.len()).filter(|bytes|*bytes<=isize::MAX as usize&&(self.output.is_none()||*bytes<=control.maximum_bytes())).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"controlled JSON output exceeds caller limit"))?;
+        let bytes=self.bytes.checked_add(text.len()).filter(|bytes|*bytes<=isize::MAX as usize&&*bytes<=self.ceiling).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"controlled JSON output exceeds caller limit"))?;
         let metadata=self.metadata.checked_add(size_of::<usize>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON writer metadata receipt overflow"))?;let pending=self.next_pending(size_of::<usize>())?;self.bytes=bytes;self.metadata=metadata;self.mark_pending(pending);
         if self.output.as_ref().is_some_and(|output|self.bytes>output.capacity()){return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"controlled JSON output exceeds admitted allocation"))}
         if text.len()<=65536{if self.output.is_some(){let metadata=self.metadata.checked_add(size_of::<usize>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON writer metadata receipt overflow"))?;let pending=self.next_pending(size_of::<usize>()+text.len())?;self.output.as_mut().unwrap().push_str(text);self.metadata=metadata;self.mark_pending(pending);}return Ok(())}
@@ -356,7 +363,7 @@ impl JsonWriteOutput for ControlledWriter{fn frame_copy(&mut self)->Result<(),Va
 
 fn finish_source_node(frames:&mut Vec<JsonWriteFrame>,path:&mut Vec<usize>)->usize{frames.pop();let mut bytes=size_of::<JsonWriteFrame>()+size_of::<usize>();if !frames.is_empty(){path.pop();bytes+=2*size_of::<usize>();}bytes}
 fn child_source_node(frames:&mut Vec<JsonWriteFrame>,path:&mut Vec<usize>,index:usize)->Result<usize,ValueError>{if path.len()>=MAX_DEPTH as usize||path.len()==path.capacity()||frames.len()==frames.capacity(){return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"JSON source exceeds its admitted traversal frontier"))}path.push(index);frames.push(JsonWriteFrame{state:0,index:0,position:0,source_index:0,next_cursor:0});Ok(2*size_of::<JsonWriteFrame>()+3*size_of::<usize>())}
-fn advance_source<S:JsonWriteSource+?Sized,W:JsonWriteOutput>(frames:&mut Vec<JsonWriteFrame>,path:&mut Vec<usize>,writer:&mut W,source:&S,control:&mut semio_framework_value::NativeEncodeControl<'_>,copy:usize)->Result<usize,ValueError>{let mut copied=size_of::<JsonWriteFrame>();let result=(||->Result<(),ValueError>{
+fn advance_source<S:JsonWriteSource+?Sized,W:JsonWriteOutput>(frames:&mut Vec<JsonWriteFrame>,path:&mut Vec<usize>,writer:&mut W,source:&S,control:&mut semio_framework_value::NativeEncodeControl<'_>,copy:usize,writing:bool)->Result<usize,ValueError>{let mut copied=size_of::<JsonWriteFrame>();let result=(||->Result<(),ValueError>{
         let frame = *frames.last().expect("writer frontier is inhabited");
         writer.frame_copy()?;
         let node = source.node_at_path(path.as_slice())?;
@@ -388,7 +395,7 @@ fn advance_source<S:JsonWriteSource+?Sized,W:JsonWriteOutput>(frames:&mut Vec<Js
             3 | 5 => {
                 let text = match node { JsonWriteNode::String(text) if frame.state == 5 => text, JsonWriteNode::Object(_) if frame.state == 3 => source.object_key_at_path(path.as_slice(),frame.source_index)?, _ => return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON text source changed")) };
                 let remaining=text.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON text source position changed"))?;
-                if !remaining.is_empty() { let (length,_)=json_text_block(remaining,copy);for character in remaining[..length].chars(){writer.character(character,control)?;frames.last_mut().unwrap().position+=character.len_utf8();}copied+=size_of::<usize>(); }
+                if !remaining.is_empty() { let (length,_)=json_text_block(remaining,copy,writing);for character in remaining[..length].chars(){writer.character(character,control)?;frames.last_mut().unwrap().position+=character.len_utf8();}copied+=size_of::<usize>(); }
                 else { writer.raw("\"", control)?; if frame.state == 5 { copied+=finish_source_node(frames,path); } else { writer.raw(":", control)?; frames.last_mut().unwrap().state = 4;copied+=size_of::<u8>(); } }
             }
             4 => { let next = frames.last_mut().unwrap(); next.state = 2; next.index += 1;copied+=size_of::<u8>()+size_of::<usize>(); copied+=child_source_node(frames,path,frame.source_index)?; }
@@ -398,7 +405,7 @@ fn advance_source<S:JsonWriteSource+?Sized,W:JsonWriteOutput>(frames:&mut Vec<Js
                 else {
                     let body=text.text_chunk(frame.index).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON native text chunk absent"))?;
                     let remaining=body.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON native text offset changed"))?;
-                    if !remaining.is_empty(){let(length,_)=json_text_block(remaining,copy);for character in remaining[..length].chars(){writer.character(character,control)?;frames.last_mut().unwrap().position+=character.len_utf8();}copied+=size_of::<usize>();}
+                    if !remaining.is_empty(){let(length,_)=json_text_block(remaining,copy,writing);for character in remaining[..length].chars(){writer.character(character,control)?;frames.last_mut().unwrap().position+=character.len_utf8();}copied+=size_of::<usize>();}
                     else {let next=frames.last_mut().unwrap();next.index+=1;next.position=0;copied+=2*size_of::<usize>();}
                 }
             }

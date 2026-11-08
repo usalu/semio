@@ -71,16 +71,16 @@ fn mesh_measures(mesh: &MeshTransfer) -> (f64, f64) {
 
 fn run_case(entry: &Value, tolerance: &Value) -> Result<String, String> {
     let mut body = Body::new();
-    let mut rec = OpRecorder::new();
-    let a = build_operand(&mut body, &mut rec, &entry["a"]).map_err(|e| format!("operand a: {e:?}"))?;
-    let b = build_operand(&mut body, &mut rec, &entry["b"]).map_err(|e| format!("operand b: {e:?}"))?;
+    let mut rec = OpRecorder::new();if std::env::var_os("KB1_TRACE").is_some(){eprintln!("[DEBUG] case start");}
+    let a = build_operand(&mut body, &mut rec, &entry["a"]).map_err(|e| format!("operand a: {e:?}"))?;if std::env::var_os("KB1_TRACE").is_some(){eprintln!("[DEBUG] operand a built");}
+    let b = build_operand(&mut body, &mut rec, &entry["b"]).map_err(|e| format!("operand b: {e:?}"))?;if std::env::var_os("KB1_TRACE").is_some(){eprintln!("[DEBUG] operand b built");}
     let op = match entry["operation"].as_str().expect("operation") {
         "fuse" => BooleanOp::Unite,
         "cut" => BooleanOp::Cut,
         _ => BooleanOp::Intersect,
     };
     let expected = &entry["expected"];
-    let outcome = boolean_solid(&mut body, a, b, op, 1e-6, &mut rec);
+    let outcome = boolean_solid(&mut body, a, b, op, 1e-6, &mut rec);if std::env::var_os("KB1_TRACE").is_some(){eprintln!("[DEBUG] boolean done");}
     if expected["empty"].as_bool().expect("empty") {
         return match outcome {
             Err(KernelError::Boolean(BooleanError::InvalidResult(message))) if message.contains("empty") => Ok("empty".into()),

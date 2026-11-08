@@ -88,7 +88,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
       canonicalWasmBuildVitePlugin(repoRoot, readBuildMode(mode)),
     semioServeCloseVitePlugin(),
     ...semioHostHtmlVitePlugin(repoRoot, {
-      title: "Entwerfen mit Bestand · Demonstrator",
+      title: [{ lang: "en", text: "Designing with Existing Stock · Demonstrator" }, { lang: "de", text: "Entwerfen mit Bestand · Demonstrator" }],
       entry: "./🟦️.tsx",
       bodyClass: "h-screen w-screen overflow-auto bg-background text-foreground",
       cnameHost: DEMONSTRATOR_HOST,

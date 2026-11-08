@@ -9,7 +9,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// ♻️ One bounded unit of member-run retirement: one alias of a member run's typed owners handed to its member store's
     /// alias retirement (displaced aliases of live runs, every alias of a run that left its slot), else the composed reads of
     /// a fully retired member run. `None` when nothing member-owned is retiring or an alias retirement is still stepping.
-    fn tool_run_member_retire_step(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,Fault>{
+    fn tool_run_member_retire_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneStep>,Fault>{
+        let grant=effect.grant();
         if self.tool_runs.snapshot_retirement.is_some(){return Ok(None);}
         if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         if let Some(index)=self.tool_runs.retired_members.iter().position(|member|!member.stale.is_empty()||member.children.is_some()){
@@ -69,7 +70,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             close_member_backing!(retired_ops,Vec<Vec<u8>>);
             let Some(owners)=member.owners.as_deref_mut().filter(|owners|everything||owners.has_displaced())else{continue};
             let child=children.get(&(member.slot.clone(),member.child_id.clone())).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"tool member original snapshot retains its missing exact Store issuer").into_fault())?;
-            let(owner,progress)=child.member.visit_member(ToolRunMemberRetire{owners,everything,grant})?;
+            let(owner,progress)=child.member.visit_member(ToolRunMemberRetire{owners,everything,grant,effect:&mut *effect})?;
             if let Some(owner)=owner{tool_runs.snapshot_retirement=Some(owner);}
             if progress!=RetainedCloneProgress::default(){return Ok(Some(RetainedCloneStep::Progress(progress)));}
         }
@@ -85,8 +86,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
 
     pub fn tool_run_retire_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<RetainedCloneStep>,semio_framework_job::OriginalTurnFailure>{
         let grant=cx.retained_grant();if cx.should_yield(){return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
-        let step=self.tool_run_member_retire_step(grant).map_err(|fault|semio_framework_job::OriginalTurnFailure::debit_original(fault,cx))?;
-        if let Some(step)=step{cx.consume_fuel(step.progress().copied_items as u64);cx.consume_retained(step.progress())?;return Ok(Some(step))}
+        let Some((step,performed))=cx.with_original_effect(grant,|_,effect|self.tool_run_member_retire_step(effect))? else{return Ok(Some(RetainedCloneStep::Progress(Default::default())))};
+        let step=step.map_err(|fault|semio_framework_job::OriginalTurnFailure::debit_original(fault,cx))?;
+        if let Some(step)=step{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX).max(step.progress().copied_items as u64));cx.consume_retained(step.progress())?;return Ok(Some(step))}
         self.tool_runs.retire_step(&mut self.stores.store,cx)
     }
 

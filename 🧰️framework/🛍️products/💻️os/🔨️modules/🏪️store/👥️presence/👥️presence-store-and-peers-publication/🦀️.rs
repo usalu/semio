@@ -85,19 +85,20 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         Ok(semio_framework_value::RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
         use semio_framework_value::retained_clone::{admit_retained_clone_close, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "presence peer publication exceeds admitted depth")); }
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "presence peer publication exceeds admitted depth").into()); }
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         let moved = RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty });
         if let Some(active) = self.active.as_mut() {
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = active.close_step(child)?;
+            let step = active.close_step(&mut effect.nested(child))?;
             let step = admit_retained_clone_close(child, step, active.terminal_is_empty(), "presence peer publication cleanup")?;
             if active.terminal_is_empty() { drop(self.active.take()); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
@@ -127,7 +128,7 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
             return Ok(moved);
         }
         if let Some(factory) = self.factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
-        if let Some(factory) = self.factory_close.as_mut() { let step = factory.step(child).result?; let step = admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original peer publication factory")?; if factory.terminal_is_empty() { self.factory_close = None; } return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }); }
+        if let Some(factory) = self.factory_close.as_mut() { let step = semio_framework_value::RetirementPollExit::resume(factory.step(&mut effect.nested(child)))?; let step = admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original peer publication factory")?; if factory.terminal_is_empty() { self.factory_close = None; } return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }); }
         Ok(RetainedCloneStep::Complete(empty))
     }
 
@@ -197,10 +198,11 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
         Ok(())
     }
 
-    pub fn maintenance_local_reads_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>
+    pub fn maintenance_local_reads_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll
     where P: Send + Sync + 'static,
     {
-        match self.local_reads.as_ref() { Some(reads) => presence_retirement::advance_returned_local(reads, &mut self.active_returned_local, self.local_retirement_factory.as_ref(), grant), None => Ok(RetainedCloneStep::Complete(Default::default())) }
+        let result = match self.local_reads.as_ref() { Some(reads) => presence_retirement::advance_returned_local(reads, &mut self.active_returned_local, self.local_retirement_factory.as_ref(), effect), None => Ok(RetainedCloneStep::Complete(Default::default())) };
+        semio_framework_value::RetirementPollExit::settle(effect, result)
     }
     /// 📏️ Quotes the next returned local-read maintenance turn on every axis without advancing it.
     pub fn maintenance_local_reads_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>

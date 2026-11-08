@@ -139,7 +139,7 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
         if !state.lookup.terminal_is_empty(){return state.lookup.close_demands(body);}
         state.lookup_lease.next_take_demands(body)
     }
-    pub fn advance(&mut self, grant: RetainedOrderedMapInsertGrant) -> crate::RetainedWorkOutcome<RetainedOrderedMapInsertStep, ValueError> {let mut work=0;let result=(||{ let state=&mut *self.state;
+    pub fn advance(&mut self, grant: RetainedOrderedMapInsertGrant, effect:&mut crate::RetainedAllocationEffect<'_>) -> crate::RetainedWorkOutcome<RetainedOrderedMapInsertStep, ValueError> {let mut work=0;let result=(||{ let state=&mut *self.state;
         if state.closing {
             return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion cursor is closing"));
         }
@@ -148,19 +148,19 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
         }
         match state.phase {
             0 => {
-                if !state.lookup_lease.ready(){let turn=state.lookup_lease.advance_birth(grant.retirement);work+=turn.work;let retirement=turn.result?.progress();return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement,..Default::default()}));}
+                if !state.lookup_lease.ready(){let turn=state.lookup_lease.advance_birth(effect);work+=turn.work;let retirement=turn.result?.progress();return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement,..Default::default()}));}
                 if state.lookup.closing{
-                    if !state.lookup.terminal_is_empty(){let step={let turn=state.lookup.close_step(grant.retirement);work+=turn.work;turn.result}?;return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement:step.progress(),..Default::default()}));}
+                    if !state.lookup.terminal_is_empty(){let step={let turn=super::bounded_ord::flatten_poll(state.lookup.close_step(&mut effect.nested(grant.retirement)));work+=turn.work;turn.result}?;return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement:step.progress(),..Default::default()}));}
                     let demand=state.lookup_lease.next_take_demands(grant.retirement.maximum_copy_bytes)?;
                     if grant.retirement.maximum_items==0||demand.copy_bytes>grant.retirement.maximum_copy_bytes||demand.capacity_bytes>grant.retirement.maximum_capacity_bytes||demand.release_bytes>grant.retirement.maximum_release_bytes||demand.depth>grant.retirement.maximum_depth{return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));}
-                    match {let turn=state.lookup_lease.take_authority(grant.retirement);work+=turn.work;turn.result}?{
+                    match {let turn=super::bounded_ord::flatten_poll(state.lookup_lease.take_authority(&mut effect.nested(grant.retirement)));work+=turn.work;turn.result}?{
                         super::super::RetainedCloneSourceTake::Pending(retirement)=>return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement,..Default::default()})),
                         super::super::RetainedCloneSourceTake::Ready(InsertWorkspace{map,key,value},retirement)=>{state.map=Some(map);state.key=Some(key);state.value=Some(value);match state.lookup.complete.unwrap(){RetainedOrderedMapLookup::Found(_)=>{state.phase=255;},RetainedOrderedMapLookup::Missing(ordinal)=>{state.target=Some(ordinal);state.phase=1;}}return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement,..Default::default()}));}
                     }
                 }
                 let map_ref=state.lookup_lease.borrow(1,|workspace|&workspace.map);
                 let key_ref=state.lookup_lease.borrow(2,|workspace|&workspace.key);
-                let(result,comparison,retirement)={let turn=state.lookup.advance(map_ref,key_ref,grant.comparison,grant.retirement);work+=turn.work;turn.result}?;
+                let(result,comparison,retirement)={let turn=state.lookup.advance(map_ref,key_ref,grant.comparison,effect);work+=turn.work;turn.result}?;
                 if result.is_some(){state.lookup.begin_close();}
                 Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{comparison,retirement,..Default::default()}))
             }
@@ -349,25 +349,35 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
         if state.map.is_some()||state.output.is_some(){return state.close.next_owner_demands::<RetainedOrderedMap<K,V>>(true,&None,body);}
         state.lookup_lease.next_close_demand(body)
     }
+    pub(super) fn close_work_demand(&self,body:usize)->Result<u64,ValueError> {
+        let state=&*self.state;
+        if !state.lookup.terminal_is_empty(){return state.lookup.close_work_demand(body);}
+        if !state.close.is_empty(){return state.close.next_owner_work::<K>(false,&None,body);}
+        if state.key.is_some(){return state.close.next_owner_work::<K>(true,&None,body);}
+        if state.value.is_some(){return state.close.next_owner_work::<V>(true,&None,body);}
+        if state.old_directory.is_some()||state.new_directory.is_some(){return state.close.next_owner_work::<Vec<Vec<(K,V)>>>(true,&None,body);}
+        if state.map.is_some()||state.output.is_some(){return state.close.next_owner_work::<RetainedOrderedMap<K,V>>(true,&None,body);}
+        state.lookup_lease.next_close_work_demand(body)
+    }
     pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
     pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
     pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
-    pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep, ValueError> {let grant=effect.grant();let mut work=0;let result=(||{
+    pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll {let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{
         if !retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         let state=&mut *self.state;
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !state.closing { return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion must begin close before retiring ownership")); }
-        if !state.lookup.terminal_is_empty(){state.lookup.begin_close();return {let turn=state.lookup.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result};}
-        if !state.close.is_empty() { return {let turn=state.close.step_granted(effect);work+=turn.work;turn.result}; }
+        if !state.closing { return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion must begin close before retiring ownership").into()); }
+        if !state.lookup.terminal_is_empty(){state.lookup.begin_close();return {let turn=crate::RetirementPollExit::settled(state.lookup.close_step(&mut effect.nested(grant)))?;work+=turn.work;turn.result.map_err(Into::into)};}
+        if !state.close.is_empty() { return {let turn=crate::RetirementPollExit::settled(state.close.step_granted(effect))?;work+=turn.work;turn.result.map_err(Into::into)}; }
         if let Some(step) = {let turn=state.close.begin_granted(&mut state.key,effect);work+=turn.work;turn.result}? { return Ok(step); }
         if let Some(step) = {let turn=state.close.begin_granted(&mut state.value,effect);work+=turn.work;turn.result}? { return Ok(step); }
         if let Some(step) = {let turn=state.close.begin_granted(&mut state.old_directory,effect);work+=turn.work;turn.result}? { return Ok(step); }
         if let Some(step) = {let turn=state.close.begin_granted(&mut state.new_directory,effect);work+=turn.work;turn.result}? { return Ok(step); }
         if let Some(step) = {let turn=state.close.begin_granted(&mut state.map,effect);work+=turn.work;turn.result}? { return Ok(step); }
         if let Some(step) = {let turn=state.close.begin_granted(&mut state.output,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        {let turn=state.lookup_lease.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result}
-    })();crate::RetainedWorkOutcome{result,work}}
+        {let turn=crate::RetirementPollExit::settled(state.lookup_lease.close_step(&mut effect.nested(grant)))?;work+=turn.work;turn.result.map_err(Into::into)}
+    })();crate::RetirementPollExit::finish(result,work)}
 
     pub fn terminal_is_empty(&self) -> bool { let state=&*self.state;
         state.lookup.terminal_is_empty()&&state.lookup_lease.terminal_is_empty()&&state.closing && state.key.is_none() && state.value.is_none() && state.old_directory.is_none() && state.new_directory.is_none() && state.map.is_none() && state.output.is_none() && state.close.is_empty()

@@ -2,6 +2,44 @@
 
 use super::*;
 use semio_os_spr::ColdMutation;
+use semio_framework_value::{AuthoringWallet, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkPoll, ValueError, retained_clone::RetainedCloneStep};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+
+/// ⛽️ Computational work one replay frontier step may spend inside its one original effect.
+const ARTIFACT_STORE_REPLAY_STEP_WORK: u64 = 64;
+
+/// 🪢️ Opens the one original effect of a replay step: a native step rides its decoder's own Work recipient, a cold step a bounded authoring stock; `None` means the work quote was not admitted and nothing ran.
+fn replay_effect<R>(grant: RetainedCloneGrant, control: Option<&mut NativeDecodeControl<'_>>, run: impl FnOnce(Option<&mut NativeDecodeControl<'_>>, &mut RetainedAllocationEffect<'_>) -> R) -> Result<Option<R>, VcsError> {
+    let opened = match control {
+        Some(control) => control.with_effect(grant, ARTIFACT_STORE_REPLAY_STEP_WORK, |control, effect| run(Some(control), effect)),
+        None => {
+            let stock = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_capacity_bytes: semio_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_release_bytes: semio_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_depth: 64 };
+            AuthoringWallet::new(stock, u128::from(ARTIFACT_STORE_REPLAY_STEP_WORK)).run(grant.restricted_by(stock), ARTIFACT_STORE_REPLAY_STEP_WORK, |effect| run(None, effect)).map(|done| done.map(|done| done.output))
+        }
+    };
+    opened.map_err(VcsError::InverseRefused)
+}
+
+/// 🧾️ A progressing step that recorded no work pays exactly one unit.
+fn paid(effect: &mut RetainedAllocationEffect<'_>, result: Result<RetainedCloneProgress, ValueError>) -> Result<RetainedCloneProgress, ValueError> {
+    let progress = result?;
+    if effect.performed_work() == 0 && progress != RetainedCloneProgress::default() && !effect.performed(1)? { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "replay step exceeds its work ceiling")); }
+    Ok(progress)
+}
+
+/// 🧾️ Charges the work a grant-shaped child reported, then yields its step.
+fn charged(effect: &mut RetainedAllocationEffect<'_>, work: u64, result: Result<RetainedCloneStep, ValueError>) -> Result<RetainedCloneStep, ValueError> {
+    if !effect.performed(work)? { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "replay step exceeds its work ceiling")); }
+    result
+}
+
+/// ⏳️ A pending poll keeps its owner resident and makes no progress this turn; a settled failure is the typed refusal.
+fn settle_poll(poll: OriginalRetirementPoll) -> Result<RetainedCloneStep, VcsError> {
+    match poll {
+        RetainedWorkPoll::Pending { .. } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())),
+        RetainedWorkPoll::Complete(turn) => turn.result.map_err(|failure| VcsError::InverseRefused(failure.into_value_error())),
+    }
+}
 
 impl<P,Mutation:super::Mutation<P>+OpBinary> ReplayOwnedState<P,Mutation>{
 
@@ -15,7 +53,8 @@ impl<P,Mutation:super::Mutation<P>+OpBinary> ReplayOwnedState<P,Mutation>{
                 let body = retirement.next_copy_byte_demand().map_err(VcsError::InverseRefused)?;
                 let capacity = retirement.next_capacity_byte_demand(body).map_err(VcsError::InverseRefused)?;
                 let grant=original.ok_or_else(||VcsError::ValidationFailed("native replay cleanup requires the original caller grant".into()))?;
-                let step = retirement.close_step(grant).map_err(VcsError::InverseRefused)?;self.native_receipt=step.progress();
+                let Some(poll) = replay_effect(grant, control.as_deref_mut(), |_, effect| retirement.close_step(effect))? else { return Ok(ReplayStep::Pending(self.progress)); };
+                let step = settle_poll(poll)?;self.native_receipt=step.progress();
                 if !step.progress().fits(grant) { return Err(VcsError::ValidationFailed("replay cleanup exceeded its admitted grant".into())); }
                 if retirement.terminal_is_empty() {
                     self.replay_retirement = None;
@@ -26,7 +65,8 @@ impl<P,Mutation:super::Mutation<P>+OpBinary> ReplayOwnedState<P,Mutation>{
             if let Some(owner) = self.prefix_message_retirement.as_mut() {
                 let body = owner.next_copy_byte_demand();
                 let grant=original.ok_or_else(||VcsError::ValidationFailed("native prefix cleanup requires the original caller grant".into()))?;
-                let step = owner.close_step(grant).map_err(VcsError::InverseRefused)?;self.native_receipt=step.progress();
+                let Some(step) = replay_effect(grant, control.as_deref_mut(), |_, effect| { let result = owner.close_step(grant); charged(effect, owner.last_turn_work(), result) })? else { return Ok(ReplayStep::Pending(self.progress)); };
+                let step = step.map_err(VcsError::InverseRefused)?;self.native_receipt=step.progress();
                 if !step.progress().fits(grant) { return Err(VcsError::ValidationFailed("prefix diagnostic cleanup exceeded its actual grant".into())); }
                 if owner.terminal_is_empty() { self.prefix_message_retirement = None; }
                 if deadline() || step.progress().copied_items == 0 { return Ok(ReplayStep::Pending(self.progress)); }
@@ -116,12 +156,13 @@ impl<P,Mutation:super::Mutation<P>+OpBinary> ReplayOwnedState<P,Mutation>{
 
             let capacity=settlement.next_capacity_byte_demand().map_err(VcsError::InverseRefused)?;
             if grant.maximum_capacity_bytes<capacity{return Ok(false)}
-            match control{
+            match control.as_deref_mut(){
                 Some(control)=>{control.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(capacity).map_err(VcsError::InverseRefused)?;}
                 None if grant==Self::cold_authority_grant()=>{}
                 None=>return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native edit diagnostics require their decoding continuation"))),
             }
-            self.native_receipt=settlement.step(&mut self.edit_messages,&mut self.outcomes,grant).map_err(VcsError::InverseRefused)?;
+            let Some(progress)=replay_effect(grant,control.as_deref_mut(),|_,effect|{let result=settlement.step(&mut self.edit_messages,&mut self.outcomes,effect);paid(effect,result)})? else{return Ok(false)};
+            self.native_receipt=progress.map_err(VcsError::InverseRefused)?;
             return Ok(false);
         }
         let rejects = match self.mode {
@@ -460,7 +501,8 @@ where
         let mut drain = semio_os_spr::command::OperationMessageDrain::new(protocol::MutationReplayOutcome { mutation_id: effective.mutation_id.clone(), edit_id: edit.id.clone(), op_index: index as u32, worst, messages, superseded: effective.superseded(), withdrawn: effective.withdrawn() });
         while !drain.is_finished() {
             let demand=drain.next_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-            drain.step(&mut self.edit_messages, grant).map_err(VcsError::InverseRefused)?;
+            let Some(progress) = replay_effect(grant, None, |_, effect| { let result = drain.step(&mut self.edit_messages, effect); paid(effect, result) })? else { return Err(VcsError::ValidationFailed("cold replay message drain was not admitted".into())); };
+            if progress.map_err(VcsError::InverseRefused)? == RetainedCloneProgress::default() { return Err(VcsError::ValidationFailed("cold replay message drain made no progress".into())); }
         }
         self.outcomes.push(drain.take().expect("cold original operation messages transferred"));
         Ok(())
@@ -547,14 +589,15 @@ mod operation_preparation {
             }
         }
 
-        pub(crate) fn step_prepared_operation(&mut self, edit: &semio_os_spr::Edit<M>, prefix: bool, original:Option<RetainedCloneGrant>, control:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>, _deadline: &mut dyn FnMut() -> bool) -> Result<bool, semio_os_vcs::VcsError> {
+        pub(crate) fn step_prepared_operation(&mut self, edit: &semio_os_spr::Edit<M>, prefix: bool, original:Option<RetainedCloneGrant>, mut control:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>, _deadline: &mut dyn FnMut() -> bool) -> Result<bool, semio_os_vcs::VcsError> {
             use crate::ReplayMode;
     use semio_os_store_ledger::CursorRevisionAccumulator;
             use semio_os_vcs::VcsError;
             let original=original.ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires the caller's original operation grant")))?;
             let grant=ArtifactStoreOneItemGrant{maximum_items:original.maximum_items,maximum_copy_bytes:original.maximum_copy_bytes,maximum_capacity_bytes:original.maximum_capacity_bytes,maximum_release_bytes:original.maximum_release_bytes,maximum_depth:original.maximum_depth};
             if let Some(settlement) = self.operation_message_settlement.as_mut() {
-                let (done,progress)=settlement.step(&mut self.edit_messages,original).map_err(VcsError::InverseRefused)?;
+                let Some(stepped)=replay_effect(original,control.as_deref_mut(),|_,effect|{let result=settlement.step(&mut self.edit_messages,effect);match result{Ok((done,progress))=>paid(effect,Ok(progress)).map(|progress|(done,progress)),Err(error)=>Err(error)}})? else{return Ok(false)};
+                let (done,progress)=stepped.map_err(VcsError::InverseRefused)?;
                 self.native_receipt=progress;
                 if done {
                     let outcome = settlement.take();
@@ -567,7 +610,8 @@ mod operation_preparation {
             }
             if let Some(retirement) = self.operation_retirement.as_mut() {
                 let control=control.ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay retirement requires its original decoder")))?;
-                let step=control.with_retirement(original,|receiving|retirement.close_step(original,receiving)).map_err(VcsError::InverseRefused)?;
+                let Some(polled)=replay_effect(original,Some(control),|control,effect|->Result<OriginalRetirementPoll,ValueError>{let control=control.ok_or_else(||ValueError::invariant("native replay retirement lost its decoder"))?;control.with_retirement(original,|receiving|Ok(retirement.close_step(effect,receiving)))})? else{return Ok(false)};
+                let step=settle_poll(polled.map_err(VcsError::InverseRefused)?)?;
                 self.native_receipt=step.progress();
                 if retirement.terminal_is_empty() {
                     self.operation_retirement = None;
@@ -582,7 +626,8 @@ mod operation_preparation {
                 }
                 let task = self.operation_preparation.as_mut().expect("active operation preparation");
                 if task.is_ready(){let copy=size_of::<ArtifactReplayPrepared<P,M>>()+size_of::<ArtifactReplayPreparationTask<P,M>>()+size_of::<ArtifactReplayPreparationRetirement<P,M>>();if original.maximum_copy_bytes<copy||original.maximum_depth==0||original.maximum_items==0{return Ok(false);}let work=task.progress();self.preparation_completed.items=self.preparation_completed.items.saturating_add(work.items);self.preparation_completed.bytes=self.preparation_completed.bytes.saturating_add(work.bytes);self.prepared_operation=Some(task.take_prepared().ok_or_else(||VcsError::ValidationFailed("prepared operation has no owners".into()))?);self.operation_retirement=Some(self.operation_preparation.take().unwrap().into_retirement());self.native_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()};return Ok(false);}
-                let step = task.step(self.generation,self.revision,original.maximum_copy_bytes,grant,control.ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires its original construction decoder")))?, &mut || false).map_err(VcsError::InverseRefused)?;
+                let control=control.ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires its original construction decoder")))?;
+                let step=task.step(self.generation,self.revision,original.maximum_copy_bytes,grant,control,&mut || false).map_err(|failure|VcsError::InverseRefused(failure.into_value_error()))?;
                 self.native_receipt=step.progress();
                 return Ok(false);
             }
@@ -593,7 +638,13 @@ mod operation_preparation {
                         if !self.edit_inverse.has_reserved_slot() {
                             let demand = self.edit_inverse.next_allocation_bytes().map_err(|error| VcsError::InverseRefused(error.into()))?;
                             if demand > grant.maximum_copy_bytes { return Err(VcsError::ValidationFailed("replay inverse page exceeds its body grant".into())); }
-                            self.edit_inverse.reserve_one(demand).map_err(|error| VcsError::InverseRefused(error.refusal().into()))?;
+                            let Some(reserved) = replay_effect(original, control.as_deref_mut(), |_, effect| self.edit_inverse.reserve_one(effect).result)? else { return Ok(false); };
+                            match reserved {
+                                Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(step)) => self.native_receipt = RetainedCloneProgress { copied_items: usize::from(step.progressed), retained_capacity_bytes: step.allocated_bytes, ..Default::default() },
+                                Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Denied) => {}
+                                Err(semio_framework_value_persistent::list::PagedListReservationFailure::Work(error)) => return Err(VcsError::InverseRefused(error)),
+                                Err(semio_framework_value_persistent::list::PagedListReservationFailure::Allocation { error, .. }) => return Err(VcsError::InverseRefused(error.refusal().into())),
+                            }
                             return Ok(false);
                         }
                         let operation = inverse.pop().expect("prepared inverse owner");

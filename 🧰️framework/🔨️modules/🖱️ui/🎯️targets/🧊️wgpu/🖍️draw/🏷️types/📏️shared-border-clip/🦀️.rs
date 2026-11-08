@@ -64,7 +64,7 @@ impl SharedBorderClipCursor {
         self.progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         if !self.pieces.has_reserved_slot() {
             let demand = self.pieces.next_allocation_bytes().map_err(|_| ())?;
-            return match self.pieces.reserve_one(demand) {
+            return match self.pieces.reserve_one_cold(demand) {
                 Ok(progress) => { self.progress.retained_capacity_bytes = progress.allocated_bytes; self.progress.copied_bytes = progress.placed_bytes; Ok(false) },
                 Err(error) => { self.progress.retained_capacity_bytes = error.allocated_bytes; Err(()) },
             };
@@ -149,7 +149,7 @@ impl SharedBorderClipCursor {
         if self.pieces.pop().is_some() { return Ok(false); }
         if self.pieces.terminal_is_empty() { return Ok(true); }
         let demand = self.pieces.next_release_allocation_bytes()?;
-        let progress = self.pieces.release_empty_page(demand)?;
+        let progress = self.pieces.release_empty_page_leased(demand)?;
         self.progress.released_bytes = progress.released_allocation_bytes;
         Ok(self.pieces.terminal_is_empty())
     }

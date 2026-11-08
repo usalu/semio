@@ -57,8 +57,8 @@ impl InlineSymbols{
  fn index<T:FieldProjectionSource>(&self,source:&T,text:TextReadView<'_>,control:&mut NativeEncodeControl<'_>)->Result<Option<u64>,ValueError>{
   let length=self.len()?;if self.spilled{return self.overflow.index(source,text,control)}if length==0{return Ok(None)}let original=self.locator(0)?.resolve(source)?;retained_symbols::compare_text(original,text,control).map(|order|(order==Ordering::Equal).then_some(0))
  }
- fn retire_one(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<(bool,usize,usize),ValueError>{
-  if maximum_items==0||maximum_bytes==0{return Ok((false,0,0))}self.phase=InlineSymbolPhase::Retiring;if self.first.take().is_some(){return Ok((true,1,0))}self.overflow.retire_one(maximum_items,maximum_bytes)
+ fn retire_one(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(bool,usize,usize),ValueError>{
+  let grant=effect.grant();if grant.maximum_items==0||grant.maximum_release_bytes==0{return Ok((false,0,0))}self.phase=InlineSymbolPhase::Retiring;if self.first.take().is_some(){if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"inline symbol close exceeded its original work"))}return Ok((true,1,0))}self.overflow.retire_one(effect)
  }
  fn return_one<const P:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize,maximum_bytes:usize)->Result<(bool,usize),ValueError>{
   if maximum_items==0||maximum_bytes==0{return Ok((false,0))}self.phase=InlineSymbolPhase::Retiring;if self.first.take().is_some(){return Ok((true,0))}self.overflow.return_one(parent,maximum_items,maximum_bytes)
@@ -188,7 +188,7 @@ impl<T:FieldProjectionSource> BorrowedEncoder<'_,'_,'_,T>{
 }
 
 fn order_push(owner:&mut InlineOrder,index:usize,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{
- while !owner.has_reserved_slot(){let required=owner.tail.next_allocation_bytes().map_err(|error|ValueError::new(ValueRefusalKind::AllocationFailed,error.reason))?;if required>4096{return Err(mismatch())}control.charge(required)?;control.checkpoint()?;let step=owner.tail.reserve_one(required).map_err(|error|ValueError::new(ValueRefusalKind::AllocationFailed,error.reason))?;if !step.progressed||step.allocated_bytes>required{return Err(mismatch())}}
+ while !owner.has_reserved_slot(){let required=owner.tail.next_allocation_bytes().map_err(|error|ValueError::new(ValueRefusalKind::AllocationFailed,error.reason))?;if required>4096{return Err(mismatch())}control.charge(required)?;control.checkpoint()?;let step=owner.tail.reserve_one_cold(required).map_err(|error|ValueError::new(ValueRefusalKind::AllocationFailed,error.reason))?;if !step.progressed||step.allocated_bytes>required{return Err(mismatch())}}
  owner.push_reserved(index).map_err(|_|mismatch())
 }
 fn order_sort(owner:&mut InlineOrder,start:usize,control:&mut NativeEncodeControl<'_>,mut compare:impl FnMut(usize,usize,&mut NativeEncodeControl<'_>)->Result<Ordering,PackRefusal>)->Result<(),PackRefusal>{
@@ -222,11 +222,11 @@ impl<T:FieldProjectionSource> BorrowedProjectedPackOperation<T>{
   }));if result.is_err(){self.phase=OperationPhase::Failed;}result
  }
  /// ♻️ Revokes complete access and retires one scalar or one actual backing within the caller grant.
- pub fn retire_one(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<(bool,usize,usize),ValueError>{
-  if maximum_items==0||maximum_bytes==0{return Ok((false,0,0))}self.phase=OperationPhase::Retiring;
-  if !self.order.is_empty(){self.order.pop();return Ok((true,1,0))}
-  if self.order.allocated_bytes()>0{let step=self.order.tail.release_empty_page(maximum_bytes).map_err(|error|ValueError::new(ValueRefusalKind::AllocationFailed,error.reason))?;return Ok((step.progressed,usize::from(step.progressed),step.released_allocation_bytes))}
-  self.symbols.retire_one(maximum_items,maximum_bytes)
+ pub fn retire_one(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(bool,usize,usize),ValueError>{
+  let grant=effect.grant();if grant.maximum_items==0||grant.maximum_release_bytes==0{return Ok((false,0,0))}self.phase=OperationPhase::Retiring;
+  if !self.order.is_empty(){if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"order close exceeded its original work"))}self.order.pop();return Ok((true,1,0))}
+  if self.order.allocated_bytes()>0{return match self.order.tail.release_empty_page(&mut effect.nested(grant)).result{Ok(semio_framework_value::PagedListReleaseOutcome::Ready(step))=>Ok((step.progressed,usize::from(step.progressed),step.released_allocation_bytes)),Ok(semio_framework_value::PagedListReleaseOutcome::Denied)=>Ok((false,0,0)),Err(semio_framework_value::PagedListReleaseFailure::Work(error))=>Err(error),Err(semio_framework_value::PagedListReleaseFailure::Release(error))=>Err(ValueError::new(ValueRefusalKind::AllocationFailed,error.reason))}}
+  self.symbols.retire_one(effect)
  }
  /// 🏠️ Returns genuine retained backing to the explicitly admitted parent without physical disposal credit.
  pub fn return_one<const P:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize,maximum_bytes:usize)->Result<(bool,usize),ValueError>{

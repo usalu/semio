@@ -50,7 +50,8 @@ pub fn child_grant(grant: RetainedCloneGrant) -> RetainedCloneGrant {
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// ♻️ Releases exactly one retained field owner under the caller's unchanged grant; a grant below the quote yields.
-    pub fn retained_fields_close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    pub fn retained_fields_close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, Fault> {
+        let grant = effect.grant();
         let value_fault = |error: ValueError| plugin_sdk_fault(error.into_message());
         let idle = RetainedCloneProgress::default();
         if self.shared().retained_fields_own_terminal_is_empty() {
@@ -174,11 +175,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             return done(handoff());
         }
         if !self.tools.registry.terminal_is_empty() {
-            return self.tools.registry.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|fault| fault);
+            return self.tools.registry.close_step(&mut effect.nested(child)).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|fault| fault);
         }
         if !self.tools.tool_jobs.original_terminal_is_empty(){return Ok(RetainedCloneStep::Progress(self.tools.tool_jobs.original_close_step(child).progress()))}
-        if let Some(owner)=self.tools.declared_tools.as_mut(){if owner.terminal_is_empty(){self.tools.declared_tools.take();return done(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_plugin_instance_jobs::jobs_components::DeclaredToolCatalogAlias>>(),..Default::default()})}return owner.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|error|plugin_sdk_fault(error.to_string()))}
-        if let Some(owner)=self.tools.declared_owner.as_mut(){if owner.terminal_is_empty(){self.tools.declared_owner.take();return done(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_plugin_job::original_declared_tools::OriginalDeclaredToolCatalog>>(),..Default::default()})}return owner.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|error|plugin_sdk_fault(error.to_string()))}
+        if let Some(owner)=self.tools.declared_tools.as_mut(){if owner.terminal_is_empty(){self.tools.declared_tools.take();return done(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_plugin_instance_jobs::jobs_components::DeclaredToolCatalogAlias>>(),..Default::default()})}return owner.close_step(&mut effect.nested(child)).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|error|plugin_sdk_fault(error.to_string()))}
+        if let Some(owner)=self.tools.declared_owner.as_mut(){if owner.terminal_is_empty(){self.tools.declared_owner.take();return done(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_plugin_job::original_declared_tools::OriginalDeclaredToolCatalog>>(),..Default::default()})}return owner.close_step(&mut effect.nested(child)).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|error|plugin_sdk_fault(error.to_string()))}
         if self.tools.bounded_tool_proofs.pop_first().is_some() {
             return done(handoff());
         }
@@ -428,8 +429,9 @@ impl<A: ArtifactApp> ClosingOwner for PeerRosterPublication<A> {
         let demand = self.close_demands(body)?;
         Ok(if demand == RetirementDemand::default() && !self.fault.terminal_is_empty() { RetirementDemand { copy_bytes: size_of::<Option<Fault>>(), depth: 1, ..Default::default() } } else { demand })
     }
-    fn closing_step(&mut self, _cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> {
-        match self.close_step(grant)? {
+    fn closing_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> {
+        let demand = self.closing_demands(grant.maximum_copy_bytes)?;
+        match semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx, grant, demand, |_, effect| { let step = self.close_step(effect)?; Ok((step, self.terminal_is_empty())) })? {
             PluginLifecycleStep::Complete(_) if !self.fault.terminal_is_empty() => {
                 let (fault, progress) = self.take_original_fault(grant).map_err(plugin_retirement_fault)?;
                 drop(fault);
@@ -443,13 +445,13 @@ impl<A: ArtifactApp> ClosingOwner for PeerRosterPublication<A> {
 
 impl ClosingOwner for PeerPresenceRootRetirement {
     fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.retirement_demands(body) }
-    fn closing_step(&mut self, _cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> { self.close_step(grant).map_err(Into::into) }
+    fn closing_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> { let demand = self.retirement_demands(grant.maximum_copy_bytes)?; semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx, grant, demand, |_, effect| { let step = self.close_step(effect)?; Ok((step, self.terminal_is_empty())) }) }
     fn closing_terminal_is_empty(&self) -> bool { self.terminal_is_empty() }
 }
 
 impl<P: Send + Sync + 'static> ClosingOwner for store::os_store::presence::PresencePeersRetirement<P> {
     fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { erased_demand(self, body) }
-    fn closing_step(&mut self, _cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> { erased_step(self, grant).map(|step| PluginLifecycleStep::Progress(step.progress())) }
+    fn closing_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> { erased_step(cx, self, grant).map(|step| PluginLifecycleStep::Progress(step.progress())) }
     fn closing_terminal_is_empty(&self) -> bool { store::os_store::presence::PresencePeersRetirement::terminal_is_empty(self) }
 }
 
@@ -467,7 +469,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         if self.tools.original_emission_receipt.is_some(){self.tools.original_emission_receipt=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>>(),..Default::default()}))}
         let Some((_, operation_id)) = self.tools.tool_operations.next_id_from(0) else { return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress::default())) };
         let operation = self.tools.tool_operations.get_mut(operation_id).ok_or_else(|| plugin_sdk_fault("typed operation owner changed during bounded close"))?;
-        if operation.pending_stream_abort.is_some(){let before=cx.retained_progress();cx.with_original_retirement(|cx|operation.close_stream_abort(&mut self.stores.store,cx))?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
+        if operation.stream_abort_open(){let before=cx.retained_progress();cx.with_original_retirement(|cx|operation.close_stream_abort(&mut self.stores.store,cx))?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
         if operation.stage == MountedTypedCommandFullOperationStage::Retiring { return self.as_typed().retire_typed_operation_unit(operation_id,cx); }
         let step = operation.close_step(cx)?;
         let PluginLifecycleStep::Complete(progress) = step else { return Ok(step) };

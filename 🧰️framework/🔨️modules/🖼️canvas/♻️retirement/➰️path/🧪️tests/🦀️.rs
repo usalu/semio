@@ -1,6 +1,14 @@
 use super::*;
 use semio_framework_trace_memory_testing::observe_backing;
 
+/// 🏦️ Closes one slot step under an authoring wallet equal to the granted stock (no job turn exists in this law) and reads the poll as the funded step.
+fn close<T: semio_framework_value::ErasedSnapshotRetirement + ?Sized>(slot: &mut Option<Box<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
+    match semio_framework_value::AuthoringWallet::new(grant, 1 << 20).run(grant, 1 << 16, |effect| semio_framework_value::close_factory_ticket(slot, effect)).unwrap().expect("work quote admitted").output {
+        semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
+        semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(RetainedCloneStep::Progress(Default::default())),
+    }
+}
+
 #[test]
 fn original_canvas_path_retains_all_cancelled_backings_and_exact_native_receipts() {
     let example: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
@@ -52,7 +60,7 @@ fn original_canvas_path_retains_all_cancelled_backings_and_exact_native_receipts
             if original_length != 0 {
                 assert_eq!(example["elementCopyBytes"].as_u64().unwrap() as usize, size_of::<PathEl>());
                 for denied in [RetainedCloneGrant { maximum_copy_bytes: 0, ..policy }, RetainedCloneGrant { maximum_copy_bytes: size_of::<PathEl>() - 1, ..policy }] {
-                    let (step, allocated, released) = observe_backing(|| semio_framework_value::close_factory_ticket(&mut slot, denied).unwrap());
+                    let (step, allocated, released) = observe_backing(|| close(&mut slot,denied).unwrap());
                     assert_eq!(step.progress(), RetainedCloneProgress::default(), "underfunded original typed element must remain retained");
                     assert_eq!((allocated, released), (0, 0));
                     let retained = slot.as_ref().unwrap();
@@ -64,7 +72,7 @@ fn original_canvas_path_retains_all_cancelled_backings_and_exact_native_receipts
             }
             for _ in 0..cut.as_u64().unwrap() {
                 if slot.as_ref().unwrap().original_elements().is_empty() { break; }
-                let (step, allocated, released) = observe_backing(|| semio_framework_value::close_factory_ticket(&mut slot,policy).unwrap());
+                let (step, allocated, released) = observe_backing(|| close(&mut slot,policy).unwrap());
                 assert!(step.progress().fits(policy)); assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
                 freed += released; born += allocated;
             }
@@ -76,7 +84,7 @@ fn original_canvas_path_retains_all_cancelled_backings_and_exact_native_receipts
                 if owner.terminal_is_empty() {
                     let shell_pointer = owner.as_ref() as *const CanvasPathRetirement;
                     for denied in [RetainedCloneGrant { maximum_release_bytes: size_of::<CanvasPathRetirement>() - 1, ..policy }, RetainedCloneGrant { maximum_copy_bytes: size_of::<Option<Box<CanvasPathRetirement>>>() - 1, ..policy }, RetainedCloneGrant { maximum_items: 0, ..policy }] {
-                        let (step, allocated, released) = observe_backing(|| semio_framework_value::close_factory_ticket(&mut slot, denied).unwrap());
+                        let (step, allocated, released) = observe_backing(|| close(&mut slot,denied).unwrap());
                         assert_eq!(step.progress(), Default::default());
                         assert_eq!((allocated, released), (0, 0));
                         assert_eq!(slot.as_ref().unwrap().as_ref() as *const CanvasPathRetirement, shell_pointer);
@@ -85,12 +93,12 @@ fn original_canvas_path_retains_all_cancelled_backings_and_exact_native_receipts
                 if slot.as_ref().unwrap().original_elements().is_empty() && !slot.as_ref().unwrap().terminal_is_empty() {
                     let extent = slot.as_ref().unwrap().next_release_byte_demand().unwrap();
                     for denied in [RetainedCloneGrant { maximum_release_bytes: extent - 1, ..policy },RetainedCloneGrant { maximum_copy_bytes: 0, ..policy }] {
-                        let (step,allocated,released)=observe_backing(||semio_framework_value::close_factory_ticket(&mut slot,denied).unwrap());
+                        let (step,allocated,released)=observe_backing(||close(&mut slot,denied).unwrap());
                         assert_eq!(step.progress(),Default::default());assert_eq!((allocated,released),(0,0));assert_eq!(slot.as_ref().unwrap().original_elements().as_ptr(),pointer);
                     }
                 }
                 let original_element = !slot.as_ref().unwrap().original_elements().is_empty();
-                let (step,allocated,released)=observe_backing(||semio_framework_value::close_factory_ticket(&mut slot,policy).unwrap());
+                let (step,allocated,released)=observe_backing(||close(&mut slot,policy).unwrap());
                 if original_element { assert_eq!(step.progress().copied_bytes, size_of::<PathEl>()); }
                 assert!(step.progress().fits(policy));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));freed+=released;born+=allocated;
             }

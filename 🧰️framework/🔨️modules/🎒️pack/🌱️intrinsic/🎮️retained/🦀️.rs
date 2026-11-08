@@ -33,12 +33,12 @@ fn capacity()->PackRefusal{PackRefusal::LimitExceeded{kind:ValueRefusalKind::Own
 fn allocation()->PackRefusal{PackRefusal::ValueRefusal(ValueError::literal(ValueRefusalKind::AllocationFailed,"retained intrinsic allocation failed"))}
 impl<'a,D:RetainedValueDriver> Materializer<'a,D>{
  /// 🎟️ Admits transferred source backing before constructing an allocation-free parser.
- fn new(input:RetainedIntrinsicInput<'a>,mut limits:PackLimits,maximum:usize)->Result<Self,(PackRefusal,RetainedIntrinsicInput<'a>)>{
+ fn new(input:RetainedIntrinsicInput<'a>,mut limits:PackLimits,maximum:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Self,(PackRefusal,RetainedIntrinsicInput<'a>)>{
   if input.bytes().len()as u64>limits.max_file_len||input.capacity()>maximum{return Err((capacity(),input))}
   let maximum=maximum.min(usize::try_from(limits.max_total_alloc).unwrap_or(usize::MAX));let admitted=input.capacity();
   if maximum==0||admitted>maximum{return Err((capacity(),input))}
   limits.max_total_alloc=maximum as u64;let maximum_frames=usize::from(limits.max_depth)+1;
-  let cursor=match D::new(limits,input.bytes().len(),maximum){Ok(cursor)=>cursor,Err(error)=>return Err((error,input))};
+  let cursor=match D::new(limits,input.bytes().len(),maximum,effect){Ok(cursor)=>cursor,Err(error)=>return Err((error,input))};
   Ok(Self{input:Some(input),cursor,owned:ManuallyDrop::new(Owned::default()),retiring:None,offset:0,maximum,admitted,maximum_frames,header:0,copy:Copy::None,pending_token:None,sealed:false,complete:false,closing:false,closed:false,original_failed:false,fault:None})
  }
  pub fn admitted_bytes(&self)->usize{self.admitted}
@@ -95,7 +95,7 @@ impl<'a,D:RetainedValueDriver> Materializer<'a,D>{
    _=>Err(invalid("unexpected intrinsic token"))
   }
  }
- fn one(&mut self)->Result<(),PackRefusal>{
+ fn one(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(),PackRefusal>{
   if self.owned.frames.capacity()==0{
    let bytes=self.maximum_frames.checked_mul(size_of::<Frame>()).filter(|bytes|*bytes<=self.remaining()).ok_or_else(capacity)?;let _=bytes;
    self.owned.frames.try_reserve_exact(self.maximum_frames).map_err(|_|allocation())?;let actual=self.owned.frames.capacity()*size_of::<Frame>();return self.admit(actual)
@@ -105,7 +105,7 @@ impl<'a,D:RetainedValueDriver> Materializer<'a,D>{
    Copy::Symbol{symbol,index,count}=>{let character=self.cursor.symbol_char(symbol,index)?.ok_or_else(||invalid("missing symbol scalar"))?;let DslValue::String(text)=&mut self.owned.scalar else{return Err(invalid("missing symbol owner"))};if text.len()+character.len_utf8()>text.capacity(){return Err(invalid("symbol exceeds admitted owner"))}text.push(character);self.copy=if index+1==count{Copy::Ready}else{Copy::Symbol{symbol,index:index+1,count}};return Ok(())},
    _=>{}
   }
-  let before=self.cursor.allocated_bytes();let result=self.cursor.one(self.input.as_ref().unwrap().bytes(),(0,self.input.as_ref().unwrap().bytes().len()),self.remaining());let born=self.cursor.allocated_bytes().checked_sub(before).ok_or_else(||invalid("parser allocation custody regressed"))?;self.admit(born)?;self.offset=self.cursor.input_bytes();if let Some(token)=result?{self.token(token)?}
+  let before=self.cursor.allocated_bytes();let result=self.cursor.one(self.input.as_ref().unwrap().bytes(),(0,self.input.as_ref().unwrap().bytes().len()),self.remaining(),effect);let born=self.cursor.allocated_bytes().checked_sub(before).ok_or_else(||invalid("parser allocation custody regressed"))?;self.admit(born)?;self.offset=self.cursor.input_bytes();if let Some(token)=result?{self.token(token)?}
   Ok(())
  }
  /// 📏️ Quotes one exact source, parser or materialization frontier before its physical effect.
@@ -127,24 +127,24 @@ impl<'a,D:RetainedValueDriver> Materializer<'a,D>{
   Ok(demand)
  }
  /// 🪜️ Advances one funded frontier and returns its actual physical receipt without replacing source custody.
- pub fn advance_original_step(&mut self,grant:RetainedCloneGrant,cancelled:bool)->RetainedIntrinsicOriginalCall{
-  let empty=RetainedCloneProgress::default();let step=||RetainedIntrinsicStep{units:0,input_bytes:self.offset,admitted_bytes:self.admitted,complete:self.complete};
+ pub fn advance_original_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,cancelled:bool)->RetainedIntrinsicOriginalCall{
+  let grant=effect.grant();  let empty=RetainedCloneProgress::default();let step=||RetainedIntrinsicStep{units:0,input_bytes:self.offset,admitted_bytes:self.admitted,complete:self.complete};
   if self.closing{return RetainedIntrinsicOriginalCall{result:Err(invalid("original advance after close")),progress:empty}}if self.original_failed{return RetainedIntrinsicOriginalCall{result:Ok(step()),progress:empty}}if self.fault.is_some(){if grant.maximum_items==0||grant.maximum_depth==0{return RetainedIntrinsicOriginalCall{result:Ok(step()),progress:empty}}self.original_failed=true;return RetainedIntrinsicOriginalCall{result:Err(self.fault.take().unwrap()),progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
   if cancelled{self.original_failed=true;return RetainedIntrinsicOriginalCall{result:Err(PackRefusal::ValueRefusal(ValueError::literal(ValueRefusalKind::Canceled,"original intrinsic decoding canceled"))),progress:empty}}if self.complete{return RetainedIntrinsicOriginalCall{result:Ok(step()),progress:empty}}
   let demand=match self.original_step_demands(){Ok(demand)=>demand,Err(error)=>{self.original_failed=true;return RetainedIntrinsicOriginalCall{result:Err(error),progress:empty}}};
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_depth<demand.depth{return RetainedIntrinsicOriginalCall{result:Ok(step()),progress:empty}}
-  let before=self.admitted;let result=(||{
-   if self.owned.frames.capacity()==0{return self.one()}if let Some(token)=self.pending_token.take(){return self.token(token)}if matches!(self.copy,Copy::Ready|Copy::Symbol{..}){return self.one()}
-   let before=self.cursor.allocated_bytes();let result=self.cursor.one(self.input.as_ref().unwrap().bytes(),(0,self.input.as_ref().unwrap().bytes().len()),self.remaining());let born=self.cursor.allocated_bytes().checked_sub(before).ok_or_else(||invalid("original parser allocation custody regressed"))?;self.admit(born)?;self.offset=self.cursor.input_bytes();self.pending_token=result?;Ok(())
-  })();let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:self.admitted-before,..Default::default()};
+  let before=self.admitted;let recorded=effect.performed_work();let result=(||{
+   if self.owned.frames.capacity()==0{return self.one(effect)}if let Some(token)=self.pending_token.take(){return self.token(token)}if matches!(self.copy,Copy::Ready|Copy::Symbol{..}){return self.one(effect)}
+   let before=self.cursor.allocated_bytes();let result=self.cursor.one(self.input.as_ref().unwrap().bytes(),(0,self.input.as_ref().unwrap().bytes().len()),self.remaining(),effect);let born=self.cursor.allocated_bytes().checked_sub(before).ok_or_else(||invalid("original parser allocation custody regressed"))?;self.admit(born)?;self.offset=self.cursor.input_bytes();self.pending_token=result?;Ok(())
+  })();let result=result.and_then(|()|if effect.performed_work()!=recorded{Ok(())}else{match effect.performed(1){Ok(true)=>Ok(()),Ok(false)=>Err(PackRefusal::ValueRefusal(ValueError::literal(ValueRefusalKind::WorkLimit,"original intrinsic action exceeded its original work"))),Err(error)=>Err(PackRefusal::from(error))}});let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:self.admitted-before,..Default::default()};
   if result.is_err(){self.original_failed=true;}let result=result.map(|_|RetainedIntrinsicStep{units:1,input_bytes:self.offset,admitted_bytes:self.admitted,complete:self.complete});RetainedIntrinsicOriginalCall{result,progress}
  }
 
  /// ⏱️ The parser and materializer retain their positions when the finite work grant ends.
- pub fn advance(&mut self,maximum_units:usize,cancelled:bool)->Result<RetainedIntrinsicStep,PackRefusal>{
+ pub fn advance(&mut self,maximum_units:usize,cancelled:bool,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedIntrinsicStep,PackRefusal>{
   if self.closing{return Err(invalid("advance after close"))}if let Some(error)=&self.fault{return Err(error.clone())}
   if cancelled{let error=PackRefusal::ValueRefusal(ValueError::literal(ValueRefusalKind::Canceled,"retained intrinsic decoding canceled"));self.fault=Some(error.clone());return Err(error)}
-  let mut units=0;while units<maximum_units&&!self.complete{units+=1;if let Err(error)=self.one(){self.fault=Some(error.clone());return Err(error)}}
+  let mut units=0;while units<maximum_units&&!self.complete{units+=1;if let Err(error)=self.one(effect){self.fault=Some(error.clone());return Err(error)}}
   Ok(RetainedIntrinsicStep{units,input_bytes:self.offset,admitted_bytes:self.admitted,complete:self.complete})
  }
  pub fn take_output(&mut self)->Option<DslValue>{if self.complete&&!self.closing&&!self.original_failed&&self.fault.is_none(){self.owned.output.take()}else{None}}
@@ -152,22 +152,22 @@ impl<'a,D:RetainedValueDriver> Materializer<'a,D>{
   use semio_framework_value::RetirementDemand;if self.closed{return Ok(Default::default())}if self.pending_token.is_some()||!self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}
   if let Some(owner)=&self.retiring{if !owner.terminal_is_empty(){return owner.next_demand(body).map_err(PackRefusal::from)}}self.cursor.close_demands(body)
  }
- pub fn close_original_step(&mut self,grant:RetainedCloneGrant)->RetainedIntrinsicOriginalCall<RetainedCloneStep>{
-  let empty=RetainedCloneProgress::default();let demand=match self.original_close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedIntrinsicOriginalCall{result:Err(error),progress:empty}};
+ pub fn close_original_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetainedIntrinsicOriginalCall<RetainedCloneStep>{
+  let grant=effect.grant();let empty=RetainedCloneProgress::default();let demand=match self.original_close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedIntrinsicOriginalCall{result:Err(error),progress:empty}};
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return RetainedIntrinsicOriginalCall{result:Ok(RetainedCloneStep::Progress(empty)),progress:empty}}
-  if self.pending_token.is_some(){self.pending_token=None;let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty};return RetainedIntrinsicOriginalCall{result:Ok(RetainedCloneStep::Progress(progress)),progress}}
-  let moving=!self.closing;let result=self.close_step(grant);let mut progress=match &result{Ok(step)=>step.progress(),Err(PackRefusal::ValueRefusal(error))=>error.retained_progress(),_=>empty};if moving&&result.is_ok(){progress.copied_bytes=demand.copy_bytes}RetainedIntrinsicOriginalCall{result:result.map(|step|match step{RetainedCloneStep::Complete(_)=>RetainedCloneStep::Complete(progress),RetainedCloneStep::Progress(_)=>RetainedCloneStep::Progress(progress)}),progress}
+  if self.pending_token.is_some(){self.pending_token=None;if !matches!(effect.performed(1),Ok(true)){return RetainedIntrinsicOriginalCall{result:Err(PackRefusal::ValueRefusal(ValueError::literal(ValueRefusalKind::WorkLimit,"original intrinsic close exceeded its original work"))),progress:empty}}let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty};return RetainedIntrinsicOriginalCall{result:Ok(RetainedCloneStep::Progress(progress)),progress}}
+  let moving=!self.closing;let result=self.close_step(effect);let mut progress=match &result{Ok(step)=>step.progress(),Err(PackRefusal::ValueRefusal(error))=>error.retained_progress(),_=>empty};if moving&&result.is_ok(){progress.copied_bytes=demand.copy_bytes}RetainedIntrinsicOriginalCall{result:result.map(|step|match step{RetainedCloneStep::Complete(_)=>RetainedCloneStep::Complete(progress),RetainedCloneStep::Progress(_)=>RetainedCloneStep::Progress(progress)}),progress}
  }
  pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(owner)=&self.retiring{if !owner.terminal_is_empty(){return owner.next_copy_byte_demand()}}Ok(self.cursor.next_copy_demand())}
  pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if let Some(owner)=&self.retiring{if !owner.terminal_is_empty(){return owner.next_capacity_byte_demand(body)}}self.cursor.next_capacity_demand(body)}
  pub fn next_close_release_byte_demand(&self)->Result<usize,PackRefusal>{if let Some(owner)=&self.retiring{if !owner.terminal_is_empty(){return owner.next_release_byte_demand().map_err(PackRefusal::from)}}self.cursor.next_release_demand()}
  pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if let Some(owner)=&self.retiring{if !owner.terminal_is_empty(){return owner.next_depth_demand()}}self.cursor.next_depth_demand()}
  /// ♻️ Independent work, capacity, release and depth grants close every partially born owner.
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PackRefusal>{
-  if self.closed{return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()))}
-  if !self.closing{if grant.maximum_depth==0{return Err(PackRefusal::ValueRefusal(ValueError::literal(ValueRefusalKind::DepthLimit,"retained intrinsic close depth")))}if let Some(RetainedIntrinsicInput::OwnedBytes(bytes))=self.input.take(){self.owned.input=bytes}let owned=std::mem::take(&mut*self.owned);match ControlledRetirement::new(owned){Ok(owner)=>self.retiring=Some(owner),Err((error,owned))=>{*self.owned=owned;return Err(PackRefusal::from(error))}}self.closing=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-  if let Some(owner)=&mut self.retiring{if !owner.terminal_is_empty(){return owner.step(grant).map_err(PackRefusal::from)}}
-  let step=self.cursor.close_step(grant)?;if matches!(step,RetainedCloneStep::Complete(_)){self.retiring.take();self.closed=true}Ok(step)
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,PackRefusal>{
+  let grant=effect.grant();if self.closed{return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()))}
+  if !self.closing{if grant.maximum_depth==0{return Err(PackRefusal::ValueRefusal(ValueError::literal(ValueRefusalKind::DepthLimit,"retained intrinsic close depth")))}if let Some(RetainedIntrinsicInput::OwnedBytes(bytes))=self.input.take(){self.owned.input=bytes}let owned=std::mem::take(&mut*self.owned);match ControlledRetirement::new(owned){Ok(owner)=>self.retiring=Some(owner),Err((error,owned))=>{*self.owned=owned;return Err(PackRefusal::from(error))}}self.closing=true;if !effect.performed(1)?{return Err(PackRefusal::ValueRefusal(ValueError::literal(ValueRefusalKind::WorkLimit,"retained intrinsic close exceeded its original work")))}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+  if let Some(owner)=&mut self.retiring{if !owner.terminal_is_empty(){return match owner.step(effect){semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|failure|PackRefusal::from(failure.primary().cloned().unwrap_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,failure.to_string())))),semio_framework_value::RetainedWorkPoll::Pending{..}=>Err(PackRefusal::ValueRefusal(ValueError::literal(ValueRefusalKind::InvariantViolated,"retained intrinsic close stayed pending")))}}}
+  let step=self.cursor.close_step(effect)?;if matches!(step,RetainedCloneStep::Complete(_)){self.retiring.take();self.closed=true}Ok(step)
  }
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.cursor.terminal_is_empty()&&self.retiring.is_none()&&self.input.is_none()}
 }
@@ -177,9 +177,9 @@ impl<D:RetainedValueDriver> Drop for Materializer<'_,D>{fn drop(&mut self){asser
 
 struct BodyDriver{cursor:RetainedRecordBodyCursor,offset:usize,sealed:bool}
 impl RetainedValueDriver for BodyDriver{
- fn new(limits:PackLimits,length:usize,maximum:usize)->Result<Self,PackRefusal>{let symbols=length.min(limits.max_symbols as usize);Ok(Self{cursor:RetainedRecordBodyCursor::try_new_intrinsic(limits,symbols,length,length,maximum)?,offset:0,sealed:false})}
- fn one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize)->Result<Option<Token>,PackRefusal>{
-  if let Some(bytes)=self.cursor.next_allocation_bytes()?{if bytes>maximum{return Err(capacity())}self.cursor.reserve_allocation(bytes).map_err(|error|error.fault)?;return Ok(None)}
+ fn new(limits:PackLimits,length:usize,maximum:usize,_effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Self,PackRefusal>{let symbols=length.min(limits.max_symbols as usize);Ok(Self{cursor:RetainedRecordBodyCursor::try_new_intrinsic(limits,symbols,length,length,maximum)?,offset:0,sealed:false})}
+ fn one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<Token>,PackRefusal>{
+  if let Some(bytes)=self.cursor.next_allocation_bytes()?{if bytes>maximum{return Err(capacity())}self.cursor.reserve_allocation(bytes,effect).map_err(|error|error.fault)?;return Ok(None)}
   if let Some(token)=self.cursor.grant()?{return Ok(match token{RetainedRecordBodyToken::Value(token)=>Some(token),_=>None})}
   if self.cursor.ingress_ready(){if self.offset<(range.1-range.0){self.cursor.admit_byte(self.offset as u64,input.byte_at(range.0+self.offset).ok_or_else(||invalid("original intrinsic input byte is absent"))?).map_err(|_|invalid("input handback"))?;self.offset+=1}else if !self.sealed{self.cursor.seal(self.offset as u64)?;self.sealed=true}else{return Err(invalid("terminal progress unavailable"))}}Ok(None)
  }
@@ -193,27 +193,27 @@ impl RetainedValueDriver for BodyDriver{
  fn symbol_char(&self,symbol:u64,index:usize)->Result<Option<char>,PackRefusal>{self.cursor.symbol_char(symbol,index)}
  fn next_release_demand(&self)->Result<usize,PackRefusal>{Ok(self.cursor.next_release_allocation_bytes()?.unwrap_or(0))}
  fn close_demands(&self,_:usize)->Result<semio_framework_value::RetirementDemand,PackRefusal>{self.cursor.source_close_demands()}
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PackRefusal>{let demand=self.close_demands(grant.maximum_copy_bytes)?;if !self.terminal_is_empty()&&!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}Ok(retained_pack_close_progress(self.cursor.close_step(grant.maximum_items,grant.maximum_release_bytes)?))}
+ fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,PackRefusal>{let grant=effect.grant();let demand=self.close_demands(grant.maximum_copy_bytes)?;if !self.terminal_is_empty()&&!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}Ok(retained_pack_close_progress(self.cursor.close_step(grant.maximum_items,grant.maximum_release_bytes,effect)?))}
  fn terminal_is_empty(&self)->bool{self.cursor.terminal_is_empty()}
 }
 macro_rules! operation{($name:ident,$driver:ty)=>{
  /// 💼️ Retains explicit intrinsic framing, finite work and partial ownership through terminal close.
  pub struct $name<'a>(Materializer<'a,$driver>);
  impl<'a> $name<'a>{
-  pub fn new(input:RetainedIntrinsicInput<'a>,limits:PackLimits,maximum:usize)->Result<Self,(PackRefusal,RetainedIntrinsicInput<'a>)>{Materializer::new(input,limits,maximum).map(Self)}
+  pub fn new(input:RetainedIntrinsicInput<'a>,limits:PackLimits,maximum:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Self,(PackRefusal,RetainedIntrinsicInput<'a>)>{Materializer::new(input,limits,maximum,effect).map(Self)}
   pub fn original_step_demands(&self)->Result<semio_framework_value::RetirementDemand,PackRefusal>{self.0.original_step_demands()}
-  pub fn advance_original_step(&mut self,grant:RetainedCloneGrant,cancelled:bool)->RetainedIntrinsicOriginalCall{self.0.advance_original_step(grant,cancelled)}
-  pub fn advance(&mut self,units:usize,cancelled:bool)->Result<RetainedIntrinsicStep,PackRefusal>{self.0.advance(units,cancelled)}
+  pub fn advance_original_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,cancelled:bool)->RetainedIntrinsicOriginalCall{self.0.advance_original_step(effect,cancelled)}
+  pub fn advance(&mut self,units:usize,cancelled:bool,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedIntrinsicStep,PackRefusal>{self.0.advance(units,cancelled,effect)}
   pub fn input(&self)->Option<&[u8]>{self.0.input()}
   pub fn admitted_bytes(&self)->usize{self.0.admitted_bytes()}
   pub fn take_output(&mut self)->Option<DslValue>{self.0.take_output()}
   pub fn original_close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,PackRefusal>{self.0.original_close_demands(body)}
-  pub fn close_original_step(&mut self,grant:RetainedCloneGrant)->RetainedIntrinsicOriginalCall<RetainedCloneStep>{self.0.close_original_step(grant)}
+  pub fn close_original_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetainedIntrinsicOriginalCall<RetainedCloneStep>{self.0.close_original_step(effect)}
   pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.0.next_close_copy_byte_demand()}
   pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.0.next_close_capacity_byte_demand(body)}
   pub fn next_close_release_byte_demand(&self)->Result<usize,PackRefusal>{self.0.next_close_release_byte_demand()}
   pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.0.next_close_depth_demand()}
-  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PackRefusal>{self.0.close_step(grant)}
+  pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,PackRefusal>{self.0.close_step(effect)}
   pub fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  }
 }}

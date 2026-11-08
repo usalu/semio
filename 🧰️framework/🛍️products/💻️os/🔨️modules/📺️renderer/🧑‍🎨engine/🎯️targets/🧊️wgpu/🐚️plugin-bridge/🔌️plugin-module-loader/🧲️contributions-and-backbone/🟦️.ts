@@ -15,7 +15,7 @@ import type { createTurnDrivers } from "../🖼️render-and-turn-drivers/🟦�
 import type { createExtensionCompletion } from "../📞️extension-and-request-actors/🟦️.ts";
 
 /** 🛰️ Builds the scoped contributions push and the document backbone turns. */
-export function createContributionsAndBackbone({ pluginId, consumedTopics, emptyInvocation, channelRequests, requireChannel, manifest, requireActorId, requireUiRoute, executeFor, drainSpawnedJobs, turnOutcomes }: { readonly pluginId: string; readonly consumedTopics: readonly string[] } & Pick<ReturnType<typeof createExtensionCompletion>, "emptyInvocation"> & Pick<ReturnType<typeof createInstanceBookkeeping>, "channelRequests" | "requireChannel" | "requireActorId" | "requireUiRoute" | "executeFor"> & Pick<Awaited<ReturnType<typeof acquirePluginDescriptor>>, "manifest"> & Pick<ReturnType<typeof createTurnDrivers>, "drainSpawnedJobs" | "turnOutcomes">) {
+export function createContributionsAndBackbone({ pluginId, consumedTopicsFor, emptyInvocation, channelRequests, requireChannel, manifest, requireActorId, requireUiRoute, executeFor, drainSpawnedJobs, turnOutcomes }: { readonly pluginId: string; readonly consumedTopicsFor: (appId: string) => readonly string[] } & Pick<ReturnType<typeof createExtensionCompletion>, "emptyInvocation"> & Pick<ReturnType<typeof createInstanceBookkeeping>, "channelRequests" | "requireChannel" | "requireActorId" | "requireUiRoute" | "executeFor"> & Pick<Awaited<ReturnType<typeof acquirePluginDescriptor>>, "manifest"> & Pick<ReturnType<typeof createTurnDrivers>, "drainSpawnedJobs" | "turnOutcomes">) {
   const pushScopedContributions = async (instanceId: number, appId: string, viewStateJson: string): Promise<InvocationResponse> => {
     let viewState: unknown = {};
     try {
@@ -23,7 +23,7 @@ export function createContributionsAndBackbone({ pluginId, consumedTopics, empty
     } catch {
       viewState = {};
     }
-    const pack = wgpuBuildScopedContributionsPack(pluginId, undefined, consumedTopics);
+    const pack = wgpuBuildScopedContributionsPack(pluginId, undefined, consumedTopicsFor(appId));
     if (!pack) {
       return emptyInvocation();
     }

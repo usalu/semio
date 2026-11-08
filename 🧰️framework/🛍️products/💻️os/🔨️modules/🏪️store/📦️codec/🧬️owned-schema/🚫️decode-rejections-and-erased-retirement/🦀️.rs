@@ -49,7 +49,8 @@ where
 /// 🧱️ A retained decode page is a GRANULE: it is released whole or not at all, so a turn
     /// that cannot pay a full page buys nothing. The empty record husk still completes under
     /// any grant — its last page has already been paid for.
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit<ValueError>> {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
@@ -58,11 +59,11 @@ where
             let terminal = match self.fields.as_ref().expect("rejected decode retains its field lease").with_owner(|owner| owner.terminal_is_empty()) {
                 Ok(terminal) => terminal,
                 Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Ok(RetainedCloneStep::Progress(empty)),
-                Err(_) => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field lease is invalid")),
+                Err(_) => return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field lease is invalid")).into()),
             };
             if terminal {
                 if !self.fields.as_mut().expect("rejected decode retains its field lease").return_now() {
-                    return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field owner was returned twice"));
+                    return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field owner was returned twice")).into());
                 }
                 drop(self.fields.take());
                 self.field_returned = true;
@@ -70,27 +71,27 @@ where
             }
             let Some(demand) = self.demands(grant.maximum_copy_bytes)? else { return Ok(RetainedCloneStep::Progress(empty)) };
             if grant.maximum_depth < demand.depth {
-                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "artifact envelope rejected field owner exceeds admitted depth"));
+                return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "artifact envelope rejected field owner exceeds admitted depth")).into());
             }
             if !artifact_retirement_grant_covers(grant, demand) {
                 return Ok(RetainedCloneStep::Progress(empty));
             }
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
             let (step, terminal) = match self.fields.as_ref().expect("rejected decode retains its field lease").with_owner(|owner| {
-                let step = owner.close_step(child);
-                (step, owner.terminal_is_empty())
+                let poll = owner.close_step(&mut effect.nested(child));
+                (poll, owner.terminal_is_empty())
             }) {
-                Ok((Ok(step), terminal)) => (step, terminal),
-                Ok((Err(diagnostic), _)) => return Err(artifact_envelope_diagnostic_error(diagnostic)),
+                Ok((RetainedWorkPoll::Pending { .. }, _)) => return Err(ArtifactEnvelopeCloseExit::Pending),
+                Ok((RetainedWorkPoll::Complete(turn), terminal)) => (turn.result.map_err(artifact_envelope_diagnostic_error)?, terminal),
                 Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Ok(RetainedCloneStep::Progress(empty)),
-                Err(_) => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field lease is invalid")),
+                Err(_) => return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field lease is invalid")).into()),
             };
             let progress = step.progress();
             if !progress.fits(child) {
-                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field owner exceeded its close grant"));
+                return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field owner exceeded its close grant")).into());
             }
             if matches!(step, RetainedCloneStep::Complete(_)) && !terminal {
-                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field owner reported a false terminal"));
+                return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field owner reported a false terminal")).into());
             }
             self.released_field_bytes = self
                 .released_field_bytes
@@ -111,7 +112,7 @@ where
                 return Ok(RetainedCloneStep::Progress(empty));
             }
             if grant.maximum_depth < 2 {
-                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "artifact envelope rejected record exceeds admitted depth"));
+                return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "artifact envelope rejected record exceeds admitted depth")).into());
             }
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
             let step = record.close_step(child)?;
@@ -119,7 +120,7 @@ where
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         Ok(RetainedCloneStep::Complete(empty))
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); artifact_envelope_retirement_settle(effect, result) }
 
     fn terminal_is_empty(&self) -> bool {
         self.record.is_none() && self.fields.is_none() && self.field_returned && self.field_registry.ticket_reclaimed(self.field_ticket)
@@ -173,14 +174,15 @@ where
     P: Send,
     Mutation: Send,
 {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit<ValueError>> {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
         }
         let demand = self.demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth {
-            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "unadmitted envelope rejection exceeds admitted depth"));
+            return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "unadmitted envelope rejection exceeds admitted depth")).into());
         }
         if !artifact_retirement_grant_covers(grant, demand) {
             return Ok(RetainedCloneStep::Progress(empty));
@@ -191,7 +193,7 @@ where
                 drop(self.fields.take());
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty }));
             }
-            let step = fields.close_step(child).map_err(artifact_envelope_diagnostic_error)?;
+            let step = artifact_envelope_close_resume_with(fields.close_step(&mut effect.nested(child)), artifact_envelope_diagnostic_error)?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child, step, fields.terminal_is_empty(), "unadmitted envelope field decoder")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
@@ -207,7 +209,7 @@ where
         }
         self.terminal = true;
         Ok(RetainedCloneStep::Complete(empty))
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); artifact_envelope_retirement_settle(effect, result) }
 
     fn terminal_is_empty(&self) -> bool {
         self.terminal && self.record.is_none() && self.fields.is_none()

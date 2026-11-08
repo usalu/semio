@@ -15,6 +15,17 @@ use semio_framework_pack_source::PackSink;
 #[cfg(test)]
 use semio_framework_pack_format_retained::{RETAINED_PACK_PAGE_BYTES, RetainedPackAnchorCursor, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSourceCursor, RetainedPackSourceEvent};
 
+/// 🎟️ Maps one reservation turn onto its exact physical step, treating a denied or work-refused turn as a typed allocation refusal.
+pub(crate) fn reserved<S>(turn:semio_framework_value::RetainedWorkOutcome<semio_framework_value_persistent::list::PagedListReservationOutcome<S>,semio_framework_value_persistent::list::PagedListReservationFailure>,idle:S)->Result<S,semio_framework_value_persistent::list::PagedListAllocationError>{
+    use semio_framework_value_persistent::list::{PagedListReservationOutcome,PagedListReservationFailure,PagedListAllocationError,PagedListRefusalKind};
+    match turn.result{Ok(PagedListReservationOutcome::Ready(step))=>Ok(step),Ok(PagedListReservationOutcome::Denied)=>Ok(idle),Err(PagedListReservationFailure::Allocation{error,..})=>Err(error),Err(PagedListReservationFailure::Work(_))=>Err(PagedListAllocationError{work:0,kind:PagedListRefusalKind::OwnershipLimit,reason:"retained-pack.reservation-work",allocated_bytes:0})}
+}
+/// 📤️ Maps one release turn onto its exact physical step, treating a denied or work-refused turn as an empty or typed refusal.
+pub(crate) fn released(turn:semio_framework_value::RetainedWorkOutcome<semio_framework_value_persistent::list::PagedListReleaseOutcome,semio_framework_value_persistent::list::PagedListReleaseFailure>)->Result<semio_framework_value_persistent::list::PagedListProgress,semio_framework_value_persistent::list::PagedListError>{
+    use semio_framework_value_persistent::list::{PagedListReleaseOutcome,PagedListReleaseFailure,PagedListError,PagedListRefusalKind};
+    match turn.result{Ok(PagedListReleaseOutcome::Ready(step))=>Ok(step),Ok(PagedListReleaseOutcome::Denied)=>Ok(Default::default()),Err(PagedListReleaseFailure::Release(error))=>Err(error),Err(PagedListReleaseFailure::Work(_))=>Err(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"retained-pack.release-work"})}
+}
+
 #[path = "../🏷️symbols/🎟️storage/🦀️.rs"]
 mod original_symbol_storage;
 

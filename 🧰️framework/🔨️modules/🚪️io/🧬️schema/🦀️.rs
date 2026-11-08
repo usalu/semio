@@ -7,7 +7,6 @@ use semio_framework_value::{FromValue as _,ToValue as _,ValueError,ValueRefusalK
 
 
 use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,SubsetId};
-#[path="♻️retirement/🦀️.rs"]mod retirement;
 
 //#region 🔖️Payload
 #[path="../📦️payload/🧬️schema/🦀️.rs"]
@@ -77,7 +76,7 @@ impl IoFidelity {
 
 //#region 🔖️Result
 /// 🚫️ A failed io operation: routing, running a hop, or (de)serializing one payload.
-#[derive(Debug, PartialEq, semio_framework_value::NativeReceive)]
+#[derive(Debug, PartialEq, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct IoError {
     pub cause: NativeSnapshotFailure,
@@ -147,7 +146,7 @@ impl From<ValueError> for IoError {
     fn from(cause:ValueError)->Self{Self::from_value_error(cause)}
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct IoOutcome<T> {
     pub value: T,
     pub diagnostics: Vec<Diagnostic>,

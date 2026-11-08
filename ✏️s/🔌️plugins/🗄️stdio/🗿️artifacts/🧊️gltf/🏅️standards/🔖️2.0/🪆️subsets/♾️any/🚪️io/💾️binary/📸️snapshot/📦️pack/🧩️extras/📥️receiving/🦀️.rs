@@ -91,3 +91,6 @@ impl semio_framework_dsl_record::DslReceivingField for GltfJson{
   match outcome.result{Ok(json)=>match GltfJson::try_from(json){Ok(value)=>RetainedWorkOutcome{result:Ok(value),work},Err(message)=>RetainedWorkOutcome{result:Err(ValueError::new(ValueRefusalKind::InvalidValue,message).into()),work}},Err(error)=>RetainedWorkOutcome{result:Err(error),work}}
  }
 }
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

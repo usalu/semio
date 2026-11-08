@@ -84,14 +84,14 @@ impl BoardFillJob {
     }
 
     pub fn admit_original(snapshot: &mut Option<BoardFillSnapshot>, max_count: u32, semantic_operation: semio_framework_job::Operation, output: &mut Option<Self>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-        use semio_framework_action_bus::{admit_original_tool_construction_scoped, ToolJobAdmissionDemand};
+        use semio_framework_action_bus::{admit_original_tool_construction_settled, ToolJobAdmissionDemand};
         use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
         if snapshot.is_none() || output.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "board fill admission requires its original snapshot and empty output").into()); }
         if snapshot.as_ref().is_some_and(|snapshot| snapshot.original_source.is_some_and(|source| !source.matches(cx))) { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "board fill admission refused a foreign original snapshot").into()); }
         let demand = Self::admission_demands()?;
         let mut allocation_failed = false;
         let mut constructed_progress = RetainedCloneProgress::default();
-        let admitted = admit_original_tool_construction_scoped(cx, output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
+        let admitted = admit_original_tool_construction_settled(cx, &mut Default::default(), output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
             scope.admit_owner(demand)?;
             let binding = scope.identity().source_binding();
             let mut original = snapshot.take().expect("original snapshot retained until admitted construction");

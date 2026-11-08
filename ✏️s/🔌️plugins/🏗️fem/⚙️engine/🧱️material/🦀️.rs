@@ -8,9 +8,25 @@ pub(crate)fn validate(id:&str,e:f64,nu:f64,rho:f64,g:Option<f64>)->Result<(),Val
  protocol::wire::validate_scoped_identity_segments(&["material",id]).map_err(|_|invalid())?;
  if e.is_finite()&&e>0.0&&nu.is_finite()&&nu> -1.0&&nu<0.5&&rho.is_finite()&&rho>0.0&&g.is_none_or(|g|g.is_finite()&&g>0.0){Ok(())}else{Err(invalid())}
 }
+/// 🔎️ One original scalar query of a material source.
+pub type Query=semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarQuery;
+/// 📬️ The borrowed reply of one scalar query.
+pub type Reply<'reply>=semio_framework_value_native_owned::native_decoding::OriginalEffectReply<'reply,semio_framework_value_native_owned::native_decoding::owned::tree::NativeSourceScalar,ValueError>;
+/// 🏁️ The recorded completion of one scalar query.
+pub type Done<'reply>=Result<semio_framework_value_native_owned::native_decoding::OriginalEffectReplyComplete<'reply,semio_framework_value_native_owned::native_decoding::owned::tree::NativeSourceScalar,ValueError>,ValueError>;
+/// 🧮️ Answers a property query: a number leaf has only a kind, a null test and its number.
+pub fn number_answer(query:Query,value:f64)->Result<semio_framework_value_native_owned::native_decoding::owned::tree::NativeSourceScalar,ValueError>{use semio_framework_value_native_owned::native_decoding::owned::tree::{NativeScalarQuery,NativeSourceScalar,NativeTreeKind};match query{NativeScalarQuery::Kind=>Ok(NativeSourceScalar::Kind(Some(NativeTreeKind::Number))),NativeScalarQuery::Null=>Ok(NativeSourceScalar::Null(false)),NativeScalarQuery::Number=>Ok(NativeSourceScalar::Number(Number::Float(value))),_=>Err(invalid())}}
+/// 🧮️ Answers a row query: an object of `length` entries.
+pub fn object_answer(query:Query,length:usize)->Result<semio_framework_value_native_owned::native_decoding::owned::tree::NativeSourceScalar,ValueError>{use semio_framework_value_native_owned::native_decoding::owned::tree::{NativeScalarQuery,NativeSourceScalar,NativeTreeKind};match query{NativeScalarQuery::Kind=>Ok(NativeSourceScalar::Kind(Some(NativeTreeKind::Object))),NativeScalarQuery::Null=>Ok(NativeSourceScalar::Null(false)),NativeScalarQuery::RecordLength=>Ok(NativeSourceScalar::Length(length)),_=>Err(invalid())}}
+/// 📬️ Records one answer inside the original effect after its single unit of work.
+pub fn record_answer<'reply>(answer:Result<semio_framework_value_native_owned::native_decoding::owned::tree::NativeSourceScalar,ValueError>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Done<'reply>{if effect.maximum_work_units()==0{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"scalar query lacks its original work grant"))))}if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"scalar query exceeded its original work authority"))))}Ok(reply.complete(answer))}
+/// 🔁️ A recovered query stays pending; the answer was never recorded twice.
+pub fn recover_answer<'reply>(reply:Reply<'reply>)->Done<'reply>{Ok(reply.pending())}
 /// 🔢️ A borrowed binary64 property presents itself to native receiving as one original number.
 #[repr(transparent)]pub struct Scalar(f64);
 impl semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource for Scalar{
+ fn query_scalar<'reply>(&self,query:Query,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Done<'reply>{record_answer(number_answer(query,self.0),effect,reply)}
+ fn recover_scalar<'reply>(&self,_query:Query,_effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Done<'reply>{recover_answer(reply)}
  fn as_source(&self)->&dyn semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource{self}
  fn tree_kind(&self)->Option<semio_framework_value_native_owned::native_decoding::owned::tree::NativeTreeKind>{Some(semio_framework_value_native_owned::native_decoding::owned::tree::NativeTreeKind::Number)}
  fn number(&self)->Result<Number,ValueError>{Ok(Number::Float(self.0))}
@@ -34,6 +50,8 @@ macro_rules! native_material_row{
    fn from_parts([id,name]:[semio_framework_value::shared_issuance::SealedShared<String>;2],numbers:[semio_framework_value::Number;$count])->Self{Self{id,name,$($field:numbers[$ordinal-2].as_f64()),+}}
   }
   impl semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource for $value{
+   fn query_scalar<'reply>(&self,query:$crate::Query,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:$crate::Reply<'reply>)->$crate::Done<'reply>{$crate::record_answer($crate::object_answer(query,2+$count),effect,reply)}
+   fn recover_scalar<'reply>(&self,_query:$crate::Query,_effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:$crate::Reply<'reply>)->$crate::Done<'reply>{$crate::recover_answer(reply)}
    fn as_source(&self)->&dyn semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource{self}
    fn tree_kind(&self)->Option<semio_framework_value_native_owned::native_decoding::owned::tree::NativeTreeKind>{Some(semio_framework_value_native_owned::native_decoding::owned::tree::NativeTreeKind::Object)}
    fn record_len(&self)->Result<usize,semio_framework_value::ValueError>{Ok(2+$count)}

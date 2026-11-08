@@ -14,7 +14,6 @@ members = [
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/🧬️protocol/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/📦️packages/🦀️rust",
-    "🔨️modules/🌱️value/🛬️decode/🧳️owned/🔐️shared-slots/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/⚙️engine/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📬️outcome/🤝️loan/📦️packages/🦀️rust",
@@ -130,7 +129,6 @@ members = [
     "🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust",
-    "🔨️modules/🌱️value/🧬️retained-clone/📜️protocol/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️schema/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/⏳️async/📦️packages/🦀️rust",
@@ -468,6 +466,8 @@ members = [
     "🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/⏱️context/🛫️encoding/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/⏱️context/⏸️park/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/⏱️context/📸️capture/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/⚠️failure/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/👶️scope/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust",
@@ -620,6 +620,7 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🏪️store/📬️command/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧪️tests/🔐️authority/📦️packages/🦀️rust",
@@ -812,6 +813,9 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📦️instances/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🔄️exchange/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/📄️document/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🖥️surface-render/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🛡️wire-limits/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📦️packages/🦀️rust",
@@ -832,6 +836,7 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📨️emission/🏛️host/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🛬️receiving/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️reserved/🪆️child-vcs/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🎞️media/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/staged-form/📦️packages/🦀️rust",
@@ -1256,6 +1261,12 @@ semio-framework-value-original-slot = { path = "🔨️modules/🌱️value/🧬
 
     [workspace.dependencies.semio-framework-job-context]
     path = "🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-park]
+    path = "🔨️modules/🧵️job/⏱️context/⏸️park/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-capture]
+    path = "🔨️modules/🧵️job/⏱️context/📸️capture/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-job-testing-caller]
     path = "🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/📦️packages/🦀️rust"

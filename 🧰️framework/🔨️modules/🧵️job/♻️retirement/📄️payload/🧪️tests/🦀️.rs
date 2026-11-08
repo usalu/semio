@@ -2,7 +2,7 @@
 use semio_framework_job::testkit::*;
 use semio_framework_job::*;
 use std::sync::Arc;
-#[path="../../../../📬️outcome/📦️builder/🧪️testing/🦀️.rs"]
+#[path="../../../📬️outcome/📦️builder/🧪️testing/🦀️.rs"]
 mod payload_case;
 use payload_case::PayloadCase;
 use semio_framework_test_fixtures::fixture_text;

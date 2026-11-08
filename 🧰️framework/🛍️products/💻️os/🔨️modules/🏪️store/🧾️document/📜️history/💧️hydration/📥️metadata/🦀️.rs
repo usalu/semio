@@ -25,16 +25,16 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
    }
    let target=self.original_meta.value.as_mut().unwrap();
    if target.dependencies.len()<source.dependencies.len(){
-    if !work.reserve_vec(&mut target.dependencies,source.dependencies.len()).map_err(invalid)?{return Ok(())}
+    if !work.reserve_vec(&mut target.dependencies,source.dependencies.len(),&mut None).map_err(invalid)?{return Ok(())}
     if !work.vec_slot(&mut target.dependencies).map_err(invalid)?||!work.copy_bytes(std::mem::size_of::<String>()){return Ok(())}
     let index=target.dependencies.len();let id=semio_os_spr::MutationId(std::mem::take(&mut source.dependencies[index]));
     if let Err((message,id))=work.vec_push(&mut target.dependencies,id){source.dependencies[index]=id.0;return Err(invalid(message))}return Ok(())
    }
    let messages=self.pending_messages.as_mut().ok_or_else(||invalid("metadata lost its original message recipient"))?;
    if self.metadata_message<source.messages.len(){
-    let message=&mut source.messages[self.metadata_message];let level=semio_framework_diagnostic::Severity::from_u8(message.level).ok_or_else(||invalid("persisted message severity is not declared"))?;
     let count=messages.messages.len().checked_add(source.messages.len()-self.metadata_message).ok_or_else(||invalid("persisted message count overflow"))?;
-    if !work.reserve_vec(&mut messages.messages,count).map_err(invalid)?{return Ok(())}
+    let message=&mut source.messages[self.metadata_message];let level=semio_framework_diagnostic::Severity::from_u8(message.level).ok_or_else(||invalid("persisted message severity is not declared"))?;
+    if !work.reserve_vec(&mut messages.messages,count,&mut None).map_err(invalid)?{return Ok(())}
     if !work.vec_slot(&mut messages.messages).map_err(invalid)?||!work.copy_bytes(std::mem::size_of::<semio_os_spr::history::HistoryMessage>()+std::mem::size_of::<usize>()){return Ok(())}
     let value=semio_os_spr::MutationMessage{level,code:semio_framework_diagnostic::FaultCode(std::mem::take(&mut message.code)),message:std::mem::take(&mut message.message),target:std::mem::take(&mut message.target),op_index:message.op_index.take()};
     if let Err((reason,value))=work.vec_push(&mut messages.messages,value){message.code=value.code.0;message.message=value.message;message.target=value.target;message.op_index=value.op_index;return Err(invalid(reason))}self.metadata_message+=1;return Ok(())
@@ -61,7 +61,7 @@ mod tests{
 
 fn append_declared_text(work:&mut RetainedWorkLedger,target:&mut String,pieces:&[&str],maximum_bytes:usize)->Result<bool,ValueError>{
  let total=pieces.iter().try_fold(0usize,|n,piece|n.checked_add(piece.len()).ok_or_else(||invalid("derived metadata text extent overflow")))?;
- if !work.reserve_string(target,total).map_err(invalid)?{return Ok(false)}if target.len()==total{return Ok(true)}
+ if !work.reserve_string(target,total,&mut None).map_err(invalid)?{return Ok(false)}if target.len()==total{return Ok(true)}
  let mut offset=target.len();for piece in pieces{if offset>=piece.len(){offset-=piece.len();continue}let available=work.remaining().maximum_copy_bytes.min(maximum_bytes);let mut end=offset.saturating_add(available).min(piece.len());while end>offset&&!piece.is_char_boundary(end){end-=1}if end==offset{return Ok(false)}work.string_push(target,&piece[offset..end]).map_err(invalid)?;return Ok(false)}Err(invalid("derived metadata text frontier changed"))
 }
 impl<P,M> RetainedPersistedDocumentHydration<P,M>

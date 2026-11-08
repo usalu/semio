@@ -24,6 +24,9 @@
 //! provisional leaves; every committed transaction is published stamped with its `TransactionRef`. Domain-neutral machines:
 //! `semio_framework_tool_machine` (`ScrubMachine`, `TypingMachine`, `ChartGesture`).
 
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as pack;
 use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
 use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
@@ -58,7 +61,7 @@ use std::sync::Arc;
 #[doc(hidden)]
 #[path="🖐️gesture/🎟️issuer/🦀️.rs"]
 pub mod gesture_issuer;
-use crate::tool_jobs_tool_machine::gesture_issuer::GestureOperation;
+use crate::gesture_issuer::GestureOperation;
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 

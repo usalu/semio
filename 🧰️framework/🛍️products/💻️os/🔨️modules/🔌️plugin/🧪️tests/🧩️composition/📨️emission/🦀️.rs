@@ -49,6 +49,19 @@ fn preparation_grant(items: usize, bytes: usize) -> store::RetainedCloneGrant {
     store::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 64 }
 }
 
+/// 🪙️ Stock of the fixture caller whose turns host the effect-shaped closes below.
+const EFFECT_STOCK: store::RetainedCloneGrant = store::RetainedCloneGrant { maximum_items: 65_536, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 656 };
+const EFFECT_TURN: store::RetainedCloneGrant = store::RetainedCloneGrant { maximum_items: 4096, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 656 };
+
+fn effect_caller() -> semio_framework_job::OriginalJobFixtureCaller {
+    semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(41), semio_framework_job::Generation(1), EFFECT_STOCK, || Some(1), 1_000_000, 1_000_000_000)
+}
+
+/// 🪙️ Runs one effect-shaped close under `grant` inside the original performed-work effect of one paid fixture turn.
+fn in_effect<R>(caller: &mut semio_framework_job::OriginalJobFixtureCaller, grant: store::RetainedCloneGrant, run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> R {
+    caller.turn(EFFECT_TURN, |cx| Ok(cx.with_original_effect(grant, |_, effect| run(effect))?.map(|(result, _)| result))).expect("original fixture effect turn").expect("original effect work quote admitted")
+}
+
 /// 🎟️ One item with no byte axis funded: every positive demand must yield.
 fn child_zero_grant() -> store::RetainedCloneGrant {
     store::RetainedCloneGrant { maximum_items: 1, maximum_depth: 64, ..Default::default() }
@@ -88,6 +101,7 @@ fn child_emission_owned_preview_preserves_exact_wire_prefix() {
     let operations=fixture["values"].as_array().unwrap().iter().map(|value|TestMutation::SetCount(SetCount{value:value.as_i64().unwrap()as i32})).collect::<Vec<_>>();
     let expected=operations.iter().map(::protocol::OpBinary::encode_op).collect::<Result<Vec<_>,_>>().unwrap();
     let labels=operations.iter().map(protocol::SemanticMutation::<TestSnapshot>::label).collect::<Vec<_>>();
+    let mut caller=effect_caller();
     let mut emit=Emit::<TestMutation>::default();
     emit.child_preparations.push_back(ChildEmitPreparation::of_owned::<TestSnapshot,_>("fixture","child",operations));
     let mut ready=false;
@@ -97,8 +111,9 @@ fn child_emission_owned_preview_preserves_exact_wire_prefix() {
     assert_eq!(emit.child_emits[0].ops,expected);
     assert_eq!(emit.child_emits[0].labels,labels);
     assert_eq!(Value::from(semio_framework_value::ToValue::to_value(&emit.child_emits[0])),serde_json::to_value(&emit.child_emits[0]).unwrap());
-    for _ in 0..4096{if emit.close_child_one(child_page_grant()).unwrap().is_none(){break;}}
-    assert!(emit.close_child_one(child_page_grant()).unwrap().is_none());
+    for _ in 0..4096{if in_effect(&mut caller,child_page_grant(),|effect|emit.close_child_original(effect)).unwrap().is_none(){break;}}
+    assert!(in_effect(&mut caller,child_page_grant(),|effect|emit.close_child_original(effect)).unwrap().is_none());
+    caller.retire(EFFECT_STOCK);
 }
 
 #[test]
@@ -108,6 +123,7 @@ fn child_emission_emit_retains_applying_source_without_wire_handoff() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let operations = fixture["values"].as_array().unwrap().iter().map(|value| RefusingChildOperation { inner: TestMutation::SetCount(SetCount { value: value.as_i64().unwrap() as i32 }), refuse: true }).collect::<Vec<_>>();
     let pointer=operations.as_ptr();
+    let mut caller = effect_caller();
     let mut emit = Emit::<TestMutation>::default();
     emit.child_preparations.push_back(ChildEmitPreparation::of_owned::<TestSnapshot, _>("fixture", "child", operations));
     let mut ready = false;
@@ -126,20 +142,21 @@ fn child_emission_emit_retains_applying_source_without_wire_handoff() {
     let metadata=retained.metadata().unwrap();
     assert_eq!(Value::from(semio_framework_value::ToValue::to_value(metadata)),serde_json::to_value(metadata).unwrap());
     assert!(metadata.ops.is_empty()&&metadata.labels.is_empty());
-    assert_eq!(emit.close_child_one(store::RetainedCloneGrant{maximum_items:0,..child_page_grant()}).unwrap(),Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default())));
+    assert_eq!(in_effect(&mut caller,store::RetainedCloneGrant{maximum_items:0,..child_page_grant()},|effect|emit.close_child_original(effect)).unwrap(),Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default())));
     assert_eq!(emit.owned_child_emits[0].mutations::<RefusingChildOperation>().unwrap().as_ptr(),pointer);
     let mut last=None;
     for _ in 0..4096 {
-        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||emit.close_child_one(child_page_grant()).unwrap());
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||in_effect(&mut caller,child_page_grant(),|effect|emit.close_child_original(effect)).unwrap());
         assert!(!heap.overflowed);assert!(heap.requested_bytes+heap.released_bytes<=4096);
         if let Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress))=step{assert_eq!(heap.released_bytes,progress.released_bytes);}
         last=step;
         if step.is_none(){break;}
     }
     if last.is_some(){}
-    assert!(emit.close_child_one(child_page_grant()).unwrap().is_none());
+    assert!(in_effect(&mut caller,child_page_grant(),|effect|emit.close_child_original(effect)).unwrap().is_none());
     assert!(emit.owned_child_emits.is_empty());
     assert_eq!(emit.owned_child_emits.capacity(),0);
+    caller.retire(EFFECT_STOCK);
 }
 
 #[test]
@@ -149,6 +166,7 @@ fn child_emission_owned_ready_transfers_original_typed_vector_without_wire_decod
     let fixture: Value = serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let operations = fixture["values"].as_array().unwrap().iter().map(|value| TestMutation::SetCount(SetCount { value: value.as_i64().unwrap() as i32 })).collect::<Vec<_>>();
     let pointer = operations.as_ptr();
+    let mut caller = effect_caller();
     let mut preparation = ChildEmitPreparation::of_owned::<TestSnapshot, _>("fixture", "child", operations);
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
     assert!(matches!(preparation.step(preparation_grant(0, 4096)).unwrap(), ChildEmitPreparationStep::Pending(_)));
@@ -173,7 +191,7 @@ fn child_emission_owned_ready_transfers_original_typed_vector_without_wire_decod
     assert!(preparation.terminal_is_empty());
     for _ in 0..1000 {
         if batch.terminal_is_empty() { break; }
-        assert!(batch.close_granted(grant).unwrap().progress().fits(grant));
+        assert!(in_effect(&mut caller, grant, |effect| batch.close_granted(effect)).unwrap().progress().fits(grant));
     }
     assert!(batch.terminal_is_empty());
     for _ in 0..1000 {
@@ -181,6 +199,7 @@ fn child_emission_owned_ready_transfers_original_typed_vector_without_wire_decod
         if matches!(wire.close_one(child_release_grant(bytes)).unwrap(), store::RetainedCloneStep::Complete(_)) { break; }
     }
     assert_eq!(wire.retirement_demands().unwrap().release_bytes, 0);
+    caller.retire(EFFECT_STOCK);
 }
 
 #[test]
@@ -221,6 +240,7 @@ fn child_emission_owned_apply_admits_typed_source_without_requesting_wire_codec(
     let fixture: Value = serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let operations = fixture["values"].as_array().unwrap().iter().map(|value| RefusingChildOperation { inner: TestMutation::SetCount(SetCount { value: value.as_i64().unwrap() as i32 }), refuse: true }).collect::<Vec<_>>();
     let pointer = operations.as_ptr();
+    let mut caller = effect_caller();
     let mut preparation = ChildEmitPreparation::of_owned::<TestSnapshot, _>("fixture", "child", operations);
     let mut ready = false;
     for _ in 0..100 {
@@ -242,7 +262,7 @@ fn child_emission_owned_apply_admits_typed_source_without_requesting_wire_codec(
     assert_eq!(Value::from(semio_framework_value::ToValue::to_value(&metadata)), serde_json::to_value(&metadata).unwrap());
     for _ in 0..1000 {
         if batch.terminal_is_empty() { break; }
-        assert!(batch.close_granted(grant).unwrap().progress().fits(grant));
+        assert!(in_effect(&mut caller, grant, |effect| batch.close_granted(effect)).unwrap().progress().fits(grant));
     }
     assert!(batch.terminal_is_empty() && preparation.terminal_is_empty());
     for _ in 0..1000 {
@@ -250,6 +270,7 @@ fn child_emission_owned_apply_admits_typed_source_without_requesting_wire_codec(
         if matches!(metadata.close_one(child_release_grant(demand)).unwrap(), store::RetainedCloneStep::Complete(_)) { break; }
     }
     assert_eq!(metadata.retirement_demands().unwrap().release_bytes, 0);
+    caller.retire(EFFECT_STOCK);
 }
 
 impl protocol::Mutation<TestSnapshot> for RefusingChildOperation {
@@ -543,10 +564,12 @@ fn ready_child_parent_return_keeps_nested_owner_backing_until_paid_parent_releas
     let items=fixture["maximumItems"].as_u64().unwrap()as usize;let child_bytes=fixture["maximumChildBytes"].as_u64().unwrap()as usize;let parent_bytes=fixture["maximumParentBytes"].as_u64().unwrap()as usize;
     let mut parent=ParentAllocationReturn::<16>::try_new(parent_bytes,parent_bytes*fixture["parentSlots"].as_u64().unwrap()as usize).unwrap();
     let return_grant=|items:usize|store::RetainedCloneGrant{maximum_items:items,maximum_release_bytes:child_bytes,maximum_depth:64,..Default::default()};
-    assert_eq!(emit.return_child_one(&mut parent,return_grant(0)).unwrap(),Some(PluginLifecycleStep::Progress(Default::default())));assert_eq!(emit.child_emits[0].owner.as_ptr(),owner_pointer);assert_eq!(parent.retained_bytes(),0);
-    let mut complete=false;for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){match emit.return_child_one(&mut parent,return_grant(items)).unwrap(){None=>{complete=true;break;},Some(PluginLifecycleStep::Progress(progress))=>{assert!(progress.copied_items<=items);assert_eq!(progress.released_bytes,0);},other=>panic!("child handoff issues logical pending or empty recipient lane: {other:?}")}}
+    let mut caller=effect_caller();
+    assert_eq!(in_effect(&mut caller,return_grant(0),|effect|emit.return_child_one(&mut parent,effect)).unwrap(),Some(PluginLifecycleStep::Progress(Default::default())));assert_eq!(emit.child_emits[0].owner.as_ptr(),owner_pointer);assert_eq!(parent.retained_bytes(),0);
+    let mut complete=false;for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){match in_effect(&mut caller,return_grant(items),|effect|emit.return_child_one(&mut parent,effect)).unwrap(){None=>{complete=true;break;},Some(PluginLifecycleStep::Progress(progress))=>{assert!(progress.copied_items<=items);assert_eq!(progress.released_bytes,0);},other=>panic!("child handoff issues logical pending or empty recipient lane: {other:?}")}}
     assert!(complete);assert!(emit.child_emits.is_empty());assert_eq!(emit.child_emits.capacity(),0);assert_eq!(parent.retained_bytes(),expected,"every original child field and backing allocation remains physically owned by the actual parent");assert!(!parent.terminal_is_empty());let before=parent.retained_bytes();assert_eq!(parent.close_step(items,child_bytes),AllocationReturnStep::Pending{released_items:0,released_bytes:0});assert_eq!(parent.retained_bytes(),before);
     let mut released=0;for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){match parent.close_step(items,parent_bytes){AllocationReturnStep::Complete=>break,AllocationReturnStep::Pending{released_items,released_bytes}=>{assert!(released_items<=items);assert!(released_bytes<=parent_bytes);released+=released_bytes;}}}assert!(parent.terminal_is_empty());assert_eq!(parent.retained_bytes(),0);assert_eq!(released,expected);
+    caller.retire(EFFECT_STOCK);
 }
 
 #[test]

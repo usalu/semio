@@ -1,0 +1,25 @@
+{
+  "schema": "localized-manifest-cases/1",
+  "note": "Language-agnostic expectations for MediaPortSpec.label and AppDefinition.terminologyBreadcrumbs: every cell is a complete {en,de} matrix; no cell blank; no plain string. check.py enforces them on the source tree; the Rust law (core edit 7) replays the same rows.",
+  "breadcrumbs": {
+    "reuse": {
+      "statik": [{"en": "Designing with Existing Stock", "de": "Entwerfen mit Bestand"}, {"en": "Statics", "de": "Statik"}],
+      "generator": [{"en": "Designing with Existing Stock", "de": "Entwerfen mit Bestand"}, {"en": "Generator", "de": "Generator"}],
+      "koordinator": [{"en": "Designing with Existing Stock", "de": "Entwerfen mit Bestand"}, {"en": "Coordinator", "de": "Koordinator"}],
+      "aggregator": [{"en": "Designing with Existing Stock", "de": "Entwerfen mit Bestand"}, {"en": "Aggregator", "de": "Aggregator"}],
+      "energie": [{"en": "Designing with Existing Stock", "de": "Entwerfen mit Bestand"}, {"en": "Energy", "de": "Energie"}],
+      "aussuchen": [{"en": "Designing with Existing Stock", "de": "Entwerfen mit Bestand"}, {"en": "Select", "de": "Aussuchen"}],
+      "bearbeiten": [{"en": "Designing with Existing Stock", "de": "Entwerfen mit Bestand"}, {"en": "Edit", "de": "Bearbeiten"}],
+      "verfolgen": [{"en": "Designing with Existing Stock", "de": "Entwerfen mit Bestand"}, {"en": "Trace", "de": "Verfolgen"}]
+    }
+  },
+  "resolve": [
+    {"app": "statik", "terminology": "reuse", "locale": "en", "breadcrumb": "Designing with Existing Stock · Statics"},
+    {"app": "statik", "terminology": "reuse", "locale": "de", "breadcrumb": "Entwerfen mit Bestand · Statik"}
+  ],
+  "ports": [
+    {"app": "sourcing", "port": "catalog:out", "en": "Catalog", "de": "Katalog"},
+    {"app": "fem", "port": "geometry:in", "en": "Geometry", "de": "Geometrie"},
+    {"app": "framework", "port": "artifact:in", "en": "Artifact", "de": "Artefakt"}
+  ]
+}

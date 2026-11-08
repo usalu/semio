@@ -171,7 +171,6 @@
                     "workOverrun"
                   ],
                   "properties": {
-                    "retirementFailure": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/OriginalRetirementFailure"}]},
                     "type": {
                       "const": "receiving"
                     },

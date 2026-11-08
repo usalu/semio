@@ -24,8 +24,14 @@ macro_rules! receiving_allocation{
   else{
    let turn=$owner.receive::<(),_,NativeSnapshotFailure>($output,&mut |_frame,output,_marker,_unwind,native,_body|{
     let before=$control.performed_work();
-    let result:Result<(),ValueError>=(||{native.checkpoint()?;let maximum=native.owned_bytes().checked_add($control.allocation_remaining_bytes()).ok_or_else(overflow)?;native.scoped_maximum(maximum,|native|native.with_encoding_receiver(|room,_observer,allocation|$control.with_original_allocation(room,allocation,|$child|{*output=Some($body.map_err(|error:ValueError|Stage::Operation(error.into())));Ok(())})))})();
-    RetainedWorkOutcome{result,work:$control.performed_work().checked_sub(before).expect("original SQL producer work is monotone")}
+    let result:Result<(),ValueError>=(||{native.checkpoint()?;let maximum=native.owned_bytes().checked_add($control.allocation_remaining_bytes()).ok_or_else(overflow)?;native.scoped_maximum(maximum,|native|{
+     let mut frame=None;let mut call=semio_framework_value_native_owned::native_decoding::NativeCallFailure::<_,ValueError>{output:None,operation:None,context:None,receipt_refusal:None};
+     let mut late=None;
+     let ran=native.with_encoding_receiver(&mut frame,&mut call,|room,_observer,allocation,_work,_construction,out,_operation|{if let Err(error)=$control.with_original_allocation(room,allocation,|$child|{*out=Some($body.map_err(|error:ValueError|Stage::Operation(error.into())));Ok(())}){late=Some(error)}});
+     let settled=(||->Result<(),ValueError>{if let Some(frame)=frame.as_mut(){frame.settle_pair()?;if !frame.take_allocation_failure()?.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"SQLite receiving retained an allocation refusal"))}native.release_encoding_receiver(frame)?}Ok(())})();
+     ran?;settled?;if let Some(error)=late{return Err(error)}if let Some(error)=call.context.take().or_else(||call.receipt_refusal.take()){return Err(error)}*output=call.output.take();Ok(())
+    })})();
+    RetainedWorkOutcome{result:result.map_err(NativeSnapshotFailure::from),work:u128::from($control.performed_work().checked_sub(before).expect("original SQL producer work is monotone"))}
    });
    RetainedWorkOutcome{result:turn.result.map_err(Stage::Operation),work:turn.work}
   }
@@ -53,7 +59,7 @@ validate!(validate_encoding,NativeSnapshotEncodeOwner);
 mod zero_allocation_tests{
  use super::*;
  use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
- use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeDecodeConstructionRecipient,NativeDecodeRetirementRecipient};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeDecodeRetirementRecipient};
  #[derive(semio_framework_value::RetireOwned)]
  struct Zero(bool);
  impl pack::snapshot::ArtifactSqliteSnapshot for Zero{
@@ -65,18 +71,33 @@ mod zero_allocation_tests{
   fn validate_sqlite_snapshot_subset(&self,_:&ArtifactDialect,_:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->IoResult<()>{control.record_performed_work(1).map_err(semio_framework_io_schema::IoError::from_value_error)?;if self.0{Err(semio_framework_io_schema::IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvalidValue,"zero-allocation authored refusal")))}else{Ok(semio_framework_io_schema::IoOutcome::clean(()))}}
  }
  struct Work(u64);
- impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.0;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->std::result::Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
+ impl semio_framework_value_native_owned::native_decoding::OriginalWorkRecipient for Work{
+  type Context<'turn,'source>=() where 'source:'turn;
+  fn validate_context<'turn,'source>(&self,_:&())->std::result::Result<(),ValueError> where 'source:'turn{Ok(())}
+  fn source_turn<'turn,'source>(&self,_:&())->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity> where 'source:'turn{None}
+  fn admits<'reply,'turn,'source>(&mut self,_:&mut (),quote:semio_framework_value_native_owned::native_decoding::OriginalWorkQuote<'reply>,observed:u64,additional:u64)->semio_framework_value_native_owned::native_decoding::OriginalWorkQuoteComplete<'reply> where 'source:'turn{quote.complete(Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0)))}
+  fn settle_partial<'reply,'turn,'source>(&mut self,_:&mut (),check:semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheck<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.complete(Ok(()))}
+  fn recover_partial<'reply,'turn,'source>(&mut self,_:&mut (),check:semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheck<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.pending()}
+ }
  struct Recipient{grant:RetainedCloneGrant,received:RetainedCloneProgress,deny:bool,refused:bool}
- impl NativeDecodeConstructionRecipient for Recipient{
-  fn submitted(&self)->RetainedCloneProgress{self.received}
-  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(self.grant)}
-  fn accept(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{self.received=self.received.checked_add(progress)?;if self.deny&&!self.refused&&progress.copied_items==1&&progress.copied_bytes==0&&progress.retained_capacity_bytes==0&&progress.released_bytes==0{self.refused=true;Err(ValueError::literal(ValueRefusalKind::Canceled,"zero-allocation publication refused"))}else{Ok(())}}
+ impl Recipient{
+  fn submitted_progress(&self)->RetainedCloneProgress{self.received}
+  fn grant_for(&mut self,_demand:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(self.grant)}
+  fn accept_for(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{self.received=self.received.checked_add(progress)?;if self.deny&&!self.refused&&progress.copied_items==1&&progress.copied_bytes==0&&progress.retained_capacity_bytes==0&&progress.released_bytes==0{self.refused=true;Err(ValueError::literal(ValueRefusalKind::Canceled,"zero-allocation publication refused"))}else{Ok(())}}
+ }
+ impl semio_framework_value_native_owned::native_decoding::OriginalConstructionRecipient for Recipient{
+  type Context<'turn,'source>=() where 'source:'turn;
+  fn validate_context<'turn,'source>(&self,_:&())->std::result::Result<(),ValueError> where 'source:'turn{Ok(())}
+  fn source_turn<'turn,'source>(&self,_:&())->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity> where 'source:'turn{None}
+  fn grant<'reply,'turn,'source>(&mut self,_:&mut (),quote:semio_framework_value_native_owned::native_decoding::OriginalConstructionGrant<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalConstructionGrantComplete<'reply> where 'source:'turn{let result=self.grant_for(quote.demand());quote.complete(result)}
+  fn accept<'reply,'turn,'source>(&mut self,_:&mut (),receipt:semio_framework_value_native_owned::native_decoding::OriginalConstructionAccept<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalConstructionAcceptComplete<'reply> where 'source:'turn{let result=self.accept_for(receipt.grant(),receipt.progress());receipt.complete(result)}
+  fn submitted<'turn,'source>(&self,_:&())->RetainedCloneProgress where 'source:'turn{self.submitted_progress()}
  }
  #[test]
  fn zero_sql_backing_preserves_valid_and_refused_publications(){
   let grant=RetainedCloneGrant{maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:64};let dialect=ArtifactDialect{artifact_kind:"zero".into(),standard:"1".into(),subset:"*".into()};let database=SqliteDatabase{tables:Vec::new()};
-  for deny in [false,true]{let mut progress=|_|true;let mut control=SqliteSnapshotControl::new(&mut progress,semio_framework_io_sqlite_snapshot::SqliteDatabaseLimits{max_allocation_bytes:0,..Default::default()});let mut observer=|_|true;let mut retirement=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observer);native.install_retirement_recipient(&mut retirement).unwrap();let mut recipient=Recipient{grant,received:Default::default(),deny,refused:false};let mut output=None;
-   let mut work=Work(1000000);native.with_work_recipient(&mut work,|native|{let turn=native.with_construction_recipient(&mut recipient,|native|{let mut owner=NativeSnapshotDecodeOwner::new(native,grant);Ok::<_,ValueError>(Zero(deny).validate_sqlite_snapshot_subset_decoding(&dialect,&database,&mut control,&mut owner,&mut output))}).unwrap();assert_eq!(control.performed_work(),1);assert_eq!(control.allocation_remaining_bytes(),0);assert!(turn.work>0);assert_eq!(turn.result.is_err(),deny);assert_eq!(recipient.refused,deny);match output.take(){Some(Ok(Ok(_))) if !deny=>{},Some(Ok(Err(error))) if deny=>assert_eq!(error.cause.message,"zero-allocation authored refusal"),_=>panic!("original zero-allocation validation output was lost")};while native.has_retirement_owner(){native.close_retirement_recipient(grant).result.unwrap();}Ok::<(),ValueError>(())}).unwrap();
+  for deny in [false,true]{let mut progress=|_|true;let mut control=SqliteSnapshotControl::new(&mut progress,semio_framework_io_sqlite_snapshot::SqliteDatabaseLimits{max_allocation_bytes:0,..Default::default()});let mut observer=|_|true;let mut retirement=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observer);native.install_retirement_recipient(&mut retirement).unwrap();let mut recipient=semio_framework_value_native_owned::native_decoding::OriginalConstructionAuthority::new(Recipient{grant,received:Default::default(),deny,refused:false});let mut output=None;
+   let mut work=semio_framework_value_native_owned::native_decoding::OriginalWorkAuthority::new(Work(1000000));work.with_loan(&mut (),|loan|native.with_work_recipient(loan,|native|{let turn=recipient.with_loan(&mut (),|construction|native.with_construction_recipient(construction,|native|{let mut owner=NativeSnapshotDecodeOwner::new(native,grant);Ok::<_,ValueError>(Zero(deny).validate_sqlite_snapshot_subset_decoding(&dialect,&database,&mut control,&mut owner,&mut output))})).unwrap().unwrap();assert_eq!(control.performed_work(),1);assert_eq!(control.allocation_remaining_bytes(),0);assert!(turn.work>0);assert_eq!(turn.result.is_err(),deny);assert_eq!(recipient.inspect(|r|r.refused),deny);match output.take(){Some(Ok(Ok(_))) if !deny=>{},Some(Ok(Err(error))) if deny=>assert_eq!(error.cause.message,"zero-allocation authored refusal"),_=>panic!("original zero-allocation validation output was lost")};while native.has_retirement_owner(){native.close_retirement_recipient(grant).result.unwrap();}Ok::<(),ValueError>(())})).unwrap().unwrap();
   }
  }
 }

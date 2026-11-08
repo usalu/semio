@@ -1,0 +1,63 @@
+ fn select_advance(&self,original:RetainedCloneRef<'_,I>,body:usize,maximum_work_units:u64)->Result<NativeAdvanceSelection,ValueError>{
+  if self.closing||self.phase>13{return Err(invalid())}original.check_binding(&self.binding)?;
+  let local=|work:u64|if work>maximum_work_units{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"named receiving action exceeds its original work ceiling"))}else{Ok(NativeAdvanceSelection::Local{work})};
+  match self.phase{
+   0=>local(original.binding_work_demand(&self.binding)?.checked_add(1).ok_or_else(invalid)?),
+   1|5|11=>local(1),
+   2=>match self.child()?.select_advance(original,body,maximum_work_units)?{NativeAdvanceSelection::Nested=>Ok(NativeAdvanceSelection::Nested),NativeAdvanceSelection::Local{work}=>local(work.checked_add(1).ok_or_else(invalid)?)},
+   3=>local(self.child()?.take_work_demand()?.checked_add(2).ok_or_else(invalid)?),
+   4=>local(self.child()?.close_work_demand(body)?.checked_add(1).ok_or_else(invalid)?),
+   7|9|12=>local(maximum_work_units.min(3)),
+   _=>local(maximum_work_units),
+  }
+ }
+ fn advance_nested(&mut self,original:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant)->crate::retained_clone::RetainedWorkPoll<RetainedCloneStep,crate::OriginalReceivingPrimary>{
+  use crate::retained_clone::RetainedWorkPoll::{Complete,Pending};
+  let result:Result<crate::retained_clone::RetainedWorkPoll<RetainedCloneStep,crate::OriginalReceivingPrimary>,crate::OriginalReceivingPrimary>=(||{
+   if self.phase!=2{return Err(invalid().into())}
+   let d=self.demands(original,body,maximum_work_units)?;if !retained_clone_grant_admits(g,d){return Ok(Complete(crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}))}
+   control.checkpoint()?;if control.owned_bytes().checked_add(d.capacity_bytes).is_none_or(|next|next>control.maximum_bytes()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"named receiving exceeds its original decoder ceiling").into())}
+   let m=Self::metadata();let child=self.child.as_mut().ok_or_else(invalid)?;
+   Ok(match child.advance_nested(original,control,body,maximum_work_units,child_grant(g,m)){Pending{work}=>Pending{work},Complete(turn)=>{let step=turn.result.and_then(|step|add_receipt(step.progress(),m).map(RetainedCloneStep::Progress).map_err(Into::into));if step.is_ok()&&child.output_ready(){self.phase=3}Complete(crate::RetainedWorkOutcome{result:step,work:turn.work})}})
+  })();
+  match result{Ok(poll)=>poll,Err(error)=>Complete(crate::RetainedWorkOutcome{result:Err(error),work:0})}
+ }
+ fn advance_local<'reply>(&mut self,original:RetainedCloneRef<'_,I>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'reply,RetainedCloneStep,crate::OriginalReceivingPrimary>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'reply,RetainedCloneStep,crate::OriginalReceivingPrimary>,ValueError>{
+  let g=effect.grant();let m=Self::metadata();let mut work:u128=0;
+  let result:Result<Option<RetainedCloneStep>,crate::OriginalReceivingPrimary>=(||{
+   let d=self.demands(original,body,effect.maximum_work_units())?;if !retained_clone_grant_admits(g,d){return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
+   let p=match self.phase{
+    0=>{let p=take_work!(work,original.bind(&mut self.binding,effect)).ok_or_else(invalid)?;self.phase=1;work+=1;add_receipt(p,m)?},
+    1=>{*self.child=Some(<PersistentList<T> as NativeReceive<I>>::receiver());self.phase=2;work+=1;paid(d)},
+    2=>{let mut slot=None;{let inner=crate::retained_clone::OriginalEffectReply::borrow(&mut slot)?;self.child.as_mut().ok_or_else(invalid)?.advance_local(original,body,&mut effect.nested(child_grant(g,m)),inner)?;}let Some(step)=slot.take()else{return Ok(None)};let step=step?;work+=u128::from(step.progress()!=RetainedCloneProgress::default());if self.child.as_ref().ok_or_else(invalid)?.output_ready(){self.phase=3;work+=1;}add_receipt(step.progress(),m)?},
+    3=>{let extra=size_of::<Option<PersistentList<T>>>()*2+m;let mut slot=None;{let inner=crate::retained_clone::OriginalEffectReply::borrow(&mut slot)?;self.child.as_mut().ok_or_else(invalid)?.take(&mut *self.raw,&mut effect.nested(child_grant(g,extra)),inner)?;}let Some(step)=slot.take()else{return Ok(None)};let step=step?;if self.raw.is_none(){return Ok(Some(RetainedCloneStep::Progress(Default::default())))}work+=1;let child=self.child.as_mut().ok_or_else(invalid)?;child.begin_close();self.phase=if child.terminal_is_empty(){5}else{4};work+=1;add_receipt(step.progress(),extra)?},
+    4=>{let child=self.child.as_mut().ok_or_else(invalid)?;match child.close_step(&mut effect.nested(child_grant(g,m))){crate::retained_clone::RetainedWorkPoll::Pending{work:pending}=>{work+=pending;return Ok(None)},crate::retained_clone::RetainedWorkPoll::Complete(turn)=>{work+=turn.work;let step=turn.result?;if child.terminal_is_empty(){self.phase=5;work+=1;}add_receipt(step.progress(),m)?}}},
+    5=>{self.child.take();self.phase=6;work+=1;paid(d)},
+    6=>{if self.source_admission.is_none(){let raw=self.raw.take().ok_or_else(invalid)?;*self.source_admission=Some(RetainedCloneSource::<PersistentList<T>>::admission_owned(raw,()));work+=1;paid(d)}else{let admission=self.source_admission.as_mut().ok_or_else(invalid)?;let taking=admission.phase()=="ready";let turn=if taking{admission.take_output(&mut self.source,g)}else{admission.advance(effect)};let done=taking&&admission.terminal_is_empty();work+=turn.work;let step=turn.result?;if done{self.source_admission.take();self.phase=7;work+=1;}step.progress()}},
+    7=>{let extra=size_of::<Option<NamedKeyIndexPreparation>>()*2+m;let admission=take_work!(work,NamedKeyIndexPreparation::new(self.ranked()?.len(),RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes.saturating_sub(extra),..g})).ok_or_else(invalid)?;*self.admission=Some(admission);self.phase=8;work+=1;paid(d)},
+    8=>{let source=self.source.as_ref().ok_or_else(invalid)?;let input=PersistentRankedKeys{original:source.try_borrow()?,key:key::<T>};let step=take_work!(work,self.admission.as_mut().ok_or_else(invalid)?.advance(&input,&mut effect.nested(child_grant(g,m))));let p=add_receipt(step.progress(),m)?;match step{NamedEditStep::Admitted(_)=>{self.phase=9;work+=1;},NamedEditStep::Refused(..)=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original named rows contain duplicate keys").with_retained_progress(p).into()),_=>{}}p},
+    9=>{let admission=self.admission.as_mut().ok_or_else(invalid)?;let(index,p)=take_work!(work,admission.take(child_grant(g,m))).ok_or_else(invalid)?;*self.index=Some(index);admission.begin_close();self.phase=if admission.terminal_is_empty(){11}else{10};work+=1;add_receipt(p,m)?},
+    10=>{let admission=self.admission.as_mut().ok_or_else(invalid)?;let step=take_work!(work,admission.close_step(&mut effect.nested(child_grant(g,m))));if admission.terminal_is_empty(){self.phase=11;work+=1;}add_receipt(step.progress(),m)?},
+    11=>{self.admission.take();self.phase=12;work+=1;paid(d)},
+    12=>{let extra=size_of::<Option<NamedPersistentRootPreparation<T>>>()*2+m;let(prep,p)=take_work!(work,NamedPersistentRoot::admit_parts(&mut self.source,&mut self.index,key::<T>,RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes.saturating_sub(extra),..g})).ok_or_else(invalid)?;*self.preparation=Some(prep);self.phase=13;work+=1;add_receipt(p,extra)?},
+    13=>{let prep=self.preparation.as_mut().ok_or_else(invalid)?;if prep.output_ready(){let extra=size_of::<Option<NamedPersistentRoot<T>>>()*2+m;let(root,p)=take_work!(work,prep.take(child_grant(g,extra))).ok_or_else(invalid)?;*self.output=Some(root);self.phase=14;work+=1;add_receipt(p,extra)?}else{let step=take_work!(work,prep.advance(&mut effect.nested(child_grant(g,m))));add_receipt(step.progress(),m)?}},
+    _=>return Err(invalid().into()),
+   };
+   crate::retained_clone::admit_retained_clone_progress(g,p,"original independent named root receiving")?;Ok(Some(if self.output_ready(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)}))
+  })();
+  let result=match crate::record_owed(effect,work){Ok(())=>result,Err(error)=>result.and(Err(error.into()))};
+  Ok(match result{Ok(Some(step))=>reply.complete(Ok(step)),Ok(None)=>reply.pending(),Err(error)=>reply.complete(Err(error))})
+ }
+ fn recover_advance_local<'reply>(&mut self,original:RetainedCloneRef<'_,I>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'reply,RetainedCloneStep,crate::OriginalReceivingPrimary>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'reply,RetainedCloneStep,crate::OriginalReceivingPrimary>,ValueError>{
+  let g=effect.grant();let m=Self::metadata();match self.phase{2=>match self.child.as_mut(){Some(child)=>child.recover_advance_local(original,body,&mut effect.nested(child_grant(g,m)),reply),None=>Ok(reply.pending())},_=>Ok(reply.pending())}
+ }
+ fn output_ready(&self)->bool{!self.closing&&self.phase==14&&self.output.is_some()}
+ fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.output_ready(){return Err(invalid())}crate::native_decoding::native_output_demand::<NamedPersistentRoot<T>>(size_of_val(&self.phase))}
+ fn take_work_demand(&self)->Result<u64,ValueError>{self.take_demand().map(|_|1)}
+ fn take<'reply>(&mut self,output:&mut Option<NamedPersistentRoot<T>>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'reply,RetainedCloneStep,crate::OriginalReceivingPrimary>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'reply,RetainedCloneStep,crate::OriginalReceivingPrimary>,ValueError>{
+  if !self.output_ready(){return Ok(reply.complete(Err(invalid().into())))}
+  let turn=crate::native_decoding::native_output_take(&mut self.output,output,size_of_val(&self.phase),effect);
+  if matches!(&turn,crate::retained_clone::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(_)),..})){self.phase=15}
+  crate::native_decoding::native_record_pure_take(turn,reply)
+ }
+ fn begin_close(&mut self){self.closing=true;if let Some(child)=self.child.as_mut(){child.begin_close()}if let Some(admission)=self.admission.as_mut(){admission.begin_close();}if let Some(prep)=self.preparation.as_mut(){prep.begin_close();}if let Some(index)=self.index.as_mut(){index.begin_close();}}

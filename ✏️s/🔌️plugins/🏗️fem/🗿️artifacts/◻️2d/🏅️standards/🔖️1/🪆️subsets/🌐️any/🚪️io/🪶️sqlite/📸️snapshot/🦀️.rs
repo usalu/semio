@@ -62,14 +62,14 @@ fn forecast_encoding(value:&Fem2dSnapshot,control:&mut SqliteSnapshotControl<'_>
  semio_framework_value::RetainedWorkOutcome{result,work}
 }
 impl ArtifactSqliteSnapshotHost for Fem2dSnapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_,'_>,output:&mut Option<Self>)->semio_framework_value::RetainedWorkOutcome<(),store::NativeSnapshotFailure>{
-  store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),&mut |record,output,_performed,_unwind,original,sql|store::native_snapshot_turn(|work|{
-   work.take(Self::receive_exchange_record(record,output,original))?;
-   work.take(forecast_decoding(output.as_ref().ok_or_else(||invalid("FEM retained snapshot is absent"))?,sql,original))?;
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_,'_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome{
+  store::decode_sqlite_snapshot_record_receiving(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),&mut |record,retained,original,sql|store::native_snapshot_turn(|work|{
+   work.take(Self::receive_exchange_record(record,retained,original))?;
+   work.take(forecast_decoding(retained.as_ref().ok_or_else(||invalid("FEM retained snapshot is absent"))?,sql,original))?;
    Ok(())
-  }),output,c,native_control)
+  }),c,native_control,output)
  }
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_,'_>)->Result<store::io_schema::IoPayload,ValueError>{let total=forecast(self,c,SqliteSnapshotPhase::EncodeNative)?;let mut out=RowWriter::forecast(c,SqliteSnapshotPhase::EncodeNative)?;self.write_sqlite_rows(&mut out,total)?;out.finish_forecast(total)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_,'_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome{if let Err(error)=(||->Result<(),ValueError>{let total=forecast(self,c,SqliteSnapshotPhase::EncodeNative)?;let mut out=RowWriter::forecast(c,SqliteSnapshotPhase::EncodeNative)?;self.write_sqlite_rows(&mut out,total)?;out.finish_forecast(total)?;Ok(())})(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),&mut |native|self.__dsl_to_record_controlled(native),c,native_owner,output)}
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.fem.fem2d"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("FEM2d owned dialect differs")));}self.validate_interaction_identities().map_err(store::io_schema::IoError::from_value_error)?;c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
 }
 impl pack::snapshot::ArtifactSqliteSnapshot for Fem2dSnapshot{

@@ -39,7 +39,7 @@ use semio_framework_plugin_instance_docs::docs_instance_root::viewer_read_only_f
 use semio_framework_plugin_instance_docs::docs_maintenance_ladder::removed;
 
 impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
-    pub async fn dispatch_typed_command_inner(&mut self,source:&mut semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,tool_tag:&mut Option<semio_plugin_tool_run::tool_jobs_tool_machine::ToolTag>,metadata:&mut Option<ActionMeta>,_identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
+    pub async fn dispatch_typed_command_inner(&mut self,source:&mut semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,tool_tag:&mut Option<semio_plugin_tool_machine::ToolTag>,metadata:&mut Option<ActionMeta>,_identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
         if !source.admit(cx)?{return Ok(None)}
         if source.receipt.is_some(){return source.advance_receipt(cx)}
         if !source.capture_metadata(metadata,cx)?{return Ok(None)}
@@ -233,6 +233,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
                 instance_operation_owner: self.tools.instance_operation_owner.clone(),
                 output_chunks: output_chunks.clone(),
                 completion: completion.clone(),
+            construction: Default::default(),
             });
         let session=None;let session_rejected=None;
         self.tools.tool_operations.insert_admitted(
@@ -273,7 +274,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
                 terminal_seen: false,
                 worker_resume_pending: false,
                 publication: None,
-                tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
+                tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None,stream_abort_resident:Default::default(), stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                 pending_child_publication: None,
                 owned_child_group: None,
                 owned_child_committed: false,
@@ -330,7 +331,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         }
         let (authority,source)=self.media.pending_reserved_producer_permit.take().ok_or_else(||plugin_sdk_fault("media source requires its original pre-admitted import permit"))?;
         if (source.0,source.1)!=(cx.operation(),cx.generation()){*self.media.pending_reserved_producer_permit=Some((authority,source));return Err(plugin_sdk_fault("media import requires its unchanged original caller"))}
-        let (job, completion) = match self.as_render().build_artifact_reserved_media_job(port, media, meta,semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)).await { Ok(producer) => producer, Err(fault) => { self.tools.finish_reserved_emit_producer(authority); return Err(fault); } };
+        let (job, completion) = match self.as_render().build_artifact_reserved_media_job(port, media, meta,semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)).await { Ok(producer) => producer, Err(fault) => { self.tools.finish_reserved_emit_producer(&mut self.pending,authority); return Err(fault); } };
         let raw = Vec::new();
         self.dispatch_reserved_original_producer("import-media",&raw,1,job,completion,meta,Some(admission),authority, cx).await
     }
@@ -384,6 +385,6 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         if permit.is_cancelled().await{return Err(Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.cancelled"),"configuration binary was cancelled before config-store commit").into())}
         let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
         let command=self.pending.pending_configuration_command.take().expect("configuration commit retains its original typed command");cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);
-        let dispatched=self.stores.config_store.dispatch(command,identity).await;let permit=self.pending.pending_configuration_permit.take().unwrap();self.tools.finish_reserved_emit_producer(permit);if let Err(source)=dispatched{*self.pending.pending_configuration_failure=Some(semio_plugin_job::reserved_jobs::OriginalConfigurationFailure::Store(source));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}self.pending.pending_configuration_identity=None;self.pending.pending_configuration_source=None;self.pending.pending_configuration_rejected=false;self.history.cache=None;Ok(Some(ToolOperations::<A>::empty_result("configCommand", meta, Vec::new(), Vec::new(), UiDirtyScope::Full).await))
+        let dispatched=self.stores.config_store.dispatch(command,identity).await;let permit=self.pending.pending_configuration_permit.take().unwrap();self.tools.finish_reserved_emit_producer(&mut self.pending,permit);if let Err(source)=dispatched{*self.pending.pending_configuration_failure=Some(semio_plugin_job::reserved_jobs::OriginalConfigurationFailure::Store(source));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}self.pending.pending_configuration_identity=None;self.pending.pending_configuration_source=None;self.pending.pending_configuration_rejected=false;self.history.cache=None;Ok(Some(ToolOperations::<A>::empty_result("configCommand", meta, Vec::new(), Vec::new(), UiDirtyScope::Full).await))
     }
 }

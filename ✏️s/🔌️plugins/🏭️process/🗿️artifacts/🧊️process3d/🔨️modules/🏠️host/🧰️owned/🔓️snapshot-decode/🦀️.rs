@@ -131,8 +131,10 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+        let result = (|| -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::ArtifactEnvelopeCloseExit> {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(empty));
@@ -142,7 +144,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         }
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth {
-            return Err(self.diagnostic("process3d-envelope.snapshot-close-depth", 0));
+            return Err(self.diagnostic("process3d-envelope.snapshot-close-depth", 0).into());
         }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
             return Ok(RetainedCloneStep::Progress(empty));
@@ -159,33 +161,33 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
         }
         if self.retirement.is_none() {
-            if let Some(value) = self.value.take() {
+            if self.value.is_some() {
                 let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-                return match semio_framework_value::retirement::admit_owned_retirement(value, child).result {
-                    Ok((owner, progress)) => {
+                let turn = semio_framework_value::retirement::admit_owned_retirement(&mut *self.value, &mut effect.nested(child));
+                return match turn.result {
+                    Ok(Some((owner, progress))) => {
                         *self.retirement = Some(owner);
                         self.state = Process3dSnapshotDecodeState::Closing;
                         if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes {
-                            return Err(self.diagnostic("process3d-envelope.snapshot-retirement-birth", 0).with_progress(progress));
+                            return Err(self.diagnostic("process3d-envelope.snapshot-retirement-birth", 0).with_progress(progress).into());
                         }
                         Ok(RetainedCloneStep::Progress(progress))
                     }
-                    Err((error, value)) => {
-                        *self.value = Some(value);
-                        Err(self.diagnostic("process3d-envelope.snapshot-retirement-fault", 0).with_native(error))
-                    }
+                    Ok(None) => Ok(RetainedCloneStep::Progress(empty)),
+                    Err(error) => Err(self.diagnostic("process3d-envelope.snapshot-retirement-fault", 0).with_native(error).into()),
                 };
             }
             self.state = Process3dSnapshotDecodeState::Complete;
             return Ok(RetainedCloneStep::Complete(empty));
         }
-        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).result.map_err(|error| self.diagnostic("process3d-envelope.snapshot-retirement-fault", 0).with_native(error))?;
+        let step = store::os_store::owned_schema_decode::artifact_envelope_close_resume_with(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, effect), |failure| store::os_store::owned_schema_decode::artifact_envelope_failure_diagnostic(self.diagnostic("process3d-envelope.snapshot-retirement-fault", 0), &failure))?;
         if self.retirement.is_none() {
             self.state = Process3dSnapshotDecodeState::Complete;
         }
         Ok(RetainedCloneStep::Progress(step.progress()))
+        })();
+        store::os_store::owned_schema_decode::artifact_envelope_close_settle(effect, result)
     }
-
     fn terminal_is_empty(&self) -> bool {
         matches!(self.state, Process3dSnapshotDecodeState::Published | Process3dSnapshotDecodeState::Complete) && self.session.is_none() && self.value.is_none() && self.retirement.is_none()
     }

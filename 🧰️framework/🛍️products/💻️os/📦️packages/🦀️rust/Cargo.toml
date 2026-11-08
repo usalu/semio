@@ -88,7 +88,7 @@ semio-os-store-engine-replay = { path = "../../🔨️modules/🏪️store/🕰�
 semio-os-store-engine-stage = { path = "../../🔨️modules/🏪️store/⚙️engine/🗄️stage/📦️packages/🦀️rust" }
 semio-os-store-initialization-replay = { path = "../../🔨️modules/🏪️store/🏗️initialization/🔁️replay/📦️packages/🦀️rust" }
 semio-os-store-initialization-runtime = { path = "../../🔨️modules/🏪️store/🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
-semio-framework-os-store-member-open = { path = "../../🔨️modules/🏪️store/🧩️composition/🚪️open/📦️packages/🦀️rust", package = "semio-os-store-member-open"}
+semio-os-store-member-open = { path = "../../🔨️modules/🏪️store/🧩️composition/🚪️open/📦️packages/🦀️rust" }
 semio-os-store-member-open-store = { path = "../../🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️packages/🦀️rust" }
 semio-os-store-space = { path = "../../🔨️modules/🏪️store/📜️space-history/🏠️space/📦️packages/🦀️rust" }
 semio-os-store-space-member = { path = "../../🔨️modules/🏪️store/🧩️composition/👥️space-member/📦️packages/🦀️rust" }
@@ -105,7 +105,7 @@ semio-os-store-backbone = { path = "../../🔨️modules/🏪️store/🔗️bac
 semio-os-store-canonical-json = { path = "../../🔨️modules/🏪️store/🧵️canonical-edit/📦️packages/🦀️rust" }
 semio-os-store-child = { path = "../../🔨️modules/🏪️store/🪆️child/📦️packages/🦀️rust" }
 semio-os-store-ledger = { path = "../../🔨️modules/🏪️store/📒️ledger/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item-batch = { path = "../../🔨️modules/🏪️store/📬️one-item-owners/📦️packages/🦀️rust", package = "semio-os-store-one-item-batch"}
+semio-os-store-one-item-batch = { path = "../../🔨️modules/🏪️store/📬️one-item-owners/📦️packages/🦀️rust" }
 semio-os-store-one-item-publication = { path = "../../🔨️modules/🏪️store/🎮️one-item/📬️publication/📦️packages/🦀️rust" }
 semio-os-store-operation-wire = { path = "../../🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
 semio-os-store-read = { path = "../../🔨️modules/🏪️store/🔗️read/📦️packages/🦀️rust" }

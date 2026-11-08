@@ -1,39 +1,47 @@
 //! 🧮️ Every receiving turn charges exactly the heap it requested to the decode control, per receiver family.
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneSource};
-use semio_framework_value::{DslValue,Number,RetirementDemand,ValueError};
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeControl,NativeReceive};
+use semio_framework_value::{DslValue,Number,RetainedAllocationEffect,RetainedWorkOutcome};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeReceive,OriginalReceivingPrimary};
 use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
+use semio_framework_value_testing_admission::{capture,receive,BankWallet,EffectBank,RetainedWorkPoll,Wallet,WorkLoan};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 
+const WORK:u64=1<<20;
+fn profile()->serde_json::Value{serde_json::json!({"items":1u64<<30,"copyBytes":1u64<<40,"capacityBytes":1u64<<40,"releaseBytes":1u64<<40,"depth":1u64<<20,"fuel":1u64<<60})}
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64}}
-#[derive(Default)] struct Turn(semio_framework_value::RetainedCloneProgress);
-impl NativeDecodeConstructionRecipient for Turn{
- fn submitted(&self)->semio_framework_value::RetainedCloneProgress{self.0}fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(grant())}
- fn accept(&mut self,p:RetainedCloneGrant,_:semio_framework_value::RetainedCloneProgress)->Result<(),ValueError>{self.0=self.0.checked_add(p)?;Ok(())}
-}
 fn source(value:DslValue)->RetainedCloneSource<DslValue>{
- let mut admission=RetainedCloneSource::<DslValue>::admission_owned(value,());let mut out=None;
- for _ in 0..64{let ready=admission.phase()=="ready";let turn=if ready{admission.take_output(&mut out,grant())}else{admission.advance(grant())};turn.result.unwrap();if ready{break}}
- out.expect("source admitted")
+let mut wallet=Wallet::from_profile(&profile());
+capture(value,&mut wallet,|wallet|wallet.loan(1,4096),|wallet|wallet.work_remaining(),|wallet,progress,work,heap,grant|wallet.post(progress,u128::from(work),grant,heap))
+}
+fn advance(owner:&mut NativeReceivingOriginal<DslValue,impl NativeReceive<DslValue>>,control:&mut NativeDecodeControl<'_>)->Result<(),OriginalReceivingPrimary>{
+let remaining=u128::from(WORK)<<20;
+let turn:RetainedWorkOutcome<(),OriginalReceivingPrimary>=receive(control,grant(),WorkLoan::new(&remaining,WORK),|control|match owner.advance(control,4096,WORK,grant()){RetainedWorkPoll::Complete(turn)=>RetainedWorkOutcome{result:turn.result.map(|_|()),work:turn.work},RetainedWorkPoll::Pending{..}=>panic!("receiving turn stayed pending")});
+turn.result
+}
+fn close<T,E>(bank:&mut EffectBank,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkPoll<T,E>)->Result<T,E>{
+let(poll,_)=bank.run(grant(),WORK,operation);
+assert_ne!(bank.take_admitted(),Some(false),"the original Work ledger refused the close turn");
+match poll{RetainedWorkPoll::Complete(turn)=>turn.result,RetainedWorkPoll::Pending{..}=>panic!("synchronous close stayed pending")}
 }
 fn law<T:NativeReceive<DslValue>+Sync>(value:DslValue){
- let mut owner=NativeReceivingOriginal::<DslValue,T>::new(source(value));
- let mut accept=|_|true;let mut control=NativeDecodeControl::new_retained(&mut accept);
- for turn in 0..10000{
-  if owner.output_ready(){break}
-  let before=control.owned_bytes();
-  let(result,heap)=observe(||control.with_construction_recipient(&mut Turn::default(),|control|owner.advance(control,4096,grant()).result));
-  result.unwrap_or_else(|error|panic!("receiving turn {turn} refused: {}",error.message()));
-  assert_eq!(control.owned_bytes()-before,heap.requested_bytes,"turn {turn} charged a different byte count than it allocated");
- }
- assert!(owner.output_ready(),"receiving did not finish");
- let(output,_)=owner.take(grant()).result.unwrap().expect("funded take");
- let mut close=ControlledRetirement::new(output).unwrap_or_else(|_|panic!("output has controlled retirement"));
- for _ in 0..10000{if close.terminal_is_empty(){break}close.step(grant()).unwrap();}
- owner.begin_close();
- for _ in 0..10000{if owner.terminal_is_empty(){break}owner.close_step(grant()).result.unwrap();}
- assert!(owner.terminal_is_empty());
+let mut owner=NativeReceivingOriginal::<DslValue,T>::new(source(value));
+let mut accept=|_|true;let mut control=NativeDecodeControl::new(1<<20,&mut accept);
+for turn in 0..10000{
+if owner.output_ready(){break}
+let before=control.owned_bytes();
+let(result,heap)=observe(||advance(&mut owner,&mut control));
+result.unwrap_or_else(|error|panic!("receiving turn {turn} refused: {}",error.message()));
+assert_eq!(control.owned_bytes()-before,heap.requested_bytes,"turn {turn} charged a different byte count than it allocated");
+}
+assert!(owner.output_ready(),"receiving did not finish");
+let mut bank=EffectBank::new(BankWallet::from_profile(&profile()));
+let mut taken=None;close(&mut bank,|effect|owner.take(&mut taken,effect)).ok().expect("funded take");let output=taken.expect("taken output");
+let mut retirement=ControlledRetirement::new(output).unwrap_or_else(|_|panic!("output has controlled retirement"));
+for _ in 0..10000{if retirement.terminal_is_empty(){break}close(&mut bank,|effect|retirement.step(effect)).ok().expect("output close step");}
+owner.begin_close();
+for _ in 0..10000{if owner.terminal_is_empty(){break}close(&mut bank,|effect|owner.close_step(effect)).ok().expect("receiver close step");}
+assert!(owner.terminal_is_empty());
 }
 fn text(value:&str)->DslValue{DslValue::String(value.into())}
 fn object(entries:Vec<(&str,DslValue)>)->DslValue{DslValue::Object(entries.into_iter().map(|(key,value)|(key.to_string(),value)).collect())}

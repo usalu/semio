@@ -105,11 +105,12 @@ impl PreparedRenderJobRejected {
 
     pub fn next_close_demands(&self,copy:usize)->Result<RetainedCloneGrant,ValueError>{match self.input.as_ref(){Some(input)if !input.terminal_is_empty()=>input.next_close_demands(copy),_=>prepared_owner_demands(self.terminal_is_empty(),Ok(0))}}
 
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<CloseStep,ValueError>{
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->PreparedClose{
+        let grant=effect.grant();
         let Some(input)=self.input.as_mut()else{return Ok(CloseStep::Complete{progress:Default::default()})};
-        if !input.terminal_is_empty(){return prepared_close_child(input.close_step(grant))}
+        if !input.terminal_is_empty(){return prepared_close_child(input.close_step(effect))}
         if grant.maximum_items==0{return Ok(CloseStep::Pending{progress:Default::default()})}
-        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original rejected render input header requires depth"))}
+        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original rejected render input header requires depth").into())}
         self.input=None;
         Ok(CloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})
     }
@@ -121,6 +122,11 @@ impl PreparedRenderJobRejected {
 
 impl PreparedRenderJob {
     pub(super) fn next_close_demands(&self, copy: usize) -> Result<RetainedCloneGrant, ValueError> {
+        let grant = self.next_close_child_demands(copy)?;
+        if self.terminal_is_empty() { return Ok(grant); }
+        Ok(RetainedCloneGrant { maximum_items: grant.maximum_items.max(1), maximum_depth: grant.maximum_depth.max(1), ..grant })
+    }
+    fn next_close_child_demands(&self, copy: usize) -> Result<RetainedCloneGrant, ValueError> {
         if let Some(upload) = self.rejected_upload.as_ref() { if !upload.terminal_is_empty() { return upload.next_close_demands(copy); } }
         else if let Some(packet) = self.rejected_packet.as_ref() { if !packet.retirement_is_empty() { return packet.next_close_demands(copy); } }
         else if self.commands.is_none() {
@@ -142,17 +148,18 @@ impl PreparedRenderJob {
         if !self.receiver.terminal_is_empty() { return self.receiver.next_close_release_byte_demand(); }
         self.fault_payload.retirement_demands().map(|demand| demand.release_bytes)
     }
-    pub(super) fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+    pub(super) fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> PreparedClose {
+        let grant = effect.grant();
         if !self.closing { return Ok(CloseStep::Blocked); }
         if self.terminal_is_empty() { return Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() }); }
         if grant.maximum_items == 0 { return Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }); }
-        if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original prepared render job close requires depth")); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original prepared render job close requires depth").into()); }
         if let Some(upload) = self.rejected_upload.as_mut() {
-            if !upload.terminal_is_empty() { return prepared_close_child(upload.close_granted(grant)) }
+            if !upload.terminal_is_empty() { return prepared_close_child(upload.close_granted(effect)) }
             self.rejected_upload = None; return prepared_close_progress(0)
         }
         if let Some(packet) = self.rejected_packet.as_mut() {
-            if !packet.retirement_is_empty() { return prepared_close_child(packet.close_granted(grant)) }
+            if !packet.retirement_is_empty() { return prepared_close_child(packet.close_granted(effect)) }
             self.rejected_packet = None; return prepared_close_progress(0)
         }
         if let Some(commands) = self.commands.as_mut() {
@@ -160,15 +167,17 @@ impl PreparedRenderJob {
             self.commands = None; return prepared_close_progress(0)
         }
         if let Some(input) = self.input.as_mut() {
-            if !input.terminal_is_empty() { return prepared_close_child(input.close_granted(grant)) }
+            if !input.terminal_is_empty() { return prepared_close_child(input.close_granted(effect)) }
             self.input = None; return prepared_close_progress(0)
         }
-        if !self.receiver.terminal_is_empty() { return prepared_close_child(self.receiver.close_granted(grant)) }
+        if !self.receiver.terminal_is_empty() { return prepared_close_child(self.receiver.close_granted(effect)) }
         if !self.fault_payload.terminal_is_empty() {
-            return self.fault_payload.close_step_granted(grant).result.map(|step|CloseStep::Pending { progress: step.progress() });
+            let turn = self.fault_payload.close_step_granted(grant);
+            RetirementPollExit::pay(effect, turn.work)?;
+            return turn.result.map(|step|CloseStep::Pending { progress: step.progress() }).map_err(Into::into);
         }
         if self.abandonment_slot != u8::MAX {
-            let Some(state) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared render job abandonment slot is absent")); };
+            let Some(state) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared render job abandonment slot is absent").into()); };
             let current = state.load(Ordering::Acquire);
             if !matches!(current, 1 | 3) || state.compare_exchange(current, if current == 3 { 3 } else { 0 }, Ordering::AcqRel, Ordering::Acquire).is_err() { return Ok(CloseStep::Blocked); }
             self.abandonment_slot = u8::MAX; return prepared_close_progress(0)
@@ -269,19 +278,20 @@ impl PreparedRenderJob {
         PREPARED_RENDER_JOB_ABANDONMENT_STATE[index].store(2, Ordering::Release);
         result
     }
-    pub fn close_abandoned_step(grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
+    pub fn close_abandoned_step(effect: &mut RetainedAllocationEffect<'_>) -> PreparedClose {
+        let grant = effect.grant();
         let Some(slot) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() }); };
         let pointer = PREPARED_RENDER_JOB_ABANDONMENT_OWNER[slot].swap(std::ptr::null_mut(), Ordering::AcqRel);
         if pointer.is_null() { PREPARED_RENDER_JOB_ABANDONMENT_STATE[slot].store(2, Ordering::Release); return Ok(CloseStep::Blocked); }
         let mut job = unsafe { Box::from_raw(pointer) };
         let step = if job.terminal_is_empty() {
             if grant.maximum_items == 0 || grant.maximum_release_bytes < size_of::<Self>() { Ok(CloseStep::Pending { progress: RetainedCloneProgress::default() }) }
-            else if grant.maximum_depth == 0 { Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original abandoned prepared job close requires depth")) }
+            else if grant.maximum_depth == 0 { Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original abandoned prepared job close requires depth").into()) }
             else {
                 drop(job); PREPARED_RENDER_JOB_ABANDONMENT_STATE[slot].store(0, Ordering::Release);
                 return prepared_close_progress(size_of::<Self>())
             }
-        } else { job.closing = true; prepared_close_child(job.close_granted(grant)) };
+        } else { job.closing = true; prepared_close_child(job.close_granted(effect)) };
         PREPARED_RENDER_JOB_ABANDONMENT_OWNER[slot].store(Box::into_raw(job), Ordering::Release);
         PREPARED_RENDER_JOB_ABANDONMENT_STATE[slot].store(2, Ordering::Release);
         step

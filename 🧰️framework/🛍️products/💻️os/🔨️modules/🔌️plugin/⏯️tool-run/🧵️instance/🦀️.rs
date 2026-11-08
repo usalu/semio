@@ -22,7 +22,7 @@ use protocol::{OpBinary, OpText};
 #[cfg(test)]
 use semio_plugin_reactor_app::PluginApp;
 use semio_ui_scene::SceneDoc;
-use semio_plugin_tool_run::{TOOL_RUN_JOB_SITE, TOOL_RUN_PANEL_TRACE_ROWS, TOOL_RUN_TRACE_DELTA_BYTES, ToolRunActionOutcome, ToolRunEntry, ToolRunFinalize, ToolRunFinalizePhase, ToolRunJobHandle, ToolRunLedger, ToolRunMemberEmissionOwner, ToolRunMemberEmissionRetire, ToolRunMemberEmit, ToolRunMemberGeneration, ToolRunMemberOwners, ToolRunMemberRetire, ToolRunMemberRun, ToolRunRefoldTurn, inject_tool_run_trace_lane_into, selected_entry, selected_entry_mut, tool_grant_funds, tool_run_arg_u64, tool_run_scene_surface};
+use semio_plugin_tool_run::{TOOL_RUN_JOB_SITE, TOOL_RUN_PANEL_TRACE_ROWS, TOOL_RUN_TRACE_DELTA_BYTES, ToolRunActionOutcome, ToolRunEntry, ToolRunFinalize, ToolRunFinalizePhase, ToolRunJobHandle, ToolRunLedger, ToolRunMemberEmissionOwner, ToolRunMemberEmissionRetire, ToolRunMemberEmit, ToolRunMemberGeneration, ToolRunMemberOwners, ToolRunMemberRetire, ToolRunMemberRun, ToolRunRefoldTurn, inject_tool_run_trace_lane_into, selected_entry, selected_entry_mut, selected_entry_required, tool_run_slot_lost, tool_grant_funds, tool_run_arg_u64, tool_run_scene_surface};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_window_config::WindowConfigOwner;
 use semio_plugin_job::is_tool_run_action_id;

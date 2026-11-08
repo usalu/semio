@@ -69,14 +69,14 @@ fn original_retained_codec_catalog_preserves_input_receipt_and_cancellation_heap
             for axis in 0..5 {
                 if axis == 1 && demand.copy_bytes == 0 || axis == 2 && demand.capacity_bytes == 0 || axis == 3 && demand.release_bytes == 0 { continue; }
                 let denied = match axis { 0 => RetainedCloneGrant { maximum_items: 0, ..grant }, 1 => RetainedCloneGrant { maximum_copy_bytes: 0, ..grant }, 2 => RetainedCloneGrant { maximum_capacity_bytes: 0, ..grant }, 3 => RetainedCloneGrant { maximum_release_bytes: 0, ..grant }, _ => RetainedCloneGrant { maximum_depth: 0, ..grant } };
-                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(denied));
+                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close_with(&mut owner, denied));
                 assert_eq!(result.unwrap(), ArtifactCodecCatalogStep::Blocked);
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             }
-            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant));
+            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close_with(&mut owner, grant));
             result.unwrap();
             assert!(!owner.terminal_is_empty());
-            let (blocked, unchanged) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant));
+            let (blocked, unchanged) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close_with(&mut owner, grant));
             assert_eq!(blocked.unwrap(), ArtifactCodecCatalogStep::Blocked);
             assert_eq!((unchanged.requested_bytes, unchanged.released_bytes), (0, 0));
             let (received_grant, receipt) = owner.take_receipt().unwrap();
@@ -102,5 +102,14 @@ fn original_retained_codec_catalog_preserves_input_receipt_and_cancellation_heap
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(births, releases);
+    }
+}
+
+fn close_with<P, M>(owner: &mut super::RetainedArtifactCodecCatalog<'_, P, M>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<super::ArtifactCodecCatalogStep, semio_framework_value::ValueError>
+where P: semio_framework_value::ToValue, M: semio_framework_value::ToValue + crate::Mutation<P> {
+    let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 64);
+    match wallet.run_settled(grant, 64, |effect| { let result = owner.close_step(effect); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work().max(1) }) })? {
+        Some((turn, _)) => turn.result,
+        None => Ok(super::ArtifactCodecCatalogStep::Blocked),
     }
 }

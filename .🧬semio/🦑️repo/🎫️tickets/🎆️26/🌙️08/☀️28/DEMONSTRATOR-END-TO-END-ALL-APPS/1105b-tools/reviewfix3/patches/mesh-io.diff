@@ -1,0 +1,11 @@
+--- patches/orig/mesh-io.rs	2026-11-07 14:11:42
++++ patches/new/mesh-io.rs	2026-11-07 14:11:42
+@@ -152,7 +152,7 @@
+                 let copy=self.next_close_copy_byte_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?;
+                 let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_close_capacity_byte_demand(body,copy).map_err(|error|KernelError::Operation(error.to_string()))?,maximum_release_bytes:self.next_close_release_byte_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?,maximum_depth:self.next_close_depth_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?};
+                 let mut wallet=semio_framework_value::AuthoringWallet::new(grant,1_000_000_000);match wallet.run(grant,1<<20,|effect|self.close_step(body,effect)).map_err(|error|KernelError::Operation(error.to_string()))?{Some(done)=>{done.output.map_err(|error|KernelError::Operation(error.to_string()))?;},None=>return Err(KernelError::Operation("mesh import close quote refused".into()))}
+-                if self.retired {return Ok(if self.cancelled {MeshImportStep::Cancelled}else {MeshImportStep::Done(if let Some(solid)=self.solid.take() {EntityRef::Solid(solid)}else {EntityRef::Shell(self.shell.take().expect("original completed import shell"))})});}
++                if self.retired {if self.cancelled {return Ok(MeshImportStep::Cancelled);}let shell=self.shell.take();let solid=self.solid.take();return match (solid,shell) {(Some(solid),_)=>Ok(MeshImportStep::Done(EntityRef::Solid(solid))),(None,Some(shell))=>Ok(MeshImportStep::Done(EntityRef::Shell(shell))),(None,None)=>Err(KernelError::Operation("mesh import already published".into()))};}
+             } else {if let Err(error)=self.advance(body) {self.cancelled=true;return Err(error);}}
+             self.units=self.units.saturating_add(1);
+         }

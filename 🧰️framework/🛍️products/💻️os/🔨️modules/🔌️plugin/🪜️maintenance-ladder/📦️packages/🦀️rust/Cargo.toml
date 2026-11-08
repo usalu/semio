@@ -53,6 +53,7 @@ semio-plugin-instance-typed-ops = { path = "../../../🧵️instance/🧾️type
 semio-plugin-time-travel-turns = { path = "../../../⏪️time-travel/🧵️instance/📦️packages/🦀️rust" }
 semio-plugin-tool-run-turns = { path = "../../../⏯️tool-run/🧵️instance/📦️packages/🦀️rust" }
 semio-plugin-tool-run = { path = "../../../⏯️tool-run/📦️packages/🦀️rust" }
+semio-plugin-tool-machine = { path = "../../../🛠️tool-machine/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-plugin-decl-emission = { path = "../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }

@@ -61,6 +61,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     tool_stage: semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,
                     tool_press_result: None,
                     pending_stream_abort: None,
+                    stream_abort_resident: Default::default(),
                     stream_abort_completed: false,
                     verb: "setGraphParameter".into(),
                     meta: ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None },
@@ -173,7 +174,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     terminal_seen: true,
                 worker_resume_pending: false,
                     publication: None,
-                    tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
+                    tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None,stream_abort_resident:Default::default(), stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                     pending_child_publication: None,
                     owned_child_group: None,
                     owned_child_committed: false,
@@ -276,7 +277,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     terminal_seen: true,
                 worker_resume_pending: false,
                     publication: None,
-                    tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
+                    tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None,stream_abort_resident:Default::default(), stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                     pending_child_publication: None,
                     owned_child_group: None,
                     owned_child_committed: false,
@@ -313,7 +314,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
         let copy_bytes = TYPED_OPERATION_RESULT_PAGE_BYTES + payload.len() + 2 * std::mem::size_of::<TypedOperationResultPage>();
         let mut page = None;
         let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes, capacity_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES, release_bytes: 0, depth: 1 };
-        assert!(cx.with_retained_loan(grant, |same| semio_framework::action_bus::admit_original_tool_construction(same, &mut page, demand, |_| {
+        assert!(cx.with_retained_loan(grant, |same| semio_framework::action_bus::admit_original_tool_construction_settled(same, &mut Default::default(), &mut page, demand, |_| {
             let mut bytes = vec![0; TYPED_OPERATION_RESULT_PAGE_BYTES];
             for (destination, byte) in bytes.iter_mut().zip(payload) { *destination = byte.as_u64().unwrap() as u8; }
             Ok((TypedOperationResultPage::from_original(token, lane, bytes, payload.len()), RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, retained_capacity_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES, ..Default::default() }))

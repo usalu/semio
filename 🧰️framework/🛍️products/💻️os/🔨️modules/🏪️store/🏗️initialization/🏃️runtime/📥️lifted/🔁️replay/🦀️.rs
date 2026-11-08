@@ -26,15 +26,23 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     pub fn adopt_native_next_demand()->RetirementDemand where P:Send+Sync+'static {
         RetirementDemand{copy_bytes:2*std::mem::size_of::<Option<Arc<P>>>(),capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:2,..Default::default()}
     }
+    /// 🎟️ Moves the current projection into a returned-read retirement frame inside the caller's effect; an unfunded or pending effect leaves the resident current untouched.
+    fn retire_current(&mut self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError> where P:Send+Sync+'static {
+        let mut alias=Some(Arc::clone(factory));let mut output=None;
+        let poll=ReturnedSnapshotReadRetirement::admit_original(&mut self.current,&mut alias,&mut output,effect);
+        drop(alias);
+        let turn=match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>return Ok(None),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn};
+        let receipt=turn.result?.progress();
+        Ok(output.map(|owner|{*self.close_active=Some(owner);receipt}))
+    }
     /// 🎟️ Keeps both actual roots unchanged when the original replacement frame is unfunded.
-    pub fn adopt_native_next(&mut self,next:&mut Option<Arc<P>>,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> where P:Send+Sync+'static {
+    pub fn adopt_native_next(&mut self,next:&mut Option<Arc<P>>,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError> where P:Send+Sync+'static {
         let demand=Self::adopt_native_next_demand();
-        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Default::default());}
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(),demand){return Ok(Default::default());}
         if self.close_phase!=0||self.close_active.is_some()||self.current.is_none()||next.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native initialization adoption requires its settled original roots"));}
-        let previous=self.current.take().unwrap();
-        match ReturnedSnapshotReadRetirement::admit(previous,Arc::clone(factory),grant){
-            Ok((owner,mut receipt))=>{*self.close_active=Some(owner);*self.current=next.take();receipt.copied_bytes+=demand.copy_bytes;Ok(receipt)}
-            Err((error,previous,alias))=>{*self.current=Some(previous);drop(alias);Err(error)}
+        match self.retire_current(factory,effect)?{
+            Some(mut receipt)=>{*self.current=next.take();receipt.copied_bytes+=demand.copy_bytes;Ok(receipt)}
+            None=>Ok(Default::default()),
         }
     }
     /// 👁️ Quotes the original current lease without cloning the snapshot or replacing its registry.
@@ -61,9 +69,9 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         self.read_registry.returned_admission_demands::<P>(|_|RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()}).map_err(semio_framework_value_snapshot_read::SnapshotReadLeaseRefusal::into_value_error)
     }
     /// ♻️ Returns one exact original read under the installed genesis issuer.
-    pub fn settle_native_read_step(&mut self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>
+    pub fn settle_native_read_step(&mut self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>
     where P:Send+Sync+'static,
-    {semio_framework_value_snapshot_read::advance_returned_snapshot_read(&self.read_registry,&mut self.close_active,factory,grant).result}
+    {semio_framework_value_snapshot_read::settle_close_poll(semio_framework_value_snapshot_read::advance_returned_snapshot_read(&self.read_registry,&mut self.close_active,factory,effect))}
     pub(super) fn read_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>
     where P:Send+Sync+'static,
     {
@@ -72,14 +80,14 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         let backing=self.read_registry.empty_backing_demands()?;if backing.release_bytes!=0{return Ok(backing);}
         Ok(RetirementDemand{release_bytes:self.read_registry.custody_byte_demand()?,depth:1,..Default::default()})
     }
-    pub(super) fn close_reads(&mut self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>
+    pub(super) fn close_reads(&mut self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>
     where P:Send+Sync+'static,
     {
         if self.read_registry.closed(){self.close_phase=11;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
-        if self.read_registry.has_returned(){return self.settle_native_read_step(factory,grant);}
+        if self.read_registry.has_returned(){return self.settle_native_read_step(factory,effect);}
         if self.read_registry.occupied_count()!=0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if self.read_registry.empty_backing_demands()?.release_bytes!=0{return self.read_registry.close_empty_backing_step(grant);}
-        self.read_registry.close_custody_step(grant)
+        if self.read_registry.empty_backing_demands()?.release_bytes!=0{return self.read_registry.close_empty_backing_step(effect).result;}
+        semio_framework_value_snapshot_read::settle_close_poll(self.read_registry.close_custody_step(effect))
     }
     /// ▶️ Folds forward `index` of the applied `edit` onto the shared current projection through its effective input
     /// (supersessions, [`admit_replacement`](super::admit_replacement) and keep-and-record [`fold_operation`](super::fold_operation)),
@@ -126,30 +134,26 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     /// 🎟️ Makes `next` the current projection under one funded turn: the displaced projection moves into a returned-read
     /// retirement frame that [`Self::settle_current_retirement_step`] drains, and `next` takes its shared backing. Refusal
     /// hands `next` back and leaves the runtime unchanged.
-    pub fn adopt_next_funded(&mut self, next: P, factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, P)>
+    pub fn adopt_next_funded(&mut self, next: P, factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, (ValueError, P)>
     where
         P: Send + Sync + 'static,
     {
         let demand = Self::adopt_next_demand();
+        let grant = effect.grant();
         if self.close_phase != 0 || self.close_active.is_some() || self.current.is_none() {
             return Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "initialization adoption requires a settled open current projection"), next));
         }
         if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_capacity_bytes < demand.capacity_bytes {
             return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit, "initialization adoption exceeds its admitted grant"), next));
         }
-        let previous = self.current.take().expect("open initialization retains its current projection");
-        match ReturnedSnapshotReadRetirement::admit(previous, Arc::clone(factory), grant) {
-            Ok((owner, mut receipt)) => {
-                *self.close_active = Some(owner);
+        match self.retire_current(factory, effect) {
+            Ok(Some(mut receipt)) => {
                 *self.current = Some(Arc::new(next));
                 receipt.retained_capacity_bytes += semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<P>();
                 Ok(receipt)
             }
-            Err((error, previous, alias)) => {
-                *self.current = Some(previous);
-                drop(alias);
-                Err((error, next))
-            }
+            Ok(None) => Err((ValueError::literal(ValueRefusalKind::OwnershipLimit, "initialization adoption was not funded by its effect"), next)),
+            Err(error) => Err((error, next)),
         }
     }
 }

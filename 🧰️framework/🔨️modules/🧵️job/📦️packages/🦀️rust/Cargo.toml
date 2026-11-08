@@ -22,6 +22,8 @@ testkit = ["semio-framework-async/testkit","semio-framework-job-context/testkit"
 
 [dependencies]
 semio-framework-job-context = { workspace = true }
+semio-framework-job-park = { workspace = true }
+semio-framework-job-capture = { workspace = true }
 semio-framework-job-native-encoding = { workspace = true }
 semio-framework-job-testing-caller = { workspace = true, optional = true }
 semio-framework-trace = { workspace = true }
@@ -46,6 +48,11 @@ serde_json = { workspace = true }
 name = "original-close-context"
 required-features = ["testkit"]
 path = "../../♻️retirement/🎟️context/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-owned-park"
+required-features = ["testkit"]
+path = "../../⏱️context/⏸️park/🧪️tests/🦀️.rs"
 
 [[test]]
 name = "original-weak-return"

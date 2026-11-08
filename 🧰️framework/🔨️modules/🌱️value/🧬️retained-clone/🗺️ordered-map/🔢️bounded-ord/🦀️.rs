@@ -42,8 +42,17 @@ fn advance_retirement_demands(&self,body:usize)->Result<crate::RetirementDemand,
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError>;
     fn next_close_depth_demand(&self)->Result<usize,ValueError>;
     fn terminal_is_empty(&self)->bool;
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep,ValueError>;
-    fn compare(&mut self, left: RetainedCloneRef<'_, T>, right: RetainedCloneRef<'_, T>, grant: BoundedOrdGrant, retirement:RetainedCloneGrant) -> crate::RetainedWorkOutcome<BoundedOrdStep, ValueError>;
+    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>;
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll;
+    fn compare(&mut self, left: RetainedCloneRef<'_, T>, right: RetainedCloneRef<'_, T>, grant: BoundedOrdGrant, effect:&mut crate::RetainedAllocationEffect<'_>) -> crate::RetainedWorkOutcome<BoundedOrdStep, ValueError>;
+}
+
+/// 🧯 An advance outcome reports cleanup as its first refusal; a pending producer reply or a nested failure owner is refused typed because an advance outcome cannot carry them.
+pub(super) fn flatten_poll<T>(poll:crate::RetainedWorkPoll<T,crate::OriginalRetirementFailure>)->crate::RetainedWorkOutcome<T,ValueError>{
+    match poll{
+        crate::RetainedWorkPoll::Pending{work}=>crate::RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"ordered-map cleanup left its producer reply pending inside an advance")),work},
+        crate::RetainedWorkPoll::Complete(turn)=>crate::RetainedWorkOutcome{result:turn.result.map_err(|failure|{let(primary,work,receipt,..)=failure.into_parts();primary.or(work).or(receipt).unwrap_or_else(||ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"ordered-map cleanup failed with an unrepresentable owner"))}),work:turn.work},
+    }
 }
 
 pub struct ScalarBoundedOrdCursor<T> {
@@ -69,13 +78,14 @@ fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{R
 fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::release_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn next_close_depth_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::depth_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn terminal_is_empty(&self)->bool{self.left.is_none()&&self.right.is_none()}
-fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep,ValueError>{let grant=effect.grant();let mut work=0;let result=(||{if !self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close"));}let step={let turn=close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant);work+=turn.work;turn.result}?;Ok(if self.left.is_none()&&self.right.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})})();crate::RetainedWorkOutcome{result,work}}
-    fn compare(&mut self, left: RetainedCloneRef<'_, T>, right: RetainedCloneRef<'_, T>, grant: BoundedOrdGrant, retirement:RetainedCloneGrant) -> crate::RetainedWorkOutcome<BoundedOrdStep, ValueError> {let mut work=0;let result=(||{
+fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing||self.terminal_is_empty(){return Ok(0)}RetainedCloneBinding::close_work_demand(if self.left.is_some(){&self.left}else{&self.right},body)}
+fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{if !self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close").into());}let step={let turn=crate::RetirementPollExit::settled(close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},effect))?;work+=turn.work;turn.result}?;Ok(if self.left.is_none()&&self.right.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})})();crate::RetirementPollExit::finish(result,work)}
+    fn compare(&mut self, left: RetainedCloneRef<'_, T>, right: RetainedCloneRef<'_, T>, grant: BoundedOrdGrant, effect:&mut crate::RetainedAllocationEffect<'_>) -> crate::RetainedWorkOutcome<BoundedOrdStep, ValueError> {let mut work=0;let result=(||{
         if self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator is closing"));}
         if self.left.is_none()&&grant.maximum_items==0{return Ok(BoundedOrdStep::Progress(Default::default()));}
 
-        if let Some(progress)={let turn=left.bind(&mut self.left,retirement);work+=turn.work;turn.result}?{return Ok(BoundedOrdStep::Authority(progress));}
-        if let Some(progress)={let turn=right.bind(&mut self.right,retirement);work+=turn.work;turn.result}?{return Ok(BoundedOrdStep::Authority(progress));}
+        if let Some(progress)={let turn=left.bind(&mut self.left,effect);work+=turn.work;turn.result}?{return Ok(BoundedOrdStep::Authority(progress));}
+        if let Some(progress)={let turn=right.bind(&mut self.right,effect);work+=turn.work;turn.result}?{return Ok(BoundedOrdStep::Authority(progress));}
         if let Some(ordering)=self.complete{return Ok(BoundedOrdStep::Complete{ordering,progress:Default::default()});}
         let progress = BoundedOrdProgress { compared_items: 1, compared_bytes: size_of::<T>() };
         if !progress.fits(grant) {
@@ -118,15 +128,16 @@ fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{R
 fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::release_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn next_close_depth_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::depth_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn terminal_is_empty(&self)->bool{self.left.is_none()&&self.right.is_none()}
-fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep,ValueError>{let grant=effect.grant();let mut work=0;let result=(||{if !self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close"));}let step={let turn=close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant);work+=turn.work;turn.result}?;Ok(if self.left.is_none()&&self.right.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})})();crate::RetainedWorkOutcome{result,work}}
-    fn compare(&mut self, left: RetainedCloneRef<'_, String>, right: RetainedCloneRef<'_, String>, grant: BoundedOrdGrant, retirement:RetainedCloneGrant) -> crate::RetainedWorkOutcome<BoundedOrdStep, ValueError> {let mut work=0;let result=(||{
+fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing||self.terminal_is_empty(){return Ok(0)}RetainedCloneBinding::close_work_demand(if self.left.is_some(){&self.left}else{&self.right},body)}
+fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{if !self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close").into());}let step={let turn=crate::RetirementPollExit::settled(close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},effect))?;work+=turn.work;turn.result}?;Ok(if self.left.is_none()&&self.right.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})})();crate::RetirementPollExit::finish(result,work)}
+    fn compare(&mut self, left: RetainedCloneRef<'_, String>, right: RetainedCloneRef<'_, String>, grant: BoundedOrdGrant, effect:&mut crate::RetainedAllocationEffect<'_>) -> crate::RetainedWorkOutcome<BoundedOrdStep, ValueError> {let mut work=0;let result=(||{
         if self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator is closing"));}
         if self.left.is_none()&&grant.maximum_items==0{return Ok(BoundedOrdStep::Progress(Default::default()));}
 
         let first = !self.initialized;
         if first&&grant.maximum_items==0{return Ok(BoundedOrdStep::Progress(Default::default()));}
-        if let Some(progress)={let turn=left.bind(&mut self.left,retirement);work+=turn.work;turn.result}?{return Ok(BoundedOrdStep::Authority(progress));}
-        if let Some(progress)={let turn=right.bind(&mut self.right,retirement);work+=turn.work;turn.result}?{return Ok(BoundedOrdStep::Authority(progress));}
+        if let Some(progress)={let turn=left.bind(&mut self.left,effect);work+=turn.work;turn.result}?{return Ok(BoundedOrdStep::Authority(progress));}
+        if let Some(progress)={let turn=right.bind(&mut self.right,effect);work+=turn.work;turn.result}?{return Ok(BoundedOrdStep::Authority(progress));}
         if let Some(ordering)=self.complete{return Ok(BoundedOrdStep::Complete{ordering,progress:Default::default()});}
         if first {work+=1;self.initialized=true;
             if grant.maximum_items == 0 {

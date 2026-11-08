@@ -1,8 +1,8 @@
 //! 🧳️ Original chunk vectors and immutable directory paths remain owned until funded publication or physical close.
 use super::{ToolRunPayloadStream,ToolRunPayloadUpdate,invalid};
 use crate::ToolRunIdentity;
-use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneSource, RetainedCloneClose, StagedSourceAdmission, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step}, retirement::{RetireOwned, RetirementCursor, RetirementStep}};
-use semio_framework_value::shared_issuance::{SealedShared, SharedIssuer};
+use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneSource, RetainedCloneClose, StagedSourceAdmission, RetainedAllocationEffect, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step}, retirement::{RetireOwned, RetirementCursor, RetirementStep}};
+use semio_framework_value::shared_issuance::SealedShared;
 use semio_framework_value_persistent::{list::persistent::PersistentList, list::persistent::PersistentSplice, list::persistent::PersistentSpliceKind};
 use std::mem::{ManuallyDrop,size_of};
 const CONTROL:usize=8*size_of::<usize>()+size_of::<ToolRunIdentity>()+size_of::<ToolRunPayloadUpdate>()+2*size_of::<bool>();
@@ -50,19 +50,19 @@ impl ToolRunPayloadStreamUpdate{
    9=>Default::default(),_=>return Err(invalid("payload preparation phase is invalid")),
   })
  }
- pub fn advance(&mut self,g:Grant)->Result<Step,ValueError>{
-  let d=self.demand()?;if !fits(d,g){return Ok(Step::Progress(Default::default()));}if self.complete(){return Ok(Step::Complete(Default::default()));}
-  let mut p=Progress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
+ pub fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<Step,ValueError>{
+  let g=effect.grant();let d=self.demand()?;if !fits(d,g){return Ok(Step::Progress(Default::default()));}if self.complete(){return Ok(Step::Complete(Default::default()));}
+  let mut p=Progress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};crate::component::record_work(effect,1)?;
   match self.phase{
    0=>{let(publication,total_bytes,chunk_bytes)=match self.update{ToolRunPayloadUpdate::Replace=>(0,self.length,self.length.max(1)),ToolRunPayloadUpdate::Range{publication,total_bytes,chunk_bytes,..}=>(publication,usize::try_from(total_bytes).map_err(|_|invalid("payload extent exceeds native address range"))?,chunk_bytes as usize)};*self.seed=Some(ToolRunPayloadStream{identity:self.identity,publication,total_bytes,received_bytes:0,chunk_bytes,pages:PersistentList::default()});self.phase=1;},
-   1=>{let seed=self.seed.take().ok_or_else(||ValueError::invariant("seed absent"))?;match SealedShared::admit(seed,SharedIssuer::owned(),g).result{Ok((source,q))=>{*self.previous=Some(source);p.retained_capacity_bytes=q.retained_capacity_bytes;self.phase=2;},Err((error,seed))=>{*self.seed=Some(seed);return Err(error);}}},
-   2=>match self.adm_original.as_mut(){None=>{let source=self.previous.take().ok_or_else(||ValueError::invariant("previous absent"))?;self.index=source.get().pages.len();self.adm_original=Some(StagedSourceAdmission::borrowed(source,|source|&source.get().pages));},Some(admission)=>{let q=admission.advance(&mut self.original,child(g)).result?.progress();p.retained_capacity_bytes=q.retained_capacity_bytes;if admission.terminal_is_empty(){self.adm_original=None;self.phase=3;}}},
-   3=>{let input=self.input.take().ok_or_else(||ValueError::invariant("input absent"))?;match SealedShared::admit(input,SharedIssuer::owned(),g).result{Ok((chunk,q))=>{*self.chunk=Some(chunk);p.retained_capacity_bytes=q.retained_capacity_bytes;self.phase=4;},Err((error,input))=>{*self.input=Some(input);return Err(error);}}},
-   4=>match self.adm_authored.as_mut(){None=>{let chunk=self.chunk.take().ok_or_else(||ValueError::invariant("chunk absent"))?;self.adm_authored=Some(StagedSourceAdmission::owned(chunk));},Some(admission)=>{let q=admission.advance(&mut self.authored,child(g)).result?.progress();p.retained_capacity_bytes=q.retained_capacity_bytes;if admission.terminal_is_empty(){self.adm_authored=None;self.phase=5;}}},
+   1=>{let seed=self.seed.take().ok_or_else(||ValueError::invariant("seed absent"))?;match crate::component::admit_sealed(seed,effect){Ok((source,q))=>{*self.previous=Some(source);p.retained_capacity_bytes=q.retained_capacity_bytes;self.phase=2;},Err((error,seed))=>{*self.seed=Some(seed);return Err(error);}}},
+   2=>match self.adm_original.as_mut(){None=>{let source=self.previous.take().ok_or_else(||ValueError::invariant("previous absent"))?;self.index=source.get().pages.len();self.adm_original=Some(StagedSourceAdmission::borrowed(source,|source|&source.get().pages));},Some(admission)=>{let q=admission.advance(&mut self.original,&mut effect.nested(child(g))).result?.progress();p.retained_capacity_bytes=q.retained_capacity_bytes;if admission.terminal_is_empty(){self.adm_original=None;self.phase=3;}}},
+   3=>{let input=self.input.take().ok_or_else(||ValueError::invariant("input absent"))?;match crate::component::admit_sealed(input,effect){Ok((chunk,q))=>{*self.chunk=Some(chunk);p.retained_capacity_bytes=q.retained_capacity_bytes;self.phase=4;},Err((error,input))=>{*self.input=Some(input);return Err(error);}}},
+   4=>match self.adm_authored.as_mut(){None=>{let chunk=self.chunk.take().ok_or_else(||ValueError::invariant("chunk absent"))?;self.adm_authored=Some(StagedSourceAdmission::owned(chunk));},Some(admission)=>{let q=admission.advance(&mut self.authored,&mut effect.nested(child(g))).result?.progress();p.retained_capacity_bytes=q.retained_capacity_bytes;if admission.terminal_is_empty(){self.adm_authored=None;self.phase=5;}}},
    5=>{self.splice=Some(PersistentSplice::new(PersistentSpliceKind::Insert,self.index));self.phase=6;},
-   6=>{let step=self.splice.as_mut().ok_or_else(||ValueError::invariant("splice absent"))?.advance(self.original.as_ref().ok_or_else(||ValueError::invariant("original absent"))?.borrow(),Some(self.authored.as_ref().ok_or_else(||ValueError::invariant("authored absent"))?.borrow()),child(g)).result?;if matches!(step,Step::Complete(_)){self.phase=7;}return Ok(Step::Progress(receipt(step.progress())));},
+   6=>{let step=self.splice.as_mut().ok_or_else(||ValueError::invariant("splice absent"))?.advance(self.original.as_ref().ok_or_else(||ValueError::invariant("original absent"))?.borrow(),Some(self.authored.as_ref().ok_or_else(||ValueError::invariant("authored absent"))?.borrow()),&mut effect.nested(child(g))).result?;if matches!(step,Step::Complete(_)){self.phase=7;}return Ok(Step::Progress(receipt(step.progress())));},
    7=>{let(pages,q)=self.splice.as_mut().ok_or_else(||ValueError::invariant("splice absent"))?.take(child(g)).result?.ok_or_else(||invalid("admitted payload directory take was refused"))?;let(publication,total_bytes,chunk_bytes,received_bytes)=match self.update{ToolRunPayloadUpdate::Replace=>(0,self.length,self.length.max(1),self.length),ToolRunPayloadUpdate::Range{publication,total_bytes,offset,chunk_bytes,..}=>(publication,usize::try_from(total_bytes).map_err(|_|invalid("payload extent exceeds native range"))?,chunk_bytes as usize,usize::try_from(offset).map_err(|_|invalid("payload offset exceeds native range"))?.checked_add(self.length).ok_or_else(||invalid("payload received extent overflow"))?)};*self.candidate=Some(ToolRunPayloadStream{identity:self.identity,publication,total_bytes,received_bytes,chunk_bytes,pages});p.retained_capacity_bytes=q.retained_capacity_bytes;self.phase=8;},
-   8=>{let candidate=self.candidate.take().ok_or_else(||ValueError::invariant("candidate absent"))?;match SealedShared::admit(candidate,SharedIssuer::owned(),g).result{Ok((output,q))=>{*self.output=Some(output);p.retained_capacity_bytes=q.retained_capacity_bytes;self.phase=9;},Err((error,candidate))=>{*self.candidate=Some(candidate);return Err(error);}}},
+   8=>{let candidate=self.candidate.take().ok_or_else(||ValueError::invariant("candidate absent"))?;match crate::component::admit_sealed(candidate,effect){Ok((output,q))=>{*self.output=Some(output);p.retained_capacity_bytes=q.retained_capacity_bytes;self.phase=9;},Err((error,candidate))=>{*self.candidate=Some(candidate);return Err(error);}}},
    _=>return Err(invalid("payload preparation lost its admitted phase")),
   }
   Ok(if self.complete(){Step::Complete(p)}else{Step::Progress(p)})
@@ -83,33 +83,34 @@ impl ToolRunPayloadStreamUpdate{
   if self.seed.is_some()||self.candidate.is_some(){return Ok(nested(self.retirement.next_owner_demands::<ToolRunPayloadStream>(true,&None,body.saturating_sub(CONTROL))?));}
   Ok(Default::default())
  }
- pub fn close_step(&mut self,g:Grant)->Result<Step,ValueError>{
-  if !self.closing{return Err(invalid("payload directory closure was not started"));}let d=self.close_demand(g.maximum_copy_bytes)?;if !fits(d,g){return Ok(Step::Progress(Default::default()));}if self.terminal_is_empty(){return Ok(Step::Complete(Default::default()));}
-  let p=Progress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
-  if let Some(splice)=self.splice.as_mut(){if !splice.terminal_is_empty(){return splice.close_step(child(g)).result.map(|step|Step::Progress(receipt(step.progress())));}self.splice=None;return Ok(Step::Progress(p));}
-  if let Some(source)=self.original.as_mut(){if !source.terminal_is_empty(){return source.close_step(child(g)).result.map(|step|Step::Progress(receipt(step.progress())));}self.original=None;return Ok(Step::Progress(p));}
-  if let Some(source)=self.authored.as_mut(){if !source.terminal_is_empty(){return source.close_step(child(g)).result.map(|step|Step::Progress(receipt(step.progress())));}self.authored=None;return Ok(Step::Progress(p));}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(child(g)).result.map(|step|Step::Progress(receipt(step.progress())));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.adm_original,child(g)).result?{return Ok(Step::Progress(receipt(step.progress())));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.adm_authored,child(g)).result?{return Ok(Step::Progress(receipt(step.progress())));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.input,child(g)).result?{return Ok(Step::Progress(receipt(step.progress())));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.chunk,child(g)).result?{return Ok(Step::Progress(receipt(step.progress())));}
-  for slot in [&mut self.previous,&mut self.displaced,&mut self.output]{if let Some(step)=self.retirement.begin_granted(slot,child(g)).result?{return Ok(Step::Progress(receipt(step.progress())));}}
-  for slot in [&mut self.seed,&mut self.candidate]{if let Some(step)=self.retirement.begin_granted(slot,child(g)).result?{return Ok(Step::Progress(receipt(step.progress())));}}
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<Step,ValueError>{
+  if !self.closing{return Err(invalid("payload directory closure was not started"));}let g=effect.grant();let d=self.close_demand(g.maximum_copy_bytes)?;if !fits(d,g){return Ok(Step::Progress(Default::default()));}if self.terminal_is_empty(){return Ok(Step::Complete(Default::default()));}
+  crate::component::record_work(effect,1)?;let p=Progress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
+  if let Some(splice)=self.splice.as_mut(){if !splice.terminal_is_empty(){return crate::component::settle_close(splice.close_step(&mut effect.nested(child(g)))).map(|progress|Step::Progress(receipt(progress)));}self.splice=None;return Ok(Step::Progress(p));}
+  if let Some(source)=self.original.as_mut(){if !source.terminal_is_empty(){return crate::component::settle_close(source.close_step(&mut effect.nested(child(g)))).map(|progress|Step::Progress(receipt(progress)));}self.original=None;return Ok(Step::Progress(p));}
+  if let Some(source)=self.authored.as_mut(){if !source.terminal_is_empty(){return crate::component::settle_close(source.close_step(&mut effect.nested(child(g)))).map(|progress|Step::Progress(receipt(progress)));}self.authored=None;return Ok(Step::Progress(p));}
+  if !self.retirement.is_empty(){return crate::component::settle_close(self.retirement.step_granted(&mut effect.nested(child(g)))).map(|progress|Step::Progress(receipt(progress)));}
+  if let Some(step)=self.retirement.begin_granted(&mut self.adm_original,&mut effect.nested(child(g))).result?{return Ok(Step::Progress(receipt(step.progress())));}
+  if let Some(step)=self.retirement.begin_granted(&mut self.adm_authored,&mut effect.nested(child(g))).result?{return Ok(Step::Progress(receipt(step.progress())));}
+  if let Some(step)=self.retirement.begin_granted(&mut self.input,&mut effect.nested(child(g))).result?{return Ok(Step::Progress(receipt(step.progress())));}
+  if let Some(step)=self.retirement.begin_granted(&mut self.chunk,&mut effect.nested(child(g))).result?{return Ok(Step::Progress(receipt(step.progress())));}
+  for slot in [&mut self.previous,&mut self.displaced,&mut self.output]{if let Some(step)=self.retirement.begin_granted(slot,&mut effect.nested(child(g))).result?{return Ok(Step::Progress(receipt(step.progress())));}}
+  for slot in [&mut self.seed,&mut self.candidate]{if let Some(step)=self.retirement.begin_granted(slot,&mut effect.nested(child(g))).result?{return Ok(Step::Progress(receipt(step.progress())));}}
   Ok(Step::Complete(Default::default()))
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.input.is_none()&&self.previous.is_none()&&self.displaced.is_none()&&self.seed.is_none()&&self.chunk.is_none()&&self.candidate.is_none()&&self.output.is_none()&&self.adm_original.is_none()&&self.adm_authored.is_none()&&self.original.is_none()&&self.authored.is_none()&&self.splice.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for ToolRunPayloadStreamUpdate{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"payload publication retains every original vector and path until paid close");}}
-struct Close{owner:ToolRunPayloadStreamUpdate}
+pub struct Close{owner:ToolRunPayloadStreamUpdate}
 impl RetireOwned for ToolRunPayloadStreamUpdate{
- fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(Close{owner:self})}
+ type RetirementCursor=Close;
+ fn retirement_seed(mut self)->Close{self.begin_close();Close{owner:self}}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Close>())}
  fn controlled_retirement_supported()->bool{true}
 }
 impl RetirementCursor for Close{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.owner.close_demand(body)}
- fn close_step(&mut self,g:Grant)->RetirementStep{match self.owner.close_step(g){Ok(step)=>RetirementStep::Progress(step.progress(),1),Err(error)=>RetirementStep::Failure(error,1)}}
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{match self.owner.close_step(effect){Ok(step)=>RetirementStep::Progress(step.progress(),effect.performed_work()),Err(error)=>RetirementStep::Failure(error.into(),effect.performed_work())}}
  fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }

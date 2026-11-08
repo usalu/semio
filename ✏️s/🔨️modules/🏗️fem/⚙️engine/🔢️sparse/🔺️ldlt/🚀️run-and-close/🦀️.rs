@@ -26,7 +26,7 @@ impl LdltJob {
             context.set_stage("fem.ldlt.checkpoint-page");
             if self.checkpoint_writer.is_some() && self.checkpoint_cursor.field == u16::MAX {
                 if !numerical_finish_writer(&mut self.checkpoint_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
-                let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
+                let Some(payload) = self.desk.lent.take() else { return Ok(NumericalRun::Fault); };
                 return Ok(self.desk.lend_checkpoint(payload, self.state.column as u64));
             }
 
@@ -59,7 +59,7 @@ impl LdltJob {
                 if !numerical_finish_writer(&mut self.output_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
                 self.terminal_published = true;
                 context.consume_retained(RetainedCloneProgress { copied_bytes: size_of::<bool>(), ..Default::default() })?;
-                let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
+                let Some(payload) = self.desk.lent.take() else { return Ok(NumericalRun::Fault); };
                 return Ok(self.desk.lend_complete(payload));
             }
 

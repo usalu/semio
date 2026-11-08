@@ -66,15 +66,16 @@ semio_framework_value::artifact_retire_leaf!(VertexId, EdgeId, CoedgeId, LoopId,
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::semio_framework_value")]
-struct Slot<T> {
+#[doc(hidden)]
+pub struct Slot<T> {
     generation: u32,
     value: Option<T>,
     next_free: Option<u32>,
 }
 
 impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for Slot<T> {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.generation),semio_framework_value::retirement::deferred(self.value),semio_framework_value::retirement::deferred(self.next_free)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.generation),semio_framework_value::retirement::deferred_birth_bytes_for(&self.value),semio_framework_value::retirement::deferred_birth_bytes_for(&self.next_free)])}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(u32,Option<T>,Option<u32>);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.generation,self.value,self.next_free)}
     fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
 }
 
@@ -92,8 +93,8 @@ pub struct Store<T, Id> {
 }
 
 impl<T:semio_framework_value::retirement::RetireOwned,Id:ArenaId+'static> semio_framework_value::retirement::RetireOwned for Store<T,Id> {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.slots),semio_framework_value::retirement::deferred(self.free_head)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.slots),semio_framework_value::retirement::deferred_birth_bytes_for(&self.free_head)])}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(semio_framework_value_persistent::list::PagedList<Slot<T>,{usize::MAX}>,Option<u32>);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.slots,self.free_head)}
     fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
 }
 
@@ -119,13 +120,17 @@ impl<T, Id: ArenaId> Store<T, Id> {
         if self.slots.has_reserved_slot(){self.slots.next_push_depth_demand().map_err(Into::into)}else{self.slots.next_reserve_depth_demand().map_err(Into::into)}
     }
     /// 🎟️ Reserves one original backing allocation while every existing original value stays in place.
-    pub fn reserve_insert_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneProgress,(semio_framework_value::ValueError,semio_framework_value::retained_clone::RetainedCloneProgress)>{
+pub fn reserve_insert_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneProgress,(semio_framework_value::ValueError,semio_framework_value::retained_clone::RetainedCloneProgress)>{self.reserve_insert_original(grant).result}
+    /// 🪙️ Reserves the same backing and reports the performed page work for the caller's single charge.
+    pub fn reserve_insert_original(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::retained_clone::RetainedCloneProgress,(semio_framework_value::ValueError,semio_framework_value::retained_clone::RetainedCloneProgress)>{
         use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::RetainedCloneProgress};
+        let mut work=0;let result=(||{
         let empty=RetainedCloneProgress::default();let bytes=self.next_insert_capacity_byte_demand(grant.maximum_copy_bytes).map_err(|error|(error,empty))?;if bytes==0{return Ok(empty);}
         if grant.maximum_items==0{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"arena reservation requires one admitted item"),empty));}
         if grant.maximum_depth<self.next_insert_depth_demand().map_err(|error|(error,empty))?{return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"arena reservation exceeds admitted depth"),empty));}
         if grant.maximum_capacity_bytes<bytes{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"arena backing exceeds admitted capacity"),empty));}
-        match self.slots.reserve_one(grant.maximum_capacity_bytes){Ok(progress)=>Ok(RetainedCloneProgress {copied_items:usize::from(progress.progressed),retained_capacity_bytes:progress.allocated_bytes,..empty}),Err(error)=>{let receipt=RetainedCloneProgress {copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..empty};let error=ValueError::from(error.refusal()).with_retained_progress(receipt);Err((error,receipt))}}
+        match self.slots.reserve_one_cold(grant.maximum_capacity_bytes){Ok(progress)=>{work=progress.work;Ok(RetainedCloneProgress {copied_items:usize::from(progress.progressed),retained_capacity_bytes:progress.allocated_bytes,..empty})},Err(error)=>{work=error.work;let receipt=RetainedCloneProgress {copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..empty};let error=ValueError::from(error.refusal()).with_retained_progress(receipt);Err((error,receipt))}}
+        })();semio_framework_value::RetainedWorkOutcome{result,work:u128::from(work)}
     }
     /// 🫴️ Transfers the exact original incoming value into independently admitted original backing.
     pub fn insert_reserved(&mut self,value:T,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Id,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,T)>{

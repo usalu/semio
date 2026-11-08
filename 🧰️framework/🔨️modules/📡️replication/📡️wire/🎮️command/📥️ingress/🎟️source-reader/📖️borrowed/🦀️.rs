@@ -39,7 +39,7 @@ impl OriginalBinaryReadSource for OriginalBinarySlice<'_>{
   let Some(available)=self.bytes.get(*self.offset..)else{return refused("borrowed binary read exceeds its actual source")};
   if available.is_empty(){return Turn{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"borrowed binary ended inside a field")),work:0}}
   let metadata=size_of::<Vec<u8>>()+size_of::<usize>();let n=(length-output.len()).min(available.len()).min(output.capacity()-output.len()).min(grant.maximum_copy_bytes.saturating_sub(metadata)).min(usize::try_from(work.saturating_sub(1)).unwrap_or(usize::MAX));if n==0{return waiting()}
-  output.extend_from_slice(&available[..n]);*self.offset+=n;let progress=Progress{copied_items:1,copied_bytes:metadata+n,..Default::default()};Turn{result:Ok(if output.len()==length{Step::Complete(progress)}else{Step::Progress(progress)}),work:n as u64+1}
+  output.extend_from_slice(&available[..n]);*self.offset+=n;let progress=Progress{copied_items:1,copied_bytes:metadata+n,..Default::default()};Turn{result:Ok(if output.len()==length{Step::Complete(progress)}else{Step::Progress(progress)}),work:n as u128+1}
  }
  fn release_consumed_source_step(&mut self,_grant:Grant,_work:u64)->Turn<Step>{complete(Default::default(),0)}
 }

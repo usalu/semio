@@ -6,6 +6,15 @@ pub use construction::{OriginalConstructionIssuerIdentity,OriginalConstructionAc
 pub use semio_framework_value_control_physical::allocation;
 #[path="📦️effect/🦀️.rs"]
 mod allocation_effect;
+#[path="🎟️authoring/🦀️.rs"]
+mod authoring;
+pub use authoring::{AuthoredEffect,AuthoringWallet,run_original_effect,OriginalEffectRun};
+#[path="🎟️lent/🦀️.rs"]
+mod lent;
+pub use lent::{EffectLend,LentEffectSlot};
+#[path="🎟️gate/🦀️.rs"]
+mod gate;
+pub use gate::{RetainedOwnerGate,RetainedOwnerGateBusy,RetainedOwnerGateGuard};
 pub use allocation_effect::{OriginalWorkPerformedBoundary,RetainedAllocationEffect};
 pub use allocation::{NATIVE_ALLOCATION_SCHEMA,NativeAllocationAuthority,NativeAllocationAuthorityLoan,NativeAllocationAuthorityPort,NativeAllocationReply,NativeAllocationReplyComplete,NativeAllocationInvocation,NativeAllocationInvocationResult,NativeAllocationLoan,NativeSendAllocationLoan,NativeAllocationSendCallback,NativeAllocationTransaction,NativeAllocationTransactionPhase,NativeAllocationBudget,NativeAllocationEvent,NativeAllocationIdentity,NativeAllocationRefusal,NativeAllocationRefusalHandle,NativeAllocationRefusalVault,NativeAllocationFailure,NativeAllocationProgress,NativeAllocationRequest};
 #[path="♻️failure/🦀️.rs"]mod original_failure;

@@ -15,7 +15,7 @@ impl OriginalCallerChildSource{
   let witness=parent.original.as_ref().ok_or_else(||refused("original child parent source has already entered retirement"))?;
   if !matches_roots(witness.get(),cx){return Err(refused("original child source requires its same still-retained initiating parent").into());}
   let Some(upstream)=self.upstream.as_ref()else{if self.terminal_is_empty(){return Ok(())}return Err(refused("original child source has already returned its parent loan").into())};
-  if self.closing{if upstream.terminal_is_empty(){return Ok(())}return upstream.validate_retirement_context(cx)}
+  if self.closing{if upstream.terminal_is_empty(){return Ok(())}return upstream.validate_retirement_context(cx).map_err(OriginalTurnFailure::from)}
   let original=upstream.original.as_ref().ok_or_else(||refused("original child source has no upstream strong witness"))?;
   if witness.identity()!=original.identity(){return Err(refused("original child source requires its same still-retained initiating parent").into());}
   if self.closing{upstream.validate_retirement_context(cx)?;}else{upstream.validate_context(cx)?;}Ok(())
@@ -34,23 +34,23 @@ impl OriginalCallerChildSource{
   if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Blocked);}
   let metadata_demand=RetirementDemand{depth:1,..Default::default()};
   let pending=|step|match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>InteractiveJobCloseStep::Blocked};
-  if !self.closing{return crate::close_original_retained_step(cx,metadata_demand,|_|{self.closing=true;self.ready=false;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
+  if !self.closing{return crate::close_original_retained_step(cx,metadata_demand,|_|{self.closing=true;self.ready=false;RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
   if let Some(child)=self.parent.as_mut(){
-   if child.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.parent.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
+   if child.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.parent.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
    let demand=child.retirement_demands()?;let witness=parent.cancellation()?;
    return crate::close_original_retained_step(cx,demand,|grant|child.close_witnessed(grant,Some(witness))).map(pending);
   }
   if let Some(ledger)=self.initial_child_ledger.as_mut(){
-   if ledger.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.initial_child_ledger.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
+   if ledger.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.initial_child_ledger.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
    let demand=ledger.retirement_demands();return crate::close_original_retained_step(cx,demand,|grant|ledger.close_step(grant)).map(pending);
   }
-  if self.cancel.is_some(){return crate::close_original_retained_step(cx,metadata_demand,|_|{*self.cancel_retiring=Some(CancelTokenRetirement::from_token(self.cancel.take().expect("cancel absent")));RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
+  if self.cancel.is_some(){return crate::close_original_retained_step(cx,metadata_demand,|_|{*self.cancel_retiring=Some(CancelTokenRetirement::from_token(self.cancel.take().expect("cancel absent")));RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
   if let Some(retiring)=self.cancel_retiring.as_mut(){
-   if retiring.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.cancel_retiring.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
-   let witness=parent.cancellation()?;return crate::close_original_retained_step(cx,metadata_demand,|grant|{let turn=retiring.return_alias_step(witness,grant);RetainedWorkOutcome{result:turn.result.map_err(cancel_refusal),work:turn.work}}).map(pending);
+   if retiring.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.cancel_retiring.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
+   let witness=parent.cancellation()?;return crate::close_original_retained_step(cx,metadata_demand,|grant|{let turn=retiring.return_alias_step(witness,grant);RetainedWorkOutcome::<_,ValueError>{result:turn.result.map_err(cancel_refusal),work:turn.work}}).map(pending);
   }
   let upstream=self.upstream.as_mut().ok_or_else(||ValueError::invariant("upstream absent"))?;
-  if upstream.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.upstream.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(metadata())),work:1}});}
+  if upstream.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.upstream.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(metadata())),work:1}});}
   upstream.close_step(parent,cx).map(pending)
  }
 }
@@ -60,7 +60,7 @@ impl Drop for OriginalCallerChildSource{fn drop(&mut self){assert!(std::thread::
 #[derive(Debug)]
 pub struct OriginalChildTurnReturn<T>{original:ManuallyDrop<Option<(Result<T,OriginalTurnFailure>,Option<ValueError>)>>,before:RetainedCloneProgress,after:RetainedCloneProgress}
 impl<T> OriginalChildTurnReturn<T>{pub fn raw_progress(&self)->Result<RetainedCloneProgress,ValueError>{delta(self.before,self.after)}pub fn original_receiving(&self)->(RetainedCloneProgress,RetainedCloneProgress){(self.before,self.after)}pub fn admitted(&self)->Option<&Result<T,OriginalTurnFailure>>{let(original,refusal)=self.original.as_ref()?;refusal.is_none().then_some(original)}pub fn retained_original(&self)->Option<&Result<T,OriginalTurnFailure>>{self.original.as_ref().map(|(original,_)|original)}pub fn receipt_refusal(&self)->Option<&ValueError>{self.original.as_ref().and_then(|(_,refusal)|refusal.as_ref())}pub fn into_original(mut self)->Result<Result<T,OriginalTurnFailure>,Self>{if self.receipt_refusal().is_some(){return Err(self)}Ok(self.original.take().expect("original child return extracted once").0)}pub fn terminal_is_empty(&self)->bool{self.original.is_none()}}
-impl<T:RetireOwned> RetireOwned for OriginalChildTurnReturn<T>{fn retirement(mut self)->Box<dyn RetirementCursor>{self.original.take().retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.original.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}
+impl<T:RetireOwned> RetireOwned for OriginalChildTurnReturn<T>{type RetirementCursor=<Option<(Result<T,OriginalTurnFailure>,Option<ValueError>)> as RetireOwned>::RetirementCursor;fn retirement_seed(mut self)->Self::RetirementCursor{self.original.take().retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{self.original.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}
 impl<T> Drop for OriginalChildTurnReturn<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original child semantic return reached Drop before admitted extraction or whole granted retirement")}}
 fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 fn narrowed_ceiling(cx:&StepContext<'_>,requested:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{let posted=delta(cx.reserved_return_progress,cx.retained_progress())?;if !posted.fits(cx.retained){return Err(refused("original child parent recipient already exceeds its incoming ceiling"))}let remaining=cx.retained_grant();let add=|paid:usize,wanted:usize,available:usize|paid.checked_add(wanted.min(available)).ok_or_else(||refused("original child loan ceiling overflow"));Ok(RetainedCloneGrant{maximum_items:add(posted.copied_items,requested.maximum_items,remaining.maximum_items)?,maximum_copy_bytes:add(posted.copied_bytes,requested.maximum_copy_bytes,remaining.maximum_copy_bytes)?,maximum_capacity_bytes:add(posted.retained_capacity_bytes,requested.maximum_capacity_bytes,remaining.maximum_capacity_bytes)?,maximum_release_bytes:add(posted.released_bytes,requested.maximum_release_bytes,remaining.maximum_release_bytes)?,maximum_depth:remaining.maximum_depth.min(requested.maximum_depth)})}

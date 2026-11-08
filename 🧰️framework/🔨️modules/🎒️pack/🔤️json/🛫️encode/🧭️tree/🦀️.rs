@@ -1,10 +1,14 @@
 //! 🧭️ Native ordinal canonical traversal retains real root-backed projections and paged frontier ownership.
 use crate::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText, ArtifactCanonicalJsonScalarBytes as ScalarBytes, canonical_escaped_byte};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, paged::{PagedMap, PagedUtf8}, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedOwnedProjection}};
-use semio_framework_value_persistent::list::PagedList;
+use semio_framework_value_persistent::list::{PagedList,PagedListReleaseFailure,PagedListReleaseOutcome,PagedListReservationFailure,PagedListReservationOutcome};
 use std::mem::size_of;
 
 fn refusal(reason: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, reason) }
+pub(super) fn work_u64(work:u128)->Result<u64,ValueError>{u64::try_from(work).map_err(|_|refusal("canonical native traversal work exceeds its u64 receipt"))}
+pub(super) fn settled<V>(poll:semio_framework_value::OriginalRetirementPoll<V>)->Result<(V,u128),ValueError>{match poll{
+ semio_framework_value::RetainedWorkPoll::Pending{..}=>Err(refusal("canonical child close left its producer reply pending inside the step")),
+ semio_framework_value::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>Ok((step,turn.work)),Err(failure)=>{let progress=failure.retained_progress();let(primary,work,receipt,..)=failure.into_parts();Err(primary.or(work).or(receipt).unwrap_or_else(||refusal("canonical child close refused")).with_retained_progress(progress))}}}}
 #[cfg(test)]
 #[path="📋️persistent/🧪️tests/🦀️.rs"]
 mod persistent_tests;
@@ -435,7 +439,7 @@ impl ArtifactCanonicalJsonTreeCursor {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if self.pending.is_some() {
             if self.closing { return self.pending_closure_demand(); }
-            if !self.frames.has_reserved_slot() { return Ok(RetirementDemand { capacity_bytes: self.frames.next_allocation_bytes().map_err(ValueError::from)?, depth: 1, ..Default::default() }); }
+            if !self.frames.has_reserved_slot() { return Ok(RetirementDemand { copy_bytes: self.frames.next_reserve_copy_byte_demand().map_err(ValueError::from)?, capacity_bytes: self.frames.next_allocation_bytes().map_err(ValueError::from)?, depth: self.frames.next_reserve_depth_demand().map_err(ValueError::from)?.max(1), ..Default::default() }); }
             return Ok(RetirementDemand { depth: 1, ..Default::default() });
         }
         if let Some(frame) = self.frames.last() {
@@ -460,23 +464,21 @@ impl ArtifactCanonicalJsonTreeCursor {
     pub fn terminal_is_empty(&self) -> bool { self.pending.is_none() && self.frames.is_empty() && self.frames.allocated_bytes() == 0 }
     pub fn is_complete(&self) -> bool { !self.closing && self.terminal_is_empty() }
 
-    pub fn advance(&mut self, output: &mut [u8], grant: RetainedCloneGrant) -> Result<ArtifactCanonicalJsonTreeStep, ValueError> {
-        self.last_turn_work=0;
+    pub fn advance(&mut self, output: &mut [u8], effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<ArtifactCanonicalJsonTreeStep, ValueError> {
+        let grant=effect.grant();self.last_turn_work=0;let started=effect.performed_work();
         if self.terminal_is_empty() { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Complete(Default::default()), written_bytes: 0 }); }
         if grant.maximum_items == 0||grant.maximum_depth==0 { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
-        let demand = self.next_demand().map_err(|error|{self.last_turn_work=1;error})?;
+        let demand = self.next_demand()?;
         if !Self::admitted(demand, grant) { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
-        self.last_turn_work=1;
         let mut progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         let mut written_bytes = 0;
         if self.pending.is_some() {
             if self.closing {
-                if let Some(pending)=self.pending.as_mut().filter(|pending|!pending.terminal_is_empty()) { let turn=pending.close_step(grant);self.last_turn_work=turn.work;progress=turn.result?.progress(); }
+                if let Some(pending)=self.pending.as_mut().filter(|pending|!pending.terminal_is_empty()) { let (step,work)=settled(pending.close_step(effect))?;self.last_turn_work=work_u64(work)?;progress=step.progress(); }
                 else { self.pending = None; progress.copied_bytes = demand.copy_bytes; }
             } else if !self.frames.has_reserved_slot() {
-                let step=match self.frames.reserve_one(grant.maximum_capacity_bytes){Ok(step)=>step,Err(error)=>{self.last_turn_work=error.work;return Err(ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}));}};
-                self.last_turn_work=step.work;
-                progress=RetainedCloneProgress{copied_items:usize::from(step.progressed),retained_capacity_bytes:step.allocated_bytes,..Default::default()};
+                let turn=self.frames.reserve_one(effect);self.last_turn_work=work_u64(turn.work)?;
+                progress=match turn.result{Ok(PagedListReservationOutcome::Denied)=>Default::default(),Ok(PagedListReservationOutcome::Ready(step))=>RetainedCloneProgress{copied_items:usize::from(step.progressed),copied_bytes:step.placed_bytes,retained_capacity_bytes:step.allocated_bytes,..Default::default()},Err(PagedListReservationFailure::Work(error))=>return Err(error),Err(PagedListReservationFailure::Allocation{error,..})=>{let progress=RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()};return Err(ValueError::from(error.refusal()).with_retained_progress(progress))}};
             } else {
                 let frame = NativeFrame::new(self.pending.take().unwrap());
                 self.frames.push_reserved(frame).unwrap_or_else(|_| unreachable!("canonical frontier reserved its exact native slot"));
@@ -485,7 +487,7 @@ impl ArtifactCanonicalJsonTreeCursor {
         } else if let Some(frame) = self.frames.last_mut() {
             if self.closing || frame.phase == Phase::Complete {
                 if frame.owner.terminal_is_empty() { drop(self.frames.pop().unwrap()); progress.copied_bytes = demand.copy_bytes; }
-                else { let turn=frame.owner.close_step(grant);self.last_turn_work=turn.work;progress=turn.result?.progress(); }
+                else { let (step,work)=settled(frame.owner.close_step(effect))?;self.last_turn_work=work_u64(work)?;progress=step.progress(); }
             } else if let Some(written) = flat_run(frame, output, grant)? {
                 progress.copied_bytes = written;
                 written_bytes = written;
@@ -505,8 +507,8 @@ impl ArtifactCanonicalJsonTreeCursor {
                     Phase::ArrayChild | Phase::ObjectChild | Phase::ArrayNext if frame.phase != Phase::ArrayNext || frame.ordinal == 0 && frame.ordinal < frame.length => {
                         let ordinal = frame.ordinal;
                         frame.owner.borrow()?.get().canonical_tree_child(ordinal)?;
-                        let turn = frame.owner.project(ordinal, |node| node.canonical_tree_child(ordinal).expect("checked immutable native canonical child"), grant);
-                        self.last_turn_work = turn.work;
+                        let turn = frame.owner.project(ordinal, |node| node.canonical_tree_child(ordinal).expect("checked immutable native canonical child"), effect);
+                        self.last_turn_work = work_u64(turn.work)?;
                         let (child, alias_progress) = turn.result?;
                         self.pending = Some(child);
                         progress = alias_progress;
@@ -549,13 +551,15 @@ impl ArtifactCanonicalJsonTreeCursor {
                 if let Some(byte) = byte { output[0] = byte; written_bytes = 1; }
             }
         } else {
-            let step = self.frames.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;
-            progress.released_bytes = step.released_allocation_bytes;
+            let turn=self.frames.release_empty_page(effect);self.last_turn_work=work_u64(turn.work)?;
+            match turn.result{Ok(PagedListReleaseOutcome::Denied)=>progress=Default::default(),Ok(PagedListReleaseOutcome::Ready(step))=>progress.released_bytes=step.released_allocation_bytes,Err(PagedListReleaseFailure::Work(error))=>return Err(error),Err(PagedListReleaseFailure::Release(error))=>return Err(ValueError::from(error))}
         }
+        let done=effect.performed_work().saturating_sub(started);
+        if done==0&&progress!=RetainedCloneProgress::default() { if !effect.performed(1)? { return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"canonical traversal unit exceeded its original work")) } self.last_turn_work=1; } else { self.last_turn_work=work_u64(done)?; }
         Ok(ArtifactCanonicalJsonTreeStep { ownership: if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }, written_bytes })
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.begin_close(); Ok(self.advance(&mut [], grant)?.ownership) }
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> { self.begin_close(); Ok(self.advance(&mut [], effect)?.ownership) }
 }
 impl Drop for ArtifactCanonicalJsonTreeCursor { fn drop(&mut self) { assert!(self.terminal_is_empty() || std::thread::panicking(), "canonical native traversal requires exact frontier closure"); } }
 

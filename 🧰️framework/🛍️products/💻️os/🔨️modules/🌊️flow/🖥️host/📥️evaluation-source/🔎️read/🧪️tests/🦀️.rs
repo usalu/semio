@@ -94,3 +94,17 @@ fn flow_source_read_tick_store_read_keeps_exact_original_issuer_and_full_copy_cl
 }
 
 fn finish_fixture_geometry(session:&mut FlowEvalSession){session.begin_retain_preview_meshes(Vec::new()).unwrap_or_else(|_|unreachable!());for _ in 0..100000{if session.preview_retention_terminal_is_empty(){break}let d=session.next_preview_retention_demands(512).unwrap();session.retain_preview_meshes_step(policy(d)).unwrap();}assert!(session.baseline_capture_terminal_is_empty());}
+
+#[test]
+fn flow_source_read_owner_births_its_exact_allocation_and_releases_it_on_close(){
+ let cancel=root_cancel_token();let(mut context,_)=StepContextOwner::new(OperationId(19),Generation(9),RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:StepContextOwner::birth_bytes(),maximum_depth:1,..Default::default()}).unwrap();let mut sequence=0;
+ let birth=FlowSourceReadOwner::birth_demand();assert_eq!(birth.capacity_bytes,size_of::<FlowSourceRead>());
+ for denied in [RetainedCloneGrant{maximum_items:0,..policy(birth)},RetainedCloneGrant{maximum_capacity_bytes:birth.capacity_bytes-1,..policy(birth)},RetainedCloneGrant{maximum_depth:0,..policy(birth)}]{let mut receipt=Default::default();let mut cx=context.context(StepBudget::new(1,u64::MAX,denied),cancel.clone(),||Some(1),&mut sequence,&mut receipt).unwrap();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||FlowSourceReadOwner::admit([1;32],&mut cx));assert!(result.unwrap().is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),Default::default());}
+ let mut receipt=Default::default();let mut cx=context.context(StepBudget::new(1,u64::MAX,policy(birth)),cancel.clone(),||Some(1),&mut sequence,&mut receipt).unwrap();
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||FlowSourceReadOwner::admit([1;32],&mut cx));let mut owner=result.unwrap().expect("one admitted item births the owner");let p=cx.retained_progress();
+ assert_eq!(p,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:birth.capacity_bytes,..Default::default()});assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,0));
+ let(mut born,mut freed)=(heap.requested_bytes,0);owner.begin_close();
+ for _ in 0..250000{if owner.terminal_is_empty(){break}let grant=policy(owner.next_close_demands(512).unwrap());let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant));let p=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert_eq!(p,owner.step_progress());born+=heap.requested_bytes;freed+=heap.released_bytes;}
+ assert!(owner.terminal_is_empty());assert_eq!(born,freed);assert!(freed>=birth.capacity_bytes);
+ drop(owner);context.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:StepContextOwner::birth_bytes(),maximum_depth:1,..Default::default()});assert!(context.terminal_is_empty());
+}

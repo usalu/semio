@@ -3,6 +3,8 @@
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
 pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,retirement};
+#[cfg(test)]
+pub use semio_framework_value_retirement::retirement::RetireOwned;
 pub use semio_framework_value_paged_list::list;
 pub use semio_framework_value_native_encoding::{native_encoding,NativeEncodeControl};
 pub use semio_framework_value_native_decoding::{native_decoding,NativeDecodeControl};
@@ -13,6 +15,9 @@ pub use paged_text::*;
 use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
+#[cfg(test)]
+#[path="../../🧪️tests/effect.rs"]
+pub(crate) mod eff;
 #[cfg(test)]
 #[path="../../🧪️tests/native-rig.rs"]
 mod staged_rig;

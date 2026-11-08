@@ -323,7 +323,7 @@ pub async fn settle_with_items(app: &mut Puzzle3dApp, maximum_items: usize) -> P
         }
         host_turn(app, maximum_items, &mut settled).await;
     }
-    panic!("puzzle3d app never quiesced: pending typed operations outlived the settle budget [DEBUG] {}",app.typed_operation_diagnostic());
+    panic!("puzzle3d app never quiesced: pending typed operations outlived the settle budget: {}",app.typed_operation_diagnostic());
 }
 
 /// 🔁️ ONE host continuation turn — the unit [`settle_with_items`] repeats — folding what it forwards

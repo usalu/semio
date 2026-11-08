@@ -112,7 +112,7 @@ fn recursive_replacement_case<'a>(vectors: &'a Value, id: &str) -> &'a Value {
 fn close_recursive_member_fixture(member: &mut RecursiveTestMembers) {
     let grant=COMPOSITION_MAINTENANCE_GRANT;
     for _ in 0..65_536 {
-        let step = member.close_owned_step(grant).expect("recursive fixture member closes under its exact grant");
+        let step = member.close_owned_step_cold(grant).expect("recursive fixture member closes under its exact grant");
         assert!(step.progress().fits(grant));
         if matches!(step, store::RetainedCloneStep::Complete(_)) {
             assert!(member.close_owned_terminal_is_empty());
@@ -125,7 +125,7 @@ fn close_recursive_member_fixture(member: &mut RecursiveTestMembers) {
 fn close_recursive_parent_fixture(store: &mut store::ArtifactStore<ComposedParentSnapshot, RecursiveFixtureMutation>) {
     let grant=COMPOSITION_MAINTENANCE_GRANT;
     for _ in 0..65_536 {
-        let step = store.close_owned_step(grant).expect("recursive archive parent closes under its exact grant");
+        let step = store.close_owned_step_cold(grant).expect("recursive archive parent closes under its exact grant");
         assert!(step.progress().fits(grant));
         if matches!(step, store::RetainedCloneStep::Complete(_)) {
             assert!(store.close_owned_terminal_is_empty());

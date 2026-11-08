@@ -39,3 +39,7 @@ path = "../../♻️retirement/🧪️tests/🦀️.rs"
 [[test]]
 name = "action-work"
 path = "../../🧪️tests/🥣️action/🦀️.rs"
+
+[[test]]
+name = "effect-settlement"
+path = "../../🧪️tests/🎟️effect/🦀️.rs"

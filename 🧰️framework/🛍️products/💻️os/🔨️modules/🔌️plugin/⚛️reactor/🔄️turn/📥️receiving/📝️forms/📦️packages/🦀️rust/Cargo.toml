@@ -35,4 +35,4 @@ semio-plugin-reactor-patches = { path = "../../../../../🩹️patches/📦️pa
 semio-plugin-actor-host = { path = "../../../../../../🌐host/📦️packages/🦀️rust" }
 semio_ui_runtime = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-ui-runtime" }
 semio_ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
-semio-framework-plugin-reactor-receiving-source = { path = "../../../🎟️source/📦️packages/🦀️rust" }
+semio-plugin-reactor-receiving-source = { path = "../../../🎟️source/📦️packages/🦀️rust" }

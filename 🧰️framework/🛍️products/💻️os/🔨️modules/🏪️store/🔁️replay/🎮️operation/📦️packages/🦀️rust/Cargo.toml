@@ -38,6 +38,7 @@ semio-os-store-projection = { path = "../../../../🎞️projection/🧬️schem
 semio-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
+semio-framework-value-original-vector = { path = "../../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️original-vector/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-projection = { path = "../../../../../../../../🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }

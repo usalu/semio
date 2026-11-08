@@ -221,9 +221,9 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         if self.constructor.has_constructor_receipt(){return Ok(PluginLifecycleStep::AwaitingInput{reason:"original constructor receipt awaits its phase recipient"})}
         if self.original_controller_close.as_ref().is_none_or(|owner|(owner.terminal)(&self.app))&&self.constructor.constructor_terminal_is_empty()&&self.close_ladder_quoted_retirement_selected(){let step=self.close_ladder_step(cx,loan)?;return Ok(PluginLifecycleStep::retained(step,self.close_terminal_is_empty()))}
         let demand=self.close_retirement_demands(loan.maximum_copy_bytes)?;
+        if self.original_controller_close.as_ref().is_none_or(|owner|(owner.terminal)(&self.app))&&!self.constructor.constructor_terminal_is_empty(){return semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx,loan,demand,|_,effect|{self.stores.close_store_constructor_unit(&mut self.constructor, effect)?;let progress=self.constructor.constructor_receipt().map_or(Default::default(),|(_,_,_,progress)|*progress);self.constructor.take_constructor_receipt();Ok((PluginLifecycleStep::Progress(progress),false))})}
         semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
             if let Some(owner)=self.original_controller_close.as_ref().filter(|owner|!(owner.terminal)(&self.app)){let before=same.retained_progress();(owner.step)(&mut self.app,same)?;let p=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,same.retained_progress())?;return Ok((PluginLifecycleStep::Progress(p),false))}
-            if !self.constructor.constructor_terminal_is_empty(){self.stores.close_store_constructor_unit(&mut self.constructor, grant)?;let progress=self.constructor.constructor_receipt().map_or(Default::default(),|(_,_,_,progress)|*progress);self.constructor.take_constructor_receipt();return Ok((PluginLifecycleStep::Progress(progress),false))}
             let step=self.close_ladder_step(same,grant)?;let terminal=self.close_terminal_is_empty();Ok((PluginLifecycleStep::retained(step,terminal),terminal))
         })
     }
@@ -261,7 +261,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         let mut retained=cx.retained_grant();if cx.should_yield(){return Ok(())}
         if self.interaction.local_interaction_query_receipt.is_some(){return Ok(())}
         if self.constructor.has_constructor_receipt() { return Ok(()); }
-        if self.constructor.store_constructor_is_pending() { ({ let __a0 = semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.preparation,retained); self.stores.drive_store_constructor_unit(&mut self.constructor, __a0) })?; return Ok(()); }
+        if self.constructor.store_constructor_is_pending() { ({ let __a0 = semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.preparation,retained); self.stores.drive_store_constructor_unit(&mut self.constructor, cx, __a0) })?; return Ok(()); }
         if InstanceExtensions::holds_receipt(&self.time_travel, &self.tool_runs) || (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index|self.tools.tool_operations.entry(index).is_some_and(|(_,owner)|owner.publication_ownership_progress.is_some()||owner.original_retirement_receipt.is_some())){return Ok(());}
         if !self.pending.reserved_commits.is_empty() && self.pending.reserved_commit_outcome.is_none() {
             self.command_ctx().step_framework_reserved_commit(cx).await?;
@@ -409,11 +409,11 @@ let operations=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter_map(|index| {
         Ok(demand)
     }
 
-    fn take_typed_operation_result_page(&mut self, receiver: u32,grant:RetainedCloneGrant) -> Result<(Option<TypedOperationResultPage> ,RetainedCloneProgress),Fault>{
-        let selected = self.selected_typed_result_page(receiver);
+    fn take_typed_operation_result_page(&mut self, receiver: u32,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<TypedOperationResultPage> ,RetainedCloneProgress),Fault>{
+        let grant=effect.grant();let selected = self.selected_typed_result_page(receiver);
         let Some((index,operation_id))=selected else{return Ok((None,Default::default()))};let demand=self.typed_operation_result_page_demands(receiver)?;
         if !plugin_turn_admitted(demand,grant)?{return Ok((None,Default::default()))}
-        let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-std::mem::size_of::<usize>(),..grant};let(page,mut progress)=self.tools.tool_operations.get_mut(operation_id).expect("selected result owner remains mounted").take_result_page(child)?;
+        let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-std::mem::size_of::<usize>(),..grant};let(page,mut progress)=self.tools.tool_operations.get_mut(operation_id).expect("selected result owner remains mounted").take_result_page(&mut effect.nested(child))?;
         if page.is_some(){self.tools.typed_result_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
         progress.copied_bytes+=std::mem::size_of::<usize>()
     ;}Ok((page,progress))
@@ -814,19 +814,19 @@ let operations=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter_map(|index| {
     fn receive_render_work_request(&mut self,body_key:&str,request:&mut Option<semio_framework::action_staging::StagedFormRequest>,view:&ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,semio_framework_job::OriginalTurnFailure>{self.receive_render_request(body_key,request,view,cx)}
     fn close_render_work_request(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{let grant=cx.retained_grant();cx.with_original_retirement(|cx|{self.pending.close_render_failure(cx,grant).map_err(semio_framework_job::OriginalTurnFailure::from)?;Ok(self.pending.render_failure_terminal_is_empty().then_some(true))})}
 
-    async fn window_engagements(&mut self, view_state: &ViewModel) -> HashMap<String, WindowEngagement> { self.window_engagements(view_state).await }
+    async fn window_engagements(&mut self, view_state: &ViewModel) -> HashMap<String, WindowEngagement> { self.render_ctx().window_engagements(view_state).await }
 
-    async fn window_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> { self.window_measures(view_state).await }
+    async fn window_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> { self.render_ctx().window_measures(view_state).await }
 
-    async fn tool_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> { self.tool_measures(view_state).await }
+    async fn tool_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> { self.render_ctx().tool_measures(view_state).await }
 
     async fn app_catalogue_json(&mut self) -> String {
         A::app_catalogue_json().await
     }
 
-    async fn pending_effects(&mut self, view: Option<&ViewModel>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Vec<Effect>, Fault> { self.pending_effects(view, cx).await }
+    async fn pending_effects(&mut self, view: Option<&ViewModel>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Vec<Effect>, Fault> { self.render_ctx().pending_effects(view, cx).await }
 
-    async fn context_menu(&mut self, request: &ContextMenuRequest, view_state: &ViewModel) -> Vec<ContextMenuItemSpec> { self.context_menu(request, view_state).await }
+    async fn context_menu(&mut self, request: &ContextMenuRequest, view_state: &ViewModel) -> Vec<ContextMenuItemSpec> { self.render_ctx().context_menu(request, view_state).await }
 
     async fn produce_media(&mut self, port: &str, owner: &mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<MediaArtifact>,semio_plugin_decl_app::MediaArtifactOperationFailure> { self.produce_media(port, owner, cx).await }
 
@@ -894,7 +894,7 @@ let operations=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter_map(|index| {
         self.media.cancel_owned_media_export(handle).await
     }
 
-    async fn retain_media_export_result(&mut self,handle:semio_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,source:&mut Option<ArtifactMediaExportPoll>,status:&mut Option<semio_plugin_decl_media::ArtifactMediaExportPublishedStatus>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> { self.retain_media_export_result(handle, source, status, cx).await }
+    async fn retain_media_export_result(&mut self,handle:semio_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,source:&mut Option<ArtifactMediaExportPoll>,status:&mut Option<semio_plugin_decl_media::ArtifactMediaExportPublishedStatus>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> { self.media.retain_media_export_result(handle, source, status, cx).await }
 
     async fn take_media_export_chunk(&mut self,handle:semio_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> { self.media.take_media_export_chunk(handle, receiver, terminal, cx).await }
 

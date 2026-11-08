@@ -49,12 +49,57 @@ fn push<T: ToValue + ?Sized>(fields: &mut Fields, name: &str, value: &T, c: &mut
     DslValue::push_encoding_controlled(fields.get_mut(), name, value, c)?;
     c.step()
 }
+struct StandaloneWork;
+impl semio_framework_value::native_decoding::OriginalWorkRecipient for StandaloneWork {
+    type Context<'turn, 'source> = () where 'source: 'turn;
+    fn validate_context<'turn, 'source>(&self, _: &()) -> Result<(), ValueError> where 'source: 'turn { Ok(()) }
+    fn source_turn<'turn, 'source>(&self, _: &()) -> Option<semio_framework_value::native_decoding::OriginalSourceTurnIdentity> where 'source: 'turn { None }
+    fn admits<'reply, 'turn, 'source>(&mut self, _: &mut (), quote: semio_framework_value::native_decoding::OriginalWorkQuote<'reply>, _: u64, _: u64) -> semio_framework_value::native_decoding::OriginalWorkQuoteComplete<'reply> where 'source: 'turn { quote.complete(Ok(true)) }
+    fn settle_partial<'reply, 'turn, 'source>(&mut self, _: &mut (), check: semio_framework_value::native_decoding::OriginalWorkPartialCheck<'reply>) -> semio_framework_value::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source: 'turn { check.complete(Ok(())) }
+    fn recover_partial<'reply, 'turn, 'source>(&mut self, _: &mut (), check: semio_framework_value::native_decoding::OriginalWorkPartialCheck<'reply>) -> semio_framework_value::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source: 'turn { check.pending() }
+}
+/// 🗑️ Drops a decoded value outside any caller turn by driving its controlled retirement under a local, unconstrained Work action.
 pub(super) fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T) {
     use semio_framework_value::retained_clone::RetainedCloneGrant;
+    use semio_framework_value::retained_clone::{OriginalWork, OriginalWorkSink};
+    use semio_framework_value::native_encoding::OriginalWorkAuthority;
     let mut cursor = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|_| panic!("diagnostic owner requires controlled retirement"));
     while !cursor.terminal_is_empty() {
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65536, maximum_capacity_bytes: cursor.next_capacity_byte_demand(65536).expect("diagnostic retirement capacity"), maximum_release_bytes: cursor.next_release_byte_demand().expect("diagnostic retirement release"), maximum_depth: cursor.next_depth_demand().expect("diagnostic retirement depth") };
-        let step = cursor.step(grant).expect("diagnostic retirement respects independent grants");
+        let maximum = cursor.next_computational_work(0).expect("diagnostic retirement work quote");
+        let mut authority = OriginalWorkAuthority::new(StandaloneWork);
+        let mut actual = None;
+        let step = authority.with_loan(&mut (), |loan| {
+            let mut loan = loan.reborrow();
+            let mut work = OriginalWork::empty();
+            work.recipient = Some(&mut loan);
+            let mut action = None;
+            let mut proof = None;
+            assert_eq!(work.prepare_for_action(maximum, &mut action).expect("diagnostic retirement work admission"), Some(true));
+            let mut receipt = None;
+            work.issue_performed_for_action(action, &mut receipt).expect("diagnostic retirement receipt");
+            let poll = {
+                let mut effect = semio_framework_value::RetainedAllocationEffect::new(grant, maximum, &mut actual, receipt.as_mut().expect("diagnostic retirement receipt issued"));
+                cursor.step(&mut effect)
+            };
+            let performed = OriginalWorkSink::observed_work(receipt.as_ref().expect("diagnostic retirement receipt issued"));
+            work.claim_performed_for_action(action, &mut receipt).expect("diagnostic retirement claim");
+            if performed == 0 {
+                work.cancel_for_action(&mut action).expect("diagnostic retirement cancel");
+            } else {
+                let mut partial = None;
+                assert!(work.settle_partial_for_action_into(action, &mut partial).expect("diagnostic retirement partial"));
+                let partial = partial.take().expect("diagnostic retirement partial outcome");
+                assert_eq!(partial.total(), performed);
+                assert!(partial.source_refusal().is_none());
+                assert!(work.commit_for_action(performed, action, &mut proof).expect("diagnostic retirement commit"));
+                work.finish_for_action(&mut proof, &mut action).expect("diagnostic retirement finish");
+            }
+            poll
+        }).expect("diagnostic retirement loan");
+        assert!(!authority.has_live_actions());
+        let semio_framework_value::RetainedWorkPoll::Complete(turn) = step else { panic!("diagnostic retirement stayed pending") };
+        let step = turn.result.unwrap_or_else(|_| panic!("diagnostic retirement respects independent grants"));
         assert!(step.progress().fits(grant), "diagnostic retirement exceeded admitted authority");
     }
 }

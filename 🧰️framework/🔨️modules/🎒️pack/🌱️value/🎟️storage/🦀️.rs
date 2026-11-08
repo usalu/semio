@@ -38,9 +38,9 @@ impl RetainedRecordBodyCursor{
   Ok(match self.next_allocation_bytes()?{Some(bytes)=>RetirementDemand{copy_bytes:0,capacity_bytes:bytes,release_bytes:0,depth:1},None=>Default::default()})
  }
  /// 🎙️ Allocates exactly the quoted backing only after every independent currency is present.
- pub fn admit_record_storage(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,PackRefusal>{
-  let demand=self.record_storage_admission_demands()?;if demand.capacity_bytes==0||!funded(grant,demand){return Ok(Default::default())}
-  let step=self.reserve_allocation(demand.capacity_bytes).map_err(|error|error.fault)?;
+ pub fn admit_record_storage(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,PackRefusal>{
+  let grant=effect.grant();let demand=self.record_storage_admission_demands()?;if demand.capacity_bytes==0||!funded(grant,demand){return Ok(Default::default())}
+  let step=self.reserve_allocation(demand.capacity_bytes,&mut effect.nested(grant)).map_err(|error|error.fault)?;
   Ok(RetainedCloneProgress{copied_items:usize::from(step.progressed),retained_capacity_bytes:step.allocated_bytes,..Default::default()})
  }
  /// 📹️ Quotes one logical transition or one exact physical backing release of the record-body close.
@@ -49,11 +49,12 @@ impl RetainedRecordBodyCursor{
   Ok(RetirementDemand{copy_bytes:0,capacity_bytes:0,release_bytes:self.next_release_allocation_bytes()?.unwrap_or(0),depth:1})
  }
  /// ⏺️ Keeps every owner and phase unchanged on an unfunded grant; a funded turn is exactly one close transition.
- pub fn retire_record_storage(&mut self,maximum_body_bytes:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PackRefusal>{
+ pub fn retire_record_storage(&mut self,maximum_body_bytes:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,PackRefusal>{
+  let grant=effect.grant();
   use semio_framework_pack_format_retained::RetainedPackCloseStep;
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let demand=self.record_storage_retirement_demands(maximum_body_bytes)?;if !funded(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  Ok(match self.close_step(1,demand.release_bytes)?{
+  Ok(match self.close_step(1,demand.release_bytes,&mut effect.nested(grant))?{
    RetainedPackCloseStep::Pending{released_bytes,..}=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}),
    RetainedPackCloseStep::Complete=>RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),
   })

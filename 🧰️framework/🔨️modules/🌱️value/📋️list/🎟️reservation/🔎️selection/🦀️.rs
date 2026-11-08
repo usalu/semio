@@ -80,7 +80,7 @@ impl<T,const N:usize>PagedList<T,N>{
   let mut work=1;let page_items=self.page_items();let page=self.capacity/page_items;
   if selected.target_height>selected.root_height{
    let mut root=Vec::new();work+=1;
-   A::reserve(&mut root,1,actual).map_err(|error|refused(work,0,error.kind,"fixed list metadata allocation failed"))?;
+   A::reserve(&mut root,1,Some(&mut *actual)).map_err(|_|refused(work,0,PagedListRefusalKind::AllocationFailed,"fixed list metadata allocation failed"))?;
    if root.capacity()<1{return Err(refused(work,0,PagedListRefusalKind::InvariantViolated,"fixed list metadata allocation provided no reserved slot"))}
    let bytes=root.capacity()*size_of::<Page<T>>();work+=FANOUT as u64+3;
    let mut children=std::array::from_fn(|_|Vec::new());children[0]=std::mem::take(&mut self.root);
@@ -95,7 +95,7 @@ impl<T,const N:usize>PagedList<T,N>{
    work+=1;
    if link.is_empty(){
     let prior=link.capacity();work+=1;
-    A::reserve(link,1,actual).map_err(|error|refused(work,0,error.kind,"fixed list metadata allocation failed"))?;
+    A::reserve(link,1,Some(&mut *actual)).map_err(|_|refused(work,0,PagedListRefusalKind::AllocationFailed,"fixed list metadata allocation failed"))?;
     if link.capacity()<1{return Err(refused(work,0,PagedListRefusalKind::InvariantViolated,"fixed list metadata allocation provided no reserved slot"))}
     let bytes=if prior==0{link.capacity()*size_of::<Page<T>>()}else{0};
     work+=if height==0{1}else{FANOUT as u64+1};
@@ -112,7 +112,7 @@ impl<T,const N:usize>PagedList<T,N>{
      let count=page_items.min(selected.limit-self.capacity);
      if *slots==0&&size_of::<T>()!=0&&items.capacity()!=0{return Err(refused(work,0,PagedListRefusalKind::InvariantViolated,"fixed list partial allocation requires funded settlement before reservation"))}
      let prior=items.capacity();work+=1;
-     A::reserve(items,count,actual).map_err(|error|refused(work,0,error.kind,"fixed list payload allocation failed"))?;
+     A::reserve(items,count,Some(&mut *actual)).map_err(|_|refused(work,0,PagedListRefusalKind::AllocationFailed,"fixed list payload allocation failed"))?;
      let bytes=if size_of::<T>()==0||prior!=0{0}else{items.capacity()*size_of::<T>()};
      self.allocated=self.allocated.checked_add(bytes).expect("each original layout fits signed addressable ownership");self.reservation_epoch=next_epoch;work+=1;
      if items.capacity()<count{return Err(refused(work,bytes,PagedListRefusalKind::InvariantViolated,"fixed list payload allocation provided fewer reserved slots; owner retained"))}

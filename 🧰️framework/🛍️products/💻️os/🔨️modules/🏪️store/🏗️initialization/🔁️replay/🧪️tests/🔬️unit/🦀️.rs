@@ -171,7 +171,7 @@ fn run_until(init: &mut Initializer, original:&mut ReplayOriginal, grant: Retain
 
 fn retire_store(store: &mut Store) {
     for _ in 0..65_536 {
-        let step = store.close_owned_store_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 1 << 16, maximum_release_bytes: 1 << 16, maximum_depth: 64 }).expect("candidate store closes under owners");
+        let step = store.close_owned_step_cold(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 1 << 16, maximum_release_bytes: 1 << 16, maximum_depth: 64 }).expect("candidate store closes under owners");
         if matches!(step, RetainedCloneStep::Complete(_)) || store.close_owned_store_terminal_is_empty() {
             return;
         }

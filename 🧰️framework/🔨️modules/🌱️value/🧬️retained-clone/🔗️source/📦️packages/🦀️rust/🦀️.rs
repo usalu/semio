@@ -1,7 +1,7 @@
 //! 🔗️ Immutable original source/ref/binding/projection custody owns every native alias.
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
-pub use semio_framework_value_retirement::{OriginalRetirementOutcome,OriginalRetirementPoll,OriginalRetirementControl,RetainedWorkOutcome,ErasedSnapshotRetirement,retirement,factory_ticket_demands,close_factory_ticket,RetirementSelection,select_factory_ticket,owned_retirement_birth_bytes,admit_owned_retirement};
+pub use semio_framework_value_retirement::{retirement_fields_type,retirement_fields_seed,OriginalRetirementOutcome,OriginalRetirementPoll,OriginalRetirementControl,RetainedWorkOutcome,ErasedSnapshotRetirement,retirement,factory_ticket_demands,close_factory_ticket,RetirementSelection,select_factory_ticket,owned_retirement_birth_bytes,admit_owned_retirement};
 pub use semio_framework_value_shared_issuance as shared_issuance;
 use semio_framework_value_retirement::{RetireOwned,retirement::controlled::RetainedOwnerGate};
 use std::{mem::ManuallyDrop,sync::atomic::AtomicU64};
@@ -30,13 +30,13 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
  /// 🪪️ Observes fixed issued-source and projection coordinates without retaining or authorizing access.
  pub fn reference_identity(self)->(u64,usize,usize,usize){(self.lease.get().id,self.projection.parent,self.projection.address,self.projection.discriminator)}
  /// 📏️ Quotes one projected reference and its three source coordinates without accessing the original value.
- pub fn projection_demand<U:?Sized>()->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<RetainedCloneRef<'a,U>>(),depth:1,..Default::default()}}
+ pub fn projection_demand<U:?Sized+'a>()->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<RetainedCloneRef<'a,U>>(),depth:1,..Default::default()}}
  /// ⛽️ Composes a concrete accessor's bounded work with five reference and coordinate writes.
  pub fn projection_work_demand(accessor_work:u64)->Result<u64,ValueError>{accessor_work.checked_add(5).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"projected source work overflow"))}
  /// 🪡️ Invokes a bounded, nonallocating accessor only after the original work and physical grant admit its projected reference. The accessor must report its actual work and have no retained side effects. A borrowed projection copies no owned item.
  pub fn project_paid<U:?Sized,F>(self,discriminator:usize,accessor_work:u64,maximum_work_units:u64,grant:RetainedCloneGrant,project:F)->RetainedWorkOutcome<Option<(RetainedCloneRef<'a,U>,RetainedCloneProgress)>>where F:FnOnce(&'a T)->RetainedWorkOutcome<&'a U>{
   let quoted=match Self::projection_work_demand(accessor_work){Ok(v)=>v,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};let demand=Self::projection_demand::<U>();if maximum_work_units<quoted||!retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(None),work:0}}
-  let turn=project(self.value);let work=turn.work;if work>accessor_work{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"projected accessor exceeded its work quote")),work}}let value=match turn.result{Ok(value)=>value,Err(error)=>return RetainedWorkOutcome{result:Err(error),work}};let result=RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}};RetainedWorkOutcome{result:Ok(Some((result,RetainedCloneProgress{copied_items:0,copied_bytes:demand.copy_bytes,..Default::default()}))),work:work+5}
+  let turn=project(self.value);let work=turn.work;if work>u128::from(accessor_work){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"projected accessor exceeded its work quote")),work}}let value=match turn.result{Ok(value)=>value,Err(error)=>return RetainedWorkOutcome{result:Err(error),work}};let result=RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}};RetainedWorkOutcome{result:Ok(Some((result,RetainedCloneProgress{copied_items:0,copied_bytes:demand.copy_bytes,..Default::default()}))),work:work+5}
  }
  pub fn project<U:?Sized,F>(self,discriminator:usize,project:F)->RetainedCloneRef<'a,U>where F:for<'source>FnOnce(&'source T)->&'source U{let value=project(self.value);RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}}}
  /// 🪤️ Projects through a fallible accessor so an absent original child refuses instead of aborting.
@@ -60,7 +60,7 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
  pub fn binding_work_demand(self,binding:&Option<RetainedCloneBinding>)->Result<u64,ValueError>{if self.binding_demand(binding)?.is_none(){Ok(0)}else{self.lease.duplicate_work_demand()}}
  pub fn bind(self,binding:&mut Option<RetainedCloneBinding>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneProgress>>{let grant=effect.grant();let mut work=0;let result=(||{
   if let Some(expected)=binding{if expected.lease.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"projected source binding already closing"))?.get().id!=self.lease.get().id||expected.projection!=self.projection{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original clone source or projected path changed"));}return Ok(None);}
-  if effect.maximum_work_units()<1||grant.maximum_items==0||grant.maximum_copy_bytes<self.binding_copy_bytes()||grant.maximum_depth==0{return Ok(Some(Default::default()));}
+  if effect.maximum_work_units()<self.lease.duplicate_work_demand()?||grant.maximum_items==0||grant.maximum_copy_bytes<self.binding_copy_bytes()||grant.maximum_depth==0{return Ok(Some(Default::default()));}
   let turn=self.lease.try_duplicate(effect);work=turn.work;let(alias,mut progress)=turn.result?;*binding=Some(RetainedCloneBinding::new(alias,self.projection));progress.copied_bytes=self.binding_copy_bytes();Ok(Some(progress))
  })();RetainedWorkOutcome{result,work}}
 }
@@ -78,7 +78,7 @@ pub struct RetainedCloneBinding{lease:ManuallyDrop<Option<shared_issuance::Seale
 impl RetainedCloneBinding{
  pub fn alias_copy_bytes()->usize{shared_issuance::SealedShared::<RetainedCloneLeaseOwner>::duplicate_copy_bytes()+std::mem::size_of::<Self>()+std::mem::size_of::<Option<Self>>()}
  /// ⛽️ Quotes the actual sealed alias duplication and two binding-state writes.
- pub const fn alias_work_demand()->u64{shared_issuance::SealedShared::<RetainedCloneLeaseOwner>::duplicate_work_demand()+2}
+ pub const fn alias_work_demand()->u64{shared_issuance::SealedShared::<RetainedCloneLeaseOwner>::duplicate_alias_work_demand()+2}
  fn new(lease:shared_issuance::SealedShared<RetainedCloneLeaseOwner>,projection:RetainedCloneProjection)->Self{Self{lease:ManuallyDrop::new(Some(lease)),close:ManuallyDrop::new(None),projection}}
  pub fn close_one(binding:&mut Option<Self>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{
   if binding.is_none(){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})}let grant=effect.grant();let demand=match Self::close_demand(binding,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};let work=match Self::close_work_demand(binding,grant.maximum_copy_bytes){Ok(work)=>work,Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};if effect.maximum_work_units()<work||!retained_clone::retained_clone_grant_admits(grant,demand){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}
@@ -111,7 +111,7 @@ impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthority<A>{
  pub fn next_close_capacity_byte_demand(&self,work:usize)->Result<usize,ValueError>{self.source.next_close_capacity_byte_demand(work)}
  pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.source.next_close_release_byte_demand()}
  pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.source.next_close_depth_demand()}
- pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();self.source.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();self.source.close_step(&mut effect.nested(grant))}
  pub fn next_take_work_demand(&self,body:usize)->Result<u64,ValueError>{self.source.next_take_work_demand(body)}
  pub fn next_take_copy_byte_demand(&self)->Result<usize,ValueError>{self.source.next_take_copy_byte_demand()}
  pub fn next_take_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.source.next_take_capacity_byte_demand(body)}
@@ -157,6 +157,7 @@ impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthorityAdmission<A>{
  pub fn return_work_demand(&self)->Result<u64,ValueError>{self.source.return_work_demand()}
  pub fn next_return_demand(&self)->Result<RetirementDemand,ValueError>{self.source.next_return_demand()}
  /// 🪙️ Writes actual allocator extent into the caller's retained marker before publishing the outcome.
+ pub fn advance_work_demand(&self)->Result<u64,ValueError>{self.source.advance_work_demand()}
  pub fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.source.advance(effect)}
  pub fn take_output(&mut self,output:&mut Option<RetainedCloneBorrowAuthority<A>>,g:RetainedCloneGrant)->RetainedWorkOutcome{if output.is_some(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original authority output place is occupied")),work:0}}let mut source=None;let turn=self.source.take_output(&mut source,g);if let Some(source)=source{*output=Some(RetainedCloneBorrowAuthority{source});}turn}
  pub fn return_inputs(&mut self,output:&mut Option<(A,())>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.source.return_inputs(output,effect)}

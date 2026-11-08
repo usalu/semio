@@ -4,7 +4,7 @@ import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import{spawn}from"node:child_process";
 import Ajv from"ajv";
-import{ensureCargoLockV1,cargoLockMissingPathManifestV1,cargoLockStaleOutputV1,cargoLockMissingCrateV1,CargoLockRefusedV1,type CargoLockOutcomeV1,type CargoLockPortV1,type CargoLockRunV1}from"../🟦️.ts";
+import{ensureCargoLockV1,cargoLockDeduplicatedV1,cargoLockMissingPathManifestV1,cargoLockStaleOutputV1,cargoLockMissingCrateV1,CargoLockRefusedV1,type CargoLockOutcomeV1,type CargoLockPortV1,type CargoLockRunV1}from"../🟦️.ts";
 import schema from"../🧬️schema/🔣️.json";
 import corpus from"./🧫️fixtures/🔣️.json";
 
@@ -101,4 +101,13 @@ test("a path dependency whose manifest does not exist is refused at once as such
  const failure=await ensureCargoLockV1({workspaceRoot:"/w",manifest:"/w/presence/Cargo.toml",receiptDirectory:null,language:"en",offline:false,force:true},port).then(()=>null,error=>error);
  expect(failure).toBeInstanceOf(CargoLockRefusedV1);expect((failure as CargoLockRefusedV1).texts.en).toContain("whose manifest does not exist");expect((failure as CargoLockRefusedV1).texts.de).toContain("Manifest nicht existiert");
  expect(calls.filter(call=>call[0]==="update"&&!call.includes("--offline")).length,"no online update was tried").toBe(0);
+});
+
+test("duplicate lock rows: a repeated registry row keeps one copy, a repeated path row is dropped for regeneration",()=>{
+ const row=(name:string,source?:string,extra="")=>"[[package]]\nname = \""+name+"\"\nversion = \"0.1.0\"\n"+(source?"source = \""+source+"\"\n":"")+extra+"\n";
+ const crates="registry+https://github.com/rust-lang/crates.io-index",head="version = 3\n\n";
+ const clean=head+row("a")+row("serde",crates);expect(cargoLockDeduplicatedV1(clean)).toEqual({text:null,dropped:[]});
+ const result=cargoLockDeduplicatedV1(head+row("a")+row("serde",crates)+row("a",undefined,"dependencies = []\n")+row("serde",crates)+row("b"));
+ expect(result.dropped).toEqual(["a","serde"]);expect(result.text).toBe(head+row("serde",crates)+row("b"));
+ expect(cargoLockDeduplicatedV1(result.text!).text).toBeNull();
 });

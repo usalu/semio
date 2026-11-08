@@ -112,11 +112,12 @@ fn number_row(id: &str, label: &str, value: f64, step: f64, action: &str, field:
 /// 🔘️ A transport button: it carries BOTH the field and the value, because `Trigger::Activate` has no
 /// scalar of its own for the host to merge.
 /// ⏯️ The play/pause button of a pane whose state the panel cannot read: it names no field, and a
-/// `setResultAnimation` that names nothing toggles play/pause on the window it addresses.
-fn toggle_button(id: &str, label: &str, window_id: &str) -> UiAssemblyResult<BuiltNode> {
+/// `setResultAnimation` that names nothing toggles play/pause on the window it addresses. Its accessible
+/// description says the state is unknown and which pane to focus, so a reader never hears a stateless toggle.
+fn toggle_button(id: &str, label: &str, state_unknown: &str, window_id: &str) -> UiAssemblyResult<BuiltNode> {
     let mut args = UiMapBuilder::try_new().ok_or_else(|| error("ui.value.map"))?;
     args.push("windowId".to_owned(), UiValue::Text(ui_text(window_id)?)).map_err(|_| error("ui.value.map.entry"))?;
-    let control = ui::button(ui_label(label)?).icon(ui_text("play")?);
+    let control = ui::button(ui_label(label)?).icon(ui_text("play")?).try_describe(state_unknown).map_err(|_| error("ui.button.description"))?;
     let control = bind(control.try_id(id).map_err(|_| error("ui.button.id"))?, Trigger::Activate, PLAYBACK_ACTION, UiValue::Map(args.finish()))?;
     control.try_build().map_err(|_| error("ui.button"))
 }
@@ -208,7 +209,7 @@ pub fn render(doc: &Fem3dSnapshot, window: Option<&Fem3dResultsWindowConfig>, cl
                     window_id,
                 )
             } else {
-                toggle_button("fem3d-play-results.transport.play", &format!("{} / {}", labels.play.as_str(), labels.pause.as_str()), window_id)
+                toggle_button("fem3d-play-results.transport.play", &format!("{} / {}", labels.play.as_str(), labels.pause.as_str()), labels.focus_results_hint.as_str(), window_id)
             },
             transport_button("fem3d-play-results.transport.forward", &format!("{} +", labels.step.as_str()), "skip-forward", "phaseStep", &format!("{ANIMATION_PHASE_STEP}"), window_id),
         ])?)

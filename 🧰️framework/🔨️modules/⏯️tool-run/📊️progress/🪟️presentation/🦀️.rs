@@ -1,8 +1,8 @@
 //! 🪟️ Captures the original joint presentation under its concrete strong-only issuer.
 use semio_framework_tool_run::{ToolRunProgress,ToolRunIdentity,ToolRunState};
-use semio_framework_tool_run_entities::provenance::ToolRunEntityProvenance;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
-use semio_framework_value_shared_issuance::{SealedShared,SharedIssuer};
+use semio_framework_tool_run_entities::{admit_sealed,duplicate_sealed,provenance::ToolRunEntityProvenance};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedAllocationEffect,RetainedCloneProgress}};
+use semio_framework_value_shared_issuance::SealedShared;
 use std::mem::size_of;
 #[path="🧬️update/🦀️.rs"]
 pub mod update;
@@ -28,12 +28,14 @@ impl ToolRunCapturedView{
 impl ToolRunPresentation{
  pub fn birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<ToolRunPresentationBody>(),capacity_bytes:SealedShared::<ToolRunPresentationBody>::birth_bytes(),depth:1,..Default::default()}}
  pub fn capture_copy_bytes()->usize{size_of::<Self>()}
- pub fn admit(body:ToolRunPresentationBody,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,ToolRunPresentationBody)>{if grant.maximum_copy_bytes<Self::birth_demands().copy_bytes{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original presentation fixed-body publication is not funded"),body));}SealedShared::admit(body,SharedIssuer::owned(),grant).result.map(|(body,mut receipt)|{receipt.copied_bytes=Self::birth_demands().copy_bytes;(Self{body},receipt)})}
- pub fn capture(&self,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{if grant.maximum_items==0||grant.maximum_copy_bytes<Self::capture_copy_bytes()||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original presentation capture is not funded"));}self.body.try_duplicate(grant).result.map(|(body,mut receipt)|{receipt.copied_bytes=Self::capture_copy_bytes();(Self{body},receipt)})}
+ pub fn admit(body:ToolRunPresentationBody,effect:&mut RetainedAllocationEffect<'_>)->Result<(Self,RetainedCloneProgress),(ValueError,ToolRunPresentationBody)>{if effect.grant().maximum_copy_bytes<Self::birth_demands().copy_bytes{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original presentation fixed-body publication is not funded"),body));}admit_sealed(body,effect).map(|(body,mut receipt)|{receipt.copied_bytes=Self::birth_demands().copy_bytes;(Self{body},receipt)})}
+ pub fn capture(&self,effect:&mut RetainedAllocationEffect<'_>)->Result<(Self,RetainedCloneProgress),ValueError>{let grant=effect.grant();if grant.maximum_items==0||grant.maximum_copy_bytes<Self::capture_copy_bytes()||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original presentation capture is not funded"));}duplicate_sealed(&self.body,effect).map(|(body,mut receipt)|{receipt.copied_bytes=Self::capture_copy_bytes();(Self{body},receipt)})}
+}
+impl ToolRunPresentation{
  pub fn body(&self)->&ToolRunPresentationBody{self.body.get()}
  pub fn identity(&self)->usize{self.body.identity()}
  pub fn borrowed_view(&self,identity:ToolRunIdentity,state:ToolRunState)->ToolRunView<'_>{let body=self.body();ToolRunView{tool_id:body.tool_id.get(),identity,state,provisional_entities:body.provenance.entities(),progress:&body.progress,payload:body.payload.as_ref().and_then(|payload|payload.get().borrowed_view(identity))}}
- pub fn capture_view(&self,identity:ToolRunIdentity,state:ToolRunState,grant:RetainedCloneGrant)->Result<(ToolRunCapturedView,RetainedCloneProgress),ValueError>{if grant.maximum_copy_bytes<ToolRunCapturedView::capture_copy_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"captured presentation and scalar envelope handoff is not funded"));}let(presentation,mut receipt)=self.capture(grant)?;receipt.copied_bytes=ToolRunCapturedView::capture_copy_bytes();Ok((ToolRunCapturedView{presentation,identity,state},receipt))}
+ pub fn capture_view(&self,identity:ToolRunIdentity,state:ToolRunState,effect:&mut RetainedAllocationEffect<'_>)->Result<(ToolRunCapturedView,RetainedCloneProgress),ValueError>{if effect.grant().maximum_copy_bytes<ToolRunCapturedView::capture_copy_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"captured presentation and scalar envelope handoff is not funded"));}let(presentation,mut receipt)=self.capture(effect)?;receipt.copied_bytes=ToolRunCapturedView::capture_copy_bytes();Ok((ToolRunCapturedView{presentation,identity,state},receipt))}
 }
 
 #[cfg(test)]

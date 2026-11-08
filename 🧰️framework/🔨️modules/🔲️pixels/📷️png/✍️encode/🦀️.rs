@@ -10,10 +10,12 @@ pub trait PngRasterSource:semio_framework_value::retirement::RetireOwned {fn ras
 impl PngRasterSource for RasterImage {fn raster(&self)->&RasterImage{self}}
 impl PngRasterSource for crate::retirement::RasterLease {fn raster(&self)->&RasterImage{self}}
 #[derive(semio_framework_value::RetireOwned)]
-struct PngEncodeOwners<S:PngRasterSource> {pub image:S,pub bytes:Vec<u8>,encoder:crate::component::deflate::ZlibEncodeCursor}
+#[doc(hidden)]
+pub struct PngEncodeOwners<S:PngRasterSource> {pub image:S,pub bytes:Vec<u8>,encoder:crate::component::deflate::ZlibEncodeCursor}
 
 impl<S:PngRasterSource> semio_framework_value::retirement::RetireOwned for PngEncodeJob<S> {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(PngEncodeOwners {image:self.image,bytes:self.bytes,encoder:self.encoder})}
+    type RetirementCursor=<PngEncodeOwners<S> as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::RetireOwned::retirement_seed(PngEncodeOwners {image:self.image,bytes:self.bytes,encoder:self.encoder})}
     fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.image),deferred_birth_bytes_for(&self.bytes),deferred_birth_bytes_for(&self.encoder)])}
     fn controlled_retirement_supported()->bool{true}
 }

@@ -24,6 +24,8 @@ impl OriginalRetirementFailure{
  /// 📏️ Borrows the enclosing span only when it was explicitly recorded.
  pub fn progress_override(&self)->Option<RetainedCloneProgress>{self.override_progress}
  pub fn retained_progress(&self)->RetainedCloneProgress{self.override_progress.unwrap_or(self.selected)}
+ /// 🧯️ Collapses to the single most fundamental ValueError (primary, work, receipt, allocation, then child) for callers whose contract is a plain ValueError; the retained progress travels with it.
+ pub fn into_value_error(self)->ValueError{let progress=self.retained_progress();let (primary,work,receipt,allocation,child,_)=self.into_parts();primary.or(work).or(receipt).or_else(||child.map(|child|child.into_value_error())).unwrap_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,if allocation.is_some(){"original retirement allocation was refused"}else{"original retirement failed without a cause"})).with_retained_progress(progress)}
 }
 impl From<ValueError> for OriginalRetirementFailure{fn from(error:ValueError)->Self{Self::from_primary(error)}}
 impl From<NativeAllocationRefusal> for OriginalRetirementFailure{fn from(error:NativeAllocationRefusal)->Self{Self::from_allocation_refusal(error)}}

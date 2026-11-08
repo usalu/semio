@@ -95,14 +95,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let work_items = self.framework_reserved_work_items(action, args).await?;
         if CLIPBOARD_ACTION_IDS.contains(&action) {
             let Some(authority)=self.as_dispatch().admit_reserved_emit_producer(action,meta,cx)?else{return Ok(None)};
-            let producer = match self.as_render().build_artifact_reserved_action_job(action, args, raw.clone(), meta, cx).await { Ok(producer) => producer, Err(fault) => { self.tools.finish_reserved_emit_producer(authority); return Err(fault.into()); } };
+            let producer = match self.as_render().build_artifact_reserved_action_job(action, args, raw.clone(), meta, cx).await { Ok(producer) => producer, Err(fault) => { self.tools.finish_reserved_emit_producer(&mut self.pending, authority); return Err(fault.into()); } };
             let mut app_completion = None;
             let job = match producer {
                 Some((job, completion)) => {
                     app_completion = Some(completion);
                     job
                 }
-                None => { self.tools.finish_reserved_emit_producer(authority); return Err(plugin_sdk_fault("clipboard producer has no exact installed reserved builder").into()); },
+                None => { self.tools.finish_reserved_emit_producer(&mut self.pending, authority); return Err(plugin_sdk_fault("clipboard producer has no exact installed reserved builder").into()); },
             };
             return self.as_dispatch().dispatch_reserved_original_producer(action,&raw,decoded_items,job,app_completion.expect("installed clipboard producer owns its original completion"),meta,None,authority,cx).await.map(Some).map_err(Into::into);
         }
@@ -128,12 +128,27 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let Some(mut commit) = self.pending.reserved_commits.pop_front() else {
             return Ok(());
         };
+        if commit.sealed.is_some() {
+            match commit.permit.lease.retire_step(&self.tools.tool_cancellations, cx) {
+                Ok(true) => {
+                    if let Some(Some(outcome)) = commit.sealed.take() {
+                        self.pending.reserved_commit_outcome = Some(outcome);
+                    }
+                }
+                Ok(false) => self.pending.reserved_commits.push_front(commit),
+                Err(failure) => {
+                    self.pending.reserved_commits.push_front(commit);
+                    return Err(failure);
+                }
+            }
+            return Ok(());
+        }
         match self.run_framework_reserved_commit_unit(&mut commit,cx).await {
             Ok(Some(result)) => {
                 let result = self.as_render().finish_recorded(commit.log_generation_before, &commit.action, result).await;
                 let _ = self.tools.typed_completion_outbox.push(TypedOperationCompletionWitness { operation: commit.permit.operation.operation.0, ui_scope: result.ui_scope.clone() });
-                commit.permit.finish();
-                self.pending.reserved_commit_outcome = Some(Ok(result));
+                commit.sealed = Some(Some(Ok(result)));
+                self.pending.reserved_commits.push_front(commit);
             }
             Ok(None) => {
                 commit.applied = commit.applied.saturating_add(1);
@@ -202,7 +217,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 let action = commit.action.clone();
                 if HISTORY_ACTION_IDS.contains(&action.as_str()) {
                     let outcome=self.commit_framework_history_route(&action,commit.args.as_ref(),&commit.meta,&commit.permit,!pins.is_empty(),identity).await;
-                    let result=match outcome{Ok(FrameworkHistoryRouteOutcome::Complete(result))=>result,Ok(FrameworkHistoryRouteOutcome::Pins{changed})=>{commit.stage=FrameworkReservedCommitStage::Repin{pins:Some(pins),publication:None,retirement:Default::default(),changed,closing:!changed};return Ok(None)},Err(error)=>{commit.stage=FrameworkReservedCommitStage::Repin{pins:Some(pins),publication:None,retirement:Default::default(),changed:false,closing:true};return Err(error.into())}};
+                    let result=match outcome{Ok(FrameworkHistoryRouteOutcome::Complete(result))=>result,Ok(FrameworkHistoryRouteOutcome::Pins{changed})=>{commit.stage=FrameworkReservedCommitStage::Repin{pins:Some(pins),publication:None,retirement:Default::default(),resident:Default::default(),changed,closing:!changed};return Ok(None)},Err(error)=>{commit.stage=FrameworkReservedCommitStage::Repin{pins:Some(pins),publication:None,retirement:Default::default(),resident:Default::default(),changed:false,closing:true};return Err(error.into())}};
                     if action == "checkoutCheckpoint" && result.ui_scope != UiDirtyScope::None {
                         let pins = self.child_composition.checkout_cascade_pins(&mut *self.stores)?;
                         if !pins.is_empty() {
@@ -216,7 +231,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     match self.begin_framework_revert_route(commit.args.as_ref(), &commit.meta, identity).await? {
                         Ok(result) => Ok(Some(result)),
                         Err(edit_id) => {
-                            commit.stage = FrameworkReservedCommitStage::Revert { edit_id,command:None,result:None,closing:false };
+                            commit.stage = FrameworkReservedCommitStage::Revert { edit_id,command:None,result:None,resident:Default::default(),closing:false };
                             Ok(None)
                         }
                     }
@@ -230,9 +245,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 commit.stage = FrameworkReservedCommitStage::CheckoutChildren { pins, next: next + 1, result };
                 Ok(None)
             }
-            FrameworkReservedCommitStage::Revert { edit_id,mut command,mut result,mut closing } => {
-                let outcome=self.stores.framework_revert_unit(&edit_id,&mut command,&mut result,&mut closing,cx);
-                commit.stage=FrameworkReservedCommitStage::Revert{edit_id,command,result,closing};
+            FrameworkReservedCommitStage::Revert { edit_id,mut command,mut result,mut resident,mut closing } => {
+                let outcome=self.stores.framework_revert_unit(&edit_id,&mut command,&mut result,&mut resident,&mut closing,cx);
+                commit.stage=FrameworkReservedCommitStage::Revert{edit_id,command,result,resident,closing};
                 match outcome?{
                     None=>Ok(None),
                     Some(true)=>{commit.total=commit.total.saturating_add(1);Ok(None)},
@@ -243,9 +258,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     }
                 }
             }
-            FrameworkReservedCommitStage::Repin{mut pins,mut publication,mut retirement,changed,mut closing}=>{
-                let outcome=self.stores.checkpoint_composition_pins_unit(&mut pins,&mut publication,&mut retirement,&mut closing,changed,4096,cx);
-                commit.stage=FrameworkReservedCommitStage::Repin{pins,publication,retirement,changed,closing};
+            FrameworkReservedCommitStage::Repin{mut pins,mut publication,mut retirement,mut resident,changed,mut closing}=>{
+                let outcome=self.stores.checkpoint_composition_pins_unit(&mut pins,&mut publication,&mut retirement,&mut resident,&mut closing,changed,4096,cx);
+                commit.stage=FrameworkReservedCommitStage::Repin{pins,publication,retirement,resident,changed,closing};
                 if !outcome?{return Ok(None)}
                 self.history.cache=None;
                 if changed{self.tools.record_command(&mut *self.history,&commit.action,ActionKind::History,None,None,Vec::new(),None);}

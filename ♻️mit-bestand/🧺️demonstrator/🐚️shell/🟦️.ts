@@ -1,7 +1,7 @@
 import { composeSpecificOsCatalogV1 } from "@semio-tech/s-dev-catalog-ts";
 import { bootFrameworkOsDev } from "@semio-tech/framework-os-dev";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
-import { DEMONSTRATOR_PANES, DEMONSTRATOR_SHELL_BRANDS, ENTWERFEN_MIT_BESTAND_NAME, demonstratorPaneBootVariants, demonstratorPaneViews } from "../🪧️brand.ts";
+import { DEMONSTRATOR_PANES, DEMONSTRATOR_SHELL_BRANDS, DEMONSTRATOR_NEUTRAL_TITLE, demonstratorPaneBootVariants, demonstratorPaneViews } from "../🪧️brand.ts";
 import { readDemonstratorLocale } from "../🔨️modules/🌐️locale/⚛️.ts";
 const operation = new AbortController();
 window.addEventListener("pagehide", () => operation.abort(), { once: true });
@@ -12,4 +12,4 @@ const mounted = await bootFrameworkOsDev({ variant, admission, catalogRows: comp
 window.addEventListener("pagehide", () => mounted.dispose(), { once: true });
 const shellPane = DEMONSTRATOR_PANES.find((pane) => pane.variant === variant || demonstratorPaneBootVariants(pane.variant).runtime === variant);
 const shellLocale = readDemonstratorLocale();
-document.title = (shellPane !== undefined && shellLocale !== undefined && demonstratorPaneViews(shellLocale).find((view) => view.id === shellPane.id)?.windowTitle) || ENTWERFEN_MIT_BESTAND_NAME;
+document.title = (shellPane !== undefined && shellLocale !== undefined && demonstratorPaneViews(shellLocale).find((view) => view.id === shellPane.id)?.windowTitle) || DEMONSTRATOR_NEUTRAL_TITLE;

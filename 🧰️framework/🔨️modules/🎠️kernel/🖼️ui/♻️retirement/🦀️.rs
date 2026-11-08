@@ -1,9 +1,9 @@
 //! 🧹️ Exact turn-patch retirement keeps every original page and reservation until its quoted close succeeds.
 use super::*;
-use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};
+use semio_framework_value::{RetainedAllocationEffect,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,record_retirement_work};
 
-struct OriginalPatches(UiTurnPatches);
+pub struct OriginalPatches(UiTurnPatches);
 
 impl OriginalPatches {
     fn demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -17,32 +17,39 @@ impl OriginalPatches {
 
 impl RetirementCursor for OriginalPatches {
     fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demand(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
+    fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(1)}
+    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
+        let grant=effect.grant();
         let result=(||{
             let demand=self.demand(grant.maximum_copy_bytes)?;
-            if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetirementStep::BudgetExhausted)}
+            if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth||effect.maximum_work_units()==0{return Ok(RetirementStep::BudgetExhausted)}
             for entry in &mut self.0.entries[..self.0.length]{
-                if !entry.contents.terminal_is_empty(){let step=entry.contents.pending.close_original_step(grant);return Ok(match step.result{Ok(progress)=>RetirementStep::Progress(progress.progress(),step.work),Err(error)=>RetirementStep::Failure(error,step.work)})}
+                if !entry.contents.terminal_is_empty(){let step=entry.contents.pending.close_original_step(grant);return Ok(match step.result{Ok(progress)=>paid(effect,progress.progress(),u64::try_from(step.work).unwrap_or(u64::MAX)),Err(error)=>RetirementStep::Failure(error.into(),step.work)})}
                 if let Some(key)=entry.retirement{
                     let mut arena=match UI_TURN_PATCH_RETIRE_ARENA.try_lock(){Ok(arena)=>arena,Err(std::sync::TryLockError::WouldBlock)=>return Ok(RetirementStep::BudgetExhausted),Err(std::sync::TryLockError::Poisoned(_))=>return Err(invalid("turn patch retirement arena is poisoned"))};
                     if !arena.release_empty(key){return Err(invalid("original turn patch reservation differs from its owner"))}
                     entry.retirement=None;
-                    return Ok(RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1))
+                    return Ok(paid(effect,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1))
                 }
             }
             self.0.length=0;self.0.cursor=0;
-            Ok(RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1))
+            Ok(paid(effect,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1))
         })();
-        result.unwrap_or_else(|error|RetirementStep::Failure(error,0))
+        result.unwrap_or_else(|error|RetirementStep::Failure(error.into(),0))
     }
     fn terminal_is_empty(&self)->bool{self.0.length==0&&self.0.cursor==0}
     fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
 
 impl RetireOwned for UiTurnPatches {
-    fn retirement(self)->Box<dyn RetirementCursor>{Box::new(OriginalPatches(self))}
+    type RetirementCursor=OriginalPatches;
+    fn retirement_seed(self)->OriginalPatches{OriginalPatches(self)}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OriginalPatches>())}
     fn controlled_retirement_supported()->bool{true}
+}
+
+fn paid(effect:&mut RetainedAllocationEffect<'_>,progress:RetainedCloneProgress,work:u64)->RetirementStep{
+    match record_retirement_work(effect,work){Ok(work)=>RetirementStep::Progress(progress,work),Err((error,work))=>RetirementStep::Failure(error.into(),work)}
 }
 
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}

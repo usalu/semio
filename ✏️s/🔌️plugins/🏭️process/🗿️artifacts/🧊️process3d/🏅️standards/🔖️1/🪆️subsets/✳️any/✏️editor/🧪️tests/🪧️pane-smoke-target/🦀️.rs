@@ -3,9 +3,12 @@
 #![recursion_limit = "512"]
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
+semio_plugin::install_fixture_heap_witness!();
 #[path = "../🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_process_process3d_commands::step::add_step;
+use semio_s_artifact_process_process3d_commands::document::set_active_example;
+use semio_s_artifact_process_process3d_kit::PROCESS3D_EXAMPLE_CONCRETE_FOREST;
 use semio_s_artifact_process_process3d_editor::*;
 use semio_s_artifact_process_process3d_modes::windows::workpiece::{self, PROCESS_3D_PLAY_BODY_MAIN};
 use semio_plugin::{artifact_app_laws, EditorApp, PluginApp};

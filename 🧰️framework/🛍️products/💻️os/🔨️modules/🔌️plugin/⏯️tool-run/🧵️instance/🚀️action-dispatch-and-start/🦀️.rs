@@ -135,7 +135,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             Ok(transition) => transition,
             Err(rejection) => return Ok(ToolRunActionOutcome::Rejected(rejection)),
         };
-        let slot = transition.slot.expect("start yields a slot");
+        let Some(slot) = transition.slot else { return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.start-slot"), "the start transition of a tool run yielded no slot")) };
         self.tool_runs.next_run = run.wrapping_add(1);
         for index in replaced.into_iter().rev() {
             let previous = self.tool_runs.entries.remove(index);

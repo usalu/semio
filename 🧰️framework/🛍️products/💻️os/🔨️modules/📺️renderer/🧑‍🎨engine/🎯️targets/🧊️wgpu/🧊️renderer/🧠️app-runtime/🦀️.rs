@@ -141,7 +141,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::PreparedInputAbandonment => {
                 let grant=context.retained_grant();
-                match frame_prepared_abandonment_complete(grant, semio_ui_prepared::PreparedRenderInput::close_abandoned_step(grant),context) {
+                match frame_prepared_effect_abandonment_complete(context, semio_ui_prepared::PreparedRenderInput::next_abandoned_close_demands(grant.maximum_copy_bytes), semio_ui_prepared::PreparedRenderInput::close_abandoned_step) {
                     Ok(true) => cursor.phase = FrameBuildPhase::PreparedJobAbandonment,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure),
@@ -149,7 +149,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::PreparedJobAbandonment => {
                 let grant=context.retained_grant();
-                match frame_prepared_abandonment_complete(grant, semio_ui_prepared::PreparedRenderJob::close_abandoned_step(grant),context) {
+                match frame_prepared_effect_abandonment_complete(context, semio_ui_prepared::PreparedRenderJob::next_abandoned_close_demands(grant.maximum_copy_bytes), semio_ui_prepared::PreparedRenderJob::close_abandoned_step) {
                     Ok(true) => cursor.phase = FrameBuildPhase::PreparedAbandonment,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure),
@@ -157,7 +157,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::PreparedAbandonment => {
                 let grant=context.retained_grant();
-                match frame_prepared_abandonment_complete(grant, semio_ui_prepared::PreparedRenderReceiver::close_abandoned_step(grant),context) {
+                match frame_prepared_effect_abandonment_complete(context, semio_ui_prepared::PreparedRenderReceiver::next_abandoned_close_demands(grant.maximum_copy_bytes), semio_ui_prepared::PreparedRenderReceiver::close_abandoned_step) {
                     Ok(true) => cursor.phase = FrameBuildPhase::PacketAbandonment,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure),
@@ -165,7 +165,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::PacketAbandonment => {
                 let grant=context.retained_grant();
-                match frame_prepared_abandonment_complete(grant, semio_ui_prepared::PreparedRenderPacket::close_abandoned_step(grant),context) {
+                match frame_prepared_effect_abandonment_complete(context, semio_ui_prepared::PreparedRenderPacket::next_abandoned_close_demands(grant.maximum_copy_bytes), semio_ui_prepared::PreparedRenderPacket::close_abandoned_step) {
                     Ok(true) => cursor.phase = FrameBuildPhase::Text,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure),

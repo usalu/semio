@@ -81,7 +81,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         if self.original_emission_receipt.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>>(),depth:1,..Default::default()})}
         let Some((_, operation_id)) = self.tool_operations.next_id_from(0) else { return Ok(RetirementDemand::default()) };
         let operation = self.tool_operations.get(operation_id).ok_or_else(|| plugin_sdk_fault("typed operation owner changed during bounded close"))?;
-        if operation.pending_stream_abort.is_some(){return operation.stream_abort_close_demands(&stores.store,body).map_err(plugin_retirement_fault)}
+        if operation.stream_abort_open(){return operation.stream_abort_close_demands(&stores.store,body).map_err(plugin_retirement_fault)}
         if operation.stage == MountedTypedCommandFullOperationStage::Retiring { return self.typed_operation_retirement_demands(child_composition, operation_id, stores, body); }
         operation.close_demands(body).map_err(plugin_retirement_fault)
     }

@@ -21,6 +21,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+law = ["semio-framework-job/testkit", "semio-os-store-one-item-publication/testkit"]
+
 [dependencies]
 semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-os-store-canonical-json = { path = "../../../🧵️canonical-edit/📦️packages/🦀️rust" }
@@ -33,10 +36,13 @@ semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒�
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-value-original-vector = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️original-vector/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 blake3 = "1.8.2"
 semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

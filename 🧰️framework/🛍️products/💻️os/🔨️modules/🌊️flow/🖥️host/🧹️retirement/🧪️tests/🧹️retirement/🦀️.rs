@@ -280,15 +280,15 @@ fn close(mut session: FlowEvalSession, copy_budget: usize, original_bytes: usize
         if session.terminal_is_empty(){break;}
         let copy=copy_budget;
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:session.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:session.next_close_release_byte_demand().unwrap(),maximum_depth:session.next_close_depth_demand().unwrap()};
-        let (step,heap)=observe(||session.close_step(RetainedCloneGrant{maximum_items:0,..grant}));
+        let (step,heap)=observe(||session.close_step_cold(RetainedCloneGrant{maximum_items:0,..grant}));
         assert!(matches!(step,Ok(Step::Pending{progress}) if progress==RetainedCloneProgress::default()));
         assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         for denied in (grant.maximum_capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(1),..grant}).into_iter().chain((grant.maximum_release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(1),..grant})){
-            let (step,heap)=observe(||session.close_step(denied));
+            let (step,heap)=observe(||session.close_step_cold(denied));
             assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
             assert!(matches!(step,Ok(Step::Pending{progress}) if progress==RetainedCloneProgress::default())||step.is_err());
         }
-        let (step,heap)=observe(||session.close_step(grant));
+        let (step,heap)=observe(||session.close_step_cold(grant));
         let receipt=match step.unwrap(){Step::Pending{progress}|Step::Complete{progress}=>progress,step=>panic!("funded original session close refused: {step:?}")};
         assert!(receipt.fits(grant));assert!(!heap.overflowed);
         assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
@@ -361,12 +361,12 @@ fn original_host_retirement_preserves_whole_source_and_full_close_receipts(){
    let (demands,query_heap)=observe(||(retirement.next_close_capacity_byte_demand(copy).unwrap(),retirement.next_close_release_byte_demand().unwrap(),retirement.next_close_depth_demand().unwrap()));assert_eq!((query_heap.requested_bytes,query_heap.released_bytes),(0,0));
    let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demands.0,maximum_release_bytes:demands.1,maximum_depth:demands.2};
    for _ in 0..law["expected"]["denialRepeats"].as_u64().unwrap(){
-    let(step,heap)=observe(||retirement.close_step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    if grant.maximum_capacity_bytes>0{let(step,heap)=observe(||retirement.close_step(RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
-    if grant.maximum_release_bytes>0{let(step,heap)=observe(||retirement.close_step(RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
-    if grant.maximum_depth>0{let(error,heap)=observe(||retirement.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).unwrap_err());assert_eq!(error.retained_progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+    let(step,heap)=observe(||retirement.close_step_cold(RetainedCloneGrant{maximum_items:0,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    if grant.maximum_capacity_bytes>0{let(step,heap)=observe(||retirement.close_step_cold(RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+    if grant.maximum_release_bytes>0{let(step,heap)=observe(||retirement.close_step_cold(RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+    if grant.maximum_depth>0{let(error,heap)=observe(||retirement.close_step_cold(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).unwrap_err());assert_eq!(error.retained_progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
    }
-   let(step,heap)=observe(||retirement.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;
+   let(step,heap)=observe(||retirement.close_step_cold(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;
    stalled=if step.progress()==RetainedCloneProgress::default(){stalled+1}else{0};assert!(stalled<64,"original Host must progress with fixed positive copy grant");
   }
   assert_eq!(freed,source_bytes+born);let(_,terminal)=observe(||drop(retirement));assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,0));

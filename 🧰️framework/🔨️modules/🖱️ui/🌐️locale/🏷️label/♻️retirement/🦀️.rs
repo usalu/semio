@@ -1,25 +1,28 @@
 //! ♻️ Returns each original locale cell allocation under an exact caller release grant.
 
 use super::{Cow,Locale,LocalizedLabel,Terminology};
-use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
+use semio_framework_value::{RetainedAllocationEffect,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::RetainedCloneProgress,retirement::{RetireOwned,RetirementCursor,RetirementStep,record_retirement_work}};
 use std::mem::ManuallyDrop;
 
-struct LocalizedLabelRetirement{cells:ManuallyDrop<[[Cow<'static,str>;Locale::COUNT];Terminology::COUNT]>,index:usize}
+#[doc(hidden)]
+pub struct LocalizedLabelRetirement{cells:ManuallyDrop<[[Cow<'static,str>;Locale::COUNT];Terminology::COUNT]>,index:usize}
 impl LocalizedLabelRetirement{
  fn new(label:LocalizedLabel)->Self{Self{cells:ManuallyDrop::new(label.cells),index:0}}
  fn current(&self)->Option<&Cow<'static,str>>{if self.terminal_is_empty(){None}else{Some(&self.cells[self.index/Locale::COUNT][self.index%Locale::COUNT])}}
 }
 impl RetirementCursor for LocalizedLabelRetirement{
-    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:match self.current(){Some(Cow::Owned(text))=>text.capacity(),_=>0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
-
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
+ fn next_demand(&self,_body:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{release_bytes:match self.current(){Some(Cow::Owned(text))=>text.capacity(),_=>0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
   if self.terminal_is_empty(){return RetirementStep::Complete(0);}
-  if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}
-  if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"localized label retirement requires one admitted depth"),0);}
-  let bytes=self.next_close_byte_demand().unwrap();
+  let grant=effect.grant();
+  if grant.maximum_items==0||effect.maximum_work_units()==0{return RetirementStep::BudgetExhausted;}
+  if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"localized label retirement requires one admitted depth").into(),0);}
+  let bytes=self.next_close_byte_demand().unwrap_or(0);
   if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}
+  let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};
   self.cells[self.index/Locale::COUNT][self.index%Locale::COUNT]=Cow::Borrowed("");self.index+=1;
-  RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()},1)
+  RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()},work)
  }
  fn terminal_is_empty(&self)->bool{self.index==Terminology::COUNT*Locale::COUNT}
  fn next_close_byte_demand(&self)->Option<usize>{Some(match self.current(){Some(Cow::Owned(text))=>text.capacity(),_=>0})}
@@ -28,7 +31,8 @@ impl RetirementCursor for LocalizedLabelRetirement{
 }
 impl Drop for LocalizedLabelRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"localized label retirement abandoned original cells");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.cells);}}}}
 impl RetireOwned for LocalizedLabel{
- fn retirement(self)->Box<dyn RetirementCursor>{Box::new(LocalizedLabelRetirement::new(self))}
+ type RetirementCursor=LocalizedLabelRetirement;
+ fn retirement_seed(self)->Self::RetirementCursor{LocalizedLabelRetirement::new(self)}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<LocalizedLabelRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }

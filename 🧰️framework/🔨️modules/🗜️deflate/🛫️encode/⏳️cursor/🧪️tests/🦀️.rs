@@ -2,6 +2,10 @@ use super::*;
 use super::retained_encoding::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::io::Write;
 use std::process::{Command, Stdio};
+#[path="../../../../🌱️value/♻️retirement/📦️owner/🧪️work/effect.rs"]
+mod effect;
+/// 🪢️ Runs one cursor action inside one actual original effect; the heap scope belongs to the closure.
+fn eff<R>(grant: RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> R { effect::with_effect(grant, 1 << 20, &mut None, operation) }
 
 fn exact(cursor: &RetainedDeflateEncoder) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: cursor.next_copy_byte_demand().unwrap(), maximum_capacity_bytes: cursor.next_capacity_byte_demand().unwrap(), maximum_release_bytes: 0, maximum_depth: cursor.next_depth_demand().unwrap() }
@@ -13,7 +17,7 @@ fn close(cursor: &mut RetainedDeflateEncoder) {
         if cursor.terminal_is_empty() { return; }
         let demand = cursor.retirement_demands().unwrap();
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        let (step, allocated, released) = super::tests::controlled::observe_backing(|| cursor.close_step(grant).unwrap());
+        let (step, allocated, released) = eff(grant,|effect|super::tests::controlled::observe_backing(||cursor.close_step(effect).unwrap()));
         let receipt = match step { RetainedCloneStep::Progress(receipt) | RetainedCloneStep::Complete(receipt) => receipt };
         assert_eq!((allocated, released), (receipt.retained_capacity_bytes, receipt.released_bytes));
         assert!(receipt.copied_items <= 1 && receipt.released_bytes <= 4096);
@@ -34,13 +38,13 @@ fn encode(raw: &[u8], reject: bool) -> Vec<u8> {
             for short in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes.saturating_sub(1), ..grant }, RetainedCloneGrant { maximum_capacity_bytes: grant.maximum_capacity_bytes.saturating_sub(1), ..grant }, RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant }] {
                 if short == grant { continue; }
                 let before = (cursor.phase(), cursor.input_len(), cursor.output_len(), pending);
-                let (step, allocated, released) = super::tests::controlled::observe_backing(|| cursor.advance(&mut pending, read == raw.len(), &mut output, short).unwrap());
+                let (step, allocated, released) = eff(short,|effect|super::tests::controlled::observe_backing(||cursor.advance(&mut pending, read == raw.len(), &mut output,effect).unwrap()));
                 assert_eq!(step.progress, RetainedCloneProgress::default());
                 assert_eq!((allocated, released), (0, 0));
                 assert_eq!((cursor.phase(), cursor.input_len(), cursor.output_len(), pending), before);
             }
         }
-        let (step, allocated, released) = super::tests::controlled::observe_backing(|| cursor.advance(&mut pending, read == raw.len(), &mut output, grant).unwrap());
+        let (step, allocated, released) = eff(grant,|effect|super::tests::controlled::observe_backing(||cursor.advance(&mut pending, read == raw.len(), &mut output,effect).unwrap()));
         assert_eq!((allocated, released), (step.progress.retained_capacity_bytes, step.progress.released_bytes));
         assert!(allocated <= 4096 && step.progress.copied_items <= 1 && step.progress.copied_bytes <= grant.maximum_copy_bytes);
         stored.extend_from_slice(&output[..step.written_bytes]);
@@ -90,7 +94,7 @@ fn deflate_controlled_retained_cancellation_frontiers() {
             if cursor.phase().as_str() == phase.as_str().unwrap() { reached = true; break; }
             if pending.is_none() && read < raw.len() { pending = Some(raw[read]); read += 1; }
             let grant = exact(&cursor);
-            cursor.advance(&mut pending, read == raw.len(), &mut output, grant).unwrap();
+            eff(grant,|effect|cursor.advance(&mut pending,read == raw.len(),&mut output,effect)).unwrap();
         }
         close(&mut cursor);
         assert!(reached, "frontier {phase}");
@@ -101,7 +105,7 @@ fn deflate_controlled_retained_cancellation_frontiers() {
 fn deflate_controlled_retained_restart_preserves_canonical_independent_windows(){
  let mut cursor=RetainedDeflateEncoder::default();let inputs=[b"A".repeat(40000),b"abc".repeat(10000),Vec::new(),b"A".repeat(60000)];
  for (index,raw) in inputs.iter().enumerate(){let mut pending=None;let mut read=0;let mut actual=Vec::new();let mut output=[0;1];let mut born=0;let mut turns=0;
-  for _ in 0..1000000{if pending.is_none()&&read<raw.len(){pending=Some(raw[read]);read+=1;}let grant=exact(&cursor);let(step,birth,free)=super::tests::controlled::observe_backing(||cursor.advance(&mut pending,read==raw.len(),&mut output,grant).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));born+=birth;actual.extend_from_slice(&output[..step.written_bytes]);turns+=1;if step.complete{break;}}
+  for _ in 0..1000000{if pending.is_none()&&read<raw.len(){pending=Some(raw[read]);read+=1;}let grant=exact(&cursor);let(step,birth,free)=eff(grant,|effect|super::tests::controlled::observe_backing(||cursor.advance(&mut pending,read==raw.len(),&mut output,effect).unwrap()));assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));born+=birth;actual.extend_from_slice(&output[..step.written_bytes]);turns+=1;if step.complete{break;}}
   let complete=cursor.is_complete();assert_eq!(actual,deflate(raw));assert_eq!(miniz_oxide::inflate::decompress_to_vec(&actual).unwrap(),*raw);if index!=0{assert_eq!(born,0);assert!(turns<300000);}if index+1<inputs.len(){cursor.restart().unwrap();assert_eq!(cursor.phase(),RetainedDeflatePhase::Input);}assert!(complete);
  }close(&mut cursor);
 }
@@ -110,8 +114,8 @@ fn deflate_controlled_retained_restart_preserves_canonical_independent_windows()
 #[test]
 fn deflate_retained_matching_pages_fit_original_opportunity(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let mut cursor=RetainedDeflateEncoder::default();let mut pending=None;let mut output=[0];let mut initialization=0;
- while cursor.phase()==RetainedDeflatePhase::Initialize{let grant=exact(&cursor);cursor.advance(&mut pending,false,&mut output,grant).unwrap();initialization+=1;}
- cursor.begin_close();let mut closure=0;while !cursor.terminal_is_empty(){let d=cursor.retirement_demands().unwrap();cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}).unwrap();closure+=1;}
+ while cursor.phase()==RetainedDeflatePhase::Initialize{let grant=exact(&cursor);eff(grant,|effect|cursor.advance(&mut pending,false,&mut output,effect)).unwrap();initialization+=1;}
+ cursor.begin_close();let mut closure=0;while !cursor.terminal_is_empty(){let d=cursor.retirement_demands().unwrap();eff(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth},|effect|cursor.close_step(effect)).unwrap();closure+=1;}
  assert!(initialization<=fixture["maximumInitializationTurns"].as_u64().unwrap()as usize,"matching-page initialization spent {initialization} turns");assert!(closure<=fixture["maximumClosureTurns"].as_u64().unwrap()as usize,"matching-page closure spent {closure} turns");
  for vector in fixture["vectors"].as_array().unwrap(){let raw:Vec<u8>=vector["raw"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect();let stored=encode(&raw,true);assert_eq!(miniz_oxide::inflate::decompress_to_vec_with_limit(&stored,raw.len().max(1)).unwrap(),raw);}
 }
@@ -119,8 +123,8 @@ fn deflate_retained_matching_pages_fit_original_opportunity(){
 /// 🧱️ Reserved append depth and Copy collection retirement quote the real original work.
 #[test]
 fn deflate_retained_batch_depth_and_retirement_grants(){
- let mut cursor=RetainedDeflateEncoder::default();let mut pending=None;let mut output=[0];while cursor.next_capacity_byte_demand().unwrap()!=0{let grant=exact(&cursor);cursor.advance(&mut pending,false,&mut output,grant).unwrap();}
- let depth=cursor.next_depth_demand().unwrap();let mut owner=semio_framework_value_persistent::list::PagedList::<u64,32768>::empty();while !owner.has_reserved_slot(){owner.reserve_one_funded(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:0,maximum_depth:4096}).unwrap();}let expected=owner.next_push_depth_demand().unwrap()+1;
- let grant=exact(&cursor);let initialized=cursor.advance(&mut pending,false,&mut output,grant).unwrap().progress.copied_bytes;cursor.begin_close();let d=cursor.retirement_demands().unwrap();let short=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:initialized.saturating_sub(1),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:d.depth};let(step,allocated,released)=super::tests::controlled::observe_backing(||cursor.close_step(short).unwrap());let refused=step.progress();let unchanged=cursor.retirement_demands().unwrap()==d;let quoted=d.copy_bytes;close(&mut cursor);
+ let mut cursor=RetainedDeflateEncoder::default();let mut pending=None;let mut output=[0];while cursor.next_capacity_byte_demand().unwrap()!=0{let grant=exact(&cursor);eff(grant,|effect|cursor.advance(&mut pending,false,&mut output,effect)).unwrap();}
+ let depth=cursor.next_depth_demand().unwrap();let mut owner=semio_framework_value_persistent::list::PagedList::<u64,32768>::empty();while !owner.has_reserved_slot(){eff(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:0,maximum_depth:4096},|effect|owner.reserve_one(effect)).result.unwrap();}let expected=owner.next_push_depth_demand().unwrap()+1;
+ let grant=exact(&cursor);let initialized=eff(grant,|effect|cursor.advance(&mut pending,false,&mut output,effect)).unwrap().progress.copied_bytes;cursor.begin_close();let d=cursor.retirement_demands().unwrap();let short=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:initialized.saturating_sub(1),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:d.depth};let(step,allocated,released)=eff(short,|effect|super::tests::controlled::observe_backing(||cursor.close_step(effect).unwrap()));let refused=step.progress();let unchanged=cursor.retirement_demands().unwrap()==d;let quoted=d.copy_bytes;close(&mut cursor);
  assert_eq!(depth,expected,"reserved append depth");assert_eq!(quoted,initialized,"Copy collection payload quote");assert_eq!(refused,RetainedCloneProgress::default());assert!(unchanged);assert_eq!((allocated,released),(0,0));
 }

@@ -157,7 +157,7 @@ impl MountedLayoutJob {
         macro_rules! close_item{($field:ident)=>{if let Some(owner)=self.$field.as_deref_mut(){if owner.pop().is_some(){return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}}}}
         close_item!(results);close_item!(lines);close_item!(glyph_previews);close_item!(glyphs);close_item!(runs);close_item!(walk);close_item!(nodes);
         macro_rules! close_list{($field:ident)=>{if let Some(owner)=self.$field.as_deref_mut(){
-            if !owner.terminal_is_empty(){return match owner.release_empty_page(grant.maximum_release_bytes){Ok(receipt)=>Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:usize::from(receipt.progressed),released_bytes:receipt.released_allocation_bytes,..Default::default()}}),Err(error)=>{let error=semio_framework_value::ValueError::from(error);Err(error)}}}
+            if !owner.terminal_is_empty(){return match owner.release_empty_page_leased(grant.maximum_release_bytes){Ok(receipt)=>Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:usize::from(receipt.progressed),released_bytes:receipt.released_allocation_bytes,..Default::default()}}),Err(error)=>{let error=semio_framework_value::ValueError::from(error);Err(error)}}}
             self.$field.take();return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})
         }}}
         close_list!(results);close_list!(lines);close_list!(glyph_previews);close_list!(glyphs);close_list!(runs);close_list!(walk);close_list!(nodes);

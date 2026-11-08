@@ -7,7 +7,7 @@ use semio_plugin::plugin_app_close_prelude::*;
 use semio_plugin::{Plugin, PluginApp};
 use semio_plugin::declarations::{EditorSurfaceApp, ViewerSurfaceApp};
 use semio_plugin::PluginBuilder;
-use semio_plugin::kernel::{CapabilityId, CapabilityRequest};
+use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 
 // 🎫️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: `cad`'s W2 packet dissolved
 // `apps::cad` into `editor::cad`/`viewer::cad` (module path read off `cad`'s OWN
@@ -84,6 +84,7 @@ pub fn plugin() -> Result<Plugin<DemonstratorApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<Process3dViewer>()
         .editor::<Gis2dPlayApp>(create_gis2d_app())
         .editor_mutation_roster::<Gis2dPlayApp>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::playground::artifact_kind().id })
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist cad, gis2d, generation3d, process3d, puzzle3d and sourcing editor edits to the open document".into(), optional: false })
         .requests(CapabilityRequest { id: CapabilityId("ui.dialog".into()), scope: "plugin".into(), reason: "puzzle3d's add-object flow opens the addObject dialog (Effect::OpenDialog)".into(), optional: false })
         .requests(CapabilityRequest { id: CapabilityId("shell.navigate".into()), scope: "plugin".into(), reason: "the gis2d `shell` command opens an external basemap/attribution URL (Effect::OpenExternalUrl)".into(), optional: false })

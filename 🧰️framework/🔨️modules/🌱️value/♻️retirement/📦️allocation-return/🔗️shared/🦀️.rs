@@ -12,13 +12,13 @@ pub fn shared_allocation_slot_demand<T>()->Result<RetirementDemand,ValueError>{l
 /// 🧰️ Allocates one genuine shared header and returns the exact original input on refusal.
 pub fn admit_shared_allocation<T>(value:T,grant:RetainedCloneGrant,actual:&mut Option<usize>)->RetainedWorkOutcome<(SharedAllocation<T>,RetainedCloneProgress),(ValueError,T)>{
  if actual.is_some(){return RetainedWorkOutcome{result:Err((ValueError::invariant("shared allocation requires an empty actual marker"),value)),work:0}}
- let kind=if grant.maximum_items==0{Some(ValueRefusalKind::WorkLimit)}else if grant.maximum_depth==0{Some(ValueRefusalKind::DepthLimit)}else if grant.maximum_capacity_bytes<shared_allocation_bytes::<T>(){Some(ValueRefusalKind::OwnershipLimit)}else{None};
+ let kind=if grant.maximum_items==0{Some(ValueRefusalKind::WorkLimit)}else if grant.maximum_depth==0{Some(ValueRefusalKind::DepthLimit)}else if grant.maximum_capacity_bytes<shared_allocation_bytes::<T>(){Some(ValueRefusalKind::OwnershipLimit)}else if shared_allocation_value_demand::<T>().is_ok_and(|demand|grant.maximum_copy_bytes<demand.copy_bytes){Some(ValueRefusalKind::OwnershipLimit)}else{None};
  if let Some(kind)=kind{return RetainedWorkOutcome{result:Err((ValueError::literal(kind,"shared allocation birth is not funded"),value)),work:0}}
  *actual=Some(0);
  let mut storage=match Arc::<T>::try_new_uninit(){Ok(storage)=>{*actual=Some(shared_allocation_bytes::<T>());storage},Err(_)=>{*actual=Some(0);return RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::AllocationFailed,"shared allocation failed"),value)),work:1}}};
  let Some(slot)=Arc::get_mut(&mut storage) else{return RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::AllocationFailed,"new shared storage is not unique"),value)),work:1}};slot.write(value);
  let owner=unsafe{storage.assume_init()};
- RetainedWorkOutcome{result:Ok((owner,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:shared_allocation_bytes::<T>(),..Default::default()})),work:1}
+ RetainedWorkOutcome{result:Ok((owner,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:shared_allocation_bytes::<T>(),..Default::default()})),work:2}
 }
 pub fn try_uninitialized_arc<T>(grant:RetainedCloneGrant,actual:&mut Option<usize>)->RetainedWorkOutcome<(Arc<MaybeUninit<T>>,RetainedCloneProgress)> {
  if actual.is_some(){return RetainedWorkOutcome{result:Err(ValueError::invariant("shared allocation marker is occupied")),work:0}}

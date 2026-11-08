@@ -3,46 +3,67 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "owners",
-    "values",
     "maximumItems",
     "maximumWork",
-    "body",
-    "remaining",
-    "releaseItems"
+    "releaseItems",
+    "cases"
   ],
   "properties": {
-    "owners": {
-      "const": [
-        "vector",
-        "deque"
-      ]
-    },
-    "values": {
-      "const": [
-        11,
-        23,
-        37
-      ]
-    },
     "maximumItems": {
       "const": 1
     },
     "maximumWork": {
       "const": 1
     },
-    "body": {
-      "const": 64
-    },
-    "remaining": {
-      "const": [
-        2,
-        1,
-        0
-      ]
-    },
     "releaseItems": {
       "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "body",
+          "run",
+          "values",
+          "remaining"
+        ],
+        "properties": {
+          "owner": {
+            "enum": [
+              "vector",
+              "deque"
+            ]
+          },
+          "body": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "run": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "values": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "remaining": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
     }
   }
 }

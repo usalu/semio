@@ -1,22 +1,26 @@
-use semio_framework_value_native_decoding::{NativeDecodeControl,NativeDecodeWorkIssuer,NativeDecodeWorkRecipient,ValueError};
+use semio_framework_value_native_decoding::*;
 struct Stock{remaining:u64,calls:u64}
-impl NativeDecodeWorkRecipient for Stock{
- fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{self.remaining.checked_sub(observed).ok_or_else(||ValueError::invariant("view fixture exceeded its original scoped work"))}
- fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{self.calls+=1;Ok(observed.checked_add(additional).is_some_and(|work|work<=self.remaining))}
+impl OriginalWorkRecipient for Stock{
+ type Context<'turn,'source>=() where 'source:'turn;
+ fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError>where 'source:'turn{Ok(())}
+ fn source_turn<'turn,'source>(&self,_:&())->Option<OriginalSourceTurnIdentity>where 'source:'turn{None}
+ fn admits<'reply,'turn,'source>(&mut self,_:&mut (),quote:OriginalWorkQuote<'reply>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'reply>where 'source:'turn{self.calls+=1;quote.complete(Ok(observed.checked_add(additional).is_some_and(|work|work<=self.remaining)))}
+ fn settle_partial<'reply,'turn,'source>(&mut self,context:&mut (),check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply>where 'source:'turn{check.complete(self.validate_context(context))}
+ fn recover_partial<'reply,'turn,'source>(&mut self,context:&mut (),check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply>where 'source:'turn{check.complete(self.validate_context(context))}
 }
+fn available(native:&NativeDecodeControl<'_>,stock:u64)->u64{stock-u64::try_from(native.actual_work()).unwrap()-native.pending_work()}
 
 #[test]
 fn actual_original_work_view_preserves_prepaid_reservations_and_nested_baseline(){
  let law:serde_json::Value=serde_json::from_str(include_str!("../view.json")).unwrap();let stock=law["stock"].as_u64().unwrap();let reserved=law["reserved"].as_u64().unwrap();let committed=law["committed"].as_u64().unwrap();let cancelled=law["cancelled"].as_u64().unwrap();
- let mut observer=|_|true;let mut native=NativeDecodeControl::new(0,&mut observer);assert!(native.available_work_units().is_err());assert_eq!(native.actual_work(),0);
- let mut backend=Stock{remaining:stock,calls:0};let mut issuer=NativeDecodeWorkIssuer::new();let mut views=[0u64;5];
- {let mut loan=issuer.loan(&mut backend);native.with_work_recipient(&mut loan,|native|{
-  views[0]=native.available_work_units()?;assert!(native.prepare_work(reserved)?);views[1]=native.available_work_units()?;native.commit_work(committed)?;views[2]=native.available_work_units()?;
-  let mut observer=|_|true;native.scoped_observer(&mut observer,|native|{views[3]=native.available_work_units()?;Ok::<_,ValueError>(())})?;
-  assert!(native.prepare_work(cancelled)?);native.cancel_work()?;views[4]=native.available_work_units()?;Ok::<_,ValueError>(())
- }).unwrap();}
- assert!(!issuer.has_pending_work());assert_eq!(backend.calls,law["admissionCalls"].as_u64().unwrap());assert_eq!(native.actual_work(),law["actual"].as_u64().unwrap());assert_eq!(serde_json::json!(views),law["views"]);
- backend.remaining=backend.remaining.checked_sub(native.actual_work()).unwrap();
- {let mut loan=issuer.loan(&mut backend);native.with_work_recipient(&mut loan,|native|{assert_eq!(native.available_work_units()?,law["nextScope"].as_u64().unwrap());Ok::<_,ValueError>(())}).unwrap();}
- assert_eq!(backend.calls,law["admissionCalls"].as_u64().unwrap());assert_eq!(native.actual_work(),committed);assert!(!issuer.has_pending_work());
+ let mut observer=|_|true;let mut native=NativeDecodeControl::new(0,&mut observer);assert!(native.prepare_work(1).is_err());assert_eq!(native.actual_work(),0);
+ let mut authority=OriginalWorkAuthority::new(Stock{remaining:stock,calls:0});let mut views=[0u64;5];
+ authority.with_loan(&mut (),|loan|native.with_work_recipient(loan,|native|{
+  views[0]=available(native,stock);assert!(native.prepare_work(reserved)?);views[1]=available(native,stock);native.commit_work(u128::from(committed))?;views[2]=available(native,stock);
+  let mut observer=|_|true;native.scoped_observer(&mut observer,|native|{views[3]=available(native,stock);Ok::<_,ValueError>(())})?;
+  assert!(native.prepare_work(cancelled)?);native.cancel_work()?;views[4]=available(native,stock);Ok::<_,ValueError>(())
+ })).unwrap().unwrap();
+ assert!(!authority.has_live_actions());assert_eq!(authority.inspect(|backend|backend.calls),law["admissionCalls"].as_u64().unwrap());assert_eq!(native.actual_work(),u128::from(law["actual"].as_u64().unwrap()));assert_eq!(serde_json::json!(views),law["views"]);
+ authority.with_loan(&mut (),|loan|native.with_work_recipient(loan,|native|{assert_eq!(available(native,stock),law["nextScope"].as_u64().unwrap());Ok::<_,ValueError>(())})).unwrap().unwrap();
+ assert_eq!(authority.inspect(|backend|backend.calls),law["admissionCalls"].as_u64().unwrap());assert_eq!(native.actual_work(),u128::from(committed));assert!(!authority.has_live_actions());assert!(authority.into_recipient().is_ok());
 }

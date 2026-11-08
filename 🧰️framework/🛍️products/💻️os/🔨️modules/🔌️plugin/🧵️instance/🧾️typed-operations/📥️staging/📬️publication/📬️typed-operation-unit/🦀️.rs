@@ -5,6 +5,13 @@ use semio_framework_plugin_retained_command::typed_operation::pending_result_pag
 
 enum OriginalPublicationAdvanceFailure{Primary(semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary),Domain(store::VcsError)}
 
+/// 🪙️ Runs one effect-taking store step inside the turn's own performed-work effect and settles its actual work once; `None` means the Work quote was not admitted and nothing ran.
+fn granted_effect<R>(cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->R)->Result<Option<R>,semio_framework_job::OriginalTurnFailure>{
+    let Some(((value,work),_))=cx.with_original_effect(grant,|_,effect|{let value=run(effect);(value,effect.performed_work())})?else{return Ok(None)};
+    semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result:Ok::<_,semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work})?;
+    Ok(Some(value))
+}
+
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     pub fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if !mounted.publication_failure.terminal_is_empty(){let custody=&mut mounted.publication_failure;if !custody.reservation.as_ref().is_some_and(|place|place.ready()){custody.reservation.get_or_insert_with(Default::default).prepare(cx)?;return Ok(())}let place=custody.reservation.as_mut().expect("funded publication failure reservation");if !place.pending(){place.with_body(cx,|_,slot|{*slot=custody.original.take();Ok(())})?;}if let Some(mut failure)=semio_framework_job::admit_original_domain_failure(place,cx)?{if place.terminal_is_empty(){custody.reservation=None}failure.effects=Default::default();return Err(failure.into())}return Ok(())}
@@ -195,7 +202,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         }
                     };
                     let grant=self.mounted_policy.maintenance;
-                    let refresh=match self.stores.window_transient_store.refresh_demands(authority,grant.maximum_copy_bytes){Ok(_)=>self.stores.window_transient_store.refresh(authority,grant),Err(error)=>Err(plugin_retirement_fault(error))};
+                    let refresh=match self.stores.window_transient_store.refresh_demands(authority,grant.maximum_copy_bytes){Ok(_)=>match granted_effect(cx,grant,|effect|self.stores.window_transient_store.refresh(authority,effect)){Ok(Some(step))=>step,Ok(None)=>Ok(semio_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(Default::default())),Err(failure)=>{ephemeral.window_transient.push(mutation);return Err(failure.into());}},Err(error)=>Err(plugin_retirement_fault(error))};
                     match refresh{Ok(semio_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(semio_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault.into());}}
                     match self.stores.window_transient_store.begin(mounted.operation.operation, authority, mutation) {
                         Ok(publication) => {
@@ -282,7 +289,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         return Err(fault.into());
                     }
                 }
-                if !self.history.close_streamed_transaction_unit(&mut *self.stores,emit,&mut mounted.pending_stream_abort,&mut mounted.stream_abort_completed,cx)?{return Ok(())}
+                if !self.history.close_streamed_transaction_unit(&mut *self.stores,emit,&mut mounted.pending_stream_abort,&mut mounted.stream_abort_resident,&mut mounted.stream_abort_completed,cx)?{return Ok(())}
                 if !emit.owned_child_emits.is_empty() {
                     if !emit.child_emits.is_empty() || emit.owned_child_emits.len() > PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN { return Err(plugin_sdk_fault("mounted owned child group requires its one exact admitted typed source family").into()); }
                     let operation = mounted.operation.operation.0;
@@ -371,7 +378,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         }
                     };
                     let grant=self.mounted_policy.maintenance;
-                    let refresh=match self.stores.window_transient_store.refresh_demands(authority,grant.maximum_copy_bytes){Ok(_)=>self.stores.window_transient_store.refresh(authority,grant),Err(error)=>Err(plugin_retirement_fault(error))};
+                    let refresh=match self.stores.window_transient_store.refresh_demands(authority,grant.maximum_copy_bytes){Ok(_)=>match granted_effect(cx,grant,|effect|self.stores.window_transient_store.refresh(authority,effect)){Ok(Some(step))=>step,Ok(None)=>Ok(semio_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(Default::default())),Err(failure)=>{ephemeral.window_transient.push(mutation);return Err(failure.into());}},Err(error)=>Err(plugin_retirement_fault(error))};
                     match refresh{Ok(semio_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(semio_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault.into());}}
                     match self.stores.window_transient_store.begin(mounted.operation.operation, authority, mutation) {
                         Ok(publication) => {

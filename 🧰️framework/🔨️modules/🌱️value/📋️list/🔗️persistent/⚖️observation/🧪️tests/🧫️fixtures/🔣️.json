@@ -127,15 +127,15 @@
   "frontierPayloads": [
     {
       "elementBytes": 8,
-      "pageBytes": 4096,
-      "expectedSlots": 512,
-      "expectedCapacityBytes": 4096
+      "pageBytes": 64,
+      "expectedSlots": 8,
+      "expectedCapacityBytes": 64
     },
     {
       "elementBytes": 16,
-      "pageBytes": 4096,
-      "expectedSlots": 256,
-      "expectedCapacityBytes": 4096
+      "pageBytes": 128,
+      "expectedSlots": 8,
+      "expectedCapacityBytes": 128
     }
   ]
 }

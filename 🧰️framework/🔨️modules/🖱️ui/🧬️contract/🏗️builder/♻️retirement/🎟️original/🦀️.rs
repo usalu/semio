@@ -54,7 +54,7 @@ impl OriginalBuiltTreeRetirement{
    if page.original_terminal_is_empty(){self.pages.pop();return Ok(metadata())}
    return match page.try_next_or_release().map_err(invalid)?{BuiltChildRetirementNext::Pending=>Ok(RetainedCloneStep::Progress(Default::default())),BuiltChildRetirementNext::Node(node)=>{self.node=Some(OriginalBuiltNode::Child(node));Ok(metadata())},BuiltChildRetirementNext::Complete=>Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))}
   }
-  let step=self.pages.release_empty_page(grant.maximum_release_bytes).map_err(|error|invalid(error.reason))?;
+  let step=self.pages.release_empty_page_leased(grant.maximum_release_bytes).map_err(|error|invalid(error.reason))?;
   let progress=RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..Default::default()};
   Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
  }

@@ -32,3 +32,14 @@ async fn inverse_diffs_sum_to_the_negative_diff() {
         }
     }
 }
+
+/// 🧹️ Removing the active alternative leaves no dangling active id; removing an inactive one keeps the active id.
+#[test]
+fn removing_the_active_alternative_clears_the_active_id() {
+    for (active, expected) in [("a", Some("a")), ("b", None)] {
+        let before = SpaceHistorySnapshot { alternatives: vec![alternative("a"), alternative("b")], active_alternative_id: Some(active.into()), ..Default::default() };
+        let post = semio_os_spr::apply_diff_cold(RemoveSpaceAlternative { alternative_id: "b".into() }.diff(&before).diff(), &before).expect("remove applies");
+        assert_eq!(post.active_alternative_id.as_deref(), expected, "active {active}");
+        assert!(post.active_alternative_id.as_ref().is_none_or(|id| post.alternatives.iter().any(|alternative| alternative.id == *id)));
+    }
+}

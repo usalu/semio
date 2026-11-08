@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
@@ -10,38 +11,38 @@ fn node_field_intent_follows_committed_vectors() {
     let vectors = [
         (
             "🩹️changes",
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/🔺️diff/🔣️.json"))
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/🦠️mutation/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            Some(repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/🔺️diff/🔣️.json"))
         ),
         (
             "📐️coordinates",
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/🔺️diff/🔣️.json"))
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/📸️snapshot/⬅️before/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/🦠️mutation/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/📸️snapshot/➡️after/🔣️.json"),
+            Some(repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/🔺️diff/🔣️.json"))
         ),
         (
             "⏸️same",
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/🔺️diff/🔣️.json"))
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/🦠️mutation/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            Some(repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/🔺️diff/🔣️.json"))
         ),
         (
             "⛔️missing",
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⛔️missing/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⛔️missing/🦠️mutation/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
             None
         ),
         (
             "⚗️empty",
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/🔺️diff/🔣️.json"))
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/📸️snapshot/⬅️before/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/🦠️mutation/🔣️.json"),
+            repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/📸️snapshot/➡️after/🔣️.json"),
+            Some(repo_text!("✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/🔺️diff/🔣️.json"))
         ),
     ];
     for (id, before, mutation, after, diff) in vectors {

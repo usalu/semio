@@ -30,8 +30,8 @@ async fn every_authored_action_is_localized_in_english_and_german() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_lists_name_version_and_every_collection_count() {
-    let document = EnergyModelSnapshot::default();
-    let tree = render(&document).expect("the tree window assembles");
+    let document = EnergyModelSnapshot::empty().unwrap();
+    let tree = render(&document, semio_ui_locale::Locale::En).expect("the tree window assembles");
     assert_eq!(tree.key.as_str(), WINDOW_KIND_ID);
     let root = &tree.children[0].children[0];
     assert!(root.children.iter().any(|item| item.key.as_str() == "name"));
@@ -43,11 +43,11 @@ async fn render_lists_name_version_and_every_collection_count() {
 #[semio_framework_async_macros::async_test]
 async fn every_node_stays_under_the_tree_kit_sibling_ceiling() {
     let model = crate::model::Model::default();
-    let groups = crate::snapshot::energy_structure_overview(&model);
+    let groups = semio_s_artifact_energy_model_structure::energy_structure_overview(&model);
     let root_children = 3 + groups.len();
-    assert!(root_children <= crate::snapshot::STRUCTURE_TREE_SIBLING_CEILING, "root has {root_children} children");
+    assert!(root_children <= semio_s_artifact_energy_model_structure::STRUCTURE_TREE_SIBLING_CEILING, "root has {root_children} children");
     for group in &groups {
-        assert!(group.counts.len() <= crate::snapshot::STRUCTURE_TREE_SIBLING_CEILING, "group {} has {} leaves", group.id, group.counts.len());
+        assert!(group.counts.len() <= semio_s_artifact_energy_model_structure::STRUCTURE_TREE_SIBLING_CEILING, "group {} has {} leaves", group.id, group.counts.len());
     }
     let mut ids: Vec<&str> = groups.iter().flat_map(|group| group.counts.iter().map(|(id, _)| *id)).collect();
     let total = ids.len();
@@ -55,4 +55,22 @@ async fn every_node_stays_under_the_tree_kit_sibling_ceiling() {
     ids.dedup();
     assert_eq!(ids.len(), total, "a collection is listed twice");
     assert_eq!(total, 35, "every collection on the model is listed exactly once");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_structure_tree_speaks_english_and_german() {
+    let model = crate::model::Model::default();
+    let labels = |locale| {
+        fn walk(node: &semio_s_artifact_energy_model_structure::TreeNodeView, out: &mut Vec<String>) {
+            out.push(node.label.clone());
+            node.children.iter().for_each(|child| walk(child, out));
+        }
+        let mut out = Vec::new();
+        semio_s_artifact_energy_model_structure::energy_structure_tree(&model, locale).roots.iter().for_each(|root| walk(root, &mut out));
+        out
+    };
+    let (en, de) = (labels(semio_ui_locale::Locale::En), labels(semio_ui_locale::Locale::De));
+    assert!(en.iter().any(|label| label == "surfaces: 0") && en.iter().any(|label| label == "Geometry: 0"));
+    assert!(de.iter().any(|label| label == "Flächen: 0") && de.iter().any(|label| label == "Geometrie: 0"));
+    assert!(de.iter().all(|label| !label.starts_with("surfaces:")));
 }

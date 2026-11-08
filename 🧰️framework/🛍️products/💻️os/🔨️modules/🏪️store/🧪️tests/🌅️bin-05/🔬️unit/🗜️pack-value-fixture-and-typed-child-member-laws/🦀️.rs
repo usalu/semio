@@ -320,12 +320,12 @@ async fn member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog
 #[semio_framework_async_macros::async_test]
 async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer_until_terminal() {
     let mut missing = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: Some(1) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
-    let refused = SpaceMember::close_owned_step(&mut missing, physical_test_close_grant());
+    let refused = SpaceMember::close_owned_step_cold(&mut missing, physical_test_close_grant());
     assert!(matches!(&refused, Err(reason) if reason.kind == semio_framework_value::ValueRefusalKind::InvariantViolated && reason.message.contains("no installed owner disposer")), "{refused:?}");
 
     missing.install_document_store_owners_exact(complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     missing.closes_on_drop();
-    let first = SpaceMember::close_owned_step(&mut missing, physical_test_close_grant());
+    let first = SpaceMember::close_owned_step_cold(&mut missing, physical_test_close_grant());
     assert!(matches!(&first, Ok(RetainedCloneStep::Progress(progress)) if progress.fits(physical_test_close_grant())), "{first:?}");
     assert!(missing.owned_disposer_installed(), "the admitted owner remains retained until terminal close");
     assert!(!SpaceMember::close_owned_terminal_is_empty(&missing));

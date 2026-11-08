@@ -1,7 +1,8 @@
 //! 🔢️ Original field7 bytes enter the existing final native column under one captured receiving policy.
-use crate::ToolRunNativeTickPreparation;
+use crate::{native_tick_preparation::pure,ToolRunNativeTickPreparation};
 use pack::record::{RetainedRecordBodySourceDecode,RetainedRecordBodyToken,RetainedValueRole,RetainedValueToken};
-use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value_persistent::list::{PagedListReservationFailure,PagedListReservationOutcome};
 type Witness=(usize,usize,Option<(u64,u64)>,(usize,usize));
 type Receipt=Option<(RetainedCloneGrant,RetainedCloneProgress)>;
 #[derive(Clone,Copy,PartialEq,Eq)]
@@ -35,11 +36,20 @@ impl ToolRunEntityColumnReceiving{
  pub fn reserve_demands(&self,source:&RetainedRecordBodySourceDecode,frame:&ToolRunNativeTickPreparation)->Result<RetirementDemand,ValueError>{
   self.validate(source,frame)?;if self.receipt.is_some()||source.receipt().is_some()||self.closing||self.phase!=Phase::Bytes||self.at!=0{return Ok(Default::default())}let column=frame.entity_column(source,self.frame)?;if column.has_reserved_slot(){return Ok(Default::default())}let d=RetirementDemand{copy_bytes:column.next_capacity_copy_byte_demand(self.entities).map_err(|_|limit())?,capacity_bytes:column.next_capacity_allocation_bytes(self.entities).map_err(|_|limit())?.ok_or_else(fault)?,depth:column.next_reserve_depth_demand().map_err(|_|limit())?+1,..Default::default()};self.allocation(source,frame,d.capacity_bytes)?;Ok(d)
  }
- pub fn reserve_step(&mut self,source:&RetainedRecordBodySourceDecode,frame:&mut ToolRunNativeTickPreparation,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
-  let d=self.reserve_demands(source,frame)?;if d.depth==0||!funded(g,d){return Ok(None)}let result=frame.entity_column_mut(source,self.frame)?.reserve_capacity_one_funded(self.entities,g);let p=match result{Ok(p)=>p,Err(error)=>{let p=RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes>0),retained_capacity_bytes:error.allocated_bytes,..Default::default()};self.receipt=Some((g,p));return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason).with_retained_progress(p))}};self.receipt=Some((g,p));if !p.fits(g){return Err(limit().with_retained_progress(p))}Ok(Some(p))
+ /// 🧱️ Reserves one exact column page under the effect; the list primitive records its own work.
+ pub fn reserve_step(&mut self,source:&RetainedRecordBodySourceDecode,frame:&mut ToolRunNativeTickPreparation,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+  let g=effect.grant();let d=self.reserve_demands(source,frame)?;if d.depth==0||!funded(g,d){return Ok(None)}
+  let turn=frame.entity_column_mut(source,self.frame)?.reserve_capacity_one_funded(self.entities,effect);
+  let p=match turn.result{
+   Ok(PagedListReservationOutcome::Ready(p))=>p,
+   Ok(PagedListReservationOutcome::Denied)=>return Ok(None),
+   Err(PagedListReservationFailure::Work(error))=>return Err(error),
+   Err(PagedListReservationFailure::Allocation{error,copied_bytes})=>{let p=RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes>0||copied_bytes>0),copied_bytes,retained_capacity_bytes:error.allocated_bytes,..Default::default()};self.receipt=Some((g,p));return Err(ValueError::from(error.refusal()).with_retained_progress(p))}
+  };
+  self.receipt=Some((g,p));if !p.fits(g){return Err(limit().with_retained_progress(p))}Ok(Some(p))
  }
- pub fn receive(&mut self,source:&RetainedRecordBodySourceDecode,frame:&ToolRunNativeTickPreparation,pending:&mut Option<RetainedRecordBodyToken>,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
-  let d=self.demands(source,frame,pending)?;if d.depth==0||self.phase==Phase::Commit||!funded(g,d){return Ok(None)}let Some(RetainedRecordBodyToken::Value(token))=pending.as_ref().copied()else{return Ok(None)};let mut p=progress();
+ pub fn receive(&mut self,source:&RetainedRecordBodySourceDecode,frame:&ToolRunNativeTickPreparation,pending:&mut Option<RetainedRecordBodyToken>,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+  let g=effect.grant();let d=self.demands(source,frame,pending)?;if d.depth==0||self.phase==Phase::Commit||!funded(g,d){return Ok(None)}let Some(RetainedRecordBodyToken::Value(token))=pending.as_ref().copied()else{return Ok(None)};if !pure(effect)?{return Ok(None)}let mut p=progress();
   match(self.phase,token){
    (Phase::Field,RetainedValueToken::Unsigned{role:RetainedValueRole::FieldId,value:7})=>self.phase=Phase::Tag,
    (Phase::Tag,RetainedValueToken::Tag{value:8,..})=>self.phase=Phase::Length,
@@ -49,13 +59,17 @@ impl ToolRunEntityColumnReceiving{
   }
   pending.take();self.receipt=Some((g,p));Ok(Some(p))
  }
- pub fn commit_step(&mut self,source:&RetainedRecordBodySourceDecode,frame:&mut ToolRunNativeTickPreparation,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
-  let d=self.demands(source,frame,&None)?;if self.phase!=Phase::Commit||d.depth==0||!funded(g,d){return Ok(None)}let mut original=Some(u64::from_le_bytes(self.scalar));let adopted=frame.entity_column_mut(source,self.frame)?.adopt_reserved(&mut original).map_err(|_|fault())?;if !adopted.progressed||original.is_some(){return Err(fault())}self.at=0;self.phase=if self.remaining==0{Phase::Complete}else{Phase::Bytes};let p=progress();self.receipt=Some((g,p));Ok(Some(p))
+ /// 🔗️ Adopts the reserved scalar under the effect; the list primitive records its own work.
+ pub fn commit_step(&mut self,source:&RetainedRecordBodySourceDecode,frame:&mut ToolRunNativeTickPreparation,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+  let g=effect.grant();let d=self.demands(source,frame,&None)?;if self.phase!=Phase::Commit||d.depth==0||!funded(g,d){return Ok(None)}
+  let mut original=Some(u64::from_le_bytes(self.scalar));let adopted=frame.entity_column_mut(source,self.frame)?.adopt_reserved(&mut original,effect).result?;
+  if !adopted.progressed{return if original.is_some(){Ok(None)}else{Err(fault())}}if original.is_some(){return Err(fault())}
+  self.at=0;self.phase=if self.remaining==0{Phase::Complete}else{Phase::Bytes};let p=progress();self.receipt=Some((g,p));Ok(Some(p))
  }
  pub fn cancel(&mut self){self.closing=true}
  pub fn close_demands(&self)->RetirementDemand{if self.receipt.is_some()||self.phase==Phase::Closed||(!self.closing&&self.phase!=Phase::Complete){return Default::default()}metadata()}
- pub fn close_step(&mut self,source:&RetainedRecordBodySourceDecode,frame:&mut ToolRunNativeTickPreparation,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
-  let d=self.close_demands();if d.depth==0||source.receipt().is_some()||!funded(g,d){return Ok(None)}self.validate(source,frame)?;self.at=0;self.remaining=0;self.phase=Phase::Closed;let p=progress();self.receipt=Some((g,p));Ok(Some(p))
+ pub fn close_step(&mut self,source:&RetainedRecordBodySourceDecode,frame:&mut ToolRunNativeTickPreparation,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+  let g=effect.grant();let d=self.close_demands();if d.depth==0||source.receipt().is_some()||!funded(g,d){return Ok(None)}self.validate(source,frame)?;if !pure(effect)?{return Ok(None)}self.at=0;self.remaining=0;self.phase=Phase::Closed;let p=progress();self.receipt=Some((g,p));Ok(Some(p))
  }
  pub fn terminal_is_empty(&self)->bool{self.phase==Phase::Closed&&self.at==0&&self.remaining==0&&self.receipt.is_none()}
 }

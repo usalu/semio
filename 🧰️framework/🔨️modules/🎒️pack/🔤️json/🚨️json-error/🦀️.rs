@@ -47,8 +47,9 @@ impl JsonError {
 }
 
 impl semio_framework_value::retirement::RetireOwned for JsonError {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;match self{Self::Native(error)=>error.retirement(),Self::DuplicateMember{name,..}=>name.retirement(),Self::UnexpectedByte{found,offset}|Self::ControlCharacterInString{byte:found,offset}=>leaf((found,offset)),Self::InvalidNumber(offset)|Self::InvalidEscape(offset)|Self::InvalidUnicodeEscape(offset)|Self::UnpairedSurrogate(offset)|Self::TrailingData(offset)=>leaf(offset),Self::MaxDepthExceeded(depth)=>leaf(depth),Self::UnexpectedEof|Self::InvalidUtf8=>leaf(())}}
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;match self{Self::Native(error)=>error.retirement_birth_bytes(),Self::DuplicateMember{name,..}=>name.retirement_birth_bytes(),Self::UnexpectedByte{..}|Self::ControlCharacterInString{..}=>Some(leaf_birth_bytes::<(u8,usize)>()),Self::InvalidNumber(_)|Self::InvalidEscape(_)|Self::InvalidUnicodeEscape(_)|Self::UnpairedSurrogate(_)|Self::TrailingData(_)=>Some(leaf_birth_bytes::<usize>()),Self::MaxDepthExceeded(_)=>Some(leaf_birth_bytes::<u32>()),Self::UnexpectedEof|Self::InvalidUtf8=>Some(leaf_birth_bytes::<()>())}}
+    type RetirementCursor=<String as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{use semio_framework_value::retirement::RetireOwned;match self{Self::Native(error)=>error.retirement_seed(),Self::DuplicateMember{name,..}=>name.retirement_seed(),_=>String::new().retirement_seed()}}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self::RetirementCursor>())}
     fn controlled_retirement_supported()->bool{true}
 }
 

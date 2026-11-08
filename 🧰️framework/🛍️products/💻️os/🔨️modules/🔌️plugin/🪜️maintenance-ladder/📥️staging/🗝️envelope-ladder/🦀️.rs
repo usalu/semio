@@ -33,33 +33,41 @@ pub(super) fn erased_demand<T: store::ErasedSnapshotRetirement + ?Sized>(owner: 
     Ok({let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.max(1);demand})
 }
 
-pub(super) fn erased_step<T: store::ErasedSnapshotRetirement + ?Sized>(owner: &mut T, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+pub(super) fn erased_step<T: store::ErasedSnapshotRetirement + ?Sized>(cx: &mut semio_framework_job::StepContext<'_>, owner: &mut T, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let empty = RetainedCloneProgress::default();
     if owner.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
     let demand = erased_demand(owner, grant.maximum_copy_bytes).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
-    if !plugin_turn_admitted(demand, grant)? { return Ok(RetainedCloneStep::Progress(empty)); }
-    let step = owner.close_step(grant).result.map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
-    admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "envelope returned owner").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
-    Ok(step)
+    let step = semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx, grant, demand, |_, effect| {
+        let child = effect.grant();
+        let step = semio_plugin_ownership::bounded_ownership::plugin_settle_poll(owner.close_step(effect))?;
+        let step = admit_retained_clone_close(child, step, owner.terminal_is_empty(), "envelope returned owner").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+        Ok((PluginLifecycleStep::Progress(step.progress()), owner.terminal_is_empty()))
+    })?;
+    let progress = step.progress().unwrap_or_default();
+    Ok(if owner.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
 }
 
 fn completed_demand<P, Mutation>(record: &dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<P, Mutation>, body: usize) -> Result<RetirementDemand, ValueError> {
     Ok(RetirementDemand { copy_bytes: record.next_close_copy_byte_demand()?, capacity_bytes: record.next_close_capacity_byte_demand(body)?, release_bytes: record.next_close_release_byte_demand()?, depth: record.next_close_depth_demand()?.max(1) })
 }
 
-fn completed_step<P, Mutation>(record: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<P, Mutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+fn completed_step<P, Mutation>(cx: &mut semio_framework_job::StepContext<'_>, record: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<P, Mutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let empty = RetainedCloneProgress::default();
     if record.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
     let demand = completed_demand(record, grant.maximum_copy_bytes).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
-    if !plugin_turn_admitted(demand, grant)? { return Ok(RetainedCloneStep::Progress(empty)); }
-    let step = record.close_step(grant).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
-    admit_retained_clone_close(grant, step, record.terminal_is_empty(), "envelope completed record").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
-    Ok(step)
+    let step = semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx, grant, demand, |_, effect| {
+        let child = effect.grant();
+        let step = semio_plugin_ownership::bounded_ownership::plugin_settle_poll(record.close_step(effect))?;
+        let step = admit_retained_clone_close(child, step, record.terminal_is_empty(), "envelope completed record").map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+        Ok((PluginLifecycleStep::Progress(step.progress()), record.terminal_is_empty()))
+    })?;
+    let progress = step.progress().unwrap_or_default();
+    Ok(if record.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
 }
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// 🎟️ One granted returned field-decoder turn; `Complete` means no returned decoder is left to hand off.
-    pub fn drive_envelope_field_decoder_returns(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    pub fn drive_envelope_field_decoder_returns(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let item = RetainedCloneProgress { copied_items: 1, ..empty };
         if grant.maximum_items == 0 {
@@ -71,7 +79,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 .ingest.envelope_field_decoder_retirements
                 .get_mut(id)
                 .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.field-retirement-authority"), "returned envelope field decoder changed during one bounded maintenance step"))?;
-            let RetainedCloneStep::Complete(progress) = erased_step(retirement, grant)? else {
+            let RetainedCloneStep::Complete(progress) = erased_step(cx, retirement, grant)? else {
                 *cursor = index;
                 return Ok(PluginLifecycleStep::Progress(empty));
             };
@@ -115,7 +123,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     /// 🎟️ One granted completed-record turn; `Complete` means no completed record is left to hand off.
-    pub fn drive_envelope_completed_record_returns(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    pub fn drive_envelope_completed_record_returns(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let item = RetainedCloneProgress { copied_items: 1, ..empty };
         if grant.maximum_items == 0 {
@@ -127,7 +135,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 .ingest.envelope_completed_record_retirements
                 .get_mut(id)
                 .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-retirement-authority"), "completed envelope changed during one bounded maintenance step"))?;
-            let RetainedCloneStep::Complete(progress) = completed_step(retirement.as_mut(), grant)? else {
+            let RetainedCloneStep::Complete(progress) = completed_step(cx, retirement.as_mut(), grant)? else {
                 *cursor = index;
                 return Ok(PluginLifecycleStep::Progress(empty));
             };
@@ -199,11 +207,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 active.generation
             })
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "live envelope operation changed during one fixed maintenance step"))?;
-        let step = self
+        let current = semio_plugin_document_media::envelope_decode_replacement(semio_framework_job::OperationId(operation_id), live_generation);
+        let completed = &self.ingest.envelope_completed_records;
+        let active = self
             .ingest.envelope_decode_jobs
             .get_mut(operation_id)
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "live envelope operation changed before worker advancement"))?
-            .drive(cx, live_generation, &self.ingest.envelope_completed_records, grant)?;
+            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "live envelope operation changed before worker advancement"))?;
+        let step = cx.with_replacement_current(current, |cx| active.drive(cx, live_generation, completed, grant))?;
         #[cfg(target_arch = "wasm32")]
         if let Some(now_ms) = semio_framework_job::default_now_ms() {
             pool.pump(now_ms);
@@ -226,8 +236,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let mut blocked = None;
         for unit in 0..3 {
             let step = match unit {
-                0 => self.drive_envelope_completed_record_returns(grant, true)?,
-                1 => self.drive_envelope_field_decoder_returns(grant, true)?,
+                0 => self.drive_envelope_completed_record_returns(cx, grant, true)?,
+                1 => self.drive_envelope_field_decoder_returns(cx, grant, true)?,
                 _ => self.drive_envelope_decode_jobs(cx,grant, true)?,
             };
             match step {

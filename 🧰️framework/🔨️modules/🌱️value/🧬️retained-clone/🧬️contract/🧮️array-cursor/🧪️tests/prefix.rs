@@ -1,5 +1,5 @@
 //! 🧫️ The native selector consumes the same portable frontier vectors as the independent SQLite oracle.
-use semio_framework_value_retained_clone_protocol::{ArrayPrefixShape,select_array_prefix};
+use semio_framework_value_retained_clone::{ArrayPrefixShape,select_array_prefix};
 #[test]
 fn prefix_selection_matches_all_portable_refusal_and_work_vectors(){
  let rows:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/staged.json")).unwrap();

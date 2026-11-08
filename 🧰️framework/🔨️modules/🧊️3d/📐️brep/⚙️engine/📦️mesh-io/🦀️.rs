@@ -50,9 +50,25 @@ pub struct TriangleMesh {
     pub normals: Vec<Vec3>,
     pub indices: Vec<u32>,
 }
+static OPEN_IMPORTS: std::sync::Mutex<std::collections::BTreeMap<u64,usize>> = std::sync::Mutex::new(std::collections::BTreeMap::new());
+static NEXT_IMPORT_SESSION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+fn open_imports() -> std::sync::MutexGuard<'static, std::collections::BTreeMap<u64,usize>> {OPEN_IMPORTS.lock().unwrap_or_else(|poisoned|poisoned.into_inner())}
+/// 🔒️ Copyable session identity whose open import mutations are counted in a process registry owned by the cursors, not by the session.
+#[derive(Clone,Copy,Default)]
+pub struct PendingMutations(u64);
+semio_framework_value::artifact_retire_leaf!(PendingMutations);
+impl PendingMutations {
+    /// 🔒️ Registers one open mutation that releases itself when its token drops.
+    pub fn open(&mut self)->PendingToken {if self.0==0 {self.0=NEXT_IMPORT_SESSION.fetch_add(1,std::sync::atomic::Ordering::Relaxed);}*open_imports().entry(self.0).or_insert(0)+=1;PendingToken(self.0)}
+    /// 🔢️ Reports how many mutations are currently open.
+    pub fn count(&self)->usize {if self.0==0 {0}else {open_imports().get(&self.0).copied().unwrap_or(0)}}
+}
+/// 🔒️ Ownership of one open mutation: released on explicit release or when the cursor is dropped.
+pub struct PendingToken(u64);
+impl Drop for PendingToken {fn drop(&mut self) {let mut open=open_imports();if let Some(count)=open.get_mut(&self.0) {*count-=1;if *count==0 {open.remove(&self.0);}}}}
 /// 📦 Bounded private triangle import and exact owned-entity retirement in the mesh-I/O owner.
 pub struct MeshImportCursor {
-    active: bool,
+    open: Option<PendingToken>,
     positions: Vec<f32>,
     positions64: Vec<Pnt3>,
     normals64: Vec<Vec3>,
@@ -81,6 +97,7 @@ struct ImportScratch {
     edges:HistoryFoldIndex<([u64;3],[u64;3]),(semio_framework_3d_brep_representation::arena::EdgeId,usize,bool)>,
 }
 semio_framework_value::artifact_retire_struct!(ImportScratch {positions,positions64,normals64,normals,indices,faces,vertices,edges});
+#[derive(semio_framework_value::RetireOwned)]
 enum RemovedImportEntity {
     Vertex {value:semio_framework_3d_brep_representation::topology::Vertex},
     Edge {value:semio_framework_3d_brep_representation::topology::Edge},
@@ -93,7 +110,6 @@ enum RemovedImportEntity {
     Curve2 {value:semio_framework_3d_brep_curve::Curve2},
     Surface {value:semio_framework_3d_brep_surface::Surface},
 }
-semio_framework_3d_brep_vector::retire_geometry_variants!(RemovedImportEntity {Vertex {value},Edge {value},Coedge {value},Loop {value},Face {value},Shell {value},Solid {value},Curve3 {value},Curve2 {value},Surface {value}});
 enum ImportCloseOwner { Scratch(ControlledRetirement<ImportScratch>),Entity(ControlledRetirement<RemovedImportEntity>),Recorder(ControlledRetirement<OpRecorder>) }
 impl ImportCloseOwner {
     fn owner(&self)->&dyn semio_framework_value::ErasedSnapshotRetirement {match self {Self::Scratch(value)=>value,Self::Entity(value)=>value,Self::Recorder(value)=>value}}
@@ -113,7 +129,7 @@ impl MeshImportCursor {
     pub fn new(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>, tolerance: f64) -> Result<Self,KernelError> {
         Self::validate_admission_counts(positions.len(),indices.len(),tolerance)?;
         let triangles=indices.len()/3;
-        Ok(Self { active:false,positions,positions64:Vec::new(),normals64:Vec::new(),normals,indices,phase:0,cursor:0,volume:0.0,faces:Vec::new(),shell:None,solid:None,recorder:OpRecorder::new(),cancelled:false,units:0,retired:false,retirement:None,retirement_stage:0,triangles,vertex_map:Default::default(),edge_map:Default::default(),boundary_edges:0 })
+        Ok(Self { open:None,positions,positions64:Vec::new(),normals64:Vec::new(),normals,indices,phase:0,cursor:0,volume:0.0,faces:Vec::new(),shell:None,solid:None,recorder:OpRecorder::new(),cancelled:false,units:0,retired:false,retirement:None,retirement_stage:0,triangles,vertex_map:Default::default(),edge_map:Default::default(),boundary_edges:0 })
     }
     /// 📦 Admits the existing owned f64 triangle representation without narrowing coordinates.
     pub fn from_triangle_mesh(mesh:TriangleMesh,tolerance:f64)->Result<Self,KernelError> {
@@ -131,9 +147,11 @@ impl MeshImportCursor {
     pub fn retirement_complete(&self)->bool {self.retired && self.cancelled}
     pub fn cleanup_complete(&self)->bool {self.retired}
     /// 🔒️ True while a session has registered this import as an open pending mutation.
-    pub fn is_active(&self)->bool {self.active}
-    /// 🔒️ Records that a session registered or released this import as an open pending mutation.
-    pub fn set_active(&mut self,active:bool) {self.active=active;}
+    pub fn is_active(&self)->bool {self.open.is_some()}
+    /// 🔒️ Registers this import as an open mutation of the session that owns `pending`.
+    pub fn activate(&mut self,pending:&mut PendingMutations) {if self.open.is_none() {self.open=Some(pending.open());}}
+    /// 🔓️ Releases the open mutation; dropping the cursor releases it too.
+    pub fn release(&mut self) {self.open=None;}
     fn points(&self)->Result<[Pnt3;3],KernelError> {
         let mut points=[Pnt3::new(0.0,0.0,0.0);3];
         for (point,index) in points.iter_mut().zip(&self.indices[self.cursor..self.cursor+3]) {
@@ -151,8 +169,8 @@ impl MeshImportCursor {
             if self.cancelled || self.phase>=4 {
                 let copy=self.next_close_copy_byte_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?;
                 let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_close_capacity_byte_demand(body,copy).map_err(|error|KernelError::Operation(error.to_string()))?,maximum_release_bytes:self.next_close_release_byte_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?,maximum_depth:self.next_close_depth_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?};
-                self.close_step(body,grant).map_err(|error|KernelError::Operation(error.to_string()))?;
-                if self.retired {return Ok(if self.cancelled {MeshImportStep::Cancelled}else {MeshImportStep::Done(if let Some(solid)=self.solid.take() {EntityRef::Solid(solid)}else {EntityRef::Shell(self.shell.take().expect("original completed import shell"))})});}
+                let mut wallet=semio_framework_value::AuthoringWallet::new(grant,1_000_000_000);match wallet.run(grant,1<<20,|effect|self.close_step(body,effect)).map_err(|error|KernelError::Operation(error.to_string()))?{Some(done)=>{done.output.map_err(|error|KernelError::Operation(error.to_string()))?;},None=>return Err(KernelError::Operation("mesh import close quote refused".into()))}
+                if self.retired {if self.cancelled {return Ok(MeshImportStep::Cancelled);}let shell=self.shell.take();let solid=self.solid.take();return match (solid,shell) {(Some(solid),_)=>Ok(MeshImportStep::Done(EntityRef::Solid(solid))),(None,Some(shell))=>Ok(MeshImportStep::Done(EntityRef::Shell(shell))),(None,None)=>Err(KernelError::Operation("mesh import already published".into()))};}
             } else {if let Err(error)=self.advance(body) {self.cancelled=true;return Err(error);}}
             self.units=self.units.saturating_add(1);
         }
@@ -175,18 +193,18 @@ impl MeshImportCursor {
             None=>(0,0),
         }
     }
-    pub fn next_close_copy_byte_demand(&self,_body:&Body)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(0),|owner|owner.owner().next_copy_byte_demand())}
+    pub fn next_close_copy_byte_demand(&self,_body:&Body)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(0),|owner|owner.owner().next_demand(0).map(|demand|demand.copy_bytes))}
     pub fn next_close_capacity_byte_demand(&self,body:&Body,copy:usize)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(self.removal_demand(body).0),|owner|owner.owner().next_capacity_byte_demand(copy))}
     pub fn next_close_release_byte_demand(&self,body:&Body)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(self.removal_demand(body).1),|owner|owner.owner().next_release_byte_demand())}
     pub fn next_close_depth_demand(&self,_body:&Body)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(usize::from(!self.retired)),|owner|owner.owner().next_depth_demand())}
     /// 🧹️ Retains the actual scratch, removed entity and recorder until their full grants arrive.
-    pub fn close_original_step(&mut self,body:&mut Body,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
-        let mut work=0;let result=(||->Result<RetainedCloneStep,ValueError>{
+    pub fn close_original_step(&mut self,body:&mut Body,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome{
+        let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,ValueError>{
         if self.retired {return Ok(RetainedCloneStep::Complete(Default::default()));}
         if grant.maximum_items==0 || grant.maximum_depth==0 || (!self.cancelled && self.phase<4) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(owner)=self.retirement.as_mut() {
             if owner.owner().terminal_is_empty() {self.retirement=None;work=1;return Ok(import_progress());}
-            let turn=owner.owner_mut().close_step(grant);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()));
+            let poll=owner.owner_mut().close_step(effect);work=poll.work();return match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default()))};
         }
         match self.retirement_stage {
             0=>{work=1;let scratch=ImportScratch {positions:std::mem::take(&mut self.positions),positions64:std::mem::take(&mut self.positions64),normals64:std::mem::take(&mut self.normals64),normals:std::mem::take(&mut self.normals),indices:std::mem::take(&mut self.indices),faces:std::mem::take(&mut self.faces),vertices:std::mem::take(&mut self.vertex_map),edges:std::mem::take(&mut self.edge_map)};self.retirement=Some(ImportCloseOwner::Scratch(import_controller(scratch)));self.retirement_stage=2;Ok(import_progress())}
@@ -214,7 +232,7 @@ impl MeshImportCursor {
         }
     })();semio_framework_value::RetainedWorkOutcome{result,work}
     }
-    pub fn close_step(&mut self,body:&mut Body,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_original_step(body,grant).result}
+    pub fn close_step(&mut self,body:&mut Body,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.close_original_step(body,effect).result}
     fn advance(&mut self,body:&mut Body)->Result<Option<EntityRef>,KernelError> {
         use semio_framework_3d_brep_representation::topology::EntityRef;
         match self.phase {
@@ -238,7 +256,7 @@ impl MeshImportCursor {
                     let mut local=OpRecorder::new();let mut vertices=Vec::with_capacity(3);let mut members=Vec::with_capacity(3);
                     for i in 0..3 {let id=if let Some(id)=self.vertex_map.get(&keys[i]) {*id}else {let id=semio_framework_3d_brep_construction::euler::make_vertex(body,points[i],Tol::DEFAULT,&mut local);self.vertex_map.insert(keys[i],id);id};vertices.push(id);}
                     for i in 0..3 {let j=(i+1)%3;let key=(keys[i].min(keys[j]),keys[i].max(keys[j]));let forward=keys[i]==key.0;let edge=if let Some((edge,uses,_))=self.edge_map.get_mut(&key) {*uses+=1;self.boundary_edges-=1;*edge}else {let (a,b)=if forward {(i,j)}else {(j,i)};let edge=semio_framework_3d_brep_construction::primitives::line_edge(body,points[a],points[b],vertices[a],vertices[b],Tol::DEFAULT,&mut local);self.edge_map.insert(key,(edge,1,forward));self.boundary_edges+=1;edge};members.push((edge,forward));}
-                    let wire=semio_framework_3d_brep_representation::topology::Wire {members,vertices,closed:true};let face=semio_framework_3d_brep_construction::primitives::make_planar_face_from_wire(body,&wire,p0,normal,&mut local)?;
+                    let wire=semio_framework_3d_brep_representation::topology::Wire {members,vertices,closed:true};let face=match semio_framework_3d_brep_construction::primitives::make_planar_face_from_wire(body,&wire,p0,normal,&mut local) {Ok(face)=>face,Err(error)=>{self.recorder.append_disjoint(local);return Err(error);}};
                     local.own_triangle(body,face);self.recorder.append_disjoint(local);self.faces.push(face);
                 }
                 self.cursor+=3;

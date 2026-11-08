@@ -192,7 +192,9 @@ impl<P: Clone + Send + Sync + 'static> PresenceStoreOwnedDisposer<P> {
 }
 
 impl<P: Clone + Send + Sync + 'static, M: Mutation<P> + 'static> ArtifactOwnedDisposer<PresenceStore<P, M>> for PresenceStoreOwnedDisposer<P> {
-    fn close_step(&mut self, owner: &mut PresenceStore<P, M>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn close_step(&mut self, owner: &mut PresenceStore<P, M>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, Fault> {
+        let grant = effect.grant();
+        if !effect.performed(1).map_err(|error| Fault::from(error.into_message()))? { return Ok(PluginLifecycleStep::Progress(Default::default())); }
         if self.retirement.is_some() && !self.owns_terminal(owner) {
             return Err(Fault::from("presence close terminal root or generation changed"));
         }

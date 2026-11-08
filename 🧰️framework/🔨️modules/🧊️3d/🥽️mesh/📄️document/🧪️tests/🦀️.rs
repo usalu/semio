@@ -1,5 +1,6 @@
 //! 🧪️ Document: 2 tests covering value round trip matches serde shape; triangle document boundary matches shared vectors.
 use super::*;
+use semio_framework_value::{FromValue as _,ToValue as _};
 
 /// 🧬️ Additive `#[derive(ToValue, FromValue)]` round-trip (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 /// 26/09/01): `FromValue(ToValue(x)) == x` for the transparent newtypes, the `default`-field
@@ -46,4 +47,13 @@ fn triangle_document_boundary_matches_shared_vectors() {
         assert_eq!(mesh.edge_count(),row["expected"]["edges"].as_u64().unwrap()as usize);
         assert_eq!(mesh.face_normal(FaceId(0)).unwrap().0,serde_json::from_value::<[f32;3]>(row["expected"]["normal"].clone()).unwrap());
     }
+}
+
+/// 🛡️ A malformed UV sample that bypassed attribute validation is a typed error, never a panic.
+#[test]
+fn malformed_uv_sample_is_a_typed_error() {
+    let mut mesh=HalfedgeMesh::from_indexed_triangles(&[0.,0.,0.,1.,0.,0.,0.,1.,0.],&[0,1,2]).unwrap();
+    let short=semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(1.0)]);
+    mesh.attributes.insert("uv".into(),MeshAttribute {domain:MeshAttributeDomain::Vertex,semantic:MeshAttributeSemantic::Uv,interpolation:MeshAttributeInterpolation::Nearest,values:vec![short.clone(),short.clone(),short],indices:None});
+    assert!(mesh.corner_uv(EdgeId(0)).is_err());
 }

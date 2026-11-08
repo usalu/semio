@@ -1,7 +1,8 @@
 //! 📤️ The original staged edit prepares causal bytes before its atomic Store publication.
 use super::*;
 
-pub(super) fn prepare_original_message<P,M>(store:&mut StoreParts<'_,P,M>,publication:&mut ArtifactStoreBatchPublication<P,M>,body:usize,grant:ArtifactStoreOneItemGrant)->Result<Option<ArtifactStoreOneItemAdvance>,VcsError>
+fn step_work(demand:semio_framework_value::RetirementDemand)->u64{[demand.copy_bytes,demand.capacity_bytes,demand.release_bytes,demand.depth,1].into_iter().fold(0u64,|total,part|total.saturating_add(u64::try_from(part).unwrap_or(u64::MAX)))}
+pub(super) fn prepare_original_message<P,M>(store:&mut StoreParts<'_,P,M>,publication:&mut ArtifactStoreBatchPublication<P,M>,body:usize,grant:ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Option<ArtifactStoreOneItemAdvance>,VcsError>
 where P: semio_os_spr::StoreState,M: semio_os_spr::StoreMutationFor<P>{
  let Some(wire)=store.log.operation_wire else{return Ok(None)};
  let Some(admit)=wire.original_message_admission else{return Ok(None)};
@@ -11,11 +12,11 @@ where P: semio_os_spr::StoreState,M: semio_os_spr::StoreMutationFor<P>{
  let progress=if let Some(owner)=stage.message_owner.as_mut(){
   if owner.ready(){let Some((edit,bytes,receipt))=owner.take_edit_message(grant.retained_grant()).map_err(refusal)?else{return Ok(Some(ArtifactStoreOneItemAdvance::Blocked))};stage.edit=Some(edit);stage.message=Some(bytes);owner.begin_close();receipt}
   else if owner.terminal_is_empty(){let release=size_of_val(owner.as_ref());let copy=size_of::<bool>();if grant.maximum_release_bytes<release||grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(Some(ArtifactStoreOneItemAdvance::Blocked))}stage.message_owner=None;stage.message_complete=true;RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:release,..Default::default()}}
-  else if stage.message.is_some(){let demand=owner.next_demand(body).map_err(refusal)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant.retained_grant(),demand){return Ok(Some(ArtifactStoreOneItemAdvance::Blocked))}owner.close_step(grant.retained_grant()).result.map_err(refusal)?.progress()}
+  else if stage.message.is_some(){let demand=owner.next_demand(body).map_err(refusal)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant.retained_grant(),demand){return Ok(Some(ArtifactStoreOneItemAdvance::Blocked))}let Some(polled)=receiving.with_allocated_effect(demand,step_work(demand),|_,effect|semio_os_store_one_item_publication::native_source::polled(owner.close_step(effect))).map_err(refusal)?else{return Ok(Some(ArtifactStoreOneItemAdvance::Blocked))};polled.map_err(refusal)?}
   else{
    let demand=owner.next_message_demand(body).map_err(refusal)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant.retained_grant(),demand){return Ok(Some(ArtifactStoreOneItemAdvance::Blocked))}
    let observed=stage.observed_source.map(|key|store.log.envelope.vcs.edits.get_key(key).and_then(|edit|edit.mutation_meta.last()).and_then(|meta|meta.mutation_id.as_ref()).map(|id|id.0.as_str()).ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"observed original operation changed before message preparation")))).transpose()?;
-   let step=owner.advance_message(&store.log.envelope.id,&store.log.envelope.schema,observed,grant.retained_grant()).map_err(refusal)?;
+   let Some(step)=receiving.with_allocated_effect(demand,step_work(demand),|_,effect|owner.advance_message(&store.log.envelope.id,&store.log.envelope.schema,observed,effect)).map_err(refusal)?else{return Ok(Some(ArtifactStoreOneItemAdvance::Blocked))};let step=step.map_err(refusal)?;
    semio_framework_value::retained_clone::admit_retained_clone_progress(grant.retained_grant(),step.progress(),"original precommit causal message").map_err(refusal)?
   }
  }else if !stage.observed_complete{
@@ -29,9 +30,9 @@ where P: semio_os_spr::StoreState,M: semio_os_spr::StoreMutationFor<P>{
 }
 
 
-pub(super) fn prepare_original_outgoing<P,M>(store:&mut StoreParts<'_,P,M>,publication:&mut ArtifactStoreBatchPublication<P,M>,body:usize,grant:ArtifactStoreOneItemGrant)->Result<Option<ArtifactStoreOneItemAdvance>,VcsError>
+pub(super) fn prepare_original_outgoing<P,M>(store:&mut StoreParts<'_,P,M>,publication:&mut ArtifactStoreBatchPublication<P,M>,body:usize,grant:ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Option<ArtifactStoreOneItemAdvance>,VcsError>
 where P: semio_os_spr::StoreState,M: semio_os_spr::StoreMutationFor<P>{
- if let Some(step)=prepare_original_message(store,publication,body,grant)?{return Ok(Some(step))}
+ if let Some(step)=prepare_original_message(store,publication,body,grant,receiving)?{return Ok(Some(step))}
  let stage=publication.stage.as_mut().expect("original outgoing owns its staged batch");if !stage.message_complete{return Ok(None)}
  let refuse=VcsError::InverseRefused;
  let receipt=if stage.seed_owner.is_none(){let Some((owner,p))=store.log.dag.admit_original_seeds(grant.retained_grant()).map_err(refuse)?else{return Ok(Some(ArtifactStoreOneItemAdvance::Blocked))};stage.seed_owner=Some(owner);p}
@@ -41,6 +42,6 @@ where P: semio_os_spr::StoreState,M: semio_os_spr::StoreMutationFor<P>{
   let copy=id.0.len().checked_add(size_of::<Option<MutationId>>()).ok_or_else(||refuse(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original outgoing identity quote overflow")))?;
   let d=semio_framework_value::RetirementDemand{copy_bytes:copy,capacity_bytes:id.0.len(),depth:1,..Default::default()};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant.retained_grant(),d){return Ok(Some(ArtifactStoreOneItemAdvance::Blocked))}
   stage.seed_pending=Some(MutationId(id.0.clone()));RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:d.capacity_bytes,..Default::default()}
- }else{let d=store.wire.original_outbox.append_demands().map_err(refuse)?;if d.capacity_bytes==0{return Ok(None)}store.wire.original_outbox.reserve_step(grant.retained_grant()).map_err(refuse)?};
+ }else{let d=store.wire.original_outbox.append_demands().map_err(refuse)?;if d.capacity_bytes==0{return Ok(None)}match receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|store.wire.original_outbox.reserve_step(effect)).and_then(Option::transpose).map_err(refuse)?{Some(step)=>step,None=>return Ok(Some(ArtifactStoreOneItemAdvance::Blocked))}};
  Ok(Some(if receipt==Default::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),receipt)}))
 }

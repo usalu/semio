@@ -7,7 +7,7 @@ use std::{mem::{ManuallyDrop, size_of}, sync::Arc};
 pub struct OriginalHistorySource {
     source: ManuallyDrop<Option<Arc<HistoryLog>>>,
     closing: ManuallyDrop<Option<SharedControlledRetirement<HistoryLog>>>,
-    binding: (u64, Option<u64>),
+    binding: (semio_framework_value::retained_clone::NativeAllocationIdentity, Option<u64>),
 }
 
 fn invalid(message: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, message) }
@@ -27,40 +27,26 @@ impl OriginalHistorySource {
 
     /// 🫴️ Keeps allocation and receipt callbacks in the supplied resident frame until original settlement.
     pub fn admit(history:&mut Option<HistoryLog>,output:&mut Option<Self>,frame:&mut semio_framework_value_native_owned::native_decoding::NativeReceivingEffect<ValueError>,native:&mut NativeDecodeControl<'_>)->Result<NativeConstructionStepResult<bool,semio_framework_value_native_owned::native_decoding::NativeReceivingEffectFailure<ValueError>>,OriginalReceivingPrimary>{
-        use semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase as Phase;
-        let demand=Self::birth_demand();
-        if frame.phase()==Phase::Empty{
-            if history.is_none()||output.is_some(){return Err(invalid("original history source requires an occupied input and empty destination").into())}
-            frame.quote(native,demand)?;
-        }else if !frame.matches_demand(demand){return Err(invalid("original history source changed its resident birth demand").into())}
-        if frame.phase()==Phase::Granted{
-            match native.prepare_work(Self::birth_work_demand()){
-                Ok(true)=>{},
-                Ok(false)=>{frame.cancel_unstarted(native)?;return frame.take(native).map(|turn|source_birth_outcome(turn,false)).map_err(Into::into)},
-                Err(error)=>{frame.record_work_refusal(native,error).map_err(|(state,refusal)|{let mut failure=OriginalReceivingPrimary::from(state);failure.work_refusal=Some(refusal);failure})?;frame.cancel_unstarted(native)?;return frame.take(native).map(|turn|source_birth_outcome(turn,false)).map_err(Into::into)}
-            }
-            let binding=(native.ledger_identity(),native.retirement_recipient_identity());
-            frame.effect(native,|actual,grant|{
-                let Some(original)=history.take()else{return semio_framework_value::RetainedWorkOutcome{result:Err(invalid("original History source input vanished before its quoted birth")),work:0}};
-                let turn=semio_framework_value::retirement::arc_custody::admit_shared_allocation(original,grant,actual);
-                let work=turn.work+2;
-                let result=match turn.result{
-                    Ok((source,mut progress))=>{*output=Some(Self{source:ManuallyDrop::new(Some(source)),closing:ManuallyDrop::new(None),binding});progress.copied_bytes=2*size_of::<Self>()+size_of::<HistoryLog>();Ok(RetainedCloneStep::Progress(progress))},
-                    Err((error,original))=>{*history=Some(original);Err(error.with_retained_progress(RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<HistoryLog>(),..Default::default()}))}
-                };
-                semio_framework_value::RetainedWorkOutcome{result,work}
-            })?;
-        }
-        if frame.phase()==Phase::EffectStarted{frame.finish_allocation(native)?}
-        if frame.phase()==Phase::EffectFinished{
-            if frame.work_commit_is_pending(){frame.retry_original_work(native)?}
-            if !frame.work_is_settled(){
-                if let Some(work)=frame.child_work(){frame.settle_original_work(native,work)?}else{frame.cancel_unperformed_work(native)?}
-            }
-            frame.receipt(native)?;
-        }
-        if frame.phase()!=Phase::Settled{return Err(invalid("original History source requires its interrupted original callback verdict").into())}
-        frame.take(native).map(|turn|source_birth_outcome(turn,output.is_some())).map_err(Into::into)
+        use semio_framework_value_native_owned::native_decoding::{NativeReceivingEffectPhase as Phase,NativeReceivingEffectPoll};
+        if frame.phase()==Phase::Empty&&(history.is_none()||output.is_some()){return Err(invalid("original history source requires an occupied input and empty destination").into())}
+        let binding=(native.ledger_identity(),native.retirement_recipient_identity());
+        let poll=native.receive_effect(Self::birth_demand(),Self::birth_work_demand(),frame,|_,effect|{
+            let outcome=|result,effect:&semio_framework_value::RetainedAllocationEffect<'_>|semio_framework_value::RetainedWorkOutcome{result,work:effect.performed_work()};
+            if history.is_none(){return outcome(Err(invalid("original History source input vanished before its quoted birth")),effect)}
+            if effect.remaining_work_units().map_or(true,|remaining|remaining<Self::birth_work_demand()){return outcome(Ok(RetainedCloneStep::Progress(Default::default())),effect)}
+            let Some(original)=history.take()else{return outcome(Err(invalid("original History source input vanished before its quoted birth")),effect)};
+            let grant=effect.grant();let turn=semio_framework_value::retirement::arc_custody::admit_shared_allocation(original,grant,effect.actual());
+            let recorded=u64::try_from(turn.work.saturating_add(1)).map_err(|_|invalid("original History source birth work exceeds its receipt")).and_then(|work|effect.performed(work));
+            let result=match(turn.result,recorded){
+                (Ok((source,mut progress)),recorded)=>{*output=Some(Self{source:ManuallyDrop::new(Some(source)),closing:ManuallyDrop::new(None),binding});progress.copied_bytes=2*size_of::<Self>()+size_of::<HistoryLog>();match recorded{Ok(true)=>Ok(RetainedCloneStep::Progress(progress)),Ok(false)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original History source birth exceeded its work grant").with_retained_progress(progress)),Err(error)=>Err(error.with_retained_progress(progress))}},
+                (Err((error,original)),_)=>{*history=Some(original);Err(error.with_retained_progress(RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<HistoryLog>(),..Default::default()}))}
+            };
+            outcome(result,effect)
+        })?;
+        Ok(match poll{
+            NativeReceivingEffectPoll::Complete(turn)=>source_birth_outcome(turn,output.is_some()),
+            NativeReceivingEffectPoll::Pending{work}=>NativeConstructionStepResult{result:Ok(false),progress:Default::default(),work},
+        })
     }
 
     fn validate(&self, native: &dyn NativeDecodeCloseControl) -> Result<(), ValueError> {
@@ -101,25 +87,30 @@ impl OriginalHistorySource {
     }
 
     /// ♻️ Cancellation borrows the original close authority and waits for live fold aliases before releasing history.
-    pub fn close_original(&mut self, native: &mut dyn NativeDecodeCloseControl, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
-        let mut work=0;
-        let result=(||{
-        self.validate(native)?;
-        let demand = self.next_close_demand(grant.maximum_copy_bytes)?;
-        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(source) = self.source.take() {
-            work=1;
-            *self.closing = Some(SharedControlledRetirement::new(source));
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
-        }
-        if let Some(owner) = self.closing.as_mut() {
-            if owner.terminal_is_empty(){work=1;*self.closing=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
-            native.charge(demand.capacity_bytes)?;
-            let result=owner.step(grant);work=owner.last_turn_work();
-            return result.map(|step|RetainedCloneStep::Progress(step.progress()));
-        }
-        Ok(RetainedCloneStep::Complete(Default::default()))
-        })();semio_framework_value::RetainedWorkOutcome{work,result}
+    pub fn close_original(&mut self, native: &mut dyn NativeDecodeCloseControl, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome {
+        let grant = effect.grant();
+        let mut work = 0;
+        let result = (|| {
+            self.validate(native)?;
+            let demand = self.next_close_demand(grant.maximum_copy_bytes)?;
+            if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            if let Some(source) = self.source.take() {
+                work = 1;
+                *self.closing = Some(SharedControlledRetirement::new(source));
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
+            }
+            if let Some(owner) = self.closing.as_mut() {
+                if owner.terminal_is_empty() { work = 1; *self.closing = None; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
+                let poll = owner.step(&mut effect.nested(grant));
+                work = poll.work();
+                return match poll {
+                    semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(RetainedCloneStep::Progress(Default::default())),
+                    semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|failure| { let (primary, work, receipt, ..) = failure.into_parts(); primary.or(work).or(receipt).unwrap_or_else(|| invalid("history source retirement failed without a cause")) }),
+                };
+            }
+            Ok(RetainedCloneStep::Complete(Default::default()))
+        })();
+        semio_framework_value::RetainedWorkOutcome { work, result }
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.source.is_none() && self.closing.is_none() }

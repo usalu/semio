@@ -13,7 +13,7 @@ pub trait StoreCloseAdmission {
     /// 🧲️ Takes the attached backbone and its inbox under the caller's retirement grant.
     fn close_take_backbone_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>;
     /// 🚪️ Moves one owned root of the addressed phase into its retirement owner.
-    fn close_cursor_admit(&mut self, phase: semio_os_store_read::ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError>;
+    fn close_cursor_admit(&mut self, phase: semio_os_store_read::ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), semio_framework_value::RetirementPollExit>;
 }
 
 /// 🪹️ Reads the terminal-empty witnesses of one store's owned roots.

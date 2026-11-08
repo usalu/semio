@@ -222,15 +222,14 @@ impl ArtifactSqliteSnapshotHost for crate::Puzzle2dPlaySnapshot{
  
  
  
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
-  let limits=control.limits();semantic_cells::extent(limits)?;
-  work.take(store::decode_sqlite_snapshot_record_native(payload,<Puzzle2dSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),Puzzle2dSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+  let limits=control.limits();if let Err(error)=(||->Result<(),semio_framework_value::ValueError>{semantic_cells::extent(limits)?;Ok(())})(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}store::decode_sqlite_snapshot_record_native(payload,<Puzzle2dSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),Puzzle2dSnapshot::__dsl_spec_producer(), &mut |record,snapshot_output,native| { let constructed: Result<_, ValueError> = (|| {
    semantic_cells::admit_record(record,limits,native)?;
    native.charge(size_of::<Puzzle2dSnapshot>()+2*size_of::<usize>())?;
    Puzzle2dSnapshot::__dsl_from_record_controlled(record,native).map(Self::from_typed)
-  })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control))})}
+  })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control,output)}
  fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{self.typed().preflight_sqlite_snapshot_encoding(encoding,control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure>{self.typed().encode_sqlite_snapshot_native(encoding,control,native_owner)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {self.typed().encode_sqlite_snapshot_native(encoding,control,native_owner,output)}
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{self.typed().validate_sqlite_snapshot_subset(dialect,database,control)}
 }
 

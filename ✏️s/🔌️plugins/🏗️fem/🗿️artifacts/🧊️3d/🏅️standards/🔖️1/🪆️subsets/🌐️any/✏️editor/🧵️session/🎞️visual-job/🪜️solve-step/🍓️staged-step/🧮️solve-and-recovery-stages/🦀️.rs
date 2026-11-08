@@ -6,7 +6,13 @@ use super::*;
 impl Fem3dNumericalChild {
     /// 🗜 Builds the CSR matrix of the assembled system.
     pub(super) fn step_build_csr(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
-        match self.csr_build.as_mut().ok_or_else(|| b"fem3d.numerical-csr".to_vec())?.step_one_funded(context.retained_grant()).and_then(|(complete, progress)| {
+        let grant = context.retained_grant();
+        let build = self.csr_build.as_mut().ok_or_else(|| b"fem3d.numerical-csr".to_vec())?;
+        let stepped = match context.with_original_effect(grant, |_, effect| build.step_one_in(effect)).map_err(|_| b"fem3d.numerical-csr-grant".to_vec())? {
+            None => Ok((false, Default::default())),
+            Some((result, performed)) => { semio_framework_job::receive_original_retained_work(context, semio_framework_value::RetainedWorkOutcome { result: Ok::<_, semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(Default::default())), work: performed }).map_err(|_| b"fem3d.numerical-csr-grant".to_vec())?; result }
+        };
+        match stepped.and_then(|(complete, progress)| {
             context.consume_retained(progress).map_err(|_| b"fem3d.numerical-csr-grant" as &'static [u8])?;
             Ok(complete)
         }) {

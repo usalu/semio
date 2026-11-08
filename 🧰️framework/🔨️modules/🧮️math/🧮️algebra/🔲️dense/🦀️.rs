@@ -103,7 +103,8 @@ impl<'de> semio_framework_value::serde::Deserialize<'de> for DenseSolveCursor {
  fn deserialize<D:semio_framework_value::serde::Deserializer<'de>>(d:D)->Result<Self,D::Error>{let words=<[u64;12] as semio_framework_value::serde::Deserialize>::deserialize(d)?;Self::from_snapshot(words).map_err(|_|semio_framework_value::serde::de::Error::custom("invalid dense cursor snapshot"))}
 }
 impl semio_framework_value::retirement::RetireOwned for DenseSolveCursor {
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.snapshot())}
+ type RetirementCursor=<[u64;12] as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::RetireOwned::retirement_seed(self.snapshot())}
  fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.snapshot())}
  fn controlled_retirement_supported()->bool{<[u64;12] as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
  fn retirement_element_copy_bytes()->usize{size_of::<Self>()}

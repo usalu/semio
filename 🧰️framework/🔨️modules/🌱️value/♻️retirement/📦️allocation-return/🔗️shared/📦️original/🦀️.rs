@@ -15,7 +15,7 @@ pub struct SharedOriginalPublication<'a,T:Send+Sync+'static>{birth:&'a mut Share
 impl<T:Send+Sync+'static> SharedOriginalPublication<'_,T>{
  pub fn commit(self,value:T)->crate::RetainedWorkOutcome<(SharedOriginalStorage<T>,RetainedCloneProgress)>{
   let mut source=self.birth.source.take().expect("funded original publication retains its backing");let storage=Arc::get_mut(&mut source).expect("unpublished original backing is unique");storage.value.get_mut().write(value);storage.aliases.store(1,Ordering::Relaxed);
-  crate::RetainedWorkOutcome{result:Ok((SharedOriginalStorage{source:ManuallyDrop::new(Some(source))},RetainedCloneProgress{copied_items:1,copied_bytes:SharedOriginalBirth::<T>::publication_demand().copy_bytes,..Default::default()})),work:Self::work_demand()}
+  crate::RetainedWorkOutcome{result:Ok((SharedOriginalStorage{source:ManuallyDrop::new(Some(source))},RetainedCloneProgress{copied_items:1,copied_bytes:SharedOriginalBirth::<T>::publication_demand().copy_bytes,..Default::default()})),work:u128::from(Self::work_demand())}
  }
  pub const fn work_demand()->u64{4}
 }

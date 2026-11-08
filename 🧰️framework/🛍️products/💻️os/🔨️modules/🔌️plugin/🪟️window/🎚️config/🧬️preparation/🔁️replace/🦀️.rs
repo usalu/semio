@@ -63,9 +63,10 @@ impl<S, M> RetainedCloneEditCursor<S, M> for WindowConfigReplaceCursor<S, M>
 where S: RetainedClone + Copy + RetireOwned + ::semio_os_kernel::StoreState, M: WindowConfigReplaceMutation<S> + RetireOwned
 {
     fn next_work_demand(&self,_:RetainedCloneRef<'_,S>,_:&S,_:RetainedCloneRef<'_,M>,_:usize)->Result<u64,ValueError>{Ok(1)}
-    fn last_turn_work(&self)->u64{self.last_work}
     fn advance_demands(&self, _: RetainedCloneRef<'_, S>, _: &S, _: RetainedCloneRef<'_, M>, _: usize) -> Result<RetirementDemand, ValueError> { Ok(if self.cancelled || self.custody.is_closing() || self.stage == 4 { Default::default() } else { self.normal_demand() }) }
-    fn advance(&mut self, base: RetainedCloneRef<'_, S>, post: &mut S, mutation: RetainedCloneRef<'_, M>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {
+    fn advance(&mut self,base: RetainedCloneRef<'_, S>, post: &mut S, mutation: RetainedCloneRef<'_, M>, body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneEditStep,ValueError>{
+     let grant=effect.grant();
+     let result=(||->Result<RetainedCloneEditStep,ValueError>{
         self.last_work=0;
         if self.cancelled || self.custody.is_closing() || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneEditStep::Progress(Default::default())); }
         if self.stage == 4 { return Ok(RetainedCloneEditStep::Complete(Default::default())); }
@@ -90,12 +91,15 @@ where S: RetainedClone + Copy + RetireOwned + ::semio_os_kernel::StoreState, M: 
         self.stage += 1;
         let receipt = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, released_bytes: 0 };
         Ok(if self.stage == 4 { RetainedCloneEditStep::Complete(receipt) } else { RetainedCloneEditStep::Progress(receipt) })
+     })();
+     if self.last_work!=0&&!effect.performed(self.last_work)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"edit cursor exceeds its work ceiling"))}
+     result
     }
     fn take_inverse(&mut self) -> Option<Vec<M>> { (self.stage == 4).then(|| self.custody.original_mut().1.take()).flatten() }
     fn foreign_step_presence(&self) -> bool { false }
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) -> bool { self.custody.begin_close() }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { let turn=self.custody.step(grant);self.last_work=self.custody.last_turn_work();turn }
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.custody.step(effect)}
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.custody.demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.custody.demands(body)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.custody.demands(0)?.release_bytes) }

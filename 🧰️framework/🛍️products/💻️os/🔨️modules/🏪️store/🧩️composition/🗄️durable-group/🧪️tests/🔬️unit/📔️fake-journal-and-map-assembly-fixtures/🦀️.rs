@@ -96,7 +96,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueErr
     fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.depth) }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !self.close_started || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -107,16 +107,21 @@ fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueErr
         else { drop(self.state.take()); }
         let progress = RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() };
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
 
     fn terminal_is_empty(&self) -> bool { self.close_started && self.decision_sha256.capacity() == 0 && self.anchor_sha256.capacity() == 0 && self.state.is_none() }
 
+}
+
+fn observe_close_journal(receiving: &mut semio_os_store_testing_prelude::FixtureStoreReceiving, owner: &mut Option<Box<dyn DurableOwnedGroupJournalCommitV1>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> (semio_framework_value::retained_clone::RetainedCloneStep, usize, usize) {
+    receiving.receive(|control| control.with_effect(grant, u64::MAX, |_, effect| semio_framework_trace_memory_testing::observe_backing(|| close_journal_owner(owner, effect).unwrap())).ok().flatten()).unwrap_or((semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()), 0, 0))
 }
 
 #[test]
 fn durable_journal_close_preserves_original_capacities_and_exact_receipts() {
     use semio_framework_value::{RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
     let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../♻️journal/🔣️.json")).unwrap();
+    let mut receiving = semio_os_store_testing_prelude::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
     for row in fixture["cases"].as_array().unwrap() {
         let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
         let mut decision = String::with_capacity(row["decisionCapacity"].as_u64().unwrap() as usize);
@@ -136,18 +141,18 @@ fn durable_journal_close_preserves_original_capacities_and_exact_receipts() {
             let (quote, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| journal.retirement_demands(grant.maximum_copy_bytes).unwrap());
             assert_eq!((born, freed), (0, 0));
             for denial in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: demand.depth - 1, ..grant }] {
-                let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| close_journal_owner(&mut owner, denial).unwrap());
+                let (step, born, freed) = observe_close_journal(&mut receiving, &mut owner, denial);
                 assert_eq!(step.progress(), Default::default());
                 assert_eq!((born, freed), (0, 0));
                 assert_eq!(owner.as_ref().unwrap().as_ref() as *const dyn DurableOwnedGroupJournalCommitV1 as *const (), frame_pointer);
             }
             if demand.release_bytes != 0 {
-                let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| close_journal_owner(&mut owner, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }).unwrap());
+                let (step, born, freed) = observe_close_journal(&mut receiving, &mut owner, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant });
                 assert_eq!(step.progress(), Default::default());
                 assert_eq!((born, freed), (0, 0));
                 assert_eq!(owner.as_ref().unwrap().retirement_demands(grant.maximum_copy_bytes).unwrap(), quote);
             }
-            let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| close_journal_owner(&mut owner, grant).unwrap());
+            let (step, born, freed) = observe_close_journal(&mut receiving, &mut owner, grant);
             assert!(step.progress().fits(grant));
             assert_eq!(born, 0);
             assert_eq!(freed, step.progress().released_bytes);

@@ -76,6 +76,11 @@ fn say(locale: Locale, en: &'static str, de: &'static str) -> &'static str {
         en
     }
 }
+
+/// 🗣️ The authored title of the site row in `locale`, the catalog string the artifact tree renders.
+pub fn site_label(locale: Locale) -> &'static str {
+    say(locale, "Site", "Standort")
+}
 //#endregion 🗣️Language
 
 //#region 🔖️UiValues
@@ -241,7 +246,7 @@ fn section_label(noun: &str, count: usize) -> UiAssemblyResult<UiLabel> {
 /// the inspector's own document summary rather than from a domain target.
 fn site_row(model: &EnergyRowsView<'_>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let row_id = format!("{TREE_NAMESPACE}.site.row");
-    let item = ui::tree_item(UiLabel(UiText::clipped(say(locale, "Site", "Standort")))).icon(ui_text("globe")?).description(UiText::clipped(&site_description(model))).dimmed(false).default_open(false);
+    let item = ui::tree_item(UiLabel(UiText::clipped(site_label(locale)))).icon(ui_text("globe")?).description(UiText::clipped(&site_description(model))).dimmed(false).default_open(false);
     let item = item.try_id(&row_id).map_err(|_| capacity_error("energy artifact site row id admission failed"))?.target(activation_target(clear_selection_action()?)?);
     item.try_build().map_err(|_| capacity_error("energy artifact site row assembly failed"))
 }

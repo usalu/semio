@@ -72,23 +72,29 @@ impl Drop for RegisteredActionBusAlias {
         assert!(std::thread::panicking() || self.terminal_is_empty(), "mounted registered bus alias requires its original paid return")
     }
 }
-struct RegisteredSourceRetirement {
+#[doc(hidden)]
+pub struct RegisteredSourceRetirement {
     source: ManuallyDrop<Option<RegisteredActionBusSource>>,
 }
 impl RetirementCursor for RegisteredSourceRetirement {
     fn next_demand(&self, _: usize) -> Result<RetirementDemand, ValueError> {
         Ok(if self.source.is_some() { RetirementDemand { copy_bytes: size_of::<Option<RegisteredActionBusSource>>(), depth: 1, ..Default::default() } } else { Default::default() })
     }
-    fn close_step(&mut self, g: RetainedCloneGrant) -> RetirementStep {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetirementStep {
         if self.source.is_none() {
             return RetirementStep::Complete(0);
         }
-        let d = self.next_demand(g.maximum_copy_bytes).expect("fixed registered source return quote");
+        let g = effect.grant();
+        let d = match self.next_demand(g.maximum_copy_bytes) { Ok(d) => d, Err(error) => return RetirementStep::Failure(error.into(), 0) };
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(g, d) {
             return RetirementStep::BudgetExhausted;
         }
+        let work = match semio_framework_value::retirement::record_retirement_work(effect, 1) { Ok(work) => work, Err((error, work)) => return RetirementStep::Failure(error.into(), work) };
         drop(self.source.take());
-        RetirementStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() }, 1)
+        RetirementStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() }, work)
+    }
+    fn next_computational_work(&self, _: usize) -> Result<u64, ValueError> {
+        Ok(u64::from(self.source.is_some()))
     }
     fn terminal_is_empty(&self) -> bool {
         self.source.is_none()
@@ -103,8 +109,9 @@ impl Drop for RegisteredSourceRetirement {
     }
 }
 impl RetireOwned for RegisteredActionBusSource {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        Box::new(RegisteredSourceRetirement { source: ManuallyDrop::new(Some(self)) })
+    type RetirementCursor = RegisteredSourceRetirement;
+    fn retirement_seed(self) -> RegisteredSourceRetirement {
+        RegisteredSourceRetirement { source: ManuallyDrop::new(Some(self)) }
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {
         Some(size_of::<RegisteredSourceRetirement>())

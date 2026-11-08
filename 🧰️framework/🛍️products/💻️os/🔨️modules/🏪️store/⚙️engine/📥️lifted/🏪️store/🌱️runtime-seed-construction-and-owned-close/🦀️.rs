@@ -6,6 +6,9 @@ use semio_os_store_replay::PrefixSnapshot;
 use semio_os_store_engine_close::StoreCloseWitness as _;
 use semio_framework_value::RetirementDemand;
 
+/// ⛽️ Work one cold owned-store close step may spend inside its own explicit authoring wallet.
+const ARTIFACT_STORE_COLD_CLOSE_STEP_WORK: u64 = 64;
+
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
     P: semio_os_spr::StoreState,
@@ -332,30 +335,36 @@ where
         Ok(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() })
     }
 
-    /// 🧹️ Advances the exact store disposer under the caller's retirement grant.
-    pub fn close_owned_store_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    /// 🧹️ Advances the exact store disposer inside the caller's funded effect.
+    pub fn close_owned_store_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        let result = self.close_owned_store_inner(effect);
+        semio_framework_value::RetirementPollExit::settle(effect, result)
+    }
+
+    fn close_owned_store_inner(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.owners.owned_disposer_terminal { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         let demand = self.close_owned_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "store close exceeds admitted owner depth")); }
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "store close exceeds admitted owner depth").into()); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let mut disposer = self.owners.owned_disposer.take().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store has no owner-supplied bounded disposer"))?;
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let result = (|| {
+        let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
             if !disposer.terminal_is_empty(self) {
-                let step = disposer.close_step(&mut ArtifactStoreCloseView { store: self }, child)?;
+                let step = semio_framework_value::RetirementPollExit::resume(disposer.close_step(&mut ArtifactStoreCloseView { store: self }, &mut effect.nested(child)))?;
                 semio_framework_value::retained_clone::admit_retained_clone_close(child, step, disposer.terminal_is_empty(self), "installed store disposer")?;
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
-            if !self.resident_backings_terminal_is_empty() { return self.close_resident_backing_step(child).map(|step| RetainedCloneStep::Progress(step.progress())); }
-            if !self.owners.snapshot_read_leases.closed() { return self.owners.snapshot_read_leases.close_custody_step(child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+            if !self.resident_backings_terminal_is_empty() { return self.close_resident_backing_step(child, &mut effect.nested(child)).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(Into::into); }
+            if !self.owners.snapshot_read_leases.closed() { return semio_framework_value::RetirementPollExit::resume(self.owners.snapshot_read_leases.close_custody_step(&mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress())); }
             if self.factory_aliases_present() {
                 self.close_one_factory_alias();
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
             }
             if !self.owners.factory_retirement_tickets.terminal_is_empty() {
-                let step = self.owners.factory_retirement_tickets.close_step(child).result?;
+                let step = semio_framework_value::RetirementPollExit::resume(self.owners.factory_retirement_tickets.close_step(&mut effect.nested(child)))?;
                 semio_framework_value::retained_clone::admit_retained_clone_close(child, step, self.owners.factory_retirement_tickets.terminal_is_empty(), "store factory tickets")?;
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
@@ -383,7 +392,7 @@ where
         Ok(self.owners.snapshot_read_leases.empty_backing_demands()?.release_bytes)
     }
 
-    fn close_resident_backing_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_resident_backing_step(&mut self, grant: RetainedCloneGrant, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
         if !self.parts_ref().close_structural_owners_terminal_is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Store resident backing still holds structural payload owners")); }
         let empty = RetainedCloneProgress::default();
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -403,13 +412,31 @@ where
         if report_messages.capacity() != 0 { return resident_backing::close_vec(report_messages, grant); }
         if report_outbound.capacity() != 0 { return resident_backing::close_vec(report_outbound, grant); }
         if let Some(ids) = report_edit_ids.filter(|ids| ids.capacity() != 0) { return resident_backing::close_vec(ids, grant); }
-        self.owners.snapshot_read_leases.close_empty_backing_step(grant)
+        self.owners.snapshot_read_leases.close_empty_backing_step(effect).result
     }
 
     /// 🧹️ Advances owned-store disposal without requiring this store to be a composed
     /// [`SpaceMember`]. Local lanes use the same exact disposer authority.
-    pub fn close_owned_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        self.close_owned_store_step(grant)
+    pub fn close_owned_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        self.close_owned_store_step(effect)
+    }
+
+    /// 🧊️ Retires displaced owners outside any Job turn under one explicit authoring wallet whose stock is `grant`; callers inside a turn pass their own effect to [`Self::maintenance_retirements_step`].
+    pub fn maintenance_retirements_step_cold(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let mut wallet = semio_framework_value::AuthoringWallet::new(grant, u128::from(ARTIFACT_STORE_COLD_CLOSE_STEP_WORK));
+        match wallet.run_settled(grant, ARTIFACT_STORE_COLD_CLOSE_STEP_WORK, |effect| self.maintenance_retirements_step(effect))? {
+            Some((turn, _)) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
+            None => Ok(RetainedCloneStep::Progress(Default::default())),
+        }
+    }
+
+    /// 🧊️ Advances owned-store disposal outside any Job turn under one explicit authoring wallet whose stock is `grant`; callers inside a turn pass their own effect to [`Self::close_owned_step`].
+    pub fn close_owned_step_cold(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let mut wallet = semio_framework_value::AuthoringWallet::new(grant, u128::from(ARTIFACT_STORE_COLD_CLOSE_STEP_WORK));
+        match wallet.run_settled(grant, ARTIFACT_STORE_COLD_CLOSE_STEP_WORK, |effect| self.close_owned_store_step(effect))? {
+            Some((turn, _)) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
+            None => Ok(RetainedCloneStep::Progress(Default::default())),
+        }
     }
 
     /// 🧺️ Confirms owned-store disposal for document and local lane snapshots alike.
@@ -423,7 +450,7 @@ where
             if self.close_owned_terminal_is_empty() { return Ok(()); }
             let demand = self.close_owned_demands(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)?;
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            if let RetainedCloneStep::Complete(_) = self.close_owned_step(grant)? { return if self.close_owned_terminal_is_empty() { Ok(()) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "store close completed without its terminal-empty witness")) }; }
+            if let RetainedCloneStep::Complete(_) = self.close_owned_step_cold(grant)? { return if self.close_owned_terminal_is_empty() { Ok(()) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "store close completed without its terminal-empty witness")) }; }
         }
         Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "store close did not reach its terminal-empty witness within its bounded steps"))
     }

@@ -13,22 +13,6 @@
 
 extern crate semio_framework_value_derive as value_derive;
 
-/// ♻️ Implements `RetireOwned` for a geometry enum by retiring every field of its matching variant.
-#[macro_export]
-macro_rules! retire_geometry_variants {
-    ($type:ty {$($variant:ident {$($field:ident),+}),+ $(,)?}) => {
-        impl semio_framework_value::retirement::RetireOwned for $type {
-            fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {
-                match self {$ (Self::$variant {$($field),+}=>semio_framework_value::retirement::sequence(vec![$(semio_framework_value::retirement::deferred($field)),+])),+}
-            }
-            fn retirement_birth_bytes(&self)->Option<usize> {
-                match self {$ (Self::$variant {$($field),+}=>semio_framework_value::retirement::sequence_birth_bytes(&[$(semio_framework_value::retirement::deferred_birth_bytes_for($field)),+])),+}
-            }
-            fn controlled_retirement_supported()->bool {true}
-        }
-    };
-}
-
 // #region 🔖️Submodules
 
 #[path = "🔢️matrix/🦀️.rs"]

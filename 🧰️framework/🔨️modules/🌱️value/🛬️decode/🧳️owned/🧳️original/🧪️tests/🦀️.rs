@@ -1,37 +1,79 @@
 use super::*;
-use crate::{DslValue,RetainedWorkOutcome,OriginalReceivingPrimary,retirement::controlled::ControlledRetirement,shared_issuance::SealedShared};
+use crate::{DslValue,OriginalReceivingPrimary,shared_issuance::SealedShared};
+use semio_framework_value_testing_admission::{self as fixture,BankWallet,EffectBank};
 #[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate",native_owned="crate")]struct Row{value:SealedShared<String>}
-struct Bank{left:RetainedCloneGrant,fuel:u64}
-impl Bank{fn new()->Self{let f:serde_json::Value=serde_json::from_str(include_str!("🎟️work/📐️.json")).unwrap();Self{left:RetainedCloneGrant{maximum_items:f["items"].as_u64().unwrap()as usize,maximum_copy_bytes:f["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:f["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:f["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:f["depth"].as_u64().unwrap()as usize},fuel:f["fuel"].as_u64().unwrap()}}fn offer(&self)->RetainedCloneGrant{assert!(self.fuel>0);RetainedCloneGrant{maximum_items:self.left.maximum_items.min(1),maximum_copy_bytes:self.left.maximum_copy_bytes.min(4096),..self.left}}fn quoted(&self,d:RetirementDemand)->RetainedCloneGrant{let loan=self.offer();assert!(retained_clone_grant_admits(loan,d));RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth,..loan}}fn post(&mut self,p:RetainedCloneProgress,work:u64){assert!(p.fits(self.left));self.left.maximum_items-=p.copied_items;self.left.maximum_copy_bytes-=p.copied_bytes;self.left.maximum_capacity_bytes-=p.retained_capacity_bytes;self.left.maximum_release_bytes-=p.released_bytes;self.fuel=self.fuel.checked_sub(work).unwrap();}}
+const BODY:usize=1<<16;
+type Owner=NativeReceivingOriginal<DslValue,Row>;
+type Turn=RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>;
+type Close=RetainedWorkOutcome<RetainedCloneStep,crate::OriginalRetirementFailure>;
+fn stock()->fixture::Wallet{fixture::Wallet::from_profile(&serde_json::from_str::<serde_json::Value>(include_str!("🎟️work/📐️.json")).unwrap())}
+fn scratch()->EffectBank{EffectBank::new(BankWallet::from_profile(&serde_json::json!({"items":1u64<<40,"copyBytes":1u64<<40,"capacityBytes":1u64<<40,"releaseBytes":1u64<<40,"depth":1u64<<20,"fuel":1u64<<60})))}
 fn observe<R>(run:impl FnOnce()->R)->(R,(usize,usize)){semio_framework_value_testing_allocator::observe_retirement_allocations(run)}
-fn account(bank:&mut Bank,p:RetainedCloneProgress,work:u64,g:RetainedCloneGrant,heap:(usize,usize)){assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));bank.post(p,work);}
-fn denied(d:RetirementDemand,g:RetainedCloneGrant)->impl Iterator<Item=RetainedCloneGrant>{[(true,RetainedCloneGrant{maximum_items:0,..g}),(d.copy_bytes>0,RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes.saturating_sub(1),..g}),(d.capacity_bytes>0,RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes.saturating_sub(1),..g}),(d.release_bytes>0,RetainedCloneGrant{maximum_release_bytes:d.release_bytes.saturating_sub(1),..g}),(d.depth>0,RetainedCloneGrant{maximum_depth:d.depth.saturating_sub(1),..g})].into_iter().filter_map(|(active,g)|active.then_some(g))}
-fn receive(control:&mut NativeDecodeControl<'_>,loan:RetainedCloneGrant,work_loan:crate::source_fixture::WorkLoan<'_>,operation:impl FnOnce(&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{crate::source_fixture::receive(control,loan,work_loan,operation)}
-
-fn input(bank:&mut Bank)->RetainedCloneSource<DslValue>{let original=DslValue::Object(vec![("value".into(),DslValue::String("Original receiving owner🧱".into()))]);crate::source_fixture::capture(original,bank,Bank::offer,|bank,p,work,heap,g|account(bank,p,work,g,heap))}
-fn drain<T:RetireOwned>(value:T,bank:&mut Bank){let mut close=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("original receiving typed close unsupported"));for _ in 0..10000{if close.terminal_is_empty(){return}let g=bank.quoted(close.next_demand(4096).unwrap());let(result,heap)=observe(||{let mut actual=None;close.step(&mut crate::RetainedAllocationEffect::new(g,u64::MAX,&mut actual))});let work=close.last_turn_work();let p=match &result{Ok(s)=>s.progress(),Err(e)=>e.retained_progress()};account(bank,p,work,g,heap);result.unwrap();}panic!("original receiving typed close stalled")}
+fn quoted(wallet:&fixture::Wallet,d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes<=BODY);let loan=wallet.loan(1,BODY);assert!(retained_clone_grant_admits(loan,d));RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth,..loan}}
+fn settled<T,E>(poll:RetainedWorkPoll<T,E>)->RetainedWorkOutcome<T,E>{match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{..}=>panic!("synchronous original fixture turn stayed pending")}}
+fn progress<E:RetainedProgressOf>(turn:&RetainedWorkOutcome<RetainedCloneStep,E>)->RetainedCloneProgress{match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.progress_of()}}
+trait RetainedProgressOf{fn progress_of(&self)->RetainedCloneProgress;}
+impl RetainedProgressOf for OriginalReceivingPrimary{fn progress_of(&self)->RetainedCloneProgress{self.retained_progress()}}
+impl RetainedProgressOf for crate::OriginalRetirementFailure{fn progress_of(&self)->RetainedCloneProgress{self.retained_progress()}}
+fn input<T:RetireOwned+Sync>(value:T,wallet:&mut fixture::Wallet)->RetainedCloneSource<T>{fixture::capture(value,wallet,|wallet|wallet.loan(1,BODY),|wallet|wallet.work_remaining(),|wallet,p,work,heap,g|wallet.post(p,u128::from(work),g,heap))}
+fn row_source(wallet:&mut fixture::Wallet)->RetainedCloneSource<DslValue>{input(DslValue::Object(vec![("value".into(),DslValue::String("Original receiving owner🧱".into()))]),wallet)}
+fn advance<I:Sync+'static,T:NativeReceive<I>>(owner:&mut NativeReceivingOriginal<I,T>,control:&mut NativeDecodeControl<'_>,wallet:&fixture::Wallet,grant:RetainedCloneGrant)->(Turn,(usize,usize)) where I:RetireOwned{
+ let fuel=wallet.work_remaining();observe(||fixture::receive(control,grant,wallet.work_loan(fuel),|control|settled(owner.advance(control,BODY,fuel,grant))))
+}
+fn take<I:Sync+'static,T:NativeReceive<I>>(owner:&mut NativeReceivingOriginal<I,T>,bank:&mut EffectBank,grant:RetainedCloneGrant,output:&mut Option<T>)->(Turn,(usize,usize)) where I:RetireOwned{
+ let((poll,_),heap)=observe(||bank.run(grant,1,|effect|owner.take(output,effect)));assert_ne!(bank.take_admitted(),Some(false));(settled(poll),heap)
+}
+fn close<I:Sync+'static,T:NativeReceive<I>>(owner:&mut NativeReceivingOriginal<I,T>,bank:&mut EffectBank,grant:RetainedCloneGrant)->(Close,(usize,usize)) where I:RetireOwned{
+ let quote=owner.close_work_demand(BODY).unwrap();let((poll,actual),heap)=observe(||bank.run(grant,quote,|effect|owner.close_step(effect)));assert_ne!(bank.take_admitted(),Some(false));if let Some(bytes)=actual{assert_eq!(bytes,heap.0)}else{assert_eq!(heap.0,0)}(settled(poll),heap)
+}
+fn close_all<I:Sync+'static,T:NativeReceive<I>>(owner:&mut NativeReceivingOriginal<I,T>,wallet:&mut fixture::Wallet,bank:&mut EffectBank,released:&mut Vec<usize>) where I:RetireOwned{
+ owner.begin_close();
+ for _ in 0..10000{
+  if owner.terminal_is_empty(){return}
+  let d=owner.close_demands(BODY).unwrap();let g=quoted(wallet,d);
+  for denied in fixture::denials(g,d){let(turn,heap)=close(owner,bank,denied);assert_eq!(turn.work,0);assert_eq!(progress(&turn),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.close_demands(BODY).unwrap(),d);}
+  let(turn,heap)=close(owner,bank,g);let p=progress(&turn);wallet.post(p,turn.work,g,heap);released.push(p.released_bytes);turn.result.unwrap();
+ }
+ panic!("original receiving owner did not close in its turn bound")
+}
 #[test]fn native_receiving_original_keeps_cancellation_and_denied_transfers_owned(){
- type Owner=NativeReceivingOriginal<DslValue,Row>;let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();assert_eq!(law["closeOrder"],serde_json::json!(["receiver","output","original-source","frame"]));let mut finished=0;
- for cut in 0..128{let mut bank=Bank::new();let source=input(&mut bank);let source_pointer=std::ptr::from_ref(source.borrow().get());let(mut owner,heap)=observe(||Owner::new(source));assert_eq!(heap,(0,0));assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),source_pointer);let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<20,&mut callback);let mut turns=0;
-  while turns<cut&&!owner.output_ready(){let d=owner.demands(4096).unwrap();let g=bank.quoted(d);assert!(retained_clone_grant_admits(g,d));for denied in denied(d,g){let(turn,heap)=observe(||receive(&mut control,denied,crate::source_fixture::WorkLoan::new(&bank.fuel,1),|control|owner.advance(control,4096,denied)));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.demands(4096).unwrap(),d);}let(turn,heap)=observe(||receive(&mut control,g,crate::source_fixture::WorkLoan::new(&bank.fuel,1),|control|owner.advance(control,4096,g)));let p=match &turn.result{Ok(s)=>s.progress(),Err(e)=>e.retained_progress()};account(&mut bank,p,turn.work,g,heap);turn.result.unwrap();assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),source_pointer);turns+=1;}
-  if owner.output_ready(){finished=turns;let d=owner.take_demand().unwrap();let g=bank.quoted(d);assert_eq!(d.copy_bytes,0);for denied in denied(d,g){let(turn,heap)=observe(||owner.take(denied));assert_eq!(turn.work,0);assert!(turn.result.unwrap().is_none());assert_eq!(heap,(0,0));assert!(owner.output_ready());}if cut%2==0{let(turn,heap)=observe(||owner.take(RetainedCloneGrant{maximum_copy_bytes:0,..g}));let work=turn.work;let(row,p)=turn.result.unwrap().unwrap();account(&mut bank,p,work,g,heap);assert_eq!(row.value.as_str(),"Original receiving owner🧱");drain(row,&mut bank);}}
-  owner.begin_close();for _ in 0..10000{if owner.terminal_is_empty(){break}if owner.receiver.reserved(){assert!(owner.original.as_ref().unwrap().try_borrow().is_ok());}else if owner.original.is_some(){assert!(!owner.receiver.reserved());}let d=owner.close_demands(4096).unwrap();let g=bank.quoted(d);assert!(retained_clone_grant_admits(g,d));for denied in denied(d,g){let(turn,heap)=observe(||{let mut actual=None;owner.close_step(&mut crate::RetainedAllocationEffect::new(denied,u64::MAX,&mut actual))});assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.close_demands(4096).unwrap(),d);}let(turn,heap)=observe(||{let mut actual=None;owner.close_step(&mut crate::RetainedAllocationEffect::new(g,u64::MAX,&mut actual))});let p=match &turn.result{Ok(s)=>s.progress(),Err(e)=>e.retained_progress()};account(&mut bank,p,turn.work,g,heap);turn.result.unwrap();}assert!(owner.terminal_is_empty());if finished>0&&cut>finished{break;}
- }assert!(finished>0);
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();assert_eq!(law["closeOrder"],serde_json::json!(["receiver","output","original-source","frame"]));let mut finished=0;
+ for cut in 0..128{
+  let mut wallet=stock();let mut bank=scratch();let source=row_source(&mut wallet);let source_pointer=std::ptr::from_ref(source.borrow().get());let(mut owner,heap)=observe(||Owner::new(source));assert_eq!(heap,(0,0));assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),source_pointer);let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<20,&mut callback);let mut turns=0;
+  while turns<cut&&!owner.output_ready(){
+   let fuel=wallet.work_remaining();let d=owner.demands(BODY,fuel).unwrap();let g=quoted(&wallet,d);
+   for denied in fixture::denials(g,d){let(turn,heap)=advance(&mut owner,&mut control,&wallet,denied);assert_eq!(turn.work,0);assert_eq!(progress(&turn),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.demands(BODY,fuel).unwrap(),d);}
+   let(turn,heap)=advance(&mut owner,&mut control,&wallet,g);let p=progress(&turn);wallet.post(p,turn.work,g,heap);turn.result.unwrap();assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),source_pointer);turns+=1;
+  }
+  if owner.output_ready(){
+   finished=turns;let d=owner.take_demand().unwrap();let g=quoted(&wallet,d);
+   for denied in fixture::denials(g,d){let mut denied_output=None;let(turn,heap)=take(&mut owner,&mut bank,denied,&mut denied_output);assert_eq!(turn.work,0);assert_eq!(progress(&turn),Default::default());assert!(denied_output.is_none());assert_eq!(heap,(0,0));assert!(owner.output_ready());}
+   if cut%2==0{let mut taken=None;let(turn,heap)=take(&mut owner,&mut bank,g,&mut taken);let p=progress(&turn);wallet.post(p,turn.work,g,heap);turn.result.unwrap();let row=taken.expect("funded publication fills the caller slot");assert_eq!(row.value.as_str(),"Original receiving owner🧱");fixture::close_owned(row,&mut wallet,BODY,10000);}
+  }
+  close_all(&mut owner,&mut wallet,&mut bank,&mut Vec::new());assert!(owner.terminal_is_empty());if finished>0&&cut>finished{break}
+ }
+ assert!(finished>0);
 }
 #[test]fn native_receiving_original_shell_requires_funded_input_and_receiver_custody(){
- type Owner=NativeReceivingOriginal<DslValue,Row>;let mut bank=Bank::new();let source=input(&mut bank);let pointer=std::ptr::from_ref(source.borrow().get());let(mut owner,heap)=observe(||Owner::new(source));assert_eq!(heap,(0,0));assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),pointer);assert!(!owner.receiver.reserved());let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<20,&mut callback);
- for stage in 0..2{let d=owner.demands(4096,bank.fuel).unwrap();let g=bank.quoted(d);for denied in denied(d,g){let(turn,heap)=observe(||receive(&mut control,denied,crate::source_fixture::WorkLoan::new(&bank.fuel,bank.fuel),|control|{let maximum=control.available_work_units().unwrap();owner.advance(control,4096,maximum,denied)}));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.demands(4096,bank.fuel).unwrap(),d);}let(turn,heap)=observe(||receive(&mut control,g,crate::source_fixture::WorkLoan::new(&bank.fuel,bank.fuel),|control|{let maximum=control.available_work_units().unwrap();owner.advance(control,4096,maximum,g)}));let work=turn.work;let p=turn.result.unwrap().progress();account(&mut bank,p,work,g,heap);assert!(owner.receiver.reserved());assert_eq!(owner.receiver.initialized(),stage==1);assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),pointer);}
- drain(owner,&mut bank);
+ let mut wallet=stock();let mut bank=scratch();let source=row_source(&mut wallet);let pointer=std::ptr::from_ref(source.borrow().get());let(mut owner,heap)=observe(||Owner::new(source));assert_eq!(heap,(0,0));assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),pointer);assert!(!owner.receiver.reserved());let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<20,&mut callback);
+ for stage in 0..2{
+  let fuel=wallet.work_remaining();let d=owner.demands(BODY,fuel).unwrap();let g=quoted(&wallet,d);
+  for denied in fixture::denials(g,d){let(turn,heap)=advance(&mut owner,&mut control,&wallet,denied);assert_eq!(turn.work,0);assert_eq!(progress(&turn),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.demands(BODY,fuel).unwrap(),d);}
+  let(turn,heap)=advance(&mut owner,&mut control,&wallet,g);let p=progress(&turn);assert_eq!(turn.work,1);wallet.post(p,turn.work,g,heap);turn.result.unwrap();
+  assert!(owner.receiver.reserved());assert_eq!(owner.receiver.initialized(),stage==1);assert_eq!(p.retained_capacity_bytes,heap.0);
+  assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),pointer);
+ }
+ close_all(&mut owner,&mut wallet,&mut bank,&mut Vec::new());assert!(owner.terminal_is_empty());
 }
-
 #[path="../🪞️projection/🧪️tests/🦀️.rs"]mod projection_laws;
-
 #[test]fn native_persistent_list_original_vector_owner_fits_quantum_and_keeps_custody(){
  use semio_framework_value_persistent::list::persistent::PersistentList;
- type Owner=NativeReceivingOriginal<Vec<DslValue>,PersistentList<Row>>;
- for cut in [Some(0usize),Some(1),Some(8),Some(32),None]{let mut bank=Bank::new();let rows=(0..17).map(|index|DslValue::Object(vec![("value".into(),DslValue::String(format!("α🙂{index}")))])).collect::<Vec<_>>();let source=crate::source_fixture::capture(rows,&mut bank,Bank::offer,|bank,p,work,heap,g|account(bank,p,work,g,heap));let pointer=std::ptr::from_ref(source.borrow().get());let(mut owner,heap)=observe(||Owner::new(source));assert_eq!(heap,(0,0));let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<30,&mut callback);let mut turns=0;
- while !owner.output_ready()&&cut.is_none_or(|cut|turns<cut){let d=owner.demands(4096).unwrap();assert!(d.copy_bytes<=4096);let g=bank.quoted(d);let(turn,heap)=observe(||receive(&mut control,g,crate::source_fixture::WorkLoan::new(&bank.fuel,1),|control|owner.advance(control,4096,g)));let p=turn.result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());account(&mut bank,p,turn.work,g,heap);turn.result.unwrap();assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),pointer);turns+=1;}
- let mut output=None;if cut.is_none(){assert!(owner.output_ready());let g=bank.quoted(owner.take_demand().unwrap());let(turn,heap)=observe(||owner.take(g));let(value,p)=turn.result.unwrap().unwrap();account(&mut bank,p,turn.work,g,heap);assert_eq!(value.len(),17);for index in 0..17{assert_eq!(value.get(index).unwrap().value.as_str(),format!("α🙂{index}"));}output=Some(value);}
- owner.begin_close();for _ in 0..100000{if owner.terminal_is_empty(){break}let g=bank.quoted(owner.close_demands(4096).unwrap());let mut actual=None;let(turn,heap)=observe(||owner.close_step(&mut crate::RetainedAllocationEffect::new(g,u64::MAX,&mut actual)));let p=turn.result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());account(&mut bank,p,turn.work,g,heap);turn.result.unwrap();}assert!(owner.terminal_is_empty());if let Some(output)=output{drain(output,&mut bank);}
+ type ListOwner=NativeReceivingOriginal<Vec<DslValue>,PersistentList<Row>>;
+ for cut in [Some(0usize),Some(1),Some(8),Some(32),None]{
+  let mut wallet=stock();let mut bank=scratch();let rows=(0..17).map(|index|DslValue::Object(vec![("value".into(),DslValue::String(format!("α🙂{index}")))])).collect::<Vec<_>>();let source=input(rows,&mut wallet);let pointer=std::ptr::from_ref(source.borrow().get());let(mut owner,heap)=observe(||ListOwner::new(source));assert_eq!(heap,(0,0));let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<30,&mut callback);let mut turns=0;
+  while !owner.output_ready()&&cut.is_none_or(|cut|turns<cut){assert!(turns<4096,"original receiving stalled");let fuel=wallet.work_remaining();let d=owner.demands(BODY,fuel).unwrap();let g=quoted(&wallet,d);let(turn,heap)=advance(&mut owner,&mut control,&wallet,g);let p=progress(&turn);wallet.post(p,turn.work,g,heap);turn.result.unwrap();assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),pointer);turns+=1;}
+  let mut output=None;
+  if cut.is_none(){assert!(owner.output_ready());let g=quoted(&wallet,owner.take_demand().unwrap());let mut taken=None;let(turn,heap)=take(&mut owner,&mut bank,g,&mut taken);let p=progress(&turn);wallet.post(p,turn.work,g,heap);turn.result.unwrap();let value=taken.expect("funded publication fills the caller slot");assert_eq!(value.len(),17);for index in 0..17{assert_eq!(value.get(index).unwrap().value.as_str(),format!("α🙂{index}"));}output=Some(value);}
+  close_all(&mut owner,&mut wallet,&mut bank,&mut Vec::new());assert!(owner.terminal_is_empty());if let Some(output)=output{fixture::close_owned(output,&mut wallet,BODY,100000);}
  }
 }

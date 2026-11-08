@@ -70,6 +70,47 @@ pub use three_member_decision_operations_codecs_and_testing::{
 };
 
 
+/// 🎟️ Runs one retirement step as one original effect of the caller's receiving turn; `None` means the turn did not admit the quoted work and nothing ran.
+pub(crate) fn effect_turn<R>(
+    receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,
+    grant: semio_os_store_one_item::ArtifactStoreOneItemGrant,
+    run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<R, DurableOwnedGroupDecisionError>,
+) -> Result<Option<R>, DurableOwnedGroupDecisionError> {
+    receiving.with_effect(grant.retained_grant(), u64::MAX, |_, effect| run(effect)).map_err(DurableOwnedGroupDecisionError::Retirement)?.transpose()
+}
+
+/// 🫴️ Runs one resident-frame original encoding turn on the receiving control and settles its pair before the caller sees any output.
+pub(crate) fn encoding_turn<R>(
+    receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,
+    operation: impl FnOnce(usize, &mut dyn FnMut(semio_framework_value::native_encoding::NativeEncodeProgress) -> bool, &mut dyn semio_framework_value_native_owned::native_decoding::NativeSendAllocationLoan) -> Result<R, DurableOwnedGroupDecisionError>,
+) -> Result<R, DurableOwnedGroupDecisionError> {
+    use DurableOwnedGroupDecisionError::Retirement;
+    let invalid = || Retirement(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "native encoding turn left inconsistent original custody"));
+    let mut frame = None;
+    let mut call = semio_framework_value_native_owned::native_decoding::NativeCallFailure::<R, DurableOwnedGroupDecisionError> { output: None, operation: None, context: None, receipt_refusal: None };
+    let run = receiving.with_encoding_receiver(&mut frame, &mut call, |room, observer, allocation, _, _, output, failure| match operation(room, observer, allocation) { Ok(value) => *output = Some(value), Err(error) => *failure = Some(error) });
+    let mut refusal = run.err();
+    if let Some(frame) = frame.as_mut() {
+        if let Err(error) = frame.settle_pair() { refusal.get_or_insert(error); } else {
+            match frame.take_allocation_failure() { Ok(failure) if failure.is_empty() => {}, Ok(_) => { refusal.get_or_insert_with(|| match invalid() { Retirement(error) => error, _ => unreachable!() }); }, Err(error) => { refusal.get_or_insert(error); } }
+            if let Err(error) = receiving.release_encoding_receiver(frame) { refusal.get_or_insert(error); }
+        }
+    }
+    let semio_framework_value_native_owned::native_decoding::NativeCallFailure { output, operation, context, receipt_refusal } = call;
+    if let Some(error) = operation { return Err(error); }
+    if let Some(error) = context.or(receipt_refusal).or(refusal) { return Err(Retirement(error)); }
+    output.ok_or_else(invalid)
+}
+
+/// 🎟️ Runs one close step of a value-level retirement owner inside [`effect_turn`] and answers its progress.
+pub(crate) fn close_turn(
+    receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,
+    grant: semio_os_store_one_item::ArtifactStoreOneItemGrant,
+    run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<semio_framework_value::RetainedCloneProgress, semio_framework_value::ValueError>,
+) -> Result<semio_framework_value::RetainedCloneProgress, DurableOwnedGroupDecisionError> {
+    Ok(effect_turn(receiving, grant, |effect| run(effect).map_err(DurableOwnedGroupDecisionError::Retirement))?.unwrap_or_default())
+}
+
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> std::fmt::Debug for DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.debug_struct("DurableOwnedThreeStorePreparedV1").field("binding_step", &self.binding_step).finish_non_exhaustive() }
 }

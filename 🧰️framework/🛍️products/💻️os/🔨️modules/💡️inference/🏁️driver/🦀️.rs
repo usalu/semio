@@ -17,7 +17,7 @@ pub fn infer_field_step<P, F: OriginalInferredField<P>>(snapshot: &P, source:&F:
         let work=cx.original_work_units_spent();original_field_event::<P,F>(snapshot,source,cursor,values,cx)?;
         if cursor.is_done()||cx.original_work_units_spent()==work||cx.should_yield()||cx.retained_grant().maximum_items==0{break}
     }
-    Ok(InferenceStepReport{done:cursor.is_done(),fuel_used:usize::try_from(before.checked_sub(cx.fuel_remaining()).expect("original inference CPU is monotone")).unwrap_or(usize::MAX),computed:cursor.next-computed,hits:0,progress:cursor.fraction()})
+    Ok(InferenceStepReport{done:cursor.is_done(),fuel_used:usize::try_from(before.saturating_sub(cx.fuel_remaining())).unwrap_or(usize::MAX),computed:cursor.next-computed,hits:0,progress:cursor.fraction()})
 }
 
 pub(super) fn original_field_metadata(cx:&mut semio_framework_job::StepContext<'_>,copy:usize)->Result<bool,InferenceWorkFailure>{

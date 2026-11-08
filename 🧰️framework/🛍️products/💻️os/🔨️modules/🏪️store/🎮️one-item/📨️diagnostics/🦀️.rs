@@ -1,7 +1,13 @@
 //! 📨️ Prepares original history diagnostics and independent command-report ownership before publication.
 use super::*;
 use semio_os_spr::command::{MutationMessageLedgerRetirement, MutationMessagePublication, MutationMessagePublicationBatch, MutationMessagePublicationJoin};
-use semio_framework_value::{RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::{RetirementDemand, RetainedAllocationEffect, RetainedWorkOutcome, RetirementPollExit, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use crate::native_source::pay;
+
+trait GrantTurn { fn paid(self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>; }
+impl GrantTurn for RetainedWorkOutcome { fn paid(self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> { pay(effect, self.work)?; self.result } }
+impl GrantTurn for Result<RetainedCloneStep, ValueError> { fn paid(self, _: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> { self } }
+fn settled(effect: &mut RetainedAllocationEffect<'_>, step: RetainedCloneStep) -> Result<RetainedCloneStep, ValueError> { if effect.performed_work() == 0 && step.progress() != RetainedCloneProgress::default() { pay(effect, 1)?; } Ok(step) }
 use semio_os_store_ledger::{ARTIFACT_EDIT_MESSAGE_OWNER_BYTES, ARTIFACT_EDIT_MESSAGE_TARGET_BYTES};
 use std::mem::{ManuallyDrop, size_of};
 
@@ -44,7 +50,7 @@ impl ArtifactStoreDiagnosticStage {
     pub fn measured_bytes(&self, identity: &str) -> Result<usize, ValueError> { self.bytes.checked_add(identity.len()).ok_or_else(|| diagnostic_fault("diagnostic entry byte extent overflow")) }
     pub fn joined(&self) -> bool { self.phase >= 1 }
     pub fn joined_transfer_ready(&self) -> bool { self.phase==1 && !self.closing && self.ready.as_ref().is_some_and(MutationMessagePublication::ready) }
-    pub fn advance_join(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { if self.joined() { Ok(RetainedCloneStep::Complete(Default::default())) } else { self.advance("", grant) } }
+    pub fn advance_join(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> { if self.joined() { Ok(RetainedCloneStep::Complete(Default::default())) } else { self.advance("", effect) } }
     pub fn take_joined(&mut self, grant: RetainedCloneGrant) -> Option<(MutationMessagePublication, RetainedCloneProgress)> {
         let copy = size_of::<MutationMessagePublication>();
         if self.phase != 1 || self.closing || grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < copy { return None; }
@@ -58,7 +64,12 @@ impl ArtifactStoreDiagnosticStage {
         Ok(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: capacity, ..idle })
     }
 
-    pub fn prepare_prefix(&mut self, source: Option<&[semio_os_spr::MutationMessage]>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn prepare_prefix(&mut self, source: Option<&[semio_os_spr::MutationMessage]>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let step = self.prepare_prefix_body(source, effect)?;
+        settled(effect, step)
+    }
+    fn prepare_prefix_body(&mut self, source: Option<&[semio_os_spr::MutationMessage]>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         let idle = RetainedCloneProgress::default();
         if self.prefix_done { return Ok(RetainedCloneStep::Complete(idle)); }
         if self.closing || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(idle)); }
@@ -72,7 +83,7 @@ impl ArtifactStoreDiagnosticStage {
         }
         if let Some(owner) = self.prefix.as_mut() {
             if owner.ready() { let Some((ready, receipt)) = owner.take(grant) else { return Ok(RetainedCloneStep::Progress(idle)); }; self.prefix_ready = Some(ready); return Ok(RetainedCloneStep::Progress(receipt)); }
-            return owner.advance(source, grant);
+            return owner.advance(source, grant).paid(effect);
         }
         let copy = size_of::<semio_os_spr::command::MutationMessageBorrowedPublication>();
         if grant.maximum_copy_bytes < copy { return Ok(RetainedCloneStep::Progress(idle)); }
@@ -80,7 +91,12 @@ impl ArtifactStoreDiagnosticStage {
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..idle }))
     }
 
-    pub fn advance(&mut self, edit_id: &str, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, edit_id: &str, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let step = self.advance_body(edit_id, effect)?;
+        settled(effect, step)
+    }
+    fn advance_body(&mut self, edit_id: &str, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         let idle = RetainedCloneProgress::default();
         if self.prepared() { return Ok(RetainedCloneStep::Complete(idle)); }
         if self.closing || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(idle)); }
@@ -96,13 +112,13 @@ impl ArtifactStoreDiagnosticStage {
                     if join.ready() {
                         let Some((ready, progress)) = join.take(grant)? else { return Ok(RetainedCloneStep::Progress(idle)); };
                         self.ready = Some(ready); self.join = None; self.phase = 1; receipt = progress;
-                    } else { return join.advance(grant); }
+                    } else { return join.advance(grant).paid(effect); }
                 }
             }
             1 => {
                 if edit_id.is_empty()||edit_id.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES{return Err(diagnostic_fault("diagnostic selection requires actual bounded edit context"));}
                 let ready=self.ready.as_mut().ok_or_else(||diagnostic_fault("joined diagnostic original is absent"))?;
-                if !ready.selection_ready(edit_id.len()){return ready.select(edit_id.len(),grant);}
+                if !ready.selection_ready(edit_id.len()){return ready.select(edit_id.len(),effect);}
                 self.rows=ready.original_messages().len();
                 let ready = self.ready.as_ref().unwrap();
                 if self.severity_index == ready.original_messages().len() { self.phase = 2; }
@@ -145,7 +161,7 @@ impl ArtifactStoreDiagnosticStage {
                 let ready = self.ready.as_mut().ok_or_else(|| diagnostic_fault("transferred diagnostic shell is absent"))?;
                 ready.begin_close();
                 if grant.maximum_depth < 2 { return Ok(RetainedCloneStep::Progress(idle)); }
-                let step = ready.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?;
+                let step = ready.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }).paid(effect)?;
                 if ready.terminal_is_empty() { self.ready = None; self.phase = 8; }
                 receipt = step.progress();
             }
@@ -197,18 +213,19 @@ impl ArtifactStoreDiagnosticStage {
         Ok(RetirementDemand { release_bytes: self.identity.iter().find(|value| value.capacity() != 0).map_or(0, String::capacity), depth: 1, ..Default::default() })
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(idle)); }
         if !self.closing { return Ok(RetainedCloneStep::Progress(idle)); }
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(idle)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if let Some(owner) = self.displaced.as_mut() { if owner.terminal_is_empty() { self.displaced = None; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..idle })); } return owner.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(owner) = self.displaced.as_mut() { if owner.terminal_is_empty() { self.displaced = None; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..idle })); } return owner.close_step(child).paid(effect).map(|step| RetainedCloneStep::Progress(step.progress())); }
         macro_rules! close_owner {
             ($slot:expr) => { if let Some(owner) = $slot.as_mut() {
                 if owner.terminal_is_empty() { $slot = None; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..idle })); }
-                return owner.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
+                return owner.close_step(child).paid(effect).map(|step| RetainedCloneStep::Progress(step.progress()));
             } };
         }
         close_owner!(self.batch);
@@ -228,7 +245,7 @@ impl ArtifactStoreDiagnosticStage {
 
 impl ErasedSnapshotRetirement for ArtifactStoreDiagnosticStage {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.close_demands(body) }
-    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{let result=Self::close_step(self,grant);let work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=semio_framework_value::RetainedCloneProgress::default()));semio_framework_value::RetainedWorkOutcome{result,work}}
+    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let result=Self::close_step(self,effect).map_err(RetirementPollExit::from);RetirementPollExit::settle(effect,result)}
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.close_demands(body)?.capacity_bytes) }

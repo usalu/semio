@@ -2,11 +2,12 @@
 use semio_os_spr::history::{HistoryLog, RetainedHistorySourceDecode, RetainedHistorySourcePartial, RetainedHistorySourceStep, RetainedHistoryOpMetaFault};
 use protocol::codec::{HistoryReadLimits,RetainedWireByteSource};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
-use semio_framework_value::{ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{ErasedSnapshotRetirement, OriginalRetirementControl, OriginalRetirementOutcome, OriginalRetirementPoll, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeRetirementRecipient};
-use semio_framework_value_native_owned::{NativeAllocationRequest,NativeAllocationEvent,NativeAllocationBudget,NativeAllocationAuthority,NativeAllocationAuthorityPort,NativeAllocationRefusal};
-use semio_framework_value_native_owned::native_decoding::{NativeForwardedDecodeControl};
+use semio_framework_value_native_owned::{NativeAllocationEvent,NativeAllocationBudget,NativeAllocationAuthority,NativeAllocationAuthorityPort,NativeAllocationRefusal};
+use semio_framework_value_native_owned::native_decoding::{NativeForwardedDecodeControl,OriginalSourceTurnIdentity,OriginalWorkAuthority,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkRecipient};
 use semio_framework_value_native_owned::native_decoding::allocation::NativeForwardedDecodeReceipt;
+use semio_framework_value_native_owned::native_decoding::{OriginalConstructionAccept,OriginalConstructionAcceptComplete,OriginalConstructionAuthority,OriginalConstructionGrant,OriginalConstructionGrantComplete,OriginalConstructionRecipient,NativeAllocationReply,NativeAllocationReplyComplete,NativeReceivingEffect,NativeReceivingEffectFailure,NativeReceivingEffectPhase,NativeReceivingEffectPoll};
 use std::{mem::ManuallyDrop,cell::UnsafeCell,sync::atomic::{AtomicBool,Ordering}};
 
 /// 🪢️ One stack loan shares the actual initiating caller only through an exclusive borrowed guard.
@@ -23,38 +24,57 @@ impl<'a,'source> BorrowedOriginalTurn<'a,'source>{
 
 trait MemberAllocationCaller:Sync{
  fn validate_source(&self,source:&semio_framework_job::OriginalCallerSourceLoan,binding:semio_framework_job::OriginalSourceBinding)->Result<(),ValueError>;
+ fn source_turn(&self)->Option<OriginalSourceTurnIdentity>;
+ fn construction_grant(&self,demand:RetirementDemand)->Result<RetainedCloneGrant,ValueError>;
+ fn construction_accept(&self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>;
  fn allocation_view(&self,event:NativeAllocationEvent,closing:bool)->Result<(RetainedCloneGrant,bool),ValueError>;
 }
 impl MemberAllocationCaller for BorrowedOriginalTurn<'_,'_>{
+ fn source_turn(&self)->Option<OriginalSourceTurnIdentity>{self.with(|cx|cx.original_source_turn_identity()).ok().flatten()}
+ fn construction_grant(&self,demand:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{self.with(|cx|{let remaining=cx.retained_grant();if !semio_framework_value::retained_clone::retained_clone_grant_admits(remaining,demand){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Member construction exceeds the actual caller's remaining grant"))}Ok(remaining)})?}
+ fn construction_accept(&self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{self.with(|cx|{if !progress.fits(grant){return Err(invariant("Member construction receipt exceeds its issued grant").with_retained_progress(progress))}cx.consume_retained(progress)})?}
  fn validate_source(&self,source:&semio_framework_job::OriginalCallerSourceLoan,binding:semio_framework_job::OriginalSourceBinding)->Result<(),ValueError>{self.with(|cx|{source.validate_retirement_context(cx)?;if !binding.matches(cx){return Err(invariant("Member decoding requires its original source and clock"))}Ok(())})?}
  fn allocation_view(&self,event:NativeAllocationEvent,closing:bool)->Result<(RetainedCloneGrant,bool),ValueError>{self.with(|cx|{let may_quote=!matches!(event,NativeAllocationEvent::Quote(_)|NativeAllocationEvent::Admit(_))||!paused(cx,closing)&&(closing||!cx.is_cancelled());(cx.retained_grant(),may_quote)})}
 }
 struct MemberAllocationContext<'a>{caller:&'a dyn MemberAllocationCaller,closing:bool,hop_started:bool}
-struct MemberHistoryAllocationPort{source:semio_framework_job::OriginalCallerSourceLoan,binding:semio_framework_job::OriginalSourceBinding,state:NativeAllocationBudget,pending_event:Option<NativeAllocationEvent>,verdict:Option<Result<(),NativeAllocationRefusal>>}
+struct MemberHistoryAllocationPort{source:semio_framework_job::OriginalCallerSourceLoan,binding:semio_framework_job::OriginalSourceBinding,state:NativeAllocationBudget}
 impl MemberHistoryAllocationPort{
- fn receive_original(&mut self,context:&mut MemberAllocationContext<'_>,event:NativeAllocationEvent)->Result<(),NativeAllocationRefusal>{
+ fn answer(&mut self,context:&mut MemberAllocationContext<'_>,event:NativeAllocationEvent)->Result<(),NativeAllocationRefusal>{
   if !context.hop_started{self.state.begin_hop();context.hop_started=true}
-  if self.verdict.is_none(){self.verdict=Some(context.caller.allocation_view(event,context.closing).and_then(|(grant,may_quote)|self.state.receive(event,grant,may_quote)).map_err(Into::into));}
-  let result=self.verdict.take().expect("original Member allocation verdict recorded");self.pending_event=None;result
+  context.caller.allocation_view(event,context.closing).and_then(|(grant,may_quote)|self.state.receive(event,grant,may_quote)).map_err(Into::into)
  }
 }
 impl NativeAllocationAuthorityPort for MemberHistoryAllocationPort{
  type Context<'turn,'source>=MemberAllocationContext<'turn> where 'source:'turn;
  fn validate_context<'turn,'source>(&self,context:&Self::Context<'turn,'source>)->Result<(),ValueError> where 'source:'turn{context.caller.validate_source(&self.source,self.binding)}
- fn receive<'turn,'source>(&mut self,context:&mut Self::Context<'turn,'source>,event:NativeAllocationEvent)->Result<(),NativeAllocationRefusal> where 'source:'turn{if self.pending_event.is_some(){return Err(invariant("Member allocation retains an unfinished original event").into())}self.pending_event=Some(event);self.receive_original(context,event)}
- fn recover<'turn,'source>(&mut self,context:&mut Self::Context<'turn,'source>,event:NativeAllocationEvent)->Result<Option<Result<(),NativeAllocationRefusal>>,ValueError> where 'source:'turn{if self.pending_event!=Some(event){return Ok(None)}self.validate_context(context)?;Ok(Some(self.receive_original(context,event)))}
+ fn source_turn<'turn,'source>(&self,context:&Self::Context<'turn,'source>)->Option<OriginalSourceTurnIdentity> where 'source:'turn{context.caller.source_turn()}
+ fn receive<'reply,'turn,'source>(&mut self,context:&mut Self::Context<'turn,'source>,event:NativeAllocationEvent,reply:NativeAllocationReply<'reply>)->Result<NativeAllocationReplyComplete<'reply>,ValueError> where 'source:'turn{let verdict=self.answer(context,event);Ok(reply.complete(verdict))}
+ fn recover<'reply,'turn,'source>(&mut self,_:&mut Self::Context<'turn,'source>,_:NativeAllocationEvent,reply:NativeAllocationReply<'reply>)->Result<NativeAllocationReplyComplete<'reply>,ValueError> where 'source:'turn{Ok(reply.pending())}
 }
+/// 🏗️ Each actual caller turn lends its exact physical ledger to the resident construction producer.
+struct MemberConstructionContext<'a>{caller:&'a dyn MemberAllocationCaller,submitted:RetainedCloneProgress}
+struct MemberConstructionProducer;
+impl OriginalConstructionRecipient for MemberConstructionProducer{
+ type Context<'turn,'source>=MemberConstructionContext<'turn> where 'source:'turn;
+ fn validate_context<'turn,'source>(&self,_:&Self::Context<'turn,'source>)->Result<(),ValueError> where 'source:'turn{Ok(())}
+ fn source_turn<'turn,'source>(&self,context:&Self::Context<'turn,'source>)->Option<OriginalSourceTurnIdentity> where 'source:'turn{context.caller.source_turn()}
+ fn grant<'a,'turn,'source>(&mut self,context:&mut Self::Context<'turn,'source>,quote:OriginalConstructionGrant<'a>)->OriginalConstructionGrantComplete<'a> where 'source:'turn{let demand=quote.demand();quote.complete(context.caller.construction_grant(demand))}
+ fn accept<'a,'turn,'source>(&mut self,context:&mut Self::Context<'turn,'source>,receipt:OriginalConstructionAccept<'a>)->OriginalConstructionAcceptComplete<'a> where 'source:'turn{let(grant,progress)=(receipt.grant(),receipt.progress());let result=context.caller.construction_accept(grant,progress).and_then(|()|{context.submitted=context.submitted.checked_add(progress)?;Ok(())});receipt.complete(result)}
+ fn submitted<'turn,'source>(&self,context:&Self::Context<'turn,'source>)->RetainedCloneProgress where 'source:'turn{context.submitted}
+}
+struct MemberConstruction(OriginalConstructionAuthority<MemberConstructionProducer>);
+impl Default for MemberConstruction{fn default()->Self{Self(OriginalConstructionAuthority::new(MemberConstructionProducer))}}
 #[derive(Default)]
-struct MemberHistoryAllocation{source:ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,authority:ManuallyDrop<Option<NativeAllocationAuthority<MemberHistoryAllocationPort>>>,work_issuer:semio_framework_value_native_owned::native_decoding::OriginalWorkActionIssuer}
+struct MemberHistoryAllocation{source:ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,authority:ManuallyDrop<Option<NativeAllocationAuthority<MemberHistoryAllocationPort>>>,work:MemberWork,construction:MemberConstruction}
 impl MemberHistoryAllocation{
  fn has_source(&self)->bool{self.source.is_some()||self.authority.is_some()}
- fn has_pending_allocation(&self)->bool{self.authority.as_ref().is_some_and(|authority|authority.has_pending_transaction()||authority.inspect_port(|port|!port.state.terminal_is_empty()||port.pending_event.is_some()||port.verdict.is_some()))}
+ fn has_pending_allocation(&self)->bool{self.authority.as_ref().is_some_and(|authority|authority.has_pending_transaction()||authority.inspect_port(|port|!port.state.terminal_is_empty()))}
  fn transition_demand()->RetirementDemand{RetirementDemand{copy_bytes:2*std::mem::size_of::<MemberHistoryAllocationPort>()+std::mem::size_of::<NativeAllocationAuthority<MemberHistoryAllocationPort>>()+2*std::mem::size_of::<Option<semio_framework_job::OriginalCallerSourceLoan>>(),depth:1,..Default::default()}}
  fn transition(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,closing:bool,run:impl FnOnce())->Result<bool,OriginalTurnFailure>{let demand=Self::transition_demand();if paused(cx,closing)||(!closing&&cx.is_cancelled())||cx.fuel_remaining()<2||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant.restricted_by(cx.retained_grant()),demand){return Ok(false)}run();let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};cx.consume_fuel(2);cx.consume_retained(progress).map_err(|error|OriginalTurnFailure::from(error.with_retained_progress(progress)))?;Ok(true)}
- fn admit_authority(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<bool,OriginalTurnFailure>{if self.authority.is_some(){return Ok(true)}let source=self.source.as_ref().ok_or_else(||invariant("Member allocation authority requires its paid original source"))?;source.validate_context(cx)?;let binding=semio_framework_job::OriginalSourceBinding::borrow(cx);Self::transition(cx,grant,false,||{let source=self.source.take().expect("observed original source loan");*self.authority=Some(NativeAllocationAuthority::new(MemberHistoryAllocationPort{source,binding,state:Default::default(),pending_event:None,verdict:None}));})}
- fn return_authority(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<bool,OriginalTurnFailure>{if self.authority.is_none(){return Ok(true)}if self.has_pending_allocation(){return Ok(false)}if self.source.is_some(){return Err(invariant("Member original source return slot is occupied").into())}let mut refusal=false;let moved=Self::transition(cx,grant,true,||{let authority=self.authority.take().expect("observed original allocation authority");match authority.into_port(){Ok(port)=>{let MemberHistoryAllocationPort{source,state,pending_event,verdict,..}=port;assert!(pending_event.is_none()&&verdict.is_none()&&state.terminal_is_empty(),"returned Member allocation port retains an original event");*self.source=Some(source)},Err(authority)=>{*self.authority=Some(authority);refusal=true}}})?;if refusal{return Err(invariant("Member allocation authority refused its selected owner transfer").into())}Ok(moved)}
+ fn admit_authority(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<bool,OriginalTurnFailure>{if self.authority.is_some(){return Ok(true)}let source=self.source.as_ref().ok_or_else(||invariant("Member allocation authority requires its paid original source"))?;source.validate_context(cx)?;let binding=semio_framework_job::OriginalSourceBinding::borrow(cx);Self::transition(cx,grant,false,||{let source=self.source.take().expect("observed original source loan");*self.authority=Some(NativeAllocationAuthority::new(MemberHistoryAllocationPort{source,binding,state:Default::default()}));})}
+ fn return_authority(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<bool,OriginalTurnFailure>{if self.authority.is_none(){return Ok(true)}if self.has_pending_allocation(){return Ok(false)}if self.source.is_some(){return Err(invariant("Member original source return slot is occupied").into())}let mut refusal=false;let moved=Self::transition(cx,grant,true,||{let authority=self.authority.take().expect("observed original allocation authority");match authority.into_port(){Ok(port)=>{let MemberHistoryAllocationPort{source,state,..}=port;assert!(state.terminal_is_empty(),"returned Member allocation port retains an original event");*self.source=Some(source)},Err(authority)=>{*self.authority=Some(authority);refusal=true}}})?;if refusal{return Err(invariant("Member allocation authority refused its selected owner transfer").into())}Ok(moved)}
 }
-impl Drop for MemberHistoryAllocation{fn drop(&mut self){assert!(std::thread::panicking()||!self.has_source()&&!self.work_issuer.has_live_actions(),"Member allocation abandoned its original source");if !self.has_source(){unsafe{ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.authority)}}}}
+impl Drop for MemberHistoryAllocation{fn drop(&mut self){assert!(std::thread::panicking()||!self.has_source()&&!self.work.0.has_live_actions()&&!self.construction.0.has_live_actions(),"Member allocation abandoned its original source");if !self.has_source(){unsafe{ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.authority)}}}}
 
 pub struct MemberHistoryReceiving {
  allocation:MemberHistoryAllocation,
@@ -65,6 +85,8 @@ pub struct MemberHistoryReceiving {
  pub fault:ManuallyDrop<Option<RetainedHistoryOpMetaFault>>,
  inner_fault:ManuallyDrop<Option<RetainedHistoryOpMetaFault>>,
  pub active:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+ birth:ManuallyDrop<NativeReceivingEffect<ValueError>>,
+ birth_demand:RetirementDemand,
  pub demand:RetirementDemand,
  pub maximum:usize,
  pub range:(usize,usize),
@@ -77,37 +99,76 @@ pub struct MemberHistoryReceiving {
 fn invariant(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
 
 
-struct OriginalMemberWork<'a,'turn,'source>{turn:&'a BorrowedOriginalTurn<'turn,'source>,closing:bool}
-impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for OriginalMemberWork<'_,'_,'_>{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{self.turn.with(|cx,_|if !paused(cx,self.closing)&&(self.closing||!cx.is_cancelled()){cx.fuel_remaining().checked_sub(observed).unwrap_or(0)}else{0})}
- fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{self.turn.with(|cx,_|!paused(cx,self.closing)&&(self.closing||!cx.is_cancelled())&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining()))}
+trait MemberWorkCaller:Sync{
+ fn work_turn(&self)->Option<OriginalSourceTurnIdentity>;
+ fn admits(&self,closing:bool,observed:u64,additional:u64)->Result<bool,ValueError>;
 }
+impl MemberWorkCaller for BorrowedOriginalTurn<'_,'_>{
+ fn work_turn(&self)->Option<OriginalSourceTurnIdentity>{self.with(|cx|cx.original_source_turn_identity()).ok().flatten()}
+ fn admits(&self,closing:bool,observed:u64,additional:u64)->Result<bool,ValueError>{self.with(|cx|!paused(cx,closing)&&(closing||!cx.is_cancelled())&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining()))}
+}
+struct MemberWorkContext<'a>{caller:&'a dyn MemberWorkCaller,closing:bool}
+struct MemberWorkProducer;
+impl OriginalWorkRecipient for MemberWorkProducer{
+ type Context<'turn,'source>=MemberWorkContext<'turn> where 'source:'turn;
+ fn validate_context<'turn,'source>(&self,_:&Self::Context<'turn,'source>)->Result<(),ValueError> where 'source:'turn{Ok(())}
+ fn source_turn<'turn,'source>(&self,context:&Self::Context<'turn,'source>)->Option<OriginalSourceTurnIdentity> where 'source:'turn{context.caller.work_turn()}
+ fn admits<'reply,'turn,'source>(&mut self,context:&mut Self::Context<'turn,'source>,quote:OriginalWorkQuote<'reply>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'reply> where 'source:'turn{quote.complete(context.caller.admits(context.closing,observed,additional))}
+ fn settle_partial<'reply,'turn,'source>(&mut self,_:&mut Self::Context<'turn,'source>,check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.complete(Ok(()))}
+ fn recover_partial<'reply,'turn,'source>(&mut self,_:&mut Self::Context<'turn,'source>,check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.complete(Ok(()))}
+}
+struct MemberWork(OriginalWorkAuthority<MemberWorkProducer>);
+impl Default for MemberWork{fn default()->Self{Self(OriginalWorkAuthority::new(MemberWorkProducer))}}
 fn paused(cx:&StepContext<'_>,closing:bool)->bool{if closing{cx.retirement_should_yield()}else{cx.should_yield()}}
 fn with_original_control<T>(receipt:&mut Option<NativeForwardedDecodeReceipt>,recipient:&mut NativeDecodeRetirementRecipient,allocation:&mut MemberHistoryAllocation,maximum:usize,cx:&mut StepContext<'_>,closing:bool,run:impl FnOnce(&mut NativeDecodeControl<'_>)->T)->Result<(T,u64),OriginalTurnFailure>{
  let borrowed=BorrowedOriginalTurn::new(&mut *cx);let mut context=MemberAllocationContext{caller:&borrowed,closing,hop_started:false};let mut progress=|_|borrowed.with(|actual|!paused(actual,closing)&&(closing||!actual.is_cancelled())).unwrap_or(false);
- let authority=allocation.authority.as_mut().ok_or_else(||invariant("Member decode requires its admitted original allocation port"))?;let work_issuer=&mut allocation.work_issuer;
+ let authority=allocation.authority.as_mut().ok_or_else(||invariant("Member decode requires its admitted original allocation port"))?;let work=&mut allocation.work.0;let construction=&mut allocation.construction.0;
  authority.with_send_loan(&mut context,|allocation_loan|{
   let mut control=if let Some(original)=receipt.take(){match NativeForwardedDecodeControl::rebind(original,&mut progress,allocation_loan,recipient){Ok(control)=>control,Err((error,original))=>{*receipt=Some(original);return Err(error.into())}}}else{let mut control=NativeDecodeControl::new_forwarded(maximum,&mut progress,allocation_loan);control.install_retirement_recipient(recipient)?;control};
-  let before=control.actual_work();let mut work=OriginalMemberWork{turn:&borrowed,closing};let mut work_loan=work_issuer.loan(&mut work);let result=control.with_work_recipient(&mut work_loan,|native|Ok::<_,ValueError>(run(native)));let observed=control.actual_work().saturating_sub(before);
+  let before=control.actual_work();let mut work_context=MemberWorkContext{caller:&borrowed,closing};let mut construction_context=MemberConstructionContext{caller:&borrowed,submitted:Default::default()};let result=work.with_loan(&mut work_context,|loan|control.with_work_recipient(loan,|native|construction.with_loan(&mut construction_context,|construction_loan|native.with_construction_recipient(construction_loan,|native|Ok::<_,ValueError>(run(native)))).and_then(|result|result))).and_then(|result|result);let observed=u64::try_from(control.actual_work().saturating_sub(before)).unwrap_or(u64::MAX);
   *receipt=Some(control.detach().map_err(|_|invariant("original Member decode continuation violated canonical control invariants"))?);result.map(|value|(value,observed)).map_err(Into::into)
  })?
 }
 
-fn controlled_retirement(control:&mut NativeDecodeControl<'_>,quote:Result<u64,ValueError>,run:impl FnOnce(&mut NativeDecodeControl<'_>)->RetainedWorkOutcome)->(RetainedWorkOutcome,Option<ValueError>){
- let quote=match quote{Ok(quote)=>quote,Err(error)=>return(RetainedWorkOutcome{result:Err(error),work:0},None)};
- match control.prepare_work(quote){Ok(true)=>{},Ok(false)=>return(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},None),Err(error)=>return(RetainedWorkOutcome{result:Err(error),work:0},None)}
- let turn=run(control);let refusal=control.commit_work(turn.work).err();(turn,refusal)
+/// ⛽️ One Member decode step is quoted against at most this many work units of the actual caller turn.
+const MEMBER_STEP_WORK:u64=64;
+/// 🍼️ A retirement owner birth performs exactly one admitted allocation action.
+const MEMBER_BIRTH_WORK:u64=1;
+/// 🪙️ Runs one closure inside one original work action on the decoder's own recipient; `None` means the quote was not admitted and nothing ran.
+fn with_native_effect<T>(receipt:&mut Option<NativeForwardedDecodeReceipt>,recipient:&mut NativeDecodeRetirementRecipient,allocation:&mut MemberHistoryAllocation,maximum:usize,cx:&mut StepContext<'_>,closing:bool,grant:RetainedCloneGrant,run:impl FnOnce(&mut NativeDecodeControl<'_>,&mut RetainedAllocationEffect<'_>)->T)->Result<Option<(T,u64,u64)>,OriginalTurnFailure>{
+ let work=cx.fuel_remaining().min(MEMBER_STEP_WORK);if work==0{return Ok(None)}
+ let(opened,observed)=with_original_control(receipt,recipient,allocation,maximum,cx,closing,|control|control.with_effect(grant,work,|control,effect|{let output=run(control,effect);(output,effect.performed_work())}))?;
+ Ok(opened?.map(|(output,performed)|(output,u64::try_from(performed).unwrap_or(u64::MAX),observed)))
+}
+/// 🚦️ A pending poll settles as a no-progress step carrying only its newly performed work.
+fn settled(polled:Result<OriginalRetirementPoll,ValueError>)->OriginalRetirementOutcome{match polled{Ok(RetainedWorkPoll::Complete(turn))=>turn,Ok(RetainedWorkPoll::Pending{work})=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work},Err(error)=>RetainedWorkOutcome{result:Err(error.into()),work:0}}}
+/// ♻️ Runs one retirement poll inside the actual caller's own original effect; the decoder keeps no work action open while it retires.
+fn retirement_turn(receipt:&mut Option<NativeForwardedDecodeReceipt>,recipient:&mut NativeDecodeRetirementRecipient,allocation:&mut MemberHistoryAllocation,maximum:usize,cx:&mut StepContext<'_>,closing:bool,grant:RetainedCloneGrant,run:impl FnOnce(&mut NativeDecodeControl<'_>,&mut RetainedAllocationEffect<'_>)->Result<OriginalRetirementPoll,ValueError>)->Result<Option<(OriginalRetirementOutcome,u64,bool)>,OriginalTurnFailure>{
+ let Some((opened,performed))=cx.with_original_effect(grant,|cx,effect|with_original_control(receipt,recipient,allocation,maximum,cx,closing,|control|run(control,effect)))?else{return Ok(None)};
+ let(polled,observed)=opened?;
+ let turn=settled(polled);
+ let overrun=turn.work<performed;
+ Ok(Some((turn,observed,overrun)))
+}
+/// 🧾️ A receiving frame failure keeps its first typed cause and physical receipt.
+fn effect_failure(failure:NativeReceivingEffectFailure<ValueError>)->ValueError{let progress=failure.retained_progress();failure.child.or(failure.producer_refusal).or(failure.work_refusal).unwrap_or_else(||invariant("original Member retirement birth receiving refused")).with_retained_progress(progress)}
+/// 🪙️ Pays one metadata unit inside the caller's effect and reports the exact physical receipt.
+fn paid_metadata<T>(effect:&mut RetainedAllocationEffect<'_>,value:T,copied_bytes:usize)->Result<(T,RetainedCloneProgress),RetainedHistoryOpMetaFault>{
+ if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Member metadata step exceeded its work ceiling").into())}
+ Ok((value,RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}))
 }
 fn history_progress(error:&RetainedHistoryOpMetaFault)->RetainedCloneProgress{match error{RetainedHistoryOpMetaFault::Value(error)=>error.retained_progress(),RetainedHistoryOpMetaFault::Native(error)=>error.retained_progress(),RetainedHistoryOpMetaFault::Retirement(error)=>error.retained_progress(),RetainedHistoryOpMetaFault::Json(_)=>Default::default()}}
 fn receive<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,turn:RetainedWorkOutcome<T,E>,issued:Option<(RetainedCloneGrant,RetainedCloneProgress)>,observed:u64,error_progress:fn(&E)->RetainedCloneProgress)->semio_framework_job_native_decode::OriginalNativeDecodeOutcome<T,E>{
  let(original,progress)=issued.unwrap_or_else(||(grant,turn.result.as_ref().err().map_or(Default::default(),error_progress)));
- semio_framework_job_native_decode::OriginalNativeDecodeSource::receive_observed_work(cx,grant,fuel,semio_framework_job_native_decode::OriginalNativeDecodeIssued{value:turn.result,grant:original,progress,work:turn.work},observed)
+ semio_framework_job_native_decode::OriginalNativeDecodeSource::receive_observed_work(cx,grant,fuel,semio_framework_job_native_decode::OriginalNativeDecodeIssued{value:turn.result,grant:original,progress,work:u64::try_from(turn.work).unwrap_or(u64::MAX)},observed)
 }
 fn metadata<T>(value:T,copied_bytes:usize)->(RetainedWorkOutcome<T,RetainedHistoryOpMetaFault>,RetainedCloneProgress){(RetainedWorkOutcome{result:Ok(value),work:1},RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()})}
 
 impl MemberHistoryReceiving {
- pub fn new(range:(usize,usize),limits:HistoryReadLimits,maximum:usize)->Self{Self{allocation:MemberHistoryAllocation::default(),receipt:None,recipient:NativeDecodeRetirementRecipient::new(),decoder:ManuallyDrop::new(None),partial:ManuallyDrop::new(None),fault:ManuallyDrop::new(None),inner_fault:ManuallyDrop::new(None),active:ManuallyDrop::new(None),demand:RetirementDemand{depth:2,..Default::default()},maximum,range,limits,admitted:false,closing:false,closed:false}}
- pub fn terminal_is_empty(&self)->bool{self.closed&&!self.allocation.has_source()&&!self.allocation.work_issuer.has_live_actions()&&!self.allocation.has_pending_allocation()&&self.decoder.is_none()&&self.partial.is_none()&&self.fault.is_none()&&self.inner_fault.is_none()&&self.active.is_none()&&self.recipient.terminal_is_empty()&&self.receipt.is_none()}
- fn failure_storage_needed(&self)->bool{!self.recipient.has_failure_storage()&&(self.active.is_some()||self.decoder.as_ref().is_some_and(|owner|!owner.terminal_is_empty())||self.recipient.has_owner())}
+ pub fn new(range:(usize,usize),limits:HistoryReadLimits,maximum:usize)->Self{Self{allocation:MemberHistoryAllocation::default(),receipt:None,recipient:NativeDecodeRetirementRecipient::new(),decoder:ManuallyDrop::new(None),partial:ManuallyDrop::new(None),fault:ManuallyDrop::new(None),inner_fault:ManuallyDrop::new(None),active:ManuallyDrop::new(None),birth:ManuallyDrop::new(Default::default()),birth_demand:Default::default(),demand:RetirementDemand{depth:2,..Default::default()},maximum,range,limits,admitted:false,closing:false,closed:false}}
+ pub fn terminal_is_empty(&self)->bool{self.closed&&!self.allocation.has_source()&&!self.allocation.work.0.has_live_actions()&&!self.allocation.construction.0.has_live_actions()&&!self.allocation.has_pending_allocation()&&self.decoder.is_none()&&self.partial.is_none()&&self.fault.is_none()&&self.inner_fault.is_none()&&self.active.is_none()&&self.birth_is_empty()&&self.recipient.terminal_is_empty()&&self.receipt.is_none()}
+ fn birth_is_empty(&self)->bool{self.birth.phase()==NativeReceivingEffectPhase::Empty}
+ fn failure_storage_needed(&self)->bool{self.birth_is_empty()&&!self.recipient.has_failure_storage()&&(self.active.is_some()||self.decoder.as_ref().is_some_and(|owner|!owner.terminal_is_empty())||self.recipient.has_owner())}
  pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.closing&&!self.admitted&&!self.allocation.has_source(){return Ok(semio_framework_job::OriginalCallerSourceLoan::admission_demand())}
   if !self.closing&&!self.admitted&&self.allocation.source.is_some()&&self.allocation.authority.is_none(){return Ok(MemberHistoryAllocation::transition_demand())}
@@ -115,6 +176,7 @@ impl MemberHistoryReceiving {
   if self.native_custody_empty()&&(self.closing||self.admitted)&&self.allocation.authority.is_some(){return Ok(MemberHistoryAllocation::transition_demand())}
   if self.native_custody_empty()&&(self.closing||self.admitted){if let Some(source)=self.allocation.source.as_ref(){return Ok(if source.terminal_is_empty(){RetirementDemand{copy_bytes:std::mem::size_of::<Option<semio_framework_job::OriginalCallerSourceLoan>>(),depth:1,..Default::default()}}else{source.retirement_demands()})}}
 
+  if !self.birth_is_empty(){return Ok(self.birth_demand)}
   if self.failure_storage_needed(){return Ok(semio_framework_value::original_failure_storage_birth_demand())}
   if let Some(active)=self.active.as_ref(){return semio_os_store_read::artifact_retirement_box_demands(active,body)}
   if self.fault.is_some(){return semio_os_store_read::artifact_retirement_owned_birth_demands(&self.fault)}
@@ -127,7 +189,7 @@ impl MemberHistoryReceiving {
   Ok(RetirementDemand{copy_bytes:if self.closed{0}else{std::mem::size_of::<bool>()},depth:if self.closed{0}else if !self.admitted&&!self.closing{2}else{1},..Default::default()})
  }
 
- fn native_owners_empty(&self)->bool{self.decoder.is_none()&&self.partial.is_none()&&self.fault.is_none()&&self.inner_fault.is_none()&&self.active.is_none()&&self.recipient.terminal_is_empty()&&!self.allocation.work_issuer.has_live_actions()&&!self.allocation.has_pending_allocation()}
+ fn native_owners_empty(&self)->bool{self.birth_is_empty()&&self.decoder.is_none()&&self.partial.is_none()&&self.fault.is_none()&&self.inner_fault.is_none()&&self.active.is_none()&&self.recipient.terminal_is_empty()&&!self.allocation.work.0.has_live_actions()&&!self.allocation.construction.0.has_live_actions()&&!self.allocation.has_pending_allocation()}
  fn native_custody_empty(&self)->bool{self.native_owners_empty()&&self.receipt.is_none()}
  fn close_native_receipt(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<RetainedCloneProgress,OriginalTurnFailure>{
   if !self.native_owners_empty(){return Err(invariant("Member receipt still retains its original native owners").into())}
@@ -166,9 +228,20 @@ impl MemberHistoryReceiving {
   let outcome=semio_framework_job_native_decode::OriginalNativeDecodeOutcome{value:outcome.value.map(|_|RetainedHistorySourceStep::Progress).map_err(Into::into),progress:outcome.progress,work:outcome.work,reported_work:outcome.reported_work,observed_native_work:outcome.observed_native_work,receiving_refusal:outcome.receiving_refusal};
   let progress=outcome.progress;self.accept(outcome)?;Ok(RetainedCloneStep::Progress(progress))
  }
+ fn finish_retirement(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,settled:Option<(OriginalRetirementOutcome,u64,bool)>)->Result<RetainedCloneStep,OriginalTurnFailure>{
+  let Some((turn,observed,overrun))=settled else{return Ok(RetainedCloneStep::Progress(Default::default()))};
+  let step=self.receive_retirement(cx,grant,fuel,turn,observed)?;
+  if overrun{return Err(invariant("original Member retirement performed more work than it settled").into())}Ok(step)
+ }
+ fn close_recipient(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<RetainedCloneStep,OriginalTurnFailure>{
+  let fuel=cx.fuel_remaining();
+  let settled=retirement_turn(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,closing,grant,|control,effect|Ok(control.close_retirement_recipient(effect)))?;
+  self.finish_retirement(cx,grant,fuel,settled)
+ }
  fn refill_failure_storage(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<RetainedCloneStep,OriginalTurnFailure>{
-  let fuel=cx.fuel_remaining();let(raw,observed)=with_original_control(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,closing,|control|control.with_retirement(grant,|same|Ok::<_,ValueError>(semio_framework_value::refill_original_failure_storage(same,grant))))?;
-  let turn=raw.unwrap_or_else(|error|semio_framework_value::OriginalRetirementOutcome{result:Err(error.into()),work:0});self.receive_retirement(cx,grant,fuel,turn,observed)
+  let fuel=cx.fuel_remaining();
+  let(polled,observed)=with_original_control(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,closing,|control|control.with_retirement(grant,|same|{let funding:&mut dyn OriginalRetirementControl=same;Ok::<_,ValueError>(semio_framework_value::refill_original_failure_storage(funding,grant))}))?;
+  self.receive_retirement(cx,grant,fuel,settled(polled),observed)
  }
  pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,cx:&mut StepContext<'_>,grant:RetainedCloneGrant,history:&mut Option<HistoryLog>)->Result<RetainedHistorySourceStep,OriginalTurnFailure>{
   let grant=grant.restricted_by(cx.retained_grant());
@@ -186,26 +259,24 @@ impl MemberHistoryReceiving {
   if self.admitted&&self.native_custody_empty()&&!self.allocation.has_source(){if cx.fuel_remaining()==0{return Ok(RetainedHistorySourceStep::Blocked)}self.closed=true;let(raw,progress)=metadata(RetainedHistorySourceStep::Ready,std::mem::size_of::<bool>());let fuel=cx.fuel_remaining();return self.accept(receive(cx,grant,fuel,raw,Some((grant,progress)),0,history_progress))}
   if self.failure_storage_needed(){self.refill_failure_storage(cx,grant,false)?;return Ok(RetainedHistorySourceStep::Progress)}
   let finish_storage=self.admitted&&self.decoder.is_none()&&!self.recipient.terminal_is_empty();
-  let fuel=cx.fuel_remaining();let decoder=&mut self.decoder;let admitted=&mut self.admitted;let demand=&mut self.demand;let range=self.range;let limits=self.limits;
-  let((turn,issued),observed)=with_original_control(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,false,|control|{
-   if control.has_retirement_owner()||finish_storage{let raw=control.close_retirement_recipient(grant);let progress=match &raw.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};return(RetainedWorkOutcome{result:raw.result.map(|_|RetainedHistorySourceStep::Progress).map_err(Into::into),work:raw.work},Some((grant,progress)))}
+  if self.recipient.has_owner()||finish_storage{self.close_recipient(cx,grant,false)?;return Ok(RetainedHistorySourceStep::Progress)}
+  let fuel=cx.fuel_remaining();let decoder=&mut self.decoder;let admitted=&mut self.admitted;let ledger_demand=&mut self.demand;let range=self.range;let limits=self.limits;
+  let Some(((turn,issued),performed,observed))=with_native_effect(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,false,grant,|control,effect|{
    let mut own_receipt=None;
    let turn=if !*admitted{
-    let raw=RetainedHistorySourceDecode::admit(source,range,limits,true,control,grant);
-    RetainedWorkOutcome{result:raw.result.map(|owner|match owner{Some(owner)=>{**decoder=Some(owner);*admitted=true;RetainedHistorySourceStep::Progress},None=>RetainedHistorySourceStep::Blocked}),work:raw.work}
+    RetainedHistorySourceDecode::admit(source,range,limits,true,control,effect).map(|owner|match owner{Some(owner)=>{**decoder=Some(owner);*admitted=true;RetainedHistorySourceStep::Progress},None=>RetainedHistorySourceStep::Blocked})
    }else if let Some(owner)=decoder.as_mut(){
-    if owner.terminal_is_empty(){decoder.take();let(raw,progress)=metadata(RetainedHistorySourceStep::Closed,std::mem::size_of::<Option<RetainedHistorySourceDecode>>());own_receipt=Some((grant,progress));raw}
-    else if owner.is_ready(){let raw=owner.take_ready_into(history,grant);RetainedWorkOutcome{result:raw.result.map(|ready|if ready{RetainedHistorySourceStep::Ready}else{RetainedHistorySourceStep::Blocked}),work:raw.work}}
-    else{owner.step(source,control,grant)}
-   }else{RetainedWorkOutcome{result:Ok(RetainedHistorySourceStep::Ready),work:0}};
+    if owner.terminal_is_empty(){decoder.take();paid_metadata(effect,RetainedHistorySourceStep::Closed,std::mem::size_of::<Option<RetainedHistorySourceDecode>>()).map(|(step,progress)|{own_receipt=Some((grant,progress));step})}
+    else if owner.is_ready(){owner.take_ready_into(history,effect).map(|ready|if ready{RetainedHistorySourceStep::Ready}else{RetainedHistorySourceStep::Blocked})}
+    else{owner.step(source,control,effect)}
+   }else{Ok(RetainedHistorySourceStep::Ready)};
    let issued=own_receipt.or_else(||decoder.as_mut().and_then(|owner|owner.take_receipt()));
-   if let Some(owner)=decoder.as_ref(){if let Ok(next)=owner.demands(source,control,grant.maximum_copy_bytes){*demand=next}}
+   if let Some(owner)=decoder.as_ref(){if let Ok(next)=owner.demands(source,control,grant.maximum_copy_bytes){*ledger_demand=next}}
    (turn,issued)
-  })?;
-  let outcome=receive(cx,grant,fuel,turn,issued,observed,history_progress);let progress=outcome.progress;
+  })?else{return Ok(RetainedHistorySourceStep::Blocked)};
+  let outcome=receive(cx,grant,fuel,RetainedWorkOutcome{result:turn,work:u128::from(performed)},issued,observed,history_progress);let progress=outcome.progress;
   let step=self.accept(outcome)?;
   if self.fault.is_some(){return Ok(RetainedHistorySourceStep::Fault)}
-
   Ok(if progress.copied_items>0{RetainedHistorySourceStep::Progress}else{step})
  }
  pub fn close_step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,OriginalTurnFailure>{
@@ -219,47 +290,53 @@ impl MemberHistoryReceiving {
   if self.native_custody_empty()&&self.allocation.has_source(){return self.close_original_source(cx,grant)}
   if self.failure_storage_needed(){return self.refill_failure_storage(cx,grant,true)}
   let fuel=cx.fuel_remaining();
-  if self.active.is_some(){
+  if self.active.is_some()&&self.birth_is_empty(){
    let active=&mut self.active;
-   let(raw,observed)=with_original_control(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,true,|control|control.with_retirement(grant,|same|Ok::<_,ValueError>(semio_framework_value::close_factory_ticket_controlled(active,grant,same))))?;
-   let turn=raw.unwrap_or_else(|error|semio_framework_value::OriginalRetirementOutcome{result:Err(error.into()),work:0});
-   return self.receive_retirement(cx,grant,fuel,turn,observed)
+   let settled=retirement_turn(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,true,grant,|control,effect|control.with_retirement(grant,|same|Ok::<_,ValueError>(semio_framework_value::close_factory_ticket_controlled(active,effect,same))))?;
+   return self.finish_retirement(cx,grant,fuel,settled)
   }
-  if self.fault.is_some()||self.inner_fault.is_some()||self.decoder.is_none()&&self.partial.is_some(){
-   let active=&mut self.active;let fault=&mut self.fault;let inner_fault=&mut self.inner_fault;let partial=&mut self.partial;
-   let((raw,work_refusal),observed)=with_original_control(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,true,|control|controlled_retirement(control,Ok(1),|control|{if let Err(error)=control.charge(demand.capacity_bytes){return RetainedWorkOutcome{result:Err(error),work:0}}if fault.is_some(){semio_os_store_read::artifact_retirement_admit_owned(fault,active,grant)}else if inner_fault.is_some(){semio_os_store_read::artifact_retirement_admit_owned(inner_fault,active,grant)}else{semio_os_store_read::artifact_retirement_admit_owned(partial,active,grant)}}))?;
-   let turn=semio_framework_value::settle_original_retirement_work(raw,work_refusal.map_or(Ok(()),Err));
-   return self.receive_retirement(cx,grant,fuel,turn,observed)
+  if !self.birth_is_empty()||self.fault.is_some()||self.inner_fault.is_some()||self.decoder.is_none()&&self.partial.is_some(){
+   if self.birth_is_empty(){self.birth_demand=demand}
+   let birth_demand=self.birth_demand;let active=&mut self.active;let fault=&mut self.fault;let inner_fault=&mut self.inner_fault;let partial=&mut self.partial;let birth=&mut self.birth;
+   let(polled,observed)=with_original_control(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,true,|control|control.receive_effect(birth_demand,MEMBER_BIRTH_WORK,birth,|_,effect|{
+    if fault.is_some(){semio_os_store_read::artifact_retirement_admit_owned(fault,active,effect)}else if inner_fault.is_some(){semio_os_store_read::artifact_retirement_admit_owned(inner_fault,active,effect)}else{semio_os_store_read::artifact_retirement_admit_owned(partial,active,effect)}
+   }))?;
+   let turn=match polled{
+    Ok(NativeReceivingEffectPoll::Complete(turn))=>RetainedWorkOutcome{result:turn.result.map_err(effect_failure),work:turn.work},
+    Ok(NativeReceivingEffectPoll::Pending{work})=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work},
+    Err(error)=>RetainedWorkOutcome{result:Err(error),work:0},
+   };
+   let physical=match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
+   let unposted=RetainedWorkOutcome{result:turn.result.map(|_|RetainedCloneStep::Progress(Default::default())).map_err(|error|error.with_retained_progress(Default::default())),work:turn.work};
+   let step=self.receive_retirement(cx,grant,fuel,semio_framework_value::settle_original_retirement_work(unposted,Ok(())),observed)?;
+   return Ok(match step{RetainedCloneStep::Progress(_)=>RetainedCloneStep::Progress(physical),other=>other})
   }
   if self.decoder.is_some(){
-   let decoder=&mut self.decoder;let partial=&mut self.partial;let fault=&mut self.inner_fault;let demand=&mut self.demand;
-   let((turn,issued),observed)=with_original_control(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,true,|control|{
+   let decoder=&mut self.decoder;let partial=&mut self.partial;let fault=&mut self.inner_fault;let ledger_demand=&mut self.demand;
+   let Some(((turn,issued),performed,observed))=with_native_effect(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,true,grant,|control,effect|{
     let owner=decoder.as_mut().unwrap();owner.cancel();
-    if owner.terminal_is_empty(){decoder.take();let(raw,progress)=metadata(RetainedHistorySourceStep::Closed,std::mem::size_of::<Option<RetainedHistorySourceDecode>>());return(raw,Some((grant,progress)))}
-    let turn=if owner.fault().is_some(){let raw=owner.take_fault_into(fault,grant);RetainedWorkOutcome{result:raw.result.map(|_|RetainedHistorySourceStep::Progress),work:raw.work}}
-    else if owner.partial_is_receivable(){let raw=owner.take_partial_into(partial,grant);RetainedWorkOutcome{result:raw.result.map(|_|RetainedHistorySourceStep::Progress),work:raw.work}}
-    else{owner.close_step(source,control,grant)};
-    let issued=owner.take_receipt();if let Ok(next)=owner.demands(source,control,grant.maximum_copy_bytes){*demand=next}(turn,issued)
-   })?;
-   let outcome=receive(cx,grant,fuel,turn,issued,observed,history_progress);let progress=outcome.progress;self.accept(outcome)?;return Ok(RetainedCloneStep::Progress(progress))
+    if owner.terminal_is_empty(){decoder.take();return match paid_metadata(effect,RetainedHistorySourceStep::Closed,std::mem::size_of::<Option<RetainedHistorySourceDecode>>()){Ok((step,progress))=>(Ok(step),Some((grant,progress))),Err(error)=>(Err(error),None)}}
+    let turn=if owner.fault().is_some(){owner.take_fault_into(fault,effect).map(|_|RetainedHistorySourceStep::Progress)}
+    else if owner.partial_is_receivable(){owner.take_partial_into(partial,effect).map(|_|RetainedHistorySourceStep::Progress)}
+    else{owner.close_step(source,control,effect)};
+    let issued=owner.take_receipt();if let Ok(next)=owner.demands(source,control,grant.maximum_copy_bytes){*ledger_demand=next}(turn,issued)
+   })?else{return Ok(RetainedCloneStep::Progress(Default::default()))};
+   let outcome=receive(cx,grant,fuel,RetainedWorkOutcome{result:turn,work:u128::from(performed)},issued,observed,history_progress);let progress=outcome.progress;self.accept(outcome)?;return Ok(RetainedCloneStep::Progress(progress))
   }
-  if !self.recipient.terminal_is_empty(){
-   let(raw,observed)=with_original_control(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,true,|control|control.close_retirement_recipient(grant))?;
-   return self.receive_retirement(cx,grant,fuel,raw,observed)
-  }
+  if !self.recipient.terminal_is_empty(){return self.close_recipient(cx,grant,true)}
   if !self.native_custody_empty()||self.allocation.has_source(){return Err(invariant("Member closure retains an unsettled original action").into())}
   if cx.fuel_remaining()==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
   self.closed=true;let(raw,progress)=metadata(RetainedHistorySourceStep::Closed,std::mem::size_of::<bool>());let outcome=receive(cx,grant,fuel,raw,Some((grant,progress)),0,history_progress);self.accept(outcome)?;Ok(RetainedCloneStep::Complete(progress))
  }
-
 }
-impl Drop for MemberHistoryReceiving{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"Member History abandoned original decoding custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.decoder);ManuallyDrop::drop(&mut self.partial);ManuallyDrop::drop(&mut self.fault);ManuallyDrop::drop(&mut self.inner_fault);ManuallyDrop::drop(&mut self.active)}}}}
+impl Drop for MemberHistoryReceiving{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"Member History abandoned original decoding custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.decoder);ManuallyDrop::drop(&mut self.partial);ManuallyDrop::drop(&mut self.fault);ManuallyDrop::drop(&mut self.inner_fault);ManuallyDrop::drop(&mut self.active);ManuallyDrop::drop(&mut self.birth)}}}}
 
 
 
 #[cfg(test)]
 mod actual_work_laws{
  use super::*;
+ use semio_framework_value_native_owned::NativeAllocationRequest;
  use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
 
  fn original_allocation(caller:&mut OriginalJobFixtureCaller)->MemberHistoryAllocation{
@@ -300,30 +377,34 @@ mod actual_work_laws{
   let mut caller=OriginalJobFixtureCaller::admit(OperationId(899),Generation(1),stock(),||Some(1),u64::MAX,1<<20);
   let mut receipt=None;let mut recipient=NativeDecodeRetirementRecipient::new();let mut allocation=original_allocation(&mut caller);
   let mut owner=Some(RetainedHistoryOpMetaFault::Value(invariant("original Member retirement owner")));
-  let mut active:Option<Box<dyn ErasedSnapshotRetirement>>=None;
-  let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/member-work.json")).unwrap();assert_eq!(law["retirement"]["quote"],1);
+  let mut active:Option<Box<dyn ErasedSnapshotRetirement>>=None;let mut birth=NativeReceivingEffect::<ValueError>::default();
+  let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/member-work.json")).unwrap();assert_eq!(law["retirement"]["quote"],MEMBER_BIRTH_WORK);
   for row in law["retirement"]["cases"].as_array().unwrap(){
    let budget=row["budget"].as_u64().unwrap();let expected=row["work"].as_u64().unwrap();
    caller.turn(stock(),|cx|{let deadline=cx.deadline_us();cx.with_original_work_loan(budget,deadline,|cx|{
     let fuel=cx.fuel_remaining();let demand=semio_os_store_read::artifact_retirement_owned_birth_demands(&owner)?;
-    let(raw,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||with_original_control(&mut receipt,&mut recipient,&mut allocation,1<<20,cx,true,|control|controlled_retirement(control,Ok(1),|control|{
-     if let Err(error)=control.charge(demand.capacity_bytes){return RetainedWorkOutcome{result:Err(error),work:0}}
-     semio_os_store_read::artifact_retirement_admit_owned(&mut owner,&mut active,stock())
-    })));
-    let((turn,refusal),observed)=raw?;assert!(refusal.is_none());let progress=turn.result.as_ref().unwrap().progress();
-    assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(heap.requested_bytes,heap.released_bytes));assert_eq!(observed,expected);assert_eq!(turn.work,expected);
-    let outcome=receive(cx,stock(),fuel,turn,Some((stock(),progress)),observed,ValueError::retained_progress);assert!(outcome.value.is_ok());assert!(outcome.receiving_refusal.is_none());assert_eq!(fuel-cx.fuel_remaining(),expected);
+    let(raw,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||if paused(cx,true){Ok((Ok(NativeReceivingEffectPoll::Pending{work:0}),0u64))}else{with_original_control(&mut receipt,&mut recipient,&mut allocation,1<<20,cx,true,|control|control.receive_effect(demand,MEMBER_BIRTH_WORK,&mut birth,|_,effect|semio_os_store_read::artifact_retirement_admit_owned(&mut owner,&mut active,effect)))});
+    let(polled,observed)=raw?;
+    let turn=match polled?{NativeReceivingEffectPoll::Complete(turn)=>RetainedWorkOutcome{result:turn.result.map_err(effect_failure),work:turn.work},NativeReceivingEffectPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};
+    let turn=semio_framework_value::settle_original_retirement_work(turn,Ok(()));let progress=turn.result.as_ref().unwrap().progress();
+    assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(heap.requested_bytes,heap.released_bytes));assert_eq!(observed,expected);assert_eq!(turn.work,u128::from(expected));
+    let outcome=receive(cx,stock(),fuel,turn,Some((stock(),Default::default())),observed,semio_framework_value::OriginalRetirementFailure::retained_progress);assert!(outcome.value.is_ok());assert!(outcome.receiving_refusal.is_none());assert_eq!(fuel-cx.fuel_remaining(),expected);
     assert_eq!(owner.is_some(),row["owner"].as_bool().unwrap());assert_eq!(active.is_some(),row["active"].as_bool().unwrap());Ok(())
    })}).unwrap();
   }
+  assert!(birth.phase()==NativeReceivingEffectPhase::Empty);
   for _ in 0..256{
    if active.is_none()&&recipient.terminal_is_empty(){break}
    let refill=active.is_some()&&!recipient.has_failure_storage();
    caller.turn(stock(),|cx|{let deadline=cx.deadline_us();cx.with_original_work_loan(64,deadline,|cx|{
     let fuel=cx.fuel_remaining();
-    let(raw,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||with_original_control(&mut receipt,&mut recipient,&mut allocation,1<<20,cx,true,|control|if refill{control.with_retirement(stock(),|same|Ok::<_,ValueError>(semio_framework_value::refill_original_failure_storage(same,stock())))}else if active.is_some(){control.with_retirement(stock(),|same|Ok::<_,ValueError>(semio_framework_value::close_factory_ticket_controlled(&mut active,stock(),same)))}else{Ok::<_,ValueError>(control.close_retirement_recipient(stock()))}));
-    let(turn,observed)=raw?;let turn=turn?;assert_eq!(turn.work,observed);let progress=turn.result.as_ref().unwrap().progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(heap.requested_bytes,heap.released_bytes));
-    let outcome=receive(cx,stock(),fuel,turn,Some((stock(),progress)),observed,semio_framework_value::OriginalRetirementFailure::retained_progress);assert!(outcome.value.is_ok());assert!(outcome.receiving_refusal.is_none());assert_eq!(fuel-cx.fuel_remaining(),observed);assert!(observed>0);Ok(())
+    let(settled,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
+     if refill{let(polled,observed)=with_original_control(&mut receipt,&mut recipient,&mut allocation,1<<20,cx,true,|control|control.with_retirement(stock(),|same|{let funding:&mut dyn OriginalRetirementControl=same;Ok::<_,ValueError>(semio_framework_value::refill_original_failure_storage(funding,stock()))}))?;Ok::<_,OriginalTurnFailure>(Some((settled(polled),observed,false)))}
+     else if active.is_some(){retirement_turn(&mut receipt,&mut recipient,&mut allocation,1<<20,cx,true,stock(),|control,effect|control.with_retirement(stock(),|same|Ok::<_,ValueError>(semio_framework_value::close_factory_ticket_controlled(&mut active,effect,same))))}
+     else{retirement_turn(&mut receipt,&mut recipient,&mut allocation,1<<20,cx,true,stock(),|control,effect|Ok(control.close_retirement_recipient(effect)))}
+    });
+    let(turn,observed,overrun)=settled?.expect("original Member cleanup quote admitted");assert!(!overrun);assert!(turn.work>0);let progress=turn.result.as_ref().unwrap().progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(heap.requested_bytes,heap.released_bytes));
+    let posted=turn.work;let outcome=receive(cx,stock(),fuel,turn,Some((stock(),progress)),observed,semio_framework_value::OriginalRetirementFailure::retained_progress);assert!(outcome.value.is_ok());assert!(outcome.receiving_refusal.is_none());assert_eq!(u128::from(fuel-cx.fuel_remaining()),posted);Ok(())
    })}).unwrap();
   }
   assert!(owner.is_none()&&active.is_none()&&recipient.terminal_is_empty());close_allocation(&mut caller,allocation,receipt.take());caller.retire(stock());

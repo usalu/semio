@@ -236,16 +236,8 @@ pub struct MeshData {
 }
 
 pack::value::artifact_retire_struct!(MeshData {positions,normals,colors,indices,uvs,face_ids,vertex_ids,edge_positions,edge_ids,edge_uvs,edge_is_seam,paint_texture_base64,attributes,materials,textures,component_references});
-impl pack::value::retirement::RetireOwned for MeshAttribute {
-    fn retirement(self)->Box<dyn pack::value::retirement::RetirementCursor> {pack::value::retirement::sequence(vec![pack::value::retirement::deferred(self.values),pack::value::retirement::deferred(self.indices)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {pack::value::retirement::sequence_birth_bytes(&[pack::value::retirement::deferred_birth_bytes_for(&self.values),pack::value::retirement::deferred_birth_bytes_for(&self.indices)])}
-    fn controlled_retirement_supported()->bool {true}
-}
-impl pack::value::retirement::RetireOwned for MeshTexture {
-    fn retirement(self)->Box<dyn pack::value::retirement::RetirementCursor> {pack::value::retirement::sequence(vec![pack::value::retirement::deferred(self.mime),pack::value::retirement::deferred(self.bytes)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {pack::value::retirement::sequence_birth_bytes(&[pack::value::retirement::deferred_birth_bytes_for(&self.mime),pack::value::retirement::deferred_birth_bytes_for(&self.bytes)])}
-    fn controlled_retirement_supported()->bool {true}
-}
+pack::value::artifact_retire_struct!(MeshAttribute {domain,semantic,interpolation,values,indices});
+pack::value::artifact_retire_struct!(MeshTexture {mime,bytes});
 
 /// 🌱️ Projects canonical mesh members without any wire representation.
 impl pack::value::ToValue for MeshData {
@@ -611,10 +603,6 @@ pub fn mesh_from_indexed_with_face_groups(positions: &[f32], normals: &[f32], in
 }
 //#endregion Primitives
 
-impl pack::value::retirement::RetireOwned for PolygonMeshSource {
-    fn retirement(self)->Box<dyn pack::value::retirement::RetirementCursor> {pack::value::retirement::sequence(vec![pack::value::retirement::deferred(self.vertices),pack::value::retirement::deferred(self.faces),pack::value::retirement::deferred(self.attributes),pack::value::retirement::deferred(self.materials),pack::value::retirement::deferred(self.textures)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {pack::value::retirement::sequence_birth_bytes(&[pack::value::retirement::deferred_birth_bytes_for(&self.vertices),pack::value::retirement::deferred_birth_bytes_for(&self.faces),pack::value::retirement::deferred_birth_bytes_for(&self.attributes),pack::value::retirement::deferred_birth_bytes_for(&self.materials),pack::value::retirement::deferred_birth_bytes_for(&self.textures)])}
-    fn controlled_retirement_supported()->bool {true}
-}
+pack::value::artifact_retire_struct!(PolygonMeshSource {vertices,faces,attributes,materials,textures});
 #[path="🚪️io/🦀️.rs"]
 pub mod io;

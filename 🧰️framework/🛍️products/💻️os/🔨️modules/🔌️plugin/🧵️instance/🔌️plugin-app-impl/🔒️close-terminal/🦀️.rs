@@ -6,7 +6,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
     pub(crate) fn original_typed_tag_pending(&self)->bool{self.original_typed_tag.is_some()||!self.original_typed_tag_close.is_empty()}
 
     pub(crate) fn original_typed_tag_close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
-        if !self.original_typed_tag_close.is_empty(){self.original_typed_tag_close.demands(body)}else{self.original_typed_tag_close.next_owner_demands::<semio_plugin_tool_run::tool_jobs_tool_machine::ToolTag>(true,&None,body)}
+        if !self.original_typed_tag_close.is_empty(){self.original_typed_tag_close.demands(body)}else{self.original_typed_tag_close.next_owner_demands::<semio_plugin_tool_machine::ToolTag>(true,&None,body)}
     }
 
     pub(crate) fn close_original_typed_tag(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_value::RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{

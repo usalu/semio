@@ -11,13 +11,7 @@ use semio_framework_value::factory::{OwnedValueRetirementFactory, SharedValueRet
 use semio_framework_value::retirement::RetireOwned;
 use std::sync::Arc;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
-use semio_framework_value_native_owned::{native_decoding::NativeDecodeConstructionRecipient, native_decoding::NativeDecodeProgress};
-struct LawConstruction { original:RetainedCloneGrant, spent:RetainedCloneProgress, submitted:RetainedCloneProgress }
-impl NativeDecodeConstructionRecipient for LawConstruction {
- fn submitted(&self)->RetainedCloneProgress{self.submitted}
- fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{let remaining=RetainedCloneGrant{maximum_items:self.original.maximum_items.saturating_sub(self.submitted.copied_items),maximum_copy_bytes:self.original.maximum_copy_bytes.saturating_sub(self.submitted.copied_bytes),maximum_capacity_bytes:self.original.maximum_capacity_bytes.saturating_sub(self.submitted.retained_capacity_bytes),maximum_release_bytes:self.original.maximum_release_bytes.saturating_sub(self.submitted.released_bytes),maximum_depth:self.original.maximum_depth};if !semio_framework_value::retained_clone::retained_clone_grant_admits(remaining,d){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"law original construction denied"));}Ok(remaining)}
- fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.submitted=self.submitted.checked_add(p)?;if !p.fits(g){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"law original construction receipt changed"));}self.spent=self.spent.checked_add(p)?;if !self.spent.fits(self.original){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"law original construction turn exhausted"));}Ok(())}
-}
+use semio_framework_job::{Generation, OperationId, OriginalJobDecodeOwner, OriginalJobFixtureCaller};
 
 /// ⚖️ What a lawful preparation published: the post snapshot, the ordered inverse rows and the cumulative physical cost.
 pub struct OneItemPreparationLaw<P, M> {
@@ -69,15 +63,13 @@ where
     assert!(birth.fits(grant.retained_grant()));
     let (mut retained, mut idle, mut turns) = (birth.retained_capacity_bytes, 0usize, 0usize);
     let (mut live, mut peak) = (birth.retained_capacity_bytes, birth.retained_capacity_bytes);
-    let mut receiving=semio_framework_job::OriginalJobDecodeOwner::empty();
-    let cancelled=false;
-    let mut observer=|_:NativeDecodeProgress|!cancelled;
+    let mut caller=OriginalJobFixtureCaller::admit(OperationId(1),Generation(1),RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:4096},||Some(1),u64::MAX,1<<20);
+    let mut decoder=OriginalJobDecodeOwner::empty();
     let prepared = loop {
         turns += 1;
-        let mut construction=LawConstruction{original:grant.retained_grant(),spent:Default::default(),submitted:Default::default()};
-        let step=receiving.receive(grant.retained_grant(),&mut observer,&mut construction,|control|owner.advance(body,grant,control)).unwrap_or_else(|error| panic!("law preparation failed at turn {turns}: {error}"));
-        let progress=match &step{ArtifactStoreOneItemPreparationStep::Prepared(_,p)|ArtifactStoreOneItemPreparationStep::Progress(_,p)=>*p,ArtifactStoreOneItemPreparationStep::Blocked=>Default::default()};
-        assert!(progress.copied_bytes>=construction.spent.copied_bytes&&progress.retained_capacity_bytes>=construction.spent.retained_capacity_bytes&&progress.released_bytes>=construction.spent.released_bytes,"law enclosing receipt lost its original construction");
+        let mut out=None;let mut advanced=None;
+        caller.turn_with_decoder(grant.retained_grant(),&mut decoder,|cx|{cx.with_native_receiving(&mut out,|control,_|{advanced=Some(owner.advance(body,grant,control));Ok(())})?;Ok(())}).unwrap_or_else(|error| panic!("law preparation failed at turn {turns}: {error:?}"));
+        let step=match advanced{Some(Ok(step))=>step,Some(Err(_))=>panic!("law preparation refused at turn {turns}"),None=>ArtifactStoreOneItemPreparationStep::Blocked};
         match step {
             ArtifactStoreOneItemPreparationStep::Prepared(_, progress) => {
                 assert!(progress.fits(grant.retained_grant()));
@@ -107,7 +99,7 @@ where
     for close_turns in 0..100_000 {
         if owner.terminal_is_empty() {
             assert_eq!(observe(|| drop(owner)).1.requested_bytes, 0);
-            while !receiving.terminal_is_empty(){let d=receiving.retirement_demands(grant.maximum_copy_bytes).unwrap();let original=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)};let(step,heap)=observe(||receiving.close_step(original).result.unwrap());assert!(step.progress().fits(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
+            drop(decoder);drop(caller);
             report.close_turns = close_turns;
             return report;
         }

@@ -58,8 +58,9 @@ pub struct SealedSharedPublication<'a,T:Send+Sync+'static>{issuance:u64,storage:
 impl<T:Send+Sync+'static> SealedSharedPublication<'_,T>{pub fn commit(self,value:T,issuer:SharedIssuer<T>)->RetainedWorkOutcome<(SealedShared<T>,RetainedCloneProgress)>{let turn=self.storage.commit(value);RetainedWorkOutcome{result:turn.result.map(|(source,p)|(SealedShared{source:ManuallyDrop::new(Some(source)),issuer,issuance:self.issuance},p)),work:turn.work}}}
 impl<T:Send+Sync+'static> SealedSharedBirth<T>{
  pub fn publication(&mut self,grant:RetainedCloneGrant)->Result<Option<SealedSharedPublication<'_,T>>,ValueError>{let issuance=self.issuance;self.storage.publication(grant).map(|p|p.map(|storage|SealedSharedPublication{issuance,storage}))}
+ pub const fn publication_work_demand()->u64{retirement::arc_custody::original::SharedOriginalPublication::<T>::work_demand()}
  pub fn next_close_demand(&self)->RetirementDemand{self.storage.next_close_demand()}
- pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{let grant=effect.grant();self.storage.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.storage.close_step(effect.grant())}
  pub fn terminal_is_empty(&self)->bool{self.storage.terminal_is_empty()}
 }
 /// 📥️ One admitted original alias has one fixed issuer return slot without heap backing.
@@ -79,8 +80,14 @@ impl<T:Send+Sync+'static> SharedAliasReturn<T>{
 impl<T:Send+Sync+'static> Drop for SharedAliasReturn<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"issuer slot retains an original returned alias");}}
 impl<T:Send+Sync+'static> SealedShared<T>{
  pub fn birth_bytes()->usize{SharedOriginalStorage::<T>::allocation_bytes()}
- /// ⛽️ Quotes the issuance attempt and the subsequent allocation attempt.
- pub const fn birth_work_demand()->u64{2}
+ pub fn admission_demand()->Result<RetirementDemand,ValueError>{SharedOriginalStorage::<T>::value_admission_demand()}
+ pub fn prepare_birth_demand()->Result<RetirementDemand,ValueError>{SharedOriginalStorage::<T>::prepare_birth_demand()}
+ pub fn publication_demand()->RetirementDemand{SharedOriginalBirth::<T>::publication_demand()}
+ /// ⛽️ Quotes the issuance action and the whole prepared birth.
+ pub const fn birth_work_demand()->u64{1+Self::prepare_birth_work_demand()}
+ pub const fn source_admission_work_demand()->u64{SharedOriginalStorage::<T>::source_admission_work_demand()}
+ pub const fn prepare_birth_work_demand()->u64{SharedOriginalStorage::<T>::prepare_birth_work_demand()}
+ pub const fn duplicate_alias_work_demand()->u64{SharedOriginalStorage::<T>::duplicate_work_demand()}
  pub fn prepare_birth(grant:RetainedCloneGrant,actual:&mut Option<usize>)->RetainedWorkOutcome<(SealedSharedBirth<T>,RetainedCloneProgress)>{
   if actual.is_some(){return RetainedWorkOutcome{result:Err(ValueError::invariant("sealed birth requires an empty actual marker")),work:0}}
   if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<Self::birth_bytes(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed issuance requires genuine header birth authority")),work:0}}
@@ -97,12 +104,13 @@ impl<T:Send+Sync+'static> SealedShared<T>{
  }
 
  /// ⛽️ Borrows the actual original storage alias work before duplication.
- pub fn duplicate_work_demand(&self)->Result<u64,ValueError>{self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"sealed source has already transferred"))?.duplicate_work_demand()}
- pub const fn duplicate_copy_bytes()->usize{SharedOriginalStorage::<T>::duplicate_copy_bytes()+size_of::<Self>()}
+ pub fn duplicate_work_demand(&self)->Result<u64,ValueError>{self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"sealed source has already transferred"))?;Ok(SharedOriginalStorage::<T>::duplicate_work_demand())}
+ pub fn duplicate_copy_bytes()->usize{SharedOriginalStorage::<T>::duplicate_demand().copy_bytes+size_of::<Self>()}
  pub fn try_duplicate(&self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<(Self,RetainedCloneProgress)>{
   let Some(source)=self.source.as_ref()else{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"sealed source has already transferred")),work:0}};let grant=effect.grant();let copy=Self::duplicate_copy_bytes();
   if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||effect.maximum_work_units()<1{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed alias handoff is not funded")),work:0}}
-  let turn=source.duplicate(effect);RetainedWorkOutcome{result:turn.result.map(|source|(Self{source:ManuallyDrop::new(Some(source)),issuer:self.issuer,issuance:self.issuance},RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})),work:turn.work}
+  let before=effect.performed_work();if let Err((error,work))=retirement::record_retirement_work(effect,SharedOriginalStorage::<T>::duplicate_work_demand()){return RetainedWorkOutcome{result:Err(error),work}}
+  let turn=source.duplicate(grant);RetainedWorkOutcome{result:turn.result.map(|source|(Self{source:ManuallyDrop::new(Some(source)),issuer:self.issuer,issuance:self.issuance},RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})),work:effect.performed_work()-before}
  }
 
  /// 🪢️ Returns one paid alias while the matching original strong parent remains borrowed and live.
@@ -140,7 +148,7 @@ impl<T:Send+Sync+'static> SealedShared<T>{
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original sealed value transfer is not funded"),self));}
   let Some(source)=self.source.take()else{return Err((ValueError::literal(ValueRefusalKind::InvalidValue,"original sealed value already transferred"),self));};
   work=ORIGINAL_TRANSFER_WORK;match source.try_owner(){Ok(mut owner)=>{let value=owner.take_value().expect("unique initialized original handback");Ok((value,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))},Err(source)=>{*self.source=Some(source);Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original sealed value still has live projections"),self))}}
- })();RetainedWorkOutcome{result,work}}
+ })();RetainedWorkOutcome{result,work:u128::from(work)}}
  pub fn identity(&self)->usize{self.source.as_ref().map_or(0,|source|source.identity())}
  pub fn get(&self)->&T{self.source.as_ref().expect("sealed shared source has transferred").get()}
 }
@@ -166,16 +174,19 @@ impl<T:Send+Sync+'static> Cursor<T>{
  }
  fn step_selected(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,demand:RetirementDemand)->RetirementStep{let grant=effect.grant();
   if !retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
-  if let Some(source)=self.handle.source.take(){
+  if self.handle.source.is_some(){
+   let work=match retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};
+   let Some(source)=self.handle.source.take()else{return RetirementStep::Failure(ValueError::invariant("sealed alias present").into(),work)};
    match source.retire(){SharedOriginalRelease::Alias=>{},SharedOriginalRelease::Original(original)=>self.original=Some(original)}
-   return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1)
+   return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},work)
   }
   if let Some(original)=self.original.as_ref(){
    let specialized=match(self.handle.issuer.demand)(original.get(),OriginalDemand::Shared){Ok(d)=>d.is_some(),Err(e)=>return RetirementStep::Failure(e.into(),0)};
    if specialized{return self.admit_cursor(effect,true)}
-   let Some(value)=self.original.as_mut().unwrap().take_value()else{return RetirementStep::Progress(Default::default(),1)};
+   let work=match retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};
+   let Some(value)=self.original.as_mut().unwrap().take_value()else{return RetirementStep::Progress(Default::default(),work)};
    self.original=None;*self.pending=Some(value);
-   return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()},1)
+   return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()},work)
   }
   if self.pending.is_some(){return self.admit_cursor(effect,false)}
   RetirementStep::Complete(0)
@@ -195,7 +206,7 @@ impl<T:Send+Sync+'static> RetireOwned for SealedShared<T>{fn retirement_ready(&s
 impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.demands(body)?;if self.handle.source.is_some(){return Ok(1)}if self.original.is_none()&&self.pending.is_none(){return Ok(0)}Ok(1)}
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();if self.terminal_is_empty(){return RetirementStep::Complete(0)}self.step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();if self.terminal_is_empty(){return RetirementStep::Complete(0)}self.step(&mut effect.nested(grant))}
  fn terminal_is_empty(&self)->bool{self.handle.source.is_none()&&self.original.is_none()&&self.pending.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
  fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.demands(body)?.copy_bytes)}
@@ -207,6 +218,12 @@ impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
 }
 impl<T:Send+Sync+'static> Drop for Cursor<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"sealed cursor retains its original payload and issuer");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.pending);}}}}
 
+#[cfg(test)]
+#[path="../../🧪️tests/⏱️effect/🦀️.rs"]
+mod effect;
+/// 🎟️ Funds exactly the complete admission quote of one value, including its inline placement copy.
+#[cfg(test)]
+fn admission_grant<T:Send+Sync+'static>()->RetainedCloneGrant{let d=SealedShared::<T>::admission_demand().unwrap();RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

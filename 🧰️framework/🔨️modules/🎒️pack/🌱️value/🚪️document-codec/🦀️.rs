@@ -22,7 +22,8 @@ pub struct DecodeReport {
     pub verified: semio_framework_pack_format::VerificationLevel,
 }
 impl semio_framework_value::retirement::RetireOwned for DecodeReport{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::{deferred,sequence};sequence(vec![deferred(self.unknown_field_ids),deferred(self.unknown_segments)])}
+ type RetirementCursor=semio_framework_value::retirement_fields_type!(Vec<u16>,Vec<u8>);
+ fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement_fields_seed!(self.unknown_field_ids,self.unknown_segments)}
  fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{deferred_birth_bytes_for,sequence_birth_bytes};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.unknown_field_ids),deferred_birth_bytes_for(&self.unknown_segments)])}
  fn controlled_retirement_supported()->bool{true}
 }

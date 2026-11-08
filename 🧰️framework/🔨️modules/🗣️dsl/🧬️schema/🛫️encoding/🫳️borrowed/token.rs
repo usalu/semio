@@ -93,14 +93,20 @@ impl BorrowedTextToken{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_value::native_encoding::NativeEncodeWorkRecipient;
+    use semio_framework_value::native_encoding::{OriginalWorkAuthority,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalSourceTurnIdentity};
     struct Loan { remaining:u64, committed:u64 }
-    impl NativeEncodeWorkRecipient for Loan {
-        fn admits(&mut self,_:u64,additional:u64)->Result<bool,ValueError>{Ok(self.remaining>=additional)}
-        fn committed(&mut self,actual:u64)->Result<(),ValueError>{self.remaining-=actual;self.committed+=actual;Ok(())}
+    struct LoanDriver;
+    impl OriginalWorkRecipient for LoanDriver{
+        type Context<'t,'s>=Loan where 's:'t;
+        fn validate_context<'t,'s>(&self,_:&Loan)->Result<(),ValueError> where 's:'t{Ok(())}
+        fn source_turn<'t,'s>(&self,_:&Loan)->Option<OriginalSourceTurnIdentity> where 's:'t{None}
+        fn admits<'r,'t,'s>(&mut self,c:&mut Loan,quote:OriginalWorkQuote<'r>,_:u64,work:u64)->OriginalWorkQuoteComplete<'r> where 's:'t{quote.complete(Ok(c.remaining>=work))}
+        fn settle_partial<'r,'t,'s>(&mut self,c:&mut Loan,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{let work=u64::try_from(check.delta()).unwrap_or(u64::MAX);let result=(||->Result<(),ValueError>{c.remaining=c.remaining.saturating_sub(work);c.committed+=work;Ok(())})();check.complete(result)}
+        fn recover_partial<'r,'t,'s>(&mut self,_:&mut Loan,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{check.pending()}
     }
+    fn with_work<R>(control:&mut NativeEncodeControl<'_>,issuer:&mut OriginalWorkAuthority<LoanDriver>,loan:&mut Loan,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<R,ValueError>)->Result<R,ValueError>{issuer.with_loan(loan,|work|control.with_work_recipient(work,operation))?}
     #[test]
-    fn token_corpus_emits_one_byte_and_denial_preserves_frontier(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();let mut denied_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+    fn token_corpus_emits_one_byte_and_denial_preserves_frontier(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);let mut denied_issuer=OriginalWorkAuthority::new(LoanDriver);
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🔣️.json")).unwrap();
         for input in fixture["invalidSurrogateJson"].as_array().unwrap(){assert!(serde_json::from_str::<String>(input.as_str().unwrap()).is_err())}
         for case in fixture["cases"].as_array().unwrap() {
@@ -109,13 +115,13 @@ mod tests {
             let mut cursor=BorrowedTextToken::new(false);let mut accepted=|_|true;
             let mut control=NativeEncodeControl::new(0,&mut accepted);
             let mut denied=Loan{remaining:0,committed:0};let mut byte=[0u8;1];
-            control.with_work_recipient(&mut denied_issuer.loan(&mut denied),|control|{
+            with_work(&mut control,&mut denied_issuer,&mut denied,|control|{
                 let progress=cursor.advance(text,&mut byte,control).map_err(|failure|failure.reason)?;
                 assert_eq!(progress.written_bytes,0);assert_eq!(cursor.emitted_bytes(),0);Ok::<_,ValueError>(())
             }).unwrap();
             assert_eq!(denied.committed,0);
             let mut loan=Loan{remaining:10000,committed:0};let mut result=Vec::new();
-            control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+            with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
                 for _ in 0..10000 {
                     let progress=cursor.advance(text,&mut byte,control).map_err(|failure|failure.reason)?;
                     result.extend_from_slice(&byte[..progress.written_bytes]);
@@ -124,11 +130,11 @@ mod tests {
                 assert_eq!(result.len(),1);Ok::<_,ValueError>(())
             }).unwrap();
             let before=cursor.emitted_bytes();byte[0]=0xaa;
-            control.with_work_recipient(&mut denied_issuer.loan(&mut denied),|control|{
+            with_work(&mut control,&mut denied_issuer,&mut denied,|control|{
                 let progress=cursor.advance(text,&mut byte,control).map_err(|failure|failure.reason)?;
                 assert_eq!(progress.written_bytes,0);assert_eq!(cursor.emitted_bytes(),before);assert_eq!(byte[0],0xaa);Ok::<_,ValueError>(())
             }).unwrap();
-            control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+            with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
                 for _ in 0..10000 {
                     let progress=cursor.advance(text,&mut byte,control).map_err(|failure|failure.reason)?;
                     result.extend_from_slice(&byte[..progress.written_bytes]);
@@ -136,22 +142,22 @@ mod tests {
                 }
                 assert!(cursor.is_complete());assert_eq!(result,expected.as_bytes());Ok::<_,ValueError>(())
             }).unwrap();
-            control.with_work_recipient(&mut denied_issuer.loan(&mut denied),|control|{
+            with_work(&mut control,&mut denied_issuer,&mut denied,|control|{
                 assert!(!cursor.close(control)?);assert!(!cursor.terminal_is_empty());Ok::<_,ValueError>(())
             }).unwrap();
-            control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+            with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
                 assert!(cursor.close(control)?);assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
             }).unwrap();
             assert!(loan.committed>result.len() as u64);
         }
     }
     #[test]
-    fn token_cancellation_preserves_prefix_and_resumes(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();
+    fn token_cancellation_preserves_prefix_and_resumes(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);
         let enabled=std::cell::Cell::new(true);let mut accept=|_|enabled.get();
         let mut control=NativeEncodeControl::new(0,&mut accept);
         let mut loan=Loan{remaining:1000,committed:0};
         let mut cursor=BorrowedTextToken::new(false);let text="é😀";let mut output=Vec::new();let mut byte=[0u8;1];
-        control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+        with_work(&mut control,&mut loan_issuer,&mut loan,|control|{
             for _ in 0..10000 {
                 let turn=cursor.advance(text,&mut byte,control).map_err(|failure|failure.reason)?;
                 output.extend_from_slice(&byte[..turn.written_bytes]);
@@ -188,27 +194,31 @@ mod tests {
     }
 
     struct FixturePhysical{allowance:semio_framework_value::RetainedCloneGrant,submitted:RetainedCloneProgress}
-    impl semio_framework_value::native_encoding::NativeEncodeConstructionRecipient for FixturePhysical{
-        fn submitted(&self)->RetainedCloneProgress{self.submitted}
-        fn grant(&mut self,demand:semio_framework_value::RetirementDemand)->Result<semio_framework_value::RetainedCloneGrant,ValueError>{
-            let remaining=self.allowance.maximum_copy_bytes.saturating_sub(self.submitted.copied_bytes);
-            if demand.copy_bytes>remaining{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture copy grant exhausted"))}
-            Ok(semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:remaining,..self.allowance})
+    struct PhysicalDriver;
+    impl semio_framework_value::native_encoding::OriginalConstructionRecipient for PhysicalDriver{
+        type Context<'t,'s>=FixturePhysical where 's:'t;
+        fn validate_context<'t,'s>(&self,_:&FixturePhysical)->Result<(),ValueError> where 's:'t{Ok(())}
+        fn source_turn<'t,'s>(&self,_:&FixturePhysical)->Option<OriginalSourceTurnIdentity> where 's:'t{None}
+        fn grant<'a,'t,'s>(&mut self,c:&mut FixturePhysical,quote:semio_framework_value::native_encoding::OriginalConstructionGrant<'a>)->semio_framework_value::native_encoding::OriginalConstructionGrantComplete<'a> where 's:'t{
+            let demand=quote.demand();let remaining=c.allowance.maximum_copy_bytes.saturating_sub(c.submitted.copied_bytes);
+            quote.complete(if demand.copy_bytes>remaining{Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture copy grant exhausted"))}else{Ok(semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:remaining,..c.allowance})})
         }
-        fn accept(&mut self,grant:semio_framework_value::RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{
-            if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture receipt exceeds quote"))}
-            self.submitted=self.submitted.checked_add(progress)?;Ok(())
+        fn accept<'a,'t,'s>(&mut self,c:&mut FixturePhysical,receipt:semio_framework_value::native_encoding::OriginalConstructionAccept<'a>)->semio_framework_value::native_encoding::OriginalConstructionAcceptComplete<'a> where 's:'t{
+            let(grant,progress)=(receipt.grant(),receipt.progress());
+            let result=if !progress.fits(grant){Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture receipt exceeds quote"))}else{c.submitted.checked_add(progress).map(|next|c.submitted=next).map_err(ValueError::from)};
+            receipt.complete(result)
         }
+        fn submitted<'t,'s>(&self,c:&FixturePhysical)->RetainedCloneProgress where 's:'t{c.submitted}
     }
     #[test]
-    fn token_effect_runs_under_physical_quote_fixture(){let mut loan_issuer=semio_framework_value::native_encoding::NativeEncodeWorkIssuer::new();let mut physical_issuer=semio_framework_value::native_encoding::NativeEncodeConstructionIssuer::new();
+    fn token_effect_runs_under_physical_quote_fixture(){let mut loan_issuer=OriginalWorkAuthority::new(LoanDriver);let mut physical_issuer=semio_framework_value::native_encoding::OriginalConstructionAuthority::new(PhysicalDriver);
         use semio_framework_io_control::{NativeSnapshotBodyWallet,NativeSnapshotEncodeEffectQuote,NativeSnapshotEffectProgress};
         use semio_framework_value::RetainedCloneGrant;
         let text="a\n😀";let expected="\"a\\n😀\"".as_bytes();let mut cursor=BorrowedTextToken::new(false);let mut output=Vec::new();let mut byte=[0u8;1];
         let allowance=RetainedCloneGrant{maximum_items:10000,maximum_copy_bytes:expected.len(),maximum_depth:1,..Default::default()};
         let mut body=NativeSnapshotBodyWallet::new(allowance);let mut physical=FixturePhysical{allowance,submitted:Default::default()};let mut loan=Loan{remaining:10000,committed:0};
         let mut accepted=|_|true;let mut control=NativeEncodeControl::new(0,&mut accepted);
-        control.with_construction_recipient(&mut physical_issuer.loan(&mut physical),|control|control.with_work_recipient(&mut loan_issuer.loan(&mut loan),|control|{
+        physical_issuer.with_loan(&mut physical,|physical|control.with_construction_recipient(physical,|control|with_work(control,&mut loan_issuer,&mut loan,|control|{
             for _ in 0..10000{
                 let demand=RetainedCloneGrant{maximum_copy_bytes:cursor.next_output_byte_demand(),maximum_depth:1,..Default::default()};
                 let quote=NativeSnapshotEncodeEffectQuote::encode(&mut body,control,demand).unwrap();let mut marker=NativeSnapshotEffectProgress::default();let mut failure=None;let mut turn=None;
@@ -218,7 +228,7 @@ mod tests {
             assert!(cursor.is_complete());assert_eq!(output,expected);
             let quote=NativeSnapshotEncodeEffectQuote::encode(&mut body,control,RetainedCloneGrant{maximum_depth:1,..Default::default()}).unwrap();let mut marker=NativeSnapshotEffectProgress::default();let mut failure=None;
             let outcome=quote.run_native(&mut marker,&mut failure,&mut |_,performed,receipt|{cursor.close_effect(performed,receipt)?;Ok(())});assert!(outcome.result.is_ok());assert_eq!(outcome.work,1);assert!(cursor.terminal_is_empty());Ok::<_,ValueError>(())
-        })).unwrap();
+        }))).unwrap().unwrap();
         assert_eq!(physical.submitted.copied_bytes,expected.len());assert!(loan.committed>expected.len() as u64);
     }
 

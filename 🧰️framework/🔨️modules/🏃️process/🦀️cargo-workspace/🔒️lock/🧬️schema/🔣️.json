@@ -103,6 +103,10 @@
           "en": "Crate {crate} is missing from the shared registry; fetching it online for {workspace}.",
           "de": "Die Crate {crate} fehlt in der gemeinsamen Registry; sie wird für {workspace} online geholt."
         },
+        "deduplicated": {
+          "en": "The Cargo.lock of {workspace} listed {count} packages more than once; the repeated rows are dropped and regenerated from the manifests.",
+          "de": "Die Cargo.lock von {workspace} führte {count} Pakete mehrfach auf; die wiederholten Zeilen werden verworfen und aus den Manifesten neu erzeugt."
+        },
         "refreshed": {
           "en": "The Cargo.lock of {workspace} is current again.",
           "de": "Die Cargo.lock von {workspace} ist wieder aktuell."

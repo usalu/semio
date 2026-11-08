@@ -2,6 +2,19 @@
   "version": 1,
   "cases": [
     {
+      "name": "a lockfile that lists a path package twice is repaired and refreshed instead of refused",
+      "files": {
+        "Cargo.toml": "[workspace]\nmembers = [\"a\"]\nresolver = \"2\"\n",
+        "a/Cargo.toml": "[package]\nname = \"a\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "a/src/lib.rs": "",
+        "Cargo.lock": "version = 3\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"a\"\nversion = \"0.1.0\"\ndependencies = []\n"
+      },
+      "steps": [
+        { "do": "ensure", "expect": { "outcomes": ["refreshed"], "oracle": "locked-ok" } },
+        { "do": "ensure", "expect": { "outcomes": ["current"], "cargoCalls": 0, "oracle": "locked-ok" } }
+      ]
+    },
+    {
       "name": "manifest edited after the last receipt refreshes the lock and the build proceeds",
       "files": {
         "Cargo.toml": "[workspace]\nmembers = [\"a\", \"b\"]\nresolver = \"2\"\n",

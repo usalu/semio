@@ -17,7 +17,6 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-manifest-media = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🎞️media/📦️packages/🦀️rust" }
-semio-plugin-window-kits-rich = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🧱️rich/📦️packages/🦀️rust" }
 semio-s-plugin-energy-engine-scene = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
@@ -52,6 +51,7 @@ semio-framework-replication = { path = "../../../../../../../../../../../../../�
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

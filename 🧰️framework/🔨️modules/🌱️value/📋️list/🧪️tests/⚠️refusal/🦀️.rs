@@ -2,13 +2,13 @@ use super::*;
 
 struct RefusedAllocation;
 unsafe impl PageAllocation for RefusedAllocation {
-    fn reserve<T>(_: &mut Vec<T>, _: usize, actual:&mut Option<usize>) -> Result<(), PagedListError> {
-        *actual=None;Err(PagedListError{kind:PagedListRefusalKind::AllocationFailed,reason:"synthetic allocation refusal"})
+    fn reserve<T>(_: &mut Vec<T>, _: usize, actual:Option<&mut Option<usize>>) -> Result<(), std::collections::TryReserveError> {
+        if let Some(marker)=actual{*marker=None}Err(Vec::<u8>::new().try_reserve_exact(usize::MAX).unwrap_err())
     }
 }
 struct ExcessAllocation;
 unsafe impl PageAllocation for ExcessAllocation {
-    fn reserve<T>(owner: &mut Vec<T>, slots: usize, actual:&mut Option<usize>) -> Result<(), PagedListError> {
+    fn reserve<T>(owner: &mut Vec<T>, slots: usize, actual:Option<&mut Option<usize>>) -> Result<(), std::collections::TryReserveError> {
         test_reserve(owner,slots * 2,actual)
     }
 }
@@ -20,26 +20,26 @@ fn run(operation: &str) -> PagedListError {
     if operation == "extraRetireEmpty" { return list.truncate_retired_last().unwrap_err(); }
     if operation == "extraRelease" || operation == "extraReleaseNext" {
         list.reserve_full().unwrap(); list.push_reserved(7).unwrap();
-        let refusal = if operation == "extraRelease" { list.release_empty_page(usize::MAX).unwrap_err() } else { list.next_release_allocation_bytes().unwrap_err() };
+        let refusal = if operation == "extraRelease" { list.release_empty_page_granted(usize::MAX).unwrap_err() } else { list.next_release_allocation_bytes().unwrap_err() };
         assert_eq!(list.pop(), Some(7));
-        while !list.terminal_is_empty() { let bytes = list.next_release_allocation_bytes().unwrap(); assert!(list.release_empty_page(bytes).unwrap().progressed); }
+        while !list.terminal_is_empty() { let bytes = list.next_release_allocation_bytes().unwrap(); assert!(list.release_empty_page_granted(bytes).unwrap().progressed); }
         return refusal;
     }
-    if operation.ends_with("Payload") { list.reserve_one(list.next_allocation_bytes().unwrap(),&mut None).unwrap(); }
+    if operation.ends_with("Payload") { list.reserve_one_granted(list.next_allocation_bytes().unwrap(),&mut None).unwrap(); }
     let requested = list.next_allocation_bytes().unwrap();
     let physical = list.allocated_bytes();
     let mut actual=None;let error = match operation {
-        "counter" => { list.allocated = isize::MAX as usize; list.reserve_one(requested,&mut None).unwrap_err() },
-        "failMetadata" | "failPayload" => list.reserve_page_using::<RefusedAllocation>(requested,&mut actual).unwrap_err(),
-        "extraMetadata" | "extraPayload" => list.reserve_page_using::<ExcessAllocation>(requested,&mut actual).unwrap_err(),
-        "signedMetadata" | "signedPayload" => { list.allocated = isize::MAX as usize - requested; list.reserve_page_using::<ExcessAllocation>(requested * 2,&mut actual).unwrap_err() },
+        "counter" => { list.allocated = isize::MAX as usize; list.reserve_one_granted(requested,&mut None).unwrap_err() },
+        "failMetadata" | "failPayload" => list.reserve_one_using_granted::<RefusedAllocation>(requested,&mut actual).unwrap_err(),
+        "extraMetadata" | "extraPayload" => list.reserve_one_using_granted::<ExcessAllocation>(requested,&mut actual).unwrap_err(),
+        "signedMetadata" | "signedPayload" => { list.allocated = isize::MAX as usize - requested; list.reserve_one_using_granted::<ExcessAllocation>(requested * 2,&mut actual).unwrap_err() },
         _ => panic!("closed paged refusal operation"),
     };
     if operation.starts_with("fail"){assert_eq!(actual,None)}else if operation!="counter"{assert_eq!(actual,Some(error.allocated_bytes))}list.allocated = physical + error.allocated_bytes;
     let refusal = error.refusal();
     while !list.terminal_is_empty() {
         let bytes = list.next_release_allocation_bytes().unwrap();
-        assert!(list.release_empty_page(bytes).unwrap().progressed);
+        assert!(list.release_empty_page_granted(bytes).unwrap().progressed);
     }
     assert_eq!(list.allocated_bytes(), 0);
     refusal
@@ -55,4 +55,4 @@ fn controlled_value_paged_refusal_actual_allocation_kind_corpus() {
 }
 
 
-fn test_reserve<T>(owner:&mut Vec<T>,slots:usize,actual:&mut Option<usize>)->Result<(),PagedListError>{*actual=None;let needed=owner.len().checked_add(slots).ok_or(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"test reservation overflow"})?;let allocating=std::mem::size_of::<T>()!=0&&needed>owner.capacity();if allocating{*actual=Some(0)}owner.try_reserve_exact(slots).map_err(|_|PagedListError{kind:PagedListRefusalKind::AllocationFailed,reason:"test allocation failed"})?;if allocating{*actual=Some(owner.capacity()*std::mem::size_of::<T>())}Ok(())}
+fn test_reserve<T>(owner:&mut Vec<T>,slots:usize,mut actual:Option<&mut Option<usize>>)->Result<(),std::collections::TryReserveError>{let allocating=std::mem::size_of::<T>()!=0&&owner.len().saturating_add(slots)>owner.capacity();if allocating{if let Some(marker)=actual.as_deref_mut(){*marker=Some(0)}}let result=owner.try_reserve_exact(slots);if allocating&&result.is_ok(){if let Some(marker)=actual.as_deref_mut(){*marker=Some(owner.capacity()*std::mem::size_of::<T>())}}result}

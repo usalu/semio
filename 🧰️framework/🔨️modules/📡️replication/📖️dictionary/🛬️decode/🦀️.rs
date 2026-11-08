@@ -78,7 +78,7 @@ impl RetainedSourceDictionary{
    1=>{let mut cursor=self.cursor;let length=Self::varint(source,&mut cursor,self.record_end)?;let end=cursor.checked_add(length).filter(|end|*end<=self.record_end).ok_or_else(||Self::fault("original dictionary field escaped its record"))?;self.range=Some((cursor,end));self.cursor=end;self.validation_cursor=cursor;self.validation=RetainedWireUtf8Validation::new();self.phase=2;RetainedCloneProgress{copied_items:1,..Default::default()}},
    2=>{let(_,end)=self.range.ok_or_else(||Self::fault("original dictionary validation range is absent"))?;let next=self.validation_cursor.saturating_add(4096).min(end);let mut validation=self.validation;for position in self.validation_cursor..next{let byte=source.byte_at(position).ok_or_else(||Self::fault("original dictionary UTF8 range contains absent source byte"))?;validation=validation.consume(&[byte])?;}if next==end&&!validation.is_complete(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original dictionary text is truncated UTF8"))}self.validation=validation;self.validation_cursor=next;if next==end{self.phase=3}RetainedCloneProgress{copied_items:1,..Default::default()}},
    3 if !self.original_source_ranges.has_reserved_slot()=>{
-    match self.original_source_ranges.reserve_one(grant.maximum_capacity_bytes){
+    match self.original_source_ranges.reserve_one_cold(grant.maximum_capacity_bytes){
      Ok(piece)=>RetainedCloneProgress{copied_items:usize::from(piece.progressed),retained_capacity_bytes:piece.allocated_bytes,released_bytes:piece.released_allocation_bytes,..Default::default()},
      Err(error)=>{let progress=RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()};self.receipt=Some((grant,progress));return Err(Self::list_error(error.refusal()).with_retained_progress(progress))}
     }
@@ -92,14 +92,25 @@ impl RetainedSourceDictionary{
   Ok(if self.phase==0{RetainedSourceDictionaryStep::Ready}else{RetainedSourceDictionaryStep::Progress})
  }
  pub fn cancel(&mut self){self.closing=true}
- pub fn close_step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,grant:RetainedCloneGrant)->Result<RetainedSourceDictionaryStep,ValueError>{
+ pub fn close_step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedSourceDictionaryStep,ValueError>{
+  use semio_framework_value_persistent::list::{PagedListReleaseFailure,PagedListReleaseOutcome};
+  let grant=effect.grant();
   self.validate_source(source)?;
   if self.receipt.is_some()||!self.closing{return Ok(RetainedSourceDictionaryStep::Blocked)}
   if self.phase==4{return Ok(RetainedSourceDictionaryStep::Closed)}
-  if !Self::covers(grant,self.demands(source)?){return Ok(RetainedSourceDictionaryStep::Blocked)}
-  let progress=if !self.original_source_ranges.is_empty(){self.original_source_ranges.pop().ok_or_else(||Self::fault("original dictionary range disappeared before paid close"))?;RetainedCloneProgress{copied_items:1,..Default::default()}}
-  else if !self.original_source_ranges.terminal_is_empty(){let piece=self.original_source_ranges.release_empty_page(grant.maximum_release_bytes).map_err(Self::list_error)?;RetainedCloneProgress{copied_items:usize::from(piece.progressed),released_bytes:piece.released_allocation_bytes,..Default::default()}}
-  else{self.range=None;self.remaining=0;self.phase=4;RetainedCloneProgress{copied_items:1,..Default::default()}};
+  if effect.maximum_work_units()==0||!Self::covers(grant,self.demands(source)?){return Ok(RetainedSourceDictionaryStep::Blocked)}
+  let pay=|effect:&mut semio_framework_value::RetainedAllocationEffect<'_>|semio_framework_value::retirement::record_retirement_work(effect,1).map_err(|(error,_)|error);
+  let progress=if !self.original_source_ranges.is_empty(){pay(effect)?;self.original_source_ranges.pop().ok_or_else(||Self::fault("original dictionary range disappeared before paid close"))?;RetainedCloneProgress{copied_items:1,..Default::default()}}
+  else if !self.original_source_ranges.terminal_is_empty(){
+   let turn=self.original_source_ranges.release_empty_page(effect);
+   match turn.result{
+    Ok(PagedListReleaseOutcome::Denied)=>return Ok(RetainedSourceDictionaryStep::Blocked),
+    Ok(PagedListReleaseOutcome::Ready(piece))=>RetainedCloneProgress{copied_items:usize::from(piece.progressed),released_bytes:piece.released_allocation_bytes,..Default::default()},
+    Err(PagedListReleaseFailure::Work(error))=>return Err(error),
+    Err(PagedListReleaseFailure::Release(error))=>return Err(Self::list_error(error)),
+   }
+  }
+  else{pay(effect)?;self.range=None;self.remaining=0;self.phase=4;RetainedCloneProgress{copied_items:1,..Default::default()}};
   self.receipt=Some((grant,progress));if !progress.fits(grant){return Err(Self::fault("original dictionary close exceeded its original grant").with_retained_progress(progress))}Ok(if self.phase==4{RetainedSourceDictionaryStep::Closed}else{RetainedSourceDictionaryStep::Progress})
  }
  pub fn terminal_is_empty(&self)->bool{self.phase==4&&self.original_source_ranges.terminal_is_empty()&&self.range.is_none()&&self.receipt.is_none()}

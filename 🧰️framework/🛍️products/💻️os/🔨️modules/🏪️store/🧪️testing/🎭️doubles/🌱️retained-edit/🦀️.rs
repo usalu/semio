@@ -63,9 +63,10 @@ impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValu
 impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_os_spr::Mutation<DemoSnapshot> + semio_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static> RetainedCloneEditCursor<DemoSnapshot, M> for ColdRetainedCloneEditCursor<M> {
     fn foreign_step_presence(&self)->bool{false}
     fn next_work_demand(&self,_:RetainedCloneRef<'_,DemoSnapshot>,_:&DemoSnapshot,_:RetainedCloneRef<'_,M>,_:usize)->Result<u64,ValueError>{Ok(if self.phase==2{2}else{1})}
-    fn last_turn_work(&self)->u64{self.last_work}
     fn advance_demands(&self, _: RetainedCloneRef<'_, DemoSnapshot>, _: &DemoSnapshot, _: RetainedCloneRef<'_, M>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { copy_bytes: if self.phase >= 2 { std::mem::size_of::<DemoSnapshot>() } else { 0 }, capacity_bytes: if self.phase == 1 { std::mem::size_of::<M>() } else { 0 }, depth: 1, ..Default::default() }) }
-    fn advance(&mut self, base: RetainedCloneRef<'_, DemoSnapshot>, post: &mut DemoSnapshot, mutation: RetainedCloneRef<'_, M>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {
+    fn advance(&mut self, base: RetainedCloneRef<'_, DemoSnapshot>, post: &mut DemoSnapshot, mutation: RetainedCloneRef<'_, M>, body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneEditStep, ValueError> {
+        let grant = effect.grant();
+        let result = (|| -> Result<RetainedCloneEditStep, ValueError> {
         self.last_work=0;
         if self.cancelled || self.closing || grant.maximum_items == 0 {
             return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress::default()));
@@ -96,6 +97,9 @@ impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValu
         *post = original;
         self.phase = 3;
         Ok(RetainedCloneEditStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes, retained_capacity_bytes: 0, released_bytes: 0 }))
+        })();
+        if self.last_work != 0 && !effect.performed(self.last_work)? { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "retained edit double exceeds its work ceiling")); }
+        result
     }
 
     fn take_inverse(&mut self) -> Option<Vec<M>> {
@@ -112,8 +116,9 @@ impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValu
         started
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        self.last_work=0;
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        use semio_framework_value::{RetainedWorkPoll, RetainedWorkOutcome};
+        let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if !self.closing || grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
@@ -129,23 +134,23 @@ impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValu
             return Ok(RetainedCloneStep::Progress(empty));
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        self.last_work=1;
         if self.active_retirement.is_some() {
-            let turn=artifact_retirement_box_close_step(&mut self.active_retirement, child);self.last_work=turn.work;let step=turn.result?;
+            let step = match artifact_retirement_box_close_step(&mut self.active_retirement, &mut effect.nested(child)) { RetainedWorkPoll::Pending { .. } => RetainedCloneStep::Progress(Default::default()), RetainedWorkPoll::Complete(turn) => turn.result.map_err(|failure| failure.into_value_error())? };
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if self.semantic_refusal.is_some() { let turn=artifact_retirement_admit_owned(&mut self.semantic_refusal, &mut self.active_retirement, child);self.last_work=turn.work;return turn.result; }
+        if self.semantic_refusal.is_some() { let turn = semio_framework_value::retirement::admit_owned_retirement(&mut *self.semantic_refusal, &mut effect.nested(child)); return match turn.result? { Some((owner, progress)) => { self.active_retirement = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }, None => Ok(RetainedCloneStep::Progress(Default::default())) }; }
         if let Some(inverse) = self.inverse.as_mut() {
             if let Some(mutation) = inverse.pop() {
-                let turn=DemoMutationRetirementFactory.retire_owned(mutation, child);self.last_work=turn.work;return match turn.result {
-                    Ok((owner, progress)) => {
+                let mut slot = Some(mutation);
+                let poll = semio_framework_value::factory_retire_owned(&DemoMutationRetirementFactory, &mut slot, &mut effect.nested(child));
+                if let Some(mutation) = slot { inverse.push(mutation); }
+                return match poll {
+                    RetainedWorkPoll::Pending { .. } => Ok(RetainedCloneStep::Progress(Default::default())),
+                    RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Ok((owner, progress)), .. }) => {
                         self.active_retirement = Some(owner);
                         Ok(RetainedCloneStep::Progress(progress))
                     }
-                    Err((error, mutation)) => {
-                        inverse.push(mutation);
-                        Err(error)
-                    }
+                    RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Err(failure), .. }) => Err(failure.into_value_error()),
                 };
             }
             drop(self.inverse.take());

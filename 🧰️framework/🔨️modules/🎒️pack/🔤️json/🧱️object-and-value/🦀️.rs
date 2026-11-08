@@ -91,7 +91,7 @@ impl FromIterator<(String, Value)> for Object {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum Value {
     Null,
     Bool(bool),

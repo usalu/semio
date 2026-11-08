@@ -77,7 +77,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
    cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|g|self.page_publication.owner.as_mut().unwrap().advance_backing(g))?;Ok(())})?;return Ok(true)
   }
   if owner.is_framed(){
-   if !owner.ready_to_handoff(){let d=owner.traversal_close_demands(cx.retained_grant().maximum_copy_bytes)?;cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|g|self.page_publication.owner.as_mut().unwrap().close_traversal(g))?;Ok(())})?;return Ok(true)}
+   if !owner.ready_to_handoff(){let d=owner.traversal_close_demands(cx.retained_grant().maximum_copy_bytes)?;cx.with_original_retirement(|cx|{semio_framework_job::close_original_effect_step(cx,d,|effect|self.page_publication.owner.as_mut().unwrap().close_traversal(effect))?;Ok(())})?;return Ok(true)}
    let coordination=size_of::<Option<PendingPublicationPage>>()+size_of::<Option<TypedOperationResultPage>>()+size_of::<bool>()+size_of::<MountedTypedCommandFullOperationStage>();
    let mut d=owner.handoff_demands()?;d.copy_bytes+=coordination;
    cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|g|{

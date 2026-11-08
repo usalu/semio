@@ -1,7 +1,7 @@
 //! 🧳️ Native receiving constructs retained owners from genuine original input under explicit physical grants.
 //! 🗒️ See [ownership and unsafe contracts](README.md).
 use crate::{RetainedWorkOutcome,OriginalReceivingPrimary,NativeDecodeControl,RetirementDemand,ValueError,retirement::RetireOwned,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
-pub use semio_framework_value_native_shared_engine::NativeIntrinsicSharedField;
+pub use semio_framework_value_native_shared_field::NativeIntrinsicSharedField;
 pub use semio_framework_value_native_schema_engine::record;
 pub use record::{NativeRecordKey,NativeRecordField,NativeSchemaLeaf,NativeSchemaKeySource,NativeRecordSchema,NativeFieldMatch,NativeRecordMatcher,NativeRecordStorage};
 #[path="📋️list/🦀️.rs"]mod list;
@@ -12,6 +12,7 @@ pub use shared::{NativeSharedReceiver,NativeSharedRoot};
 pub use semio_framework_value_native_default::{NativeDefault,NativeDefaultCursor,NativeDefaultValue,NativeDefaultValueCursor,NativeDefaultSlot,NativeArrayDefaultCursor,NativePairDefaultCursor};
 
 #[path="🌳️value/🦀️.rs"]pub mod tree;
+pub use tree::NativeReceiveSlot;
 #[path="🗂️map/🦀️.rs"]pub mod map;
 #[path="🧺️set/🦀️.rs"]pub mod set;
 
@@ -40,7 +41,7 @@ pub use semio_framework_value_native_receiving_contract::{NativeClosePermit,nati
 
 
 
-pub use semio_framework_value_native_shared_engine::NativeSharedSlots;
+pub use semio_framework_value_native_shared_slots::NativeSharedSlots;
 
 #[path="🔄️map/🦀️.rs"]
 pub mod mapped;
@@ -53,3 +54,4 @@ pub use semio_framework_value_native_receiver_protocol::{native_receiver_backing
 #[cfg(test)]#[path="♻️header/🎟️work/🧪️tests/🦀️.rs"]mod header_retirement_tests;
 
 pub use semio_framework_value_native_receiver_protocol::{native_output_demand,native_output_take,native_record_pure_take};
+pub use semio_framework_value_native_receiver_protocol::{NativeReceivingChild,NativeLocalAuthority,NativeLocalProducer,NativeLocalOperation,native_poll_local,native_receive_local};

@@ -39,9 +39,9 @@ pub fn drive_hydration_retirement(active: &mut Option<Box<dyn ErasedSnapshotReti
     if active.is_none() { return Ok(false); }
     if cx.is_cancelled() || cx.should_yield() { return Ok(true); }
     let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-    let step = semio_os_store_read::artifact_retirement_box_close_step(active, grant).result.map_err(|_| MemberOpenDiagnostic::Initialization)?;
-    let progress = step.progress();
-    semio_framework_os_store_member_open::record_member_step(cx, progress)?;
+    let Some((step, performed)) = cx.with_original_effect(grant, |_, effect| semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(active, effect))).map_err(|_| MemberOpenDiagnostic::Initialization)? else { return Ok(true) };
+    let progress = step.map_err(|_| MemberOpenDiagnostic::Initialization)?.progress();
+    semio_framework_os_store_member_open::record_member_step_performed(cx, progress, performed)?;
     Ok(true)
 }
 
@@ -49,11 +49,12 @@ pub fn drive_hydration_retirement(active: &mut Option<Box<dyn ErasedSnapshotReti
 pub fn drive_hydration_runtime<P: Send + Sync + 'static>(runtime: &mut ArtifactStoreInitializationRuntime<P>, factory: &std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<bool, MemberOpenDiagnostic> {
     if cx.is_cancelled() || cx.should_yield() { return Ok(false); }
     let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-    let step = runtime.close_step(factory, grant).map_err(|_| MemberOpenDiagnostic::Initialization)?;
+    let Some((step, performed)) = cx.with_original_effect(grant, |_, effect| runtime.close_step(factory, effect)).map_err(|_| MemberOpenDiagnostic::Initialization)? else { return Ok(false) };
+    let step = step.map_err(|_| MemberOpenDiagnostic::Initialization)?;
     let terminal = runtime.terminal_is_empty();
     semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, terminal, "hydration original initialization").map_err(|_| MemberOpenDiagnostic::Initialization)?;
     let progress = step.progress();
-    semio_framework_os_store_member_open::record_member_step(cx, progress)?;
+    semio_framework_os_store_member_open::record_member_step_performed(cx, progress, performed)?;
     Ok(terminal)
 }
 
@@ -163,6 +164,9 @@ where
     pub(super) metadata_message:usize,
     pub(super) semantic_index:usize,
     pub(super) mutation_receiving:ManuallyDrop<Option<Box<M::Receiving>>>,
+    pub(super) mutation_admission:semio_framework_job::OriginalConstructionAdmission,
+    pub(super) mutation_refusal:ManuallyDrop<Option<semio_framework_job::OriginalConstructionFailure>>,
+    pub(super) mutation_constructing:bool,
     pub(super) mutation_output:OwnedSlot<M>,
     pub original_failure:ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
     pub original_context_failure:ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
@@ -274,7 +278,7 @@ where
         Self {
             actor: ManuallyDrop::new(actor),
             original_source:None,original_meta:OwnedSlot::default(),empty_messages:OwnedSlot::default(),fold_output:OwnedSlot::default(),fold_protocol:OwnedSlot::default(),mutation_domain:OwnedSlot::default(),metadata_message:0,semantic_index:0,
-            mutation_receiving:ManuallyDrop::new(None),mutation_output:OwnedSlot::default(),original_failure:ManuallyDrop::new(None),original_context_failure:ManuallyDrop::new(None),
+            mutation_receiving:ManuallyDrop::new(None),mutation_admission:Default::default(),mutation_refusal:ManuallyDrop::new(None),mutation_constructing:false,mutation_output:OwnedSlot::default(),original_failure:ManuallyDrop::new(None),original_context_failure:ManuallyDrop::new(None),
             pack: ManuallyDrop::new(pack),
             initial: ManuallyDrop::new(initial),
             history: ManuallyDrop::new(Some(std::sync::Arc::new(history))),
@@ -342,9 +346,9 @@ where
                 if cursor.domain_failure().is_some(){
                     let demand=cursor.domain_failure_demand()?;let work=cursor.domain_failure_work_demand()?;let grant=cx.retained_grant();
                     if cx.retirement_should_yield()||cx.fuel_remaining()<work||grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(false)}
-                    let turn=cursor.take_domain_failure_into(&mut self.mutation_domain.value,grant);cx.consume_fuel(turn.work);
+                    let turn=cursor.take_domain_failure_into(&mut self.mutation_domain.value,grant);cx.consume_fuel(u64::try_from(turn.work).unwrap_or(u64::MAX));
                     match turn.result{Ok(progress)=>cx.consume_retained(progress)?,Err(error)=>{let progress=error.retained_progress();let receipt=cx.consume_retained(progress);let mut failure=semio_framework_job::OriginalTurnFailure::from(error);failure.effects=progress;failure.receipt_refusal=receipt.err();return Err(failure)}}
-                    if turn.work>work{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"mutation domain transfer exceeded its original work quote").into())}
+                    if turn.work>u128::from(work){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"mutation domain transfer exceeded its original work quote").into())}
                 }
             }
         }
@@ -401,7 +405,10 @@ where
 
     pub(super) fn admit_active<T: semio_framework_value::retirement::RetireOwned>(&mut self, value: T, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<(), MemberOpenDiagnostic> {
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let (owner, progress) = semio_framework_value::retirement::admit_owned_retirement(value, child).result.map_err(|_| MemberOpenDiagnostic::Initialization)?;
+        let mut slot = Some(value);
+        let Some((turn, performed)) = cx.with_original_effect(child, |_, effect| semio_framework_value::retirement::admit_owned_retirement(&mut slot, effect)).map_err(|_| MemberOpenDiagnostic::Initialization)? else { return Err(MemberOpenDiagnostic::Initialization) };
+        cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+        let (owner, progress) = turn.result.map_err(|_| MemberOpenDiagnostic::Initialization)?.ok_or(MemberOpenDiagnostic::Initialization)?;
         *self.active = Some(owner);
         semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "hydration owned retirement").map_err(|_| MemberOpenDiagnostic::Initialization)?;
         semio_framework_os_store_member_open::record_member_step(cx, progress)?;

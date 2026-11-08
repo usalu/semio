@@ -4,10 +4,10 @@
 import { NativeDependenciesScript } from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts";
 import { ticketOutput } from "../../⚡️caching/🎫️output/🟦️.ts";
 import { nativeBootstrapCommandV1 } from "../../../🔩️native/🥾️bootstrap/🟦️.ts";
-import { nativeTemporarySystemPortV1, withNativeTemporaryDirectoryV1 } from "../../../🔩️native/🥾️bootstrap/📁️temporary/🟦️.ts";
+import { nativeTemporarySystemPortV1, nativeTemporaryWindowsDosDeviceV1, withNativeTemporaryDirectoryV1 } from "../../../🔩️native/🥾️bootstrap/📁️temporary/🟦️.ts";
 import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📦️binary/🟦️.ts";
 import { dispatchSubcommand } from "../../🚨️policy/🧭️entrypoints/🟦️.ts";
-import { runCmd, runCmdStatus } from "../../🏃️process/🟦️.ts";
+import { runCmd } from "../../🏃️process/🟦️.ts";
 import { installMicroCommitGitHooks, reportHookShellV1 } from "../📝️commit/🪝️hooks/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { spawnSync } from "node:child_process";
@@ -47,7 +47,7 @@ export class NativeOsScript extends Script {
       if (cmd === "rust") {
         const candidates = [...new Set([join(homedir(), ".semio", "native-temp"), join(env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local"), "semio", "native-temp")])];
         const target = env.SEMIO_TICKET_DIR ? dirname(ticketOutput(this.repoRoot, [], env)) : env.TEMP ?? env.TMP ?? tmpdir();
-        withNativeTemporaryDirectoryV1({ target, candidates, ticket: env.SEMIO_TICKET_DIR }, nativeTemporarySystemPortV1(args => runCmdStatus("subst.exe", args)), run);
+        withNativeTemporaryDirectoryV1({ target, candidates, ticket: env.SEMIO_TICKET_DIR }, nativeTemporarySystemPortV1(nativeTemporaryWindowsDosDeviceV1()), run);
       } else run();
       return;
     }

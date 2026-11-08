@@ -53,13 +53,17 @@ fn registered_bus_alias_keeps_the_original_process_registry() {
     assert_eq!(heap.requested_bytes, 0);
     let mut original = Some(source);
     let mut close = RetainedCloneClose::default();
+    let mut wallet = semio_framework_value::AuthoringWallet::new(TURN, u128::MAX / 2);
     for turn in 0..4096 {
         if original.is_none() && close.is_empty() {
             break;
         }
         let d = close.next_owner_demands::<RegisteredActionBusSource>(original.is_some(), &None, 4096).unwrap();
         assert!(d.copy_bytes <= TURN.maximum_copy_bytes && d.capacity_bytes <= TURN.maximum_capacity_bytes && d.release_bytes <= TURN.maximum_release_bytes && d.depth <= TURN.maximum_depth);
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| if let Some(step) = close.begin_granted(&mut original, TURN).unwrap() { step } else { close.step_granted(TURN).unwrap() });
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| wallet.run(TURN, 1_000, |effect| match close.begin_granted(&mut original, effect).result.unwrap() {
+            Some(step) => step,
+            None => match close.step_granted(effect) { semio_framework_value::RetainedWorkPoll::Complete(done) => done.result.unwrap(), _ => panic!("fixture close cannot stay pending") },
+        }).unwrap().expect("authoring stock funds the fixture close").output);
         assert!(step.progress().fits(TURN));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
         assert!(turn < 4095)

@@ -147,7 +147,7 @@ fn published_example_load(app: &mut context::Process3dApp, example: &str) -> (Ve
         }
         PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("example maintenance step");
         ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("example publication");
-        if let (Some(page), _) = app.take_typed_operation_result_page(instance, semio_plugin::artifact_app_laws::OriginalWorkFixture::stock()).expect("example result page") {
+        if let (Some(page), _) = semio_plugin::artifact_app_laws::take_fixture_result_turn(&mut app, instance, semio_plugin::artifact_app_laws::OriginalWorkFixture::stock()).expect("example result page") {
             assert!(app.acknowledge_typed_operation_result(page.token).expect("example result ack"));
         }
         if let Some(Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {

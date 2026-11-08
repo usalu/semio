@@ -35,10 +35,11 @@ impl<A: ArtifactApp> InstanceStores<A> {
         work.as_mut().unwrap().advance(actor, output, cx)
     }
     /// ⏪️ Advances one retained original Undo until its fixed receipt and physical return complete.
-    pub fn framework_revert_unit(&mut self,edit_id:&str,command:&mut Option<store::os_store::ArtifactNativeVcsCommand<A::Snapshot,A::Mutation>>,result:&mut Option<store::os_store::ArtifactNativeVcsResult>,closing:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
-        if command.is_none()&&*closing{*closing=false;return Ok(Some(false))}
+    pub fn framework_revert_unit(&mut self,edit_id:&str,command:&mut Option<store::os_store::ArtifactNativeVcsCommand<A::Snapshot,A::Mutation>>,result:&mut Option<store::os_store::ArtifactNativeVcsResult>,resident:&mut semio_os_store_engine_replay::OriginalReplayResident,closing:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
+        if resident.constructing(){resident.settle(cx)?;return Ok(None)}
+        if command.is_none()&&*closing{if !resident.terminal_is_empty(){cx.with_original_retirement(|cx|resident.close_step(cx))?;return Ok(None)}*closing=false;return Ok(Some(false))}
         if let Some(owner)=command.as_mut(){
-            if *closing||cx.is_cancelled(){*closing=true;let complete=cx.with_original_retirement(|cx|self.store.close_native_vcs_command(owner,cx))?;if complete{let applied=result.take().is_some_and(|result|result.selected.is_some());*command=None;*closing=false;return Ok(Some(applied))}return Ok(None)}
+            if *closing||cx.is_cancelled(){*closing=true;let complete=cx.with_original_retirement(|cx|self.store.close_native_vcs_command(owner,cx))?;if complete{if !resident.terminal_is_empty(){cx.with_original_retirement(|cx|resident.close_step(cx))?;return Ok(None)}let applied=result.take().is_some_and(|result|result.selected.is_some());*command=None;*closing=false;return Ok(Some(applied))}return Ok(None)}
             if result.is_some(){if self.store.ack_native_vcs_command(owner,cx)?{*closing=true;}return Ok(None)}
             if owner.terminal_is_empty(){*command=None;return Ok(Some(false))}
             let advance=self.store.advance_native_vcs_command(owner,cx)?;
@@ -48,7 +49,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
         let applied=self.store.applied_edit_ids();
         if cx.is_cancelled()||!applied.iter().any(|id|id.as_str()==edit_id)||applied.last().is_none_or(|tail|tail.as_str()==edit_id){return Ok(Some(false))}
         let mut request=Some(store::os_store::ArtifactNativeVcsRequest::Undo{lane:store::os_store::store_schema::HistoryLane::Document,policy:protocol::UndoPolicy::TransformAgainstConcurrent});
-        self.store.admit_native_vcs_command(&mut request,cx,command)?;
+        self.store.admit_native_vcs_command(&mut request,cx,command,resident)?;
         Ok(None)
     }
 

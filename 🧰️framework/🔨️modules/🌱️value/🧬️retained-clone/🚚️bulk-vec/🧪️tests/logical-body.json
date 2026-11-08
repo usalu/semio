@@ -12,6 +12,7 @@
   "maximumTurns": 100000,
   "stock": {
     "items": 100000,
+    "fuel": 67108864,
     "copy": 16777216,
     "capacity": 16777216,
     "release": 16777216,

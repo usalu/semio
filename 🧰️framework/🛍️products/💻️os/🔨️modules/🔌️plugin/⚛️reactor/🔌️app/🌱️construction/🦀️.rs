@@ -22,6 +22,6 @@ pub trait OriginalPluginAppRegistration:Send{
  fn boxed_release_demands(&self)->RetirementDemand;
 }
 /// 🎟️ This bare declaration port admits the actual retained construction frame using its original caller.
-pub struct OriginalPluginAppFactory<PA>{pub registration:fn(semio_plugin_window_kits::RegisteredDefinitionSource<'_>)->Result<Box<dyn OriginalPluginAppRegistration>,semio_framework::Fault>,pub begin:fn(&mut StepContext<'_>,&mut Option<Box<dyn OriginalPluginAppConstruction<PA>>>)->Result<bool,OriginalTurnFailure>}
+pub struct OriginalPluginAppFactory<PA>{pub registration:fn(semio_plugin_window_kits::RegisteredDefinitionSource<'_>)->Result<Box<dyn OriginalPluginAppRegistration>,semio_framework::Fault>,pub begin:fn(&mut StepContext<'_>,&mut semio_plugin_ownership::original_store_genesis::OriginalStoreBirth,&mut Option<Box<dyn OriginalPluginAppConstruction<PA>>>)->Result<bool,OriginalTurnFailure>}
 impl<PA> Copy for OriginalPluginAppFactory<PA>{}
 impl<PA> Clone for OriginalPluginAppFactory<PA>{fn clone(&self)->Self{*self}}

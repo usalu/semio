@@ -12,8 +12,8 @@
     64
   ],
   "futureAtomBytes": 16,
-  "selectedChildCopyBytes": 0,
-  "selectedChildCapacityBytes": 32,
+  "runHeaderWords": 1,
+  "runCapacityBytes": 0,
   "oneItemPerGrant": true,
   "quoteHeap": [
     0,

@@ -1,7 +1,7 @@
 //! 🧪️ The actual child checkpoint source skips clean rows and preserves original authored metadata through a paid pin handoff.
 use super::*;
 use store::SpaceMember;
-use semio_plugin_job::reserved_jobs::child_vcs::checkpoint::{ChildCheckpointUnit as Unit,CheckpointMetadata};
+use semio_plugin_job_child_vcs::checkpoint::{ChildCheckpointUnit as Unit,CheckpointMetadata};
 use semio_framework_value::retained_clone::RetainedCloneSource;
 #[test]fn original_child_checkpoint_preparation_uses_original_metadata_and_native_pin(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();for cut in law["cuts"].as_array().unwrap().iter().map(|n|Some(n.as_u64().unwrap()as usize)).chain([None]){

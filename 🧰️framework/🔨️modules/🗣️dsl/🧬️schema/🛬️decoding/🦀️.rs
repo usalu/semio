@@ -419,18 +419,23 @@ impl NativeOctets for Vec<u8>{fn admit(length:usize,control:&mut NativeDecodeCon
 #[cfg(test)]
 mod work_tests{
  use super::*;
- use semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient;
+ use semio_framework_value_native_owned::native_decoding::{OriginalWorkAuthority,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalSourceTurnIdentity};
  struct Loan(u64);
- impl NativeDecodeWorkRecipient for Loan{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.0;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
+ impl OriginalWorkRecipient for Loan{type Context<'a,'b>=() where 'b:'a;
+  fn validate_context<'a,'b>(&self,_:&())->Result<(),ValueError> where 'b:'a{Ok(())}
+  fn source_turn<'a,'b>(&self,_:&())->Option<OriginalSourceTurnIdentity> where 'b:'a{None}
+  fn admits<'r,'a,'b>(&mut self,_:&mut (),q:OriginalWorkQuote<'r>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'r> where 'b:'a{q.complete(Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0)))}
+  fn settle_partial<'r,'a,'b>(&mut self,_:&mut (),c:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 'b:'a{c.complete(Ok(()))}
+  fn recover_partial<'r,'a,'b>(&mut self,_:&mut (),c:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 'b:'a{c.pending()}}
  #[test]
  fn original_character_scan_stops_before_denied_effect(){
   let f:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧵️continuation/🎟️work.json")).unwrap();
-  let mut callback=|_|true;let mut native=NativeDecodeControl::new(0,&mut callback);let mut loan=Loan(f["allowance"].as_u64().unwrap());
-  native.with_work_recipient(&mut loan,|native|{
+  let mut callback=|_|true;let mut native=NativeDecodeControl::new(0,&mut callback);let mut authority=OriginalWorkAuthority::new(Loan(f["allowance"].as_u64().unwrap()));
+  authority.with_loan(&mut (),|loan|native.with_work_recipient(loan,|native|{
    let mut reader=Reader{source:f["text"].as_str().unwrap(),position:0,line:1,column:1,lookahead:[None,None],limits:Limits::default(),tokens:0,nodes:0,control:native};
    let first=reader.consume().unwrap();let refusal=reader.consume().unwrap_err();
    assert_eq!(serde_json::json!({"first":first.to_string(),"position":reader.position,"work":reader.control.actual_work(),"deniedKind":refusal.kind.as_str()}),serde_json::json!({"first":f["first"],"position":f["position"],"work":f["work"],"deniedKind":f["deniedKind"]}));
    Ok::<(),ValueError>(())
-  }).unwrap();
+  })).unwrap().unwrap();
  }
 }

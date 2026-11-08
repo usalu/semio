@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-job-park"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Owned original caller turn: parks one non-renewable wallet and the issuing recipient across an await."
+
+[package.metadata.semio]
+role = "framework"
+id = "job-park"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_job_park"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job-context = { workspace = true }
+semio-framework-value-retained-clone = { path = "../../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }

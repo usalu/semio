@@ -3,6 +3,15 @@ use super::*;
 use db_engine_base::test_worker_pool;
 use db_io_core::{PayloadStorage as _, WalStorage as _};
 
+/// ⏱️ Waits while another lane still owes its effect, failing with the waited condition instead of spinning forever.
+fn wait_while(what: &str, mut busy: impl FnMut() -> bool) {
+    let start = std::time::Instant::now();
+    while busy() {
+        assert!(start.elapsed() < std::time::Duration::from_secs(120), "[catalog-bootstrap] still waiting after 120s: {what}");
+        std::thread::yield_now();
+    }
+}
+
 struct ControlledCapabilitySubmitQueue {
     pub slots: [Option<semio_framework_async::Job>; 8],
     pub head: usize,
@@ -162,9 +171,7 @@ async fn database_catalog_bootstrap_real_max_plus_one_refusal_returns_pages_stor
     let (error, close) = rejected.mount_close_and_take_error();
     assert!(matches!(error, DbError::LimitExceeded("database catalog-bootstrap page credit")));
     let close = close.unwrap();
-    while !close.terminal_is_empty() {
-        std::thread::yield_now();
-    }
+    wait_while("!close.terminal_is_empty()", || !close.terminal_is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -231,9 +238,7 @@ async fn database_catalog_bootstrap_ready_and_pending_interruption_publish_once_
     let (probe, polls, waker, pointer, _) = controlled_catalog_bootstrap_probe(ControlledCatalogBootstrapPoll::Pending).await;
     let state = probe.state.clone();
     state.schedule();
-    while polls.load(std::sync::atomic::Ordering::Acquire) == 0 {
-        std::thread::yield_now();
-    }
+    wait_while("polls.load(std::sync::atomic::Ordering::Acquire) == 0", || polls.load(std::sync::atomic::Ordering::Acquire) == 0);
     probe.cancel();
     waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().unwrap().wake_by_ref();
     let result = probe.await.unwrap();
@@ -403,10 +408,7 @@ async fn database_catalog_bootstrap_atomic_driver_claim_closes_first_poll_pendin
         *lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = true;
         ready.notify_one();
     }
-    while !terminal.terminal_is_empty() {
-        terminal.close_step();
-        std::thread::yield_now();
-    }
+    wait_while("terminal has not reached terminal ownership", || !terminal.terminal_is_empty() && { terminal.close_step(); true });
     assert_eq!(state.max_active_drivers.load(std::sync::atomic::Ordering::Acquire), 1);
     assert_eq!(state.driver_authority.load(std::sync::atomic::Ordering::Acquire), DatabaseCatalogBootstrapDriverAuthority::Idle as u8);
 }
@@ -417,13 +419,9 @@ async fn database_catalog_bootstrap_lost_handle_take_resume_close_and_terminal_w
     let generation = probe.generation();
     let state = probe.state.clone();
     state.schedule();
-    while state.scheduled.load(std::sync::atomic::Ordering::Acquire) || state.polling.load(std::sync::atomic::Ordering::Acquire) {
-        std::thread::yield_now();
-    }
+    wait_while("state.scheduled.load(std::sync::atomic::Ordering::Acquire) || state.polling.load(std::sync::atomic::Ordering::Acquire)", || state.scheduled.load(std::sync::atomic::Ordering::Acquire) || state.polling.load(std::sync::atomic::Ordering::Acquire));
     drop(probe);
-    while state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
-        std::thread::yield_now();
-    }
+    wait_while("state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()", || state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
     let terminal = take_database_catalog_bootstrap_terminal(generation).unwrap();
     assert_eq!(terminal.witness().generation, generation);
     assert!(terminal.witness().retained_owners > 0);
@@ -453,19 +451,12 @@ async fn database_catalog_bootstrap_backend_no_service_close_retires_only_on_io_
     let generation = probe.generation();
     let state = probe.state.clone();
     state.schedule();
-    while polls.load(std::sync::atomic::Ordering::Acquire) == 0 {
-        std::thread::yield_now();
-    }
+    wait_while("polls.load(std::sync::atomic::Ordering::Acquire) == 0", || polls.load(std::sync::atomic::Ordering::Acquire) == 0);
     assert!(state.poll_worker_thread.load(std::sync::atomic::Ordering::Acquire));
     drop(probe);
-    while state.scheduled.load(std::sync::atomic::Ordering::Acquire) || state.polling.load(std::sync::atomic::Ordering::Acquire) {
-        std::thread::yield_now();
-    }
+    wait_while("state.scheduled.load(std::sync::atomic::Ordering::Acquire) || state.polling.load(std::sync::atomic::Ordering::Acquire)", || state.scheduled.load(std::sync::atomic::Ordering::Acquire) || state.polling.load(std::sync::atomic::Ordering::Acquire));
     let terminal = take_database_catalog_bootstrap_terminal(generation).unwrap();
-    while !terminal.terminal_is_empty() {
-        terminal.close_step();
-        std::thread::yield_now();
-    }
+    wait_while("terminal has not reached terminal ownership", || !terminal.terminal_is_empty() && { terminal.close_step(); true });
     assert!(terminal.witness().terminal_empty);
 }
 

@@ -126,7 +126,7 @@ fn action_meta(action: &str, args: Option<&Value>, window_id: Option<&str>) -> A
 ///
 /// 📤️ One fixed result page of the testkit's instance, borrowed under the mounted maintenance grant.
 fn take_page(app: &mut Puzzle5dTestApp) -> Result<Option<semio_plugin::app::TypedOperationResultPage>, Fault> {
-    Ok(app.take_typed_operation_result_page(1, semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance)?.0)
+    Ok(semio_plugin::artifact_app_laws::take_fixture_result_turn(app, 1, semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance)?.0)
 }
 
 /// 🐛️ Called inside the loop AND once more before it returns: an operation that RETIRED during the

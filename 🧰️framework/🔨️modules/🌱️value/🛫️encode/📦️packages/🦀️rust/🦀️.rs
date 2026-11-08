@@ -10,3 +10,6 @@ pub use native_encoding::*;
 use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
+#[cfg(test)]
+#[path="../../🧪️tests/🎟️eff/🦀️.rs"]
+pub(crate) mod eff;

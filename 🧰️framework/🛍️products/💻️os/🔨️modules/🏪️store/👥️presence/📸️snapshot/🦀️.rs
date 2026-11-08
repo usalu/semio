@@ -5,7 +5,6 @@ use semio_framework_io_control::NativeSnapshotEncodeOwner;
 use semio_framework_io_control::NativeSnapshotFailure;
 use semio_framework_value::RetainedWorkOutcome;
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 
 #[path = "🔤️json/🦀️.rs"]

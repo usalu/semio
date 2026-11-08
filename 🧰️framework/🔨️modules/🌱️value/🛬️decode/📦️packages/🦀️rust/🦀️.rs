@@ -15,3 +15,6 @@ pub(crate) use allocation_testing::observe_retirement_allocations;
 
 pub use semio_framework_value_receiving::span::effect::{OriginalEffectAction,OriginalEffectAuthority,OriginalEffectCallbackMode,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete};
 pub fn no_pending_receiving_recovery()->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native receiver has no pending recovery").into()),work:0}}
+#[cfg(test)]
+#[path="../../🎟️work/🧪️tests/eff.rs"]
+pub(crate) mod eff;

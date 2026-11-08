@@ -19,11 +19,11 @@ fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_
             let target_exists = row["targetExists"].as_bool().unwrap();
             let mut registry = WindowConfigOwnerRegistry::new(protocol::ActorId(fixture["openedActor"].as_str().unwrap().to_owned().into()));
             registry.register::<IdentityWindowOwner>().unwrap();
-            let original=registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(source).await.unwrap(); crate::window_mutation_tests::tests::close_with(original,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();registry.maintenance_retirements_step(retained_pack_load_tests::quoted(demand,4096)).unwrap();});
+            let original=registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(source).await.unwrap(); crate::window_mutation_tests::tests::close_with(original,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();let grant=retained_pack_load_tests::quoted(demand,4096);let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);wallet.run(grant,64,|effect|registry.maintenance_retirements_step(effect)).unwrap().unwrap().output.unwrap();});
             let target_before = if target_exists {
                 let before = registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(target).await.unwrap();
                 let witness = (before.generation, before.revision, before.snapshot.get::<IdentityWindowOwner>().unwrap() as *const _ as *const ());
-                crate::window_mutation_tests::tests::close_with(before,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();registry.maintenance_retirements_step(retained_pack_load_tests::quoted(demand,4096)).unwrap();});
+                crate::window_mutation_tests::tests::close_with(before,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();let grant=retained_pack_load_tests::quoted(demand,4096);let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);wallet.run(grant,64,|effect|registry.maintenance_retirements_step(effect)).unwrap().unwrap().output.unwrap();});
                 Some(witness)
             } else {
                 None
@@ -38,7 +38,7 @@ fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_
                 Some((generation, revision, pointer)) if !row["accepted"].as_bool().unwrap() => {
                     let after = registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(target).await.unwrap();
                     let unchanged = after.generation == generation && after.revision == revision && after.snapshot.get::<IdentityWindowOwner>().unwrap() as *const _ as *const () == pointer && after_ids == before_ids;
-                    crate::window_mutation_tests::tests::close_with(after,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();registry.maintenance_retirements_step(retained_pack_load_tests::quoted(demand,4096)).unwrap();});
+                    crate::window_mutation_tests::tests::close_with(after,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();let grant=retained_pack_load_tests::quoted(demand,4096);let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);wallet.run(grant,64,|effect|registry.maintenance_retirements_step(effect)).unwrap().unwrap().output.unwrap();});
                     unchanged
                 }
                 None => after_ids == before_ids && !after_ids.iter().any(|(kind, id)| kind == IdentityWindowOwner::WINDOW_KIND_ID && id == target),

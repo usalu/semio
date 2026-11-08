@@ -242,11 +242,11 @@ if publication.phase!=ArtifactStoreOneItemPublicationPhase::Preparing||publicati
     /// ✍️ Uses the original installed typed operation codec and caller-funded output prefix without eager encoding.
     pub fn advance_prepared_operation_wire(
         &self, store_owners: &StoreOwners<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, publication:&ArtifactStoreBatchPublication<P,Mutation>,
-        cursor:&mut ArtifactPreparedOperationCursor,output:&mut[u8],grant:RetainedCloneGrant,
+        cursor:&mut ArtifactPreparedOperationCursor,output:&mut[u8],effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,
     )->Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError>{
         let(original,_)=self.original_proposal_forward(store_owners, store_cursor, publication)?;
         let source=publication.source.as_ref().and_then(|owner|owner.operation_wire_source(original)).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"proposal bytes require their original installed typed codec issuer"))?;
-        cursor.advance(source,output,grant)
+        cursor.advance(source,output,effect)
     }
 
     //#endregion 📬️OneItemPublication

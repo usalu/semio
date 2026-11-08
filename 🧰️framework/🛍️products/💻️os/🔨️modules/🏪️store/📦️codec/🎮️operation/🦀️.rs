@@ -70,7 +70,7 @@ where P: ToValue, M: ToValue + Mutation<P> {
     }
     fn advance_catalog(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
         let owners = self.original.as_mut().unwrap();
-        match owners.admit_constructor(grant) { Ok(progress) => Ok(progress), Err((error, progress)) => { *self.failure = Some(error); self.closing = true; Ok(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress }) } }
+        match owners.admit_constructor_cold(grant) { Ok(progress) => Ok(progress), Err((error, progress)) => { *self.failure = Some(error); self.closing = true; Ok(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress }) } }
     }
     /// 📏️ Borrows exact original error, ticket and catalog closure demands before any transfer.
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
@@ -82,16 +82,17 @@ where P: ToValue, M: ToValue + Mutation<P> {
         parent(demand)
     }
     /// ♻️ Closes one genuine original child while preserving its actual unchanged-grant receipt.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<ArtifactCodecCatalogStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<ArtifactCodecCatalogStep, ValueError> {
+        let grant = effect.grant();
         if self.receipt.is_some() { return Ok(ArtifactCodecCatalogStep::Blocked); }
         if self.done { return Ok(ArtifactCodecCatalogStep::Closed); }
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
         if !covers(grant, demand) { return Ok(ArtifactCodecCatalogStep::Blocked); }
         self.closing = true;
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let progress = if self.failure_close.is_some() { crate::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.failure_close, child).result?.progress() }
-        else if self.failure.is_some() { crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.failure, &mut self.failure_close, child).result?.progress() }
-        else if let Some(owners) = self.original.as_mut() { if owners.uninstalled_owners_terminal_is_empty() { drop(self.original.take()); item() } else { close_catalog(owners, child)?.progress() } }
+        let progress = if self.failure_close.is_some() { crate::os_store::snapshot_read::settle_close_poll(crate::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.failure_close, &mut effect.nested(child)))?.progress() }
+        else if self.failure.is_some() { crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.failure, &mut self.failure_close, &mut effect.nested(child)).result?.progress() }
+        else if let Some(owners) = self.original.as_mut() { if owners.uninstalled_owners_terminal_is_empty() { drop(self.original.take()); item() } else { close_catalog(owners, &mut effect.nested(child))?.progress() } }
         else { self.done = true; item() };
         if progress == Default::default() { return Ok(ArtifactCodecCatalogStep::Blocked); }
         self.record(grant, progress)?;
@@ -108,9 +109,10 @@ impl<P, M> Drop for RetainedArtifactCodecCatalog<'_, P, M>
 where P: ToValue, M: ToValue + Mutation<P> {
     fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "original codec catalog requires controlled custody and receipt closure"); if self.terminal_is_empty() { unsafe { ManuallyDrop::drop(&mut self.original); ManuallyDrop::drop(&mut self.failure); ManuallyDrop::drop(&mut self.failure_close); } } }
 }
-fn close_catalog<P, M>(owners: &mut DocumentStoreOwners<P, M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>
+fn close_catalog<P, M>(owners: &mut DocumentStoreOwners<P, M>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>
 where P: ToValue, M: ToValue + Mutation<P> {
-    let step = owners.close_uninstalled_owners_step(grant)?;
+    let grant = effect.grant();
+    let step = owners.close_uninstalled_owners_step(effect)?;
     semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, owners.uninstalled_owners_terminal_is_empty(), "original codec catalog sources")
 }
 fn parent(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.max(1).checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "codec catalog parent depth overflow"))?; Ok(demand) }

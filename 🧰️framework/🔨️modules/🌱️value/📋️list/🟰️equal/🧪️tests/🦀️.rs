@@ -9,7 +9,7 @@ fn retained_slice_equality_obeys_neutral_work_vectors(){
   let left:Vec<u8>=row["left"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap() as u8).collect();let right:Vec<u8>=row["right"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap() as u8).collect();
   let mut cursor=RetainedSliceEquality::new();let maximum=row["maximumWork"].as_u64().unwrap();let body=row["payloadBodyBytes"].as_u64().unwrap()as usize;let demand=cursor.demand(&left,&right,body,maximum).unwrap();let quoted=cursor.work_demand(&left,&right,body,maximum).unwrap();let g=grant(demand);
   let (denied,heap)=crate::observe_retirement_allocations(||cursor.advance(&left,&right,4096,maximum,RetainedCloneGrant{maximum_items:0,..g}));assert_eq!(denied.work,0);assert_eq!(heap,(0,0));
-  let (turn,heap)=crate::observe_retirement_allocations(||cursor.advance(&left,&right,body,maximum,g));assert_eq!(heap,(0,0));assert!(turn.work<=quoted);assert_eq!(turn.work,row["work"].as_u64().unwrap());let step=turn.result.unwrap();assert!(step.progress().fits(g));assert_eq!(cursor.ready(),row["ready"].as_bool().unwrap());assert_eq!(cursor.equal(),row["equal"].as_bool());
+  let (turn,heap)=crate::observe_retirement_allocations(||cursor.advance(&left,&right,body,maximum,g));assert_eq!(heap,(0,0));assert!(turn.work<=u128::from(quoted));assert_eq!(turn.work,u128::from(row["work"].as_u64().unwrap()));let step=turn.result.unwrap();assert!(step.progress().fits(g));assert_eq!(cursor.ready(),row["ready"].as_bool().unwrap());assert_eq!(cursor.equal(),row["equal"].as_bool());
  }
 }
 /// 🧪️ Exact denied pages and original scalar buffers obey the independent portable byte corpus.
@@ -26,7 +26,7 @@ fn retained_slice_equality_matches_portable_bytes_without_allocations(){
   }
   assert_eq!(cursor.equal(),law["expected"].as_bool());assert_eq!((left.as_ptr(),right.as_ptr()),pointers);assert_eq!(crate::observe_retirement_allocations(||std::hint::black_box(cursor)).1,(0,0));
  }
- let mut cursor=RetainedSliceEquality::new();let demand=cursor.demand(&[1u8],&[1u8],0,4096).unwrap();assert!(demand.copy_bytes>RetainedSliceEquality::fixed_copy_bytes());let p=cursor.advance(&[1u8],&[1u8],0,4096,RetainedCloneGrant{maximum_copy_bytes:RetainedSliceEquality::fixed_copy_bytes(),..grant(demand)}).result.unwrap().progress();assert_eq!(p,RetainedCloneProgress::default());assert!(!cursor.ready());
+ let mut cursor=RetainedSliceEquality::new();assert_eq!(cursor.demand(&[1u8],&[1u8],0,4096).unwrap(),RetirementDemand::default());assert_eq!(cursor.work_demand(&[1u8],&[1u8],0,4096).unwrap(),0);let demand=cursor.demand(&[1u8],&[1u8],2,4096).unwrap();assert!(demand.copy_bytes>RetainedSliceEquality::fixed_copy_bytes());let p=cursor.advance(&[1u8],&[1u8],2,4096,RetainedCloneGrant{maximum_copy_bytes:RetainedSliceEquality::fixed_copy_bytes(),..grant(demand)}).result.unwrap().progress();assert_eq!(p,RetainedCloneProgress::default());assert!(!cursor.ready());
 }
 #[derive(Copy)]
 struct InlinePoint{coordinates:[f64;3]}
@@ -86,7 +86,7 @@ fn staged_slice_retains_and_closes_its_inspection(){
   let left:Vec<u8>=row["left"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect();let right:Vec<u8>=row["right"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect();let mut c=RetainedStagedSliceEquality::new();
   let g=grant(c.demand::<u8>(4096,4096).unwrap());assert_eq!(c.advance(&left,&right,4096,0,g).work,0);assert!(c.advance(&left,&right,4096,3,g).result.unwrap().progress().fits(g));
   let work=row["maximumWork"].as_u64().unwrap()+4;let body=row["payloadBodyBytes"].as_u64().unwrap()as usize;let d=c.demand::<u8>(body,work).unwrap();let quoted=c.work_demand::<u8>(body,work).unwrap();let g=grant(d);let denied=c.advance(&left,&right,body,work,RetainedCloneGrant{maximum_items:0,..g});assert_eq!(denied.work,0);if quoted>0&&left.as_ptr()!=right.as_ptr(){let foreign=c.advance(&right,&left,body,work,g);assert_eq!(foreign.work,3);assert!(foreign.result.is_err());}
-  let turn=c.advance(&left,&right,body,work,g);assert!(turn.work<=quoted);assert!(turn.result.unwrap().progress().fits(g));assert_eq!(c.ready(),row["ready"].as_bool().unwrap());assert_eq!(c.equal(),row["equal"].as_bool());if row["work"].as_u64().unwrap()>0{assert_eq!(turn.work,row["work"].as_u64().unwrap()+4);}else{assert_eq!(turn.work,0);}
+  let turn=c.advance(&left,&right,body,work,g);assert!(turn.work<=u128::from(quoted));assert!(turn.result.unwrap().progress().fits(g));assert_eq!(c.ready(),row["ready"].as_bool().unwrap());assert_eq!(c.equal(),row["equal"].as_bool());if row["work"].as_u64().unwrap()>0{assert_eq!(turn.work,u128::from(row["work"].as_u64().unwrap()+4));}else{assert_eq!(turn.work,0);}
   c.begin_close();while !c.terminal_is_empty(){let g=grant(c.close_demand().unwrap());assert_eq!(c.close_step(0,g).work,0);let turn=c.close_step(1,g);assert!(turn.result.unwrap().progress().fits(g));}
  }
 }

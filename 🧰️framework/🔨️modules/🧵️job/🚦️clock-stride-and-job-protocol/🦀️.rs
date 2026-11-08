@@ -2,7 +2,6 @@
 
 use super::*;
 
-pub use semio_framework_job_clock::ClockStride;
 
 pub use semio_framework_job_payload::{Checkpoint,CommitCandidate,JobFault,StepOutcome};
 

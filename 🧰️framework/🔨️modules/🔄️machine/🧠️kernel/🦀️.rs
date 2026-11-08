@@ -299,7 +299,7 @@ pub enum Command<M: Machine> {
 //#region 🔖️Snapshot
 
 /// 🏳️ Whether a machine is still running, has produced an output, or was stopped by its host.
-#[derive(Debug)]
+#[derive(Debug, semio_framework_value::RetireOwned)]
 pub enum Status<O> {
     Running,
     Done(O),
@@ -308,7 +308,9 @@ pub enum Status<O> {
 
 /// 📸️ A machine's runtime state: active configuration (never a single enum — see [`Configuration`]),
 /// consumer context, status, and private history slots for `history(...)` targets.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct Snapshot<M: Machine> {
+    #[value(skip)]
     pub configuration: M::Config,
     pub context: M::Context,
     pub status: Status<M::Output>,

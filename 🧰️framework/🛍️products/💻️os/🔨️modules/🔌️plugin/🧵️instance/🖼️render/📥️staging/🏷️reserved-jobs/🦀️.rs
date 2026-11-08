@@ -118,16 +118,17 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let owner=self.pending.reserved_preparation.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("reserved wire requires its preparation"))?;
         owner.validate(self.stores.store.content_revision(),cx)?;let Some(raw)=owner.raw_wire.as_ref()else{return Ok(false)};let length=raw.len();
         if owner.admission.is_some(){
+            if !owner.wire_construction.terminal_is_empty(){owner.wire_construction.reset_step(cx)?;return Ok(false)}
             let Some(cursor)=owner.wire_cursor.as_mut()else{return Ok(true)};
             if !cursor.terminal_is_empty(){cx.with_original_retirement(|cx|cursor.close_step(&*self.tools.tool_jobs,cx))?;return Ok(false)}
             let bytes=std::mem::size_of::<Option<semio_framework::action_bus::OriginalWireAdmission>>();cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{owner.wire_cursor.take();semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}}))?;return Ok(false)
         }
-        if owner.wire_cursor.is_some(){owner.wire_cursor.as_mut().unwrap().advance(&*self.tools.tool_jobs,cx,&mut owner.admission)?;return Ok(false)}
+        if owner.wire_cursor.is_some(){let advanced=owner.wire_cursor.as_mut().unwrap().advance(&*self.tools.tool_jobs,cx,&mut owner.wire_construction,&mut owner.admission)?;if advanced&&owner.admission.is_none(){owner.wire_construction.reset_step(cx)?;}return Ok(false)}
         if owner.wire_key.is_none()&&owner.wire_schema.is_none(){
             if ![5,6,7].into_iter().all(|field|owner.header_ready(field)){return Ok(false)}let bytes=std::mem::size_of::<semio_framework::ToolFactoryKey>()+std::mem::size_of::<String>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
             let headers=owner.headers.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("reserved wire metadata was donated"))?;*owner.wire_key=Some(semio_framework::ToolFactoryKey::new(std::mem::take(&mut headers[5]),std::mem::take(&mut headers[6])));*owner.wire_schema=Some(std::mem::take(&mut headers[7]));cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
         }
-        semio_framework::action_bus::OriginalWireAdmission::admit(&mut owner.wire_key,&mut owner.wire_schema,length,cx,&mut owner.wire_cursor)?;Ok(false)
+        match semio_framework::action_bus::OriginalWireAdmission::admit(&mut owner.wire_key,&mut owner.wire_schema,length,cx,&mut owner.wire_construction,&mut owner.wire_cursor)?{semio_framework_job::OriginalConstructionStatus::Failed=>return Err(semio_framework_value::ValueError::invariant("reserved wire admission construction failed; its causes remain in the preparation").into()),semio_framework_job::OriginalConstructionStatus::Ready=>{owner.wire_construction.reset_step(cx)?;}semio_framework_job::OriginalConstructionStatus::Pending=>{}}Ok(false)
     }
     /// 🎞️ Advances the original media request from its retained source through the concrete producer builder.
     pub fn advance_reserved_media(&mut self,port:&str,media:&mut Option<Media>,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{

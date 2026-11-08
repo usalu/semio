@@ -59,6 +59,8 @@ pub fn parse_polygon_mesh_source(text:&str)->Result<PolygonMeshSource,String> {
     loop {let grant=preparation.cold_grant(text,4096,4096)?;if let Some(source)=preparation.step(text,grant)?.source{return Ok(source);}}
 }
 
+const AUTHORING_WORK:u128=1_000_000_000;
+const STEP_WORK:u64=1<<20;
 /// 🎛️ Keeps projection work and retirement currencies independent.
 #[derive(Clone,Copy,Debug)]
 pub struct PolygonSourceGrant {pub maximum_units:usize,pub maximum_projection_bytes:usize,pub retirement:pack::value::retained_clone::RetainedCloneGrant}
@@ -66,12 +68,12 @@ pub struct PolygonSourceGrant {pub maximum_units:usize,pub maximum_projection_by
 /// 🪜️ Returns physical closure receipts alongside the admitted canonical source.
 pub struct PolygonSourceStep {pub source:Option<PolygonMeshSource>,pub retirement:pack::value::retained_clone::RetainedCloneProgress}
 
-fn admit_source_retirement<T:pack::value::retirement::RetireOwned>(slot:&mut Option<Box<dyn pack::value::ErasedSnapshotRetirement>>,value:&mut Option<T>,grant:pack::value::retained_clone::RetainedCloneGrant)->Result<pack::value::retained_clone::RetainedCloneProgress,String>{
+fn admit_source_retirement<T:pack::value::retirement::RetireOwned>(slot:&mut Option<Box<dyn pack::value::ErasedSnapshotRetirement>>,value:&mut Option<T>,effect:&mut pack::value::RetainedAllocationEffect<'_>)->Result<pack::value::retained_clone::RetainedCloneProgress,String>{
     use pack::value::retained_clone::RetainedCloneProgress;
-    let bytes=pack::value::retirement::owned_retirement_birth_bytes::<T>();
+    let grant=effect.grant();let bytes=pack::value::retirement::owned_retirement_birth_bytes::<T>();
     if grant.maximum_items==0||grant.maximum_capacity_bytes<bytes{return Ok(RetainedCloneProgress::default());}
-    let original=value.take().ok_or("mesh retirement lost its original owner")?;
-    match pack::value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{*slot=Some(owner);Ok(progress)},Err((error,original))=>{*value=Some(original);Err(error.to_string())}}
+    if value.is_none(){return Err("mesh retirement lost its original owner".into());}
+    match pack::value::retirement::admit_owned_retirement(value,effect).result{Ok(Some((owner,progress)))=>{*slot=Some(owner);Ok(progress)},Ok(None)=>Ok(RetainedCloneProgress::default()),Err(error)=>Err(error.to_string())}
 }
 
 fn mesh_source_decode_admission(control:&semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,demand:pack::value::RetirementDemand)->Result<(),String>{
@@ -79,6 +81,8 @@ fn mesh_source_decode_admission(control:&semio_framework_value_native_owned::nat
 }
 
 /// 🧵️ Captures, projects, and admits the existing polygon payload under retained work grants.
+#[derive(semio_framework_value_derive::RetireOwned)]
+#[value(send_only)]
 pub struct PolygonSourcePreparation {
     parser:Option<json::JsonParseCursor>,projection:Option<json::JsonValueProjection>,decoding:Option<semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation>,stage:u8,
     raw:Option<pack::value::DslValue>,vertices:std::vec::IntoIter<pack::value::DslValue>,faces:std::vec::IntoIter<pack::value::DslValue>,
@@ -106,20 +110,27 @@ impl PolygonSourcePreparation {
         Ok(PolygonSourceGrant{maximum_units,maximum_projection_bytes,retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)}})
     }
     /// 💼️ Advances projection work or one independently admitted closure turn.
-    pub fn step(&mut self,text:&str,grant:PolygonSourceGrant)->Result<PolygonSourceStep,String>{
+    pub fn step(&mut self,text:&str,grant:PolygonSourceGrant)->Result<PolygonSourceStep,String> {
+        let mut wallet=pack::value::AuthoringWallet::new(grant.retirement,AUTHORING_WORK);
+        match wallet.run(grant.retirement,STEP_WORK,|effect|self.step_authored(text,grant,effect)).map_err(|error|error.to_string())?{
+            Some(done)=>done.output,
+            None=>Ok(PolygonSourceStep{source:None,retirement:Default::default()}),
+        }
+    }
+    fn step_authored(&mut self,text:&str,grant:PolygonSourceGrant,effect:&mut pack::value::RetainedAllocationEffect<'_>)->Result<PolygonSourceStep,String> {
         let waiting=|retirement|PolygonSourceStep{source:None,retirement};
         if text.len()>16_000_000{return Err("mesh input exceeds 16 MB".into());}
         if grant.maximum_units==0{return Ok(waiting(Default::default()));}
-        if self.retirement.is_some(){let closed=pack::value::close_factory_ticket(&mut self.retirement,grant.retirement).result.map_err(|error|error.to_string())?;return Ok(waiting(closed.progress()));}
-        if self.stage==1&&self.parser.is_some(){return Ok(waiting(admit_source_retirement(&mut self.retirement,&mut self.parser,grant.retirement)?));}
-        if self.stage==2&&self.projection.is_some(){return Ok(waiting(admit_source_retirement(&mut self.retirement,&mut self.projection,grant.retirement)?));}
-        if self.stage==10&&!self.garbage.is_empty(){let bytes=pack::value::retirement::owned_retirement_birth_bytes::<Vec<pack::value::DslValue>>();if grant.retirement.maximum_items==0||grant.retirement.maximum_capacity_bytes<bytes{return Ok(waiting(Default::default()));}let mut original=Some(std::mem::take(&mut self.garbage));let admitted=admit_source_retirement(&mut self.retirement,&mut original,grant.retirement);if let Some(original)=original{self.garbage=original;}return admitted.map(waiting);}
+        if self.retirement.is_some(){let closed=match pack::value::close_factory_ticket(&mut self.retirement,effect){pack::value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|error|error.to_string())?.progress(),pack::value::RetainedWorkPoll::Pending{..}=>Default::default()};return Ok(waiting(closed));}
+        if self.stage==1&&self.parser.is_some(){return Ok(waiting(admit_source_retirement(&mut self.retirement,&mut self.parser,effect)?));}
+        if self.stage==2&&self.projection.is_some(){return Ok(waiting(admit_source_retirement(&mut self.retirement,&mut self.projection,effect)?));}
+        if self.stage==10&&!self.garbage.is_empty(){let bytes=pack::value::retirement::owned_retirement_birth_bytes::<Vec<pack::value::DslValue>>();if grant.retirement.maximum_items==0||grant.retirement.maximum_capacity_bytes<bytes{return Ok(waiting(Default::default()));}let mut original=Some(std::mem::take(&mut self.garbage));let admitted=admit_source_retirement(&mut self.retirement,&mut original,effect);if let Some(original)=original{self.garbage=original;}return admitted.map(waiting);}
         let maximum_bytes=grant.maximum_projection_bytes;
         if maximum_bytes==0{return Ok(waiting(Default::default()));}
         for _ in 0..grant.maximum_units {
             match self.stage {
-                0=>{let mut accepted=|_|true;let mut control=match self.decoding.take(){Some(receipt)=>semio_framework_value_native_owned::native_decoding::NativeDecodeControl::resume(receipt,&mut accepted),None=>Ok(semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut accepted))}.map_err(|error|error.to_string())?;let parser=self.parser.as_mut().unwrap();let parsed=(||{mesh_source_decode_admission(&control,parser.normal_step_demands(text).map_err(|error|error.to_string())?)?;parser.step(text,1,&mut control,grant.retirement).map_err(|error|error.to_string())})();let progress=parser.normal_step_progress();self.decoding=Some(control.pause().map_err(|error|error.to_string())?);if let Some(value)=parsed? {self.projection=Some(json::JsonValueProjection::new(value));self.stage=1;}if !progress.fits(grant.retirement){return Err("mesh original parser/projection receipt exceeds caller grant".into());}return Ok(waiting(progress));},
-                1=>{let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::resume(self.decoding.take().unwrap(),&mut accepted).map_err(|error|error.to_string())?;let projection=self.projection.as_mut().unwrap();let projected=(||{mesh_source_decode_admission(&control,projection.normal_step_demands().map_err(|error|error.to_string())?)?;projection.step(1,maximum_bytes,&mut control,grant.retirement).map_err(|error|error.to_string())})();let progress=projection.normal_step_progress();self.decoding=Some(control.pause().map_err(|error|error.to_string())?);if let Some(value)=projected? {self.raw=Some(value);self.stage=2;}if !progress.fits(grant.retirement){return Err("mesh original parser/projection receipt exceeds caller grant".into());}return Ok(waiting(progress));},
+                0=>{let mut accepted=|_|true;let mut control=match self.decoding.take(){Some(receipt)=>semio_framework_value_native_owned::native_decoding::NativeDecodeControl::resume(receipt,&mut accepted).map_err(|(error,receipt)|{self.decoding=Some(receipt);error.to_string()})?,None=>semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut accepted)};let parser=self.parser.as_mut().unwrap();let parsed=(||{mesh_source_decode_admission(&control,parser.normal_step_demands(text).map_err(|error|error.to_string())?)?;parser.step(text,1,&mut control,effect).map_err(|error|error.to_string())})();let progress=parser.normal_step_progress();self.decoding=Some(control.pause().map_err(|(error,_)|error.to_string())?);if let Some(value)=parsed? {self.projection=Some(json::JsonValueProjection::new(value));self.stage=1;}if !progress.fits(grant.retirement){return Err("mesh original parser/projection receipt exceeds caller grant".into());}return Ok(waiting(progress));},
+                1=>{let mut accepted=|_|true;let receipt=self.decoding.take().ok_or("mesh native decoding continuation is absent")?;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::resume(receipt,&mut accepted).map_err(|(error,receipt)|{self.decoding=Some(receipt);error.to_string()})?;let projection=self.projection.as_mut().unwrap();let projected=(||{mesh_source_decode_admission(&control,projection.normal_step_demands().map_err(|error|error.to_string())?)?;projection.step(1,maximum_bytes,&mut control,effect).map_err(|error|error.to_string())})();let progress=projection.normal_step_progress();self.decoding=Some(control.pause().map_err(|(error,_)|error.to_string())?);if let Some(value)=projected? {self.raw=Some(value);self.stage=2;}if !progress.fits(grant.retirement){return Err("mesh original parser/projection receipt exceeds caller grant".into());}return Ok(waiting(progress));},
                 2=>self.admit_root()?,
                 3=>{if let Some(value)=self.vertices.next() {self.raw=Some(value);let values=self.raw.as_ref().unwrap().as_array().filter(|values|values.len()==3).ok_or("vertex must have three coordinates")?;let mut point=[0.0;3];for axis in 0..3 {point[axis]=values[axis].as_f64().filter(|number|number.is_finite() && number.abs()<=f32::MAX as f64).ok_or("coordinate must be finite")? as f32;}self.source.vertices.push(point);self.seen.push(0);self.garbage.push(self.raw.take().unwrap());}else {self.stage=4;}},
                 4=>self.project_face()?,
@@ -186,14 +197,9 @@ impl PolygonSourcePreparation {
         let name=self.name.as_ref().unwrap();let fields=self.source.materials[name].as_object().unwrap();if let Some((key,value))=fields.get(self.field-1) {validate_mesh_material_field(name,key,value,&self.source.textures)?;self.field+=1;}else {self.field=0;}Ok(())
     }
 }
-impl pack::value::retirement::RetireOwned for PolygonSourcePreparation {
-    fn retirement(self)->Box<dyn pack::value::retirement::RetirementCursor> {let fields=pack::value::retirement::sequence(vec![pack::value::retirement::deferred(self.parser),pack::value::retirement::deferred(self.projection),pack::value::retirement::deferred(self.raw),pack::value::retirement::deferred(self.vertices),pack::value::retirement::deferred(self.faces),pack::value::retirement::deferred(self.attributes),pack::value::retirement::deferred(self.materials),pack::value::retirement::deferred(self.textures),pack::value::retirement::deferred(self.source),pack::value::retirement::deferred(self.face),pack::value::retirement::deferred(self.indices),pack::value::retirement::deferred(self.seen),pack::value::retirement::deferred(self.current),pack::value::retirement::deferred(self.attribute),pack::value::retirement::deferred(self.texture),pack::value::retirement::deferred(self.garbage),pack::value::retirement::deferred(self.name)]);if let Some(retirement)=self.retirement {pack::value::retirement::sequence(vec![pack::value::retirement::erased_cursor(retirement),fields])}else {fields}}
-    fn retirement_birth_bytes(&self)->Option<usize> {let fields=pack::value::retirement::sequence_birth_bytes(&[pack::value::retirement::deferred_birth_bytes_for(&self.parser),pack::value::retirement::deferred_birth_bytes_for(&self.projection),pack::value::retirement::deferred_birth_bytes_for(&self.raw),pack::value::retirement::deferred_birth_bytes_for(&self.vertices),pack::value::retirement::deferred_birth_bytes_for(&self.faces),pack::value::retirement::deferred_birth_bytes_for(&self.attributes),pack::value::retirement::deferred_birth_bytes_for(&self.materials),pack::value::retirement::deferred_birth_bytes_for(&self.textures),pack::value::retirement::deferred_birth_bytes_for(&self.source),pack::value::retirement::deferred_birth_bytes_for(&self.face),pack::value::retirement::deferred_birth_bytes_for(&self.indices),pack::value::retirement::deferred_birth_bytes_for(&self.seen),pack::value::retirement::deferred_birth_bytes_for(&self.current),pack::value::retirement::deferred_birth_bytes_for(&self.attribute),pack::value::retirement::deferred_birth_bytes_for(&self.texture),pack::value::retirement::deferred_birth_bytes_for(&self.garbage),pack::value::retirement::deferred_birth_bytes_for(&self.name)])?;if self.retirement.is_some() {pack::value::retirement::sequence_birth_bytes(&[pack::value::retirement::erased_cursor_birth_bytes(),fields])}else {Some(fields)}}
-    fn controlled_retirement_supported()->bool {true}
-}
 
 /// 🎒️ Retained metadata cursor shared by mesh JSON and preview packing.
-#[derive(Default)]
+#[derive(Default,semio_framework_value_derive::RetireOwned)]
 pub struct MeshMetadataCursor {
     metadata_section:u8,metadata_stage:u8,metadata_name:Option<String>,metadata_records:usize,metadata_value:usize,metadata_stack:Vec<MeshJsonTask>,
 }
@@ -282,6 +288,7 @@ impl MeshMetadataCursor {
         Ok(false)
     }
 }
+#[derive(semio_framework_value_derive::RetireOwned)]
 enum MeshJsonTask { Node(Vec<usize>),Array(Vec<usize>,usize),Object(Vec<usize>,usize),Text(Vec<usize>,usize,Option<usize>) }
 
 fn mesh_json_node<'a>(root:&'a pack::value::DslValue,path:&[usize])->Result<&'a pack::value::DslValue,String> {
@@ -478,16 +485,6 @@ fn obj_resolve_index(raw: i64, count: usize) -> Result<usize, String> {
 }
 //#endregion Obj
 
-impl pack::value::retirement::RetireOwned for MeshMetadataCursor {
-    fn retirement(self)->Box<dyn pack::value::retirement::RetirementCursor> {pack::value::retirement::sequence(vec![pack::value::retirement::deferred(self.metadata_name),pack::value::retirement::deferred(self.metadata_stack)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {pack::value::retirement::sequence_birth_bytes(&[pack::value::retirement::deferred_birth_bytes_for(&self.metadata_name),pack::value::retirement::deferred_birth_bytes_for(&self.metadata_stack)])}
-    fn controlled_retirement_supported()->bool {true}
-}
-impl pack::value::retirement::RetireOwned for MeshJsonTask {
-    fn retirement(self)->Box<dyn pack::value::retirement::RetirementCursor> {let (Self::Node(path)|Self::Array(path,..)|Self::Object(path,..)|Self::Text(path,..))=self;pack::value::retirement::deferred(path)}
-    fn retirement_birth_bytes(&self)->Option<usize> {let (Self::Node(path)|Self::Array(path,..)|Self::Object(path,..)|Self::Text(path,..))=self;Some(pack::value::retirement::deferred_birth_bytes_for(path))}
-    fn controlled_retirement_supported()->bool {true}
-}
 
 
 #[path="🧬️fields/🦀️.rs"]

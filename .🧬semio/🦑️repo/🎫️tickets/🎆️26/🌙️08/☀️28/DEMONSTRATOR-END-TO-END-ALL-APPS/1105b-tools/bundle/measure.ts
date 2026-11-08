@@ -1,0 +1,15 @@
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { consumedTopicsForApp, scopeContributionsJson } from "../../../../../../../../../🧰️framework/🔨️modules/🎠️kernel/🧾️contributions-json/🟦️.ts";
+const root = process.cwd();
+const hub = (n: string) => join(root, "🌎️hub/🧩️compositions", n, "🧩️component");
+const d = (p: string) => JSON.parse(readFileSync(p, "utf8")).manifest;
+const cons = (n: string) => [...(readFileSync(join(hub(n), "📦️packages/🦀️rust/Cargo.toml"), "utf8").match(/^consumes\s*=\s*\[([^\]]*)\]/m)?.[1] ?? "").matchAll(/"([^"]+)"/g)].map((m) => m[1]!);
+const hubs = ["🎪️demonstrator", "📐️cad", "🌍️gis", "🌀️procedural", "🏭️process", "🧩️puzzle", "🪵️sourcing"];
+const ext = readdirSync(join(root, "✏️s/🔌️plugins")).flatMap((p) => { const e = join(root, "✏️s/🔌️plugins", p, "🧩️extensions"); return existsSync(e) ? readdirSync(e).map((x) => join(e, x, "🧩️component/🔣️.json")) : []; }).filter(existsSync);
+const ms = [...hubs.map((n) => d(join(hub(n), "🔣️.json"))), ...ext.map(d)];
+const reg = hubs.map((n) => ({ pluginId: d(join(hub(n), "🔣️.json")).pluginId, consumes: cons(n) }));
+const loaded = ms.map((m: any) => ({ pluginId: m.pluginId, manifest: { apps: m.apps ?? [], topicContributions: m.topicContributions ?? [] } }));
+const size = (t: readonly string[]) => Buffer.byteLength(JSON.stringify(["setContributions", { json: scopeContributionsJson(loaded as never, "demonstrator", t) }]));
+console.log("union", size(reg.find((r) => r.pluginId === "demonstrator")!.consumes));
+for (const a of ["s.cad.cad@1/*#editor", "s.process.process3d@1/*#editor", "s.sourcing.curation@1/*#editor", "s.procedural.generation3d@1/*#editor", "s.puzzle.puzzle3d@1/*#editor", "s.gis.gismap@1/*#editor"]) console.log(a, consumedTopicsForApp(reg, loaded, "demonstrator", a).join(","), size(consumedTopicsForApp(reg, loaded, "demonstrator", a)));

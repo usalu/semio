@@ -4,12 +4,12 @@ use super::*;
 fn retained_fixed_list_pages_counter_refuses_unaddressable_ownership_before_allocation() {
     let mut list = PagedList::<u64, 1>::default();
     list.allocated = isize::MAX as usize;
-    let result = list.reserve_one(4096,&mut None);
+    let result = list.reserve_one_granted(4096,&mut None);
     let allocated = list.root.capacity() * size_of::<Page<u64>>();
     list.allocated = allocated;
     while !list.terminal_is_empty() {
         let exact = list.next_release_allocation_bytes().unwrap();
-        list.release_empty_page(exact).unwrap();
+        list.release_empty_page_granted(exact).unwrap();
     }
     assert!(result.is_err());
     assert_eq!(allocated, 0, "counter rejection must precede a new physical allocation");
@@ -17,7 +17,7 @@ fn retained_fixed_list_pages_counter_refuses_unaddressable_ownership_before_allo
 
 struct Overallocated;
 unsafe impl PageAllocation for Overallocated {
-    fn reserve<T>(owner: &mut Vec<T>, slots: usize, actual:&mut Option<usize>) -> Result<(), PagedListError> {
+    fn reserve<T>(owner: &mut Vec<T>, slots: usize, actual:Option<&mut Option<usize>>) -> Result<(), std::collections::TryReserveError> {
         test_reserve(owner,slots * 2,actual)
     }
 }
@@ -29,28 +29,28 @@ fn retained_fixed_list_pages_counter_rejects_actual_signed_limit_and_preserves_r
     for payload in [false, true] {
         let mut list = PagedList::<u64, 1>::default();
         if payload {
-            list.reserve_one(list.next_allocation_bytes().unwrap(),&mut None).unwrap();
+            list.reserve_one_granted(list.next_allocation_bytes().unwrap(),&mut None).unwrap();
         }
         let physical_before = list.allocated_bytes();
         let requested = list.next_allocation_bytes().unwrap();
         let seeded_before = isize::MAX as usize - requested;
         list.allocated = seeded_before;
-        let mut actual=None;let error = list.reserve_page_using::<Overallocated>(requested * multiplier,&mut actual).unwrap_err();assert_eq!(actual,Some(error.allocated_bytes));
+        let mut actual=None;let error = list.reserve_one_using_granted::<Overallocated>(requested * multiplier,&mut actual).unwrap_err();assert_eq!(actual,Some(error.allocated_bytes));
         assert_eq!(error.reason, "fixed list actual allocation exceeds addressable ownership; owner retained");
         assert_eq!(error.allocated_bytes, requested * multiplier);
         assert_eq!(list.allocated_bytes(), seeded_before + error.allocated_bytes);
         let pointer = if payload { list.backing_ptr(0).unwrap().cast::<u8>() } else { list.root.as_ptr().cast::<u8>() };
-        assert!(!list.release_empty_page(error.allocated_bytes - 1).unwrap().progressed);
+        assert!(!list.release_empty_page_granted(error.allocated_bytes - 1).unwrap().progressed);
         assert_eq!(list.allocated_bytes(), seeded_before + error.allocated_bytes);
         let retained = if payload { list.backing_ptr(0).unwrap().cast::<u8>() } else { list.root.as_ptr().cast::<u8>() };
         assert_eq!(pointer, retained);
-        let released = list.release_empty_page(error.allocated_bytes).unwrap();
+        let released = list.release_empty_page_granted(error.allocated_bytes).unwrap();
         assert_eq!(released.released_allocation_bytes, error.allocated_bytes);
         assert_eq!(list.allocated_bytes(), seeded_before);
         list.allocated = physical_before;
         while !list.terminal_is_empty() {
             let exact = list.next_release_allocation_bytes().unwrap();
-            assert!(list.release_empty_page(exact).unwrap().progressed);
+            assert!(list.release_empty_page_granted(exact).unwrap().progressed);
         }
         assert_eq!((list.root.capacity(), list.len(), list.capacity(), list.allocated_bytes()), (0, 0, 0, 0));
     }
@@ -61,28 +61,28 @@ fn retained_fixed_list_pages_counter_keeps_actual_failed_allocation_until_releas
     let data: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut list = PagedList::<u64, 1>::default();
     let requested = list.next_allocation_bytes().unwrap();
-    let mut actual=None;let error = list.reserve_page_using::<Overallocated>(requested,&mut actual).unwrap_err();assert_eq!(actual,Some(error.allocated_bytes));
+    let mut actual=None;let error = list.reserve_one_using_granted::<Overallocated>(requested,&mut actual).unwrap_err();assert_eq!(actual,Some(error.allocated_bytes));
     assert_eq!(error.allocated_bytes, requested * data["counter"]["allocatorMultiplier"].as_u64().unwrap() as usize);
     assert_eq!(list.allocated_bytes(), error.allocated_bytes);
     assert!(!list.terminal_is_empty());
     let exact = list.next_release_allocation_bytes().unwrap();
-    let released = list.release_empty_page(exact).unwrap();
+    let released = list.release_empty_page_granted(exact).unwrap();
     assert_eq!(released.released_allocation_bytes, error.allocated_bytes);
     assert!(list.terminal_is_empty());
     assert_eq!((list.root.capacity(), list.len(), list.capacity(), list.allocated_bytes()), (0, 0, 0, 0));
     let mut list = PagedList::<u64, 1>::default();
-    list.reserve_one(requested,&mut None).unwrap();
+    list.reserve_one_granted(requested,&mut None).unwrap();
     let before = list.allocated_bytes();
-    let mut actual=None;let error = list.reserve_page_using::<Overallocated>(size_of::<u64>(),&mut actual).unwrap_err();assert_eq!(actual,Some(error.allocated_bytes));
+    let mut actual=None;let error = list.reserve_one_using_granted::<Overallocated>(size_of::<u64>(),&mut actual).unwrap_err();assert_eq!(actual,Some(error.allocated_bytes));
     assert_eq!(list.allocated_bytes() - before, error.allocated_bytes);
     assert_eq!(error.allocated_bytes, 2 * size_of::<u64>());
     assert!(list.has_reserved_slot());
     let exact = list.next_release_allocation_bytes().unwrap();
-    let step = list.release_empty_page(exact).unwrap();
+    let step = list.release_empty_page_granted(exact).unwrap();
     assert_eq!(step.released_allocation_bytes, error.allocated_bytes);
     assert_eq!(list.allocated_bytes(), before);
     let exact = list.next_release_allocation_bytes().unwrap();
-    list.release_empty_page(exact).unwrap();
+    list.release_empty_page_granted(exact).unwrap();
     assert!(list.terminal_is_empty());
     assert_eq!((list.root.capacity(), list.len(), list.capacity(), list.allocated_bytes()), (0, 0, 0, 0));
 }
@@ -97,7 +97,7 @@ fn retained_fixed_list_depth_quotes_original_tail_and_whole_release_frontiers() 
     let mut list=PagedList::<u64,600>::empty();
     let mut oracle=std::collections::VecDeque::new();
     for value in 0..count as u64{
-        while !list.has_reserved_slot(){let bytes=list.next_allocation_bytes().unwrap();list.reserve_one(bytes,&mut None).unwrap();}
+        while !list.has_reserved_slot(){let bytes=list.next_allocation_bytes().unwrap();list.reserve_one_granted(bytes,&mut None).unwrap();}
         list.push_reserved(value).unwrap();oracle.push_back(value);
     }
     while !oracle.is_empty(){
@@ -111,8 +111,8 @@ fn retained_fixed_list_depth_quotes_original_tail_and_whole_release_frontiers() 
     while !list.terminal_is_empty(){
         let bytes=list.next_release_allocation_bytes().unwrap();let depth=list.next_release_depth_demand().unwrap();
         assert!(depth>=2);let before=list.allocated_bytes();
-        if bytes>0{let denied=list.release_empty_page(bytes-1).unwrap();assert!(!denied.progressed);assert_eq!(list.allocated_bytes(),before);assert_eq!(list.next_release_depth_demand().unwrap(),depth);}
-        let released=list.release_empty_page(bytes).unwrap();assert!(released.progressed);assert_eq!(released.released_allocation_bytes,bytes);
+        if bytes>0{let denied=list.release_empty_page_granted(bytes-1).unwrap();assert!(!denied.progressed);assert_eq!(list.allocated_bytes(),before);assert_eq!(list.next_release_depth_demand().unwrap(),depth);}
+        let released=list.release_empty_page_granted(bytes).unwrap();assert!(released.progressed);assert_eq!(released.released_allocation_bytes,bytes);
     }
     assert_eq!(list.next_release_depth_demand().unwrap(),0);
 }
@@ -121,10 +121,10 @@ fn retained_fixed_list_depth_quotes_original_tail_and_whole_release_frontiers() 
 fn retained_fixed_list_reservation_copy_quotes_actual_original_metadata_and_heap(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️reservation.json")).unwrap();let count=fixture["count"].as_u64().unwrap()as usize;let layout=fixture["layouts"].as_array().unwrap().iter().find(|row|row["pointerBits"].as_u64().unwrap()==usize::BITS as u64).unwrap();assert_eq!(size_of::<Page<u64>>(),layout["pageBytes"].as_u64().unwrap()as usize);assert_eq!(size_of::<Vec<Page<u64>>>(),layout["headerBytes"].as_u64().unwrap()as usize);
  let mut owner=PagedList::<u64,600>::with_payload_page_bytes(fixture["payloadBytes"].as_u64().unwrap()as usize).unwrap();let mut oracle=std::collections::VecDeque::new();let(mut born,mut promotions,mut metadata,mut payload)=(0,0,0,0);
- for value in 0..count as u64{while !owner.has_reserved_slot(){let copy=owner.next_reserve_copy_byte_demand().unwrap();assert_eq!(copy,0);let promotion=PagedList::<u64,600>::page_height(owner.capacity()/owner.page_items())>owner.height();let capacity=owner.next_allocation_bytes().unwrap();let before=(owner.len(),owner.capacity(),owner.allocated_bytes());let before_pointer=owner.root.as_ptr();let grant=crate::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:17,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};for axis in fixture["deniedAxes"].as_array().unwrap(){let mut denied=grant;match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"capacityBytes"=>denied.maximum_capacity_bytes=capacity-1,_=>denied.maximum_depth=0};let mut actual=Some(73);let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_one_funded(denied,&mut actual).unwrap());assert_eq!(actual,Some(73));assert_eq!(result,Default::default());assert_eq!(physical,(0,0));assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes()),before);assert_eq!(owner.root.as_ptr(),before_pointer);}let mut actual=None;let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_one_funded(grant,&mut actual).unwrap());assert_eq!(actual,Some(physical.0));assert_eq!(physical,(capacity,0));assert_eq!(result.retained_capacity_bytes,capacity);assert_eq!(result.copied_bytes,copy);assert!(result.fits(grant));born+=physical.0;if promotion{promotions+=1;}else if capacity==fixture["payloadBytes"].as_u64().unwrap()as usize{payload+=1;}else{metadata+=1;}assert_eq!(result.copied_items,1);}
-  assert_eq!(owner.next_reserve_copy_byte_demand().unwrap(),0);owner.push_reserved(value).unwrap();oracle.push_back(value);
+ for value in 0..count as u64{while !owner.has_reserved_slot(){let copy=owner.next_reserve_copy_byte_demand().unwrap();assert!(copy<=crate::effect::STOCK.maximum_copy_bytes);let promotion=PagedList::<u64,600>::page_height(owner.capacity()/owner.page_items())>owner.height();let capacity=owner.next_allocation_bytes().unwrap();let before=(owner.len(),owner.capacity(),owner.allocated_bytes());let before_pointer=owner.root.as_ptr();let grant=crate::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};for axis in fixture["deniedAxes"].as_array().unwrap(){let mut denied=grant;match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"capacityBytes"=>denied.maximum_capacity_bytes=capacity-1,_=>denied.maximum_depth=0};let mut actual=None;let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_one_funded_granted(denied,&mut actual).unwrap());assert_eq!(actual,None);assert_eq!(result,Default::default());assert_eq!(physical,(0,0));assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes()),before);assert_eq!(owner.root.as_ptr(),before_pointer);}let mut actual=None;let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_one_funded_granted(grant,&mut actual).unwrap());assert_eq!(actual,Some(physical.0));assert_eq!(physical,(capacity,0));assert_eq!(result.retained_capacity_bytes,capacity);assert_eq!(result.copied_bytes,copy);assert!(result.fits(grant));born+=physical.0;if promotion{promotions+=1;}else if capacity==fixture["payloadBytes"].as_u64().unwrap()as usize{payload+=1;}else{metadata+=1;}assert_eq!(result.copied_items,1);}
+  assert!(owner.next_reserve_copy_byte_demand().unwrap()<=crate::effect::STOCK.maximum_copy_bytes);owner.push_reserved(value).unwrap();oracle.push_back(value);
  }
- assert!(metadata>0&&payload>0);assert_eq!(promotions,fixture["promotionPages"].as_array().unwrap().len());assert_eq!(owner.iter().copied().collect::<Vec<_>>(),oracle.iter().copied().collect::<Vec<_>>());while !oracle.is_empty(){assert_eq!(owner.pop(),oracle.pop_back());}let mut released=0;while !owner.terminal_is_empty(){let exact=owner.next_release_allocation_bytes().unwrap();let(result,physical)=crate::observe_retirement_allocations(||owner.release_empty_page(exact).unwrap());assert_eq!(physical,(0,result.released_allocation_bytes));released+=physical.1;}assert_eq!(born,released);
+ assert!(metadata>0&&payload>0);assert_eq!(promotions,fixture["promotionPages"].as_array().unwrap().len());assert_eq!(owner.iter().copied().collect::<Vec<_>>(),oracle.iter().copied().collect::<Vec<_>>());while !oracle.is_empty(){assert_eq!(owner.pop(),oracle.pop_back());}let mut released=0;while !owner.terminal_is_empty(){let exact=owner.next_release_allocation_bytes().unwrap();let(result,physical)=crate::observe_retirement_allocations(||owner.release_empty_page_granted(exact).unwrap());assert_eq!(physical,(0,result.released_allocation_bytes));released+=physical.1;}assert_eq!(born,released);
 }
 
 #[test]
@@ -132,10 +132,10 @@ fn retained_fixed_list_capacity_funding_preserves_original_pages_before_items(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️reservation.json")).unwrap();let count=fixture["count"].as_u64().unwrap()as usize;
  let mut owner=PagedList::<u64,600>::with_payload_page_bytes(fixture["payloadBytes"].as_u64().unwrap()as usize).unwrap();let mut born=0;
  while let Some(capacity)=owner.next_capacity_allocation_bytes(count).unwrap(){let copy=owner.next_capacity_copy_byte_demand(count).unwrap();let before=(owner.len(),owner.capacity(),owner.allocated_bytes());let grant=crate::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:owner.next_page_reserve_depth_demand().unwrap()};
-  for axis in fixture["deniedAxes"].as_array().unwrap(){let mut denied=grant;match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"copyBytes"=>denied.maximum_copy_bytes-=1,"capacityBytes"=>denied.maximum_capacity_bytes-=1,_=>denied.maximum_depth-=1};let mut actual=Some(73);let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_capacity_one_funded(count,denied,&mut actual).unwrap());assert_eq!(actual,Some(73));assert_eq!(result,Default::default());assert_eq!(physical,(0,0));assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes()),before);}
-  let mut actual=None;let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_capacity_one_funded(count,grant,&mut actual).unwrap());assert_eq!(actual,Some(physical.0));assert_eq!(physical,(capacity,0));assert_eq!(result.copied_bytes,copy);assert!(result.fits(grant));born+=physical.0;
+  for axis in fixture["deniedAxes"].as_array().unwrap(){let mut denied=grant;match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"copyBytes"=>denied.maximum_copy_bytes-=1,"capacityBytes"=>denied.maximum_capacity_bytes-=1,_=>denied.maximum_depth-=1};let mut actual=None;let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_capacity_one_funded_granted(count,denied,&mut actual).unwrap());assert_eq!(actual,None);assert_eq!(result,Default::default());assert_eq!(physical,(0,0));assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes()),before);}
+  let mut actual=None;let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_capacity_one_funded_granted(count,grant,&mut actual).unwrap());assert_eq!(actual,Some(physical.0));assert_eq!(physical,(capacity,0));assert_eq!(result.copied_bytes,copy);assert!(result.fits(grant));born+=physical.0;
  }
- assert_eq!(owner.next_capacity_copy_byte_demand(count).unwrap(),0);let mut oracle=std::collections::VecDeque::new();for value in 0..count as u64{owner.push_reserved(value).unwrap();oracle.push_back(value);}while !oracle.is_empty(){assert_eq!(owner.pop(),oracle.pop_back());}let mut released=0;while !owner.terminal_is_empty(){let exact=owner.next_release_allocation_bytes().unwrap();let(step,physical)=crate::observe_retirement_allocations(||owner.release_empty_page(exact).unwrap());assert_eq!(physical,(0,step.released_allocation_bytes));released+=physical.1;}assert_eq!(born,released);
+ assert_eq!(owner.next_capacity_copy_byte_demand(count).unwrap(),0);let mut oracle=std::collections::VecDeque::new();for value in 0..count as u64{owner.push_reserved(value).unwrap();oracle.push_back(value);}while !oracle.is_empty(){assert_eq!(owner.pop(),oracle.pop_back());}let mut released=0;while !owner.terminal_is_empty(){let exact=owner.next_release_allocation_bytes().unwrap();let(step,physical)=crate::observe_retirement_allocations(||owner.release_empty_page_granted(exact).unwrap());assert_eq!(physical,(0,step.released_allocation_bytes));released+=physical.1;}assert_eq!(born,released);
 }
 
-fn test_reserve<T>(owner:&mut Vec<T>,slots:usize,actual:&mut Option<usize>)->Result<(),PagedListError>{*actual=None;let needed=owner.len().checked_add(slots).ok_or(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"test reservation overflow"})?;let allocating=std::mem::size_of::<T>()!=0&&needed>owner.capacity();if allocating{*actual=Some(0)}owner.try_reserve_exact(slots).map_err(|_|PagedListError{kind:PagedListRefusalKind::AllocationFailed,reason:"test allocation failed"})?;if allocating{*actual=Some(owner.capacity()*std::mem::size_of::<T>())}Ok(())}
+fn test_reserve<T>(owner:&mut Vec<T>,slots:usize,mut actual:Option<&mut Option<usize>>)->Result<(),std::collections::TryReserveError>{let allocating=std::mem::size_of::<T>()!=0&&owner.len().saturating_add(slots)>owner.capacity();if allocating{if let Some(marker)=actual.as_deref_mut(){*marker=Some(0)}}let result=owner.try_reserve_exact(slots);if allocating&&result.is_ok(){if let Some(marker)=actual.as_deref_mut(){*marker=Some(owner.capacity()*std::mem::size_of::<T>())}}result}

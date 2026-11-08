@@ -191,7 +191,7 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
         let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original pending child owner")).map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;
         Ok(PluginLifecycleStep::Progress(step.progress()))
     }
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
         let idle=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(idle));}
         if self.phase!=PendingChildGroupPublicationPhase::Closing{return Ok(PluginLifecycleStep::Blocked{reason:"original child publication is not admitted for closure"});}
@@ -205,8 +205,8 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
             let Some(child)=self.child_emits.get_mut(self.native_child_index)else{self.native_wires=Some(wires);return Err(plugin_sdk_fault("native child wire source lost its exact metadata slot"));};
             if !child.ops.is_empty()||child.ops.capacity()!=0{self.native_wires=Some(wires);return Err(plugin_sdk_fault("native child wire source cannot replace occupied metadata"));}child.ops=wires;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}));
         }
-        if let Some(owner)=self.native_batch.as_mut(){if owner.terminal_is_empty(){self.native_batch=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}return owner.close_granted(grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error));}
-        if let Some(owner)=self.native_children.last_mut(){if owner.terminal_is_empty(){self.native_children.pop();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}return owner.close_granted(grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error));}
+        if let Some(owner)=self.native_batch.as_mut(){if owner.terminal_is_empty(){self.native_batch=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|owner.close_granted(effect)).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error));}
+        if let Some(owner)=self.native_children.last_mut(){if owner.terminal_is_empty(){self.native_children.pop();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|owner.close_step(effect)).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error));}
         if self.native_children.capacity()!=0{self.native_children=Vec::new();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}));}
         if let Some(child)=self.child_emits.last_mut(){
             if child.terminal_is_empty(){self.child_emits.pop();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}

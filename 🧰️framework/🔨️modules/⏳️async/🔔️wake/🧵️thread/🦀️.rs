@@ -7,7 +7,8 @@ impl std::task::Wake for OriginalThreadWake{fn wake(self:Arc<Self>){self.thread.
 #[doc(hidden)]
 pub struct ThreadWakeRetirement{thread:ManuallyDrop<Option<std::thread::Thread>>,id:Option<std::thread::ThreadId>}
 impl RetireOwned for OriginalThreadWake{
- fn retirement(self)->Box<dyn RetirementCursor>{Box::new(ThreadWakeRetirement{thread:ManuallyDrop::new(Some(self.thread)),id:Some(self.id)})}
+ type RetirementCursor=ThreadWakeRetirement;
+ fn retirement_seed(self)->ThreadWakeRetirement{ThreadWakeRetirement{thread:ManuallyDrop::new(Some(self.thread)),id:Some(self.id)}}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ThreadWakeRetirement>())}
  fn controlled_retirement_supported()->bool{true}
  fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
@@ -15,11 +16,13 @@ impl RetireOwned for OriginalThreadWake{
 impl RetirementCursor for ThreadWakeRetirement{
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:if self.terminal_is_empty(){0}else{size_of::<Option<std::thread::Thread>>()+size_of::<std::thread::Thread>()+size_of::<Option<std::thread::ThreadId>>()},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
 
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
+ fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+  let grant=effect.grant();
   if self.terminal_is_empty(){return RetirementStep::Complete(0)}
   let copy=self.next_work_byte_demand().unwrap();
-  if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return RetirementStep::BudgetExhausted}
+  if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth==0||effect.maximum_work_units()==0{return RetirementStep::BudgetExhausted}
   if !ISSUER.with(|issuer|issuer.get()==self.id){return RetirementStep::BudgetExhausted}
+  match effect.performed(1){Ok(true)=>{},Ok(false)=>return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::WorkLimit,"thread wake release exceeded its original work").into(),1),Err(error)=>return RetirementStep::Failure(error.into(),1)}
   drop(self.thread.take());self.id.take();RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()},1)
  }
  fn terminal_is_empty(&self)->bool{self.thread.is_none()&&self.id.is_none()}

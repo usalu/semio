@@ -31,7 +31,7 @@ impl<T: Default + RetireOwned> Unpin for FoldBackingBirth<T> {}
 impl<T: Default + RetireOwned> FoldBackingBirth<T> {
     fn new(control: &HistoryFoldControl, count: usize, bytes: Option<usize>, allocate: fn(&mut T, usize) -> Result<(), ValueError>) -> Self {
         let capacity = bytes.and_then(|bytes| bytes.checked_add(owned_retirement_birth_bytes::<T>()));
-        let copy = 2 * size_of::<T>();
+        let copy = admission_copy::<T>();
         if let Some(capacity) = capacity {
             control.0.pending_construction_capacity.fetch_add(capacity, Ordering::Relaxed);
             control.0.pending_original_copy.fetch_add(copy, Ordering::Relaxed);
@@ -55,9 +55,15 @@ impl<T: Default + RetireOwned> Future for FoldBackingBirth<T> {
         let Some(capacity) = self.capacity else { return Poll::Ready(Err(value_cause(ValueError::literal(ValueRefusalKind::OwnershipLimit, "history fold construction size overflow")))) };
         let grant = self.control.original_grant();
         if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < self.copy || grant.maximum_capacity_bytes < capacity { return Poll::Pending; }
-        let (owner, mut progress) = match admit_typed_controlled_retirement(T::default(), grant).result {
-            Ok(admitted) => admitted,
-            Err((error, _)) => return Poll::Ready(Err(value_cause(error))),
+        let mut slot = Some(T::default());
+        let turn = match self.control.charged(|effect| { let turn = admit_typed_controlled_retirement(&mut slot, &mut effect.nested(grant)); let work = turn.work; (turn.result, work) }) {
+            Ok(done) => done,
+            Err(error) => return Poll::Ready(Err(value_cause(error))),
+        };
+        let (owner, mut progress) = match turn {
+            Ok(Some(admitted)) => admitted,
+            Ok(None) => return Poll::Ready(Err(value_cause(ValueError::invariant("fold backing birth value is absent")))),
+            Err(error) => return Poll::Ready(Err(value_cause(error))),
         };
         self.owner = Some(HistoryFoldOwned { owner: Some(owner), control: self.control.clone() });
         let allocate = self.allocate;

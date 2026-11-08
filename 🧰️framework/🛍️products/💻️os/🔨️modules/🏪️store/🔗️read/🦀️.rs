@@ -80,6 +80,7 @@ pub use envelope_genesis_and_displaced_snapshot_retirements::{
     ArtifactStoreEnvelopeRetirement, ARTIFACT_STORE_DISPLACED_PRESSURE_OCCUPANCY,
     ARTIFACT_STORE_DISPLACED_RESERVATION_CAPACITY, ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY,
     DISPLACED_RELIEF_STEPS,
+    DISPLACED_RELIEF_STEP_WORK,
 };
 
 pub use semio_framework_value_snapshot_read::*;

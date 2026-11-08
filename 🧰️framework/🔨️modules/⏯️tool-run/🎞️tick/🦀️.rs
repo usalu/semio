@@ -2,8 +2,16 @@
 
 use semio_framework_tool_run::payload_stream;
 use semio_framework_tool_run::{ToolRunCounter, ToolRunId, ToolRunIdentity, ToolRunPayloadUpdate, ToolRunProgress, ToolRunReceivingLimits, ToolRunState, ToolRunStep, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTickWriter, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_COUNTERS_MAX, TOOL_RUN_STEP_ARGS_MAX, TOOL_RUN_STEP_RING_CAPACITY, TOOL_RUN_TICK_BYTES_MAX, TOOL_RUN_TRACE_PAGE_BYTES_MAX, TOOL_RUN_TRACE_PAGE_OPS_MAX, validate_tick_payload};
-use pack::{PackLimits, record::RetainedRecordBodyCursor};
 
+#[cfg(test)]
+#[path="../../🌱️value/♻️retirement/📦️owner/🧪️work/effect.rs"]
+mod effect_fixture;
+/// 🧪️ Runs one fixture turn inside one actual original Work action over the given grant.
+#[cfg(test)]
+pub(crate) fn effected<R>(grant:semio_framework_value::RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->R)->R{let mut actual=None;effect_fixture::with_effect(grant,1<<20,&mut actual,operation)}
+/// 🧪️ Observes heap traffic of the operation alone, outside the fixture's own work action.
+#[cfg(test)]
+macro_rules! observe_effect{($grant:expr,|$effect:ident| $body:expr)=>{$crate::effected($grant,|$effect|semio_framework_trace::observe_heap_allocations_on_this_thread(||$body))}}
 #[path="🛬️receive/🪪️identity/🦀️.rs"]
 mod identity_receiving;
 pub use identity_receiving::ToolRunIdentityReceiving;

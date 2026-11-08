@@ -99,7 +99,7 @@ async fn examples_are_registered_for_the_shell_picker() {
 /// asserted for every bundled example, so a new row can never silently fall back on the seam.
 #[semio_framework_async_macros::async_test]
 async fn loading_an_example_swaps_the_document_through_an_effect_and_never_a_mutation() {
-    let snapshot = EnergyModelSnapshot::default();
+    let snapshot = EnergyModelSnapshot::empty().unwrap();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     for (id, _, model) in example_rows() {

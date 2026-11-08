@@ -24,6 +24,7 @@ semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-ui-locale = { workspace = true }
 semio-s-artifact-energy-model-editor = { workspace = true }
 semio-s-artifact-energy-model-editor-commands = { workspace = true }
+semio-s-artifact-energy-model-editor-panels = { workspace = true }
 semio-s-artifact-energy-model-mutations = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }

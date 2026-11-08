@@ -150,7 +150,7 @@ fn close_inert(mut owners: time_travel::TimeTravelStoreState<TestSnapshot, Inert
     assert!(owners.terminal_is_empty(), "the history-edit owners retire everything they held");
     for _ in 0..65_536 {
         let grant=mounted_policy.close;
-        let step=document.close_owned_step(grant).expect("the document store closes under its exact grant");assert!(step.progress().fits(grant));
+        let step=document.close_owned_step_cold(grant).expect("the document store closes under its exact grant");assert!(step.progress().fits(grant));
         match step {
             semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress==Default::default()=>panic!("the document store has no external owner"),
             semio_framework_value::retained_clone::RetainedCloneStep::Progress(_) => {}

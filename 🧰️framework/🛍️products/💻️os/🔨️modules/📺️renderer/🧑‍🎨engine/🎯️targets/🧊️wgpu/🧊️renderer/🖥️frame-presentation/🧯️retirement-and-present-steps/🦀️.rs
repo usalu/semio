@@ -119,7 +119,9 @@ impl AppPresentedRetirement {
             return Ok(false);
         }
         if let Some(frame) = self.completed_frame.as_mut() {
-            if !matches!(frame.close_step(frame.retained), InteractiveJobCloseStep::Complete { .. }) {
+            let retained = frame.retained;
+            let step = semio_ui_prepared::retirement::prepared_close_authored(retained, |effect| frame.close_step(effect)).map_err(|failure| failure.to_string())?;
+            if !matches!(step, InteractiveJobCloseStep::Complete { .. }) {
                 return Ok(false);
             }
             self.completed_frame = None;

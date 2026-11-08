@@ -18,7 +18,8 @@ macro_rules! physical_work_retirement {
   impl $retired {
    pub fn new(job:$job)->Self {Self{owner:semio_framework_value::retirement::controlled::ControlledRetirement::retain(job)}}
    pub fn terminal_is_empty(&self)->bool {self.owner.terminal_is_empty()}
-   pub fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.owner.step(grant)}
+   pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{self.owner.step(effect)}
+   pub fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.owner.next_demand(body)}
    pub fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.owner.next_copy_byte_demand()}
    pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{self.owner.next_capacity_byte_demand(copy)}
    pub fn next_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.owner.next_release_byte_demand()}

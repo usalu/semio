@@ -3,14 +3,15 @@
 use super::Tree;
 use std::{borrow::Borrow,cmp::Ordering,mem::ManuallyDrop,sync::Arc};
 use protocol::causal::transition::HistoryFoldIndex;
-use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close}, retirement::{RetireOwned, controlled::ControlledRetirement, arc_custody::{SharedControlledRetirement, shared_retirement_birth_bytes}}};
-use semio_framework_value_persistent::{list::PagedList, list::PagedListError};
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementPollExit, ValueError, ValueRefusalKind, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close}, retirement::{RetireOwned, controlled::ControlledRetirement, arc_custody::{SharedControlledRetirement, shared_retirement_birth_bytes}}};
+use semio_framework_value_persistent::{list::PagedList, list::PagedListError, list::PagedListReservationFailure, list::PagedListReservationOutcome};
 
 const TOPOLOGY_ITEMS:usize=1_048_576;
 
 struct TreeSourceLease(Arc<Tree>);
 impl RetireOwned for TreeSourceLease {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(SharedControlledRetirement::lease(self.0))}
+    type RetirementCursor=SharedControlledRetirement<Tree>;
+    fn retirement_seed(self)->Self::RetirementCursor{SharedControlledRetirement::lease(self.0)}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(shared_retirement_birth_bytes::<Tree>())}
     fn controlled_retirement_supported()->bool{true}
 }
@@ -23,7 +24,8 @@ impl Eq for NodeKey {}
 impl PartialOrd for NodeKey {fn partial_cmp(&self,other:&Self)->Option<Ordering>{Some(self.cmp(other))}}
 impl Ord for NodeKey {fn cmp(&self,other:&Self)->Ordering{self.source.neurons[self.index].id.cmp(&other.source.neurons[other.index].id)}}
 impl RetireOwned for NodeKey {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(SharedControlledRetirement::lease(self.source))}
+    type RetirementCursor=SharedControlledRetirement<Tree>;
+    fn retirement_seed(self)->Self::RetirementCursor{SharedControlledRetirement::lease(self.source)}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(shared_retirement_birth_bytes::<Tree>())}
     fn controlled_retirement_supported()->bool{true}
 }
@@ -104,9 +106,13 @@ impl BudgetedEvalTopology {
     pub fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demands(0)?.release_bytes)}
     pub fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.next_demands(0)?.depth)}
 
-    fn reserve_page<T>(list:&mut PagedList<T,TOPOLOGY_ITEMS>,extent:usize,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{
-        let progress=list.reserve_exact_capacity_one(extent,grant.maximum_capacity_bytes).map_err(|error|{*receipt=RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()};ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason)})?;
-        Ok(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:progress.allocated_bytes,..Default::default()})
+    fn reserve_page<T>(list:&mut PagedList<T,TOPOLOGY_ITEMS>,extent:usize,effect:&mut RetainedAllocationEffect<'_>,receipt:&mut RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{
+        match list.reserve_exact_capacity_one(extent,effect).result {
+            Ok(PagedListReservationOutcome::Denied)=>Ok(Default::default()),
+            Ok(PagedListReservationOutcome::Ready(progress))=>Ok(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:progress.allocated_bytes,..Default::default()}),
+            Err(PagedListReservationFailure::Work(error))=>Err(error),
+            Err(PagedListReservationFailure::Allocation{error,copied_bytes})=>{*receipt=RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0||copied_bytes!=0),copied_bytes,retained_capacity_bytes:error.allocated_bytes,..Default::default()};Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason))}
+        }
     }
     fn reserve_index<V>(index:&mut HistoryFoldIndex<NodeKey,V>,key:&NodeKey,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<Option<RetainedCloneProgress>,ValueError>{
         if index.next_insert_capacity_byte_demand(key,grant.maximum_copy_bytes)?==0{return Ok(None)}
@@ -115,11 +121,11 @@ impl BudgetedEvalTopology {
 
     /// ⏱️ Advances one original topology phase and preserves the complete physical receipt.
     pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
-    pub fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        self.progress=Default::default();let result=self.step_source(grant);if let Ok(step)=&result{self.progress=step.progress();}result.map_err(|error|error.with_retained_progress(self.progress))
+    pub fn step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        self.progress=Default::default();let result=self.step_source(effect).and_then(|step|{if effect.performed_work()==0&&step.progress()!=RetainedCloneProgress::default()&&!effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original topology event exceeds its work ceiling"))}Ok(step)});if let Ok(step)=&result{self.progress=step.progress();}result.map_err(|error|error.with_retained_progress(self.progress))
     }
-    fn step_source(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        let empty=RetainedCloneProgress::default();
+    fn step_source(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();let empty=RetainedCloneProgress::default();
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
         let demand=self.next_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original topology exceeds admitted depth"))}
@@ -136,13 +142,13 @@ impl BudgetedEvalTopology {
                 let (_,receipt)=self.owners.nodes.insert_reserved(key,self.cursor,grant).map_err(|(error,_,_)|error)?;progress=receipt;self.node_has_key=true;
             },
             0=>{
-                if !self.owners.rows.has_reserved_slot(){return Self::reserve_page(&mut self.owners.rows,nodes,grant,&mut self.progress).map(RetainedCloneStep::Progress)}
+                if !self.owners.rows.has_reserved_slot(){return Self::reserve_page(&mut self.owners.rows,nodes,effect,&mut self.progress).map(RetainedCloneStep::Progress)}
                 self.owners.rows.push_reserved(TopologyRow::default()).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original topology row reservation vanished"))?;self.cursor+=1;self.node_has_key=false;
             },
             1 if self.cursor==self.source().unwrap().synapses.len()=>{self.phase=2;self.cursor=0;},
             1=>{
                 if let Some((from,to))=self.edge_endpoints(){
-                    if !self.owners.edges.has_reserved_slot(){let extent=self.source().unwrap().synapses.len();return Self::reserve_page(&mut self.owners.edges,extent,grant,&mut self.progress).map(RetainedCloneStep::Progress)}
+                    if !self.owners.edges.has_reserved_slot(){let extent=self.source().unwrap().synapses.len();return Self::reserve_page(&mut self.owners.edges,extent,effect,&mut self.progress).map(RetainedCloneStep::Progress)}
                     let index=self.owners.edges.len();let next=self.owners.rows[from].outgoing;
                     self.owners.edges.push_reserved(TopologyEdge{target:to,next}).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original topology edge reservation vanished"))?;
                     self.owners.rows[from].outgoing=Some(index);self.owners.rows[to].incoming=self.owners.rows[to].incoming.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original topology indegree overflow"))?;
@@ -158,7 +164,7 @@ impl BudgetedEvalTopology {
                 self.cursor+=1;
             },
             3 if self.owners.selected.is_some()=>{
-                if !self.owners.order.has_reserved_slot(){return Self::reserve_page(&mut self.owners.order,nodes,grant,&mut self.progress).map(RetainedCloneStep::Progress)}
+                if !self.owners.order.has_reserved_slot(){return Self::reserve_page(&mut self.owners.order,nodes,effect,&mut self.progress).map(RetainedCloneStep::Progress)}
                 let index=self.owners.selected.as_ref().unwrap().index;self.owners.order.push_reserved(index).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original topology order reservation vanished"))?;self.edge_cursor=self.owners.rows[index].outgoing;self.phase=4;
             },
             3=>{
@@ -186,17 +192,21 @@ impl BudgetedEvalTopology {
         if let Some(owner)=self.retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}
         Ok(RetirementDemand{depth:usize::from(!self.owners.terminal_is_empty()),..Default::default()})
     }
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        self.progress=Default::default();let result=self.close_source(grant);if let Ok(step)=&result{self.progress=step.progress();}result.map_err(|error|error.with_retained_progress(self.progress))
-    }
-    fn close_source(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original topology close was not begun"))}
-        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-        let demand=self.next_close_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original topology close exceeds admitted depth"))}
-        if let Some(owner)=self.retirement.as_mut(){let result=owner.step(grant);self.progress=owner.step_progress();let step=result?;let step=admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"Neural original topology source")?;if owner.terminal_is_empty(){self.retirement=None;}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
-        if self.owners.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
-        self.retirement=Some(ControlledRetirement::new(std::mem::take(&mut*self.owners)).unwrap_or_else(|_|unreachable!("declared original topology owner")));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
+    /// ⛽️ Quotes the selected retirement child step or the one source handoff.
+    pub fn next_close_work(&self,body:usize)->Result<u64,ValueError>{if let Some(owner)=self.retirement.as_ref(){return owner.next_computational_work(body)}Ok(u64::from(!self.owners.terminal_is_empty()))}
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+        self.progress=Default::default();let grant=effect.grant();
+        let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+            if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original topology close was not begun").into())}
+            if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+            let demand=self.next_close_demands(grant.maximum_copy_bytes)?;
+            if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original topology close exceeds admitted depth").into())}
+            if let Some(owner)=self.retirement.as_mut(){let result=RetirementPollExit::resume(owner.step(effect));self.progress=owner.step_progress();let step=result?;let step=admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"Neural original topology source")?;if owner.terminal_is_empty(){self.retirement=None;}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+            if self.owners.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+            if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original topology source handoff exceeds its work ceiling").into())}
+            self.retirement=Some(ControlledRetirement::retain(std::mem::take(&mut*self.owners)));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
+        })();
+        crate::settle_close(effect,result,&mut self.progress)
     }
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.retirement.is_none()&&self.owners.terminal_is_empty()}
 }
@@ -204,10 +214,12 @@ impl BudgetedEvalTopology {
 impl Drop for BudgetedEvalTopology {
     fn drop(&mut self){if !self.terminal_is_empty(){assert!(std::thread::panicking(),"original topology must finish explicit close before Drop");return;}unsafe{ManuallyDrop::drop(&mut self.owners);}}
 }
-struct TopologyRetirement(BudgetedEvalTopology);
+/// 🧹️ Owns a closing topology as its retirement cursor.
+pub struct TopologyRetirement(BudgetedEvalTopology);
 impl semio_framework_value::retirement::RetirementCursor for TopologyRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.next_close_demands(body) }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;match self.0.close_step(grant){Ok(step) if step.progress()!=RetainedCloneProgress::default()=>RetirementStep::Progress(step.progress(),1),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete(0),Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error,0)}}
+    fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.0.next_close_work(body)}
+    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{semio_framework_value::retirement::erased_cursor_turn(self.0.close_step(effect))}
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}
     fn allows_admitted_narrow_work(&self)->bool{true}
@@ -217,7 +229,8 @@ impl semio_framework_value::retirement::RetirementCursor for TopologyRetirement 
     fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl RetireOwned for BudgetedEvalTopology {
-    fn retirement(mut self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{self.begin_close();Box::new(TopologyRetirement(self))}
+    type RetirementCursor=TopologyRetirement;
+    fn retirement_seed(mut self)->TopologyRetirement{self.begin_close();TopologyRetirement(self)}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<TopologyRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }

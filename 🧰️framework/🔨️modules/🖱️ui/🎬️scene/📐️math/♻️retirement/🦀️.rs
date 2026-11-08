@@ -34,7 +34,8 @@ impl IneligibleGroups {
     pub(super) fn insert(&mut self,key:u64) {let index=self.offsets[(key>>32)as usize]+(key as u32)as usize;if self.flags[index]==0{self.flags[index]=1;self.count+=1;}}
 }
 impl semio_framework_value::retirement::RetireOwned for IneligibleGroups {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::RetireOwned::retirement(self.flags)}
+    type RetirementCursor=<Vec<u8> as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement::RetireOwned::retirement_seed(self.flags)}
     fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.flags)}
     fn controlled_retirement_supported()->bool {true}
 }

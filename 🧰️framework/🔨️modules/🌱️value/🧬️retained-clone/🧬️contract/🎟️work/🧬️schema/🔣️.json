@@ -18,7 +18,7 @@
     "advanceWork": {
       "const": {
         "deniedCpu": 0,
-        "bindingCpu": 1,
+        "bindingCpu": 3,
         "payloadCpu": 1,
         "cachedCpu": 0
       }

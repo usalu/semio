@@ -27,8 +27,8 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `EnergyModelSnapshot -> UiNode` read: the same grouped tree the editor draws, from
 /// `crate::energy_structure_tree` (artifact root, never the editor surface) — grouped so no node
 /// exceeds the kit's 32-sibling ceiling.
-pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
-    TreeWindowKit::render(&crate::snapshot::energy_structure_tree(&document.model.read()))
+pub fn render(document: &EnergyModelSnapshot, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
+    TreeWindowKit::render(&semio_s_artifact_energy_model_structure::energy_structure_tree(&document.model.read(), locale))
 }
 //#endregion 🔖️Render
 

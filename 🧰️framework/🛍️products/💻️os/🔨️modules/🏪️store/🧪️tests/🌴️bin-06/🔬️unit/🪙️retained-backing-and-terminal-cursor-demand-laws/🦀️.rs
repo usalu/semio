@@ -25,17 +25,17 @@ fn fresh_vcs_release_publishes_actual_retained_backing_demand() {
         let advertised = owner.next_close_release_byte_demand().unwrap();
         let physical = owner.retirement.as_ref().unwrap().next_release_byte_demand().unwrap();
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
-        let (caller_step, _, caller_released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: caller, maximum_depth: 16, ..Default::default() }).unwrap());
+        let (caller_step, _, caller_released) = semio_framework_trace_memory_testing::observe_backing(|| envelope_close_turn(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: caller, maximum_depth: 16, ..Default::default() }, |effect| owner.close_step(effect)).result.unwrap());
         let caller_expected = row["releasedBytes"].as_u64().unwrap() as usize;
         let mut progress = vec![(caller_step, caller_released)];
         for _ in 0..512 {
             if owner.terminal_is_empty() { break; }
             let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() };
-            let (step, _, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant).unwrap());
+            let (step, _, released) = semio_framework_trace_memory_testing::observe_backing(|| envelope_close_turn(grant, |effect| owner.close_step(effect)).result.unwrap());
             progress.push((step, released));
         }
         let funded_terminal = owner.terminal_is_empty();
-        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; owner.close_step(grant).unwrap(); }
+        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; envelope_close_turn(grant, |effect| owner.close_step(effect)).result.unwrap(); }
         assert!(owner.terminal_is_empty(), "exact independently admitted allocation grant drains the fixture before assertions");
         let exact_accounting = progress.iter().all(|(step, actual)| step.progress().released_bytes == *actual);
         if advertised != physical || !funded_terminal || !exact_accounting || caller_released != caller_expected { failures.push((extent, advertised, physical, funded_terminal, exact_accounting)); }
@@ -96,12 +96,12 @@ fn fresh_field_release_propagates_retained_target_allocation_demand() {
         owner.active_retirement = Some(Box::new(DemandingBufferRetirement { buffer: Some(buffer) }));
         let demand = owner.next_close_release_byte_demand().unwrap();
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
-        let (caller_step, _, caller_released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: caller, maximum_depth: 16, ..Default::default() }).unwrap());
+        let (caller_step, _, caller_released) = semio_framework_trace_memory_testing::observe_backing(|| envelope_close_turn(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: caller, maximum_depth: 16, ..Default::default() }, |effect| owner.close_step(effect)).result.unwrap());
         let caller_expected = row["releasedBytes"].as_u64().unwrap() as usize;
         let mut progress = vec![(caller_step, caller_released)];
-        for _ in 0..8 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; let (step, _, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant).unwrap()); progress.push((step, released)); }
+        for _ in 0..8 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; let (step, _, released) = semio_framework_trace_memory_testing::observe_backing(|| envelope_close_turn(grant, |effect| owner.close_step(effect)).result.unwrap()); progress.push((step, released)); }
         let terminal = owner.terminal_is_empty();
-        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; owner.close_step(grant).unwrap(); }
+        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; envelope_close_turn(grant, |effect| owner.close_step(effect)).result.unwrap(); }
         assert!(owner.terminal_is_empty());
         let exact_accounting = progress.iter().all(|(step, actual)| step.progress().released_bytes == *actual);
         if demand != extent || !terminal || !exact_accounting || caller_released != caller_expected { failures.push((extent, demand, terminal, exact_accounting)); }
@@ -122,7 +122,7 @@ fn fresh_vcs_preserves_terminal_snapshot_cursor_box_under_grant() {
         fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic> { Ok(0) }
         fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> { Ok(0) }
         fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> { Ok(0) }
-        fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic> { Ok(RetainedCloneStep::Complete(Default::default())) }
+        fn close_step(&mut self, _: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll { RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }) }
         fn terminal_is_empty(&self) -> bool { true }
     }
     #[derive(semio_framework_value::FactoryPayloadRetirement)]
@@ -134,9 +134,9 @@ fn fresh_vcs_preserves_terminal_snapshot_cursor_box_under_grant() {
         let mut owner = ArtifactEnvelopeFreshVcsAuthority::try_new(Box::new(TerminalSnapshotCursor::<N>([0; N])), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Arc::new(UnusedEditDecoder)).unwrap_or_else(|_| panic!("bounded terminal snapshot scaffold admits"));
         let demand = owner.next_close_release_byte_demand().unwrap();
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
-        let (step, _, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: caller, maximum_depth: 16, ..Default::default() }).unwrap());
+        let (step, _, released) = semio_framework_trace_memory_testing::observe_backing(|| envelope_close_turn(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: caller, maximum_depth: 16, ..Default::default() }, |effect| owner.close_step(effect)).result.unwrap());
         let retained = owner.snapshot.is_some();
-        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; owner.close_step(grant).unwrap(); }
+        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; envelope_close_turn(grant, |effect| owner.close_step(effect)).result.unwrap(); }
         assert!(owner.terminal_is_empty());
         let expected = row["releasedBytes"].as_u64().unwrap() as usize;
         let reported = step.progress().released_bytes;
@@ -185,11 +185,11 @@ fn fresh_vcs_active_history_decoder_propagates_physical_release_demand() {
         };
         let demand = owner.next_close_release_byte_demand().unwrap();
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
-        let (step, _, actual) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: caller, maximum_depth: 16, ..Default::default() }).unwrap());
+        let (step, _, actual) = semio_framework_trace_memory_testing::observe_backing(|| envelope_close_turn(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: caller, maximum_depth: 16, ..Default::default() }, |effect| owner.close_step(effect)).result.unwrap());
         let mut progress = vec![(step, actual)];
-        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; let (step, _, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant).unwrap()); progress.push((step, released)); }
+        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; let (step, _, released) = semio_framework_trace_memory_testing::observe_backing(|| envelope_close_turn(grant, |effect| owner.close_step(effect)).result.unwrap()); progress.push((step, released)); }
         let terminal = owner.terminal_is_empty();
-        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; owner.close_step(grant).unwrap(); }
+        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; envelope_close_turn(grant, |effect| owner.close_step(effect)).result.unwrap(); }
         assert!(owner.terminal_is_empty());
         let exact = progress.iter().all(|(step, actual)| step.progress().released_bytes == *actual);
         if demand != extent || actual != row["releasedBytes"].as_u64().unwrap() as usize || !terminal || !exact { failures.push((extent, demand, terminal, exact)); }
@@ -203,7 +203,7 @@ fn envelope_and_genesis_preserve_terminal_cursor_physical_grants() {
     struct TerminalCursor<const N: usize>([u8; N]);
     impl<const N: usize> ErasedSnapshotRetirement for TerminalCursor<N> {
             fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
-fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { Ok(RetainedCloneStep::Complete(Default::default())) })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
         fn terminal_is_empty(&self) -> bool { true }
         fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
         fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
@@ -267,7 +267,7 @@ fn displaced_store_owner_preserves_terminal_physical_grants() {
     struct TerminalOwner<const N: usize>([u8; N]);
     impl<const N: usize> ErasedSnapshotRetirement for TerminalOwner<N> {
             fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
-fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { Ok(RetainedCloneStep::Complete(Default::default())) })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
         fn terminal_is_empty(&self) -> bool { true }
         fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
         fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
@@ -310,16 +310,16 @@ fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::Retain
 async fn installed_store_disposer_preserves_terminal_physical_grant() {
     struct TerminalDisposer<const N: usize>([u8; N]);
     impl<const N: usize> ArtifactStoreOwnedDisposer<DemoSnapshot, DemoMutation> for TerminalDisposer<N> {
-        fn close_step(&mut self, _: &mut ArtifactStoreCloseView<'_, DemoSnapshot, DemoMutation>, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+        fn close_step(&mut self, _: &mut ArtifactStoreCloseView<'_, DemoSnapshot, DemoMutation>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { semio_framework_value::RetirementPollExit::settle(effect, Ok(RetainedCloneStep::Complete(Default::default()))) }
         fn terminal_is_empty(&self, _: &dyn semio_os_store_engine_owners::lifted_store::ArtifactStoreCloseHost<DemoSnapshot, DemoMutation>) -> bool { true }
         fn demands(&self, _: &dyn semio_os_store_engine_owners::lifted_store::ArtifactStoreCloseHost<DemoSnapshot, DemoMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
-        fn close_uninstalled_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+        fn close_uninstalled_step(&mut self, _: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
         fn uninstalled_demands(&self, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
         fn uninstalled_terminal_is_empty(&self) -> bool { true }
     }
     impl<const N: usize> ErasedSnapshotRetirement for TerminalDisposer<N> {
             fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
-fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { Ok(RetainedCloneStep::Complete(Default::default())) })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
         fn terminal_is_empty(&self) -> bool { true }
         fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
         fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
@@ -353,10 +353,10 @@ fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::Retain
         store.owners.owned_disposer_terminal = false;
         let demand = store.close_owned_demands(0).unwrap().release_bytes;
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
-        let (step, _, actual) = semio_framework_trace_memory_testing::observe_backing(|| store.close_owned_step(grant_for(1, caller)).unwrap());
+        let (step, _, actual) = semio_framework_trace_memory_testing::observe_backing(|| store.close_owned_step_cold(grant_for(1, caller)).unwrap());
         let reported = step.progress().released_bytes;
         let expected = row["releasedBytes"].as_u64().unwrap() as usize;
-        for _ in 0..8 { if store.close_owned_terminal_is_empty() { break; } store.close_owned_step(grant_for(1, admission)).unwrap(); }
+        for _ in 0..8 { if store.close_owned_terminal_is_empty() { break; } store.close_owned_step_cold(grant_for(1, admission)).unwrap(); }
         assert!(store.close_owned_terminal_is_empty());
         if demand != N || actual != expected || reported != actual { failures.push((N, demand, actual, reported)); }
     }

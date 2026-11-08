@@ -1,6 +1,6 @@
 //! 📨️ Original command custody separates a paid inline slot from its reserved native semantic frame.
 use crate::{TimeTravelDiscardCursor,TimeTravelEvent};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementDemand, RetirementPollExit, ValueError, ValueRefusalKind, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use semio_framework_value_retirement_queue::RetirementQueue;
 
 /// 🎟️ Retains received native event fields before semantic construction or cancellation.
@@ -43,13 +43,17 @@ impl TimeTravelCommandCustody {
         Ok(RetirementDemand{copy_bytes,depth:1,..Default::default()})
     }
     /// ♻️ Cancellation retains every original owning event field through the declared native authority.
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+        let grant=effect.grant();
+        let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
         if self.done{return Ok(RetainedCloneStep::Complete(Default::default()))}
         let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}
-        if let Some(original)=self.original.take(){match ControlledRetirement::new(original){Ok(owner)=>self.retirement=Some(owner),Err((error,original))=>{self.original=Some(original);return Err(error)}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..item()}))}
-        if let Some(owner)=self.retirement.as_mut(){if !owner.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original command event")?;return Ok(RetainedCloneStep::Progress(step.progress()))}self.retirement=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..item()}))}
+        if let Some(original)=self.original.take(){match ControlledRetirement::new(original){Ok(owner)=>self.retirement=Some(owner),Err((error,original))=>{self.original=Some(original);return Err(error.into())}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..item()}))}
+        if let Some(owner)=self.retirement.as_mut(){if !owner.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=RetirementPollExit::resume(owner.step(&mut effect.nested(child)))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original command event")?;return Ok(RetainedCloneStep::Progress(step.progress()))}self.retirement=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..item()}))}
         self.done=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..item()}))
+        })();
+        RetirementPollExit::settle(effect,result)
     }
     pub fn terminal_is_empty(&self)->bool{self.done&&self.original.is_none()&&self.retirement.is_none()}
 }

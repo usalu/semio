@@ -87,7 +87,7 @@ async fn settlement_work_ledger_is_finite_and_progresses() {
         semio_plugin::artifact_app_laws::retain_original_ownership_receipts(&mut *app, policy, &mut receipts).expect("receipts");
         let mut page_log = Vec::new();
         for _ in 0..16 {
-            let (answer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.take_typed_operation_result_page(action_meta.instance_id, policy.preparation));
+            let (answer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_plugin::artifact_app_laws::take_fixture_result_turn(&mut app, action_meta.instance_id, policy.preparation));
             let Ok((page, progress)) = answer else { page_log.push("refused".to_string()); break };
             page_log.push(format!("heap(req {}, rel {}) progress(cap {}, rel {}, copy {}) page {}", heap.requested_bytes, heap.released_bytes, progress.retained_capacity_bytes, progress.released_bytes, progress.copied_bytes, page.is_some()));
             if let Some(page) = page {

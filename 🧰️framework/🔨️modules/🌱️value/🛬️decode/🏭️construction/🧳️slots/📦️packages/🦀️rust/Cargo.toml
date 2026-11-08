@@ -26,3 +26,7 @@ semio-framework-value-native-decoding = { path = "../../../../📦️packages/�
 semio-framework-value-retained-clone = { path = "../../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-shared-issuance = { path = "../../../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value-testing-admission = { path = "../../../../../🧪️testing/📥️admission/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

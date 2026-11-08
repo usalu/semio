@@ -9,7 +9,7 @@ pub trait NativePreparedDecodeControl{
  fn charge(&mut self,bytes:usize)->Result<(),ValueError>;
 }
 impl NativePreparedDecodeControl for NativeDecodeControl<'_>{
- fn available_work_units(&mut self)->Result<u64,ValueError>{NativeDecodeControl::available_work_units(self)}
+ fn available_work_units(&mut self)->Result<u64,ValueError>{Ok(NativeDecodeControl::pending_work(self))}
  fn checkpoint(&mut self)->Result<(),ValueError>{NativeDecodeControl::checkpoint(self)}
  fn admit_turn_capacity(&mut self,bytes:usize)->Result<(),ValueError>{NativeDecodeControl::admit_turn_capacity(self,bytes)}
  fn charge(&mut self,bytes:usize)->Result<(),ValueError>{NativeDecodeControl::charge(self,bytes)}
@@ -37,26 +37,10 @@ impl<'operation,'decode> NativeRetirementDecodeControl<'operation,'decode>{
  pub fn finish_retirement_receiving(&mut self,frame:&mut super::NativeReceivingEffect<crate::OriginalRetirementFailure>)->crate::RetainedWorkOutcome<crate::RetainedCloneProgress,super::OriginalReceivingPrimary>{self.original.finish_retirement_receiving(frame)}
  /// 🧳️ Dispatches only an already-owned recovery loan without exposing semantic admission.
  pub fn finish_recovery(&mut self,loan:super::construction::NativeRecoveryLoan<'_>)->crate::RetainedWorkOutcome<crate::RetainedCloneProgress,super::OriginalReceivingPrimary>{match loan{super::construction::NativeRecoveryLoan::Value(frame)=>self.finish_receiving(frame),super::construction::NativeRecoveryLoan::Retirement(frame)=>self.finish_retirement_receiving(frame)}}
- /// 📬️ Returns the original grant reply unchanged when its recipient or callback phase differs.
- pub fn resolve_receiving_grant<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>,reply:Result<RetainedCloneGrant,ValueError>)->Result<(),(ValueError,Result<RetainedCloneGrant,ValueError>)>{frame.resolve_grant(self.original,reply)}
- /// 🧾️ Resolves the exact original allocation callback and preserves every refused reply donor.
- pub fn resolve_receiving_allocation_callback<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>,reply:Result<(),ValueError>)->Result<(),(ValueError,Result<(),ValueError>)>{frame.resolve_allocation_callback(self.original,reply)}
  /// ⛽️ Resolves only the pending quote of this unchanged original work issuer.
- pub fn resolve_work_quote(&mut self,reply:Result<bool,ValueError>)->Result<Result<bool,ValueError>,(ValueError,Result<bool,ValueError>)>{self.original.resolve_work_quote(reply)}
- /// 📨️ Resolves an already-submitted physical receipt without creating another effect.
- pub fn resolve_receiving_receipt<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>,reply:Result<(),ValueError>)->Result<(),(ValueError,Result<(),ValueError>)>{frame.resolve_receipt(self.original,reply)}
- /// 🏷️ Reconciles only the retained actual marker of an already-started physical effect.
- pub fn resolve_receiving_effect_marker<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>,actual:Option<usize>)->Result<(),ValueError>{frame.resolve_effect_marker(self.original,actual)}
- /// 🏁️ Finishes the already-started allocation through its original captured port.
- pub fn finish_receiving_allocation<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>)->Result<(),ValueError>{frame.finish_allocation(self.original)}
- /// 🫴️ Retains a real allocated child's exact response or returns the entire donor on refusal.
- pub fn resolve_receiving_child<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>,reply:crate::RetainedWorkOutcome<RetainedCloneStep,E>)->Result<(),(ValueError,crate::RetainedWorkOutcome<RetainedCloneStep,E>)>{frame.resolve_child(self.original,reply)}
+ pub fn recover_work_quote(&mut self)->Result<Option<bool>,ValueError>{self.original.recover_work_quote()}
  /// 🧮️ Returns one real unallocated child's response only to its pending original frontier.
  pub fn resolve_unallocated_receiving_child<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>,reply:crate::RetainedWorkOutcome<RetainedCloneStep,E>)->Result<(),(ValueError,crate::RetainedWorkOutcome<RetainedCloneStep,E>)>{frame.resolve_unallocated_child(self.original,reply)}
- /// ⏪️ Cancels original held work only when the effect itself proves that no child ran.
- pub fn cancel_unperformed_receiving_work<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>)->Result<(),ValueError>{frame.cancel_unperformed_work(self.original)}
- /// 🛑️ Cancels a granted original frame whose physical effect was never started.
- pub fn cancel_unstarted_receiving<E:super::NativeReceivingEffectError>(&mut self,frame:&mut super::NativeReceivingEffect<E>)->Result<(),ValueError>{frame.cancel_unstarted(self.original)}
  /// 📊️ Reads cumulative original allocation without issuing another capacity.
  pub fn owned_bytes(&self)->usize{self.original.ledger.as_ref().expect("original decode ledger present").owned_bytes()}
  /// 🧾️ Retirement bytes already charged against this loan's paid capacity.
@@ -87,6 +71,8 @@ impl<'operation,'decode> NativeRetirementDecodeControl<'operation,'decode>{
  pub fn with_encoding_receiver<T,E>(&mut self,frame:&mut Option<semio_framework_value_native_encoding::native_receiving::NativeEncodingReceiverFrame>,result:&mut semio_framework_value_call::NativeCallFailure<T,E>,operation:impl FnOnce(usize,&mut dyn FnMut(crate::native_encoding::NativeEncodeProgress)->bool,&mut dyn crate::NativeSendAllocationLoan,&mut semio_framework_value_native_encoding::native_receiving::NativeEncodingReceiverWork<'_,'_,'_>,Option<&mut semio_framework_value_native_encoding::native_receiving::NativeEncodingReceiverConstruction<'_,'_>>,&mut Option<T>,&mut Option<E>))->Result<(),ValueError>{
   let before=self.original.owned_bytes();let scope=RetirementEncodingSpend{loan:self,before};scope.loan.original.with_encoding_receiver(frame,result,operation)
  }
+ /// 🔓️ Releases the settled receiver to this loan's exact original ledger and authorities.
+ pub fn release_encoding_receiver(&mut self,frame:&mut semio_framework_value_native_encoding::native_receiving::NativeEncodingReceiverFrame)->Result<(),ValueError>{self.original.release_encoding_receiver(frame)}
  /// 👓️ Reports already-born ownership in this exact original recipient.
  pub fn has_retirement_owner(&self)->bool{self.original.has_retirement_owner()}
  /// 🧺️ Observes spare failure custody separately from a pending returned owner.
@@ -97,10 +83,23 @@ impl<'operation,'decode> NativeRetirementDecodeControl<'operation,'decode>{
  /// ⛽️ Quotes only the selected genuine recipient close action.
  pub fn retirement_work_demand(&self,body:usize)->Result<u64,ValueError>{if self.requires_original_birth(){return Err(invalid(ValueRefusalKind::UnsupportedOwner,"original failure birth requires its separate driver"))}self.original.retirement.as_ref().ok_or_else(||invalid(ValueRefusalKind::UnsupportedOwner,"original retirement recipient absent"))?.next_computational_work(body)}
  /// 🍼️ Advances the same original failure birth without opening a second allocation effect.
+ fn commit_poll_births(&mut self,grant:RetainedCloneGrant,poll:semio_framework_value_retirement::OriginalRetirementPoll)->semio_framework_value_retirement::OriginalRetirementPoll{
+  let crate::RetainedWorkPoll::Complete(mut outcome)=poll else{return poll};
+  let progress=match &outcome.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
+  if let Err(error)=self.commit_closed_births(grant,progress){if outcome.result.is_ok(){outcome.result=Err(error.into())}}
+  crate::RetainedWorkPoll::Complete(outcome)
+ }
+ fn commit_closed_births(&mut self,grant:RetainedCloneGrant,progress:crate::RetainedCloneProgress)->Result<(),ValueError>{
+  let born=progress.retained_capacity_bytes;if born==0{return Ok(())}
+  let owned=self.original.owned_bytes();let maximum=self.original.maximum_bytes;let next=owned.checked_add(born).filter(|next|*next<=maximum).ok_or_else(||invalid(ValueRefusalKind::OwnershipLimit,"decoder retirement births exceed its original ceiling"))?;
+  allocation::commit_admission(&mut self.original.ledger,crate::NativeAllocationRequest{bytes:born,owned_bytes:owned,next_owned_bytes:next,maximum_bytes:maximum})?;
+  if self.original.construction.is_some(){self.original.submit_constructed_progress(grant,progress)?}Ok(())
+ }
  pub fn close_original_birth_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementPoll{if !self.requires_original_birth(){return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Err(invalid(ValueRefusalKind::InvariantViolated,"original recipient has no selected failure birth").into()),work:0})}let funding:&mut dyn semio_framework_value_retirement::OriginalRetirementControl=self;semio_framework_value_retirement::refill_original_failure_storage(funding,grant)}
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{let recipient=self.original.retirement.as_ref().ok_or_else(||invalid(ValueRefusalKind::UnsupportedOwner,"original retirement has no recipient"))?;if !recipient.funding.reserved&&recipient.owner.is_some()&&recipient.funding.failure_pool.is_empty(){return Ok(semio_framework_value_retirement::original_failure_storage_birth_demand())}recipient.next_demand(body)}
  /// 🚮️ Charges and closes the original returned owner through the same performed-work sink.
- pub fn close_retirement_recipient(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll{
+ pub fn close_retirement_recipient(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll{let grant=effect.grant();let poll=self.close_recipient_inner(effect);self.commit_poll_births(grant,poll)}
+ fn close_recipient_inner(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll{
   use crate::RetainedWorkPoll;
   let grant=effect.grant();
   if self.requires_original_birth(){return RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Err(invalid(ValueRefusalKind::InvariantViolated,"original failure birth must precede the general effect").into()),work:0})}

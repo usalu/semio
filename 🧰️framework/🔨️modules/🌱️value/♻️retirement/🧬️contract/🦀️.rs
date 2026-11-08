@@ -11,6 +11,20 @@ pub enum RetirementPollExit{Pending(u128),Failed(OriginalRetirementFailure)}
 impl From<ValueError> for RetirementPollExit{fn from(error:ValueError)->Self{Self::Failed(error.into())}}
 impl From<OriginalRetirementFailure> for RetirementPollExit{fn from(error:OriginalRetirementFailure)->Self{Self::Failed(error)}}
 impl RetirementPollExit{
+ /// 🪆️ Forwards a child poll into a ladder: `Pending` stays pending and a settled failure is kept.
+ pub fn resume<T>(poll:OriginalRetirementPoll<T>)->Result<T,Self>{match poll{RetainedWorkPoll::Pending{work}=>Err(Self::Pending(work)),RetainedWorkPoll::Complete(turn)=>turn.result.map_err(Self::Failed)}}
+ /// 🧾️ Records work a grant-shaped child reported into the caller's effect; an unfunded unit is a typed work-limit failure.
+ pub fn pay(effect:&mut RetainedAllocationEffect<'_>,work:u128)->Result<(),Self>{let admitted=u64::try_from(work).is_ok_and(|work|work==0||effect.performed(work).unwrap_or(false));if admitted{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"retirement close exceeds its work ceiling").into())}}
+ /// 🧾️ Settles a close ladder against its effect once: a progressing turn that recorded no work pays one unit, and the poll carries exactly the effect's performed work.
+ pub fn settle(effect:&mut RetainedAllocationEffect<'_>,result:Result<RetainedCloneStep,Self>)->OriginalRetirementPoll{
+  let result=match result{
+   Err(Self::Pending(_))=>return RetainedWorkPoll::Pending{work:effect.performed_work()},
+   Err(Self::Failed(failure))=>Err(failure),
+   Ok(step) if effect.performed_work()==0&&step.progress()!=RetainedCloneProgress::default()=>match Self::pay(effect,1){Ok(())=>Ok(step),Err(Self::Failed(failure))=>Err(failure),Err(Self::Pending(_))=>unreachable!("paying work never suspends")},
+   Ok(step)=>Ok(step),
+  };
+  RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()})
+ }
  pub fn settled(poll:OriginalRetirementPoll)->Result<OriginalRetirementOutcome,Self>{match poll{RetainedWorkPoll::Pending{work}=>Err(Self::Pending(work)),RetainedWorkPoll::Complete(turn)=>Ok(turn)}}
  pub fn finish<T>(result:Result<T,Self>,work:u128)->OriginalRetirementPoll<T>{match result{Ok(value)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(value),work}),Err(Self::Failed(error))=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error),work}),Err(Self::Pending(child))=>RetainedWorkPoll::Pending{work:work.checked_add(child).expect("bounded original retirement invocation work")}}}
 }
@@ -101,12 +115,6 @@ impl OriginalFailureFunding for dyn OriginalRetirementControl+'_{
  fn commit(&mut self,work:u128)->Result<(),ValueError>{self.commit_failure_storage_work(work)}
  fn cancel_work(&mut self)->Result<(),ValueError>{self.cancel_failure_storage_work()}
  fn finish_work(&mut self)->Result<(),ValueError>{self.finish_failure_storage_work()}
-}
-/// 🧷️ The borrowed original cleanup loan is itself the funded original decoding custody it was lent from.
-impl OriginalRetirementControl for semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_> {
-    fn ledger_identity(&self) -> u64 { semio_framework_value_control_contract::OriginalRetirementCloseLoan::ledger_identity(self) }
-    fn retirement_recipient_identity(&self) -> Option<u64> { semio_framework_value_control_contract::OriginalRetirementCloseLoan::retirement_recipient_identity(self) }
-    fn charge(&mut self, bytes: usize) -> Result<(), ValueError> { semio_framework_value_control_contract::OriginalRetirementCloseLoan::charge(self, bytes) }
 }
 pub trait ErasedSnapshotRetirement: Send {
     /// 👶️ Selects a real source-owned birth separately from ordinary closure effects.

@@ -34,6 +34,7 @@ semio-os-store-durable-group-wire = { path = "../../📜️wire/📦️packages/
 semio-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
 semio-os-store-engine-stage = { path = "../../../../⚙️engine/🗄️stage/📦️packages/🦀️rust" }
 semio-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
+semio-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item-batch = { path = "../../../../📬️one-item-owners/📦️packages/🦀️rust", package = "semio-os-store-one-item-batch"}
 semio-os-store-one-item-publication = { path = "../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
 semio-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
@@ -56,4 +57,5 @@ semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/
 serde_json = "1.0.140"
 
 [dev-dependencies]
+semio-os-store-one-item-publication = { path = "../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }

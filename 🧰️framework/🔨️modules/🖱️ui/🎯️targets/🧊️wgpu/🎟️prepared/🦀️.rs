@@ -9,7 +9,7 @@ use std::rc::Rc;
 use std::sync::atomic::{AtomicPtr, AtomicU64, AtomicU8, AtomicUsize, Ordering};
 use std::sync::Mutex;
 use semio_framework_job::{InteractiveJobCloseStep as CloseStep, RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect, RetirementPollExit, ValueError, ValueRefusalKind};
 
 #[path = "📊️credits-limits-and-fixed-lists/🦀️.rs"]
 mod credits_limits_and_fixed_lists;
@@ -80,6 +80,8 @@ extern crate self as semio_ui_prepared;
 #[path="🧪️testing/🦀️.rs"]
 pub mod testing;
 
+#[cfg(test)]
+use semio_framework_value_testing_allocator as _;
 #[cfg(test)]
 #[path = "🧪️tests/📏️shared-border/🦀️.rs"]
 mod shared_border_tests;

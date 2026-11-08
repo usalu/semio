@@ -37,6 +37,7 @@ semio-plugin-window-kits = { path = "../../../🪟️window-kits/📦️packages
 semio-plugin-decl-views = { path = "../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
 semio-plugin-decl-emission = { path = "../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-plugin-decl-app = { path = "../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-plugin-job-child-vcs = { path = "../../🏛️reserved/🪆️child-vcs/📦️packages/🦀️rust" }
 semio-plugin-job-receiving = { path = "../../🛬️receiving/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }

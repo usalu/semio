@@ -87,7 +87,7 @@ impl OwnedOperationBytes {
         let requested = self.next_allocation_bytes()?;
         if requested > maximum_bytes { return Ok(OperationByteAllocationStep::default()); }
         let remaining = self.maximum_allocation_bytes - self.allocated_bytes();
-        let step = self.bytes.reserve_exact_capacity_one(self.maximum_payload_bytes, maximum_bytes.min(remaining)).map_err(|error| {
+        let step = self.bytes.reserve_exact_capacity_one_cold(self.maximum_payload_bytes, maximum_bytes.min(remaining)).map_err(|error| {
             let fault = OperationByteFault::paged(error.kind, error.reason, error.allocated_bytes);
             if error.allocated_bytes != 0 { self.allocation_fault = Some(fault); }
             fault
@@ -115,21 +115,39 @@ impl OwnedOperationBytes {
     pub fn byte_ref(&self, offset: usize) -> Option<&u8> { self.bytes.get(offset) }
 
     /// ♻️ Removes one logical byte or returns one complete empty physical backing allocation.
-    pub fn close_one(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<OperationByteCloseStep, OperationByteFault> {
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(OperationByteCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
-        if self.closed { return Ok(OperationByteCloseStep::Complete); }
+    pub fn close_one(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome<OperationByteCloseStep, semio_framework_value::ValueError> {
+        use semio_framework_value::{RetainedWorkOutcome, ValueError};
+        use semio_framework_value_persistent::list::PagedListReleaseOutcome;
+        let pending = OperationByteCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        let paged = |error: semio_framework_value_persistent::list::PagedListError| ValueError::new(match error.kind { PagedListRefusalKind::OwnershipLimit => ValueRefusalKind::OwnershipLimit, PagedListRefusalKind::AllocationFailed => ValueRefusalKind::AllocationFailed, PagedListRefusalKind::InvariantViolated => ValueRefusalKind::InvariantViolated }, error.reason);
+        let grant = effect.grant();
+        if grant.maximum_items == 0 || effect.maximum_work_units() == 0 { return RetainedWorkOutcome { result: Ok(pending), work: 0 }; }
+        if self.closed { return RetainedWorkOutcome { result: Ok(OperationByteCloseStep::Complete), work: 0 }; }
         self.closing = true;
-        if self.bytes.pop().is_some() { return Ok(OperationByteCloseStep::Pending { released_items: 1, released_bytes: 0 }); }
+        let mut work = 0;
+        if !self.bytes.is_empty() {
+            if grant.maximum_copy_bytes == 0 { return RetainedWorkOutcome { result: Ok(pending), work }; }
+            if let Err(error) = semio_framework_value::retirement::record_retirement_work(effect, 1).map(|paid| work += paid).map_err(|(error, paid)| { work += paid; error }) { return RetainedWorkOutcome { result: Err(error), work }; }
+            self.bytes.pop();
+            return RetainedWorkOutcome { result: Ok(OperationByteCloseStep::Pending { released_items: 1, released_bytes: 0 }), work };
+        }
         if self.bytes.terminal_is_empty() {
+            if let Err(error) = semio_framework_value::retirement::record_retirement_work(effect, 1).map(|paid| work += paid).map_err(|(error, paid)| { work += paid; error }) { return RetainedWorkOutcome { result: Err(error), work }; }
             unsafe { ManuallyDrop::drop(&mut self.bytes) };
             self.bytes = ManuallyDrop::new(PagedList::default());
             self.closed = true;
-            return Ok(OperationByteCloseStep::Complete);
+            return RetainedWorkOutcome { result: Ok(OperationByteCloseStep::Complete), work };
         }
-        let required = self.bytes.next_release_allocation_bytes().map_err(|error| OperationByteFault::paged(error.kind, error.reason, 0))?;
-        if required > maximum_bytes { return Ok(OperationByteCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
-        let step = self.bytes.release_empty_page(maximum_bytes).map_err(|error| OperationByteFault::paged(error.kind, error.reason, 0))?;
-        Ok(OperationByteCloseStep::Pending { released_items: usize::from(step.progressed), released_bytes: step.released_allocation_bytes })
+        let required = match self.bytes.next_release_allocation_bytes() { Ok(required) => required, Err(error) => return RetainedWorkOutcome { result: Err(paged(error)), work } };
+        if required > grant.maximum_release_bytes { return RetainedWorkOutcome { result: Ok(pending), work }; }
+        let turn = self.bytes.release_empty_page(effect);
+        let result = match turn.result {
+            Ok(PagedListReleaseOutcome::Denied) => Ok(pending),
+            Ok(PagedListReleaseOutcome::Ready(step)) => Ok(OperationByteCloseStep::Pending { released_items: usize::from(step.progressed), released_bytes: step.released_allocation_bytes }),
+            Err(semio_framework_value_persistent::list::PagedListReleaseFailure::Work(error)) => Err(error),
+            Err(semio_framework_value_persistent::list::PagedListReleaseFailure::Release(error)) => Err(paged(error)),
+        };
+        RetainedWorkOutcome { result, work: work + turn.work }
     }
 
     /// 🏡️ Transfers source backing to the actual parent while retaining separate physical disposal responsibility.
@@ -158,18 +176,19 @@ impl OwnedOperationBytes {
 
 impl semio_framework_value::ErasedSnapshotRetirement for OwnedOperationBytes{
     fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:usize::from(!self.closed&&self.len()!=0),release_bytes:if self.closed||self.len()!=0||self.allocated_bytes()==0{0}else{self.next_close_byte_demand().map_err(|fault|semio_framework_value::ValueError::new(fault.kind,fault.reason))?},depth:usize::from(!self.closed),..Default::default()})}
-    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{
-        let mut work=0;let result=(||->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
+    fn next_computational_work(&self,_:usize)->Result<u64,semio_framework_value::ValueError>{Ok(u64::from(!self.closed))}
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
-        let empty=RetainedCloneProgress::default();if self.closed{return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}if grant.maximum_depth<1{return Err(semio_framework_value::ValueError::literal(ValueRefusalKind::DepthLimit,"original operation source retirement requires admitted depth"))}
+        let grant=effect.grant();let empty=RetainedCloneProgress::default();
+        let done=|result:Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>,work:u128|semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result,work});
+        if self.closed{return done(Ok(RetainedCloneStep::Complete(empty)),0)}if grant.maximum_items==0||effect.maximum_work_units()==0{return done(Ok(RetainedCloneStep::Progress(empty)),0)}if grant.maximum_depth<1{return done(Err(semio_framework_value::ValueError::literal(ValueRefusalKind::DepthLimit,"original operation source retirement requires admitted depth").into()),0)}
         let logical=self.len()!=0;
-        if logical&&grant.maximum_copy_bytes==0{return Ok(RetainedCloneStep::Progress(empty))}
-        let release=if logical||self.allocated_bytes()==0{0}else{self.next_close_byte_demand().map_err(|fault|semio_framework_value::ValueError::new(fault.kind,fault.reason))?};
-        if release>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty))}
-        work=1;let step=self.close_one(1,if logical{grant.maximum_copy_bytes}else if release!=0{grant.maximum_release_bytes}else{1}).map_err(|fault|semio_framework_value::ValueError::new(fault.kind,fault.reason))?;
-        match step{OperationByteCloseStep::Complete=>Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty})),OperationByteCloseStep::Pending{released_items,released_bytes}=>Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,copied_bytes:usize::from(logical&&released_items!=0),released_bytes,..empty}))}
-        })();
-        semio_framework_value::RetainedWorkOutcome{result:result.map_err(Into::into),work}
+        if logical&&grant.maximum_copy_bytes==0{return done(Ok(RetainedCloneStep::Progress(empty)),0)}
+        let release=if logical||self.allocated_bytes()==0{0}else{match self.next_close_byte_demand(){Ok(release)=>release,Err(fault)=>return done(Err(semio_framework_value::ValueError::new(fault.kind,fault.reason).into()),0)}};
+        if release>grant.maximum_release_bytes{return done(Ok(RetainedCloneStep::Progress(empty)),0)}
+        let turn=self.close_one(effect);
+        let result=turn.result.map(|step|match step{OperationByteCloseStep::Complete=>RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}),OperationByteCloseStep::Pending{released_items,released_bytes}=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,copied_bytes:usize::from(logical&&released_items!=0),released_bytes,..empty})}).map_err(Into::into);
+        done(result,turn.work)
     }
     fn terminal_is_empty(&self)->bool{self.closed}
     fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(!self.closed&&self.len()!=0))}
@@ -321,9 +340,9 @@ impl OperationBytePreparation{
         self.source.as_mut()?.maximum_payload_bytes=self.exact_length;
         self.source.take()
     }
-    pub fn close_one(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<OperationByteCloseStep,OperationByteFault>{
-        let Some(source)=self.source.as_mut()else{return Ok(OperationByteCloseStep::Complete)};
-        source.close_one(maximum_items,maximum_bytes)
+    pub fn close_one(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<OperationByteCloseStep,semio_framework_value::ValueError>{
+        let Some(source)=self.source.as_mut()else{return semio_framework_value::RetainedWorkOutcome{result:Ok(OperationByteCloseStep::Complete),work:0}};
+        source.close_one(effect)
     }
     pub fn terminal_is_empty(&self)->bool{self.source.as_ref().is_none_or(OwnedOperationBytes::terminal_is_empty)}
 }

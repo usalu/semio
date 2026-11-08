@@ -13,6 +13,9 @@ fn child_emission_private_input_metadata_and_genesis_retain_exact_request_and_or
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🏪️store/🧩️composition/🚪️open/🌱️genesis/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let reference = |value: &serde_json::Value| ArtifactRef { artifact_id: value["artifact_id"].as_str().unwrap().into(), dialect: ArtifactDialect { artifact_kind: value["dialect"]["artifact_kind"].as_str().unwrap().into(), standard: value["dialect"]["standard"].as_str().unwrap().into(), subset: value["dialect"]["subset"].as_str().unwrap().into() } };
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 262144, maximum_release_bytes: 262144, maximum_depth: 64 };
+    let stock = RetainedCloneGrant { maximum_items: 65_536, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 };
+    let turn_grant = RetainedCloneGrant { maximum_items: 4096, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(7311), semio_framework_job::Generation(3), stock, || Some(1), 1_000_000, 1_000_000_000);
     for row in corpus["cases"].as_array().unwrap() {
         let expected = reference(&row["expected"]);
         let parent = reference(&row["owner"]["parent"]);
@@ -87,7 +90,7 @@ fn child_emission_private_input_metadata_and_genesis_retain_exact_request_and_or
                 assert!(parts.metadata.terminal_is_empty());
                 for _ in 0..100000 {
                     if parts.source.terminal_is_empty() { break; }
-                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| parts.source.close_granted(grant).unwrap());
+                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(turn_grant, |cx| Ok(cx.with_original_effect(grant, |_, effect| parts.source.close_step(effect))?.map(|(step, _)| step))).expect("original fixture effect turn").expect("original effect work quote admitted").unwrap());
                     assert!(step.progress().fits(grant));
                     assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
                 }
@@ -97,7 +100,7 @@ fn child_emission_private_input_metadata_and_genesis_retain_exact_request_and_or
                     if input.terminal_is_empty() { break; }
                     let demand = input.retirement_demands(grant.maximum_copy_bytes).unwrap();
                     assert!(demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth);
-                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| input.close_granted(grant).unwrap());
+                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(turn_grant, |cx| Ok(input.close_granted(cx, grant)?)).expect("original fixture close turn"));
                     assert!(step.progress().fits(grant));
                     assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
                 }
@@ -105,4 +108,5 @@ fn child_emission_private_input_metadata_and_genesis_retain_exact_request_and_or
             }
         }
     }
+    caller.retire(stock);
 }

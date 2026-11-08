@@ -2,7 +2,7 @@
 use super::*;
 use std::mem::ManuallyDrop;
 use semio_framework_job::StepContext;
-use semio_framework_value::{retirement::controlled::ControlledRetirement,RetirementDemand};
+use semio_framework_value::{retirement::controlled::ControlledRetirement,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand};
 
 /// 📥️ The existing registered-job source schema carries one owned kind, input and optional checkpoint.
 #[derive(Debug,serde::Serialize,serde::Deserialize,semio_framework_value_derive::FromValue,semio_framework_value_derive::ToValue,semio_framework_value::RetireOwned,semio_framework_value_derive::NativeReceive)]
@@ -89,7 +89,13 @@ impl OriginalJobSourceCursor{
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
   self.validate(cx)?;self.closing=true;let grant=cx.retained_grant();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;if cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(false)}
   if self.bytes.capacity()!=0{let bytes=self.bytes.capacity();drop(std::mem::take(&mut*self.bytes));cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
-  if let Some(owner)=self.retirement.as_mut(){if !owner.terminal_is_empty(){let step=owner.step(RetainedCloneGrant{maximum_items:grant.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX)),maximum_depth:grant.maximum_depth-1,..grant}).map_err(|error|{let progress=error.retained_progress();cx.consume_fuel(progress.copied_items as u64);let _=cx.consume_retained(progress);error})?;cx.consume_fuel(step.progress().copied_items as u64);cx.consume_retained(step.progress())?;return Ok(false)}drop(self.retirement.take());cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+  if let Some(owner)=self.retirement.as_mut(){if !owner.terminal_is_empty(){
+   let child=RetainedCloneGrant{maximum_items:grant.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX)),maximum_depth:grant.maximum_depth-1,..grant};
+   let Some((poll,performed))=cx.with_original_effect(child,|_,effect|owner.step(effect))?else{return Ok(false)};
+   let turn=match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};
+   cx.consume_work(turn.work);let overrun=turn.work<performed;
+   let step=turn.result.map_err(|error|{let progress=error.retained_progress();let _=cx.consume_retained(progress);error.into_value_error()})?;cx.consume_retained(step.progress())?;
+   if overrun{return Err(refusal("original job source close performed more work than it settled"))}return Ok(false)}drop(self.retirement.take());cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
   let field=if self.prepared.is_some(){&mut*self.prepared}else{&mut*self.original};if let Some(source)=field.take(){match ControlledRetirement::new(source){Ok(owner)=>*self.retirement=Some(owner),Err((error,source))=>{*field=Some(source);return Err(error)}}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}Ok(true)
  }
 }

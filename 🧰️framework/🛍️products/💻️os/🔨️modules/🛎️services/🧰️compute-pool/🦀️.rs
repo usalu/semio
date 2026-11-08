@@ -77,7 +77,7 @@ impl<J:InteractiveJob+'static> ComputeJobCompletion<J>{
         let map=|step:InteractiveJobCloseStep|match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>WorkerJobCloseStep::Blocked};
         if let Some(fault)=self.fault.as_ref(){
             let demand=RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::ValueError>>(),release_bytes:match &fault.message{std::borrow::Cow::Owned(message)=>message.capacity(),std::borrow::Cow::Borrowed(_)=>0},depth:1,..Default::default()};
-            return close_original_retained_step(cx,demand,|_|{drop(self.fault.take());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()})),work:1}}).map(map)
+            return close_original_retained_step(cx,demand,|_|{drop(self.fault.take());RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()})),work:1}}).map(map)
         }
         if self.session.as_ref().is_some_and(MountedWorkerJobSession::terminal_is_empty){drop(self.session.take());}
         if let Some(session)=self.session.as_mut(){
@@ -93,7 +93,7 @@ impl<J:InteractiveJob+'static> ComputeJobCompletion<J>{
         }
         if self.permit.is_some(){
             let demand=RetirementDemand{copy_bytes:size_of::<Option<OwnedPermit>>(),depth:1,..Default::default()};
-            let step=close_original_retained_step(cx,demand,|_|{drop(self.permit.take());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})?;
+            let step=close_original_retained_step(cx,demand,|_|{drop(self.permit.take());RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})?;
             return Ok(if self.terminal_is_empty(){WorkerJobCloseStep::Complete{progress:step.progress()}}else{map(step)})
         }
         let step=self.admission.close_step(cx)?;

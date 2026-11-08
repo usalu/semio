@@ -24,7 +24,7 @@ async fn apply_other_edits(app: &mut ToyApp, count: i32) {
         for _ in 0..4_096 {
             if !app.stores.store.maintenance_retirements_under_pressure(){break;}
             let grant=app.mounted_policy.maintenance;
-            let step=app.stores.store.maintenance_retirements_step(grant).expect("the store retires what the edits displaced");assert!(step.progress().fits(grant));
+            let step=app.stores.store.maintenance_retirements_step_cold(grant).expect("the store retires what the edits displaced");assert!(step.progress().fits(grant));
             if matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)){break;}
         }
     }

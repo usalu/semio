@@ -52,6 +52,7 @@ semio-framework-value-native-owned = { path = "../../../../../../../../🔨️mo
 semio-framework-replication = { workspace = true }
 
 [dev-dependencies]
+semio-os-store-one-item-publication = { path = "../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

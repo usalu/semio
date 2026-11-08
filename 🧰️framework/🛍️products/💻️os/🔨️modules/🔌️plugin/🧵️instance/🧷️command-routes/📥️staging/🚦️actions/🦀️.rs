@@ -30,7 +30,7 @@ use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::RetainedWorkOutcome;
-use semio_plugin_tool_run::tool_jobs_tool_machine::ToolTag;
+use semio_plugin_tool_machine::ToolTag;
 use semio_plugin_instance_jobs::jobs_components::ToolOperations;
 use semio_plugin_instance_dispatch::dispatch_emit;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
@@ -56,7 +56,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if !self.original_emission.advance_host(cx)?{return Ok(None)}
         if matches!(source.original_tool_tag,Some(ToolTag::Scrub(_))){
             use semio_framework_job::{OriginalConstructionDemand,admit_original_construction};
-            let bytes=std::mem::size_of::<(ToolTag,Option<ToolTag>,Option<semio_plugin_tool_run::tool_jobs_tool_machine::ScrubTag>)>();
+            let bytes=std::mem::size_of::<(ToolTag,Option<ToolTag>,Option<semio_plugin_tool_machine::ScrubTag>)>();
             admit_original_construction(cx,&mut source.original_press_tag,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{let Some(ToolTag::Scrub(tag))=source.original_tool_tag.take()else{unreachable!()};RetainedWorkOutcome{result:Ok((tag,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;
             return Ok(None)
         }
@@ -589,6 +589,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             instance_operation_owner: self.tools.instance_operation_owner.clone(),
             output_chunks: ArtifactOutputChunks::new(contract.max_output_bytes),
             completion: completion.clone(),
+        construction: Default::default(),
         };
         let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:cx.retained_grant(),site:"plugin_agent_lane_preview",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:contract.max_work_units_per_step,step_budget_us:u64::from(contract.max_step_micros)};
         let state=self.tools.agent_lane_preview.as_mut().expect("original preview lease remains received");state.producer_request=Some(request);state.completion=Some(completion);state.config=config;state.maximum_bytes=contract.max_output_bytes;state.starting=false;

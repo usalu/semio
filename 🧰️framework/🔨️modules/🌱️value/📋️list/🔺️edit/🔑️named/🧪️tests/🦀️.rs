@@ -13,10 +13,10 @@ fn close(plan:&mut NamedEditPlan,born:usize){
  plan.begin_close();let mut births=born;let mut releases=0;let mut turns=0;let limit=128+(plan.shape.base_len+plan.shape.added+plan.shape.removed+plan.shape.modified)*32;
  while !plan.terminal_is_empty(){
   let demand=plan.close_demand(32768).unwrap();let funded=grant(demand);
-  for denied in[RetainedCloneGrant{maximum_items:0,..funded},RetainedCloneGrant{maximum_copy_bytes:0,..funded},RetainedCloneGrant{maximum_depth:0,..funded}]{let(step,heap)=crate::observe_retirement_allocations(||plan.close_step(denied).result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
-  if demand.capacity_bytes>0{let(step,heap)=crate::observe_retirement_allocations(||plan.close_step(RetainedCloneGrant{maximum_capacity_bytes:0,..funded}).result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
-  if demand.release_bytes>0{let(step,heap)=crate::observe_retirement_allocations(||plan.close_step(RetainedCloneGrant{maximum_release_bytes:0,..funded}).result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
-  let(step,heap)=crate::observe_retirement_allocations(||plan.close_step(funded).result.unwrap());let p=step.progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));assert!(p.copied_bytes<=funded.maximum_copy_bytes);births+=heap.0;releases+=heap.1;turns+=1;assert!(turns<limit);
+  for denied in[RetainedCloneGrant{maximum_items:0,..funded},RetainedCloneGrant{maximum_copy_bytes:0,..funded},RetainedCloneGrant{maximum_depth:0,..funded}]{let(step,heap)=crate::observe_retirement_allocations(||crate::effect::settle(denied,|effect|plan.close_step(effect)).result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
+  if demand.capacity_bytes>0{let(step,heap)=crate::observe_retirement_allocations(||crate::effect::settle(RetainedCloneGrant{maximum_capacity_bytes:0,..funded},|effect|plan.close_step(effect)).result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
+  if demand.release_bytes>0{let(step,heap)=crate::observe_retirement_allocations(||crate::effect::settle(RetainedCloneGrant{maximum_release_bytes:0,..funded},|effect|plan.close_step(effect)).result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
+  let(step,heap)=crate::observe_retirement_allocations(||crate::effect::settle(funded,|effect|plan.close_step(effect)).result.unwrap());let p=step.progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));assert!(p.copied_bytes<=funded.maximum_copy_bytes);births+=heap.0;releases+=heap.1;turns+=1;assert!(turns<limit);
  }
  assert_eq!(births,releases);
 }
@@ -30,9 +30,9 @@ fn named_edit_plan_matches_portable_keys_and_physical_custody(){
   let original=pointers(&source);let(mut plan,heap)=crate::observe_retirement_allocations(||NamedEditPlan::new(source.shape()));assert_eq!(heap,(0,0));let mut born=0;let mut turns=0;
   while !plan.settled(){
    let demand=plan.demand(&source,NamedEditPlan::fixed_copy_bytes()+256).unwrap();let funded=grant(demand);let state=(plan.phase,plan.cursor,plan.low,plan.high,plan.searching,plan.compare.offset);
-   for denied in[RetainedCloneGrant{maximum_items:0,..funded},RetainedCloneGrant{maximum_copy_bytes:0,..funded},RetainedCloneGrant{maximum_depth:0,..funded}]{let(step,heap)=crate::observe_retirement_allocations(||plan.advance(&source,denied).result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(state,(plan.phase,plan.cursor,plan.low,plan.high,plan.searching,plan.compare.offset));}
-   if demand.capacity_bytes>0{let(step,heap)=crate::observe_retirement_allocations(||plan.advance(&source,RetainedCloneGrant{maximum_capacity_bytes:0,..funded}).result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
-   let(step,heap)=crate::observe_retirement_allocations(||plan.advance(&source,funded).result.unwrap());let p=step.progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));assert!(p.copied_bytes<=funded.maximum_copy_bytes);born+=heap.0;turns+=1;assert!(turns<2000);
+   for denied in[RetainedCloneGrant{maximum_items:0,..funded},RetainedCloneGrant{maximum_copy_bytes:0,..funded},RetainedCloneGrant{maximum_depth:0,..funded}]{let(step,heap)=crate::observe_retirement_allocations(||crate::effect::settle(denied,|effect|plan.advance(&source,effect)).result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(state,(plan.phase,plan.cursor,plan.low,plan.high,plan.searching,plan.compare.offset));}
+   if demand.capacity_bytes>0{let(step,heap)=crate::observe_retirement_allocations(||crate::effect::settle(RetainedCloneGrant{maximum_capacity_bytes:0,..funded},|effect|plan.advance(&source,effect)).result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
+   let(step,heap)=crate::observe_retirement_allocations(||crate::effect::settle(funded,|effect|plan.advance(&source,effect)).result.unwrap());let p=step.progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));assert!(p.copied_bytes<=funded.maximum_copy_bytes);born+=heap.0;turns+=1;assert!(turns<2000);
   }
   let expected=&law["expected"];assert_eq!(plan.ready(),!expected.is_null());
   if plan.ready(){
@@ -53,7 +53,7 @@ fn named_edit_plan_long_prefixes_and_cancellation_are_bounded(){
  let prefix="k".repeat(65537);let source=Source{keys:[vec![format!("{prefix}é"),format!("{prefix}ö")],vec![format!("{prefix}é")],vec![format!("{prefix}ö")],vec![format!("{prefix}é")]],indices:vec![1]};let original=pointers(&source);
  for cut in[Some(0),Some(1),Some(7),Some(128),Some(25000),None]{
   let mut plan=NamedEditPlan::new(source.shape());let mut born=0;let mut steps=0;
-  while !plan.settled()&&cut.is_none_or(|cut|steps<cut){let demand=plan.demand(&source,NamedEditPlan::fixed_copy_bytes()+Compare::fixed()+6).unwrap();let funded=grant(demand);let(step,heap)=crate::observe_retirement_allocations(||plan.advance(&source,funded).result.unwrap());let p=step.progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));assert!(p.copied_bytes<=funded.maximum_copy_bytes);born+=heap.0;steps+=1;assert!(steps<65537*16);}
+  while !plan.settled()&&cut.is_none_or(|cut|steps<cut){let demand=plan.demand(&source,NamedEditPlan::fixed_copy_bytes()+Compare::fixed()+6).unwrap();let funded=grant(demand);let(step,heap)=crate::observe_retirement_allocations(||crate::effect::settle(funded,|effect|plan.advance(&source,effect)).result.unwrap());let p=step.progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));assert!(p.copied_bytes<=funded.maximum_copy_bytes);born+=heap.0;steps+=1;assert!(steps<65537*16);}
   if cut.is_none(){assert!(plan.ready());assert_eq!(plan.modified_index(0).unwrap(),1);assert_eq!(plan.plan().unwrap().entries(IndexedEditKind::Removed).unwrap()[0].index,0);}
   close(&mut plan,born);assert_eq!(crate::observe_retirement_allocations(||drop(plan)).1,(0,0));assert_eq!(pointers(&source),original);
  }

@@ -18,6 +18,10 @@ impl FlowAddDescriptorWork{
  fn kind(payload:&AddWidget)->Result<u8,ValueError>{Ok(match payload.kind.as_str(){"neuron"=>0,"inputSlider"=>1,"inputNote"=>2,"inputImage"=>3,"outputPreview"=>4,"outputAction"=>5,"outputExport"=>6,"variable"=>7,_=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original Add widget kind is unsupported"))})}
  fn text<'a>(&self,payload:&'a AddWidget)->&'a str{match self.kind{0=>payload.neuron_kind.as_deref().unwrap_or("math.add"),1=>payload.label.as_deref().unwrap_or(""),5=>payload.action.as_deref().unwrap_or(""),6=>payload.format.as_deref().unwrap_or(""),_=>""}}
  fn paid(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{if cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(fixed(bytes)){return Ok(false)}cx.consume_fuel(1);cx.consume_retained(p(bytes))?;Ok(true)}
+ /// ⛽️ Quotes the raw work of the next original event so a caller funds exactly that event.
+ pub fn next_work_demand(&self,payload:&AddWidget,body:usize)->Result<u64,ValueError>{
+  let copy=self.copy.as_ref();Ok(match self.phase{0|3|4=>1,1=>{let copy=copy.ok_or_else(invalid)?;if copy.ready(){copy.take_work_demand()?}else{copy.next_work_demand(self.text(payload),body)?}},2=>match copy{Some(copy)if !copy.terminal_is_empty()=>copy.close_work_demand(body)?,_=>1},_=>return Err(invalid())})
+ }
  pub fn step(&mut self,payload:&AddWidget,cx:&mut StepContext<'_>)->Result<Option<WidgetDescriptor>,OriginalTurnFailure>{for _ in 0..512{let before=(cx.retained_progress(),cx.fuel_remaining());if let Some(output)=self.once(payload,cx)?{return Ok(Some(output))}if cx.should_yield()||cx.is_cancelled()||before==(cx.retained_progress(),cx.fuel_remaining()){break}}Ok(None)}
  fn once(&mut self,payload:&AddWidget,cx:&mut StepContext<'_>)->Result<Option<WidgetDescriptor>,OriginalTurnFailure>{
   let binding=Binding{source:OriginalSourceBinding::borrow(cx),payload:payload as*const _ as usize};if self.closing||self.binding.is_some_and(|original|original!=binding){return Err(invalid().into())}if cx.should_yield()||cx.is_cancelled(){return Ok(None)}

@@ -1,4 +1,5 @@
 //! 📋️ Original typed history records keep payload identities while their contiguous index births and releases remain granted.
+use semio_framework_value::RetainedAllocationEffect;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress};
 use std::mem::{ManuallyDrop,size_of};
 
@@ -46,7 +47,7 @@ impl<T> RetainedHistoryRecords<T>{
  }
  pub fn cancel(&mut self){self.closing=true}
  /// ♻️ Releases only the empty original index, after every record has its paid retained recipient.
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedHistoryRecordsStep,ValueError>{
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedHistoryRecordsStep,ValueError>{let grant=effect.grant();
   if self.receipt.is_some(){return Ok(RetainedHistoryRecordsStep::Blocked)}if self.closed{return Ok(RetainedHistoryRecordsStep::Closed)}
   if !self.closing||!self.records.is_empty(){return Ok(RetainedHistoryRecordsStep::Blocked)}let demand=self.demands()?;if !Self::permits(grant,demand){return Ok(RetainedHistoryRecordsStep::Blocked)}
   drop(std::mem::take(&mut*self.records));self.closed=true;self.record_receipt(grant,RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})?;Ok(RetainedHistoryRecordsStep::Closed)

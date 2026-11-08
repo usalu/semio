@@ -39,7 +39,7 @@ impl RetainedSliceEquality{
   if left.len()!=right.len()||self.offset==left.len(){return Ok(1)}
   let count=self.count::<T>(left.len(),right.len(),body,maximum_work_units)?;if count==0{return Ok(0)}(count as u64).checked_mul(T::WORK).and_then(|work|work.checked_add(1)).ok_or_else(invalid)
  }
- pub fn advance<T:RetainedEqualityElement>(&mut self,left:&[T],right:&[T],body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work:u64=0;let result=(||{
+ pub fn advance<T:RetainedEqualityElement>(&mut self,left:&[T],right:&[T],body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work:u128=0;let result=(||{
   if self.result.is_some(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   if self.work_demand(left,right,body,maximum_work_units)?==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
   let demand=self.demand(left,right,body,maximum_work_units)?;
@@ -47,7 +47,7 @@ impl RetainedSliceEquality{
   let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};
   if left.len()!=right.len(){self.result=Some(false);work=1;return Ok(RetainedCloneStep::Complete(progress))}
   let end=self.offset+self.count::<T>(left.len(),right.len(),body,maximum_work_units)?;
-  work=1;for index in self.offset..end{work=work.checked_add(T::WORK).ok_or_else(invalid)?;progress.copied_bytes+=size_of::<T>()*2;if !T::inline_eq(&left[index],&right[index]){self.result=Some(false);return Ok(RetainedCloneStep::Complete(progress))}}
+  work=1;for index in self.offset..end{work=work.checked_add(u128::from(T::WORK)).ok_or_else(invalid)?;progress.copied_bytes+=size_of::<T>()*2;if !T::inline_eq(&left[index],&right[index]){self.result=Some(false);return Ok(RetainedCloneStep::Complete(progress))}}
   self.offset=end;if end==left.len(){self.result=Some(true);Ok(RetainedCloneStep::Complete(progress))}else{Ok(RetainedCloneStep::Progress(progress))}
  })();crate::RetainedWorkOutcome{result,work}}
 
@@ -106,9 +106,9 @@ impl RetainedStagedSliceEquality{
   if !self.inspection.ready(){return self.inspection.inspect(left,right,work,g)}
   let(d,selected,n)=match self.selection::<T>(body,work){Ok(x)=>x,Err(e)=>return crate::RetainedWorkOutcome{result:Err(e),work:0}};if selected==0||!retained_clone_grant_admits(g,d){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
   let check=self.inspection.verify(left,right,work);match check.result{Ok(Some(true))=>{},Ok(_)=>return crate::RetainedWorkOutcome{result:Err(invalid()),work:check.work},Err(e)=>return crate::RetainedWorkOutcome{result:Err(e),work:check.work}}
-  let mut actual=5;let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RetainedSliceEquality>()*2,..Default::default()};let header=self.inspection.header.as_ref().unwrap();
+  let mut actual:u128=5;let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RetainedSliceEquality>()*2,..Default::default()};let header=self.inspection.header.as_ref().unwrap();
   if header.left.1!=header.right.1{self.cursor.result=Some(false);return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(p)),work:actual}}
-  let end=self.cursor.offset+n;for i in self.cursor.offset..end{actual+=T::WORK;p.copied_bytes+=size_of::<T>()*2;if !T::inline_eq(&left[i],&right[i]){self.cursor.result=Some(false);return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(p)),work:actual}}}
+  let end=self.cursor.offset+n;for i in self.cursor.offset..end{actual+=u128::from(T::WORK);p.copied_bytes+=size_of::<T>()*2;if !T::inline_eq(&left[i],&right[i]){self.cursor.result=Some(false);return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(p)),work:actual}}}
   self.cursor.offset=end;if end==header.left.1{self.cursor.result=Some(true)}crate::RetainedWorkOutcome{result:Ok(if self.ready(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)}),work:actual}
  }
  pub fn begin_close(&mut self){self.inspection.begin_close()}

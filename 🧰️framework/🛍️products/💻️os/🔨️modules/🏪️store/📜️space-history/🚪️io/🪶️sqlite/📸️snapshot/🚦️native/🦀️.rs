@@ -7,6 +7,7 @@ use semio_framework_dsl_record::RecordLayout;
 use semio_framework_dsl_record::RecordSpec;
 use semio_framework_dsl_record::Shape;
 use semio_framework_value::{DslValue, FromValue, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_io_control::NativeSnapshotWork;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 fn spec<C: NativeSchemaControl>(c: &mut C) -> Result<RecordSpec, ValueError> {
     let mut fields = c.allocate_vec(1)?;
@@ -77,19 +78,11 @@ fn project(value: &SpaceHistorySnapshot, c: &mut NativeEncodeControl<'_>) -> Res
     }
     Ok(DslValue::Object(fields))
 }
+#[cfg(test)]
 fn retire_projection(value: DslValue) {
     let mut retirement = semio_framework_value::IntrinsicRetirement::new(value);
     while !retirement.terminal_is_empty() { retirement.close_step(256); }
 }
-fn retire_record(record: semio_framework_dsl_record::RecordValue) {
-    for value in record.fields.into_values() {
-        match value {
-            FieldValue::Value(value) => retire_projection(value),
-            _ => unreachable!("History producer emits only the declared intrinsic field"),
-        }
-    }
-}
-
 fn field<'a>(value: &'a DslValue, key: &str) -> Result<&'a DslValue, ValueError> {
     let DslValue::Object(fields) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space history native object is required")) };
     fields.iter().find(|(name, _)| name == key).map(|(_, value)| value).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, format!("space history native field {key} is required")))
@@ -209,61 +202,62 @@ fn json_size(value: &DslValue, c: &mut NativeEncodeControl<'_>) -> Result<usize,
         _ => Err(ValueError::new(ValueRefusalKind::InvariantViolated, "space history projector emitted an undeclared native primitive")),
     }
 }
-fn encoded_effect(native:&mut NativeEncodeControl<'_>,body:&mut semio_framework_io_control::NativeSnapshotBodyWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<semio_framework_io_control::NativeSnapshotFailure>,bytes:usize,depth:usize,effect:impl FnOnce())->Result<(),semio_framework_io_control::NativeSnapshotFailure>{
+fn encoded_effect(work:&mut NativeSnapshotWork,native:&mut NativeEncodeControl<'_>,body:&mut semio_framework_io_control::NativeSnapshotBodyWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<semio_framework_io_control::NativeSnapshotFailure>,bytes:usize,depth:usize,effect:impl FnOnce())->Result<(),semio_framework_io_control::NativeSnapshotFailure>{
     use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
-    let quote=semio_framework_io_control::NativeSnapshotEncodeEffectQuote::encode(body,native,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:depth,..Default::default()})?;let mut effect=Some(effect);
-    let turn=quote.run(marker,unwind,&mut |performed,physical|{effect.take().unwrap()();*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};Ok(())});turn.result?;marker.reset_completed()?;Ok(())
+    let demand=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:depth,..Default::default()};let mut effect=Some(effect);
+    work.take(body.effect_encoded(native,demand,marker,unwind,&mut |performed,physical|{effect.take().unwrap()();*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};Ok(())}))?;marker.reset_completed()?;Ok(())
 }
-fn encoded_vector<T>(native:&mut NativeEncodeControl<'_>,body:&mut semio_framework_io_control::NativeSnapshotBodyWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<semio_framework_io_control::NativeSnapshotFailure>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,output:&mut Vec<T>,count:usize,depth:usize)->Result<(),semio_framework_io_control::NativeSnapshotFailure>{
+fn encoded_vector<T>(work:&mut NativeSnapshotWork,native:&mut NativeEncodeControl<'_>,body:&mut semio_framework_io_control::NativeSnapshotBodyWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<semio_framework_io_control::NativeSnapshotFailure>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,output:&mut Vec<T>,count:usize,depth:usize)->Result<(),semio_framework_io_control::NativeSnapshotFailure>{
     use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
     if !output.is_empty()||(size_of::<T>()!=0&&output.capacity()!=0){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"history projection vector slot must be empty").into())}
     if allocation.is_unsettled(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"history projection allocation state is unsettled").into())}
     let layout=std::alloc::Layout::array::<T>(count).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"history projection vector extent overflow"))?;let bytes=layout.size();
-    let quote=semio_framework_io_control::NativeSnapshotEncodeEffectQuote::encode(body,native,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<Vec<T>>(),maximum_capacity_bytes:bytes,maximum_depth:depth,..Default::default()})?;
-    if bytes==0{let turn=quote.run(marker,unwind,&mut |performed,physical|{*output=Vec::new();*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Vec<T>>(),..Default::default()};Ok(())});turn.result?;marker.reset_completed()?;return Ok(())}let turn=quote.run_native(marker,unwind,&mut |native,performed,physical|{let outcome=native.allocate_effect(bytes,&mut allocation.actual,&mut allocation.unwind,&mut |actual|{let pointer=unsafe{std::alloc::alloc(layout)}.cast::<T>();if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"history projection vector allocation failed"))}*output=unsafe{Vec::from_raw_parts(pointer,0,count)};*actual=Some(bytes);*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Vec<T>>(),retained_capacity_bytes:bytes,released_bytes:0};Ok(())});match allocation.capture(outcome,bytes){Ok(true)=>Ok(()),Ok(false)=>Ok(()),Err(outcome)=>{allocation.collision=Some(outcome);Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"history projection allocation custody is occupied"))}}});allocation.finish(turn.result).map_err(|error|error.with_retained_progress(body.progress()))?;marker.reset_completed()?;Ok(())
+    let demand=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<Vec<T>>(),maximum_capacity_bytes:bytes,maximum_depth:depth,..Default::default()};
+    if bytes==0{work.take(body.effect_encoded(native,demand,marker,unwind,&mut |performed,physical|{*output=Vec::new();*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Vec<T>>(),..Default::default()};Ok(())}))?;marker.reset_completed()?;return Ok(())}
+    work.take(body.encode_effect(native,demand,Some(bytes),marker,unwind,allocation,&mut |performed,physical,actual|{*performed=true;*actual=Some(0);let pointer=unsafe{std::alloc::alloc(layout)}.cast::<T>();if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"history projection vector allocation failed"))}*output=unsafe{Vec::from_raw_parts(pointer,0,count)};*actual=Some(bytes);*physical=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Vec<T>>(),retained_capacity_bytes:bytes,released_bytes:0};Ok(())}))?;allocation.reset_completed()?;Ok(())
 }
 type ProjectError=semio_framework_io_control::NativeSnapshotFailure;
 type ProjectWallet=semio_framework_io_control::NativeSnapshotBodyWallet;
-fn object_into(value:&mut DslValue,count:usize,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<(),ProjectError>{
- encoded_effect(native,body,marker,unwind,size_of::<DslValue>(),depth,||*value=DslValue::Object(Vec::new()))?;
- let DslValue::Object(fields)=value else{unreachable!()};encoded_vector(native,body,marker,unwind,allocation,fields,count,depth+1)
+fn object_into(value:&mut DslValue,count:usize,work:&mut NativeSnapshotWork,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<(),ProjectError>{
+ encoded_effect(work,native,body,marker,unwind,size_of::<DslValue>(),depth,||*value=DslValue::Object(Vec::new()))?;
+ let DslValue::Object(fields)=value else{unreachable!()};encoded_vector(work,native,body,marker,unwind,allocation,fields,count,depth+1)
 }
-fn array_into(value:&mut DslValue,count:usize,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<(),ProjectError>{
- encoded_effect(native,body,marker,unwind,size_of::<DslValue>(),depth,||*value=DslValue::Array(Vec::new()))?;
- let DslValue::Array(items)=value else{unreachable!()};encoded_vector(native,body,marker,unwind,allocation,items,count,depth+1)
+fn array_into(value:&mut DslValue,count:usize,work:&mut NativeSnapshotWork,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<(),ProjectError>{
+ encoded_effect(work,native,body,marker,unwind,size_of::<DslValue>(),depth,||*value=DslValue::Array(Vec::new()))?;
+ let DslValue::Array(items)=value else{unreachable!()};encoded_vector(work,native,body,marker,unwind,allocation,items,count,depth+1)
 }
-fn member_into<'a>(value:&'a mut DslValue,key:&str,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<&'a mut DslValue,ProjectError>{
+fn member_into<'a>(value:&'a mut DslValue,key:&str,work:&mut NativeSnapshotWork,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<&'a mut DslValue,ProjectError>{
  let DslValue::Object(fields)=value else{unreachable!()};if fields.len()==fields.capacity(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"history projection object has no admitted slot").into())}
- encoded_effect(native,body,marker,unwind,size_of::<(String,DslValue)>(),depth,||fields.push((String::new(),DslValue::Null)))?;
- let (name,slot)=fields.last_mut().unwrap();body.copy_text_encoded(native,key,name,marker,unwind,allocation,depth+1)?;Ok(slot)
+ encoded_effect(work,native,body,marker,unwind,size_of::<(String,DslValue)>(),depth,||fields.push((String::new(),DslValue::Null)))?;
+ let (name,slot)=fields.last_mut().unwrap();work.take(body.copy_text_encoded(native,key,name,marker,unwind,allocation,depth+1))?;Ok(slot)
 }
-fn item_into<'a>(value:&'a mut DslValue,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,_allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<&'a mut DslValue,ProjectError>{
+fn item_into<'a>(value:&'a mut DslValue,work:&mut NativeSnapshotWork,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,_allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<&'a mut DslValue,ProjectError>{
  let DslValue::Array(items)=value else{unreachable!()};if items.len()==items.capacity(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"history projection array has no admitted slot").into())}
- encoded_effect(native,body,marker,unwind,size_of::<DslValue>(),depth,||items.push(DslValue::Null))?;Ok(items.last_mut().unwrap())
+ encoded_effect(work,native,body,marker,unwind,size_of::<DslValue>(),depth,||items.push(DslValue::Null))?;Ok(items.last_mut().unwrap())
 }
-fn text_into_encoded(value:&mut DslValue,text:&str,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<(),ProjectError>{
- encoded_effect(native,body,marker,unwind,size_of::<DslValue>(),depth,||*value=DslValue::String(String::new()))?;let DslValue::String(output)=value else{unreachable!()};body.copy_text_encoded(native,text,output,marker,unwind,allocation,depth+1)
+fn text_into_encoded(value:&mut DslValue,text:&str,work:&mut NativeSnapshotWork,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<(),ProjectError>{
+ encoded_effect(work,native,body,marker,unwind,size_of::<DslValue>(),depth,||*value=DslValue::String(String::new()))?;let DslValue::String(output)=value else{unreachable!()};work.take(body.copy_text_encoded(native,text,output,marker,unwind,allocation,depth+1))
 }
-fn text_member(value:&mut DslValue,key:&str,text:&str,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<(),ProjectError>{let slot=member_into(value,key,native,body,marker,unwind,allocation,depth)?;text_into_encoded(slot,text,native,body,marker,unwind,allocation,depth+1)}
-fn uint_member(value:&mut DslValue,key:&str,number:u64,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<(),ProjectError>{let slot=member_into(value,key,native,body,marker,unwind,allocation,depth)?;encoded_effect(native,body,marker,unwind,size_of::<DslValue>(),depth+1,||*slot=DslValue::uint(number))}
+fn text_member(value:&mut DslValue,key:&str,text:&str,work:&mut NativeSnapshotWork,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<(),ProjectError>{let slot=member_into(value,key,work,native,body,marker,unwind,allocation,depth)?;text_into_encoded(slot,text,work,native,body,marker,unwind,allocation,depth+1)}
+fn uint_member(value:&mut DslValue,key:&str,number:u64,work:&mut NativeSnapshotWork,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation,depth:usize)->Result<(),ProjectError>{let slot=member_into(value,key,work,native,body,marker,unwind,allocation,depth)?;encoded_effect(work,native,body,marker,unwind,size_of::<DslValue>(),depth+1,||*slot=DslValue::uint(number))}
 #[derive(semio_framework_value::RetireOwned)]
 struct ProjectFrame{value:Option<DslValue>,allocation:semio_framework_io_control::NativeSnapshotEncodeAllocation}
-fn project_into(value:&SpaceHistorySnapshot,frame:&mut ProjectFrame,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>)->Result<(),ProjectError>{
- encoded_effect(native,body,marker,unwind,size_of::<Option<DslValue>>(),1,||frame.value=Some(DslValue::Null))?;let allocation=&mut frame.allocation;let root=frame.value.as_mut().unwrap();object_into(root,if value.active_alternative_id.is_some(){3}else{2},native,body,marker,unwind,allocation,2)?;
- let checkpoints=member_into(root,"checkpoints",native,body,marker,unwind,allocation,3)?;array_into(checkpoints,value.checkpoints.len(),native,body,marker,unwind,allocation,4)?;
- for row in &value.checkpoints{let entry=item_into(checkpoints,native,body,marker,unwind,allocation,5)?;object_into(entry,if row.parent_id.is_some(){6}else{5},native,body,marker,unwind,allocation,6)?;text_member(entry,"id",&row.id,native,body,marker,unwind,allocation,7)?;if let Some(parent)=&row.parent_id{text_member(entry,"parentId",parent,native,body,marker,unwind,allocation,7)?}text_member(entry,"message",&row.message,native,body,marker,unwind,allocation,7)?;
-  let authors=member_into(entry,"authors",native,body,marker,unwind,allocation,7)?;array_into(authors,row.authors.len(),native,body,marker,unwind,allocation,8)?;for author in &row.authors{let item=item_into(authors,native,body,marker,unwind,allocation,9)?;object_into(item,if author.avatar.is_some(){3}else{2},native,body,marker,unwind,allocation,10)?;text_member(item,"id",&author.id,native,body,marker,unwind,allocation,11)?;text_member(item,"name",&author.name,native,body,marker,unwind,allocation,11)?;if let Some(avatar)=&author.avatar{text_member(item,"avatar",avatar,native,body,marker,unwind,allocation,11)?}}
-  let clock=member_into(entry,"timestamp",native,body,marker,unwind,allocation,7)?;object_into(clock,3,native,body,marker,unwind,allocation,8)?;uint_member(clock,"actor",row.timestamp.actor,native,body,marker,unwind,allocation,9)?;uint_member(clock,"physical_ms",row.timestamp.physical_ms,native,body,marker,unwind,allocation,9)?;uint_member(clock,"logical",row.timestamp.logical,native,body,marker,unwind,allocation,9)?;
-  let members=member_into(entry,"members",native,body,marker,unwind,allocation,7)?;array_into(members,row.members.len(),native,body,marker,unwind,allocation,8)?;for pin in &row.members{let item=item_into(members,native,body,marker,unwind,allocation,9)?;object_into(item,3,native,body,marker,unwind,allocation,10)?;text_member(item,"documentId",&pin.document_id,native,body,marker,unwind,allocation,11)?;text_member(item,"checkpointId",&pin.checkpoint_id,native,body,marker,unwind,allocation,11)?;text_member(item,"alternativeId",&pin.alternative_id,native,body,marker,unwind,allocation,11)?}
+fn project_into(value:&SpaceHistorySnapshot,frame:&mut ProjectFrame,work:&mut NativeSnapshotWork,native:&mut NativeEncodeControl<'_>,body:&mut ProjectWallet,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<ProjectError>)->Result<(),ProjectError>{
+ encoded_effect(work,native,body,marker,unwind,size_of::<Option<DslValue>>(),1,||frame.value=Some(DslValue::Null))?;let allocation=&mut frame.allocation;let root=frame.value.as_mut().unwrap();object_into(root,if value.active_alternative_id.is_some(){3}else{2},work,native,body,marker,unwind,allocation,2)?;
+ let checkpoints=member_into(root,"checkpoints",work,native,body,marker,unwind,allocation,3)?;array_into(checkpoints,value.checkpoints.len(),work,native,body,marker,unwind,allocation,4)?;
+ for row in &value.checkpoints{let entry=item_into(checkpoints,work,native,body,marker,unwind,allocation,5)?;object_into(entry,if row.parent_id.is_some(){6}else{5},work,native,body,marker,unwind,allocation,6)?;text_member(entry,"id",&row.id,work,native,body,marker,unwind,allocation,7)?;if let Some(parent)=&row.parent_id{text_member(entry,"parentId",parent,work,native,body,marker,unwind,allocation,7)?}text_member(entry,"message",&row.message,work,native,body,marker,unwind,allocation,7)?;
+  let authors=member_into(entry,"authors",work,native,body,marker,unwind,allocation,7)?;array_into(authors,row.authors.len(),work,native,body,marker,unwind,allocation,8)?;for author in &row.authors{let item=item_into(authors,work,native,body,marker,unwind,allocation,9)?;object_into(item,if author.avatar.is_some(){3}else{2},work,native,body,marker,unwind,allocation,10)?;text_member(item,"id",&author.id,work,native,body,marker,unwind,allocation,11)?;text_member(item,"name",&author.name,work,native,body,marker,unwind,allocation,11)?;if let Some(avatar)=&author.avatar{text_member(item,"avatar",avatar,work,native,body,marker,unwind,allocation,11)?}}
+  let clock=member_into(entry,"timestamp",work,native,body,marker,unwind,allocation,7)?;object_into(clock,3,work,native,body,marker,unwind,allocation,8)?;uint_member(clock,"actor",row.timestamp.actor,work,native,body,marker,unwind,allocation,9)?;uint_member(clock,"physical_ms",row.timestamp.physical_ms,work,native,body,marker,unwind,allocation,9)?;uint_member(clock,"logical",row.timestamp.logical,work,native,body,marker,unwind,allocation,9)?;
+  let members=member_into(entry,"members",work,native,body,marker,unwind,allocation,7)?;array_into(members,row.members.len(),work,native,body,marker,unwind,allocation,8)?;for pin in &row.members{let item=item_into(members,work,native,body,marker,unwind,allocation,9)?;object_into(item,3,work,native,body,marker,unwind,allocation,10)?;text_member(item,"documentId",&pin.document_id,work,native,body,marker,unwind,allocation,11)?;text_member(item,"checkpointId",&pin.checkpoint_id,work,native,body,marker,unwind,allocation,11)?;text_member(item,"alternativeId",&pin.alternative_id,work,native,body,marker,unwind,allocation,11)?}
  }
- let alternatives=member_into(root,"alternatives",native,body,marker,unwind,allocation,3)?;array_into(alternatives,value.alternatives.len(),native,body,marker,unwind,allocation,4)?;for row in &value.alternatives{let entry=item_into(alternatives,native,body,marker,unwind,allocation,5)?;object_into(entry,3,native,body,marker,unwind,allocation,6)?;text_member(entry,"id",&row.id,native,body,marker,unwind,allocation,7)?;text_member(entry,"name",&row.name,native,body,marker,unwind,allocation,7)?;let pins=member_into(entry,"checkpointIds",native,body,marker,unwind,allocation,7)?;array_into(pins,row.checkpoint_ids.len(),native,body,marker,unwind,allocation,8)?;for pin in &row.checkpoint_ids{let item=item_into(pins,native,body,marker,unwind,allocation,9)?;text_into_encoded(item,pin,native,body,marker,unwind,allocation,10)?}}
- if let Some(active)=&value.active_alternative_id{text_member(root,"activeAlternativeId",active,native,body,marker,unwind,allocation,3)?}Ok(())
+ let alternatives=member_into(root,"alternatives",work,native,body,marker,unwind,allocation,3)?;array_into(alternatives,value.alternatives.len(),work,native,body,marker,unwind,allocation,4)?;for row in &value.alternatives{let entry=item_into(alternatives,work,native,body,marker,unwind,allocation,5)?;object_into(entry,3,work,native,body,marker,unwind,allocation,6)?;text_member(entry,"id",&row.id,work,native,body,marker,unwind,allocation,7)?;text_member(entry,"name",&row.name,work,native,body,marker,unwind,allocation,7)?;let pins=member_into(entry,"checkpointIds",work,native,body,marker,unwind,allocation,7)?;array_into(pins,row.checkpoint_ids.len(),work,native,body,marker,unwind,allocation,8)?;for pin in &row.checkpoint_ids{let item=item_into(pins,work,native,body,marker,unwind,allocation,9)?;text_into_encoded(item,pin,work,native,body,marker,unwind,allocation,10)?}}
+ if let Some(active)=&value.active_alternative_id{text_member(root,"activeAlternativeId",active,work,native,body,marker,unwind,allocation,3)?}Ok(())
 }
 #[derive(semio_framework_value::RetireOwned)]
 struct EncodeFrame {
     value:Option<DslValue>,
-    spec:Option<RecordSpec>,
     record:Option<semio_framework_dsl_record::RecordValue>,
+    payload:Option<semio_framework_io_schema::IoPayload>,
 }
 struct BorrowedJson<'a>(&'a DslValue);
 impl semio_framework_pack_json::JsonWriteSource for BorrowedJson<'_> {
@@ -292,51 +286,77 @@ fn write_json(value:&DslValue,owner:&mut semio_framework_io_control::NativeSnaps
    if frame.settlement.is_some()||frame.receipt.is_some()||frame.cancellation.is_some()||frame.receipt_failure.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON original settlement requires recovery").into())}
    if frame.text.is_some(){
     if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON output slot is occupied").into())}
-    let bytes=size_of::<Option<String>>()+size_of::<Option<crate::lifted_serialization::SnapshotReceivingOutput<semio_framework_io_schema::IoPayload>>>();owner.begin_original_settlement(&mut frame.settlement,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:1,..Default::default()},1)?;
-    *output=Some(Ok(semio_framework_io_schema::IoPayload::Text(frame.text.take().unwrap())));work=1;if let Err(error)=frame.settlement.as_mut().unwrap().record_effect(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()},work){frame.receipt_failure=Some(error)}owner.settle_original_effect(&mut frame.settlement)?;let _=NativeSnapshotEncodeSettlement::take_receipt(&mut frame.settlement)?;return Ok(())
+    let bytes=size_of::<Option<String>>()+size_of::<Option<crate::lifted_serialization::SnapshotReceivingOutput<semio_framework_io_schema::IoPayload>>>();owner.begin_original_settlement(&mut frame.settlement,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:1,..Default::default()})?;
+    *output=Some(Ok(semio_framework_io_schema::IoPayload::Text(frame.text.take().unwrap())));work=1;if let Err(error)=frame.settlement.as_mut().unwrap().record_effect(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}){frame.receipt_failure=Some(error)}owner.settle_original_effect(&mut frame.settlement)?;let _=NativeSnapshotEncodeSettlement::take_receipt(&mut frame.settlement)?;return Ok(())
    }
-   let available=owner.remaining_grant();let demand=frame.writer.normal_step_demands_with_copy(&BorrowedJson(value),available.maximum_copy_bytes)?;let output_handoff=frame.writer.phase==2&&frame.writer.frames.is_empty();let extra=RetainedCloneProgress{copied_bytes:if output_handoff{size_of::<Option<String>>()}else{0},..Default::default()};let copy_bytes=demand.copy_bytes.checked_add(extra.copied_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON output handoff receipt overflow"))?;owner.begin_original_settlement(&mut frame.settlement,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},1)?;frame.writer.bind_original_turn(frame.settlement.as_ref().unwrap().original().unwrap(),extra)?;
+   let available=owner.remaining_grant();let demand=frame.writer.normal_step_demands_with_copy(&BorrowedJson(value),available.maximum_copy_bytes)?;let output_handoff=frame.writer.phase==2&&frame.writer.frames.is_empty();let extra=RetainedCloneProgress{copied_bytes:if output_handoff{size_of::<Option<String>>()}else{0},..Default::default()};let copy_bytes=demand.copy_bytes.checked_add(extra.copied_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON output handoff receipt overflow"))?;owner.begin_original_settlement(&mut frame.settlement,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth})?;frame.writer.bind_original_turn(frame.settlement.as_ref().unwrap().original().unwrap(),extra)?;
    let step=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||frame.writer.step(&BorrowedJson(value),1,owner.native(),available)));
    match step{Ok(Ok(Some(text)))=>frame.text=Some(text),Ok(Ok(None))=>{},Ok(Err(error))=>frame.failure=Some(error),Err(payload)=>{if let Err(payload)=frame.settlement.as_mut().unwrap().retain_operation_unwind(payload){std::panic::resume_unwind(payload)}}}
-   work=frame.writer.last_turn_work();if work==0{frame.cancellation=Some(owner.cancel_original_settlement(&mut frame.settlement)?);let token=frame.cancellation.take().unwrap();if let Err((error,token))=frame.writer.acknowledge_canceled_turn(token){frame.cancellation=Some(token);return Err(error.into())}}else{let progress=frame.writer.normal_step_progress().checked_add(extra)?;if let Err(error)=frame.settlement.as_mut().unwrap().record_effect(progress,work){frame.receipt_failure=Some(error)}owner.settle_original_effect(&mut frame.settlement)?;frame.receipt=Some(NativeSnapshotEncodeSettlement::take_receipt(&mut frame.settlement)?);let token=frame.receipt.take().unwrap();if let Err((error,token))=frame.writer.acknowledge_posted_turn(token){frame.receipt=Some(token);return Err(error.into())}}
+   work=frame.writer.last_turn_work();if work==0{frame.cancellation=Some(owner.cancel_original_settlement(&mut frame.settlement)?);let token=frame.cancellation.take().unwrap();if let Err((error,token))=frame.writer.acknowledge_canceled_turn(token){frame.cancellation=Some(token);return Err(error.into())}}else{let progress=frame.writer.normal_step_progress().checked_add(extra)?;if let Err(error)=frame.settlement.as_mut().unwrap().record_effect(progress){frame.receipt_failure=Some(error)}owner.settle_original_effect(&mut frame.settlement)?;frame.receipt=Some(NativeSnapshotEncodeSettlement::take_receipt(&mut frame.settlement)?);let token=frame.receipt.take().unwrap();if let Err((error,token))=frame.writer.acknowledge_posted_turn(token){frame.receipt=Some(token);return Err(error.into())}}
    if frame.settlement.as_ref().is_some_and(NativeSnapshotEncodeSettlement::has_operation_unwind){NativeSnapshotEncodeSettlement::resume_operation_unwind(&mut frame.settlement)?}if let Some(error)=frame.failure.take(){return Err(error.into())}Ok(())
-  })();RetainedWorkOutcome{result,work}
+  })();RetainedWorkOutcome{result,work:u128::from(work)}
  })
 }
 
-pub(super) fn encode(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>, native_owner:&mut semio_framework_io_control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<semio_framework_io_schema::IoPayload, ValueError> {
-    let limits = control.limits();
-    let result=control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative, |remaining, checkpoint| {
-        let mut progress = |event: semio_framework_value::native_encoding::NativeEncodeProgress| checkpoint(event.completed, event.total);
-        let before = native_owner.native().owned_bytes();
-        let maximum = before.checked_add(remaining).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit,"space history native allocation allowance overflow"));
-        let result = maximum.and_then(|maximum| native_owner.scoped_native(maximum, &mut progress, |owner| {
-            let value = semio_framework_value::DecodedValue::new(project(value, owner.native())?, retire_projection);
-            match encoding {
-                SnapshotEncoding::Text => {
-                    owner.native().begin_stage(0)?;
-                    if json_size(value.get(), owner.native())? > limits.max_file_bytes {
-                        return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "space history native text exceeds file limit"));
-                    }
-                    write_json(value.get(), owner).map(semio_framework_io_schema::IoPayload::Text)
+pub(super) fn encode(value:&SpaceHistorySnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_io_control::NativeSnapshotEncodeOwner<'_,'_>,output:&mut Option<crate::lifted_serialization::SnapshotReceivingOutput<semio_framework_io_schema::IoPayload>>)->crate::lifted_serialization::SnapshotReceivingOutcome{
+    use semio_framework_io_control::{NativeSnapshotFailure,native_snapshot_turn};
+    use semio_framework_io_sqlite_snapshot::SqliteStageFailure as Stage;
+    use semio_framework_value::RetainedWorkOutcome;
+    use semio_framework_io_schema::IoPayload;
+    let limits=control.limits();
+    let admitted=(||->Result<(usize,usize),ValueError>{
+        if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original snapshot output slot is occupied"))}
+        native_owner.native().checkpoint()?;
+        control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;
+        let before=native_owner.native().owned_bytes();
+        let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"space history native allocation allowance overflow"))?;
+        Ok((before,maximum))
+    })();
+    let (before,maximum)=match admitted{Ok(admitted)=>admitted,Err(error)=>return RetainedWorkOutcome{result:Err(Stage::NotStarted(error)),work:0}};
+    let settlement=semio_framework_io_sqlite_snapshot::artifact::receiving::ReceivingSettlement::new(control,before,SqliteSnapshotPhase::EncodeNative);
+    let mut observer=|event:semio_framework_value::native_encoding::NativeEncodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+    let turn=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive_nested::<EncodeFrame,crate::lifted_serialization::SnapshotReceivingOutput<IoPayload>,NativeSnapshotFailure>(output,&mut |slot,result,_marker,_unwind,owner|native_snapshot_turn(|work|{
+        *slot=Some(EncodeFrame{value:None,record:None,payload:None});
+        let frame=slot.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"history encode frame is absent"))?;
+        let status=(||->Result<(),NativeSnapshotFailure>{
+            frame.value=Some(work.measured_encode(owner.native(),|native|project(value,native))?);
+            let projected=frame.value.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"history projection is absent"))?;
+            match encoding{
+                SnapshotEncoding::Text=>{
+                    work.measured_encode(owner.native(),|native|{native.begin_stage(0)?;if json_size(projected,native)?>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"space history native text exceeds file limit"))}Ok::<(),ValueError>(())})?;
+                    let mut written=None;
+                    work.take(write_json(projected,owner,&mut written))?;
+                    frame.payload=match written{Some(Ok(payload))=>Some(payload),Some(Err(_))|None=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"history JSON writer retained no payload").into())};
                 }
-                SnapshotEncoding::Binary => {
-                    let c = owner.native();
-                    let spec = spec(c)?;
-                    let mut record = EncodedRecord::new(1, c)?;
-                    record.insert(1, FieldValue::Value(value.take()))?;
-                    let record = semio_framework_value::DecodedValue::new(record.take(), retire_record);
-                    let mut options = pack::record::EncodeOptions::default();
-                    options.limits.max_file_len = limits.max_file_bytes as u64;
-                    let bytes = pack::record::encode_document_controlled(&spec, record.get(), &options, c).map_err(semio_os_pack::PackRefusal::into_value_error)?;
-                    drop(record);
-                    Ok(semio_framework_io_schema::IoPayload::Binary(bytes))
+                SnapshotEncoding::Binary=>{
+                    let record_value=frame.value.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"history projection is absent"))?;
+                    frame.record=Some(work.measured_encode(owner.native(),|c|->Result<semio_framework_dsl_record::RecordValue,ValueError>{
+                        let mut record=EncodedRecord::new(1,c)?;
+                        record.insert(1,FieldValue::Value(record_value))?;
+                        Ok(record.take())
+                    })?);
+                    let retained=frame.record.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"history record is absent"))?;
+                    frame.payload=Some(IoPayload::Binary(work.measured_encode(owner.native(),|c|->Result<Vec<u8>,ValueError>{
+                        let spec=spec(c)?;
+                        let mut options=pack::record::EncodeOptions::default();
+                        options.limits.max_file_len=limits.max_file_bytes as u64;
+                        pack::record::encode_document_controlled(&spec,retained,&options,c).map_err(semio_os_pack::PackRefusal::into_value_error)
+                    })?));
                 }
             }
-        }));
-        (result, native_owner.native().owned_bytes() - before)
-    });
-    result?
+            Ok(())
+        })();
+        let settled=settlement.finish_body(owner.native().owned_bytes());
+        match(status,settled){
+            (Err(primary),Ok(()))=>return Err(primary),
+            (Ok(()),Err(error))=>return Err(error.into()),
+            (Err(primary),Err(error))=>return Err(primary.with_settlement_refusal(error).expect("history encode body has its original settlement slot")),
+            (Ok(()),Ok(()))=>{}
+        }
+        let retained=frame.payload.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"history encode lost its retained output"))?;
+        *result=Some(Ok(retained));Ok(())
+    })));
+    RetainedWorkOutcome{result:turn.result.map_err(|error|Stage::Operation(settlement.refused_failure(native_owner.native().owned_bytes(),error))),work:turn.work}
 }
 
 pub(super) fn decode(payload:&semio_framework_io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_io_control::NativeSnapshotDecodeOwner<'_,'_>,output:&mut Option<crate::lifted_serialization::SnapshotReceivingOutput<SpaceHistorySnapshot>>)->crate::lifted_serialization::SnapshotReceivingOutcome{
@@ -360,7 +380,7 @@ pub fn decode_with<T:semio_framework_value::retirement::RetireOwned>(payload:&se
     let settlement=super::settlement::TypedFileSettlement::new(control,before,SqliteSnapshotPhase::DecodeNative);
     let mut observer=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
     let mut bind=Some(bind);
-    let turn=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<(Option<RecordSpec>,Option<semio_framework_dsl_record::RecordValue>,Option<DslValue>,Option<T>),crate::lifted_serialization::SnapshotReceivingOutput<T>,NativeSnapshotFailure>(output,&mut |intermediate,published,native,body|{
+    let turn=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<(Option<RecordSpec>,Option<semio_framework_dsl_record::RecordValue>,Option<DslValue>,Option<T>),crate::lifted_serialization::SnapshotReceivingOutput<T>,NativeSnapshotFailure>(output,&mut |intermediate,published,_marker,_unwind,native,body|{
         let before_work=native.actual_work();
         *intermediate=Some((None,None,None,None));
         let (schema,record,value,output)=intermediate.as_mut().unwrap();
@@ -374,7 +394,7 @@ pub fn decode_with<T:semio_framework_value::retirement::RetireOwned>(payload:&se
                     *schema=Some(spec(native)?);
                     *record=Some(pack::record::decode_document_controlled(bytes,schema.as_ref().unwrap(),&pack::record::DecodeOptions::default(),native).map_err(semio_os_pack::PackRefusal::into_value_error)?.0);
                     let Some(FieldValue::Value(value))=record.as_ref().unwrap().get(1)else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"space history native value field is missing"))};
-                    bind.take().unwrap()(value,output,native,body)?;
+                    bind.take().unwrap()(&value,output,native,body)?;
                 }
             }
             output.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"space history native constructor did not retain output"))

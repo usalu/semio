@@ -267,13 +267,13 @@ trait ErasedWindowTransientStoreOwner: Send {
     fn capture_generation(&self,window_id:&str)->Option<u64>;
 
     fn refresh_demands(&self,authority:&WindowTransientAuthority,body:usize)->Result<RetirementDemand,ValueError>;
-    fn refresh(&mut self,authority:&mut WindowTransientAuthority,grant:RetainedCloneGrant)->Result<semio_plugin_window_config_mutation::WindowAuthorityRefreshStep,Fault>;
+    fn refresh(&mut self,authority:&mut WindowTransientAuthority,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_plugin_window_config_mutation::WindowAuthorityRefreshStep,Fault>;
     fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, RejectedWindowTransientEmission>;
     fn advance(&mut self, publication: &mut dyn ErasedWindowTransientPublication, grant: store::os_store::one_item::ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, PluginLifecyclePrimary>;
     fn maintenance_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
     fn maintenance_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, Fault>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -328,11 +328,12 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
     }
 
     fn refresh_demands(&self,authority:&WindowTransientAuthority,_body:usize)->Result<RetirementDemand,ValueError>{semio_plugin_window_config_mutation::refresh::refresh_demands(&authority.pending_snapshot,&authority.retired_snapshots)}
-    fn refresh(&mut self,authority:&mut WindowTransientAuthority,grant:RetainedCloneGrant)->Result<semio_plugin_window_config_mutation::WindowAuthorityRefreshStep,Fault>{
+    fn refresh(&mut self,authority:&mut WindowTransientAuthority,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_plugin_window_config_mutation::WindowAuthorityRefreshStep,Fault>{
+        let grant=effect.grant();
         let demand=self.refresh_demands(authority,grant.maximum_copy_bytes).map_err(demand_fault)?;
         if demand_refusal(demand,grant)?{return Ok(semio_plugin_window_config_mutation::WindowAuthorityRefreshStep::Pending(Default::default()));}
         if authority.pending_snapshot.is_none(){let partition=self.partition(&authority.window_id);let snapshot=partition.store.current_read_erased().map_err(Fault::from)?;authority.pending_snapshot=Some(WindowTransientSnapshot{window_id:String::new(),window_kind_id:O::WINDOW_KIND_ID,generation:partition.store.generation_now(),document_generation:authority.snapshot.document_generation,snapshot,mutation_issuer:authority.snapshot.mutation_issuer.clone()});return Ok(semio_plugin_window_config_mutation::WindowAuthorityRefreshStep::Pending(RetainedCloneProgress{copied_items:1,..Default::default()}));}
-        let step=semio_plugin_window_config_mutation::refresh::refresh_transfer(&mut authority.snapshot,&mut authority.pending_snapshot,&mut authority.retired_snapshots,grant).map_err(demand_fault)?;
+        let step=semio_plugin_window_config_mutation::refresh::refresh_transfer(&mut authority.snapshot,&mut authority.pending_snapshot,&mut authority.retired_snapshots,effect).result.map_err(demand_fault)?;
         if matches!(step,semio_plugin_window_config_mutation::WindowAuthorityRefreshStep::Ready(_)){authority.generation=authority.snapshot.generation;}Ok(step)
     }
     fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, RejectedWindowTransientEmission> {
@@ -400,12 +401,13 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         self.factory_close.iter().flatten().next().map_or(Ok(Default::default()), |factory| factory.demands(body))
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, Fault> {
+        let grant = effect.grant();
         if self.terminal_is_empty() { return Ok(PluginLifecycleStep::Complete(Default::default())); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(|error| Fault::from(error.into_message()))?;
         if !fits(grant, demand) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
         if let Some(owner) = self.partition_address.as_mut() {
-            let step = owner.step(grant).map_err(|error| Fault::from(error.into_message()))?;
+            let step = semio_plugin_window_config_registry::settle_step(owner.step(&mut effect.nested(grant))).map_err(|error| Fault::from(error.into_message()))?;
             if owner.terminal_is_empty() { self.partition_address = None; }
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
@@ -436,7 +438,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
             return Ok(PluginLifecycleStep::Progress(progress));
         }
         if !self.partitions.terminal_is_empty() {
-            return self.partitions.close_backing_step(grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(|error| Fault::from(error.into_message()));
+            return self.partitions.close_backing_step(effect).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(|error| Fault::from(error.into_message()));
         }
         if let Some(owners) = self.owners.take() {
             let preparation: Arc<dyn FactoryRetirement> = owners.preparation;
@@ -502,11 +504,11 @@ impl WindowTransientOwnerRegistry {
     }
 
     #[doc(hidden)]
-    pub fn refresh(&mut self, authority: &mut WindowTransientAuthority, grant: RetainedCloneGrant) -> Result<semio_plugin_window_config_mutation::WindowAuthorityRefreshStep, Fault> {
+    pub fn refresh(&mut self, authority: &mut WindowTransientAuthority, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<semio_plugin_window_config_mutation::WindowAuthorityRefreshStep, Fault> {
         if authority.snapshot.document_generation != self.document_generation {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.document-generation"), "window transient refresh belongs to a replaced document"));
         }
-        self.owners.get_mut(authority.window_kind_id.as_str()).and_then(Option::as_mut).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient refresh has no registered concrete window owner"))?.refresh(authority, grant)
+        self.owners.get_mut(authority.window_kind_id.as_str()).and_then(Option::as_mut).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient refresh has no registered concrete window owner"))?.refresh(authority, effect)
     }
 
     #[doc(hidden)]
@@ -591,7 +593,8 @@ impl WindowTransientOwnerRegistry {
     }
 
     #[doc(hidden)]
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, Fault> {
+        let grant = effect.grant();
         if self.terminal_is_empty() { return Ok(PluginLifecycleStep::Complete(Default::default())); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(|error| Fault::from(error.into_message()))?;
         if !fits(grant, demand) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
@@ -600,7 +603,7 @@ impl WindowTransientOwnerRegistry {
             let slot = self.owners.get_index_mut(self.owner_close_cursor).unwrap();
             if let Some(owner) = slot.as_mut() {
                 if !owner.terminal_is_empty() {
-                    let step = owner.close_step(grant)?;
+                    let step = owner.close_step(effect)?;
                     if matches!(step, PluginLifecycleStep::AwaitingInput { .. } | PluginLifecycleStep::Blocked { .. }) || step.progress().is_some_and(|progress| progress == RetainedCloneProgress::default()) {
                         self.owner_close_cursor = (self.owner_close_cursor + 1) % count;
                         return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<usize>(), ..Default::default() }));
@@ -620,7 +623,7 @@ impl WindowTransientOwnerRegistry {
             assert!(owner.is_none());
             return Ok(PluginLifecycleStep::Progress(progress));
         }
-        self.owners.close_backing_step(grant).map(|step| PluginLifecycleStep::retained(step, self.terminal_is_empty())).map_err(|error| Fault::from(error.into_message()))
+        self.owners.close_backing_step(effect).map(|step| PluginLifecycleStep::retained(step, self.terminal_is_empty())).map_err(|error| Fault::from(error.into_message()))
     }
 
     #[doc(hidden)]

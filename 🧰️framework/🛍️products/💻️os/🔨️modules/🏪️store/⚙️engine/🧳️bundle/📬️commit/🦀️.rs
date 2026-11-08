@@ -2,9 +2,9 @@
 use super::*;
 use semio_framework_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata;
 
-pub(super) fn advance_original_commit<P,M>(store:&mut StoreParts<'_,P,M>,publication:&mut ArtifactStoreBatchPublication<P,M>,body:usize,grant:ArtifactStoreOneItemGrant)->Result<ArtifactStoreOneItemAdvance,VcsError>
+pub(super) fn advance_original_commit<P,M>(store:&mut StoreParts<'_,P,M>,publication:&mut ArtifactStoreBatchPublication<P,M>,body:usize,grant:ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactStoreOneItemAdvance,VcsError>
 where P: semio_os_spr::StoreState,M: semio_os_spr::StoreMutationFor<P>{
- if let Some(step)=original_message::prepare_original_outgoing(store,publication,body,grant)?{return Ok(step)}
+ if let Some(step)=original_message::prepare_original_outgoing(store,publication,body,grant,receiving)?{return Ok(step)}
  let stage=publication.stage.as_mut().expect("original commit retains its batch stage");
  let fail=|message:&'static str|VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,message));
  if stage.commit_metadata.is_none(){let copy=size_of::<BatchCommitMetadata>();if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked)}stage.commit_metadata=Some(BatchCommitMetadata::new(None,None));return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))}

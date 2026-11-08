@@ -7,3 +7,5 @@ pub mod original_pack_receiving;
 pub mod original_value_copies;
 #[path = "🔀️transaction/🦀️.rs"]
 pub mod original_transaction_prepare;
+#[path = "🏗️steps/🦀️.rs"]
+pub mod original_steps;

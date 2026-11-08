@@ -1,5 +1,5 @@
 //! 🌳️ Fold-owned AVL indexes retain native inline slots until independently granted retirement.
-use semio_framework_value::retirement::{RetireOwned, RetirementCursor, deferred, deferred_birth_bytes_for, sequence, sequence_birth_bytes};
+use semio_framework_value::retirement::RetireOwned;
 use std::{borrow::Borrow, cmp::Ordering};
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 use semio_framework_value_persistent::{list::PagedList, list::PagedListRefusalKind};
@@ -9,7 +9,8 @@ pub use read::HistoryFoldIndexRead;
 pub use read::HistoryFoldIndexMatch;
 
 #[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetainedClone)]
-struct FoldIndexNode<K, V> { entry: Option<(K,V)>, retired_entry:Option<(K,V)>, left: Option<usize>, right: Option<usize>, height: usize, count: usize }
+#[doc(hidden)]
+pub struct FoldIndexNode<K, V> { entry: Option<(K,V)>, retired_entry:Option<(K,V)>, left: Option<usize>, right: Option<usize>, height: usize, count: usize }
 
 /// 🗂️ Ordered fold facts own every arena slot and displaced key until exact retirement.
 #[derive(Clone, Debug, semio_framework_value::RetainedClone)]
@@ -67,9 +68,9 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
         if grant.maximum_items==0{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"index reservation requires one admitted item"),empty))}
         if grant.maximum_depth<self.next_insert_depth_demand(key).map_err(|error|(error,empty))?{return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"index reservation exceeds admitted depth"),empty))}
         if grant.maximum_capacity_bytes<bytes{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"index backing exceeds admitted capacity"),empty))}
-        let result=if self.contains_key(key){self.displaced_keys.reserve_one(grant.maximum_capacity_bytes)}else{self.nodes.reserve_one(grant.maximum_capacity_bytes)};
+        let result=if self.contains_key(key){self.displaced_keys.reserve_one_cold(grant.maximum_capacity_bytes)}else{self.nodes.reserve_one_cold(grant.maximum_capacity_bytes)};
         match result{Ok(progress)=>{work=progress.work;Ok(RetainedCloneProgress{copied_items:usize::from(progress.progressed),retained_capacity_bytes:progress.allocated_bytes,..empty})},Err(error)=>{work=error.work;Err((index_page_refusal(error.kind,error.reason),RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..empty}))}}
-        })();semio_framework_value::RetainedWorkOutcome{result,work}
+        })();semio_framework_value::RetainedWorkOutcome{result,work:u128::from(work)}
     }
     /// 🪴️ Transfers one incoming original row only into independently admitted backing.
     pub fn insert_reserved(&mut self,key:K,value:V,grant:RetainedCloneGrant)->Result<(Option<V>,RetainedCloneProgress),(ValueError,K,V)>{
@@ -193,7 +194,7 @@ pub struct HistoryFoldIndexIntoIter<K:Ord,V> { owner:HistoryFoldIndex<K,V> }
 impl<K:Ord,V> Iterator for HistoryFoldIndexIntoIter<K,V> {type Item=(K,V);fn next(&mut self)->Option<Self::Item>{self.owner.pop_first()}fn size_hint(&self)->(usize,Option<usize>){let len=self.owner.len();(len,Some(len))}}
 impl<K:Ord,V> ExactSizeIterator for HistoryFoldIndexIntoIter<K,V>{}
 impl<K:Ord,V> IntoIterator for HistoryFoldIndex<K,V> {type Item=(K,V);type IntoIter=HistoryFoldIndexIntoIter<K,V>;fn into_iter(self)->Self::IntoIter{HistoryFoldIndexIntoIter{owner:self}}}
-impl<K:Ord+RetireOwned,V:RetireOwned> RetireOwned for HistoryFoldIndexIntoIter<K,V> {fn retirement(self)->Box<dyn RetirementCursor>{self.owner.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.owner.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{HistoryFoldIndex::<K,V>::controlled_retirement_supported()}}
+impl<K:Ord+RetireOwned,V:RetireOwned> RetireOwned for HistoryFoldIndexIntoIter<K,V> {type RetirementCursor=<HistoryFoldIndex<K,V> as RetireOwned>::RetirementCursor;fn retirement_seed(self)->Self::RetirementCursor{self.owner.retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{self.owner.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{HistoryFoldIndex::<K,V>::controlled_retirement_supported()}}
 
 impl<V:semio_framework_value::ToValue> semio_framework_value::ToValue for HistoryFoldIndex<String,V> {
     fn to_value(&self)->semio_framework_value::DslValue {semio_framework_value::DslValue::Object(self.iter().map(|(key,value)|(key.clone(),value.to_value())).collect())}
@@ -214,8 +215,8 @@ impl<'de,K:Ord+serde::Deserialize<'de>,V:serde::Deserialize<'de>> serde::Deseria
     }
 }
 
-impl<K:RetireOwned,V:RetireOwned> RetireOwned for FoldIndexNode<K,V>{fn retirement(self)->Box<dyn RetirementCursor>{sequence(vec![deferred(self.entry),deferred(self.retired_entry),deferred(self.left),deferred(self.right),deferred(self.height),deferred(self.count)])}fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.entry),deferred_birth_bytes_for(&self.retired_entry),deferred_birth_bytes_for(&self.left),deferred_birth_bytes_for(&self.right),deferred_birth_bytes_for(&self.height),deferred_birth_bytes_for(&self.count)])}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}}
-impl<K:RetireOwned,V:RetireOwned> RetireOwned for HistoryFoldIndex<K,V>{fn retirement(self)->Box<dyn RetirementCursor>{sequence(vec![deferred(self.nodes),deferred(self.root),deferred(self.free_head),deferred(self.displaced_keys),deferred(self.mutation_epoch)])}fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.nodes),deferred_birth_bytes_for(&self.root),deferred_birth_bytes_for(&self.free_head),deferred_birth_bytes_for(&self.displaced_keys),deferred_birth_bytes_for(&self.mutation_epoch)])}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}}
+impl<K:RetireOwned,V:RetireOwned> RetireOwned for FoldIndexNode<K,V>{type RetirementCursor=semio_framework_value::retirement_fields_type!(Option<(K,V)>,Option<(K,V)>,Option<usize>,Option<usize>,usize,usize);fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement_fields_seed!(self.entry,self.retired_entry,self.left,self.right,self.height,self.count)}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}}
+impl<K:RetireOwned,V:RetireOwned> RetireOwned for HistoryFoldIndex<K,V>{type RetirementCursor=semio_framework_value::retirement_fields_type!(PagedList<FoldIndexNode<K,V>,{usize::MAX}>,Option<usize>,Option<usize>,PagedList<K,{usize::MAX}>,u64);fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement_fields_seed!(self.nodes,self.root,self.free_head,self.displaced_keys,self.mutation_epoch)}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}}
 
 /// 🧺️ Owns arbitrary original membership keys in the same retained ordered arena.
 #[derive(Clone,Debug,PartialEq,Eq, semio_framework_value::RetainedClone)]
@@ -269,8 +270,8 @@ pub struct HistoryFoldSetIntoIter<K:Ord>{entries:HistoryFoldIndexIntoIter<K,()>}
 impl<K:Ord> Iterator for HistoryFoldSetIntoIter<K>{type Item=K;fn next(&mut self)->Option<Self::Item>{self.entries.next().map(|(key,())|key)}fn size_hint(&self)->(usize,Option<usize>){self.entries.size_hint()}}
 impl<K:Ord> ExactSizeIterator for HistoryFoldSetIntoIter<K>{}
 impl<K:Ord> IntoIterator for HistoryFoldSet<K>{type Item=K;type IntoIter=HistoryFoldSetIntoIter<K>;fn into_iter(self)->Self::IntoIter{HistoryFoldSetIntoIter{entries:self.0.into_iter()}}}
-impl<K:RetireOwned+Ord> RetireOwned for HistoryFoldSet<K>{fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()}}
-impl<K:RetireOwned+Ord> RetireOwned for HistoryFoldSetIntoIter<K>{fn retirement(self)->Box<dyn RetirementCursor>{self.entries.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.entries.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()}}
+impl<K:RetireOwned+Ord> RetireOwned for HistoryFoldSet<K>{type RetirementCursor=<HistoryFoldIndex<K,()> as RetireOwned>::RetirementCursor;fn retirement_seed(self)->Self::RetirementCursor{self.0.retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()}}
+impl<K:RetireOwned+Ord> RetireOwned for HistoryFoldSetIntoIter<K>{type RetirementCursor=<HistoryFoldIndex<K,()> as RetireOwned>::RetirementCursor;fn retirement_seed(self)->Self::RetirementCursor{self.entries.retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{self.entries.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()}}
 impl<K:Ord+serde::Serialize> serde::Serialize for HistoryFoldSet<K>{fn serialize<S:serde::Serializer>(&self,serializer:S)->Result<S::Ok,S::Error>{use serde::ser::SerializeSeq;let mut sequence=serializer.serialize_seq(Some(self.len()))?;for key in self{sequence.serialize_element(key)?;}sequence.end()}}
 impl<'de,K:Ord+serde::Deserialize<'de>> serde::Deserialize<'de> for HistoryFoldSet<K>{fn deserialize<D:serde::Deserializer<'de>>(deserializer:D)->Result<Self,D::Error>{<Vec<K> as serde::Deserialize>::deserialize(deserializer).map(|keys|keys.into_iter().collect())}}
 

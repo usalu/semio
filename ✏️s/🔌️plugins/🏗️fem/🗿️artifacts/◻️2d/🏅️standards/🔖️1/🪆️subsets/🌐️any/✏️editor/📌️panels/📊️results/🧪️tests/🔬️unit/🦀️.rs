@@ -92,4 +92,5 @@ async fn results_panel_without_a_captured_window_offers_a_toggle_and_a_focus_hin
     assert!(json.contains(labels().focus_results_hint.as_str()), "{json}");
     assert!(json.contains(&format!("{} / {}", labels().play.as_str(), labels().pause.as_str())), "{json}");
     assert!(json.contains("fem2d-play-results.transport.play"), "{json}");
+    assert!(json.matches(labels().focus_results_hint.as_str()).count() >= 2, "the toggle describes its unknown state: {json}");
 }

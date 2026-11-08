@@ -1,9 +1,8 @@
 {
   "value": "Native constructor UTF8🧱",
   "deniedWork": 0,
-  "allocationWork": 2,
+  "allocationWork": 4,
   "nullWork": 2,
-  "copiedBytes": 0,
   "stock": {
     "items": 100000,
     "copyBytes": 33554432,
@@ -13,7 +12,7 @@
     "fuel": 100000,
     "maximumTurns": 100000
   },
-  "publicationWork": 1,
+  "publicationWork": 4,
   "nullAdmission": "requestedExtent",
   "nullPhysicalBytes": 0
 }

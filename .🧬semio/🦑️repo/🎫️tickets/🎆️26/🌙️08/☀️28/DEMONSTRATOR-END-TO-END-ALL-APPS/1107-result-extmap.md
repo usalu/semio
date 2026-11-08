@@ -1,0 +1,5 @@
+STATUS: BLOCKED, ext gate NOT green (1 of 21 components compiled; marker `ext-ok-1107` NOT written).
+Run: `1105b-tools/value/ext.sh 201` (wasm check, via slot). Queue wait for the first component was ~1h, compile ~25 min.
+- flow-extension-bim: rc 1 (`🗑️generated/1105b/value-201-flow-extension-bim.{txt,rc}`). Failed crates: `semio-os-store-replay` (57 errors: close_step/close_step_controlled trait mismatch, E0061 arg counts, `?` on non-Try) and `semio-os-store-paged-one-item` (157 errors). No error in any plugin/extension crate: the failure is entirely in store3/store5 territory, upstream of every extension.
+- The other 20 components were not run: they depend on the same store crates, so each would fail identically after another ~1h queue + 25 min. I stopped the driver after component 1 and killed the still-queued second check (flow-extension-brep, no output). No extension-crate own errors were observed, so no ports were made; semio-plugin-retained-command, instance/job crates and semio-s-plugin-energy-engine-sim remain UNVERIFIED (not reached).
+- Re-run when store-replay and store-paged-one-item are green: `1105b-tools/value/ext.sh <n>` with a fresh n.

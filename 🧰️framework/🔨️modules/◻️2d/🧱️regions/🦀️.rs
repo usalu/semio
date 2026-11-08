@@ -5,10 +5,12 @@
 
 use semio_framework_2d_booleans::{BooleanError, BooleanFillRule, BooleanInput, BooleanJob, BooleanOperand, BooleanOperation, BooleanProgress};
 use semio_framework_2d_engine::{PathSegment, Vec2};
-use semio_framework_value::{work::RetainedWorkLedger, RetainedCloneGrant};
+use semio_framework_value::{AuthoringWallet, work::RetainedWorkLedger, RetainedCloneGrant, ValueError, ValueRefusalKind};
 
 /// 🕐️ Work steps granted to the arrangement job between two `control` calls.
 pub const GRANT: usize = 4096;
+const CLOSE_WORK: u64 = 1 << 20;
+const WALLET_WORK: u128 = 1_000_000_000;
 const STOCK: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 22, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 25, maximum_release_bytes: 1 << 26, maximum_depth: 256 };
 
 /// 💠️ Polygon with holes; the outer ring is counter-clockwise, holes are clockwise.
@@ -78,7 +80,8 @@ fn run(operation: BooleanOperation, operands: Vec<BooleanOperand>, control: &mut
     let magnitude = operands.iter().flat_map(|o| o.contours.iter().flatten()).fold(0.0f64, |m, p| m.max(p[0].abs()).max(p[1].abs()));
     let mut job = BooleanJob::new(BooleanInput { operation, operands, epsilon: 1e-8f64.max(magnitude * f64::EPSILON * 32.0), max_edges: 262144, max_parameters: 1048576, max_atomic_edges: 262144, max_segments: 327680, max_work: 1_000_000_000 });
     let outcome = (|| loop {
-        let progress = job.advance(GRANT, &mut RetainedWorkLedger::new(STOCK))?;
+        let mut alloc = None;
+        let progress = job.advance(GRANT, &mut RetainedWorkLedger::new(STOCK), &mut alloc)?;
         if progress.done {
             return job.result().map(regions_from_path);
         }
@@ -91,12 +94,25 @@ fn run(operation: BooleanOperation, operands: Vec<BooleanOperand>, control: &mut
         }
     })();
     let (mut retired, _, _) = job.into_retirement();
-    let refused = |_| BooleanError::Invalid("Region boolean retirement refused its physical grant");
+    let refused = BooleanError::Refused;
+    let mut wallet = AuthoringWallet::new(STOCK, WALLET_WORK);
     while !retired.terminal_is_empty() {
-        let copy = retired.next_copy_byte_demand().map_err(refused)?;
-        let release = retired.next_release_byte_demand().map_err(refused)?;
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: retired.next_capacity_byte_demand(if copy > 0 { copy } else { release }).map_err(refused)?, maximum_release_bytes: release, maximum_depth: retired.next_depth_demand().map_err(refused)? };
-        if retired.close_step(grant).map_err(refused)?.progress() == Default::default() {
+        let mut body = 0;
+        let mut quoted = None;
+        for _ in 0..8 {
+            let demand = retired.next_demand(body).map_err(refused)?;
+            if demand.copy_bytes <= body { quoted = Some(demand); break; }
+            body = demand.copy_bytes;
+        }
+        let Some(demand) = quoted else { return Err(BooleanError::Invalid("Region boolean retirement quote did not settle")); };
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let Some((turn, _)) = wallet.run_settled(grant, CLOSE_WORK, |effect| retired.close_step(effect)).map_err(refused)? else {
+            return Err(BooleanError::Invalid("Region boolean retirement exceeded its authoring wallet"));
+        };
+        let work = turn.work;
+        let step = turn.result.map_err(|failure| refused(failure.primary().cloned().unwrap_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, failure.to_string()))))?;
+        wallet.post(step.progress()).map_err(refused)?;
+        if work == 0 {
             return Err(BooleanError::Invalid("Region boolean retirement made no progress"));
         }
     }

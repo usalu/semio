@@ -39,5 +39,7 @@
       "work": 1,
       "value": 17
     }
-  ]
+  ],
+  "refusedBirthWork": 2,
+  "birthWork": 4
 }

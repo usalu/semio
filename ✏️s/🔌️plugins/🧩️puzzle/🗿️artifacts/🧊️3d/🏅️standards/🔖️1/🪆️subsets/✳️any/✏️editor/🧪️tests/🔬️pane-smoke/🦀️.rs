@@ -35,20 +35,35 @@ async fn assert_every_pane_body_renders(app: &mut Puzzle3dApp, locale: semio_ui_
         let body = render_panel_body(app, body_key, Some(AGGREGATOR_VIEW_IDS[0])).await;
         assert!(body.to_string().len() > 16, "{body_key} renders a non-empty body in {locale:?}");
     }
+    assert_document_tree_in_catalog(app, locale).await;
 }
 
-/// 🧩️ LAW: the Aggregator pane loads the page's Concrete Forest fixture, renders every body in en and de, adds the catalogue kind into both views and the document, undoes, redoes and closes with the store drop witness satisfied.
+/// 🔎️ The document tree carries the `objects` and `references` catalog strings of `locale`.
+async fn assert_document_tree_in_catalog(app: &mut Puzzle3dApp, locale: semio_ui_locale::Locale) {
+    let labels = puzzle3d_labels(&semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native)).expect("admitted host axis");
+    let tree = render_panel_body(app, artifact::BODY_KEY, Some(AGGREGATOR_VIEW_IDS[0])).await.to_string();
+    for label in [labels.objects.as_str(), labels.references.as_str()] {
+        assert!(tree.contains(label), "the document tree carries the {locale:?} catalog string {label:?}");
+    }
+}
+
+/// 🧩️ LAW: the Aggregator pane loads the page's Concrete Forest fixture, renders every body, adds the catalogue kind into both views and the document, undoes, redoes and closes in en and de with the store drop witness satisfied and its catalog strings rendered.
 #[semio_framework_async_macros::async_test]
 async fn aggregator_pane_loads_applies_undoes_and_closes() {
     let _serial = AGGREGATOR_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    for locale in semio_plugin::artifact_app_laws::PANE_SMOKE_LOCALES {
+        aggregator_cycle(locale).await;
+    }
+}
+
+/// 🔁️ One whole load, render, apply, undo, redo and close cycle on a fresh app whose every dispatch and render runs under `locale`.
+async fn aggregator_cycle(locale: semio_ui_locale::Locale) {
     let mut app = app().await;
     let loaded = object_ids(&app);
     assert_eq!(loaded.len(), CONCRETE_FOREST_EXAMPLE_SNAPSHOT.objects.len(), "the booted document is the page fixture");
     assert!(loaded.iter().any(|id| id == AGGREGATOR_SEED_ID), "the page fixture carries the seed object");
 
-    assert_every_pane_body_renders(&mut app, semio_ui_locale::Locale::En).await;
-    assert_every_pane_body_renders(&mut app, semio_ui_locale::Locale::De).await;
-    app.set_label_axes(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    assert_every_pane_body_renders(&mut app, locale).await;
 
     let mut loaded_views = Vec::new();
     for view_id in AGGREGATOR_VIEW_IDS {
@@ -64,19 +79,6 @@ async fn aggregator_pane_loads_applies_undoes_and_closes() {
     let new_id = new_ids[0].clone();
     assert!(new_id.starts_with("puzzle3d.object."), "the new object id is minted by the document: {new_id}");
 
-    {
-        let composite = render_composite(&mut app).await;
-        let ids: Vec<String> = instances_of(&composite).iter().filter_map(|instance| instance.get("id").and_then(Value::as_str).map(str::to_string)).collect();
-        eprintln!("[DEBUG] aggregator-gate V composite ids={ids:?} objects={added:?}");
-        eprintln!("[DEBUG] aggregator-gate V composite raw count={} {}",instances_of(&composite).len(),instances_of(&composite).iter().map(|i|i.to_string().chars().take(300).collect::<String>()).collect::<Vec<_>>().join(" || "));
-        let window = render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await;
-        let ids: Vec<String> = instances_of(&window).iter().filter_map(|instance| instance.get("id").and_then(Value::as_str).map(str::to_string)).collect();
-        eprintln!("[DEBUG] aggregator-gate V window ids={ids:?}");
-    }
-    for view_id in AGGREGATOR_VIEW_IDS {
-        let shown = view_instance_ids(&mut app, view_id).await;
-        eprintln!("[DEBUG] aggregator-gate V {view_id} ids={shown:?}");
-    }
     for view_id in AGGREGATOR_VIEW_IDS {
         assert_eq!(view_instance_ids(&mut app, view_id).await, added, "{view_id} shows the new instance");
         let node = render_window_refresh(&mut app, main::BODY_KEY, view_id).await;
@@ -87,7 +89,6 @@ async fn aggregator_pane_loads_applies_undoes_and_closes() {
     let row = render_panel_body(&mut app, artifact::BODY_KEY, Some(AGGREGATOR_VIEW_IDS[0])).await.to_string();
     assert!(row.contains(&new_id) && row.contains(AGGREGATOR_KIND_ID), "the document tree carries the new row");
 
-    eprintln!("[DEBUG] aggregator-gate U parent_before_undo={:?}", app.parts().1.original_source_parent().map(|_| ()).map_err(|e| e.into_message()));
     dispatch(&mut app, "undo", None, None).await.expect("undo");
     assert_eq!(object_ids(&app), loaded, "undo removes the added object");
     for (view_id, before) in AGGREGATOR_VIEW_IDS.iter().zip(&loaded_views) {
@@ -103,6 +104,7 @@ async fn aggregator_pane_loads_applies_undoes_and_closes() {
     }
     let row = render_panel_body(&mut app, artifact::BODY_KEY, Some(AGGREGATOR_VIEW_IDS[0])).await.to_string();
     assert!(row.contains(&new_id), "the document tree restores the row on redo");
+    assert_document_tree_in_catalog(&mut app, locale).await;
 
     assert!(close_witness(&mut app).expect("original Puzzle3D app retirement"), "the app reaches terminal-empty ownership");
 }

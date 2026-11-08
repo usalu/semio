@@ -145,7 +145,9 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoder<Generati
         self.authority.as_ref().map_or(Ok(0), |authority| authority.next_close_depth_demand().map(|depth| depth + 1))
     }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, effect: &mut store::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
+        let result = (|| -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        let grant = effect.grant();
         let Some(authority) = self.authority.as_mut() else { return Ok(store::RetainedCloneStep::Complete(Default::default())) };
         if authority.terminal_is_empty() {
             drop(self.authority.take());
@@ -157,6 +159,8 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoder<Generati
             return Err(Self::diagnostic("generation2d-retained-pack.outer-vcs-false-terminal"));
         }
         Ok(store::RetainedCloneStep::Progress(step.progress()))
+    })();
+        store::os_store::owned_schema_decode::artifact_envelope_close_settle(effect, result.map_err(Into::into))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -310,7 +314,9 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         Ok(usize::from(!self.terminal))
     }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, effect: &mut store::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
+        let result = (|| -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        let grant = effect.grant();
         if self.terminal {
             return Ok(store::RetainedCloneStep::Complete(Default::default()));
         }
@@ -320,6 +326,8 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         self.terminal = true;
         self.closed.store(true, std::sync::atomic::Ordering::Release);
         Ok(store::RetainedCloneStep::Complete(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+    })();
+        store::os_store::owned_schema_decode::artifact_envelope_close_settle(effect, result.map_err(Into::into))
     }
 
     fn terminal_is_empty(&self) -> bool {

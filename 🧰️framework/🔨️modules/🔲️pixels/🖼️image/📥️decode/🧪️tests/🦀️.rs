@@ -3,8 +3,23 @@ use base64::Engine;
 use crate::retirement::tests::{drain,observed};
 fn rows()->serde_json::Value{serde_json::from_str(crate::text("🖼️image/📥️decode/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn input(value:&serde_json::Value)->ImageDecodeInput<'_>{ImageDecodeInput{mime:value["mime"].as_str().unwrap(),data:value["data"].as_str().unwrap(),max_source_bytes:value["maxSourceBytes"].as_u64().unwrap()as usize,max_bytes:value["maxBytes"].as_u64().unwrap()as usize,max_pixels:value["maxPixels"].as_u64().unwrap()as usize,max_chunks:value["maxChunks"].as_u64().unwrap()as usize}}
+#[path="../../../../🌱️value/♻️retirement/📦️owner/🧪️work/effect.rs"]
+mod effect;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+type Turn=(ImageDecodeProgress,RetainedCloneProgress);
+/// 🪢️ Image decoder turns inside one actual original effect, so every recorded unit is genuine.
+trait Effected{
+ fn advance_with(&mut self,source:&str,grant:RetainedCloneGrant)->Result<Turn,ImageDecodeError>;
+ fn advance_observed(&mut self,source:&str,grant:RetainedCloneGrant)->(Result<Turn,ImageDecodeError>,(usize,usize));
+ fn advance_checked(&mut self,source:&str,grant:RetainedCloneGrant)->(Turn,(usize,usize));
+}
+impl Effected for ImageDecodeJob{
+ fn advance_with(&mut self,source:&str,grant:RetainedCloneGrant)->Result<Turn,ImageDecodeError>{effect::with_effect(grant,1<<40,&mut None,|effect|ImageDecodeJob::advance(self,source,effect))}
+ fn advance_observed(&mut self,source:&str,grant:RetainedCloneGrant)->(Result<Turn,ImageDecodeError>,(usize,usize)){effect::with_effect(grant,1<<40,&mut None,|effect|observed(||ImageDecodeJob::advance(self,source,effect)))}
+ fn advance_checked(&mut self,source:&str,grant:RetainedCloneGrant)->(Turn,(usize,usize)){let(result,physical)=self.advance_observed(source,grant);(result.unwrap(),physical)}
+}
 fn funded(job:&ImageDecodeJob)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:job.next_copy_byte_demand().unwrap(),maximum_capacity_bytes:job.next_capacity_byte_demand().unwrap(),maximum_release_bytes:0,maximum_depth:job.next_depth_demand().unwrap()}}
-fn finish(job:&mut ImageDecodeJob,source:&str,items:usize)->Result<(),ImageDecodeError>{let mut previous=job.progress();for _ in 0..2_000_000{let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:items*131072,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:job.next_depth_demand()?};let(progress,receipt)=job.advance(source,grant)?;assert!(receipt.fits(grant));assert!(progress.work-previous.work<=items as u64);assert!(progress.source_completed>=previous.source_completed&&progress.source_completed<=progress.source_total);assert!(progress.bytes>=previous.bytes&&progress.pixels>=previous.pixels);previous=progress;if progress.done{return Ok(());}}panic!("Image source did not finish")}
+fn finish(job:&mut ImageDecodeJob,source:&str,items:usize)->Result<(),ImageDecodeError>{let mut previous=job.progress();for _ in 0..2_000_000{let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:items*131072,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:job.next_depth_demand()?};let(progress,receipt)=job.advance_with(source,grant)?;assert!(receipt.fits(grant));assert!(progress.work>=previous.work);assert!(progress.source_completed>=previous.source_completed&&progress.source_completed<=progress.source_total);assert!(progress.bytes>=previous.bytes&&progress.pixels>=previous.pixels);previous=progress;if progress.done{return Ok(());}}panic!("Image source did not finish")}
 fn take(job:&mut ImageDecodeJob)->RasterImage{job.take_result(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<RasterImage>(),maximum_depth:1,..Default::default()}).unwrap().unwrap().0}
 fn oracle(text:&str)->Vec<u8>{let bytes=if text.get(..5).is_some_and(|s|s.eq_ignore_ascii_case("data:")){let(header,body)=text.split_once(',').unwrap();let bytes=percent_encoding::percent_decode_str(body).collect::<Vec<_>>();if header.to_ascii_lowercase().ends_with(";base64"){base64::engine::general_purpose::STANDARD.decode(bytes).unwrap()}else{bytes}}else{base64::engine::general_purpose::STANDARD.decode(text).unwrap()};let mut decoder=png::Decoder::new(std::io::Cursor::new(bytes));decoder.set_transformations(png::Transformations::EXPAND|png::Transformations::STRIP_16);let mut reader=decoder.read_info().unwrap();let mut bytes=vec![0;reader.output_buffer_size()];let info=reader.next_frame(&mut bytes).unwrap();let mut rgba=Vec::new();for p in bytes[..info.buffer_size()].chunks(info.color_type.samples()){match info.color_type{png::ColorType::Grayscale=>rgba.extend_from_slice(&[p[0],p[0],p[0],255]),png::ColorType::Rgb=>rgba.extend_from_slice(&[p[0],p[1],p[2],255]),png::ColorType::GrayscaleAlpha=>rgba.extend_from_slice(&[p[0],p[0],p[0],p[1]]),png::ColorType::Rgba=>rgba.extend_from_slice(p),_=>panic!("Unexpanded oracle palette")}}rgba}
 #[test]
@@ -20,15 +35,15 @@ fn image_sources_exact_limits_and_live_phase_cancellation(){
  let rows=rows();let row=&rows[37];let mut limits=input(&row["input"]);limits.max_source_bytes=limits.data.len();limits.max_bytes=base64::engine::general_purpose::STANDARD.decode(limits.data.split_once(',').unwrap().1).unwrap().len();limits.max_pixels=row["expected"]["width"].as_u64().unwrap()as usize*row["expected"]["height"].as_u64().unwrap()as usize;
  let mut job=ImageDecodeJob::new(limits).unwrap();finish(&mut job,limits.data,1).unwrap();assert_eq!(job.result().unwrap().pixels,oracle(limits.data));drain(job);
  for limit in 0..3{let mut value=limits;match limit{0=>value.max_source_bytes-=1,1=>value.max_bytes-=1,_=>value.max_pixels-=1}if let Ok(mut job)=ImageDecodeJob::new(value){assert!(finish(&mut job,value.data,7).is_err());drain(job);}}
- let mut seen=Vec::new();let mut probe=ImageDecodeJob::new(limits).unwrap();let mut steps=0;loop{let p=probe.advance(limits.data,funded(&probe)).unwrap().0;steps+=1;if !p.done&&!seen.contains(&p.phase){seen.push(p.phase);let mut cancelled=ImageDecodeJob::new(limits).unwrap();for _ in 0..steps{cancelled.advance(limits.data,funded(&cancelled)).unwrap();}let old=cancelled.progress();cancelled.cancel();assert_eq!(cancelled.progress(),old);assert_eq!(cancelled.advance(limits.data,funded(&cancelled)),Err(ImageDecodeError::Cancelled));drain(cancelled);}if p.done{break;}}assert_eq!(seen,["header","validate","decode","source-handoff","decoder","png","image-handoff"]);drain(probe);
+ let mut seen=Vec::new();let mut probe=ImageDecodeJob::new(limits).unwrap();let mut steps=0;loop{let p=probe.advance_with(limits.data,funded(&probe)).unwrap().0;steps+=1;if !p.done&&!seen.contains(&p.phase){seen.push(p.phase);let mut cancelled=ImageDecodeJob::new(limits).unwrap();for _ in 0..steps{cancelled.advance_with(limits.data,funded(&cancelled)).unwrap();}let old=cancelled.progress();cancelled.cancel();assert_eq!(cancelled.progress(),old);assert_eq!(cancelled.advance_with(limits.data,funded(&cancelled)),Err(ImageDecodeError::Cancelled));drain(cancelled);}if p.done{break;}}assert_eq!(seen,["header","validate","decode","source-handoff","decoder","png","image-handoff"]);drain(probe);
 }
 #[test]
 fn image_sources_original_funding_and_jpeg_allocator_custody(){
  let fixture:serde_json::Value=serde_json::from_str(crate::text("🖼️image/📥️decode/🧪️tests/🧫️fixtures/🎟️funding.json")).unwrap();let png=rows();let source=input(&png[0]["input"]);
- for axis in fixture["axes"].as_array().unwrap(){let mut job=ImageDecodeJob::new(source).unwrap();let axis=axis.as_str().unwrap();if matches!(axis,"maximumCapacityBytes"|"releaseForCapacity"){while job.next_capacity_byte_demand().unwrap()==0{job.advance(source.data,funded(&job)).unwrap();}}let mut grant=funded(&job);match axis{"maximumItems"=>grant.maximum_items=0,"maximumCopyBytes"=>grant.maximum_copy_bytes-=1,"maximumCapacityBytes"=>grant.maximum_capacity_bytes-=1,"maximumDepth"=>grant.maximum_depth=0,_=>{grant.maximum_capacity_bytes=0;grant.maximum_release_bytes=536870912;}}let old=job.progress();let(step,physical)=observed(||job.advance(source.data,grant).unwrap());assert_eq!(physical,(0,0));assert_eq!(step,(old,Default::default()));let changed=format!("{}x",source.data);let(error,physical)=observed(||job.advance(&changed,funded(&job)));assert!(error.is_err());assert_eq!(physical,(0,0));drain(job);}
+ for axis in fixture["axes"].as_array().unwrap(){let mut job=ImageDecodeJob::new(source).unwrap();let axis=axis.as_str().unwrap();if matches!(axis,"maximumCapacityBytes"|"releaseForCapacity"){while job.next_capacity_byte_demand().unwrap()==0{job.advance_with(source.data,funded(&job)).unwrap();}}let mut grant=funded(&job);match axis{"maximumItems"=>grant.maximum_items=0,"maximumCopyBytes"=>grant.maximum_copy_bytes-=1,"maximumCapacityBytes"=>grant.maximum_capacity_bytes-=1,"maximumDepth"=>grant.maximum_depth=0,_=>{grant.maximum_capacity_bytes=0;grant.maximum_release_bytes=536870912;}}let old=job.progress();let(step,physical)=job.advance_checked(source.data,grant);assert_eq!(physical,(0,0));assert_eq!(step,(old,Default::default()));let changed=format!("{}x",source.data);let(error,physical)=job.advance_observed(&changed,funded(&job));assert!(error.is_err());assert_eq!(physical,(0,0));drain(job);}
  let jpeg:serde_json::Value=serde_json::from_str(crate::text("📸️jpeg/📥️decode/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut phases=std::collections::BTreeSet::new();
  for index in fixture["jpegCases"].as_array().unwrap(){let row=&jpeg["cases"][index.as_u64().unwrap()as usize];let original=format!("data:image/jpeg;base64,{}",row["base64"].as_str().unwrap());let source=ImageDecodeInput{mime:"image/jpeg",data:&original,max_source_bytes:268439552,max_bytes:67108864,max_pixels:16777216,max_chunks:65536};let(mut job,physical)=observed(||ImageDecodeJob::new(source).unwrap());assert_eq!(physical,(0,0));let mut born=0;
-  loop{let phase=job.progress().phase;if phases.insert(phase)&&phase!="complete"{let mut cancelled=ImageDecodeJob::new(source).unwrap();while cancelled.progress().phase!=phase{cancelled.advance(source.data,funded(&cancelled)).unwrap();}let before=cancelled.progress();let(_,physical)=observed(||cancelled.cancel());assert_eq!(physical,(0,0));assert_eq!(cancelled.progress(),before);drain(cancelled);}let grant=funded(&job);let(step,physical)=observed(||job.advance(source.data,grant).unwrap());assert_eq!(physical,(step.1.retained_capacity_bytes,step.1.released_bytes));assert!(step.1.fits(grant));born+=physical.0;if step.0.done{break;}}
+  loop{let phase=job.progress().phase;if phases.insert(phase)&&phase!="complete"{let mut cancelled=ImageDecodeJob::new(source).unwrap();while cancelled.progress().phase!=phase{cancelled.advance_with(source.data,funded(&cancelled)).unwrap();}let before=cancelled.progress();let(_,physical)=observed(||cancelled.cancel());assert_eq!(physical,(0,0));assert_eq!(cancelled.progress(),before);drain(cancelled);}let grant=funded(&job);let(step,physical)=job.advance_checked(source.data,grant);assert_eq!(physical,(step.1.retained_capacity_bytes,step.1.released_bytes));assert!(step.1.fits(grant));born+=physical.0;if step.0.done{break;}}
   let decoded=image::load_from_memory_with_format(&base64::engine::general_purpose::STANDARD.decode(row["base64"].as_str().unwrap()).unwrap(),image::ImageFormat::Jpeg).unwrap().into_rgba8();let output=job.result().unwrap();assert_eq!((output.width,output.height),(row["width"].as_u64().unwrap()as u32,row["height"].as_u64().unwrap()as u32));let maximum=output.pixels.iter().zip(decoded.as_raw()).map(|(left,right)|left.abs_diff(*right)).max().unwrap();assert!(maximum<=row["oracleTolerance"].as_u64().unwrap()as u8);let denied=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<RasterImage>()-1,maximum_depth:1,..Default::default()};assert!(job.take_result(denied).unwrap().is_none());let output=take(&mut job);let(a,r)=drain(job);let(oa,or)=drain(output);assert_eq!(born+a+oa,r+or);
  }
  for phase in fixture["interruptionPhases"].as_array().unwrap().iter().filter(|phase|phase.as_str()!=Some("png")){assert!(phases.contains(phase.as_str().unwrap()));}
@@ -106,3 +121,33 @@ fn encoded_orientation_reads_jpeg_exif_and_png_exif_like_the_image_crate(){
  for truncated in [3usize,5,9,20]{assert_eq!(encoded_orientation(&jpeg_with_orientation(jpeg_bytes(&source),6)[..truncated]),Orientation::NoTransforms);}
 }
 //#endregion BlockingDecodeAndOrientation
+
+#[test]
+fn image_decode_phases_record_honest_work(){
+ let jpeg:serde_json::Value=serde_json::from_str(crate::text("📸️jpeg/📥️decode/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let png=rows();let png=input(&png[0]["input"]);
+ for (source,floor) in [(png,0u64),(jpeg_source(&jpeg),1)]{
+  let mut job=ImageDecodeJob::new(source).unwrap();let mut recorded=0u128;let mut actions=0usize;
+  for _ in 0..2_000_000{let grant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:4096*131072,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:job.next_depth_demand().unwrap()};
+   let(result,performed)=effect::with_effect(grant,1<<40,&mut None,|effect|{let result=job.advance(source.data,effect);(result,effect.performed_work())});let(progress,receipt)=result.unwrap();recorded+=performed;actions+=receipt.copied_items;assert_eq!(recorded,u128::from(progress.work));if progress.done{break;}}
+  assert!(job.progress().done);assert!(recorded>=u128::from(source.data.len()as u64));if floor>0{assert!(recorded>actions as u128,"decoder work must exceed one unit per action");}
+  drain(take(&mut job));drain(job);
+ }
+}
+fn jpeg_source(jpeg:&serde_json::Value)->ImageDecodeInput<'static>{let data:&'static str=Box::leak(format!("data:image/jpeg;base64,{}",jpeg["cases"][0]["base64"].as_str().unwrap()).into_boxed_str());ImageDecodeInput{mime:"image/jpeg",data,max_source_bytes:268439552,max_bytes:67108864,max_pixels:16777216,max_chunks:65536}}
+#[test]
+fn stalled_blocking_close_releases_its_owner_and_refuses_with_a_typed_error(){
+ let(result,(requested,released))=observed(||retire_funded(vec![7u8;4096],|grant|RetainedCloneGrant{maximum_items:0,..grant}));
+ assert_eq!(result,Err(ImageDecodeError::Invalid("Decode job close stalled")));assert!(requested>0);assert_eq!(requested,released,"a stalled close leaked its owner");
+ assert_eq!(retire_funded(vec![7u8;4096],|grant|grant),Ok(()));
+}
+#[derive(semio_framework_value::RetireOwned)]
+struct NestedOwners{first:Vec<u8>,second:Vec<Vec<u8>>,third:(Vec<u8>,Vec<u8>)}
+#[test]
+fn stalled_close_of_nested_record_owners_releases_every_level_without_panicking(){
+ for healthy in [0usize,1,2,3,5]{
+  let turns=std::cell::Cell::new(0usize);
+  let(result,(requested,released))=observed(||retire_funded(NestedOwners{first:vec![1;64],second:vec![vec![2;32],vec![3;16]],third:(vec![4;8],vec![5;8])},|grant|{let turn=turns.get();turns.set(turn+1);if turn<healthy{grant}else{RetainedCloneGrant{maximum_items:0,..grant}}}));
+  assert_eq!(result,Err(ImageDecodeError::Invalid("Decode job close stalled")),"healthy turns {healthy}");assert_eq!(requested,released,"healthy turns {healthy} leaked");
+ }
+}

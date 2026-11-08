@@ -56,7 +56,7 @@ impl<V> LookupCursor<V>{
   match step{
    Step::Blocked=>crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},
    Step::Complete=>crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0},
-   Step::Progress{completed_items,completed_bytes}=>{let progress=RetainedCloneProgress{copied_items:completed_items,copied_bytes:completed_bytes,..Default::default()};crate::RetainedWorkOutcome{result:Ok(if self.state.complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)}),work:completed_items as u64}},
+   Step::Progress{completed_items,completed_bytes}=>{let progress=RetainedCloneProgress{copied_items:completed_items,copied_bytes:completed_bytes,..Default::default()};crate::RetainedWorkOutcome{result:Ok(if self.state.complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)}),work:completed_items as u128}},
   }
  }
 }

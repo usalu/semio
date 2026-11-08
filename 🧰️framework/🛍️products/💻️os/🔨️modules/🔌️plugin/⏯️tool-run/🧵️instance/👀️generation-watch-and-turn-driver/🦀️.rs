@@ -30,7 +30,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         if parent_moved && entry.member.is_some() {
             let head = self.stores.store.snapshot_owner();
-            let entry = selected_entry_mut!(self.tool_runs).expect("the watch keeps the slot");
+            let Some(entry) = selected_entry_mut!(self.tool_runs) else { return };
             entry.replace_base(head);
             let overlay = Arc::clone(&entry.base);
             entry.replace_overlay(overlay);
@@ -43,7 +43,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     self.tool_runs.close_current_job();
                     self.tool_runs.discard_provisional();
                 }
-                let entry = selected_entry_mut!(self.tool_runs).expect("refold keeps the slot");
+                let Some(entry) = selected_entry_mut!(self.tool_runs) else { return };
                 if let Some(member) = entry.member.as_mut() {
                     member.base_generation = generation;
                     member.rebase = true;
@@ -64,7 +64,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 self.tool_runs.close_current_job();
                 self.tool_runs.discard_provisional();
             }
-            let entry = selected_entry_mut!(self.tool_runs).expect("refold keeps the slot");
+            let Some(entry) = selected_entry_mut!(self.tool_runs) else { return };
             entry.replace_base(head);
             entry.base_generation = store_generation;
             entry.identity.base_revision = self.stores.store.content_revision();
@@ -87,9 +87,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if !settings_moved {
             return;
         }
-        let entry = selected_entry!(self.tool_runs).expect("the watch keeps the slot");
+        let Some(entry) = selected_entry!(self.tool_runs) else { return };
         let values = self.stores.tool_run_settings_values(&entry.definition.settings, entry.window.as_ref());
-        let entry = selected_entry_mut!(self.tool_runs).expect("the watch keeps the slot");
+        let Some(entry) = selected_entry_mut!(self.tool_runs) else { return };
         entry.settings_generation = settings_generation;
         if values == entry.settings_values {
             return;
@@ -146,13 +146,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         match state{
             ToolRunState::Starting=>self.admit_tool_run_job().await.map_err(Into::into),
             ToolRunState::Running|ToolRunState::Paused=>{
-                let entry=selected_entry!(self.tool_runs).unwrap();
+                let entry=selected_entry!(self.tool_runs).ok_or_else(||tool_run_slot_lost("drive"))?;
                 if state==ToolRunState::Paused&&!entry.pending_step{return Ok(())}
                 if entry.job.is_none(){self.admit_tool_run_job().await.map_err(Into::into)}else{self.step_tool_run_job(cx)}
             }
             ToolRunState::Aborting=>{
                 if self.tool_runs.retired_jobs.is_empty()&&self.tool_runs.retired_publications.is_empty(){
-                    let entry=selected_entry!(self.tool_runs).unwrap();let(run,generation)=(entry.slot.run,entry.slot.generation);
+                    let entry=selected_entry!(self.tool_runs).ok_or_else(||tool_run_slot_lost("abort"))?;let(run,generation)=(entry.slot.run,entry.slot.generation);
                     if self.apply_tool_run_driver_event(ToolRunEvent::AbortComplete{run,generation})==Some(ToolRunEffect::RetireProvisional){self.tool_runs.discard_provisional();self.mark_tool_run_document_dirty();}
                 }Ok(())
             }
@@ -166,7 +166,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let Some(entry)=selected_entry_mut!(self.tool_runs).filter(|entry|entry.refold.is_some())else{return Ok(false)};
         if entry.job.is_none(){entry.settle_refold();}
         if !entry.operations.refold(&self.stores.store,&mut entry.overlay,cx)?{return Ok(true)}
-        if !entry.refold.as_ref().unwrap().boundary{return Ok(false)}
+        if !entry.refold.as_ref().is_some_and(|refold|refold.boundary){return Ok(false)}
         let d=RetirementDemand{copy_bytes:std::mem::size_of_val(&entry.refold),depth:1,..Default::default()};
         if !cx.retained_work_can_enter(d){return Ok(true)}entry.refold=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);self.mark_tool_run_document_dirty();Ok(false)
     }

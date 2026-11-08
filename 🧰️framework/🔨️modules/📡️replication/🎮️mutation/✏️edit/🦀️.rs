@@ -215,7 +215,7 @@ impl semio_framework_value::FromValue for MutationMeta {
 
 /// 📝️ One coalesced batch of operations, forward and backward, plus their causal metadata.
 /// Moved verbatim from `crate::os_store::Edit` (was `vcs/rs/lib.rs` L73).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Edit<Op> {
     pub id: String,
     pub actor: Option<semio_framework_value::SharedUtf8>,
@@ -323,7 +323,7 @@ mod transaction_ref_tests;
 /// 📍️ Provenance of one [`MutationMeta`]-described operation. `Owner` is the default (and
 /// the overwhelming common case), omitted from wire by `MutationMeta.origin`'s
 /// `skip_serializing_if`.
-#[derive(Clone, Debug, Default, PartialEq,semio_framework_value::NativeReceive,semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq,semio_framework_value::NativeReceive,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned)]
 #[value(tag="kind",rename_all="camelCase",rename_all_fields="camelCase")]
 pub enum MutationOrigin {
     #[default]
@@ -405,6 +405,7 @@ impl semio_framework_value::FromValue for MutationOrigin {
 #[path = "../🧵️canonical/🦀️.rs"]
 mod canonical_fields;
 pub use canonical_fields::ArtifactCanonicalEditIdentityCursor;
+pub(crate) use canonical_fields::settle_exit as canonical_fields_settle;
 pub use canonical_fields::{ArtifactCanonicalEditAuthority,ArtifactCanonicalEditAuthorityCursor};
 
 #[path = "../../🚪️io/📝️text/🧵️canonical/🦀️.rs"]
@@ -412,19 +413,7 @@ pub mod canonical;
 
 mod owned_retirement {
     use super::*;
-    use semio_framework_value::retirement::{RetireOwned, RetirementCursor, sequence, deferred, deferred_birth_bytes_for, sequence_birth_bytes};
     semio_framework_value::artifact_retire_struct!(TransactionRef { id, tool });
-    impl RetireOwned for MutationOrigin {
-        fn retirement(self) -> Box<dyn RetirementCursor> {
-            match self {
-                Self::Owner => sequence(Vec::new()),
-                Self::Contributed { plugin_id, mutation_id, payload_hash } => sequence(vec![deferred(plugin_id), deferred(mutation_id.0), deferred(payload_hash.0)]),
-                Self::Transaction { initiator } => sequence(vec![deferred(initiator.artifact_id), deferred(initiator.artifact_kind), deferred(initiator.dialect)]),
-            }
-        }
-        fn retirement_birth_bytes(&self) -> Option<usize> { match self { Self::Owner => sequence_birth_bytes(&[]), Self::Contributed { plugin_id, mutation_id, payload_hash } => sequence_birth_bytes(&[deferred_birth_bytes_for(plugin_id), deferred_birth_bytes_for(&mutation_id.0), deferred_birth_bytes_for(&payload_hash.0)]), Self::Transaction { initiator } => sequence_birth_bytes(&[deferred_birth_bytes_for(&initiator.artifact_id), deferred_birth_bytes_for(&initiator.artifact_kind), deferred_birth_bytes_for(&initiator.dialect)]) } }
-        fn controlled_retirement_supported() -> bool { true }
-    }
 }
 
 #[cfg(test)]

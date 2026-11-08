@@ -8,7 +8,7 @@
     "maximumDepth": 256
   },
   "bodyCopyBytes": 512,
-  "maximumWorkUnits": 64,
+  "maximumWorkUnits": 1024,
   "cases": [
     {
       "name": "Null",

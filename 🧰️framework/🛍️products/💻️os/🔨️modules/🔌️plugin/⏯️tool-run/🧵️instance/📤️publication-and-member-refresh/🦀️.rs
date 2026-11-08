@@ -18,9 +18,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     pub(super) async fn publish_tool_run(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
         if cx.should_yield(){return Ok(())}
         let grant=cx.retained_grant();
-        let entry=selected_entry_mut!(self.tool_runs).expect("finalizing original slot");
+        let entry=selected_entry_required!(self.tool_runs,"publication")?;
         let(run,generation)=(entry.slot.run,entry.slot.generation);
-        let finalize=entry.finalize.as_mut().expect("original finalize owner");
+        let finalize=entry.finalize.as_mut().ok_or_else(||tool_run_slot_lost("publication finalize owner"))?;
         if entry.member.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"member finalization requires its original composite publication owner").into())}
         if finalize.publication.is_none(){
             if entry.provisional.is_empty(){let d=RetirementDemand{copy_bytes:size_of::<ToolRunFinalizePhase>(),depth:1,..Default::default()};if cx.retained_work_can_enter(d){finalize.phase=ToolRunFinalizePhase::Closing;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);}return Ok(())}
@@ -33,8 +33,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             match admitted{Ok(Some((publication,p)))=>{finalize.publication=Some(publication);cx.consume_retained(p)?;cx.consume_fuel(p.copied_items as u64);},Ok(None)=>{},Err(error)=>return Err(error.into())}return Ok(())
         }
         if !self.ingest.reclaim_document_snapshot_read_returns(&*self.stores).map_err(semio_framework_job::OriginalTurnFailure::from)?{return Ok(())}
-        let entry=selected_entry_mut!(self.tool_runs).expect("finalizing original slot");
-        let publication=entry.finalize.as_mut().unwrap().publication.as_mut().unwrap();
+        let entry=selected_entry_required!(self.tool_runs,"publication advance")?;
+        let publication=entry.finalize.as_mut().and_then(|finalize|finalize.publication.as_mut()).ok_or_else(||tool_run_slot_lost("publication advance owner"))?;
         let result=cx.with_native_receiving(|native|self.stores.store.advance_apply_batch(publication,grant.maximum_copy_bytes,store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:grant.maximum_items.min(1),maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth},native));
         use store::os_store::one_item_publication::ArtifactStoreOneItemAdvance as Advance;
         let p=match &result{Ok(Advance::Published(_,p)|Advance::PreparationProgress(_,p))=>*p,Err(store::os_vcs::VcsError::InverseRefused(error))=>error.retained_progress(),_=>Default::default()};
@@ -53,7 +53,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 let grant=cx.retained_grant();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-coordination,..grant};
                 let Some(p)=publication.acknowledge_granted(child)else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original ToolRun acknowledgement lost its prepared publication").into())};
                 cx.consume_retained(p.checked_add(RetainedCloneProgress{copied_bytes:coordination,..Default::default()})?)?;cx.consume_fuel(1);
-                let finalize=entry.finalize.as_mut().unwrap();finalize.published=true;finalize.phase=ToolRunFinalizePhase::Closing;self.mark_tool_run_document_dirty();
+                let finalize=entry.finalize.as_mut().ok_or_else(||tool_run_slot_lost("publication acknowledgement owner"))?;finalize.published=true;finalize.phase=ToolRunFinalizePhase::Closing;self.mark_tool_run_document_dirty();
             },
             Err(store::os_vcs::VcsError::InverseRefused(error))=>return Err(error.into()),
             Err(error)=>return Err(error.into_fault().into()),
@@ -67,7 +67,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     pub(super) fn close_tool_run_finalize_owner(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let grant=cx.retained_grant();
         if self.tool_runs.has_original_receipt(){return Ok(false);}
-        let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
+        let entry = selected_entry_required!(self.tool_runs,"finalize close")?;
         let Some(finalize)=entry.finalize.as_mut()else{return Ok(true)};
         if let Some(publication) = finalize.publication.as_mut() {
             if let Some(p)=self.stores.store.prepare_apply_batch_close(publication,grant).map_err(FaultFrom::into_fault)?{self.tool_runs.retain_original_receipt(grant,p)?;return Ok(false);}
@@ -91,14 +91,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let grant=cx.retained_grant();
         if !self.close_tool_run_finalize_owner(cx)?{return Ok(());}
         let copy=size_of::<Option<ToolRunFinalize<A>>>();if !tool_grant_funds(grant,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()}){return Ok(());}
-        let entry=selected_entry_mut!(self.tool_runs).expect("finalizing original slot");let(run,generation)=(entry.slot.run,entry.slot.generation);let rejected=entry.finalize.as_ref().is_some_and(|finalize|finalize.rejected);drop(entry.finalize.take());self.tool_runs.retain_original_receipt(grant,RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;
+        let entry=selected_entry_required!(self.tool_runs,"publication close")?;let(run,generation)=(entry.slot.run,entry.slot.generation);let rejected=entry.finalize.as_ref().is_some_and(|finalize|finalize.rejected);drop(entry.finalize.take());self.tool_runs.retain_original_receipt(grant,RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;
         if rejected{self.apply_tool_run_driver_event(ToolRunEvent::StoreRejected{run,generation});self.mark_tool_run_ui_dirty();return Ok(());}
         if self.apply_tool_run_driver_event(ToolRunEvent::PublicationComplete { run, generation }) == Some(ToolRunEffect::ReleaseProvisional) {
             let store_generation = self.stores.store.generation();
             let member_generation = self.shared().tool_run_member_generation();
             let head = self.stores.store.snapshot_owner();
             self.tool_runs.release_provisional(true);
-            let entry = selected_entry_mut!(self.tool_runs).expect("finalized slot");
+            let entry = selected_entry_required!(self.tool_runs,"finalized rebase")?;
             entry.replace_base(head);
             let overlay = Arc::clone(&entry.base);
             entry.replace_overlay(overlay);
@@ -120,10 +120,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let Some(mut member) = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.member.take()) else { return Ok(false) };
         let mut progress=RetainedCloneProgress::default();
         let outcome = self.child_composition.refresh_member_overlay(&mut member, deadline,grant,receiving,&mut progress);
-        let entry = selected_entry_mut!(self.tool_runs).expect("a member run keeps its slot");
+        let entry = selected_entry_required!(self.tool_runs,"member refresh")?;
         entry.member = Some(member);
         self.tool_runs.retain_original_receipt(grant,progress)?;
-        let entry=selected_entry_mut!(self.tool_runs).expect("a member run keeps its slot");
+        let entry=selected_entry_required!(self.tool_runs,"member refresh settle")?;
         let (run, generation) = (entry.slot.run, entry.slot.generation);
         match outcome {
             Ok(Some((pending, conflicts, rebased))) => {
@@ -159,7 +159,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let stale = std::mem::take(&mut member.stale);
             self.child_composition.retire_tool_run_views(stale, &mut member.stale)
         };
-        selected_entry_mut!(self.tool_runs).expect("a member run keeps its slot").member = Some(member);
+        selected_entry_required!(self.tool_runs,"member settle")?.member = Some(member);
         self.tool_runs.retain_original_receipt(grant,progress)?;
         match outcome {
             Err(fault) if !fault.retryable => Err(fault),
@@ -174,11 +174,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// batch.
     async fn publish_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), Fault> {
         let app_instance_id = self.app.instance_id().await;
-        let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
+        let entry = selected_entry_required!(self.tool_runs,"member publication")?;
         let (run, generation) = (entry.slot.run, entry.slot.generation);
-        let member = entry.member.as_mut().expect("a member run");
+        let member = entry.member.as_mut().ok_or_else(||tool_run_slot_lost("member publication owner"))?;
         if member.ops.is_empty() {
-            entry.finalize.as_mut().expect("finalize owner").phase = ToolRunFinalizePhase::Closing;
+            entry.finalize.as_mut().ok_or_else(||tool_run_slot_lost("member finalize owner"))?.phase = ToolRunFinalizePhase::Closing;
             return Ok(());
         }
         if member.emit.is_none(){
@@ -188,7 +188,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 _ => return self.reject_tool_run_publication(run, generation),
             }
         }
-        let finalize=entry.finalize.as_mut().expect("original member finalizer");
+        let finalize=entry.finalize.as_mut().ok_or_else(||tool_run_slot_lost("member finalizer"))?;
         if finalize.ingress.transaction.is_none(){let clock=semio_framework_tool_machine::authoring_clock(run);let progress=finalize.ingress.admit_transaction(&entry.actor,&clock,app_instance_id,&entry.tool_id,grant).map_err(FaultFrom::into_fault)?;if let Some(progress)=progress{self.tool_runs.retain_original_receipt(grant,progress)?;}return Ok(());}
         let _=deadline;
         Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"ToolRun member retains its original emission and transaction until the mounted group issuer admits their unchanged full grant").into_fault())

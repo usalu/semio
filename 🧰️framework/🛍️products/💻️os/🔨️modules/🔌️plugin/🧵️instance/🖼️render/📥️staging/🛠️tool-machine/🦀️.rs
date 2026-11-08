@@ -8,11 +8,11 @@ use semio_plugin_decl_emission::Emit;
 use semio_framework::Fault;
 use semio_plugin_decl_emission::HostEvent;
 use store::Mutation;
-use semio_plugin_tool_run::tool_jobs_tool_machine::PressLeaf;
-use semio_plugin_tool_run::tool_jobs_tool_machine::ScrubTag;
-use semio_plugin_tool_run::tool_jobs_tool_machine::ToolTag;
+use semio_plugin_tool_machine::PressLeaf;
+use semio_plugin_tool_machine::ScrubTag;
+use semio_plugin_tool_machine::ToolTag;
 use semio_plugin_window_config::WindowConfigMutation;
-use semio_plugin_tool_run::tool_jobs_tool_machine::gesture_host_event;
+use semio_plugin_tool_machine::gesture_host_event;
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
@@ -36,10 +36,10 @@ use semio_plugin_decl_views::gesture_contract::{GestureCapture, GestureSlot};
 use semio_plugin_instance_extension::InstanceExtension;
 use crate::render_bundle::{RenderCtx, RenderRef};
 use semio_ui_contract::*;
-use semio_plugin_tool_run::tool_jobs_tool_machine::*;
-use semio_plugin_tool_run::tool_jobs_tool_machine::gesture_issuer::GestureOperation;
-use semio_plugin_tool_run::tool_jobs_tool_machine::gesture_issuer::reserve_live;
-use semio_plugin_tool_run::tool_jobs_tool_machine::gesture_issuer::issue_live;
+use semio_plugin_tool_machine::*;
+use semio_plugin_tool_machine::gesture_issuer::GestureOperation;
+use semio_plugin_tool_machine::gesture_issuer::reserve_live;
+use semio_plugin_tool_machine::gesture_issuer::issue_live;
 use semio_framework_tool_machine::ToolAbortReason;
 use semio_framework_tool_machine::ToolStep;
 use semio_framework_tool_machine::TypingInput;
@@ -186,7 +186,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             return Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
         }
         if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()))}
-        if self.shared().tool_overlay_alias_retirement_pending()||self.stores.window_config_store.preview_retirement_pending(){return self.tool_overlay_alias_retirement_step(grant).map_err(Into::into)}
+        if self.shared().tool_overlay_alias_retirement_pending()||self.stores.window_config_store.preview_retirement_pending(){return self.tool_overlay_alias_retirement_step(cx,grant).map_err(Into::into)}
         if self.tool_machines.refold_owed{
             if closing||cx.is_cancelled(){
                 let d=RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()};
@@ -200,7 +200,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     /// 🌈️ Original refold Vec/Arc owners wait for this actual full grant; no cold-drain fallback is admitted.
-    fn tool_overlay_alias_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    fn tool_overlay_alias_retirement_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if !self.shared().tool_overlay_retirement_pending(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if self.shared().gesture_retirement_pending(){return self.gesture_retirement_step(grant);}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -208,14 +208,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(owner)=self.tool_machines.overlay_alias_retirement.as_mut(){
             if owner.terminal_is_empty(){drop(self.tool_machines.overlay_alias_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-            return owner.advance(ArtifactStore::<A::Snapshot,A::Mutation>::snapshot_alias_retirement_birth_bytes(),grant,|alias,child|self.stores.store.retire_snapshot_alias(alias,child));
+            let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|owner.advance(ArtifactStore::<A::Snapshot,A::Mutation>::snapshot_alias_retirement_birth_bytes(),effect,|alias,child|self.stores.store.retire_snapshot_alias(alias,child)))? else{return Ok(RetainedCloneStep::Progress(Default::default()))};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));return semio_plugin_ownership::bounded_ownership::plugin_settle_value(poll);
         }
         if self.tool_machines.pending_overlay_aliases.is_some(){
             let(owner,progress)=ToolOriginalAliasBatch::admit_original(&mut self.tool_machines.pending_overlay_aliases,grant)?.expect("admitted original overlay batch");self.tool_machines.overlay_alias_retirement=Some(owner);return Ok(RetainedCloneStep::Progress(progress));
         }
         if let Some(owner)=self.tool_machines.config_alias_retirement.as_mut(){
             if owner.terminal_is_empty(){drop(self.tool_machines.config_alias_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-            return owner.advance(ArtifactStore::<A::Config,A::ConfigMutation>::snapshot_alias_retirement_birth_bytes(),grant,|alias,child|self.stores.config_store.retire_snapshot_alias(alias,child));
+            let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|owner.advance(ArtifactStore::<A::Config,A::ConfigMutation>::snapshot_alias_retirement_birth_bytes(),effect,|alias,child|self.stores.config_store.retire_snapshot_alias(alias,child)))? else{return Ok(RetainedCloneStep::Progress(Default::default()))};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));return semio_plugin_ownership::bounded_ownership::plugin_settle_value(poll);
         }
         if self.tool_machines.pending_config_aliases.is_some(){let(owner,progress)=ToolOriginalAliasBatch::admit_original(&mut self.tool_machines.pending_config_aliases,grant)?.expect("admitted original config overlay batch");self.tool_machines.config_alias_retirement=Some(owner);return Ok(RetainedCloneStep::Progress(progress));}
         self.stores.window_config_store.preview_retirement_step(grant)
@@ -235,7 +235,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if result.is_some(){return Ok(true)}
         if self.tools.original_press_settlement.is_none(){
             if tag.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original press requires its retained tag").into())}
-            semio_plugin_tool_run::tool_jobs_tool_machine::OriginalPressSettlement::<A>::admit(base,actor,emit,0,||(tag.take().expect("original retained press tag"),self.tool_machines.clock()),cx,&mut self.tools.original_press_settlement)?;
+            semio_plugin_tool_machine::OriginalPressSettlement::<A>::admit(base,actor,emit,0,||(tag.take().expect("original retained press tag"),self.tool_machines.clock()),cx,&mut self.tools.original_press_settlement)?;
             return Ok(false)
         }
         let Some(owner)=self.tools.original_press_settlement.as_mut()else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original press settlement was not admitted").into())};
@@ -270,7 +270,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if self.tools.original_press_settlement.is_some(){let mut absent=None;return self.settle_press(&mut absent,base,actor,emit,cx,result)}
             let machines=&mut *self.tool_machines;let copied=machines.operations.len().checked_mul(std::mem::size_of::<(u64,ToolTag)>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original press tag transfer quote overflow"))?;
             if !matches!(machines.operation_tag(operation),Some(ToolTag::Scrub(_))){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original scrub lost its retained operation tag").into())}
-            semio_plugin_tool_run::tool_jobs_tool_machine::OriginalPressSettlement::<A>::admit(base,actor,emit,copied,||{let Some(ToolTag::Scrub(tag))=machines.take_operation(operation)else{unreachable!("original scrub tag remains in its mounted registry")};let clock=machines.clock();(tag,clock)},cx,&mut self.tools.original_press_settlement)?;return Ok(false)
+            semio_plugin_tool_machine::OriginalPressSettlement::<A>::admit(base,actor,emit,copied,||{let Some(ToolTag::Scrub(tag))=machines.take_operation(operation)else{unreachable!("original scrub tag remains in its mounted registry")};let clock=machines.clock();(tag,clock)},cx,&mut self.tools.original_press_settlement)?;return Ok(false)
         }
         if result.is_some(){return Ok(true)}
         if let Some(owner)=self.tools.original_typing_settlement.as_ref(){if !owner.matches_context(cx)||!owner.accepts(operation,base,actor,emit){return Ok(false)}}

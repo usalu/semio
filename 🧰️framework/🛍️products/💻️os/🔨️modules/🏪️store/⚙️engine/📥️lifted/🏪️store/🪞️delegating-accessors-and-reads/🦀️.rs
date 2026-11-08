@@ -160,7 +160,7 @@ where
     #[inline] pub fn snapshot_alias_retirement_birth_bytes()->usize { StoreLog::<P,Mutation>::snapshot_alias_retirement_birth_bytes() }
 
     /// 🪞️ Delegates to [`StoreOwners::retire_owned_mutation`].
-    #[inline] pub fn retire_owned_mutation(&self,owner:&mut Option<Mutation>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError> { self.owners.retire_owned_mutation(owner, grant) }
+    #[inline] pub fn retire_owned_mutation(&self,owner:&mut Option<Mutation>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError> { self.owners.retire_owned_mutation(owner, effect) }
 
     /// 🪞️ Delegates to [`StoreOwners::install_document_store_owners_exact`].
     #[inline] pub fn install_document_store_owners_exact(&mut self, mut owners: DocumentStoreOwners<P, Mutation>) -> Result<(), (ValueError, DocumentStoreOwners<P, Mutation>)> { self.owners.install_document_store_owners_exact(&mut self.log, owners) }
@@ -211,7 +211,7 @@ where
     #[inline] pub fn replace_tail_undo_cache_retained(&mut self, next: Option<(String, Arc<P>)>) -> Result<(), VcsError> { self.live.replace_tail_undo_cache_retained(&mut self.log, &mut self.owners, next) }
 
     /// 🪞️ Delegates to [`StoreOwners::maintenance_retirements_step`].
-    #[inline] pub fn maintenance_retirements_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.owners.maintenance_retirements_step(grant) }
+    #[inline] pub fn maintenance_retirements_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { self.owners.maintenance_retirements_step(effect) }
 
     /// 🪞️ Delegates to [`StoreOwners::handoff_batch_publication_close`].
     #[inline] pub fn handoff_batch_publication_close(&mut self, publication: &mut Option<ArtifactStoreBatchPublication<P, Mutation>>) -> Result<bool, VcsError> where P: Sync, { self.owners.handoff_batch_publication_close(publication) }
@@ -235,7 +235,7 @@ where
     #[inline] pub(super) fn close_one_factory_alias(&mut self) { self.owners.close_one_factory_alias() }
 
     /// 🪞️ Delegates to [`StoreOwners::retire_snapshot_alias`].
-    #[inline] pub fn retire_snapshot_alias(&self,alias:&mut Option<Arc<P>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError> where P:Sync { self.owners.retire_snapshot_alias(alias, grant) }
+    #[inline] pub fn retire_snapshot_alias(&self,alias:&mut Option<Arc<P>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError> where P:Sync { self.owners.retire_snapshot_alias(alias, effect) }
 
     /// 🪞️ Delegates to [`StoreOwners::snapshot_read_retirement_demand`].
     #[inline] pub fn snapshot_read_retirement_demand(&self) -> semio_framework_value::RetirementDemand { self.owners.snapshot_read_retirement_demand() }
@@ -244,7 +244,7 @@ where
     #[inline] pub fn returned_snapshot_read_retirement_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> where P: Sync, { self.owners.returned_snapshot_read_retirement_demand() }
 
     /// 🪞️ Delegates to [`StoreOwners::take_returned_snapshot_read_retirement`].
-    #[inline] pub fn take_returned_snapshot_read_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> where P: Sync, { self.owners.take_returned_snapshot_read_retirement(grant) }
+    #[inline] pub fn take_returned_snapshot_read_retirement(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> where P: Sync, { self.owners.take_returned_snapshot_read_retirement(effect) }
 
     /// 🪞️ Delegates to [`StoreLive::close_cursor_demands`].
     #[inline] pub fn close_cursor_demands(&self, phase: ArtifactStoreCursorDisposerPhase, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.live.close_cursor_demands(&self.log, &self.owners, &self.wire, phase, body) }

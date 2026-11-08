@@ -164,8 +164,15 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
                     let diagnostic = OwnedSchemaDecodeDiagnostic { code: "artifact-spr.inverse-page-admission", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() };
                     let demand = values.next_allocation_bytes().map_err(|_| diagnostic)?;
                     if demand > ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES { return Err(diagnostic); }
-                    let progress = values.reserve_one(demand).map_err(|_| diagnostic)?;
-                    cx.consume_fuel(progress.allocated_bytes.max(1) as u64);
+                    let grant = cx.retained_grant();
+                    let Some((reserved, performed)) = cx.with_original_effect(grant, |_, effect| values.reserve_one(effect).result).map_err(|_| diagnostic)? else { return Ok(ArtifactEnvelopeFieldDecodeStep::Pending); };
+                    let progress = match reserved {
+                        Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(step)) => step,
+                        Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Denied) => return Ok(ArtifactEnvelopeFieldDecodeStep::Pending),
+                        Err(_) => return Err(diagnostic),
+                    };
+                    cx.consume_fuel(u64::try_from(performed.max(1)).unwrap_or(u64::MAX));
+                    cx.consume_retained(RetainedCloneProgress { copied_items: usize::from(progress.progressed), retained_capacity_bytes: progress.allocated_bytes, ..Default::default() }).map_err(|_| diagnostic)?;
                     return Ok(ArtifactEnvelopeFieldDecodeStep::Pending);
                 }
             }
@@ -266,20 +273,22 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
         self.values.take()
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll {
+        let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit> {
+        let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_close};
         let diagnostic = self.diagnostic("artifact-spr.mutation-array-close-authority", 0);
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(diagnostic); }
+        if grant.maximum_depth < demand.depth { return Err(diagnostic.into()); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.state = ArtifactOwnedSprMutationArrayState::Closing;
         if let Some(owner) = self.active.as_mut() {
             if owner.terminal_is_empty() { drop(self.active.take()); self.depth = 0; self.scalar_entry = false; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty })); }
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = owner.close_step(child)?;
+            let step = artifact_envelope_close_resume(owner.close_step(&mut effect.nested(child)))?;
             admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original SPR mutation decoder").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
@@ -288,21 +297,22 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
             self.reservation = None;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
         }
-        if let Some(value) = self.target.value.take() {
+        if self.target.value.is_some() {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.mutation_factory.as_ref().ok_or_else(||diagnostic.with_native(semio_framework_value::ValueError::invariant("mutation target factory is absent")))?.retire_owned(value, child).result {
-                Ok((owner, progress)) => { *self.retirement = Some(owner); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(diagnostic.with_progress(progress)); } Ok(RetainedCloneStep::Progress(progress)) }
-                Err((error, value)) => { *self.target.value = Some(value); Err(diagnostic.with_native(error)) }
-            };
+            let factory = self.mutation_factory.as_ref().ok_or_else(||diagnostic.with_native(semio_framework_value::ValueError::invariant("mutation target factory is absent")))?;
+            let (owner, progress) = artifact_envelope_close_resume_with(artifact_envelope_factory_retire(factory.as_ref(), &mut *self.target.value, &mut effect.nested(child)), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure))?;
+            *self.retirement = Some(owner);
+            if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(diagnostic.with_progress(progress).into()); }
+            return Ok(RetainedCloneStep::Progress(progress));
         }
-        if self.retirement.is_some() { return artifact_retirement_box_close_step(&mut self.retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (diagnostic).with_native(error)); }
+        if self.retirement.is_some() { return artifact_envelope_close_resume_with(artifact_retirement_box_close_step(&mut self.retirement, effect), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(values) = self.values.take() {
             *self.rows_retirement = Some(ArtifactStoreOperationRowsRetirement::new(values, self.mutation_factory.as_ref().expect("original operation rows retain their factory").clone()));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
         }
         if let Some(owner) = self.rows_retirement.as_mut() {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = owner.close_step(child).result.map_err(|error| (diagnostic).with_native(error))?;
+            let step = artifact_envelope_close_resume_with(owner.close_step(&mut effect.nested(child)), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure))?;
             admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original SPR row owner").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
             if owner.terminal_is_empty() { drop(self.rows_retirement.take()); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
@@ -320,7 +330,7 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
         if let Some(slot) = self.factories_close.iter_mut().find(|slot| slot.is_some()) {
             let owner = slot.as_mut().expect("observed original mutation factory");
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = owner.step(child).result.map_err(|error| (diagnostic).with_native(error))?;
+            let step = artifact_envelope_close_resume_with(owner.step(&mut effect.nested(child)), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure))?;
             admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original SPR mutation factory").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
             if owner.terminal_is_empty() { drop(slot.take()); }
             self.taken = self.factories_close.iter().all(Option::is_none);
@@ -328,6 +338,8 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
         }
         self.taken = true;
         Ok(RetainedCloneStep::Complete(empty))
+        })();
+        artifact_envelope_close_settle(effect, result)
     }
 
     pub fn terminal_is_empty(&self) -> bool {

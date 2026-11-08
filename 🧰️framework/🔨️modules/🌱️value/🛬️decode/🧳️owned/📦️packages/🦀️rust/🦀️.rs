@@ -2,14 +2,14 @@
 
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_intrinsic::{DslValue, Number};
-pub use semio_framework_value_native_decoding::native_decoding::{NativeDecodeConstructionRecipient, NativeDecodeControl, NativeOwnedDecodeControl, OriginalReceivingPrimary};
+pub use semio_framework_value_native_decoding::native_decoding::{NativeDecodeControl, NativeOwnedDecodeControl, OriginalReceivingPrimary};
 pub use semio_framework_value_native_decoding::native_decoding::NativeDecodeAllocationOutcome;
 pub use semio_framework_value_native_decoding::native_encoding::NativeEncodeAllocationOutcome;
 pub use semio_framework_value_native_decoding::native_encoding::NativeEncodeEffectFailure;
 pub use semio_framework_value_persistent::list;
 pub use semio_framework_value_retained_clone::retained_clone;
 pub use semio_framework_value_retirement::retirement;
-pub use semio_framework_value_retirement::{OriginalRetirementOutcome,OriginalRetirementPoll,OriginalRetirementFailure};
+pub use semio_framework_value_retirement::{OriginalRetirementOutcome,OriginalRetirementPoll,OriginalRetirementFailure,OriginalRetirementControl,retirement_fields_type,retirement_fields_seed};
 pub use semio_framework_value_shared_issuance as shared_issuance;
 
 #[path = "../../🦀️.rs"]

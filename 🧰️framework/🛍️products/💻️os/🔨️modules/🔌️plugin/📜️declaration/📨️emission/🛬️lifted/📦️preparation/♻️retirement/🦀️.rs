@@ -2,14 +2,22 @@ use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementS
 
 /// ♻️ Original child emission sources retain their native close authority.
 struct OwnedChildEmitRetirement{original:ManuallyDrop<Option<OwnedChildEmit>>}
+/// ⏱️ Records work a still grant-shaped delegate already did on the caller's effect.
+fn pay_work(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,work:u64)->Result<(),ValueError>{
+ if effect.performed(work)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original child emission delegate exceeds its work grant"))}
+}
 impl RetirementCursor for OwnedChildEmitRetirement{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.original.as_ref().map_or(Ok(Default::default()),|source|if source.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{source.retirement_demands(maximum_body_bytes)})}
 
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
+ fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+  let grant=effect.grant();
   let Some(source)=self.original.as_mut()else{return RetirementStep::Complete(0)};
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
-  if source.terminal_is_empty(){drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1)}
-  let result=source.close_granted(grant);let work=source.last_turn_work();match result{Ok(step)=>RetirementStep::Progress(step.progress(),work),Err(error)=>RetirementStep::Failure(error,work)}
+  if source.terminal_is_empty(){
+   if let Err(error)=semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect){return RetirementStep::Failure(error.into(),effect.performed_work())}
+   drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},effect.performed_work())
+  }
+  match source.close_step(effect){Ok(step)=>RetirementStep::Progress(step.progress(),effect.performed_work()),Err(error)=>RetirementStep::Failure(error,effect.performed_work())}
  }
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.original.as_ref().map_or(Ok(0),|source|source.retirement_demands(0).map(|d|d.copy_bytes))}
@@ -21,8 +29,8 @@ impl RetirementCursor for OwnedChildEmitRetirement{
 }
 impl Drop for OwnedChildEmitRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.original.is_none(),"original owned child emission remains retained until full close");}}
 impl RetireOwned for OwnedChildEmit{
- fn retirement(self)->Box<dyn RetirementCursor>{Box::new(OwnedChildEmitRetirement{original:ManuallyDrop::new(Some(self))})}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OwnedChildEmitRetirement>())}
+ type RetirementCursor=OwnedChildEmitRetirement;
+ fn retirement_seed(self)->Self::RetirementCursor{OwnedChildEmitRetirement{original:ManuallyDrop::new(Some(self))}}
  fn controlled_retirement_supported()->bool{true}
 }
 
@@ -36,13 +44,19 @@ impl ChildEmitPreparationRetirement{
 impl RetirementCursor for ChildEmitPreparationRetirement{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
 
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
+ fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+  let grant=effect.grant();
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
-  if let Some(fault)=self.fault.as_mut(){let result=fault.step(grant);let work=fault.last_turn_work();return match result{Ok(step)=>{if fault.terminal_is_empty(){drop(self.fault.take());}RetirementStep::Progress(step.progress(),work)},Err(error)=>RetirementStep::Failure(error,work)}}
+  if let Some(fault)=self.fault.as_mut(){return match fault.step(effect){
+   semio_framework_value::RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),
+   semio_framework_value::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>{if fault.terminal_is_empty(){drop(self.fault.take());}RetirementStep::Progress(step.progress(),effect.performed_work())},Err(error)=>RetirementStep::Failure(error,effect.performed_work())}
+  }}
   let Some(source)=self.original.as_mut()else{return RetirementStep::Complete(0)};
-  if source.terminal_is_empty(){let bytes=source.owner_cell_bytes();if grant.maximum_depth==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted}drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()},1)}
+  if source.terminal_is_empty(){let bytes=source.owner_cell_bytes();if grant.maximum_depth==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted}if let Err(error)=semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect){return RetirementStep::Failure(error.into(),effect.performed_work())}drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()},effect.performed_work())}
   source.begin_close();
-  let result=source.close_step(grant);let work=source.last_turn_work();match result{
+  let result=source.close_step(grant);let paid=pay_work(effect,source.last_turn_work());let work=effect.performed_work();
+  if let Err(error)=paid{return RetirementStep::Failure(error.into(),work)}
+  match result{
    Ok(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=>RetirementStep::Progress(progress,work),
    Ok(PluginLifecycleStep::AwaitingInput{..}|PluginLifecycleStep::Blocked{..})=>if work==0{RetirementStep::BudgetExhausted}else{RetirementStep::Progress(Default::default(),work)},
    Err(original)=>{
@@ -67,7 +81,7 @@ impl RetirementCursor for ChildEmitPreparationRetirement{
 }
 impl Drop for ChildEmitPreparationRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original child preparation and full refusal remain retained until granted close");}}
 impl RetireOwned for ChildEmitPreparation{
- fn retirement(self)->Box<dyn RetirementCursor>{Box::new(ChildEmitPreparationRetirement{original:ManuallyDrop::new(Some(self)),fault:None})}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ChildEmitPreparationRetirement>())}
+ type RetirementCursor=ChildEmitPreparationRetirement;
+ fn retirement_seed(self)->Self::RetirementCursor{ChildEmitPreparationRetirement{original:ManuallyDrop::new(Some(self)),fault:None}}
  fn controlled_retirement_supported()->bool{true}
 }

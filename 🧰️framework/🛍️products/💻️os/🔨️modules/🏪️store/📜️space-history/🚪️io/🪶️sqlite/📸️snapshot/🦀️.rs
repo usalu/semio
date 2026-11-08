@@ -34,9 +34,9 @@ impl ArtifactSqliteSnapshotHost for SpaceHistorySnapshot {
     fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_io_control::NativeSnapshotEncodeOwner<'_,'_>,output:&mut Option<crate::lifted_serialization::SnapshotReceivingOutput<Self>>)->crate::lifted_serialization::SnapshotReceivingOutcome{receiving::reconstruct_receiving(None,Some(database),control,owner,output)}
     
     fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,control)}
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_io_control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<semio_framework_io_schema::IoPayload, ValueError> {
-        semantic(self,SqliteSnapshotPhase::EncodeNative,control)?;
-        native::encode(self, encoding, control, native_owner)
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_io_control::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<crate::lifted_serialization::SnapshotReceivingOutput<semio_framework_io_schema::IoPayload>>)->crate::lifted_serialization::SnapshotReceivingOutcome {
+        if let Err(error)=semantic(self,SqliteSnapshotPhase::EncodeNative,control){return semio_framework_value::RetainedWorkOutcome{result:Err(semio_framework_io_sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}
+        native::encode(self, encoding, control, native_owner, output)
     }
     fn decode_sqlite_snapshot_native(payload:&semio_framework_io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_io_control::NativeSnapshotDecodeOwner<'_,'_>,output:&mut Option<crate::lifted_serialization::SnapshotReceivingOutput<Self>>)->crate::lifted_serialization::SnapshotReceivingOutcome {
         if let Err(error)=schema(control){return semio_framework_value::RetainedWorkOutcome{result:Err(semio_framework_io_sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}

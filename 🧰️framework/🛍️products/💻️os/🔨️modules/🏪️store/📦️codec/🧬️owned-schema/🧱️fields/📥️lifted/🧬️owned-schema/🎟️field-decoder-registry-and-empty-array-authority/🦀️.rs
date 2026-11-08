@@ -42,42 +42,47 @@ impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for Ar
         Some(value)
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
-        use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_close};
-        let empty = RetainedCloneProgress::default();
-        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        let demand = self.close_demands(grant.maximum_copy_bytes).map_err(|error| (self.diagnostic("artifact-envelope.history-entry-demand", 0)).with_native(error))?;
-        if grant.maximum_depth < demand.depth { return Err(self.diagnostic("artifact-envelope.history-entry-depth-refused", 0)); }
-        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        self.terminal = true;
-        if self.retirement.is_some() { return artifact_retirement_box_close_step(&mut self.retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (self.diagnostic("artifact-envelope.history-entry-retirement-fault", 0)).with_native(error)); }
-        if let Some(value) = self.value.take() {
-            let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            match self.retirement_factory.as_ref().ok_or_else(|| self.diagnostic("artifact-envelope.history-factory-absent", 0).with_native(semio_framework_value::ValueError::invariant("history value factory is absent")))?.retire_owned(value, child).result {
-                Ok((owner, progress)) => {
-                    *self.retirement = Some(owner);
-                    if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(self.diagnostic("artifact-envelope.history-entry-constructor-receipt", 0).with_progress(progress)); }
-                    return Ok(RetainedCloneStep::Progress(progress));
-                }
-                Err((error, value)) => { *self.value = Some(value); return Err(self.diagnostic("artifact-envelope.history-entry-retirement-admission", 0).with_native(error)); }
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll {
+        let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit> {
+            use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_close};
+            let grant = effect.grant();
+            let empty = RetainedCloneProgress::default();
+            if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+            if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+            let demand = self.close_demands(grant.maximum_copy_bytes).map_err(|error| (self.diagnostic("artifact-envelope.history-entry-demand", 0)).with_native(error))?;
+            if grant.maximum_depth < demand.depth { return Err(self.diagnostic("artifact-envelope.history-entry-depth-refused", 0).into()); }
+            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+            self.terminal = true;
+            if self.retirement.is_some() {
+                let fault = self.diagnostic("artifact-envelope.history-entry-retirement-fault", 0);
+                return artifact_envelope_close_resume_with(artifact_retirement_box_close_step(&mut self.retirement, effect), |failure| artifact_envelope_failure_diagnostic(fault, &failure)).map(|step| RetainedCloneStep::Progress(step.progress()));
             }
-        }
-        if self.raw_len != 0 { self.raw_len = 0; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty })); }
-        if self.raw.is_some() { drop(self.raw.take()); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty })); }
-        if let Some(factory) = self.retirement_factory.take() {
-            let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
-            *self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory));
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
-        }
-        let failure = self.diagnostic("artifact-envelope.history-entry-factory-close", 0);
-        let owner = self.factory_close.as_mut().expect("remaining original history factory");
-        let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = owner.step(child).result.map_err(|error| (failure).with_native(error))?;
-        let terminal = owner.terminal_is_empty();
-        admit_retained_clone_close(child, step, terminal, "original history decoder factory").map_err(|error| (self.diagnostic("artifact-envelope.history-entry-factory-receipt", 0)).with_native(error).with_progress(step.progress()))?;
-        if terminal { drop(self.factory_close.take()); }
-        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
+            if self.value.is_some() {
+                let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+                let factory = self.retirement_factory.as_ref().ok_or_else(|| self.diagnostic("artifact-envelope.history-factory-absent", 0).with_native(semio_framework_value::ValueError::invariant("history value factory is absent")))?;
+                let admission = self.diagnostic("artifact-envelope.history-entry-retirement-admission", 0);
+                let (owner, progress) = artifact_envelope_close_resume_with(artifact_envelope_factory_retire(factory.as_ref(), &mut *self.value, &mut effect.nested(child)), |failure| artifact_envelope_failure_diagnostic(admission, &failure))?;
+                *self.retirement = Some(owner);
+                if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(self.diagnostic("artifact-envelope.history-entry-constructor-receipt", 0).with_progress(progress).into()); }
+                return Ok(RetainedCloneStep::Progress(progress));
+            }
+            if self.raw_len != 0 { self.raw_len = 0; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty })); }
+            if self.raw.is_some() { drop(self.raw.take()); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty })); }
+            if let Some(factory) = self.retirement_factory.take() {
+                let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
+                *self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory));
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
+            }
+            let failure = self.diagnostic("artifact-envelope.history-entry-factory-close", 0);
+            let owner = self.factory_close.as_mut().ok_or_else(|| failure.with_native(semio_framework_value::ValueError::invariant("remaining original history factory is absent")))?;
+            let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+            let step = artifact_envelope_close_resume_with(owner.step(&mut effect.nested(child)), |error| artifact_envelope_failure_diagnostic(failure, &error))?;
+            let terminal = owner.terminal_is_empty();
+            admit_retained_clone_close(child, step, terminal, "original history decoder factory").map_err(|error| (self.diagnostic("artifact-envelope.history-entry-factory-receipt", 0)).with_native(error).with_progress(step.progress()))?;
+            if terminal { drop(self.factory_close.take()); }
+            Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
+        })();
+        artifact_envelope_close_settle(effect, result)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -101,7 +106,7 @@ pub trait ArtifactEnvelopeFieldDecoder<P, Mutation>: Send {
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -360,23 +365,27 @@ where
     P: Send,
     Mutation: Send,
 {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
-        let empty = RetainedCloneProgress::default();
-        if self.owner.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        let demand = self.demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "returned artifact envelope field decoder exceeds admitted depth")); }
-        if !artifact_retirement_grant_covers(grant, demand) { return Ok(RetainedCloneStep::Progress(empty)); }
-        let owner = self.owner.as_mut().expect("returned field decoder remains present");
-        if owner.terminal_is_empty() {
-            drop(self.owner.take());
-            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty }));
-        }
-        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = owner.close_step(child).map_err(artifact_envelope_diagnostic_error)?;
-        semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "returned artifact envelope field decoder")?;
-        Ok(RetainedCloneStep::Progress(step.progress()))
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit<ValueError>> {
+            let grant = effect.grant();
+            let empty = RetainedCloneProgress::default();
+            if self.owner.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
+            if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+            let demand = self.demands(grant.maximum_copy_bytes)?;
+            if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "returned artifact envelope field decoder exceeds admitted depth").into()); }
+            if !artifact_retirement_grant_covers(grant, demand) { return Ok(RetainedCloneStep::Progress(empty)); }
+            let owner = self.owner.as_mut().expect("returned field decoder remains present");
+            if owner.terminal_is_empty() {
+                drop(self.owner.take());
+                return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty }));
+            }
+            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+            let step = artifact_envelope_close_resume_with(owner.close_step(&mut effect.nested(child)), artifact_envelope_diagnostic_error)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "returned artifact envelope field decoder")?;
+            Ok(RetainedCloneStep::Progress(step.progress()))
+        })();
+        artifact_envelope_retirement_settle(effect, result)
+    }
 
     fn terminal_is_empty(&self) -> bool {
         self.owner.is_none()
@@ -410,24 +419,27 @@ where
     P: Send,
     Mutation: Send,
 {
-    /// ↩️ Detaches and bounded-closes one exact returned decoder on the caller thread so a
-    /// worker [`release_step`] can pass its `ticket_reclaimed` gate without waiting for the app's
-    /// next maintenance visit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END `env-20`).
-    pub fn reclaim_returned_ticket_now(&self, ticket: ArtifactEnvelopeFieldDecoderTicket) -> Result<(), ArtifactEnvelopeFieldDecoderRegistryFault> {
-        if self.ticket_reclaimed(ticket) {
-            return Ok(());
-        }
-        let mut retired = self.take_returned_ticket(ticket)?;
-        for _ in 0..4096 {
-            if retired.terminal_is_empty() {
-                drop(retired);
-                return Ok(());
+    /// ↩️ Detaches the exact returned decoder into the caller's resident slot, then closes it one step per call inside the caller's effect, so a worker [`release_step`] passes its `ticket_reclaimed` gate without waiting for the app's next maintenance visit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END `env-20`). A registry that cannot yet detach the ticket reports a contended empty turn.
+    pub fn reclaim_returned_ticket_step(&self, ticket: ArtifactEnvelopeFieldDecoderTicket, slot: &mut Option<ArtifactEnvelopeReturnedFieldDecoder<P, Mutation>>, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let done = |result: Result<RetainedCloneStep, OriginalRetirementFailure>| RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: 0 });
+        if slot.is_none() {
+            if self.ticket_reclaimed(ticket) { return done(Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))); }
+            match self.take_returned_ticket(ticket) {
+                Ok(retired) => *slot = Some(retired),
+                Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return done(Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()))),
+                Err(_) => return done(Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned artifact envelope field decoder ticket cannot be detached").into())),
             }
-            let Ok(demand) = retired.demands(ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) else { return Err(ArtifactEnvelopeFieldDecoderRegistryFault::FalseTerminal) };
-            if ErasedSnapshotRetirement::close_step(&mut retired, artifact_retirement_self_grant(demand, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).result.is_err() { return Err(ArtifactEnvelopeFieldDecoderRegistryFault::FalseTerminal); }
         }
-        Err(ArtifactEnvelopeFieldDecoderRegistryFault::FalseTerminal)
+        let Some(retired) = slot.as_mut() else { return done(Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))) };
+        if retired.terminal_is_empty() && retired.owner.is_none() {
+            drop(slot.take());
+            return done(Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())));
+        }
+        let poll = ErasedSnapshotRetirement::close_step(retired, effect);
+        if slot.as_ref().is_some_and(|retired| retired.owner.is_none()) { drop(slot.take()); }
+        poll
     }
+
 }
 
 /// 🧺️ Token-local authority for an exact empty JSON array. The opening token is

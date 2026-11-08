@@ -1,0 +1,16 @@
+STATUS: pack-json-source native GREEN (4/4, packjson-5 rc 0). wasm32-wasip2 check of direct dependents: UNVERIFIED for retained-command and guest-contract (blocked upstream in peer crate semio-os-store-snapshot-clone, 63 errors, packjson-6); no error in source, source-sink, scene-views, result-page, host-source-json, space-history.
+
+## Caller limit vs turn capacity (ruling applied)
+- `ControlledWriter` (pack-json 🎛️controlled-and-borrowed-bridge) compared the output length with `control.maximum_bytes()`, which under `NativeEncodeControl::new_retained` is the per-turn capacity. Capacity-0 turns therefore refused a large output.
+- It now carries `ceiling` (whole-output caller ceiling), checked on every raw write in measure and write phase (no exemption). New `JsonBorrowedWriteCursor::set_output_ceiling`. `SourceJsonEncoder::advance` sets it at birth from `cx.original_total_retained_grant().maximum_capacity_bytes`. Turn capacity only bounds the allocation quote: running out yields Pending, output continues next turn.
+- Non-retained constructors keep their old limit (the explicit-control writer uses `control.maximum_bytes()`, others `isize::MAX`).
+- New test `the_caller_ceiling_bounds_the_whole_output_and_exceeding_it_is_a_typed_refusal` (40000-byte string, 16384 capacity: typed refusal, then clean close). Refusal law `a_grant_smaller_than_the_next_allocation_is_refused_without_a_heap_birth` stays green.
+
+## One-item-per-epoch stall (not the same conflation; two causes)
+1. The output-birth step (phase 1 -> 2) quoted and charged `size_of::<ControlledWriter>()+size_of::<JsonWriteFrame>()+1` (about 137-145 B), more than the per-turn copy grant 128 minus the 9 B epoch/closing reserve = 119. The phase is indivisible, so every turn returned Pending, each charging an epoch item, until the total item budget ended in "remaining budget cannot cover its minimum metadata phase". Fix: the quote and receipt are the payload actually moved (`WRITER_BIRTH_COPY_BYTES`: output backing, both counters, first frame, tag = about 81 B). Grant sizes unchanged.
+2. After that, cleanup failed with "retirement cursor lacks a work quote": `JsonProjectionIteratorRetirement` (parser-and-grammar-cursor) never implemented `next_computational_work`. Added (`1` until released).
+- Open design note: an indivisible phase whose demand can never fit the caller's per-turn copy grant still spins as Pending until the total budget ends (typed at the end, not at the first turn). Not changed; it needs the caller to decide per-turn vs total.
+
+## Logs
+C/🗑️generated/1105b/packjson-1..7.{txt,rc}: -1 wrong flag (my error), -2 red (close quote), -3 3/3 green, -4 red (test fixture admit with 4000 capacity), -5 4/4 green, -6 wasm dependents, -7 pack-json-tests native.
+- packjson-7 (pack-json-tests companion, native): rc 1, "package ID specification did not match any packages" (not a member of the root workspace manifest). UNVERIFIED: the companion/borrowed-source-laws tests that also drive JsonBorrowedWriteCursor (their write-phase limit is now `ceiling` = isize::MAX by default, set from the explicit control only in the non-cursor writer); the stdio-contract-editing-patch dependent was also not checked. Owner of that manifest should run them.

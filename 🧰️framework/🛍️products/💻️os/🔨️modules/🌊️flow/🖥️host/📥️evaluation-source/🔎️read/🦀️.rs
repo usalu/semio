@@ -25,6 +25,9 @@ pub trait FlowSourceBaseline {
 #[path="⚖️compare/🦀️.rs"]
 mod compare;
 use compare::SourceCompare;
+#[path="🧺️owner/🦀️.rs"]
+pub mod owner;
+pub use owner::FlowSourceReadOwner;
 #[path="📨️request/🦀️.rs"]
 pub mod request;
 pub use request::{FlowPreviewTessellationRequest,FlowPreviewTessellationWriter};
@@ -212,18 +215,3 @@ pub type FlowLayoutEntryWork=semio_framework_value_ordered::ordered::OriginalOwn
 
 pub use semio_os_flow_host_source::ordering::{OriginalTextOrdering,FlowTextOrderingWork};
 
-
-// [DEBUG] size probe
-#[cfg(feature="size-probe")]
-mod size_probe{use super::*;
-const _:[();0]=[();size_of::<neural::Synapse>()];
-const _:[();1]=[();size_of::<NeuralValue>()];
-const _:[();2]=[();size_of::<neural::BudgetedTreeCopy>()];
-const _:[();3]=[();size_of::<neural::BudgetedOwnedEntry>()];
-const _:[();4]=[();size_of::<semio_framework_artifact_flow_flow::artifact::FlowSourceIdentity>()];
-const _:[();5]=[();size_of::<Option<semio_framework_artifact_flow_flow::artifact::FlowSourceIdentity>>()];
-const _:[();6]=[();size_of::<RetainedCloneProgress>()];
-const _:[();7]=[();size_of::<Option<FlowSourceReadFailure>>()];
-const _:[();8]=[();size_of::<EvalChannels>()];
-const _:[();9]=[();size_of::<ControlledRetirement<ReadSources>>()];
-}

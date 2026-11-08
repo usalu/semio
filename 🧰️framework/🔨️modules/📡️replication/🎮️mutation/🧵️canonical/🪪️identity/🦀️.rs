@@ -1,5 +1,5 @@
 //! 🧾️ Original publication fields assemble into actual native paged identity owners.
-use super::authority::ArtifactCanonicalEditAuthority;
+use super::{authority::ArtifactCanonicalEditAuthority,settle_exit};
 use crate::Edit;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,paged::{PagedUtf8,PagedUtf8AppendCursor,Utf8Text},retirement::controlled::ControlledRetirement,retained_clone::{RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::size_of;
@@ -38,21 +38,21 @@ impl<M:Send+Sync+'static> ArtifactCanonicalEditIdentityCursor<M>{
   if let Some(owner)=self.authority.as_ref(){return if owner.terminal_is_empty(){Ok(copy(0))}else{alias_demand(owner)};}
   Ok(Default::default())
  }
- pub fn advance(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{let mut work=0;let result=(||{
+ pub fn advance(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{use semio_framework_value::RetirementPollExit;let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedCloneStep,RetirementPollExit>=(||->Result<RetainedCloneStep,RetirementPollExit>{
   if self.terminal_is_empty()||self.is_ready(){return Ok(RetainedCloneStep::Complete(Default::default()));}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}let demand=self.next_demand()?;if !permits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let progress=if let Some(owner)=self.append.as_ref(){
    if owner.terminal_is_empty(){work=1;self.append=None;self.append_closing=false;if !self.closing{let count=self.text()?.text_chunk_count().max(1);self.chunk+=1;if self.chunk==count{self.chunk=0;self.field+=1;}}RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}
-   else if self.append_closing{{let turn=self.append.as_mut().ok_or_else(||ValueError::invariant("append absent"))?.close_step(child(grant));work=turn.work;turn.result?.progress()}}
+   else if self.append_closing{{let turn=RetirementPollExit::settled(self.append.as_mut().ok_or_else(||ValueError::invariant("append absent"))?.close_step(&mut effect.nested(child(grant))))?;work=turn.work;turn.result?.progress()}}
     else{let authority=self.authority.as_ref().ok_or_else(||ValueError::invariant("authority absent"))?.borrow()?;let edit=self.edit.as_ref().ok_or_else(||ValueError::invariant("edit absent"))?.borrow()?;let text:&(dyn Utf8Text+Sync)=if self.field==0{authority.get().actor()}else{&edit.get().id};let chunk=if text.text_bytes()==0{""}else{text.text_chunk(self.chunk).ok_or_else(||refusal("canonical identity native input chunk missing"))?};let owner=self.append.as_mut().ok_or_else(||ValueError::invariant("append absent"))?;let turn=owner.advance(chunk,&mut self.output.as_mut().ok_or_else(||ValueError::invariant("output absent"))?[self.field],128,child(grant));work=turn.work;let step=turn.result?;if matches!(step,RetainedCloneStep::Complete(_)){owner.begin_close();self.append_closing=true;}step.progress()}
   }else if self.closing&&self.output.is_some(){work=1;let [actor,applied,tail]=self.output.take().ok_or_else(||ValueError::invariant("output absent"))?;self.retirement=Some(ControlledRetirement::new((actor,applied,tail)).map_err(|(error,(actor,applied,tail))|{self.output=Some([actor,applied,tail]);error})?);RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}
-  else if let Some(owner)=self.retirement.as_mut(){if owner.terminal_is_empty(){work=1;self.retirement=None;RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}else{{let step=owner.step(child(grant));work=owner.last_turn_work();step?.progress()}}}
+  else if let Some(owner)=self.retirement.as_mut(){if owner.terminal_is_empty(){work=1;self.retirement=None;RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}else{{let turn=RetirementPollExit::settled(owner.step(&mut effect.nested(child(grant))))?;work=turn.work;turn.result?.progress()}}}
   else if !self.closing&&self.field<3{work=1;self.append=Some(PagedUtf8AppendCursor::default());RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}
-  else if let Some(owner)=self.edit.as_mut(){if owner.terminal_is_empty(){work=1;self.edit=None;RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}else{{let turn=owner.close_step(child(grant));work=turn.work;turn.result?.progress()}}}
-  else if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){work=1;self.authority=None;RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}else{{let turn=owner.close_step(child(grant));work=turn.work;turn.result?.progress()}}}
+  else if let Some(owner)=self.edit.as_mut(){if owner.terminal_is_empty(){work=1;self.edit=None;RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}else{{let turn=RetirementPollExit::settled(owner.close_step(&mut effect.nested(child(grant))))?;work=turn.work;turn.result?.progress()}}}
+  else if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){work=1;self.authority=None;RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}else{{let turn=RetirementPollExit::settled(owner.close_step(&mut effect.nested(child(grant))))?;work=turn.work;turn.result?.progress()}}}
   else{Default::default()};
   Ok(if self.terminal_is_empty()||self.is_ready(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
- })();semio_framework_value::RetainedWorkOutcome{result,work}}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{self.begin_close();self.advance(grant)}
+ })();settle_exit(effect,base,result,work)}
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{self.begin_close();self.advance(effect)}
 }
 impl<M:Send+Sync+'static> Drop for ArtifactCanonicalEditIdentityCursor<M>{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"canonical identity assembly abandoned original inputs or output pages");}}
 

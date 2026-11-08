@@ -1,5 +1,5 @@
 //! 🔀️ Source-owned guest operations and their original result recipients.
-pub use semio_framework_plugin_host_source_json::{SourceJsonEncoder,OriginalJobBudgetJson};
+pub use semio_plugin_host_source_json::{SourceJsonEncoder,OriginalJobBudgetJson};
 use semio_framework_actor::ActorId as RuntimeActorId;
 use semio_plugin_host_guest_runtime::{GuestInstance,GuestRuntimes};
 use semio_plugin_host_wake::GuestRelayWakeDriver;

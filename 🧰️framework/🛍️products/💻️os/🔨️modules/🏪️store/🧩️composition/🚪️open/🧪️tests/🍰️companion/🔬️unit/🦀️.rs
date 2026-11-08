@@ -167,7 +167,7 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
     assert_eq!(observed, vec![17, -23, 42]);
     for member in &mut members {
         for _ in 0..4096 {
-            if matches!(member.close_owned_step(grant.retained_grant()).unwrap(), RetainedCloneStep::Complete(_)) {
+            if matches!(member.close_owned_step_cold(grant.retained_grant()).unwrap(), RetainedCloneStep::Complete(_)) {
                 break;
             }
         }

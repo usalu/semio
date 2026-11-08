@@ -1,6 +1,6 @@
 //! 📋️ The clone trait owner binds actual typed elements to the fixed-page engine.
 use super::*;
-use crate::OriginalRetirementOutcome;
+use crate::{OriginalRetirementOutcome,OriginalRetirementPoll};
 use semio_framework_value_paged_list::PagedList;
 use semio_framework_value_paged_clone::{PagedListCloneEngine,PagedCloneElement};
 #[doc(hidden)]
@@ -13,14 +13,14 @@ fn advance_work_demand(&self,source:RetainedCloneRef<'_,T>,body:usize,maximum_wo
 fn advance(&mut self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementOutcome{self.0.advance(source,body,maximum_work_units,effect)}
 fn take_demand(&self)->Result<RetirementDemand,ValueError>{self.0.take_demand()}
 fn take_work_demand(&self)->Result<u64,ValueError>{self.0.take_work_demand()}
-fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>{self.0.take(grant)}
+fn take<'reply>(&mut self,output:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{self.0.take(output,effect,reply)}
 fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>{self.0.begin_close_demand()}
 fn begin_close_work_demand(&self)->Result<u64,ValueError>{self.0.begin_close_work_demand()}
-fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress>{self.0.begin_close_paid(grant)}
+fn begin_close_paid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,ValueError>{self.0.begin_close_paid(effect)}
 fn close_started(&self)->bool{self.0.close_started()}
 fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.close_demands(body)}
 fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.0.close_work_demand(body)}
-fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementOutcome{let grant=effect.grant();self.0.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
+fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let grant=effect.grant();self.0.close_step(&mut effect.nested(grant))}
 fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
 }
 pub type PagedListCursor<T:RetainedClone,const N:usize>=PagedListCloneEngine<T,PagedListElement<T>,N>;
@@ -32,14 +32,14 @@ fn advance_work_demand(&self,source:RetainedCloneRef<'_,PagedList<T,N>>,body:usi
 fn advance(&mut self,source:RetainedCloneRef<'_,PagedList<T,N>>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementOutcome{PagedListCloneEngine::advance(self,source,body,maximum_work_units,effect)}
 fn take_demand(&self)->Result<RetirementDemand,ValueError>{PagedListCloneEngine::take_demand(self)}
 fn take_work_demand(&self)->Result<u64,ValueError>{PagedListCloneEngine::take_work_demand(self)}
-fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(PagedList<T,N>,RetainedCloneProgress)>>{PagedListCloneEngine::take(self,grant)}
+fn take<'reply>(&mut self,output:&mut Option<PagedList<T,N>>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{PagedListCloneEngine::take(self,output,effect,reply)}
 fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>{PagedListCloneEngine::begin_close_demand(self)}
 fn begin_close_work_demand(&self)->Result<u64,ValueError>{PagedListCloneEngine::begin_close_work_demand(self)}
-fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress>{PagedListCloneEngine::begin_close_paid(self,grant)}
+fn begin_close_paid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,ValueError>{PagedListCloneEngine::begin_close_paid(self,effect)}
 fn close_started(&self)->bool{PagedListCloneEngine::close_started(self)}
 fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{PagedListCloneEngine::close_demands(self,body)}
 fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{PagedListCloneEngine::close_work_demand(self,body)}
-fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementOutcome{let grant=effect.grant();PagedListCloneEngine::close_step(self,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
+fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let grant=effect.grant();PagedListCloneEngine::close_step(self,&mut effect.nested(grant))}
 fn terminal_is_empty(&self)->bool{PagedListCloneEngine::terminal_is_empty(self)}
 fn next_close_depth_demand(&self)->Result<usize,ValueError>{PagedListCloneEngine::next_close_depth_demand(self)}
 fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{PagedListCloneEngine::next_close_copy_byte_demand(self)}

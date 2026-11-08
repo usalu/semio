@@ -82,7 +82,7 @@ impl UiNativeResources {
         }
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_release_bytes < demand.release_bytes { return Ok(Mesh3dOwnershipStep::default()); }
-        let step = self.rows.release_empty_page(grant.maximum_release_bytes).map_err(UiNativeResourceFailure::Storage)?;
+        let step = self.rows.release_empty_page_leased(grant.maximum_release_bytes).map_err(UiNativeResourceFailure::Storage)?;
         Ok(Mesh3dOwnershipStep { complete: self.terminal_is_empty(), progress: RetainedCloneProgress { copied_items: usize::from(step.progressed), released_bytes: step.released_allocation_bytes, ..Default::default() } })
     }
 
@@ -202,7 +202,7 @@ impl std::ops::DerefMut for UiNativeFailurePlace { fn deref_mut(&mut self) -> &m
 
 fn close_native_failure_place(place: &mut UiNativeFailurePlace, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
     let demand = place.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
-    semio_framework_job::close_original_retained_step(cx, demand, |grant| place.close_step(grant))?;
+    semio_framework_job::close_original_effect_step(cx, demand, |effect| place.close_step(effect))?;
     Ok(())
 }
 

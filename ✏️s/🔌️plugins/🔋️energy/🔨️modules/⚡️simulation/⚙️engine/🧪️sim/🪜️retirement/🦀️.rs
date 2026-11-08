@@ -53,17 +53,42 @@ pub fn energy_outcome(step: Result<RetainedCloneStep, ValueError>) -> semio_fram
         Ok(step) => u64::from(step.progress() != RetainedCloneProgress::default()),
         Err(_) => 0,
     };
-    semio_framework_value::RetainedWorkOutcome { result: step, work }
+    semio_framework_value::RetainedWorkOutcome { result: step, work: u128::from(work) }
 }
 
 /// 🏗️ Wraps one construction step into the work-counted outcome: one work unit iff the construction succeeded.
 pub fn energy_construct<T>(result: Result<(T, RetainedCloneProgress), ValueError>) -> semio_framework_value::RetainedWorkOutcome<(T, RetainedCloneProgress)> {
-    semio_framework_value::RetainedWorkOutcome { work: u64::from(result.is_ok()), result }
+    semio_framework_value::RetainedWorkOutcome { work: u128::from(result.is_ok()), result }
 }
 
 /// 🎟️ Runs one funded retained step under the original caller from a plain owner step.
 pub fn energy_retained_step(cx: &mut semio_framework_job::StepContext<'_>, demand: RetirementDemand, advance: impl FnOnce(RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
     semio_framework_job::close_original_retained_step(cx, demand, |grant| energy_outcome(advance(grant)))
+}
+
+/// 🎟️ Runs one funded retained step under the original caller's effect; a refusal travels as a typed retirement failure.
+pub fn energy_effect_step(cx: &mut semio_framework_job::StepContext<'_>, demand: RetirementDemand, advance: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+    semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+        let result = advance(effect).map_err(semio_framework_value::OriginalRetirementFailure::from);
+        semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work() })
+    })
+}
+
+/// 🔁️ Reads a retirement poll as one step: a suspended poll is an idle turn that the next turn repolls unchanged.
+pub fn energy_poll<T>(poll: semio_framework_value::RetainedWorkPoll<T, semio_framework_value::OriginalRetirementFailure>) -> Result<Option<T>, ValueError> {
+    match poll {
+        semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(None),
+        semio_framework_value::RetainedWorkPoll::Complete(outcome) => outcome.result.map(Some).map_err(|failure| {
+            let progress = failure.retained_progress();
+            let (primary, work, receipt, ..) = failure.into_parts();
+            primary.or(work).or(receipt).unwrap_or_else(|| ValueError::invariant("original retirement refused without a cause")).with_retained_progress(progress)
+        }),
+    }
+}
+
+/// 🚀️ Reads the outcome of a begun retirement: the first step when the owner entered, none when it stayed resident.
+pub fn energy_begin<T>(outcome: semio_framework_value::RetainedWorkOutcome<Option<T>, ValueError>) -> Result<Option<T>, ValueError> {
+    outcome.result
 }
 
 /// 🛡️ Closes one owner frontier only when the grant covers its own quote, otherwise reports an idle turn.

@@ -28,21 +28,18 @@ impl Projection {
     pub fn take_scene(&mut self) -> Option<DslValue> { self.scene.take() }
 
     /// ♻️ Transfers both completed and partial owners to the framework's explicit retirement cursor; a refused admission leaves every owner in place.
-    pub fn take_retirement(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), ValueError> {
-        let owners = ((std::mem::take(&mut self.nodes), std::mem::take(&mut self.handles), std::mem::take(&mut self.edges), std::mem::take(&mut self.regions)), std::mem::take(&mut self.fields), self.scene.take());
-        let turn = semio_framework_value::retirement::admit_owned_retirement(owners, grant);
-        semio_framework_value::RetainedWorkOutcome {
-            result: turn.result.map_err(|(error, ((nodes, handles, edges, regions), fields, scene))| {
-                self.nodes = nodes;
-                self.handles = handles;
-                self.edges = edges;
-                self.regions = regions;
-                self.fields = fields;
-                self.scene = scene;
-                error
-            }),
-            work: turn.work,
+    pub fn take_retirement(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress)>, ValueError> {
+        let mut owners = Some(((std::mem::take(&mut self.nodes), std::mem::take(&mut self.handles), std::mem::take(&mut self.edges), std::mem::take(&mut self.regions)), std::mem::take(&mut self.fields), self.scene.take()));
+        let turn = semio_framework_value::retirement::admit_owned_retirement(&mut owners, effect);
+        if let Some(((nodes, handles, edges, regions), fields, scene)) = owners {
+            self.nodes = nodes;
+            self.handles = handles;
+            self.edges = edges;
+            self.regions = regions;
+            self.fields = fields;
+            self.scene = scene;
         }
+        turn
     }
 
     /// 🚦️ Projects with cumulative allocation admission, progress and cancellation.

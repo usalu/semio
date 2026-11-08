@@ -11,6 +11,8 @@ impl<T> NativeOwnedStorage<T>{
  pub fn reserve_demand()->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<Option<NonNull<T>>>(),capacity_bytes:Layout::new::<T>().size(),depth:1,..Default::default()}}
  pub fn move_demand()->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<Option<T>>()+std::mem::size_of::<T>()+std::mem::size_of::<bool>(),depth:1,..Default::default()}}
  pub fn release_demand(&self)->RetirementDemand{if self.pointer.is_none(){Default::default()}else{RetirementDemand{copy_bytes:std::mem::size_of::<Option<NonNull<T>>>(),release_bytes:Layout::new::<T>().size(),depth:1,..Default::default()}}}
+ /// ⏱️ Quotes the actual backing release action.
+ pub fn release_work_demand(&self)->u64{u64::from(self.pointer.is_some())}
  pub fn reserved(&self)->bool{self.pointer.is_some()}
  pub fn initialized(&self)->bool{self.initialized}
  pub fn address(&self)->Option<usize>{self.pointer.map(|p|p.as_ptr()as usize)}

@@ -35,7 +35,8 @@ pub enum GeometryKind {
 pub struct GeometryHandle(pub String);
 
 impl semio_framework_value::retirement::RetireOwned for GeometryHandle {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.0)}
+    type RetirementCursor=<String as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::RetireOwned::retirement_seed(self.0)}
     fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)}
     fn controlled_retirement_supported()->bool{true}
 }

@@ -5,11 +5,11 @@ fn denied(d:crate::RetirementDemand,g:RetainedCloneGrant)->impl Iterator<Item=Re
 fn account(p:RetainedCloneProgress,g:RetainedCloneGrant,heap:(usize,usize)){assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes))}
 fn close<V:crate::retirement::RetireOwned+Sync>(cursor:LookupCursor<V>){
  let mut owner=ControlledRetirement::new(cursor).unwrap_or_else(|_|panic!("actual lookup declares controlled retirement"));
- for _ in 0..10000{
+ let mut bank=crate::bank::scratch();for _ in 0..10000{
   if owner.terminal_is_empty(){return}
-  let d=owner.selected_demand(4096).unwrap();let g=grant(d);
-  for denied in denied(d,g){let(turn,heap)=crate::observe_retirement_allocations(||owner.step(denied));assert_eq!(owner.last_turn_work(),0);assert_eq!(heap,(0,0));match turn{Ok(step)=>assert_eq!(step.progress(),Default::default()),Err(error)=>assert_eq!(error.kind,crate::ValueRefusalKind::DepthLimit)}assert_eq!(owner.selected_demand(4096).unwrap(),d)}
-  let(turn,heap)=crate::observe_retirement_allocations(||owner.step(g));account(turn.unwrap().progress(),g,heap);
+  let d=owner.selected_demand(4096).unwrap();let g=grant(d);let units=owner.next_computational_work(4096).unwrap();
+  for denied in denied(d,g){let((turn,_),heap)=crate::observe_retirement_allocations(||crate::bank::once(&mut bank,denied,units,|effect|owner.step(effect)));assert_eq!(turn.work,0);assert_eq!(owner.last_turn_work(),0);assert_eq!(heap,(0,0));match turn.result{Ok(step)=>assert_eq!(step.progress(),Default::default()),Err(error)=>assert_eq!(error.primary().expect("original failure keeps a primary refusal").kind,crate::ValueRefusalKind::DepthLimit)}assert_eq!(owner.selected_demand(4096).unwrap(),d)}
+  let((turn,_),heap)=crate::observe_retirement_allocations(||crate::bank::once(&mut bank,g,units,|effect|owner.step(effect)));account(turn.result.unwrap().progress(),g,heap);
  }panic!("borrowed lookup original root retirement stalled")
 }
 #[test]

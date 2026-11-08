@@ -8,7 +8,7 @@ use semio_framework_value::{DslValue, native_encoding::NativeEncodeControl};
 use semio_framework_dsl_record::{BorrowedRecordSpec, BorrowedShape as B};
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView as V};
 use semio_framework_dsl_record::native_encoding::RetainedExpressionCursor;
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::retained_clone::{RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value_paged_text::paged_text::TextReadView;
 
@@ -37,16 +37,8 @@ const SYMBOL_LIMIT: usize = isize::MAX as usize;
 struct Symbol { path: [usize; 64], depth: usize, occurrences: usize, selected: bool, forced: bool, key: Option<usize> }
 #[derive(Clone, Copy, Debug)]
 struct ChunkLocator { path: [usize; 64], depth: usize, offset: usize, length: usize }
-impl semio_framework_value::retirement::RetireOwned for ChunkLocator{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
-    fn controlled_retirement_supported()->bool{true}
-}
-impl semio_framework_value::retirement::RetireOwned for Symbol{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
-    fn controlled_retirement_supported()->bool{true}
-}
+semio_framework_value::artifact_retire_leaf!(ChunkLocator);
+semio_framework_value::artifact_retire_leaf!(Symbol);
 impl Symbol {
     fn text<'a>(&self, source: &'a dyn FieldProjectionSource) -> Result<TextReadView<'a>, ValueError> {
         if let Some(key)=self.key{source.projection_key_view(&self.path[..self.depth],key)}else{text_view(source.projection_view(&self.path[..self.depth])?)}
@@ -55,11 +47,7 @@ impl Symbol {
 
 #[derive(Clone, Copy, Default)]
 struct Frame { phase: u8, index: usize, count: usize, ordinal: usize, previous: u32, candidate: u32, flags: u8, packed: u8, length: usize, offset: usize, rank: usize, shape: Option<B>, record: Option<BorrowedRecordSpec>, table_row: bool, force_text: bool, intrinsic:bool,bare_record:bool }
-impl semio_framework_value::retirement::RetireOwned for Frame{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
-    fn controlled_retirement_supported()->bool{true}
-}
+semio_framework_value::artifact_retire_leaf!(Frame);
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Phase { Initialize, Discover, Find, Reserve, Insert, Select, SymbolsCount, Symbols, SymbolBytes, Reset, Body, Expression, ChunkReserve, Complete, Closing, Closed }
@@ -79,6 +67,20 @@ pub struct BorrowedProjectedPackProgress { pub progress: RetainedCloneProgress, 
 #[derive(Debug,semio_framework_value::RetireOwned)]
 pub struct BorrowedProjectedPackFailure { pub reason: ValueError, pub written_bytes: usize }
 
+impl From<semio_framework_value::OriginalRetirementFailure> for BorrowedProjectedPackFailure {
+    fn from(failure: semio_framework_value::OriginalRetirementFailure) -> Self { Self { reason: failure.primary().cloned().unwrap_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "borrowed Pack retirement failed without a primary cause")), written_bytes: 0 } }
+}
+/// 📚️ A paged list reserves one page under the caller's effect; denial reports no progress.
+pub(crate) fn reserve_list<T: semio_framework_value::retirement::RetireOwned, const N: usize>(list: &mut PagedList<T, N>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
+    use semio_framework_value_persistent::list::{PagedListReservationFailure as F, PagedListReservationOutcome as O};
+    let grant = effect.grant(); let mut child = effect.nested(RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant });
+    match list.reserve_one_funded(&mut child).result { Ok(O::Ready(progress)) => Ok(progress), Ok(O::Denied) => Ok(Default::default()), Err(F::Work(error)) => Err(error), Err(F::Allocation { error, copied_bytes }) => Err(page_error(error.refusal()).with_retained_progress(RetainedCloneProgress { retained_capacity_bytes: error.allocated_bytes, copied_bytes, ..Default::default() })) }
+}
+/// 📚️ A paged list releases its empty page under the caller's effect; denial releases nothing.
+pub(crate) fn release_list<T: semio_framework_value::retirement::RetireOwned, const N: usize>(list: &mut PagedList<T, N>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<usize, ValueError> {
+    use semio_framework_value_persistent::list::{PagedListReleaseFailure as F, PagedListReleaseOutcome as O};
+    match list.release_empty_page(effect).result { Ok(O::Ready(step)) => Ok(step.released_allocation_bytes), Ok(O::Denied) => Ok(0), Err(F::Work(error)) => Err(error), Err(F::Release(error)) => Err(page_error(error)) }
+}
 impl From<ValueError> for BorrowedProjectedPackFailure {
     fn from(reason: ValueError) -> Self { Self { reason, written_bytes: 0 } }
 }
@@ -269,16 +271,17 @@ impl BorrowedProjectedPackCursor {
     }
 
     /// ✍️ Performs one structural event, one physical birth, or at most sixty-four source/output bytes.
-    pub fn advance(&mut self, source: &dyn FieldProjectionSource, spec: BorrowedRecordSpec, output: &mut [u8], grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, BorrowedProjectedPackFailure> {
-        self.advance_root(source,Some(spec),None,output,grant)
+    pub fn advance(&mut self, source: &dyn FieldProjectionSource, spec: BorrowedRecordSpec, output: &mut [u8], effect: &mut RetainedAllocationEffect<'_>) -> Result<BorrowedProjectedPackProgress, BorrowedProjectedPackFailure> {
+        self.advance_root(source,Some(spec),None,output,effect)
     }
 
     /// 🌱️ Emits one declared intrinsic Body field, preserving original member order and duplicates.
-    pub fn advance_intrinsic(&mut self, source: &dyn FieldProjectionSource, field_id: u16, output: &mut [u8], grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, BorrowedProjectedPackFailure> {
-        self.advance_root(source,None,Some(field_id),output,grant)
+    pub fn advance_intrinsic(&mut self, source: &dyn FieldProjectionSource, field_id: u16, output: &mut [u8], effect: &mut RetainedAllocationEffect<'_>) -> Result<BorrowedProjectedPackProgress, BorrowedProjectedPackFailure> {
+        self.advance_root(source,None,Some(field_id),output,effect)
     }
 
-    fn advance_root(&mut self, source: &dyn FieldProjectionSource, spec: Option<BorrowedRecordSpec>, field_id: Option<u16>, output: &mut [u8], grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, BorrowedProjectedPackFailure> {
+    fn advance_root(&mut self, source: &dyn FieldProjectionSource, spec: Option<BorrowedRecordSpec>, field_id: Option<u16>, output: &mut [u8], effect: &mut RetainedAllocationEffect<'_>) -> Result<BorrowedProjectedPackProgress, BorrowedProjectedPackFailure> {
+        let grant = effect.grant();
         let mut progress = RetainedCloneProgress::default();
         let result = (|| -> Result<BorrowedProjectedPackProgress, ValueError> {
         if matches!(self.phase, Phase::Closing | Phase::Closed) { return Err(invalid("borrowed Pack cursor is closing")); }
@@ -290,6 +293,7 @@ impl BorrowedProjectedPackCursor {
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < self.next_minimum_copy_bytes() { return Ok(Default::default()); }
         if grant.maximum_depth < self.next_advance_depth_demand()? { return Ok(Default::default()); }
         self.identity = Some(identity); self.root_spec = spec; self.intrinsic_field = field_id;
+        if (self.phase != Phase::Expression || self.expression_state.mode == 1) && !effect.performed(1)? { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "borrowed Pack action exceeded its original work")); }
         progress.copied_items = 1;
         let maximum = grant.maximum_copy_bytes.min(64);
         if self.pending_offset < self.pending_length {
@@ -299,7 +303,7 @@ impl BorrowedProjectedPackCursor {
             return Ok(BorrowedProjectedPackProgress { progress, written_bytes: count, complete: self.is_complete() });
         }
         match self.phase {
-            Phase::Initialize=>{if !self.frames.has_reserved_slot(){progress=self.frames.reserve_one_funded(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map_err(|error|{progress.retained_capacity_bytes=error.allocated_bytes;page_error(error.refusal())})?;}else{self.frames.push_reserved(Frame::default()).map_err(|_|invalid("Pack frame has no admitted initialization slot"))?;progress.copied_bytes=size_of::<Frame>();if self.frames.len()==64{self.phase=Phase::Discover;}}},
+            Phase::Initialize=>{if !self.frames.has_reserved_slot(){progress=reserve_list(&mut self.frames,effect)?;}else{self.frames.push_reserved(Frame::default()).map_err(|_|invalid("Pack frame has no admitted initialization slot"))?;progress.copied_bytes=size_of::<Frame>();if self.frames.len()==64{self.phase=Phase::Discover;}}},
             Phase::Discover => self.discover(source,maximum,&mut progress)?,
             Phase::Find => {
                 let note = self.note.ok_or_else(|| invalid("borrowed Pack lost its pending text locator"))?;
@@ -315,7 +319,7 @@ impl BorrowedProjectedPackCursor {
                 if !self.symbols.has_reserved_slot() {
                     let required = self.symbols.next_allocation_bytes().map_err(page_error)?;
                     if required > grant.maximum_capacity_bytes { return Ok(Default::default()); }
-                    progress=self.symbols.reserve_one_funded(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map_err(|error| { progress.retained_capacity_bytes = error.allocated_bytes; page_error(error.refusal()) })?;
+                    progress=reserve_list(&mut self.symbols,effect)?;
                 } else { self.symbols.push_reserved(self.note.ok_or_else(|| invalid("Pack insertion lost text locator"))?).map_err(|_| invalid("Pack symbol reserved slot rejected"))?;progress.copied_bytes=size_of::<Symbol>(); self.search = self.symbols.len() - 1; self.phase = Phase::Insert; }
             }
             Phase::Insert => {
@@ -344,11 +348,11 @@ impl BorrowedProjectedPackCursor {
             }
             Phase::Reset=>{self.frames[self.reset]=Frame::default();self.reset+=1;progress.copied_bytes=size_of::<Frame>();if self.reset==64{self.phase=Phase::Body;if let Some(field)=self.intrinsic_field{self.queue_number(None,1);self.append_number(u64::from(field));self.pending[self.pending_length]=TAG_VALUE;self.pending_length+=1;}}},
             Phase::ChunkReserve=>{
-                if !self.replaying&&!self.chunks.has_reserved_slot(){progress=self.chunks.reserve_one_funded(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map_err(|error|{progress.retained_capacity_bytes=error.allocated_bytes;page_error(error.refusal())})?;}
+                if !self.replaying&&!self.chunks.has_reserved_slot(){progress=reserve_list(&mut self.chunks,effect)?;}
                 else{let chunk=self.chunk_note.ok_or_else(||invalid("Pack chunk reservation lost original locator"))?;let id=if self.replaying{let original=self.chunks.get(self.chunk_index).ok_or_else(||invalid("Pack chunk replay lost original ordinal"))?;if original.depth!=chunk.depth||original.offset!=chunk.offset||original.length!=chunk.length||original.path[..original.depth]!=chunk.path[..chunk.depth]{return Err(invalid("Pack chunk replay original range changed"));}let id=self.chunk_index;self.chunk_index+=1;id}else{let id=self.chunks.len();if id>u32::MAX as usize{return Err(invalid("Pack chunk ID exceeds canonical width"));}self.chunks.push_reserved(chunk).map_err(|_|invalid("Pack chunk has no admitted slot"))?;id};self.frames[self.depth].offset+=chunk.length;self.queue_number(None,id as u64);self.chunk_note=None;self.phase=Phase::Body;progress.copied_bytes=size_of::<ChunkLocator>();}
             },
             Phase::Body => { return self.body(source, output, maximum, &mut progress); }
-            Phase::Expression=>{progress=Default::default();return self.expression_turn(source,output,grant);},
+            Phase::Expression=>{progress=Default::default();return self.expression_turn(source,output,effect);},
             _ => unreachable!(),
         }
         Ok(BorrowedProjectedPackProgress { progress, written_bytes: 0, complete: self.is_complete() })
@@ -541,7 +545,8 @@ impl BorrowedProjectedPackCursor {
     }
 
     /// 🔣️ Quotes the original symbol frontier with separate release and structural depth.
-    fn expression_turn(&mut self,source:&dyn FieldProjectionSource,output:&mut[u8],grant:RetainedCloneGrant)->Result<BorrowedProjectedPackProgress,ValueError>{
+    fn expression_turn(&mut self,source:&dyn FieldProjectionSource,output:&mut[u8],effect:&mut RetainedAllocationEffect<'_>)->Result<BorrowedProjectedPackProgress,ValueError>{
+        let grant=effect.grant();
         if self.expression_state.mode==3&&output.is_empty(){return Ok(Default::default());}
         let V::Expr(original)=source.projection_view(&self.path[..self.depth])?else{return Err(invalid("original Pack expression field changed"));};
         if self.expression_state.mode==1{
@@ -549,7 +554,7 @@ impl BorrowedProjectedPackCursor {
             else{let symbol=&self.symbols[self.expression_state.index];if !symbol.selected||symbol.text(source)?.len()!=self.expression_state.length{self.expression_state.rank+=usize::from(symbol.selected);self.expression_state.index+=1;}else{self.expression.restart();self.expression_state.offset=0;self.expression_state.different=false;self.expression_state.mode=2;}}
             return Ok(BorrowedProjectedPackProgress{progress:RetainedCloneProgress{copied_items:1,..Default::default()},..Default::default()});
         }
-        let mut byte=[0;1];let step=self.expression.advance(original,&mut byte,RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-1,maximum_depth:grant.maximum_depth-self.depth-1,..grant})?;let mut progress=step.progress;let mut written_bytes=0;
+        let mut byte=[0;1];let step=self.expression.advance(original,&mut byte,&mut effect.nested(RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-1,maximum_depth:grant.maximum_depth-self.depth-1,..grant})).result?;let mut progress=step.progress;let mut written_bytes=0;
         match self.expression_state.mode{
             0=>{self.expression_state.length=self.expression_state.length.checked_add(step.written_bytes).ok_or_else(||invalid("original expression text length overflow"))?;if step.complete{self.expression_state.mode=1;}},
             2=>{if step.written_bytes!=0{let original=self.symbols[self.expression_state.index].text(source)?.byte_at(self.expression_state.offset).ok_or_else(||invalid("original expression matching symbol changed"))?;progress.copied_bytes+=1;self.expression_state.offset+=1;self.expression_state.different|=original!=byte[0];}if self.expression_state.different{self.expression_state.rank+=1;self.expression_state.index+=1;self.expression_state.mode=1;}else if step.complete{self.queue(&[TAG_EXPR,TAG_STR]);self.append_number(self.expression_state.rank as u64);self.pop();self.phase=Phase::Body;}},
@@ -566,7 +571,8 @@ impl BorrowedProjectedPackCursor {
     }
 
     /// 🍂️ Retires one inline locator or one whole paid symbol allocation without source disposal.
-    pub fn close(&mut self, grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, BorrowedProjectedPackFailure> {
+    pub fn close(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<BorrowedProjectedPackProgress, BorrowedProjectedPackFailure> {
+        let grant = effect.grant();
         let mut progress = RetainedCloneProgress::default();
         let result = (|| -> Result<BorrowedProjectedPackProgress, ValueError> {
         if self.phase == Phase::Closed { return Ok(BorrowedProjectedPackProgress { complete: true, ..Default::default() }); }
@@ -574,12 +580,13 @@ impl BorrowedProjectedPackCursor {
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(Default::default()); }
         self.phase = Phase::Closing; self.note = None; self.compare_left = None;
         progress.copied_items = 1;
-        if !self.expression.terminal_is_empty(){let step=self.expression.close(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})?;progress=step.progress;}else if !self.symbols.is_empty() { self.symbols.pop(); }
-        else if !self.symbols.terminal_is_empty() { let required = self.symbols.next_release_allocation_bytes().map_err(page_error)?; if required > grant.maximum_release_bytes { return Ok(Default::default()); } let step = self.symbols.release_empty_page(required).map_err(page_error)?; progress.released_bytes = step.released_allocation_bytes; }
+        if !self.expression.terminal_is_empty(){let step=self.expression.close(&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})).result?;progress=step.progress;}else if !effect.performed(1)? { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "borrowed Pack close exceeded its original work")); }
+        else if !self.symbols.is_empty() { self.symbols.pop(); }
+        else if !self.symbols.terminal_is_empty() { let required = self.symbols.next_release_allocation_bytes().map_err(page_error)?; if required > grant.maximum_release_bytes { return Ok(Default::default()); } progress.released_bytes = release_list(&mut self.symbols,effect)?; }
         else if !self.frames.is_empty(){self.frames.pop();}
-        else if !self.frames.terminal_is_empty(){let step=self.frames.release_empty_page(demand.release_bytes).map_err(page_error)?;progress.released_bytes=step.released_allocation_bytes;}
+        else if !self.frames.terminal_is_empty(){progress.released_bytes=release_list(&mut self.frames,effect)?;}
         else if !self.chunks.is_empty(){self.chunks.pop();}
-        else if !self.chunks.terminal_is_empty(){let step=self.chunks.release_empty_page(demand.release_bytes).map_err(page_error)?;progress.released_bytes=step.released_allocation_bytes;}
+        else if !self.chunks.terminal_is_empty(){progress.released_bytes=release_list(&mut self.chunks,effect)?;}
         else { self.identity = None; self.phase = Phase::Closed; }
         Ok(BorrowedProjectedPackProgress { progress, written_bytes: 0, complete: self.phase == Phase::Closed })
         })();
@@ -596,10 +603,10 @@ impl Drop for BorrowedProjectedPackCursor {
 #[derive(semio_framework_value::RetireOwned)]
 struct PhysicalBorrowedPack{expression:RetainedExpressionCursor,symbols:PagedList<Symbol,SYMBOL_LIMIT>,frames:PagedList<Frame,64>,chunks:PagedList<ChunkLocator,{isize::MAX as usize}>}
 
-struct OriginalProjectedPackRetirement(std::mem::ManuallyDrop<BorrowedProjectedPackCursor>);
+#[doc(hidden)]pub struct OriginalProjectedPackRetirement(std::mem::ManuallyDrop<BorrowedProjectedPackCursor>);
 impl semio_framework_value::retirement::RetirementCursor for OriginalProjectedPackRetirement{
     fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.0.retirement_demands()}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep as S;match self.0.close(grant){Err(failure)=>S::Failure(failure.reason,0),Ok(step) if step.complete&&step.progress==Default::default()=>S::Complete(0),Ok(step)=>S::Progress(step.progress,1)}}
+    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep as S;let turn=self.0.close(effect);let work=effect.performed_work();match turn{Err(failure)=>S::Failure(failure.reason.into(),work),Ok(step) if step.complete&&step.progress==Default::default()=>S::Complete(work),Ok(step)=>S::Progress(step.progress,work)}}
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands()?.copy_bytes)}
     fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_byte_demand().ok()}
@@ -608,7 +615,8 @@ impl semio_framework_value::retirement::RetirementCursor for OriginalProjectedPa
 }
 impl Drop for OriginalProjectedPackRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.0.terminal_is_empty(),"original Pack retirement must close every symbol, frame, chunk and expression owner");if self.0.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.0);}}}}
 impl semio_framework_value::retirement::RetireOwned for BorrowedProjectedPackCursor{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(OriginalProjectedPackRetirement(std::mem::ManuallyDrop::new(self)))}
+    type RetirementCursor=OriginalProjectedPackRetirement;
+    fn retirement_seed(self)->Self::RetirementCursor{OriginalProjectedPackRetirement(std::mem::ManuallyDrop::new(self))}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OriginalProjectedPackRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }

@@ -91,9 +91,8 @@ mod tests;
 //#endregion 🧪️SetLaws
 
 impl semio_framework_value_retained_clone::RetainedAlias for OrderedSet{
- const INSPECTION_WORK:u64=4;
  fn alias_demand(&self)->crate::RetirementDemand{semio_framework_value_retained_clone::RetainedAlias::alias_demand(&self.values)}
  fn alias_work_demand(&self)->u64{1+semio_framework_value_retained_clone::RetainedAlias::alias_work_demand(&self.values)}
  fn admit_alias(&self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,crate::RetainedCloneProgress)>{let turn=semio_framework_value_retained_clone::RetainedAlias::admit_alias(&self.values,grant);crate::RetainedWorkOutcome{result:turn.result.map(|(values,progress)|(Self{values},progress)),work:1+turn.work}}
 }
-impl semio_framework_value_retained_clone::RetainedClone for OrderedSet{type Cursor=semio_framework_value_retained_clone::RetainedAliasCursor<Self>;fn cursor_birth_work()->Result<u64,crate::ValueError>{Ok(Self::Cursor::birth_work())}fn retained_clone_cursor()->Self::Cursor{Default::default()}}
+impl semio_framework_value_retained_clone::RetainedClone for OrderedSet{type Cursor=semio_framework_value_retained_clone::RetainedAliasCursor<Self>;fn retained_clone_cursor()->Self::Cursor{Default::default()}}

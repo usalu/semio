@@ -178,24 +178,25 @@ impl RetainedPackSymbolTable {
         self.remember(result)
     }
 
-    pub fn reserve_symbol_capacity(&mut self, target: usize, maximum_bytes: usize, offset: u64) -> Result<RetainedPackCatalogAllocationStep, RetainedPackCatalogAllocationError> {
+    pub fn reserve_symbol_capacity(&mut self, target: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, offset: u64) -> Result<RetainedPackCatalogAllocationStep, RetainedPackCatalogAllocationError> {
         let requested = self.next_symbol_allocation_bytes(target, offset).map_err(|fault| RetainedPackCatalogAllocationError { allocated_bytes: 0, fault })?;
-        self.reserve(target, maximum_bytes, offset, requested, true)
+        self.reserve(target, effect, offset, requested, true)
     }
 
-    pub fn reserve_scalar_capacity(&mut self, target: usize, maximum_bytes: usize, offset: u64) -> Result<RetainedPackCatalogAllocationStep, RetainedPackCatalogAllocationError> {
+    pub fn reserve_scalar_capacity(&mut self, target: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, offset: u64) -> Result<RetainedPackCatalogAllocationStep, RetainedPackCatalogAllocationError> {
         let requested = self.next_scalar_allocation_bytes(target, offset).map_err(|fault| RetainedPackCatalogAllocationError { allocated_bytes: 0, fault })?;
-        self.reserve(if target>self.scalars.capacity(){self.maximum_scalars}else{target}, maximum_bytes, offset, requested, false)
+        self.reserve(if target>self.scalars.capacity(){self.maximum_scalars}else{target}, effect, offset, requested, false)
     }
 
     fn reserve(
         &mut self,
         target: usize,
-        maximum_bytes: usize,
+        effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
         offset: u64,
         requested: Option<usize>,
         symbol: bool,
     ) -> Result<RetainedPackCatalogAllocationStep, RetainedPackCatalogAllocationError> {
+        let maximum_bytes = effect.grant().maximum_capacity_bytes;
         let Some(requested) = requested else { return Ok(RetainedPackCatalogAllocationStep::default()) };
         if maximum_bytes < requested {
             return Ok(RetainedPackCatalogAllocationStep::default());
@@ -206,9 +207,9 @@ impl RetainedPackSymbolTable {
         })?;
         let remaining = self.maximum_allocation_bytes.saturating_sub(allocated);
         let result = if symbol {
-            self.symbols.reserve_capacity_one(target, maximum_bytes.min(remaining))
+            crate::reserved(self.symbols.reserve_capacity_one(target, &mut effect.nested(semio_framework_value::RetainedCloneGrant { maximum_capacity_bytes: maximum_bytes.min(remaining), ..effect.grant() })), Default::default())
         } else {
-            self.scalars.reserve_capacity_one(target, maximum_bytes.min(remaining))
+            crate::reserved(self.scalars.reserve_capacity_one(target, &mut effect.nested(semio_framework_value::RetainedCloneGrant { maximum_capacity_bytes: maximum_bytes.min(remaining), ..effect.grant() })), Default::default())
         };
         let step = match result {
             Ok(step) => step,
@@ -313,7 +314,8 @@ impl RetainedPackSymbolTable {
         Ok(None)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedPackCloseStep, PagedListError> {
+    pub fn close_step(&mut self, maximum_items: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedPackCloseStep, PagedListError> {
+        let maximum_bytes = effect.grant().maximum_release_bytes;
         if !self.closed && maximum_items == 0 && maximum_bytes == 0 {
             return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -332,9 +334,9 @@ impl RetainedPackSymbolTable {
         self.utf8_bytes = 0;
         for owner in [false, true] {
             let (terminal, step) = if owner {
-                (self.symbols.terminal_is_empty(), self.symbols.release_empty_page(maximum_bytes))
+                (self.symbols.terminal_is_empty(), crate::released(self.symbols.release_empty_page(&mut *effect)))
             } else {
-                (self.scalars.terminal_is_empty(), self.scalars.release_empty_page(maximum_bytes))
+                (self.scalars.terminal_is_empty(), crate::released(self.scalars.release_empty_page(&mut *effect)))
             };
             if !terminal {
                 let step = step?;

@@ -48,7 +48,7 @@
                     break;
                 }
                 let demand = child.maintenance_retirements_demands(4096).expect("quoted displaced snapshot demand");
-                let _ = child.maintenance_retirements_step(fixture_close_grant(demand)).expect("member drains its displaced snapshot aliases");
+                let _ = child.maintenance_retirements_step_cold(fixture_close_grant(demand)).expect("member drains its displaced snapshot aliases");
             }
             assert!(child.maintenance_retirements_terminal_is_empty(), "the member released every snapshot alias it displaced");
         }

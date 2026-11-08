@@ -10,7 +10,7 @@ pub use component::{
     validate_sqlite_database_schema_controlled, validate_sqlite_table_schema,
     validate_sqlite_table_schema_controlled, SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteRow,
     SqliteSnapshotControl, SqliteSnapshotReceivingControl, SqliteSnapshotPhase, SqliteSnapshotProgress, SqliteTable, SqliteValue,
-    ValueError, ValueRefusalKind, SQLITE_SNAPSHOT_APPLICATION_ID, SQLITE_SNAPSHOT_USER_VERSION,
+    SqliteStageFailure, ValueError, ValueRefusalKind, SQLITE_SNAPSHOT_APPLICATION_ID, SQLITE_SNAPSHOT_USER_VERSION,
 };
 
 pub(crate) mod sqlite_snapshot {pub use super::component::*;}

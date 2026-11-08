@@ -28,18 +28,18 @@ impl<K: BoundedOrd> Default for RetainedOrderedMapLookupCursor<K> {
 }
 
 impl<K:BoundedOrd> RetainedOrderedMapLookupCursor<K>{
-    pub fn advance<V>(&mut self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,target:RetainedCloneRef<'_,K>,grant:BoundedOrdGrant,retirement:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Option<RetainedOrderedMapLookup>,BoundedOrdProgress,RetainedCloneProgress),ValueError>{let mut work=0;let result=(||{
+    pub fn advance<V>(&mut self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,target:RetainedCloneRef<'_,K>,grant:BoundedOrdGrant,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<(Option<RetainedOrderedMapLookup>,BoundedOrdProgress,RetainedCloneProgress),ValueError>{let retirement=effect.grant();let mut work=0;let result=(||{
         if self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup is closing"));}
         let first=!self.initialized;
         if first&&grant.maximum_items==0{return Ok((None,Default::default(),Default::default()));}
-        if let Some(progress)={let turn=source.bind(&mut self.source,retirement);work+=turn.work;turn.result}?{return Ok((None,Default::default(),progress));}
-        if let Some(progress)={let turn=target.bind(&mut self.target,retirement);work+=turn.work;turn.result}?{return Ok((None,Default::default(),progress));}
+        if let Some(progress)={let turn=source.bind(&mut self.source,effect);work+=turn.work;turn.result}?{return Ok((None,Default::default(),progress));}
+        if let Some(progress)={let turn=target.bind(&mut self.target,effect);work+=turn.work;turn.result}?{return Ok((None,Default::default(),progress));}
         if let Some(result)=self.complete{return Ok((Some(result),Default::default(),Default::default()));}
         let map=source.get();
         if first{work+=1;self.initialized=true;self.high=map.len();return Ok((None,BoundedOrdProgress{compared_items:1,compared_bytes:0},Default::default()));}
         if let Some(ordering)=self.pending{
             if let Some(comparison)=self.comparison.as_mut(){
-                comparison.begin_close();let step={let turn=comparison.close_step(retirement);work+=turn.work;turn.result}?;
+                comparison.begin_close();let step={let turn=super::bounded_ord::flatten_poll(comparison.close_step(&mut effect.nested(retirement)));work+=turn.work;turn.result}?;
                 if comparison.terminal_is_empty(){self.comparison=None;}
                 return Ok((None,Default::default(),step.progress()));
             }
@@ -55,7 +55,7 @@ impl<K:BoundedOrd> RetainedOrderedMapLookupCursor<K>{
         }
         if self.comparison.is_none(){if grant.maximum_items==0{return Ok((None,Default::default(),Default::default()));}let turn=K::admit_bounded_ord_cursor(retirement);work+=turn.work;let Some((comparison,p))=turn.result?else{return Ok((None,Default::default(),Default::default()));};self.middle=self.low+(self.high-self.low)/2;self.comparison=Some(comparison);return Ok((None,Default::default(),p));}
         let comparison=self.comparison.as_mut().ok_or_else(||ValueError::invariant("comparison absent"))?;
-        match {let turn=comparison.compare(source.try_project(self.middle+1,|map|map.get_index(self.middle).map(|entry|entry.0).ok_or_else(||ValueError::invariant("ordered map lookup index is absent")))?,target,grant,retirement);work+=turn.work;turn.result}?{
+        match {let turn=comparison.compare(source.try_project(self.middle+1,|map|map.get_index(self.middle).map(|entry|entry.0).ok_or_else(||ValueError::invariant("ordered map lookup index is absent")))?,target,grant,&mut effect.nested(retirement));work+=turn.work;turn.result}?{
             BoundedOrdStep::Authority(progress)=>Ok((None,Default::default(),progress)),
             BoundedOrdStep::Progress(p)=>Ok((None,p,Default::default())),
             BoundedOrdStep::Complete{ordering:Ordering::Equal,progress}=>{let result=RetainedOrderedMapLookup::Found(self.middle);self.complete=Some(result);Ok((Some(result),progress,Default::default()))},
@@ -78,19 +78,20 @@ impl<K:BoundedOrd> RetainedOrderedMapLookupCursor<K>{
     pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(0)}else{c.next_close_capacity_byte_demand(body)}}else{RetainedCloneBinding::capacity_demand(if self.source.is_some(){&self.source}else{&self.target},body)}}
     pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(0)}else{c.next_close_release_byte_demand()}}else{RetainedCloneBinding::release_demand(if self.source.is_some(){&self.source}else{&self.target})}}
     pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(1)}else{c.next_close_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::DepthLimit,"original lookup comparator close depth overflow"))}}else{RetainedCloneBinding::depth_demand(if self.source.is_some(){&self.source}else{&self.target})}}
-    pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep,ValueError>{let grant=effect.grant();let mut work=0;let result=(||{
-        if !self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup must begin close"));}
+    pub(super) fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if let Some(cursor)=self.comparison.as_ref(){return if cursor.terminal_is_empty(){Ok(1)}else{cursor.close_work_demand(body)}}RetainedCloneBinding::close_work_demand(if self.source.is_some(){&self.source}else{&self.target},body)}
+    pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{
+        if !self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup must begin close").into());}
         let demand=self.close_demands(grant.maximum_copy_bytes)?;
         if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(c)=self.comparison.as_mut(){
             if c.terminal_is_empty(){work+=1;self.comparison=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
             let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-            let step={let turn=c.close_step(&mut effect.reborrow(child,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result}?;
+            let step={let turn=crate::RetirementPollExit::settled(c.close_step(&mut effect.nested(child)))?;work+=turn.work;turn.result}?;
             let step=admit_retained_clone_close(child,step,c.terminal_is_empty(),"original lookup comparator close")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step={let turn=close_retained_binding(if self.source.is_some(){&mut self.source}else{&mut self.target},grant);work+=turn.work;turn.result}?;
+        let step={let turn=crate::RetirementPollExit::settled(close_retained_binding(if self.source.is_some(){&mut self.source}else{&mut self.target},effect))?;work+=turn.work;turn.result}?;
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
-    })();crate::RetainedWorkOutcome{result,work}}
+    })();crate::RetirementPollExit::finish(result,work)}
     pub fn terminal_is_empty(&self)->bool{self.comparison.is_none()&&self.source.is_none()&&self.target.is_none()}
 }

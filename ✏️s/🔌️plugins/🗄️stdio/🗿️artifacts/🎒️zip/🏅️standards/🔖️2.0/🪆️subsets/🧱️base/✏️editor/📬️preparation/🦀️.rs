@@ -8,6 +8,7 @@ use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
 use semio_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPost, PagedOneItemPostMode, PagedOneItemPostRead};
 use std::sync::Arc;
+use semio_framework_value::{OriginalReceivingPrimary, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetirementPollExit};
 
 const MAXIMUM_STRUCTURAL_ITEMS: usize = 4_096;
 const MAXIMUM_TEXT_BYTES: usize = u16::MAX as usize;
@@ -130,11 +131,11 @@ impl PagedOneItemEdit<ZipSnapshot, ZipMutation> for ZipTextEdit {
         PagedOneItemPostMode::Mutable
     }
 
-    fn advance_demands(&self, _before: RetainedCloneRef<'_, ZipSnapshot>, _mutation: RetainedCloneRef<'_, ZipMutation>, _post: PagedOneItemPostRead<'_, ZipSnapshot>, _body: usize) -> Result<RetirementDemand, ValueError> {
+    fn advance_demands(&self, _before: RetainedCloneRef<'_, ZipSnapshot>, _mutation: RetainedCloneRef<'_, ZipMutation>, _post: PagedOneItemPostRead<'_, ZipSnapshot>, _body: usize, _maximum_work_units: u64) -> Result<RetirementDemand, ValueError> {
         Ok(RetirementDemand::default())
     }
 
-    fn advance(&mut self, _before: RetainedCloneRef<'_, ZipSnapshot>, mutation: RetainedCloneRef<'_, ZipMutation>, post: PagedOneItemPost<'_, ZipSnapshot>, _body: usize, grant: RetainedCloneGrant, receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
+    fn advance(&mut self, _before: RetainedCloneRef<'_, ZipSnapshot>, mutation: RetainedCloneRef<'_, ZipMutation>, post: PagedOneItemPost<'_, ZipSnapshot>, _body: usize, grant: RetainedCloneGrant, receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<ZipMutation>, OriginalReceivingPrimary> {
         self.last_work=0;
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PagedOneItemEditStep::Progress(Default::default()))}
         if !receiving.prepare_work(if !self.admitted||matches!(mutation.get(),ZipMutation::RenameEntry(_))&&!self.scanned{1}else{2})?{return Ok(PagedOneItemEditStep::Progress(Default::default()))}
@@ -159,8 +160,8 @@ impl PagedOneItemEdit<ZipSnapshot, ZipMutation> for ZipTextEdit {
             _ => Err(refusal("stdio-zip-base-snapshot-edit-unsupported-mutation")),
         }
         })();
-        receiving.commit_work(self.last_work)?;
-        result
+        receiving.commit_work(u128::from(self.last_work))?;
+        result.map_err(Into::into)
     }
 
     fn last_turn_work(&self)->u64{self.last_work}
@@ -169,13 +170,27 @@ impl PagedOneItemEdit<ZipSnapshot, ZipMutation> for ZipTextEdit {
         self.closing = true;
     }
 
-    fn close_demands(&self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<ZipMutation>, _body: usize) -> Result<RetirementDemand, ValueError> {
+    fn has_pending_receiving_recovery(&self) -> bool { false }
+
+    fn pending_receiving_demand(&self) -> Option<RetirementDemand> { None }
+
+    fn pending_receiving_recovery(&mut self) -> Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>> { None }
+
+    fn finish_receiving_recovery(&mut self, _: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> RetainedWorkOutcome<RetainedCloneProgress, OriginalReceivingPrimary> {
+        RetainedWorkOutcome { result: Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "ZipMutation edit opens every native work action atomically and never retains a pending receiving frame").into()), work: 0 }
+    }
+
+    fn close_demands(&self, _mutations: &Arc<dyn ArtifactOwnedValueRetirementFactory<ZipMutation>>, _body: usize) -> Result<RetirementDemand, ValueError> {
         Ok(RetirementDemand::default())
     }
 
-    fn close_step(&mut self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<ZipMutation>, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_work_demand(&self, _mutations: &Arc<dyn ArtifactOwnedValueRetirementFactory<ZipMutation>>, _body: usize) -> Result<u64, ValueError> {
+        Ok(0)
+    }
+
+    fn close_step(&mut self, _mutations: &Arc<dyn ArtifactOwnedValueRetirementFactory<ZipMutation>>, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         self.closing = true;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+        RetirementPollExit::settle(effect, Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -229,7 +244,7 @@ mod tests {
         Fixture::new(caller,OriginalJobDecodeOwner::empty(),before,mutation,post,ZipTextEdit::default())
     }
     fn retire<T:semio_framework_value::RetireOwned+'static>(fixture:&mut Fixture,value:T){let mut value=Some(value);let mut active=None;assert!(fixture.retire_owned(&mut value,&mut active,close_grant(),1_000_000).expect("funded ZIP fixture output retirement"));assert!(value.is_none()&&active.is_none());}
-    fn drive(fixture:&mut Fixture)->Result<(usize,RetainedCloneProgress,ZipMutation),ValueError>{
+    fn drive(fixture:&mut Fixture)->Result<(usize,RetainedCloneProgress,ZipMutation),OriginalReceivingPrimary>{
         let mut turns=0;
         loop{
             let outcome=fixture.advance(grant()).expect("original ZIP caller");assert_eq!(outcome.work,fixture.last_work());

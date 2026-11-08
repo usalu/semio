@@ -29,7 +29,7 @@ fn include_progress(progress: &mut RetainedCloneProgress, child: RetainedClonePr
 fn reserve_page<T>(values: &mut BorderPages<T>, progress: &mut RetainedCloneProgress) -> Result<(), RetainedOutputError> {
     let bytes = values.next_allocation_bytes().map_err(|_| RetainedOutputError::Capacity)?;
     let copied = values.next_reserve_copy_byte_demand().map_err(|_| RetainedOutputError::Capacity)?;
-    match values.reserve_one(bytes) {
+    match values.reserve_one_cold(bytes) {
         Ok(receipt) => { progress.retained_capacity_bytes = progress.retained_capacity_bytes.saturating_add(receipt.allocated_bytes); progress.released_bytes = progress.released_bytes.saturating_add(receipt.released_allocation_bytes); if receipt.progressed { progress.copied_bytes = progress.copied_bytes.saturating_add(copied); Ok(()) } else { Err(RetainedOutputError::Capacity) } }
         Err(error) => { progress.retained_capacity_bytes = progress.retained_capacity_bytes.saturating_add(error.allocated_bytes); Err(RetainedOutputError::Allocation) }
     }
@@ -38,7 +38,7 @@ fn retire_page<T>(values: &mut BorderPages<T>, progress: &mut RetainedCloneProgr
     if values.pop().is_some() { copied::<T>(progress); return Ok(false); }
     if values.terminal_is_empty() { return Ok(true); }
     let bytes = values.next_release_allocation_bytes().map_err(|_| RetainedOutputError::Capacity)?;
-    let receipt = values.release_empty_page(bytes).map_err(|_| RetainedOutputError::Capacity)?;
+    let receipt = values.release_empty_page_leased(bytes).map_err(|_| RetainedOutputError::Capacity)?;
     progress.released_bytes = progress.released_bytes.saturating_add(receipt.released_allocation_bytes);
     Ok(values.terminal_is_empty())
 }
@@ -127,7 +127,7 @@ impl BorderFinalize {
         if let Some(layer) = &mut self.insertion {
             if let Some(clip) = &mut layer.clip {
                 if clip.scissors.pop().is_some() { return false; }
-                if !clip.scissors.terminal_is_empty() { let bytes = clip.scissors.next_release_allocation_bytes().expect("valid shared-border clip backing"); clip.scissors.release_empty_page(bytes).expect("valid shared-border clip release"); return false; }
+                if !clip.scissors.terminal_is_empty() { let bytes = clip.scissors.next_release_allocation_bytes().expect("valid shared-border clip backing"); clip.scissors.release_empty_page_leased(bytes).expect("valid shared-border clip release"); return false; }
                 layer.clip = None; return false;
             }
             if layer.ui_instances.pop().is_some() || layer.overlay_ui_instances.pop().is_some() { return false; }
@@ -226,7 +226,7 @@ impl BorderFinalize {
             else if draw.shared_borders.terminal_is_empty() { self.layer = usize::MAX; return self.insert_step(draw); }
             else {
                 let bytes = draw.shared_borders.next_release_allocation_bytes().map_err(|_| RetainedOutputError::Capacity)?;
-                let receipt = draw.shared_borders.release_empty_page(bytes).map_err(|_| RetainedOutputError::Capacity)?;
+                let receipt = draw.shared_borders.release_empty_page_leased(bytes).map_err(|_| RetainedOutputError::Capacity)?;
                 self.released_baseline = self.released_baseline.saturating_add(receipt.released_allocation_bytes);
                 self.progress.released_bytes = self.progress.released_bytes.saturating_add(receipt.released_allocation_bytes);
             }
@@ -399,6 +399,9 @@ impl DrawList {
         fn read<T>(values: &BorderPages<T>) -> Result<usize, RetainedOutputError> {
             if values.is_empty() { Ok(0) } else { values.next_get_depth_demand(values.len() - 1).map_err(|_| RetainedOutputError::Capacity) }
         }
+        fn push<T>(values: &BorderPages<T>) -> Result<usize, RetainedOutputError> {
+            if values.has_reserved_slot() { values.next_push_depth_demand() } else { values.next_reserve_depth_demand() }.map_err(|_| RetainedOutputError::Capacity)
+        }
         fn retire<T>(values: &BorderPages<T>) -> Result<usize, RetainedOutputError> {
             if !values.is_empty() { values.next_pop_depth_demand().map_err(|_| RetainedOutputError::Capacity) }
             else if !values.terminal_is_empty() { values.next_release_depth_demand().map_err(|_| RetainedOutputError::Capacity) }
@@ -419,20 +422,20 @@ impl DrawList {
         if state.cleanup {
             if !self.shared_borders.terminal_is_empty() { depth = depth.max(retire(&self.shared_borders)?); }
             else if state.insertion_phase == 0 && state.insertion_scan >= state.generated.len() && state.selected_index.is_none() { depth = depth.max(retire(&state.generated)?); }
-            else if state.insertion_phase == 2 { depth = depth.max(self.layers.next_push_depth_demand().map_err(|_| RetainedOutputError::Capacity)?); }
+            else if state.insertion_phase == 2 { depth = depth.max(push(&self.layers)?); }
             else if state.insertion_phase == 1 {
                 if let Some(clip) = state.insertion.as_ref().and_then(|layer| layer.clip.as_ref()) {
                     depth = depth.max(read(&clip.scissors)?);
                     let source = state.selected.and_then(|selected| self.layers.get(selected.owner)).and_then(|layer| layer.clip.as_ref());
                     if let Some(region) = source { depth = depth.max(read(&region.scissors)?); }
                     let has_piece = source.is_some_and(|region| state.insertion_clip < region.scissors.len());
-                    if has_piece { depth = depth.max(clip.scissors.next_push_depth_demand().map_err(|_| RetainedOutputError::Capacity)?); }
+                    if has_piece { depth = depth.max(push(&clip.scissors)?); }
                 }
             }
         } else {
             match state.phase {
-                0 if state.pending_segment.is_some() => { depth = depth.max(state.origins.next_push_depth_demand().map_err(|_| RetainedOutputError::Capacity)?); if state.origins.has_reserved_slot() { depth = depth.max(state.cursor.maximum_push_depth_demand()); } },
-                1 if state.pending_generated.is_some() => depth = depth.max(state.generated.next_push_depth_demand().map_err(|_| RetainedOutputError::Capacity)?),
+                0 if state.pending_segment.is_some() => { depth = depth.max(push(&state.origins)?); if state.origins.has_reserved_slot() { depth = depth.max(state.cursor.maximum_push_depth_demand()); } },
+                1 if state.pending_generated.is_some() => depth = depth.max(push(&state.generated)?),
                 1 if state.pending_generated.is_none() => depth = depth.max(state.cursor.next_step_depth_demand()),
                 4 => depth = depth.max(state.cursor.next_retirement_depth_demand()),
                 5 => depth = depth.max(retire(&state.origins)?),

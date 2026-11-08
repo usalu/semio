@@ -36,6 +36,7 @@ semio-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀
 semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-plugin-time-travel-panel = { path = "../../../🪟️panel/📦️packages/🦀️rust" }
 semio-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
+semio-plugin-tool-machine = { path = "../../../../🛠️tool-machine/📦️packages/🦀️rust" }
 semio-plugin-time-travel = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-plugin-instance-stores = { path = "../../../../🧵️instance/🏪️stores/📦️packages/🦀️rust", package = "semio-plugin-instance-stores"}
 semio-plugin-instance-history = { path = "../../../../🧵️instance/📜️history/📦️packages/🦀️rust" }

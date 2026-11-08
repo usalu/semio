@@ -1,5 +1,11 @@
 //! 🎛️ Caller-owned identity admission retained across asynchronous authoring hops.
-use semio_framework_value::{serde,NativeEncodeControl,ValueError,ValueRefusalKind,native_encoding::{NativeEncodeProgress,NativeEncodeContinuation,NativeEncodeAllocationPort,NativeForwardedEncodeContinuation,NativeRetirementEncodeContinuation}};
+use semio_framework_value::{serde,NativeEncodeControl,ValueError,ValueRefusalKind,native_encoding::{NativeEncodeProgress,NativeEncodeContinuation,NativeSendAllocationLoan,NativeForwardedEncodeContinuation,NativeRetirementEncodeContinuation}};
+
+/// 🧯️ Surfaces the most fundamental refusal of a failed hop: receipt, then context, then operation, then the produced result error.
+fn hop_refusal<T,E:From<ValueError>>(output:Option<Result<T,E>>,operation:Option<ValueError>,context:Option<ValueError>,receipt:Option<ValueError>)->E{
+    if let Some(error)=receipt.or(context).or(operation){return E::from(error)}
+    match output{Some(Err(error))=>error,_=>E::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"identity hop failed without a refusal"))}
+}
 
 #[cfg(not(target_arch="wasm32"))]
 pub type Observer<'a>=dyn FnMut(NativeEncodeProgress)->bool+Send+'a;
@@ -11,9 +17,9 @@ enum Receipt<'a>{Native(NativeEncodeContinuation),Forwarded(NativeForwardedEncod
 pub struct EntityIdentityAuthority<'a,O:FnMut(NativeEncodeProgress)->bool+?Sized=Observer<'a>>{continuation:Option<Receipt<'a>>,observer:&'a mut O}
 impl<'a,O:FnMut(NativeEncodeProgress)->bool+?Sized> EntityIdentityAuthority<'a,O>{
     /// 🚦️ Starts admission with the caller's explicit ownership ceiling and cancellation authority.
-    pub fn new(maximum_bytes:usize,observer:&'a mut O)->Result<Self,ValueError>{let continuation=NativeEncodeControl::new(maximum_bytes,&mut |event|observer(event)).pause()?;Ok(Self{continuation:Some(Receipt::Native(continuation)),observer})}
+    pub fn new(maximum_bytes:usize,observer:&'a mut O)->Result<Self,ValueError>{let continuation=NativeEncodeControl::new(maximum_bytes,&mut |event|observer(event)).pause().map_err(|(error,_control)|error)?;Ok(Self{continuation:Some(Receipt::Native(continuation)),observer})}
     /// 🌉️ Retains the original receiving allocation port and observer through every guest authoring hop.
-    pub fn new_forwarded(maximum_bytes:usize,observer:&'a mut O,allocate:&'a mut NativeEncodeAllocationPort<'a>)->Result<Self,ValueError>{Ok(Self{continuation:Some(Receipt::Forwarded(NativeForwardedEncodeContinuation::new(maximum_bytes,allocate))),observer})}
+    pub fn new_forwarded(maximum_bytes:usize,observer:&'a mut O,allocate:&'a mut (dyn NativeSendAllocationLoan+'a))->Result<Self,ValueError>{Ok(Self{continuation:Some(Receipt::Forwarded(NativeForwardedEncodeContinuation::new(maximum_bytes,allocate))),observer})}
     /// 🔗️ Resumes the same caller allocation port and retirement recipient across an asynchronous hop.
     pub fn resume_forwarded(continuation:NativeForwardedEncodeContinuation<'a>,observer:&'a mut O)->Self{Self{continuation:Some(Receipt::Forwarded(continuation)),observer}}
     /// ▶️ Continues the actual previously admitted operation with the current caller observer.
@@ -29,13 +35,12 @@ impl<'a,O:FnMut(NativeEncodeProgress)->bool+?Sized> EntityIdentityAuthority<'a,O
     /// 🪆️ Resumes only for synchronous encoding and retains all admitted charges on refusal.
     pub fn encode<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<T,E>)->Result<T,E>{
         let mut observer=|event|(self.observer)(event);
-        if let Some(Receipt::Forwarded(receipt))=self.continuation.as_mut(){return receipt.encode(&mut observer,|control|Ok(operation(control))).map_err(E::from)?;}
+        if let Some(Receipt::Forwarded(receipt))=self.continuation.as_mut(){return receipt.encode(&mut observer,|control|Ok(operation(control))).map_err(|failure|hop_refusal(failure.output,failure.operation,failure.context,failure.receipt_refusal))?;}
         if let Some(Receipt::Retirement(receipt))=self.continuation.as_mut(){return receipt.encode(&mut observer,|control|Ok(operation(control))).map_err(E::from)?;}
         let Some(Receipt::Native(receipt))=self.continuation.take()else{return Err(E::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"identity authority lacks its cumulative receipt")))};
-        let mut control=NativeEncodeControl::resume(receipt,&mut observer).map_err(E::from)?;
+        let mut control=match NativeEncodeControl::resume(receipt,&mut observer){Ok(control)=>control,Err((error,receipt))=>{self.continuation=Some(Receipt::Native(receipt));return Err(E::from(error))}};
         let result=control.scoped_stage(operation);
-        self.continuation=Some(Receipt::Native(control.pause().map_err(E::from)?));
-        result
+        match control.pause(){Ok(receipt)=>{self.continuation=Some(Receipt::Native(receipt));result}Err((error,_control))=>Err(E::from(error))}
     }
 }
 

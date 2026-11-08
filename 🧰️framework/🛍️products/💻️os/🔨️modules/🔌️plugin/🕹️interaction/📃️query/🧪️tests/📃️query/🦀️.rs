@@ -31,7 +31,7 @@ fn close_original_query(store:&mut InteractionStore,query:&mut LocalInteractionQ
   if query.terminal_is_empty()&&owner.is_none()&&store.snapshot_read_leases_terminal_is_empty(){break}
  }
  assert!(query.terminal_is_empty());assert!(owner.is_none());assert!(store.snapshot_read_leases_terminal_is_empty());assert_eq!(query.completed_bytes(),query.retired_bytes());
- for _ in 0..turns{let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.close_owned_step(recipient.remaining_grant()).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if matches!(step,RetainedCloneStep::Complete(_)){assert!(store.close_owned_terminal_is_empty());return}}
+ for _ in 0..turns{let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.close_owned_step_cold(recipient.remaining_grant()).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if matches!(step,RetainedCloneStep::Complete(_)){assert!(store.close_owned_terminal_is_empty());return}}
  panic!("original query caller grant did not close its Store");
 }
 

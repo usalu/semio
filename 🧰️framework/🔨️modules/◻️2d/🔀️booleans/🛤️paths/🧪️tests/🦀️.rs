@@ -7,7 +7,7 @@ use semio_framework_value::{work::RetainedWorkLedger,RetainedCloneGrant};
 mod funding;
 funding::physical_close!(PathBooleanRetirement,funding::PhysicalClose);
 fn funded(input:PathBooleanInput)->funding::Funded<PathBooleanJob>{funding::Funded::new(PathBooleanJob::new(input),include_str!("🎟️work/🔣️.json"))}
-fn step(job:&mut funding::Funded<PathBooleanJob>,items:usize)->Result<PathBooleanProgress,BooleanError>{job.turn(items,|job,work|job.advance(items,work))}
+fn step(job:&mut funding::Funded<PathBooleanJob>,items:usize)->Result<PathBooleanProgress,BooleanError>{job.turn(items,|job,work,alloc|job.advance(items,work,alloc))}
 fn drain(retired:&mut funding::Funded<PathBooleanRetirement>,items:usize)->u64{let mut turns:u64=0;while !retired.terminal_is_empty(){retired.close_turn(items).unwrap();turns+=1;assert!(turns<retired.turn_bound()as u64);}turns}
 fn rows()->Vec<Value>{serde_json::from_str::<Value>(include_str!("🧫️fixtures/🔣️.json")).unwrap()["cases"].as_array().unwrap().clone()}
 fn point(v:&Value)->Vec2{[v[0].as_f64().unwrap(),v[1].as_f64().unwrap()]}

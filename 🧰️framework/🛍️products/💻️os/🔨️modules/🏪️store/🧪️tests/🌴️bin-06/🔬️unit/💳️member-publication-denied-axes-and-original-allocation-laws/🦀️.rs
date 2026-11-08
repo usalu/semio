@@ -41,7 +41,7 @@ async fn member_owned_publication_birth_refuses_without_allocating_or_transferri
         assert!(publication.terminal_is_empty());
         for _ in 0..1024 { if request.mutations.terminal_is_empty() { break; } request.mutations.close_granted(grant).unwrap(); }
         assert!(request.mutations.terminal_is_empty());
-        for _ in 0..65_536 { if matches!(SpaceMember::close_owned_step(&mut member, physical_test_close_grant()).unwrap(), RetainedCloneStep::Complete(_)) { break; } }
+        for _ in 0..65_536 { if matches!(SpaceMember::close_owned_step_cold(&mut member, physical_test_close_grant()).unwrap(), RetainedCloneStep::Complete(_)) { break; } }
         assert!(SpaceMember::close_owned_terminal_is_empty(&member));
     }
 }

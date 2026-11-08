@@ -3,6 +3,9 @@
 use super::*;
 
 // #region ♻️Reachability
+const COLD_COMPACT_STOCK:RetainedCloneGrant=RetainedCloneGrant {maximum_items:1<<30,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:1<<10};
+const COLD_COMPACT_BUDGET:u128=1_000_000_000_000;
+const COLD_COMPACT_WORK:u64=1<<20;
 /// ♻️ How many slots one [`Body::compact`] call actually freed, per store — informational only.
 /// Kept ids never move (no index remap, only [`Store::free`] on the rest), so there is nothing
 /// for a caller to translate.
@@ -84,7 +87,8 @@ impl Body {
     /// counts, not a remap.
     pub fn compact(&mut self, keep: ReachSet) -> Remap {
         let mut job=BodyCompactionJob::new(keep).unwrap_or_else(|(error,_)|panic!("cold original compaction admission: {error}"));
-        while !job.terminal_is_empty(){let copy=job.next_copy_byte_demand(self).expect("cold original compact copy");let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:job.next_capacity_byte_demand(self,copy).expect("cold original compact capacity"),maximum_release_bytes:job.next_release_byte_demand(self).expect("cold original compact release"),maximum_depth:job.next_depth_demand(self).expect("cold original compact depth")};job.step(self,grant).expect("cold original compact turn");}
+        let mut wallet=semio_framework_value::AuthoringWallet::new(COLD_COMPACT_STOCK,COLD_COMPACT_BUDGET);
+        let mut stall=0;while !job.terminal_is_empty(){let copy=job.next_copy_byte_demand(self).expect("cold original compact copy");let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:job.next_capacity_byte_demand(self,copy).expect("cold original compact capacity"),maximum_release_bytes:job.next_release_byte_demand(self).expect("cold original compact release"),maximum_depth:job.next_depth_demand(self).expect("cold original compact depth")};let Some((turn,_))=wallet.run_settled(grant,COLD_COMPACT_WORK,|effect|job.step(self,effect)).expect("cold original compact turn")else{panic!("cold original compact quote refused")};let step=turn.result.expect("cold original compact step");wallet.post(step.progress()).expect("cold original compact stock");if step.progress()==Default::default(){stall+=1;assert!(stall<64,"cold original compaction stalled without progress: grant={grant:?}");}else{stall=0;}}
         job.freed()
     }
 

@@ -9,6 +9,8 @@ impl<T>NativeRecordStorage<T>{
  pub const fn empty(fields:usize)->Self{Self{backing:NativeOwnedStorage::empty(),fields,live:0,taken:false,ready:false}}
  pub fn reserve_demand()->RetirementDemand{NativeOwnedStorage::<T>::reserve_demand()}
  pub fn initialize_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}}
+ /// ⏱️ Quotes the actual record backing release action.
+ pub fn release_work_demand(&self)->u64{self.backing.release_work_demand()}
  pub fn release_demand(&self)->RetirementDemand{let mut demand=self.backing.release_demand();if self.backing.reserved()&&self.ready{demand.copy_bytes+=size_of::<bool>()}demand}
  pub fn reserved(&self)->bool{self.backing.reserved()}
  pub fn initialized(&self)->bool{self.ready}

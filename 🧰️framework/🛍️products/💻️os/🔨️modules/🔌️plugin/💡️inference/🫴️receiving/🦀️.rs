@@ -1,7 +1,7 @@
 //! 🫴️ Original artifact document source custody through strict bounded base64 receiving.
 use super::ArtifactDocumentPayload;
 use base64_codec::{Base64Control, Base64ControlError, Base64DecodeCursor, Base64Input};
-use semio_framework::action_bus::{admit_original_tool_construction_scoped, OriginalToolSourceBinding, ToolJobAdmissionDemand};
+use semio_framework::action_bus::{admit_original_tool_construction_settled, OriginalToolSourceBinding, ToolJobAdmissionDemand};
 use semio_framework_job::{close_original_retained_step, InteractiveJobCloseStep, OriginalTurnFailure, StepContext};
 use semio_framework_value::{retirement::controlled::ControlledRetirement, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::{size_of, ManuallyDrop};
@@ -40,7 +40,7 @@ impl OriginalArtifactDocumentReceiving {
         if cx.original_clock_binding().is_none() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "artifact document receiving requires its original clock").into()); }
         if source.is_none() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "artifact document original payload is absent").into()); }
         let demand = RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() };
-        admit_original_tool_construction_scoped(cx, output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: 0, release_bytes: 0, depth: 1 }, |scope| {
+        admit_original_tool_construction_settled(cx, &mut Default::default(), output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: 0, release_bytes: 0, depth: 1 }, |scope| {
             scope.admit_owner(demand)?;
             let ArtifactDocumentPayload { pack, spr } = source.take().expect("borrowed original document preflight");
             let candidate = Self { source: scope.identity().source_binding(), cursors: ManuallyDrop::new([Some(Base64DecodeCursor::new(Base64Input::OwnedText(pack))), Some(Base64DecodeCursor::new(Base64Input::OwnedText(spr)))]), decoded: ManuallyDrop::new([None, None]), closing_text: ManuallyDrop::new([None, None]), close_owner: ManuallyDrop::new(None), phase: 0, maximum_decoded_bytes, fault: None, closing: false };
@@ -98,7 +98,7 @@ impl OriginalArtifactDocumentReceiving {
         self.validate_source(cx)?;
         if self.closing || self.phase != 2 || self.fault.is_some() { return Ok(false); }
         let demand = RetirementDemand { copy_bytes: size_of::<(Vec<u8>, Vec<u8>)>(), depth: 1, ..Default::default() };
-        admit_original_tool_construction_scoped(cx, output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: 0, release_bytes: 0, depth: 1 }, |scope| {
+        admit_original_tool_construction_settled(cx, &mut Default::default(), output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: 0, release_bytes: 0, depth: 1 }, |scope| {
             scope.admit_owner(demand)?;
             let pair = (self.decoded[0].take().expect("complete Pack source"), self.decoded[1].take().expect("complete SPR source"));
             self.phase = 3;

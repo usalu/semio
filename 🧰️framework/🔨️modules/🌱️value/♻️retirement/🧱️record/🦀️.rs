@@ -19,12 +19,12 @@ pub unsafe fn admit_field_with<T:RetireOwned>(value:*const T,effect:&mut Retaine
  let cursor=unsafe{pointer.as_ptr().write(take().retirement_seed());Box::from_raw(pointer.as_ptr())};RetirementStep::ChildProgress(cursor,crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:layout.size(),..Default::default()},1)
 }
 /// 🧳️ Holds the original record inline while authored field ports price and transfer one owner at a time.
-pub struct RetirementRecord<T:Send+'static>{original:MaybeUninit<T>,ordinal:usize,count:usize,demand:unsafe fn(*const T,usize)->Result<RetirementDemand,ValueError>,step:unsafe fn(*mut T,usize,&mut RetainedAllocationEffect<'_>)->RetirementStep}
+pub struct RetirementRecord<T:Send+'static>{original:MaybeUninit<T>,ordinal:usize,count:usize,demand:unsafe fn(*const T,usize)->Result<RetirementDemand,ValueError>,step:unsafe fn(*mut T,usize,&mut RetainedAllocationEffect<'_>)->RetirementStep,release:unsafe fn(*mut T,usize)}
 impl<T:Send+'static> RetirementRecord<T>{
  /// 🌱️ Initializes metadata without calling a producer.
  /// # Safety
- /// Ports must select each declared field exactly once; the source type must have no custom Drop and every field must transfer before terminal.
- pub unsafe fn new(original:T,count:usize,demand:unsafe fn(*const T,usize)->Result<RetirementDemand,ValueError>,step:unsafe fn(*mut T,usize,&mut RetainedAllocationEffect<'_>)->RetirementStep)->Self{Self{original:MaybeUninit::new(original),ordinal:0,count,demand,step}}
+ /// Ports must select each declared field exactly once; the source type must have no custom Drop and every field must transfer before terminal; `release` drops exactly the fields whose ordinal is at least the given one.
+ pub unsafe fn new(original:T,count:usize,demand:unsafe fn(*const T,usize)->Result<RetirementDemand,ValueError>,step:unsafe fn(*mut T,usize,&mut RetainedAllocationEffect<'_>)->RetirementStep,release:unsafe fn(*mut T,usize))->Self{Self{original:MaybeUninit::new(original),ordinal:0,count,demand,step,release}}
 }
 impl<T:Send+'static> RetirementCursor for RetirementRecord<T>{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){Ok(Default::default())}else{unsafe{(self.demand)(self.original.as_ptr(),self.ordinal)}}}
@@ -32,5 +32,9 @@ impl<T:Send+'static> RetirementCursor for RetirementRecord<T>{
  fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0)}let turn=unsafe{(self.step)(self.original.as_mut_ptr(),self.ordinal,effect)};if matches!(&turn,RetirementStep::ChildProgress(..)){self.ordinal+=1}turn}
  fn terminal_is_empty(&self)->bool{self.ordinal==self.count}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
+ fn next_birth_bytes(&self,body:usize)->Option<usize>{self.next_demand(body).ok().map(|demand|demand.capacity_bytes)}
+ fn next_close_byte_demand(&self)->Option<usize>{self.next_demand(0).ok().map(|demand|demand.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.depth)}
 }
-impl<T:Send+'static> Drop for RetirementRecord<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"record fields remain owned before terminal closure")}}
+impl<T:Send+'static> Drop for RetirementRecord<T>{fn drop(&mut self){let settled=self.terminal_is_empty();assert!(super::unsettled_drop_allowed()||settled,"record fields remain owned before terminal closure");if !settled&&super::controlled::abandoning(){unsafe{(self.release)(self.original.as_mut_ptr(),self.ordinal)}}}}

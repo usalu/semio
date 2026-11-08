@@ -372,3 +372,40 @@ impl semio_framework_dsl_record::DslField for ArtifactLink {
         artifact_link_from_record_controlled(record, control)
     }
 }
+
+/// 🚚️ The pin's literal strings move out of its kind-tagged record after the whole branch validates; the emptied shell stays with its paid owner.
+pub fn take_link_pin(source:&mut semio_framework_dsl_record::FieldValue)->Result<LinkPin,ValueError>{
+    use semio_framework_dsl_record::{receiving::owned::invalid,FieldValue};
+    if !link_pin_is_well_typed(source){return Err(invalid())}
+    let FieldValue::Record(record)=source else{return Err(invalid())};
+    let kind=match record.get(0){Some(FieldValue::Enum(kind))=>*kind,_=>return Err(invalid())};
+    let mut text=|id:u16|match record.fields.get_mut(&id){Some(FieldValue::Text(value))=>std::mem::take(value),_=>String::new()};
+    match kind{
+        0=>Ok(LinkPin::Head),
+        1=>Ok(LinkPin::Checkpoint{id:text(1)}),
+        2=>{let(hash,media_type)=(text(2),text(4));let size=match record.get(3){Some(FieldValue::UInt(size))=>*size,_=>return Err(invalid())};Ok(LinkPin::Snapshot{blob:BlobRef{hash,size,media_type}})}
+        _=>Err(invalid()),
+    }
+}
+fn link_pin_is_well_typed(value:&semio_framework_dsl_record::FieldValue)->bool{
+    use semio_framework_dsl_record::FieldValue;
+    let FieldValue::Record(record)=value else{return false};
+    validate_link_pin_record(record).is_ok()&&record.fields.iter().all(|(id,field)|matches!((id,field),(_,FieldValue::Absent)|(0,FieldValue::Enum(_))|(1|2|4,FieldValue::Text(_))|(3,FieldValue::UInt(_))))
+}
+/// 🚚️ Target, pin and role move out of the link record only after every part validated, so a refusal leaves the source whole.
+pub fn take_artifact_link(source:&mut Option<semio_framework_dsl_record::FieldValue>)->Result<ArtifactLink,ValueError>{
+    use semio_framework_dsl_record::{receiving::owned::invalid,FieldValue};
+    let Some(FieldValue::Record(record))=source.as_mut() else{return Err(invalid())};
+    let shaped=record.fields.len()==3
+        &&record.fields.get(&0).is_some_and(semio_framework_artifact_reference::is_artifact_ref_value)
+        &&record.fields.get(&1).is_some_and(link_pin_is_well_typed)
+        &&matches!(record.fields.get(&2),Some(FieldValue::Text(_)));
+    if !shaped{return Err(invalid())}
+    let pin=take_link_pin(record.fields.get_mut(&1).ok_or_else(invalid)?)?;
+    let target=semio_framework_artifact_reference::take_artifact_ref(record.fields.get_mut(&0).ok_or_else(invalid)?)?;
+    let role=match record.fields.get_mut(&2){Some(FieldValue::Text(value))=>std::mem::take(value),_=>return Err(invalid())};
+    Ok(ArtifactLink{target,pin,role})
+}
+fn link_pin_take(source:&mut Option<semio_framework_dsl_record::FieldValue>)->Result<LinkPin,ValueError>{take_link_pin(source.as_mut().ok_or_else(semio_framework_dsl_record::receiving::owned::invalid)?)}
+semio_framework_dsl_record::dsl_owned_scalar_receiving!(move LinkPin,link_pin_take);
+semio_framework_dsl_record::dsl_owned_scalar_receiving!(move ArtifactLink,take_artifact_link);

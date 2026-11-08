@@ -131,7 +131,7 @@ impl PrivateChildPublicationInput {
         Ok(demand)
     }
     /// ♻️ Retires exact retained request, metadata and typed source under their independently supplied grant.
-    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_granted(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -164,7 +164,7 @@ impl PrivateChildPublicationInput {
             return Ok(input_pending(step));
         }
         if let Some(source) = self.source.as_mut() {
-            let step = source.close_granted(child)?;
+            let step = semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx, child, |effect| source.close_step(effect).map_err(semio_plugin_ownership::bounded_ownership::plugin_failure_error))?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child, step, source.terminal_is_empty(), "private input typed source")?;
             if source.terminal_is_empty() { self.source.take(); }
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { input_pending(step) });

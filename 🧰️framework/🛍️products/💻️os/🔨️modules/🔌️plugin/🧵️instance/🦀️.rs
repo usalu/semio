@@ -69,7 +69,7 @@ use semio_plugin_job::{EmitWire, PendingTransaction, TransactionProposalDraft, T
 /// 🪝️ The instance extensions every mounted instance consults, in route, refusal and maintenance order (see [`InstanceExtension`]).
 pub type InstanceExtensions = (semio_plugin_tool_run_turns::ToolRunExtension, (semio_plugin_time_travel_turns::TimeTravelExtension, ()));
 use semio_plugin_time_travel::TimeTravelLedger;
-use semio_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_plugin_tool_machine::ToolMachineRuntime;
 use semio_plugin_tool_run::ToolRunLedger;
 use semio_plugin_job::lifted_full_operation_job::TypedCommandFullOperationJobFactory;
 use semio_plugin_window_transient::built_to_component_tree;
@@ -93,7 +93,7 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactor
 pub original_host_event_command:semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,
 pub original_command_scope:Option<(semio_framework_job::OriginalSourceBinding,(u64,u64))>,
 pub original_host_event_scope:Option<(semio_framework_job::OriginalSourceBinding,(u64,u64))>,
-    pub original_typed_tag:std::mem::ManuallyDrop<Option<semio_plugin_tool_run::tool_jobs_tool_machine::ToolTag>>,
+    pub original_typed_tag:std::mem::ManuallyDrop<Option<semio_plugin_tool_machine::ToolTag>>,
     pub original_typed_tag_close:semio_framework_value::retained_clone::RetainedCloneClose,
     /// 🗜️ Local interaction: the framework-owned live query, topology authority, hover and snapshot read returns.
     pub interaction: LocalInteraction<A>,
@@ -144,16 +144,7 @@ pub use semio_ui_contract::*;
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory> Drop for VcsArtifactApp<A, M> {
     fn drop(&mut self) {
         self.tools.tool_cancellations.cancel_scope_generation();
-        while let Some((_, id)) = self.pending.pending_reserved.next_id_from(0) {
-            if let Some(pending) = self.pending.pending_reserved.remove(id) {
-                pending.permit.finish();
-            } else {
-                break;
-            }
-        }
-        while let Some(commit) = self.pending.reserved_commits.pop_front() {
-            commit.permit.finish();
-        }
+        assert!(std::thread::panicking() || (self.pending.pending_reserved.is_empty() && self.pending.reserved_commits.is_empty()), "framework-reserved routes retire their leases through the paid close before the app drops");
     }
 }
 

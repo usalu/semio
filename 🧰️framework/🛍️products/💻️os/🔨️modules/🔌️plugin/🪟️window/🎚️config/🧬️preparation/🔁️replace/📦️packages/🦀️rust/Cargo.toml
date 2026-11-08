@@ -24,3 +24,6 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-os-store-snapshot-clone = { path = "../../../../../../../🏪️store/🧬️snapshot-clone/📦️packages/🦀️rust", features = ["law"] }

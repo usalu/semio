@@ -12,6 +12,6 @@
   "expected": {
     "deniedWork": 0,
     "closedWork": 0,
-    "aliasWork": 1
+    "aliasWork": 3
   }
 }

@@ -3,6 +3,7 @@ use crate::{RetirementDemand,ValueError,ValueRefusalKind,RetainedEqualityElement
 use semio_framework_value_clone_source::{RetainedCloneRef,RetainedCloneBinding};
 use semio_framework_value_control_contract::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits};
 use std::mem::size_of;
+use semio_framework_value_retirement::retirement_contract::RetirementPollExit;
 
 /// 🌳️ Original sources stay stable; cursor construction allocates nothing, inspects no source and finishes within its declared fixed work.
 pub trait RetainedEquality:Sized+RetireOwned+Send+Sync+'static{
@@ -19,14 +20,17 @@ pub struct RetainedEqualityStep{pub equal:Option<bool>,pub progress:RetainedClon
 pub trait RetainedEqualityCursor<T:?Sized>:Send+'static{
  fn demand(&self,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>;
  fn work_demand(&self,body:usize,maximum_work_units:u64)->Result<u64,ValueError>;
- fn advance(&mut self,left:&T,right:&T,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome<RetainedEqualityStep,crate::OriginalRetirementFailure>;
+ /// 📏️ Quotes the same demand once the caller has already verified a nonzero work quote, so nested frontiers are not re-gated at every depth.
+ fn demand_admitted(&self,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{self.demand(body,maximum_work_units)}
+ fn advance(&mut self,left:&T,right:&T,body:usize,maximum_work_units:u64,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedEqualityStep,crate::OriginalRetirementFailure>;
  fn begin_close(&mut self);
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>;
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>;
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome;
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll;
  fn terminal_is_empty(&self)->bool;
 }
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
+fn complete<T,E>(poll:crate::RetainedWorkPoll<T,E>)->Result<crate::RetainedWorkOutcome<T,E>,ValueError>{match poll{crate::RetainedWorkPoll::Complete(turn)=>Ok(turn),crate::RetainedWorkPoll::Pending{..}=>Err(invalid("typed equality child close stayed pending"))}}
 fn scalar(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 
 /// 🔬️ Inline native equality never traverses a hidden referenced payload.
@@ -35,11 +39,11 @@ impl<T> RetainedInlineEquality<T>{pub fn new()->Self{Self{result:None,marker:Def
 impl<T:RetainedEqualityElement+Send+Sync+'static> RetainedEqualityCursor<T> for RetainedInlineEquality<T>{
  fn demand(&self,_:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if self.result.is_some(){return Err(invalid("typed inline comparison is settled"));}if T::WORK>maximum_work_units{return Ok(Default::default())}Ok(scalar(size_of::<T>()*2))}
  fn work_demand(&self,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.demand(body,maximum_work_units)?;Ok(if T::WORK<=maximum_work_units{T::WORK}else{0})}
- fn advance(&mut self,left:&T,right:&T,body:usize,maximum_work_units:u64,g:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome<RetainedEqualityStep,crate::OriginalRetirementFailure>{let mut work=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{if actual.is_some(){return Err(invalid("equality advance needs an empty allocation marker").into())}if self.result.is_some(){return Ok(RetainedEqualityStep{equal:self.result,progress:Default::default()})}if self.work_demand(body,maximum_work_units)?==0{return Ok(RetainedEqualityStep{equal:None,progress:Default::default()})}let d=self.demand(body,maximum_work_units)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedEqualityStep{equal:None,progress:Default::default()});}self.result=Some(T::inline_eq(left,right));work=T::WORK;Ok(RetainedEqualityStep{equal:self.result,progress:RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}})})();crate::RetainedWorkOutcome{result,work}}
+ fn advance(&mut self,left:&T,right:&T,body:usize,maximum_work_units:u64,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedEqualityStep,crate::OriginalRetirementFailure>{let g=effect.grant();let mut work:u128=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{if effect.actual().is_some(){return Err(invalid("equality advance needs an empty allocation marker").into())}if self.result.is_some(){return Ok(RetainedEqualityStep{equal:self.result,progress:Default::default()})}if self.work_demand(body,maximum_work_units)?==0{return Ok(RetainedEqualityStep{equal:None,progress:Default::default()})}let d=self.demand(body,maximum_work_units)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedEqualityStep{equal:None,progress:Default::default()});}self.result=Some(T::inline_eq(left,right));work=u128::from(T::WORK);Ok(RetainedEqualityStep{equal:self.result,progress:RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}})})();settle_work(effect,crate::RetainedWorkOutcome{result,work})}
  fn begin_close(&mut self){}
  fn close_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
  fn close_work_demand(&self,_:usize)->Result<u64,ValueError>{Ok(0)}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let _=effect.grant();crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let _=effect.grant();crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})}
  fn terminal_is_empty(&self)->bool{true}
 }
 macro_rules! inline{($($ty:ty),*)=>{$(impl RetainedEquality for $ty{
@@ -65,19 +69,29 @@ impl RetainedEquality for String{
 impl RetainedEqualityCursor<String> for RetainedStringEquality{
  fn demand(&self,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{self.cursor.demand::<u8>(body,maximum_work_units.saturating_sub(2))}
  fn work_demand(&self,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{let child=self.cursor.work_demand::<u8>(body,maximum_work_units.saturating_sub(2))?;if child==0{return Ok(0)}child.checked_add(2).ok_or_else(||invalid("string equality projection work overflow"))}
- fn advance(&mut self,left:&String,right:&String,body:usize,maximum_work_units:u64,g:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome<RetainedEqualityStep,crate::OriginalRetirementFailure>{
-  if actual.is_some(){return crate::RetainedWorkOutcome{result:Err(invalid("equality advance needs an empty allocation marker").into()),work:0}}
+ fn advance(&mut self,left:&String,right:&String,body:usize,maximum_work_units:u64,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedEqualityStep,crate::OriginalRetirementFailure>{let g=effect.grant();
+  if effect.actual().is_some(){return crate::RetainedWorkOutcome{result:Err(invalid("equality advance needs an empty allocation marker").into()),work:0}}
   let selected=match self.work_demand(body,maximum_work_units){Ok(v)=>v,Err(e)=>return crate::RetainedWorkOutcome{result:Err(e.into()),work:0}};if selected==0{return crate::RetainedWorkOutcome{result:Ok(RetainedEqualityStep{equal:None,progress:Default::default()}),work:0}}
   let d=match self.demand(body,maximum_work_units){Ok(v)=>v,Err(e)=>return crate::RetainedWorkOutcome{result:Err(e.into()),work:0}};if !retained_clone_grant_admits(g,d){return crate::RetainedWorkOutcome{result:Ok(RetainedEqualityStep{equal:None,progress:Default::default()}),work:0}}
-  let turn=self.cursor.advance(left.as_bytes(),right.as_bytes(),body,maximum_work_units-2,g);crate::RetainedWorkOutcome{work:turn.work+2,result:turn.result.map(|step|RetainedEqualityStep{equal:self.cursor.equal(),progress:step.progress()}).map_err(Into::into)}
+  let turn=self.cursor.advance(left.as_bytes(),right.as_bytes(),body,maximum_work_units-2,g);let equal=self.cursor.equal();settle_work(effect,crate::RetainedWorkOutcome{work:turn.work+2,result:turn.result.map(|step|RetainedEqualityStep{equal,progress:step.progress()}).map_err(Into::into)})
  }
  fn begin_close(&mut self){self.cursor.begin_close()}
  fn close_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{self.cursor.close_demand()}
  fn close_work_demand(&self,_:usize)->Result<u64,ValueError>{self.cursor.close_work_demand()}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{self.cursor.close_step(effect.maximum_work_units(),effect.grant())}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let turn=self.cursor.close_step(effect.maximum_work_units(),effect.grant());crate::RetainedWorkPoll::Complete(settle_work(effect,crate::RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}))}
  fn terminal_is_empty(&self)->bool{self.cursor.terminal_is_empty()}
 }
 
+/// ⏱️ Records the work a turn reports but did not yet put on the original receipt, so every reported unit is performed exactly once.
+pub(crate) fn settle_work<T,E:From<ValueError>>(effect:&mut crate::RetainedAllocationEffect<'_>,mut turn:crate::RetainedWorkOutcome<T,E>)->crate::RetainedWorkOutcome<T,E>{
+ let owed=turn.work.saturating_sub(effect.performed_work());
+ if owed>0{let refusal=match u64::try_from(owed).map_err(|_|ValueError::invariant("equality turn work overflow")).and_then(|owed|effect.performed(owed)){Ok(true)=>None,Ok(false)=>Some(ValueError::literal(ValueRefusalKind::WorkLimit,"equality turn exceeded its original work")),Err(error)=>Some(error)};if let Some(error)=refusal{if turn.result.is_ok(){turn.result=Err(E::from(error))}}}
+ turn.work=effect.performed_work();turn
+}
+/// ⏱️ Settles a retirement poll against the original receipt; a pending poll reports only performed work.
+pub(crate) fn settle_poll(effect:&mut crate::RetainedAllocationEffect<'_>,poll:crate::OriginalRetirementPoll)->crate::OriginalRetirementPoll{
+ match poll{crate::RetainedWorkPoll::Complete(turn)=>crate::RetainedWorkPoll::Complete(settle_work(effect,turn)),crate::RetainedWorkPoll::Pending{work}=>{let turn=settle_work(effect,crate::RetainedWorkOutcome{result:Ok::<(),crate::OriginalRetirementFailure>(()),work});crate::RetainedWorkPoll::Pending{work:turn.work}}}
+}
 /// 🧳️ Genuine original source bindings outlive the whole typed comparison and every child cancellation.
 pub struct RetainedEqualityOwner<T:RetainedEquality>{cursor:T::Equality,left:Option<RetainedCloneBinding>,right:Option<RetainedCloneBinding>,result:Option<bool>,closing:bool}
 impl<T:RetainedEquality> RetainedEqualityOwner<T>{
@@ -96,22 +110,22 @@ impl<T:RetainedEquality> RetainedEqualityOwner<T>{
  fn fixed()->usize{0}
  pub fn demand(&self,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if self.closing||self.result.is_some(){return Err(invalid("original typed comparison is closing or settled"))}if self.work_demand(body,maximum_work_units)?==0{return Ok(Default::default())}if self.left.is_none()||self.right.is_none(){return Ok(scalar(RetainedCloneBinding::alias_copy_bytes()))}let checks=RetainedCloneRef::<T>::check_binding_work(&self.left).checked_add(RetainedCloneRef::<T>::check_binding_work(&self.right)).and_then(|v|v.checked_add(1)).ok_or_else(||invalid("typed equality work overflow"))?;let mut d=self.cursor.demand(body.saturating_sub(Self::fixed()),maximum_work_units-checks)?;d.copy_bytes+=size_of::<Option<bool>>()*2+Self::fixed();d.depth+=1;Ok(d)}
  pub fn work_demand(&self,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{if self.closing||self.result.is_some(){return Err(invalid("original typed comparison is closing or settled"))}let check=RetainedCloneRef::<T>::check_binding_work(&self.left);let required=if self.left.is_none(){RetainedCloneBinding::alias_work_demand()}else if self.right.is_none(){check.checked_add(RetainedCloneBinding::alias_work_demand()).ok_or_else(||invalid("typed equality work overflow"))?}else{let checks=check.checked_add(RetainedCloneRef::<T>::check_binding_work(&self.right)).and_then(|v|v.checked_add(1)).ok_or_else(||invalid("typed equality work overflow"))?;let child=self.cursor.work_demand(body.saturating_sub(Self::fixed()),maximum_work_units.saturating_sub(checks))?;if child==0{return Ok(0)}child.checked_add(checks).ok_or_else(||invalid("typed equality work overflow"))?};Ok(if required<=maximum_work_units{required}else{0})}
- pub fn advance(&mut self,left:RetainedCloneRef<'_,T>,right:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome<RetainedEqualityStep,crate::OriginalRetirementFailure>{let mut work=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{
-  if actual.is_some(){return Err(invalid("equality advance needs an empty allocation marker").into())}if self.closing{return Err(invalid("original typed comparison is closing").into())}if self.result.is_some(){return Ok(RetainedEqualityStep{equal:self.result,progress:Default::default()})}if self.work_demand(body,maximum_work_units)?==0{return Ok(RetainedEqualityStep{equal:None,progress:Default::default()})}let d=self.demand(body,maximum_work_units)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedEqualityStep{equal:None,progress:Default::default()})}
-  if self.left.is_none(){let turn=left.bind(&mut self.left,g);work=turn.work;return turn.result.map(|p|RetainedEqualityStep{equal:None,progress:p.unwrap_or_default()}).map_err(Into::into)}
-  let checked=left.check_binding_paid(&self.left,maximum_work_units,g);work=checked.work;if checked.result?!=Some(true){return Err(invalid("typed equality left binding changed").into())}if self.right.is_none(){let turn=right.bind(&mut self.right,g);work+=turn.work;return turn.result.map(|p|RetainedEqualityStep{equal:None,progress:p.unwrap_or_default()}).map_err(Into::into)}
-  let checked=right.check_binding_paid(&self.right,maximum_work_units-work,g);work+=checked.work;if checked.result?!=Some(true){return Err(invalid("typed equality right binding changed").into())}let checks=RetainedCloneRef::<T>::check_binding_work(&self.left).checked_add(RetainedCloneRef::<T>::check_binding_work(&self.right)).and_then(|v|v.checked_add(1)).ok_or_else(||invalid("typed equality work overflow"))?;let extra=size_of::<Option<bool>>()*2+Self::fixed();let turn=self.cursor.advance(left.get(),right.get(),body.saturating_sub(Self::fixed()),maximum_work_units-checks,RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-extra,maximum_depth:g.maximum_depth-1,..g},actual);work+=turn.work;let mut step=turn.result?;if let Some(equal)=step.equal{self.result=Some(equal);step.progress.copied_items=1;step.progress.copied_bytes+=extra;work+=1}Ok(step)
- })();crate::RetainedWorkOutcome{result,work}}
+ pub fn advance(&mut self,left:RetainedCloneRef<'_,T>,right:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedEqualityStep,crate::OriginalRetirementFailure>{let g=effect.grant();let mut work:u128=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{
+  if effect.actual().is_some(){return Err(invalid("equality advance needs an empty allocation marker").into())}if self.closing{return Err(invalid("original typed comparison is closing").into())}if self.result.is_some(){return Ok(RetainedEqualityStep{equal:self.result,progress:Default::default()})}if self.work_demand(body,maximum_work_units)?==0{return Ok(RetainedEqualityStep{equal:None,progress:Default::default()})}let d=self.demand(body,maximum_work_units)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedEqualityStep{equal:None,progress:Default::default()})}
+  if self.left.is_none(){let turn=left.bind(&mut self.left,effect);work=turn.work;return turn.result.map(|p|RetainedEqualityStep{equal:None,progress:p.unwrap_or_default()}).map_err(Into::into)}
+  let checked=left.check_binding_paid(&self.left,maximum_work_units,g);work=checked.work;if checked.result?!=Some(true){return Err(invalid("typed equality left binding changed").into())}if self.right.is_none(){let turn=right.bind(&mut self.right,effect);work+=turn.work;return turn.result.map(|p|RetainedEqualityStep{equal:None,progress:p.unwrap_or_default()}).map_err(Into::into)}
+  let checked=right.check_binding_paid(&self.right,maximum_work_units.saturating_sub(u64::try_from(work).unwrap_or(u64::MAX)),g);work+=checked.work;if checked.result?!=Some(true){return Err(invalid("typed equality right binding changed").into())}let checks=RetainedCloneRef::<T>::check_binding_work(&self.left).checked_add(RetainedCloneRef::<T>::check_binding_work(&self.right)).and_then(|v|v.checked_add(1)).ok_or_else(||invalid("typed equality work overflow"))?;let extra=size_of::<Option<bool>>()*2+Self::fixed();let child_work=maximum_work_units.checked_sub(checks).ok_or_else(||invalid("typed equality child work underflows"))?;let turn=self.cursor.advance(left.get(),right.get(),body.saturating_sub(Self::fixed()),child_work,&mut effect.nested_within(RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes.checked_sub(extra).ok_or_else(||invalid("typed equality child copy budget underflows"))?,maximum_depth:g.maximum_depth.checked_sub(1).ok_or_else(||invalid("typed equality child depth underflows"))?,..g},child_work));work+=turn.work;let mut step=turn.result?;if let Some(equal)=step.equal{self.result=Some(equal);step.progress.copied_items=1;step.progress.copied_bytes+=extra;work+=1}Ok(step)
+ })();settle_work(effect,crate::RetainedWorkOutcome{result,work})}
 
  pub fn begin_close(&mut self){self.closing=true;self.cursor.begin_close();}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid("original typed comparison close has not begun"));}if !self.cursor.terminal_is_empty(){return self.cursor.close_demand(body);}RetainedCloneBinding::close_demand(if self.right.is_some(){&self.right}else{&self.left},body)}
  pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(invalid("original typed comparison close has not begun"));}if !self.cursor.terminal_is_empty(){return self.cursor.close_work_demand(body);}RetainedCloneBinding::close_work_demand(if self.right.is_some(){&self.right}else{&self.left},body)}
- pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let g=effect.grant();let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let g=effect.grant();let mut work:u128=0;let result=(|| -> Result<RetainedCloneStep,RetirementPollExit>{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if !self.cursor.terminal_is_empty(){let turn=self.cursor.close_step(&mut effect.reborrow(g,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into)}
-  let turn=RetainedCloneBinding::close_one(if self.right.is_some(){&mut self.right}else{&mut self.left},g);work=turn.work;let step=turn.result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
- })();crate::RetainedWorkOutcome{result,work}}
+  if !self.cursor.terminal_is_empty(){let turn=RetirementPollExit::settled(self.cursor.close_step(&mut effect.nested(g)))?;work=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()))}
+  let turn=RetirementPollExit::settled(RetainedCloneBinding::close_one(if self.right.is_some(){&mut self.right}else{&mut self.left},effect))?;work=turn.work;let step=turn.result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+ })();settle_poll(effect,RetirementPollExit::finish(result,work))}
 
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.cursor.terminal_is_empty()&&self.left.is_none()&&self.right.is_none()}
 }
@@ -129,9 +143,9 @@ pub fn equality_box<B:RetainedEqualityBirth>(maximum_work_units:u64,grant:Retain
  if actual.is_some(){return crate::RetainedWorkOutcome{result:Err(invalid("equality birth needs an empty allocation marker")),work:0}}
  let work=match equality_box_work::<B>(){Ok(work)=>work,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};let layout=std::alloc::Layout::new::<B::Output>();let copied=match layout.size().checked_mul(2){Some(bytes)=>bytes,None=>return crate::RetainedWorkOutcome{result:Err(invalid("equality birth copy overflow")),work:0}};let d=RetirementDemand{copy_bytes:copied,capacity_bytes:layout.size(),depth:1,..Default::default()};
  if maximum_work_units<work||!retained_clone_grant_admits(grant,d){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}
- if layout.size()==0{return crate::RetainedWorkOutcome{result:Ok(Some((Box::new(B::birth()),RetainedCloneProgress{copied_items:1,..Default::default()}))),work}}
+ if layout.size()==0{return crate::RetainedWorkOutcome{result:Ok(Some((Box::new(B::birth()),RetainedCloneProgress{copied_items:1,..Default::default()}))),work:u128::from(work)}}
  *actual=Some(0);let pointer=unsafe{std::alloc::alloc(layout)}as*mut B::Output;if pointer.is_null(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"typed equality cursor allocation refused")),work:1}}
- *actual=Some(layout.size());unsafe{pointer.write(B::birth());crate::RetainedWorkOutcome{result:Ok(Some((Box::from_raw(pointer),RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()}))),work}}
+ *actual=Some(layout.size());unsafe{pointer.write(B::birth());crate::RetainedWorkOutcome{result:Ok(Some((Box::from_raw(pointer),RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()}))),work:u128::from(work)}}
 }
 
 #[cfg(test)] #[path="🧪️tests/🦀️.rs"] mod tests;

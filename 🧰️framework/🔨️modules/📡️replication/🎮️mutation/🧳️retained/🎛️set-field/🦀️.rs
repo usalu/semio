@@ -1,7 +1,7 @@
 //! 🎛️ Generic retained leaf of a "set one field" mutation: the authored value is copied under physical grants into a one-field sparse patch, the displaced original value into the one-row inverse. See [`super`].
 use super::super::{ApplyCapability,Mutation,MutationMessage};
-use super::{retained_mutation_demand_fits,RetainedDiff,RetainedDiffApply,RetainedDiffFragment,RetainedDiffPreflightAdvance,RetainedFieldPreparation,RetainedMutationAdvance,RetainedMutationCloseContext,RetainedMutationDecision,RetainedMutationLeafPreparation,RetainedRowPatch,RetainedRowPatchApply};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
+use super::{left,settle,settle_advance,settle_exit,settle_value,retained_mutation_demand_fits,RetainedDiff,RetainedDiffApply,RetainedDiffFragment,RetainedDiffPreflightAdvance,RetainedFieldPreparation,RetainedMutationAdvance,RetainedMutationCloseContext,RetainedMutationDecision,RetainedMutationLeafPreparation,RetainedRowPatch,RetainedRowPatchApply};
+use semio_framework_value::{OriginalRetirementFailure,OriginalRetirementOutcome,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{admit_retained_clone_progress,RetainedClone,RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep};
 use semio_framework_value_factory::vector::FactoryVectorRetirement;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
@@ -51,19 +51,19 @@ fn tag(error:ValueError,extra:usize)->ValueError{let p=error.retained_progress()
 fn child(g:RetainedCloneGrant,extra:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes.saturating_sub(extra),..g}}
 fn field_birth<T:RetainedClone>()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<RetainedFieldPreparation<T>>()+2*size_of::<Option<Box<RetainedFieldPreparation<T>>>>(),capacity_bytes:size_of::<RetainedFieldPreparation<T>>(),depth:1,..Default::default()}}
 pub fn field_birth_work<T:RetainedClone>()->Result<u64,ValueError>{let embedded=RetainedFieldPreparation::<T>::embedded_birth_work()?;u64::try_from(field_birth::<T>().copy_bytes).ok().and_then(|bytes|bytes.checked_add(embedded)).and_then(|work|work.checked_add(1)).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"retained field birth work overflow"))}
-fn admit_field_birth<T:RetainedClone>(output:&mut Option<Box<RetainedFieldPreparation<T>>>,grant:RetainedCloneGrant,maximum_work_units:u64,declared_work:u64,actual:&mut Option<usize>)->semio_framework_value::RetainedWorkOutcome{let minimum=match field_birth_work::<T>(){Ok(work)=>work,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}};if declared_work<minimum{return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"retained field birth lacks a bounded layout quote")),work:0}}let d=field_birth::<T>();if output.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Err(invalid()),work:0}}if maximum_work_units<declared_work||!retained_mutation_demand_fits(d,grant){return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if actual.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::invariant("original field birth allocation marker is occupied")),work:0}}let layout=std::alloc::Layout::new::<RetainedFieldPreparation<T>>();let pointer=if layout.size()==0{std::ptr::NonNull::<RetainedFieldPreparation<T>>::dangling().as_ptr()}else{*actual=Some(0);unsafe{std::alloc::alloc(layout)}.cast::<RetainedFieldPreparation<T>>()};if pointer.is_null(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"retained field birth allocation refused")),work:1}}if layout.size()!=0{*actual=Some(layout.size())}unsafe{pointer.write(RetainedFieldPreparation::default());*output=Some(Box::from_raw(pointer))}semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:minimum}}
+fn admit_field_birth<T:RetainedClone>(output:&mut Option<Box<RetainedFieldPreparation<T>>>,grant:RetainedCloneGrant,maximum_work_units:u64,declared_work:u64,actual:&mut Option<usize>)->semio_framework_value::RetainedWorkOutcome{let minimum=match field_birth_work::<T>(){Ok(work)=>work,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}};if declared_work<minimum{return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"retained field birth lacks a bounded layout quote")),work:0}}let d=field_birth::<T>();if output.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Err(invalid()),work:0}}if maximum_work_units<declared_work||!retained_mutation_demand_fits(d,grant){return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if actual.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::invariant("original field birth allocation marker is occupied")),work:0}}let layout=std::alloc::Layout::new::<RetainedFieldPreparation<T>>();let pointer=if layout.size()==0{std::ptr::NonNull::<RetainedFieldPreparation<T>>::dangling().as_ptr()}else{*actual=Some(0);unsafe{std::alloc::alloc(layout)}.cast::<RetainedFieldPreparation<T>>()};if pointer.is_null(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"retained field birth allocation refused")),work:1}}if layout.size()!=0{*actual=Some(layout.size())}unsafe{pointer.write(RetainedFieldPreparation::default());*output=Some(Box::from_raw(pointer))}semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:u128::from(minimum)}}
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod birth_tests;
 fn field_release<T:RetainedClone>()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<Option<Box<RetainedFieldPreparation<T>>>>(),release_bytes:size_of::<RetainedFieldPreparation<T>>(),depth:1,..Default::default()}}
-fn field_demand<T:RetainedClone>(field:&Option<Box<RetainedFieldPreparation<T>>>,body:usize,maximum_work_units:u64,take_extra:usize)->Result<RetirementDemand,ValueError>{
+fn field_demand<'a,T:RetainedClone>(field:&Option<Box<RetainedFieldPreparation<T>>>,source:impl FnOnce()->Result<RetainedCloneRef<'a,T>,ValueError>,body:usize,maximum_work_units:u64,take_extra:usize)->Result<RetirementDemand,ValueError>{
  let Some(field)=field else{return Ok(field_birth::<T>())};
- if field.value().is_some(){let mut d=field.exchange_demand()?;d.copy_bytes=d.copy_bytes.checked_add(take_extra).ok_or_else(invalid)?;Ok(d)}else{field.demand(body,maximum_work_units)}
+ if field.value().is_some(){let mut d=field.exchange_demand()?;d.copy_bytes=d.copy_bytes.checked_add(take_extra).ok_or_else(invalid)?;Ok(d)}else{field.demand(source()?,body,maximum_work_units)}
 }
 fn field_close_demand<T:RetainedClone>(field:&RetainedFieldPreparation<T>,body:usize)->Result<RetirementDemand,ValueError>{if !field.close_started(){return Ok(field.begin_close_demand())}if field.terminal_is_empty(){Ok(field_release::<T>())}else{field.close_demand(body)}}
-fn field_close_step<T:RetainedClone>(slot:&mut Option<Box<RetainedFieldPreparation<T>>>,d:RetirementDemand,g:RetainedCloneGrant,actual:&mut Option<usize>)->semio_framework_value::OriginalRetirementOutcome{
- let Some(field)=slot.as_mut()else{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
- if !field.close_started(){let turn=field.begin_close_paid(g);return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress).map_err(Into::into),work:turn.work}}
- if field.terminal_is_empty(){drop(slot.take());return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(d))),work:1};}
- let turn=field.close_step(g,actual);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|s|RetainedCloneStep::Progress(s.progress())),work:turn.work}
+fn field_close_step<T:RetainedClone>(slot:&mut Option<Box<RetainedFieldPreparation<T>>>,d:RetirementDemand,effect:&mut RetainedAllocationEffect<'_>,work:&mut u128)->Result<RetainedCloneStep,RetirementPollExit>{
+ let Some(field)=slot.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()))};
+ if !field.close_started(){let turn=field.begin_close_paid(effect);*work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?))}
+ if field.terminal_is_empty(){drop(slot.take());*work+=1;return Ok(RetainedCloneStep::Progress(receipt(d)))}
+ let turn=RetirementPollExit::settled(field.close_step(effect))?;*work+=turn.work;Ok(RetainedCloneStep::Progress(turn.result?.progress()))
 }
 
 impl<L,R,P,M> RetainedSetFieldLeaf<L,R,P,M> where L:RetainedSetField<R,P,M>,P:RetainedDiff<R>,M:Mutation<R,Diff=P>+Send+'static{
@@ -73,15 +73,17 @@ impl<L,R,P,M> RetainedSetFieldLeaf<L,R,P,M> where L:RetainedSetField<R,P,M>,P:Re
   if include_diff{work=work.checked_add(RetainedCloneRef::<P>::check_binding_work(&self.diff_source)).ok_or_else(invalid)?}Ok(work)
  }
  fn check_paid<'a>(&self,payload:RetainedCloneRef<'a,L>,original:RetainedCloneRef<'_,R>,diff:Option<RetainedCloneRef<'_,P>>,maximum_work_units:u64,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(RetainedCloneRef<'a,L::Authored>,RetainedCloneProgress)>>{
-  let mut work=0;let mut receipt=RetainedCloneProgress::default();let result=(||{
+  let mut work:u128=0;let mut receipt=RetainedCloneProgress::default();let result=(||{
    let quote=self.check_work(diff.is_some())?;if quote>maximum_work_units||!retained_mutation_demand_fits(RetirementDemand{depth:1,..Default::default()},grant){return Ok(None)}
    let turn=L::source_paid(payload,maximum_work_units,grant);work=turn.work;let Some((source,progress))=turn.result? else{return Ok(None)};receipt=progress;
-   let turn=source.check_binding_paid(&self.payload,maximum_work_units.saturating_sub(work),grant);work=work.checked_add(turn.work).ok_or_else(invalid)?;if turn.result?.is_none(){return Err(invalid())}
-   let turn=original.check_binding_paid(&self.original,maximum_work_units.saturating_sub(work),grant);work=work.checked_add(turn.work).ok_or_else(invalid)?;if turn.result?.is_none(){return Err(invalid())}
-   if let Some(diff)=diff{let turn=diff.check_binding_paid(&self.diff_source,maximum_work_units.saturating_sub(work),grant);work=work.checked_add(turn.work).ok_or_else(invalid)?;if turn.result?.is_none(){return Err(invalid())}}
+   let turn=source.check_binding_paid(&self.payload,left(maximum_work_units,work),grant);work=work.checked_add(turn.work).ok_or_else(invalid)?;if turn.result?.is_none(){return Err(invalid())}
+   let turn=original.check_binding_paid(&self.original,left(maximum_work_units,work),grant);work=work.checked_add(turn.work).ok_or_else(invalid)?;if turn.result?.is_none(){return Err(invalid())}
+   if let Some(diff)=diff{let turn=diff.check_binding_paid(&self.diff_source,left(maximum_work_units,work),grant);work=work.checked_add(turn.work).ok_or_else(invalid)?;if turn.result?.is_none(){return Err(invalid())}}
    Ok(Some((source,receipt)))
   })();semio_framework_value::RetainedWorkOutcome{result:result.map_err(|error:ValueError|error.with_retained_progress(receipt)),work}
  }
+ fn authored_source<'a>(payload:RetainedCloneRef<'a,L>)->Result<RetainedCloneRef<'a,L::Authored>,ValueError>{payload.try_project(L::source_discriminator(),|leaf|L::source_accessor(leaf).result)}
+ fn displaced_source<'a>(original:RetainedCloneRef<'a,R>)->Result<RetainedCloneRef<'a,L::Displaced>,ValueError>{original.try_project(L::original_discriminator(),|row|L::original_accessor(row).result)}
  fn take_extra_decision()->usize{2*size_of::<P>()+2*size_of::<Option<P>>()}
  fn take_extra_inverse()->usize{2*size_of::<M>()+2*size_of::<Vec<M>>()}
  fn first_binding(&self)->&Option<RetainedCloneBinding>{if self.diff_source.is_some(){&self.diff_source}else if self.original.is_some(){&self.original}else{&self.payload}}
@@ -90,39 +92,39 @@ impl<L,R,P,M> RetainedSetFieldLeaf<L,R,P,M> where L:RetainedSetField<R,P,M>,P:Re
 
 impl<L,R,P,M> RetainedMutationLeafPreparation<R,M,L> for RetainedSetFieldLeaf<L,R,P,M> where L:RetainedSetField<R,P,M>,R:'static,P:RetainedDiff<R>,M:Mutation<R,Diff=P>+Send+'static{
  fn new()->Self{Self{payload:None,original:None,diff_source:None,authored:None,displaced:None,diff:ManuallyDrop::new(None),inverse:ManuallyDrop::new(None),inverse_close:None,retirement:Default::default(),phase:0,inverse_phase:0,closing:false,marker:Default::default()}}
- fn decision_demand(&self,_payload:RetainedCloneRef<'_,L>,_original:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
+ fn decision_demand(&self,payload:RetainedCloneRef<'_,L>,_original:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
   if self.closing||self.phase>=5{return Err(invalid());}
-  let demand=match self.phase{0|1=>scalar(RetainedCloneBinding::alias_copy_bytes()),2=>field_birth::<L::Authored>(),3=>field_demand(&self.authored,body,maximum_work_units,0)?,4=>field_demand(&self.authored,body,maximum_work_units,Self::take_extra_decision())?,_=>return Err(invalid())};
+  let demand=match self.phase{0|1=>scalar(RetainedCloneBinding::alias_copy_bytes()),2=>field_birth::<L::Authored>(),3=>field_demand(&self.authored,||Self::authored_source(payload),body,maximum_work_units,0)?,4=>field_demand(&self.authored,||Self::authored_source(payload),body,maximum_work_units,Self::take_extra_decision())?,_=>return Err(invalid())};
   with_projection(demand,RetainedCloneRef::<L>::projection_demand::<L::Authored>())
  }
  fn decision_work_demand(&self,payload:RetainedCloneRef<'_,L>,original:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{
   self.decision_demand(payload,original,body,maximum_work_units)?;let checks=self.check_work(false)?;let remaining=maximum_work_units.saturating_sub(checks);
-  let child=match self.phase{0|1=>RetainedCloneBinding::alias_work_demand(),2=>L::authored_birth_work()?,3=>{let field=self.authored.as_ref().ok_or_else(invalid)?;if field.value().is_some(){1}else{field.advance_work_demand(body,remaining)?}},4=>L::patch_work_demand()?.checked_add(1).ok_or_else(invalid)?,_=>return Err(invalid())};
+  let child=match self.phase{0|1=>RetainedCloneBinding::alias_work_demand(),2=>L::authored_birth_work()?,3=>{let field=self.authored.as_ref().ok_or_else(invalid)?;if field.value().is_some(){1}else{field.advance_work_demand(Self::authored_source(payload)?,body,remaining)?}},4=>L::patch_work_demand()?.checked_add(1).ok_or_else(invalid)?,_=>return Err(invalid())};
   if child==0{return Ok(0)}let total=checks.checked_add(child).ok_or_else(invalid)?;Ok(if total<=maximum_work_units{total}else{0})
  }
- fn decide(&mut self,payload:RetainedCloneRef<'_,L>,original:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant,actual:&mut Option<usize>)->semio_framework_value::RetainedWorkOutcome<RetainedMutationAdvance,semio_framework_value::OriginalRetirementFailure>{let mut work=0;let mut projected=RetainedCloneProgress::default();let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
+ fn decide(&mut self,payload:RetainedCloneRef<'_,L>,original:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedMutationAdvance,OriginalRetirementFailure>{let g=effect.grant();let base=effect.performed_work();let mut work:u128=0;let mut projected=RetainedCloneProgress::default();let result:Result<RetainedMutationAdvance,OriginalRetirementFailure>=(||{
   let selected=self.decision_work_demand(payload,original,body,maximum_work_units)?;if selected==0||selected>maximum_work_units{return Ok(RetainedMutationAdvance::Progress(Default::default()))}let d=self.decision_demand(payload,original,body,maximum_work_units)?;
   if !retained_mutation_demand_fits(d,g){return Ok(RetainedMutationAdvance::Progress(Default::default()));}
   let checked=self.check_paid(payload,original,None,maximum_work_units,g);work=checked.work;let Some((source,progress))=checked.result? else{return Ok(RetainedMutationAdvance::Progress(Default::default()))};projected=progress;let g=child(g,projected.copied_bytes);let mut p=RetainedCloneProgress::default();
   match self.phase{
-   0=>{let turn=source.bind(&mut self.payload,g);work=work.checked_add(turn.work).ok_or_else(invalid)?;p=turn.result?.ok_or_else(invalid)?;self.phase=1;},
-   1=>{let turn=original.bind(&mut self.original,g);work=work.checked_add(turn.work).ok_or_else(invalid)?;p=turn.result?.ok_or_else(invalid)?;self.phase=2;},
-   2=>{let turn=admit_field_birth(&mut self.authored,g,maximum_work_units.saturating_sub(work),L::authored_birth_work()?,actual);work=work.checked_add(turn.work).ok_or_else(invalid)?;p=turn.result?.progress();if self.authored.is_some(){self.phase=3;}},
-   3=>{let field=self.authored.as_mut().ok_or_else(invalid)?;if field.value().is_some(){work=work.checked_add(1).ok_or_else(invalid)?;self.phase=4;}else{let turn=field.advance(source,body,maximum_work_units.saturating_sub(work),g,actual);work=work.checked_add(turn.work).ok_or_else(invalid)?;let step=turn.result?;p=step.progress();if field.value().is_some(){self.phase=4;}}},
-   4=>{let extra=Self::take_extra_decision();let field=self.authored.as_mut().ok_or_else(invalid)?;let quoted=L::patch_work_demand()?;let(value,progress)=field.take(child(g,extra)).map_err(|e|tag(e,extra))?;let(patch,callback_work)=L::patch(value.ok_or_else(invalid)?);work=work.checked_add(1).and_then(|n|n.checked_add(callback_work)).ok_or_else(invalid)?;*self.diff=Some(patch);p=add(progress,extra)?;self.phase=5;if callback_work>quoted{return Err(invalid().with_retained_progress(p).into())}},
+   0=>{let turn=source.bind(&mut self.payload,&mut effect.nested(g));work=work.checked_add(turn.work).ok_or_else(invalid)?;p=turn.result?.ok_or_else(invalid)?;self.phase=1;},
+   1=>{let turn=original.bind(&mut self.original,&mut effect.nested(g));work=work.checked_add(turn.work).ok_or_else(invalid)?;p=turn.result?.ok_or_else(invalid)?;self.phase=2;},
+   2=>{let turn=admit_field_birth(&mut self.authored,g,left(maximum_work_units,work),L::authored_birth_work()?,effect.actual());work=work.checked_add(turn.work).ok_or_else(invalid)?;p=turn.result?.progress();if self.authored.is_some(){self.phase=3;}},
+   3=>{let field=self.authored.as_mut().ok_or_else(invalid)?;if field.value().is_some(){work=work.checked_add(1).ok_or_else(invalid)?;self.phase=4;}else{let turn=field.advance(source,body,left(maximum_work_units,work),&mut effect.nested(g));work=work.checked_add(turn.work).ok_or_else(invalid)?;let step=turn.result?;p=step.progress();if field.value().is_some(){self.phase=4;}}},
+   4=>{let extra=Self::take_extra_decision();let field=self.authored.as_mut().ok_or_else(invalid)?;let quoted=L::patch_work_demand()?;let(value,progress)=field.take(child(g,extra)).map_err(|e|tag(e,extra))?;let(patch,callback_work)=L::patch(value.ok_or_else(invalid)?);work=work.checked_add(1).and_then(|n|n.checked_add(u128::from(callback_work))).ok_or_else(invalid)?;*self.diff=Some(patch);p=add(progress,extra)?;self.phase=5;if callback_work>quoted{return Err(invalid().with_retained_progress(p).into())}},
    _=>return Err(invalid().into()),
   }
   admit_retained_clone_progress(g,p,"retained set-field leaf decision")?;
   p=p.checked_add(projected)?;Ok(if self.phase==5{RetainedMutationAdvance::Ready(p)}else{RetainedMutationAdvance::Progress(p)})
- })();let result=result.map_err(|error|{let progress=error.retained_progress();error.with_retained_progress(progress.saturating_add(projected))});semio_framework_value::RetainedWorkOutcome{result,work}}
+ })();let mut turn=settle_advance(effect,base,result,work);turn.result=turn.result.map_err(|error|{let progress=error.retained_progress();error.with_retained_progress(progress.saturating_add(projected))});turn}
  fn take_decision(&mut self)->RetainedMutationDecision<P>{
   if self.phase!=5||self.closing{return RetainedMutationDecision::Refused(vec![MutationMessage::fatal("mutation.invariant","The retained set-field decision is not ready.")]);}
   self.phase=6;
   match self.diff.take(){Some(diff)=>RetainedMutationDecision::Admitted(diff,Vec::new()),None=>RetainedMutationDecision::Refused(vec![MutationMessage::fatal("mutation.invariant","The retained set-field decision lost its patch.")])}
  }
- fn inverse_demand(&self,_payload:RetainedCloneRef<'_,L>,_original:RetainedCloneRef<'_,R>,_diff:RetainedCloneRef<'_,P>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
+ fn inverse_demand(&self,_payload:RetainedCloneRef<'_,L>,original:RetainedCloneRef<'_,R>,_diff:RetainedCloneRef<'_,P>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
   if self.closing||self.phase!=6||self.inverse_phase>=4{return Err(invalid());}
-  let mut demand=if self.diff_source.is_none(){scalar(RetainedCloneBinding::alias_copy_bytes())}else{match self.inverse_phase{0=>field_birth::<L::Displaced>(),1=>field_demand(&self.displaced,body,maximum_work_units,0)?,2=>RetirementDemand{copy_bytes:2*size_of::<Option<Vec<M>>>(),capacity_bytes:size_of::<M>(),depth:1,..Default::default()},3=>field_demand(&self.displaced,body,maximum_work_units,Self::take_extra_inverse())?,_=>return Err(invalid())}};
+  let mut demand=if self.diff_source.is_none(){scalar(RetainedCloneBinding::alias_copy_bytes())}else{match self.inverse_phase{0=>field_birth::<L::Displaced>(),1=>field_demand(&self.displaced,||Self::displaced_source(original),body,maximum_work_units,0)?,2=>RetirementDemand{copy_bytes:2*size_of::<Option<Vec<M>>>(),capacity_bytes:size_of::<M>(),depth:1,..Default::default()},3=>field_demand(&self.displaced,||Self::displaced_source(original),body,maximum_work_units,Self::take_extra_inverse())?,_=>return Err(invalid())}};
   demand=with_projection(demand,RetainedCloneRef::<L>::projection_demand::<L::Authored>())?;
   if self.diff_source.is_some()&&self.inverse_phase==1&&self.displaced.as_ref().is_some_and(|field|field.value().is_none()){demand=with_projection(demand,RetainedCloneRef::<R>::projection_demand::<L::Displaced>())?}
   Ok(demand)
@@ -131,29 +133,29 @@ impl<L,R,P,M> RetainedMutationLeafPreparation<R,M,L> for RetainedSetFieldLeaf<L,
   self.inverse_demand(payload,original,diff,body,maximum_work_units)?;let checks=self.check_work(true)?;let remaining=maximum_work_units.saturating_sub(checks);
   let child=if self.diff_source.is_none(){RetainedCloneBinding::alias_work_demand()}else{match self.inverse_phase{
    0=>L::displaced_birth_work()?,
-   1=>{let field=self.displaced.as_ref().ok_or_else(invalid)?;if field.value().is_some(){1}else{let projection=RetainedCloneRef::<R>::projection_work_demand(L::original_projection_work()?)?;let child=field.advance_work_demand(body,remaining.saturating_sub(projection))?;if child==0{return Ok(0)}projection.checked_add(child).ok_or_else(invalid)?}},
+   1=>{let field=self.displaced.as_ref().ok_or_else(invalid)?;if field.value().is_some(){1}else{let projection=RetainedCloneRef::<R>::projection_work_demand(L::original_projection_work()?)?;let child=field.advance_work_demand(Self::displaced_source(original)?,body,remaining.saturating_sub(projection))?;if child==0{return Ok(0)}projection.checked_add(child).ok_or_else(invalid)?}},
    2=>u64::try_from(2*size_of::<Option<Vec<M>>>()).ok().and_then(|n|n.checked_add(1)).ok_or_else(invalid)?,
    3=>L::inverse_work_demand()?.checked_add(1).ok_or_else(invalid)?,
    _=>return Err(invalid()),
   }};
   if child==0{return Ok(0)}let total=checks.checked_add(child).ok_or_else(invalid)?;Ok(if total<=maximum_work_units{total}else{0})
  }
- fn inverse(&mut self,payload:RetainedCloneRef<'_,L>,original:RetainedCloneRef<'_,R>,diff:RetainedCloneRef<'_,P>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant,actual:&mut Option<usize>)->semio_framework_value::RetainedWorkOutcome<RetainedMutationAdvance,semio_framework_value::OriginalRetirementFailure>{let mut work=0;let mut projected=RetainedCloneProgress::default();let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
+ fn inverse(&mut self,payload:RetainedCloneRef<'_,L>,original:RetainedCloneRef<'_,R>,diff:RetainedCloneRef<'_,P>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedMutationAdvance,OriginalRetirementFailure>{let g=effect.grant();let base=effect.performed_work();let mut work:u128=0;let mut projected=RetainedCloneProgress::default();let result:Result<RetainedMutationAdvance,OriginalRetirementFailure>=(||{
   let selected=self.inverse_work_demand(payload,original,diff,body,maximum_work_units)?;if selected==0||selected>maximum_work_units{return Ok(RetainedMutationAdvance::Progress(Default::default()))}let d=self.inverse_demand(payload,original,diff,body,maximum_work_units)?;
   if !retained_mutation_demand_fits(d,g){return Ok(RetainedMutationAdvance::Progress(Default::default()));}
   let checked=self.check_paid(payload,original,Some(diff),maximum_work_units,g);work=checked.work;let Some((_,progress))=checked.result? else{return Ok(RetainedMutationAdvance::Progress(Default::default()))};projected=progress;let mut g=child(g,projected.copied_bytes);
-  if self.diff_source.is_none(){let turn=diff.bind(&mut self.diff_source,g);work=work.checked_add(turn.work).ok_or_else(invalid)?;if let Some(p)=turn.result?{return Ok(RetainedMutationAdvance::Progress(p.checked_add(projected)?));}}
+  if self.diff_source.is_none(){let turn=diff.bind(&mut self.diff_source,&mut effect.nested(g));work=work.checked_add(turn.work).ok_or_else(invalid)?;if let Some(p)=turn.result?{return Ok(RetainedMutationAdvance::Progress(p.checked_add(projected)?));}}
   let mut p=RetainedCloneProgress::default();
   match self.inverse_phase{
-   0=>{let turn=admit_field_birth(&mut self.displaced,g,maximum_work_units.saturating_sub(work),L::displaced_birth_work()?,actual);work=work.checked_add(turn.work).ok_or_else(invalid)?;p=turn.result?.progress();if self.displaced.is_some(){self.inverse_phase=1;}},
-   1=>{let field=self.displaced.as_mut().ok_or_else(invalid)?;if field.value().is_some(){work=work.checked_add(1).ok_or_else(invalid)?;self.inverse_phase=2;}else{let turn=L::original_paid(original,maximum_work_units.saturating_sub(work),g);work=work.checked_add(turn.work).ok_or_else(invalid)?;let Some((source,progress))=turn.result? else{return Err(invalid().into())};projected=projected.checked_add(progress)?;g=child(g,progress.copied_bytes);let turn=field.advance(source,body,maximum_work_units.saturating_sub(work),g,actual);work=work.checked_add(turn.work).ok_or_else(invalid)?;let step=turn.result?;p=step.progress();if field.value().is_some(){self.inverse_phase=2;}}},
-   2=>{if actual.is_some(){return Err(ValueError::invariant("original inverse allocation marker is occupied").into())}let bytes=semio_framework_value::retained_clone::allocation::backing::exact_vector_bytes::<M>(1)?;if bytes!=0{*actual=Some(0);}let rows=semio_framework_value::retained_clone::allocation::backing::allocate_exact_vector::<M>(1)?;if bytes!=0{*actual=Some(bytes);}*self.inverse=Some(rows);p=receipt(RetirementDemand{copy_bytes:2*size_of::<Option<Vec<M>>>(),capacity_bytes:bytes,depth:1,..Default::default()});work=work.checked_add(u64::try_from(2*size_of::<Option<Vec<M>>>()).map_err(|_|invalid())?.checked_add(1).ok_or_else(invalid)?).ok_or_else(invalid)?;self.inverse_phase=3;},
-   3=>{let extra=Self::take_extra_inverse();let field=self.displaced.as_mut().ok_or_else(invalid)?;let quoted=L::inverse_work_demand()?;let(value,progress)=field.take(child(g,extra)).map_err(|e|tag(e,extra))?;let(inverse,callback_work)=L::inverse(value.ok_or_else(invalid)?);work=work.checked_add(1).and_then(|n|n.checked_add(callback_work)).ok_or_else(invalid)?;self.inverse.as_mut().ok_or_else(invalid)?.push(inverse);p=add(progress,extra)?;self.inverse_phase=4;if callback_work>quoted{return Err(invalid().with_retained_progress(p).into())}},
+   0=>{let turn=admit_field_birth(&mut self.displaced,g,left(maximum_work_units,work),L::displaced_birth_work()?,effect.actual());work=work.checked_add(turn.work).ok_or_else(invalid)?;p=turn.result?.progress();if self.displaced.is_some(){self.inverse_phase=1;}},
+   1=>{let field=self.displaced.as_mut().ok_or_else(invalid)?;if field.value().is_some(){work=work.checked_add(1).ok_or_else(invalid)?;self.inverse_phase=2;}else{let turn=L::original_paid(original,left(maximum_work_units,work),g);work=work.checked_add(turn.work).ok_or_else(invalid)?;let Some((source,progress))=turn.result? else{return Err(invalid().into())};projected=projected.checked_add(progress)?;g=child(g,progress.copied_bytes);let turn=field.advance(source,body,left(maximum_work_units,work),&mut effect.nested(g));work=work.checked_add(turn.work).ok_or_else(invalid)?;let step=turn.result?;p=step.progress();if field.value().is_some(){self.inverse_phase=2;}}},
+   2=>{if effect.actual().is_some(){return Err(ValueError::invariant("original inverse allocation marker is occupied").into())}let bytes=semio_framework_value::retained_clone::allocation::backing::exact_vector_bytes::<M>(1)?;if bytes!=0{*effect.actual()=Some(0);}let rows=semio_framework_value::retained_clone::allocation::backing::allocate_exact_vector::<M>(1)?;if bytes!=0{*effect.actual()=Some(bytes);}*self.inverse=Some(rows);p=receipt(RetirementDemand{copy_bytes:2*size_of::<Option<Vec<M>>>(),capacity_bytes:bytes,depth:1,..Default::default()});work=work.checked_add(u128::try_from(2*size_of::<Option<Vec<M>>>()).map_err(|_|invalid())?.checked_add(1).ok_or_else(invalid)?).ok_or_else(invalid)?;self.inverse_phase=3;},
+   3=>{let extra=Self::take_extra_inverse();let field=self.displaced.as_mut().ok_or_else(invalid)?;let quoted=L::inverse_work_demand()?;let(value,progress)=field.take(child(g,extra)).map_err(|e|tag(e,extra))?;let(inverse,callback_work)=L::inverse(value.ok_or_else(invalid)?);work=work.checked_add(1).and_then(|n|n.checked_add(u128::from(callback_work))).ok_or_else(invalid)?;self.inverse.as_mut().ok_or_else(invalid)?.push(inverse);p=add(progress,extra)?;self.inverse_phase=4;if callback_work>quoted{return Err(invalid().with_retained_progress(p).into())}},
    _=>return Err(invalid().into()),
   }
   admit_retained_clone_progress(g,p,"retained set-field leaf inverse")?;
   p=p.checked_add(projected)?;Ok(if self.inverse_phase==4{RetainedMutationAdvance::Ready(p)}else{RetainedMutationAdvance::Progress(p)})
- })();let result=result.map_err(|error|{let progress=error.retained_progress();error.with_retained_progress(progress.saturating_add(projected))});semio_framework_value::RetainedWorkOutcome{result,work}}
+ })();let mut turn=settle_advance(effect,base,result,work);turn.result=turn.result.map_err(|error|{let progress=error.retained_progress();error.with_retained_progress(progress.saturating_add(projected))});turn}
  fn take_inverse(&mut self)->Vec<M>{
   if self.inverse_phase!=4||self.closing{return Vec::new();}
   self.inverse_phase=5;self.inverse.take().unwrap_or_default()
@@ -162,7 +164,7 @@ impl<L,R,P,M> RetainedMutationLeafPreparation<R,M,L> for RetainedSetFieldLeaf<L,
  fn close_started(&self)->bool{self.closing}
  fn begin_close_demand(&self)->RetirementDemand{if self.closing{RetirementDemand::default()}else{scalar(size_of::<bool>())}}
  fn begin_close_work_demand(&self)->u64{u64::from(!self.closing)}
- fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{let d=self.begin_close_demand();if self.closing||!retained_mutation_demand_fits(d,grant){return semio_framework_value::RetainedWorkOutcome{result:Ok(Default::default()),work:0}}self.closing=true;semio_framework_value::RetainedWorkOutcome{result:Ok(receipt(d)),work:1}}
+ fn begin_close_paid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,ValueError>{let d=self.begin_close_demand();if self.closing||effect.maximum_work_units()==0||!retained_mutation_demand_fits(d,effect.grant()){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}let work=match effect.performed(1){Ok(true)=>1,Ok(false)=>return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"retained set-field close start exceeded its original action")),work:1},Err(error)=>return RetainedWorkOutcome{result:Err(error),work:1}};self.closing=true;RetainedWorkOutcome{result:Ok(receipt(d)),work}}
  fn close_demand(&self,context:RetainedMutationCloseContext<'_,M>,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.closing{return Err(invalid());}
   if let Some(f)=self.authored.as_ref(){return field_close_demand(f.as_ref(),body);}
@@ -181,19 +183,19 @@ impl<L,R,P,M> RetainedMutationLeafPreparation<R,M,L> for RetainedSetFieldLeaf<L,
   if self.diff.is_some(){return self.retirement.next_owner_work::<P>(true,&None,body)}
   RetainedCloneBinding::close_work_demand(self.first_binding(),body)
  }
- fn close_step(&mut self,context:RetainedMutationCloseContext<'_,M>,g:RetainedCloneGrant,actual:&mut Option<usize>)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
+ fn close_step(&mut self,context:RetainedMutationCloseContext<'_,M>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let g=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
   let d=self.close_demand(context,g.maximum_copy_bytes)?;
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if self.authored.is_some(){let turn=field_close_step(&mut self.authored,d,g,actual);work+=turn.work;return turn.result;}
-  if self.displaced.is_some(){let turn=field_close_step(&mut self.displaced,d,g,actual);work+=turn.work;return turn.result;}
-  if let Some(close)=self.inverse_close.as_mut(){let turn=close.close_step(context.mutations,g,actual);work+=turn.work;let s=turn.result?;if close.terminal_is_empty(){self.inverse_close=None;}return Ok(RetainedCloneStep::Progress(s.progress()));}
-  if let Some(rows)=self.inverse.take(){work+=1;return match FactoryVectorRetirement::admit(rows,g){Ok((close,p))=>{self.inverse_close=Some(close);Ok(RetainedCloneStep::Progress(p))},Err((e,rows))=>{*self.inverse=Some(rows);Err(e.into())}};}
-  if !self.retirement.is_empty(){let turn=self.retirement.step_granted(g,actual);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));}
-  let turn=self.retirement.begin_granted(&mut self.diff,g,actual);work+=turn.work;if let Some(s)=turn.result?{return Ok(RetainedCloneStep::Progress(s.progress()));}
-  let turn=RetainedCloneBinding::close_one(self.first_binding_mut(),g,actual);work+=turn.work;let s=turn.result?;
+  if self.authored.is_some(){return field_close_step(&mut self.authored,d,effect,&mut work);}
+  if self.displaced.is_some(){return field_close_step(&mut self.displaced,d,effect,&mut work);}
+  if let Some(close)=self.inverse_close.as_mut(){let turn=RetirementPollExit::settled(close.close_step(context.mutations,effect))?;work+=turn.work;let s=turn.result?;if close.terminal_is_empty(){self.inverse_close=None;}return Ok(RetainedCloneStep::Progress(s.progress()));}
+  if self.inverse.is_some(){return match FactoryVectorRetirement::admit(&mut *self.inverse,&mut self.inverse_close,effect){RetainedWorkPoll::Pending{work}=>Err(RetirementPollExit::Pending(work)),RetainedWorkPoll::Complete(turn)=>{work+=turn.work;Ok(RetainedCloneStep::Progress(turn.result?.progress()))}};}
+  if !self.retirement.is_empty(){let turn=RetirementPollExit::settled(self.retirement.step_granted(effect))?;work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));}
+  let turn=self.retirement.begin_granted(&mut self.diff,effect);work+=turn.work;if let Some(s)=turn.result?{return Ok(RetainedCloneStep::Progress(s.progress()));}
+  let turn=RetirementPollExit::settled(RetainedCloneBinding::close_one(self.first_binding_mut(),effect))?;work+=turn.work;let s=turn.result?;
   Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(s.progress())}else{RetainedCloneStep::Progress(s.progress())})
- })();semio_framework_value::RetainedWorkOutcome{result,work}}
+ })();settle_exit(effect,base,result,work)}
  fn terminal_is_empty(&self)->bool{self.authored.is_none()&&self.displaced.is_none()&&self.diff.is_none()&&self.inverse.is_none()&&self.inverse_close.is_none()&&self.payload.is_none()&&self.original.is_none()&&self.diff_source.is_none()&&self.retirement.is_empty()}
 }
 impl<L,R,P,M> Drop for RetainedSetFieldLeaf<L,R,P,M> where L:RetainedSetField<R,P,M>,P:RetainedDiff<R>,M:Mutation<R,Diff=P>+Send+'static{
@@ -214,21 +216,21 @@ impl<R:Send+Sync+'static,P> RetainedDiffApply<R,P> for RetainedPatchDiffApply<R,
  fn new()->Self{Self{fields:Default::default(),phase:0}}
  fn preflight_demand(&self,d:RetainedCloneRef<'_,P>,s:RetainedCloneRef<'_,R>,_:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if self.phase!=0{return Err(apply_invalid());}if maximum_work_units==0{return Ok(Default::default())}nested(self.fields.stage_demand(d,s,body.saturating_sub(1),maximum_work_units)?)}
  fn preflight_work_demand(&self,d:RetainedCloneRef<'_,P>,s:RetainedCloneRef<'_,R>,p:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.preflight_demand(d,s,p,body,maximum_work_units)?;self.fields.stage_work_demand(d,s,body.saturating_sub(1),maximum_work_units)}
- fn preflight(&mut self,d:RetainedCloneRef<'_,P>,s:RetainedCloneRef<'_,R>,p:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant,_:&mut NativeDecodeControl<'_>)->semio_framework_value::RetainedWorkOutcome<RetainedDiffPreflightAdvance,semio_framework_value::OriginalRetirementFailure>{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
+ fn preflight(&mut self,d:RetainedCloneRef<'_,P>,s:RetainedCloneRef<'_,R>,p:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,_:&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedDiffPreflightAdvance,OriginalRetirementFailure>{let g=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedDiffPreflightAdvance,OriginalRetirementFailure>=(||{
   let selected=self.preflight_work_demand(d,s,p,body,maximum_work_units)?;if selected==0{return Ok(RetainedDiffPreflightAdvance::Progress(Default::default()))}let q=self.preflight_demand(d,s,p,body,maximum_work_units)?;if !retained_mutation_demand_fits(q,g){return Ok(RetainedDiffPreflightAdvance::Progress(Default::default()))}
-  let turn=self.fields.stage(d,s,body.saturating_sub(1),maximum_work_units,apply_child(g));work=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(1);error.with_retained_progress(p)})?;let mut progress=step.progress();progress.copied_bytes+=1;
+  let turn=self.fields.stage(d,s,body.saturating_sub(1),maximum_work_units,&mut effect.nested(apply_child(g)));work=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(1);error.with_retained_progress(p)})?;let mut progress=step.progress();progress.copied_bytes+=1;
   if matches!(step,RetainedCloneStep::Complete(_)){self.phase=1;Ok(RetainedDiffPreflightAdvance::Ready(progress,true))}else{Ok(RetainedDiffPreflightAdvance::Progress(progress))}
- })();semio_framework_value::RetainedWorkOutcome{result,work}}
+ })();settle_value(effect,base,result,work,RetainedDiffPreflightAdvance::progress)}
  fn take_messages(&mut self)->Vec<MutationMessage>{Vec::new()}
  fn commit_demand(&self,_:RetainedCloneRef<'_,P>,_:RetainedCloneRef<'_,R>,_:&R,_:usize)->Result<RetirementDemand,ValueError>{if self.phase!=1{return Err(apply_invalid());}nested(self.fields.exchange_demand()?)}
  fn commit_work_demand(&self,d:RetainedCloneRef<'_,P>,s:RetainedCloneRef<'_,R>,p:&R,body:usize)->Result<u64,ValueError>{self.commit_demand(d,s,p,body)?;self.fields.exchange_work_demand()}
- fn commit(&mut self,d:RetainedCloneRef<'_,P>,s:RetainedCloneRef<'_,R>,p:&mut R,g:RetainedCloneGrant,c:ApplyCapability)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
+ fn commit(&mut self,d:RetainedCloneRef<'_,P>,s:RetainedCloneRef<'_,R>,p:&mut R,effect:&mut RetainedAllocationEffect<'_>,c:ApplyCapability)->OriginalRetirementOutcome{let g=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedCloneStep,OriginalRetirementFailure>=(||{
   let q=self.commit_demand(d,s,p,g.maximum_copy_bytes)?;if !retained_mutation_demand_fits(q,g){return Ok(RetainedCloneStep::Progress(Default::default()))}let turn=self.fields.exchange(p,c,apply_child(g));work=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(1);error.with_retained_progress(p)})?;let mut progress=step.progress();progress.copied_bytes+=1;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=2;Ok(RetainedCloneStep::Complete(progress))}else{Ok(RetainedCloneStep::Progress(progress))}
- })();semio_framework_value::RetainedWorkOutcome{result,work}}
+ })();settle(effect,base,result,work)}
  fn begin_close(&mut self){self.fields.begin_close();}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.fields.close_demand(body)}
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.fields.close_work_demand(body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{self.fields.close_step(g)}
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.fields.close_step(effect)}
  fn terminal_is_empty(&self)->bool{self.fields.terminal_is_empty()}
 }
 
@@ -264,20 +266,20 @@ impl<R,P,M> super::RetainedMutationPreparation<R,M> for RetainedRootMutation<R,P
  fn new()->Self{Self{leaf:<RetainedSetFieldLeaf<M,R,P,M> as RetainedMutationLeafPreparation<R,M,M>>::new()}}
  fn decision_demand(&self,m:RetainedCloneRef<'_,M>,o:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{self.leaf.decision_demand(m,o,body,maximum_work_units)}
  fn decision_work_demand(&self,m:RetainedCloneRef<'_,M>,o:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.leaf.decision_work_demand(m,o,body,maximum_work_units)}
- fn decide(&mut self,m:RetainedCloneRef<'_,M>,o:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant,actual:&mut Option<usize>)->semio_framework_value::RetainedWorkOutcome<RetainedMutationAdvance,semio_framework_value::OriginalRetirementFailure>{self.leaf.decide(m,o,body,maximum_work_units,g,actual)}
+ fn decide(&mut self,m:RetainedCloneRef<'_,M>,o:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedMutationAdvance,OriginalRetirementFailure>{self.leaf.decide(m,o,body,maximum_work_units,effect)}
  fn take_decision(&mut self)->RetainedMutationDecision<P>{self.leaf.take_decision()}
  fn inverse_demand(&self,m:RetainedCloneRef<'_,M>,o:RetainedCloneRef<'_,R>,d:RetainedCloneRef<'_,P>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{self.leaf.inverse_demand(m,o,d,body,maximum_work_units)}
  fn inverse_work_demand(&self,m:RetainedCloneRef<'_,M>,o:RetainedCloneRef<'_,R>,d:RetainedCloneRef<'_,P>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.leaf.inverse_work_demand(m,o,d,body,maximum_work_units)}
- fn inverse(&mut self,m:RetainedCloneRef<'_,M>,o:RetainedCloneRef<'_,R>,d:RetainedCloneRef<'_,P>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant,actual:&mut Option<usize>)->semio_framework_value::RetainedWorkOutcome<RetainedMutationAdvance,semio_framework_value::OriginalRetirementFailure>{self.leaf.inverse(m,o,d,body,maximum_work_units,g,actual)}
+ fn inverse(&mut self,m:RetainedCloneRef<'_,M>,o:RetainedCloneRef<'_,R>,d:RetainedCloneRef<'_,P>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedMutationAdvance,OriginalRetirementFailure>{self.leaf.inverse(m,o,d,body,maximum_work_units,effect)}
  fn take_inverse(&mut self)->Vec<M>{self.leaf.take_inverse()}
  fn begin_close(&mut self){self.leaf.begin_close()}
  fn close_started(&self)->bool{self.leaf.close_started()}
  fn begin_close_demand(&self)->RetirementDemand{self.leaf.begin_close_demand()}
  fn begin_close_work_demand(&self)->u64{self.leaf.begin_close_work_demand()}
- fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{self.leaf.begin_close_paid(grant)}
+ fn begin_close_paid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,ValueError>{self.leaf.begin_close_paid(effect)}
  fn close_demand(&self,c:RetainedMutationCloseContext<'_,M>,body:usize)->Result<RetirementDemand,ValueError>{self.leaf.close_demand(c,body)}
  fn close_work_demand(&self,c:RetainedMutationCloseContext<'_,M>,body:usize)->Result<u64,ValueError>{self.leaf.close_work_demand(c,body)}
- fn close_step(&mut self,c:RetainedMutationCloseContext<'_,M>,g:RetainedCloneGrant,actual:&mut Option<usize>)->semio_framework_value::OriginalRetirementOutcome{self.leaf.close_step(c,g,actual)}
+ fn close_step(&mut self,c:RetainedMutationCloseContext<'_,M>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.leaf.close_step(c,effect)}
  fn terminal_is_empty(&self)->bool{self.leaf.terminal_is_empty()}
 }
 

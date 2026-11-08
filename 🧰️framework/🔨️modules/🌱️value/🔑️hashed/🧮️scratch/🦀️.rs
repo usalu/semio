@@ -1,11 +1,13 @@
 //! 🗂️ Fixed scratch hash owners expose exact vector layouts and retain tombstones without hidden table growth.
 use std::{borrow::Borrow,hash::{Hash,Hasher},mem::size_of};
-use crate::{RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor},retained_clone::RetainedCloneProgress};
+use crate::{RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::RetainedCloneProgress};
 #[derive(Debug)]
-enum Slot<K,V>{Empty,Deleted,Occupied((K,V))}
+#[doc(hidden)]
+pub enum Slot<K,V>{Empty,Deleted,Occupied((K,V))}
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for Slot<K,V>{
- fn retirement(self)->Box<dyn RetirementCursor>{match self{Self::Occupied(value)=>value.retirement(),_=>().retirement()}}
- fn retirement_birth_bytes(&self)->Option<usize>{match self{Self::Occupied(value)=>value.retirement_birth_bytes(),_=>().retirement_birth_bytes()}}
+ type RetirementCursor=<Option<(K,V)> as RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{match self{Self::Occupied(value)=>Some(value),_=>None}.retirement_seed()}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }
 /// 🗺️ A declared scratch table allocates one known vector and never grows during lookup or insertion.
@@ -37,7 +39,8 @@ impl<K:Hash+Eq,V> ScratchHashMap<K,V>{
  pub fn remove<Q:Hash+Eq+?Sized>(&mut self,key:&Q)->Option<V> where K:Borrow<Q>{let at=self.find(key)?;match std::mem::replace(&mut self.slots[at],Slot::Deleted){Slot::Occupied((_,value))=>{self.len-=1;Some(value)},_=>unreachable!()}}
 }
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for ScratchHashMap<K,V>{
- fn retirement(self)->Box<dyn RetirementCursor>{self.slots.retirement()}
+ type RetirementCursor=<Vec<Slot<K,V>> as RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{self.slots.retirement_seed()}
  fn retirement_birth_bytes(&self)->Option<usize>{self.slots.retirement_birth_bytes()}
  fn controlled_retirement_supported()->bool{<Vec<Slot<K,V>>>::controlled_retirement_supported()}
 }
@@ -59,7 +62,8 @@ impl<K:Hash+Eq> ScratchHashSet<K>{
  pub fn remove<Q:Hash+Eq+?Sized>(&mut self,key:&Q)->bool where K:Borrow<Q>{self.map.remove(key).is_some()}
 }
 impl<K:RetireOwned> RetireOwned for ScratchHashSet<K>{
- fn retirement(self)->Box<dyn RetirementCursor>{self.map.retirement()}
+ type RetirementCursor=<ScratchHashMap<K,()> as RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{self.map.retirement_seed()}
  fn retirement_birth_bytes(&self)->Option<usize>{self.map.retirement_birth_bytes()}
  fn controlled_retirement_supported()->bool{ScratchHashMap::<K,()>::controlled_retirement_supported()}
 }

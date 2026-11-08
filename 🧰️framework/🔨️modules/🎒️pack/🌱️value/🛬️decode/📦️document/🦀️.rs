@@ -3,7 +3,7 @@ use crate::{RetainedValueToken as Token,RetainedValueContainer as Container,Reta
 use semio_framework_replication_codec::PackLimits;
 use semio_framework_pack_error::PackRefusal;
 use semio_framework_replication_wire_core::RetainedWireByteSource;
-use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{RetainedAllocationEffect,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::size_of;
 fn invalid(detail:&'static str)->PackRefusal{PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"retained Pack Document",offset:0,detail}}
 fn capacity()->PackRefusal{PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"retained Document cumulative ownership"}}
@@ -38,18 +38,18 @@ fn segment_one<S:RetainedWireByteSource+?Sized>(cursor:&mut Segment,input:&S,ran
 impl RetainedDocumentDriver{
  pub(crate) fn last_turn_work(&self)->u64{self.last_work}
  /// 📦️ Keeps full Pack verification and chunk replay while selecting an ordinary Record root.
- pub fn record(limits:PackLimits,length:usize,maximum:usize)->Result<Self,PackRefusal>{Self::declared(limits,length,maximum,false)}
- fn declared(limits:PackLimits,length:usize,maximum:usize,intrinsic:bool)->Result<Self,PackRefusal>{
+ pub fn record(limits:PackLimits,length:usize,maximum:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<Self,PackRefusal>{Self::declared(limits,length,maximum,false,effect)}
+ fn declared(limits:PackLimits,length:usize,maximum:usize,intrinsic:bool,effect:&mut RetainedAllocationEffect<'_>)->Result<Self,PackRefusal>{
   let mut segment=Segment::try_new(limits.clone(),maximum)?;let mut chunk_segment=match Segment::try_new(limits.clone(),maximum){Ok(cursor)=>cursor,Err(error)=>{while segment.close_step(1,0)!=Close::Complete{}return Err(error)}};
   let decoded=usize::try_from(limits.max_total_alloc.min(limits.max_file_len)).unwrap_or(usize::MAX).max(length);let symbols=length.min(limits.max_symbols as usize);let chunks=length.min(usize::try_from(limits.max_items).unwrap_or(usize::MAX));
   let mut catalog=match Catalog::try_new(limits.clone(),symbols,decoded,decoded,chunks,maximum){Ok(cursor)=>cursor,Err(error)=>{while segment.close_step(1,0)!=Close::Complete{}while chunk_segment.close_step(1,0)!=Close::Complete{}return Err(catalog_fault(error))}};
-  let value=match if intrinsic{Value::try_new_intrinsic(limits,maximum)}else{Value::try_new(limits,maximum)}{Ok(cursor)=>cursor,Err(error)=>{while catalog.close_step(1,0).map_err(paged)?!=Close::Complete{}while segment.close_step(1,0)!=Close::Complete{}while chunk_segment.close_step(1,0)!=Close::Complete{}return Err(error)}};
+  let value=match if intrinsic{Value::try_new_intrinsic(limits,maximum)}else{Value::try_new(limits,maximum)}{Ok(cursor)=>cursor,Err(error)=>{let grant=effect.grant();while catalog.close_step(1,&mut effect.nested(grant)).map_err(paged)?!=Close::Complete{}while segment.close_step(1,0)!=Close::Complete{}while chunk_segment.close_step(1,0)!=Close::Complete{}return Err(error)}};
   Ok(Self{anchor:Anchor::new(),segment,chunk_segment,catalog,value,ids:Default::default(),phase:Phase::Anchor,offset:0,chunk_offset:0,input_work:0,source_complete:false,chunk_complete:false,superblock:None,verified:None,event:None,document_byte:None,body_ingress:0,sealed:false,intrinsic,schema_index:0,schema_hash:semio_framework_hash::Hasher::new(),chunks:Chunks::None,pending_id:None,chunk_hash:semio_framework_hash::Hasher::new(),closed:false,last_work:0})
  }
- fn replay_one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize)->Result<Option<Token>,PackRefusal>{
+ fn replay_one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<Token>,PackRefusal>{
   if let Some(bytes)=self.value.next_allocation_bytes()?{if bytes>maximum{return Err(capacity())}self.value.reserve_allocation(bytes).map_err(|error|error.fault)?;return Ok(None)}
   if let Some(id)=self.pending_id{
-   if !self.ids.has_reserved_slot(){let bytes=self.ids.next_allocation_bytes().map_err(paged)?;if bytes>maximum{return Err(capacity())}self.ids.reserve_one(bytes).map_err(|error|PackRefusal::from_paged_allocation(error,"retained intrinsic chunk references",0))?;return Ok(None)}
+   if !self.ids.has_reserved_slot(){let bytes=self.ids.next_allocation_bytes().map_err(paged)?;if bytes>maximum{return Err(capacity())}let grant=effect.grant();match self.ids.reserve_one(&mut effect.nested(grant)).result{Ok(_)=>{},Err(semio_framework_value_persistent::list::PagedListReservationFailure::Allocation{error,..})=>return Err(PackRefusal::from_paged_allocation(error,"retained intrinsic chunk references",0)),Err(semio_framework_value_persistent::list::PagedListReservationFailure::Work(error))=>return Err(PackRefusal::from(error))}return Ok(None)}
    let entry=self.catalog.chunk(id).map_err(catalog_fault)?;let Chunks::Gather{remaining,total,..}=&mut self.chunks else{return Err(invalid("chunk reference outside declaration"))};*total=total.checked_add(entry.raw_len).ok_or_else(capacity)?;*remaining=remaining.checked_sub(1).ok_or_else(||invalid("too many chunk references"))?;self.ids.push_reserved(id).map_err(|_|invalid("chunk reference exceeds admitted owner"))?;self.pending_id=None;return Ok(None)
   }
   if matches!(self.chunks,Chunks::Read{..}){return self.chunk_one(input,range,maximum)}
@@ -86,18 +86,18 @@ impl RetainedDocumentDriver{
  }
 }
 impl RetainedValueDriver for RetainedDocumentDriver{
- fn new(limits:PackLimits,length:usize,maximum:usize)->Result<Self,PackRefusal>{Self::declared(limits,length,maximum,true)}
- fn one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize)->Result<Option<Token>,PackRefusal>{
+ fn new(limits:PackLimits,length:usize,maximum:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<Self,PackRefusal>{Self::declared(limits,length,maximum,true,effect)}
+ fn one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<Token>,PackRefusal>{
   self.last_work=0;match self.phase{
    Phase::Anchor=>{self.last_work=1;let event=if self.offset<(range.1-range.0){let event=Source::Byte{offset:self.offset as u64,value:input.byte_at(range.0+self.offset).ok_or_else(||invalid("original Pack anchor byte is absent"))?};self.offset+=1;self.input_work+=1;Some(event)}else if !self.source_complete{self.source_complete=true;Some(Source::Complete{bytes:self.offset as u64,pages:0})}else{None};if self.anchor.grant(event)?{self.superblock=self.anchor.take();self.phase=Phase::Verify;self.offset=0;self.source_complete=false}Ok(None)},
    Phase::Verify=>{self.last_work=1;
-    if self.catalog.has_pending_input(){if let Some(bytes)=self.catalog.next_allocation_bytes().map_err(catalog_fault)?{if bytes>maximum{return Err(capacity())}self.catalog.reserve_allocation(bytes).map_err(|error|catalog_fault(error.fault))?;}else{self.catalog.grant().map_err(catalog_fault)?;}return Ok(None)}
+    if self.catalog.has_pending_input(){if let Some(bytes)=self.catalog.next_allocation_bytes().map_err(catalog_fault)?{if bytes>maximum{return Err(capacity())}self.catalog.reserve_allocation(&mut effect.nested(effect.grant())).map_err(|error|catalog_fault(error.fault))?;}else{self.catalog.grant().map_err(catalog_fault)?;}return Ok(None)}
     if let Some(event)=self.event.take(){self.catalog.admit(event).map_err(|_|invalid("catalog segment handback"))?;return Ok(None)}
     if self.catalog.progress().complete{self.verified=self.catalog.take(self.superblock.take().ok_or_else(||invalid("missing verified document anchor"))?).map_err(catalog_fault)?;if self.verified.is_none(){return Err(invalid("catalog has no verified manifest"))}self.phase=Phase::Schema;return Ok(None)}
     let before=self.offset;self.event=segment_one(&mut self.segment,input,range,&mut self.offset,&mut self.source_complete,maximum)?;self.input_work+=self.offset-before;Ok(None)
    },
    Phase::Schema=>{self.last_work=1;if !self.intrinsic{self.segment.replay()?;self.offset=0;self.source_complete=false;self.phase=Phase::Replay;return Ok(None)}if self.schema_index<INTRINSIC_SCHEMA_GRAPH.len(){self.schema_hash.update(&INTRINSIC_SCHEMA_GRAPH[self.schema_index..self.schema_index+1]);self.schema_index+=1;return Ok(None)}let manifest=self.verified.as_ref().ok_or_else(||invalid("missing verified document manifest"))?.manifest;if manifest.field_count!=1||self.schema_hash.finalize().as_bytes()!=&manifest.schema_hash{return Err(invalid("intrinsic document schema mismatch"))}self.segment.replay()?;self.offset=0;self.source_complete=false;self.phase=Phase::Replay;Ok(None)},
-   Phase::Replay=>{self.last_work=1;let token=self.replay_one(input,range,maximum)?;if matches!(token,Some(Token::Complete{..})){self.phase=Phase::Complete}Ok(token)},
+   Phase::Replay=>{self.last_work=1;let token=self.replay_one(input,range,maximum,effect)?;if matches!(token,Some(Token::Complete{..})){self.phase=Phase::Complete}Ok(token)},
    Phase::Complete=>Ok(None),
   }
  }
@@ -148,13 +148,13 @@ impl RetainedValueDriver for RetainedDocumentDriver{
   if !self.chunk_segment.terminal_is_empty(){return Ok(self.chunk_segment.retirement_demands())}
   Ok(RetirementDemand{depth:1,..Default::default()})
  }
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PackRefusal>{
-  self.last_work=0;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,PackRefusal>{
+  let grant=effect.grant();self.last_work=0;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
   self.last_work=1;
   if !self.ids.is_empty(){if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}self.ids.pop();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-  if !self.ids.terminal_is_empty(){let step=self.ids.release_empty_page(grant.maximum_release_bytes).map_err(paged)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:step.released_allocation_bytes,..Default::default()}))}
+  if !self.ids.terminal_is_empty(){let released=match self.ids.release_empty_page(&mut effect.nested(grant)).result{Ok(semio_framework_value_persistent::list::PagedListReleaseOutcome::Ready(step))=>step.released_allocation_bytes,Ok(semio_framework_value_persistent::list::PagedListReleaseOutcome::Denied)=>0,Err(semio_framework_value_persistent::list::PagedListReleaseFailure::Work(error))=>return Err(PackRefusal::from(error)),Err(semio_framework_value_persistent::list::PagedListReleaseFailure::Release(error))=>return Err(paged(error))};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:released,..Default::default()}))}
   if !self.value.terminal_is_empty(){return Ok(partial_close(self.value.close_step(grant.maximum_items,grant.maximum_release_bytes)?,grant.maximum_items))}
-  if !self.catalog.terminal_is_empty(){return Ok(partial_close(self.catalog.close_step(grant.maximum_items,grant.maximum_release_bytes).map_err(paged)?,grant.maximum_items))}
+  if !self.catalog.terminal_is_empty(){return Ok(partial_close(self.catalog.close_step(grant.maximum_items,&mut effect.nested(grant)).map_err(paged)?,grant.maximum_items))}
   if !self.segment.terminal_is_empty(){return Ok(partial_close(self.segment.close_step(grant.maximum_items,grant.maximum_release_bytes),grant.maximum_items))}
   if !self.chunk_segment.terminal_is_empty(){return Ok(partial_close(self.chunk_segment.close_step(grant.maximum_items,grant.maximum_release_bytes),grant.maximum_items))}
   self.anchor.close_step();self.event=None;self.document_byte=None;self.pending_id=None;self.superblock=None;self.verified=None;self.closed=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:grant.maximum_items.min(1),..Default::default()}))

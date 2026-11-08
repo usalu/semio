@@ -28,6 +28,6 @@ async fn inference_determinism_law() {
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     use protocol::Inference;
-    assert_eq!(crate::inferences::EnergyModelInference::infer(&crate::snapshot::EnergyModelSnapshot::default()).expect("valid materialized inference fixture"), crate::inferences::EnergyModelInference::default(),);
+    assert_eq!(crate::inferences::EnergyModelInference::infer(&crate::snapshot::EnergyModelSnapshot::empty().unwrap()).expect("valid materialized inference fixture"), crate::inferences::EnergyModelInference::default(),);
 }
 //#endregion 🧪️InferenceLaws

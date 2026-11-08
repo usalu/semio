@@ -606,3 +606,6 @@ pub async fn resolve_backbone(uri: &str) -> Result<Backbones, VcsError> {
 static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 #[path="📤️original-outbox/🦀️.rs"]
 pub mod original_outbox;
+#[cfg(test)]
+#[path = "🧪️effect/🦀️.rs"]
+pub(crate) mod test_effect;

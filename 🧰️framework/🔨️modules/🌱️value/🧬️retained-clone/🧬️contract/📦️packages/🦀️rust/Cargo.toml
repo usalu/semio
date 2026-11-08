@@ -22,7 +22,6 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-value-paged-clone = { path = "../../../📋️paged-list/⚙️engine/📦️packages/🦀️rust" }
-semio-framework-value-retained-clone-protocol = { path = "../../../📜️protocol/📦️packages/🦀️rust" }
 semio-framework-value-intrinsic = { path="../../../../🌳️intrinsic/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path="../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-clone-source = { path="../../../🔗️source/📦️packages/🦀️rust" }
@@ -65,3 +64,7 @@ path = "../../../🧪️tests/work-budget/native.rs"
 [[test]]
 name = "original-bulk-vector-public"
 path = "../../../🚚️bulk-vec/🧪️tests/public.rs"
+
+[[test]]
+name = "array-prefix-selection"
+path = "../../🧮️array-cursor/🧪️tests/prefix.rs"

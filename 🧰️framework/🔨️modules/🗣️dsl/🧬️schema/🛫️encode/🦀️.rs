@@ -30,10 +30,12 @@ pub fn projection_path_error()->ValueError{ValueError::literal(semio_framework_v
 mod receiving;
 
 struct FieldProjectionFrame{value:FieldValue,kind:u8,length:usize,next:usize,position:usize,ids:&'static [u16],key:Option<String>,key_length:usize}
+struct FrameOwned{value:FieldValue,key:Option<String>}
+semio_framework_value::artifact_retire_struct!(FrameOwned{value,key});
 impl semio_framework_value::retirement::RetireOwned for FieldProjectionFrame{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::{sequence,deferred};sequence(vec![deferred(self.value),deferred(self.key)])}
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.value),deferred_birth_bytes_for(&self.key)])}
-    fn controlled_retirement_supported()->bool{true}
+    type RetirementCursor=<FrameOwned as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{let Self{value,key,..}=self;semio_framework_value::retirement::RetireOwned::retirement_seed(FrameOwned{value,key})}
+    fn controlled_retirement_supported()->bool{<FrameOwned as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 
 #[derive(Clone,Copy,Default)]
@@ -155,10 +157,12 @@ impl RetainedFieldProjection{
         }Ok(None)
     }
 }
+#[doc(hidden)]pub struct ProjectionOwned{frames:Vec<FieldProjectionFrame>,path:Vec<usize>,complete:Option<FieldValue>,fault_value:Option<FieldValue>}
+semio_framework_value::artifact_retire_struct!(ProjectionOwned{frames,path,complete,fault_value});
 impl semio_framework_value::retirement::RetireOwned for RetainedFieldProjection{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::{sequence,deferred};sequence(vec![deferred(self.frames),crate::retirement::RecordPlanningRetirement::new(self.path),deferred(self.complete),deferred(self.fault_value)])}
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.frames),crate::retirement::RecordPlanningRetirement::<usize>::birth_bytes(),deferred_birth_bytes_for(&self.complete),deferred_birth_bytes_for(&self.fault_value)])}
-    fn controlled_retirement_supported()->bool{true}
+    type RetirementCursor=<ProjectionOwned as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{let Self{frames,path,complete,fault_value,..}=self;semio_framework_value::retirement::RetireOwned::retirement_seed(ProjectionOwned{frames,path,complete,fault_value})}
+    fn controlled_retirement_supported()->bool{<ProjectionOwned as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 
 /// ♻️ Retires intermediate native fields without recursive container drops.

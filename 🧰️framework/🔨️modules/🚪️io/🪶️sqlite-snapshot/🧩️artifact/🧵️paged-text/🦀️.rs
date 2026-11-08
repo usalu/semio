@@ -2,6 +2,16 @@
 use super::{SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind};
 use semio_framework_value::paged::Utf8Text;
 
+/// 🧵️ Copies borrowed paged text into one exact owned SQLite string under the forwarded allocation stage.
+pub(super) fn copy_text(text:&dyn Utf8Text,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<String,ValueError>{
+ let total=text.text_bytes();
+ control.allocation_stage(phase,|remaining,progress,allocation|{
+  let mut callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|progress(event.completed,event.total);
+  let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(remaining,&mut callback,allocation);
+  let result=(||{native.begin_stage(total)?;native.charge(total)?;let mut output=String::new();output.try_reserve_exact(total).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"paged text allocation failed"))?;for index in 0..text.text_chunk_count(){let chunk=text.text_chunk(index).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text omitted a declared chunk"))?;output.push_str(chunk);native.advance(chunk.len())?}Ok::<_,ValueError>(output)})();
+  (result,native.owned_bytes())
+ })?
+}
 pub(super) fn copy_text_into(text:&dyn Utf8Text,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase,owner:&mut super::SnapshotOwner<'_,'_,'_>,output:&mut String,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<semio_framework_io_control::NativeSnapshotFailure>,allocation:&mut semio_framework_io_control::NativeSnapshotAllocation,stage_unwind:&mut Option<semio_framework_io_sqlite_model::SqliteNativeStageOutcome<(),semio_framework_io_control::NativeSnapshotFailure>>,depth:usize)->semio_framework_io_sqlite_model::SqliteNativeStageOutcome<(),semio_framework_io_control::NativeSnapshotFailure>{
  use semio_framework_value::RetainedWorkOutcome;
  use semio_framework_io_sqlite_model::{SqliteNativeStageOutcome,SqliteStageFailure,SqliteStageWorkReceipt};
@@ -14,9 +24,9 @@ pub(super) fn copy_text_into(text:&dyn Utf8Text,control:&mut SqliteSnapshotContr
  let turn=control.allocation_stage_native(phase,|remaining,progress|{let before=owner.actual_work();let mut declared=0;let result=match std::panic::catch_unwind(std::panic::AssertUnwindSafe(||copy_body(text,length,remaining,progress,owner,output,marker,unwind,allocation,&mut declared,depth))){Ok(result)=>result,Err(error)=>{payload=Some(error);if marker.performed||marker.physical!=semio_framework_value::RetainedCloneProgress::default(){match declared.checked_add(1){Some(next)=>{declared=next;Ok(())},None=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"paged text unwind work overflow").into())}}else{Ok(())}}};let after=owner.actual_work();let receipt=SqliteStageWorkReceipt{declared,before,after,actual:after.checked_sub(before)};(RetainedWorkOutcome{result,work:declared},output.capacity(),receipt)});
  if let Some(payload)=payload{*stage_unwind=Some(turn);std::panic::resume_unwind(payload)}turn
 }
-fn next_work(work:u64)->Result<u64,semio_framework_io_control::NativeSnapshotFailure>{work.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"paged text work receipt overflow").into())}
-fn record_work(turn:semio_framework_value::RetainedWorkOutcome<(),semio_framework_io_control::NativeSnapshotFailure>,work:&mut u64,next:u64)->Result<(),semio_framework_io_control::NativeSnapshotFailure>{if turn.work==1{*work=next}else{debug_assert_eq!(turn.work,0)}turn.result}
-fn copy_body(text:&dyn Utf8Text,length:usize,remaining:usize,progress:&mut dyn FnMut(usize,usize)->bool,owner:&mut super::SnapshotOwner<'_,'_,'_>,output:&mut String,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<semio_framework_io_control::NativeSnapshotFailure>,allocation:&mut semio_framework_io_control::NativeSnapshotAllocation,work:&mut u64,depth:usize)->Result<(),semio_framework_io_control::NativeSnapshotFailure>{
+fn next_work(work:u128)->Result<u128,semio_framework_io_control::NativeSnapshotFailure>{work.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"paged text work receipt overflow").into())}
+fn record_work(turn:semio_framework_value::RetainedWorkOutcome<(),semio_framework_io_control::NativeSnapshotFailure>,work:&mut u128,next:u128)->Result<(),semio_framework_io_control::NativeSnapshotFailure>{if turn.work==1{*work=next}else{debug_assert_eq!(turn.work,0)}turn.result}
+fn copy_body(text:&dyn Utf8Text,length:usize,remaining:usize,progress:&mut dyn FnMut(usize,usize)->bool,owner:&mut super::SnapshotOwner<'_,'_,'_>,output:&mut String,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<semio_framework_io_control::NativeSnapshotFailure>,allocation:&mut semio_framework_io_control::NativeSnapshotAllocation,work:&mut u128,depth:usize)->Result<(),semio_framework_io_control::NativeSnapshotFailure>{
  use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
  if !output.is_empty()||output.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text destination must be empty").into())}if length>remaining{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"paged text exceeds original SQL allocation allowance").into())}if !progress(0,length){return Err(ValueError::literal(ValueRefusalKind::Canceled,"paged text copy canceled").into())}if length>0{
  let layout=std::alloc::Layout::array::<u8>(length).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"paged text extent overflow"))?;

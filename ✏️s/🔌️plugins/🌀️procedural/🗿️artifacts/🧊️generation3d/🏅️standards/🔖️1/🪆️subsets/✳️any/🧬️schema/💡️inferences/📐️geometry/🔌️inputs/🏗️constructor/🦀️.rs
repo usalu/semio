@@ -68,7 +68,7 @@ impl WidgetInputsConstruction {
                 if insertion.output_ready(){
                     post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.labels=insertion.take();insertion.begin_close();state.phase=8;
                 }else{
-                    let grant=cx.retained_grant();let step={let outcome=insertion.advance(RetainedOrderedMapInsertGrant{retirement:grant,comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:1},maximum_moved_items:grant.maximum_items,maximum_moved_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes});cx.consume_fuel(outcome.work);outcome.result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?};
+                    let grant=cx.retained_grant();let step={let Some((outcome,performed))=cx.with_original_effect(grant,|_,effect|insertion.advance(RetainedOrderedMapInsertGrant{retirement:grant,comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:1},maximum_moved_items:grant.maximum_items,maximum_moved_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes},effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(None)};cx.consume_fuel(outcome.work.saturating_sub(u64::try_from(performed).unwrap_or(u64::MAX)));outcome.result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?};
                     let receipt=match step{RetainedOrderedMapInsertStep::Progress(receipt)|RetainedOrderedMapInsertStep::Complete{progress:receipt,..}=>receipt};
                     post(cx,insert_receipt(receipt)?)?;
                 }

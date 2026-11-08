@@ -1,6 +1,6 @@
 //! 🔢️ Paged mutable AVL indexes for fixed-width scratch keys and retained physical ownership.
 use semio_framework_value_persistent::list::{PagedList, PagedListError};
-use crate::retirement::{RetireOwned,RetirementCursor};
+use crate::retirement::RetireOwned;
 use std::cmp::Ordering;
 #[path="🧵️insert/🦀️.rs"]
 mod retained_insert;
@@ -12,10 +12,12 @@ pub use work_insert::{NumericWorkInsertCursor,NumericWorkRemoveCursor};
 mod set;
 pub use set::{NumericSet,NumericSetIter};
 
-struct Node<K,V>{key:K,value:Option<V>,generation:u64,count_generation:u64,pub count:usize,height:u8,left:Option<usize>,right:Option<usize>,parent:Option<usize>}
+#[doc(hidden)]
+pub struct Node<K,V>{key:K,value:Option<V>,generation:u64,count_generation:u64,pub count:usize,height:u8,left:Option<usize>,right:Option<usize>,parent:Option<usize>}
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for Node<K,V>{
- fn retirement(self)->Box<dyn RetirementCursor>{crate::retirement::sequence(vec![crate::retirement::deferred(self.key),crate::retirement::deferred(self.value),crate::retirement::deferred(self.generation),crate::retirement::deferred(self.count_generation),crate::retirement::deferred(self.count),crate::retirement::deferred(self.height),crate::retirement::deferred(self.left),crate::retirement::deferred(self.right),crate::retirement::deferred(self.parent)])}
- fn retirement_birth_bytes(&self)->Option<usize>{crate::retirement::sequence_birth_bytes(&[crate::retirement::deferred_birth_bytes_for(&self.key),crate::retirement::deferred_birth_bytes_for(&self.value),crate::retirement::deferred_birth_bytes::<u64>(),crate::retirement::deferred_birth_bytes::<u64>(),crate::retirement::deferred_birth_bytes::<usize>(),crate::retirement::deferred_birth_bytes::<u8>(),crate::retirement::deferred_birth_bytes::<Option<usize>>(),crate::retirement::deferred_birth_bytes::<Option<usize>>(),crate::retirement::deferred_birth_bytes::<Option<usize>>()])}
+ type RetirementCursor=crate::retirement_fields_type!(K,Option<V>,u64,u64,usize,u8,Option<usize>,Option<usize>,Option<usize>);
+ fn retirement_seed(self)->Self::RetirementCursor{crate::retirement_fields_seed!(self.key,self.value,self.generation,self.count_generation,self.count,self.height,self.left,self.right,self.parent)}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }
 
@@ -45,13 +47,14 @@ impl<K:Copy+Ord,V> NumericIndex<K,V>{
  /// 🎟️ Quotes structural copy, backing capacity and traversal depth from the original paged owner.
  pub fn next_reserve_demand(&self)->Result<crate::RetirementDemand,PagedListError>{Ok(crate::RetirementDemand{copy_bytes:self.nodes.next_reserve_copy_byte_demand()?,capacity_bytes:self.nodes.next_allocation_bytes()?,release_bytes:0,depth:self.nodes.next_reserve_depth_demand()?})}
  /// 🪪️ Passes the original caller grant to one physical page reservation and returns its exact receipt.
- pub fn reserve_one_funded(&mut self,grant:crate::RetainedCloneGrant)->Result<crate::RetainedCloneProgress,semio_framework_value_persistent::list::PagedListAllocationError>{self.nodes.reserve_one_funded(grant)}
- pub fn reserve_one(&mut self,bytes:usize)->Result<semio_framework_value_persistent::list::PagedListProgress,semio_framework_value_persistent::list::PagedListAllocationError>{self.nodes.reserve_one(bytes)}
- pub fn insert_reserved(&mut self,key:K,value:V)->Result<Option<V>,(K,V)>{
+ pub fn reserve_one_funded(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<semio_framework_value_persistent::list::PagedListReservationOutcome<crate::RetainedCloneProgress>,semio_framework_value_persistent::list::PagedListReservationFailure>{self.nodes.reserve_one_funded(effect)}
+ pub fn reserve_one(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<semio_framework_value_persistent::list::PagedListReservationOutcome,semio_framework_value_persistent::list::PagedListReservationFailure>{self.nodes.reserve_one(effect)}
+ pub fn insert_reserved(&mut self,key:K,value:V)->Result<Option<V>,(K,V)>{self.place(key,value,true)}
+ fn place(&mut self,key:K,value:V,reserved:bool)->Result<Option<V>,(K,V)>{
   let mut parent=None;let mut current=self.root;while let Some(index)=current{match key.cmp(&self.node(index).key){Ordering::Equal=>{let generation=self.generation;let n=self.node_mut(index);let previous=n.value.replace(value);let previous=if n.generation==generation{previous}else{None};n.generation=generation;self.repair(Some(index));return Ok(previous)},order=>{parent=Some(index);current=if order==Ordering::Less{self.node(index).left}else{self.node(index).right}}}}
-  if !self.nodes.has_reserved_slot(){return Err((key,value))}let index=self.nodes.len();let node=Node{key,value:Some(value),generation:self.generation,count_generation:self.generation,count:1,height:1,left:None,right:None,parent};self.nodes.push_reserved(node).unwrap_or_else(|_|unreachable!());if let Some(parent)=parent{if key<self.node(parent).key{self.node_mut(parent).left=Some(index)}else{self.node_mut(parent).right=Some(index)}}else{self.root=Some(index)}self.repair(parent);Ok(None)
+  if reserved&&!self.nodes.has_reserved_slot(){return Err((key,value))}let index=self.nodes.len();let node=Node{key,value:Some(value),generation:self.generation,count_generation:self.generation,count:1,height:1,left:None,right:None,parent};if reserved{self.nodes.push_reserved(node).unwrap_or_else(|_|unreachable!());}else{self.nodes.push(node);}if let Some(parent)=parent{if key<self.node(parent).key{self.node_mut(parent).left=Some(index)}else{self.node_mut(parent).right=Some(index)}}else{self.root=Some(index)}self.repair(parent);Ok(None)
  }
- pub fn insert(&mut self,key:K,value:V)->Option<V>{if self.find(&key).is_none(){while !self.nodes.has_reserved_slot(){let required=self.nodes.next_allocation_bytes().expect("numeric index page demand");self.nodes.reserve_one(required).expect("numeric index page admission");}}self.insert_reserved(key,value).unwrap_or_else(|_|unreachable!())}
+ pub fn insert(&mut self,key:K,value:V)->Option<V>{self.place(key,value,false).unwrap_or_else(|_|unreachable!())}
  pub fn get_or_insert_default(&mut self,key:K)->&mut V where V:Default{if !self.contains_key(&key){assert!(self.insert(key,V::default()).is_none(),"non-copy numeric value reset refused");}self.get_mut(&key).unwrap()}
  pub fn remove(&mut self,key:&K)->Option<V>{let index=self.find(key)?;if self.node(index).generation!=self.generation{return None}let value=self.node_mut(index).value.take();self.repair(Some(index));value}
  pub fn pop_first(&mut self)->Option<(K,V)>{let mut current=self.root?;if self.count(Some(current))==0{return None}loop{let n=self.node(current);if self.count(n.left)>0{current=n.left.unwrap();continue}if n.generation==self.generation&&n.value.is_some(){let key=n.key;return self.remove(&key).map(|value|(key,value))}current=n.right.unwrap();}}
@@ -62,12 +65,19 @@ impl<K:Copy+Ord,V:Copy> NumericIndex<K,V>{
  pub fn next_close_release_byte_demand(&self)->Result<usize,PagedListError>{if self.nodes.is_empty(){self.nodes.next_release_allocation_bytes()}else{Ok(0)}}
  pub fn next_close_copy_byte_demand(&self)->usize{if self.nodes.is_empty(){0}else{size_of::<Node<K,V>>()}}
  /// ❄️ Cold scalar disposal; retained callers separately admit the funded copy demand.
- pub fn close_copy_step(&mut self,maximum_items:usize,maximum_release_bytes:usize)->Result<semio_framework_value_persistent::list::PagedListProgress,PagedListError>{self.close_copy_step_funded(maximum_items,usize::MAX,maximum_release_bytes)}
- pub fn close_copy_step_funded(&mut self,maximum_items:usize,maximum_copy_bytes:usize,maximum_release_bytes:usize)->Result<semio_framework_value_persistent::list::PagedListProgress,PagedListError>{if maximum_items==0||maximum_copy_bytes<self.next_close_copy_byte_demand(){return Ok(semio_framework_value_persistent::list::PagedListProgress::default())}self.root=None;if self.nodes.pop().is_some(){return Ok(semio_framework_value_persistent::list::PagedListProgress{progressed:true,..Default::default()})}self.nodes.release_empty_page(maximum_release_bytes)}
+ pub fn close_copy_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<semio_framework_value_persistent::list::PagedListReleaseOutcome,semio_framework_value_persistent::list::PagedListReleaseFailure>{
+  use semio_framework_value_persistent::list::{PagedListProgress,PagedListReleaseFailure,PagedListReleaseOutcome};let grant=effect.grant();
+  if grant.maximum_items==0||grant.maximum_copy_bytes<self.next_close_copy_byte_demand()||effect.maximum_work_units()==0{return crate::RetainedWorkOutcome{result:Ok(PagedListReleaseOutcome::Denied),work:0}}
+  if self.nodes.is_empty(){return self.nodes.release_empty_page(effect)}
+  let before=effect.performed_work();let performed=effect.performed(1);let work=effect.performed_work().saturating_sub(before);
+  match performed{Ok(true)=>{},Ok(false)=>return crate::RetainedWorkOutcome{result:Err(PagedListReleaseFailure::Work(crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"numeric scratch disposal exceeded its original work"))),work},Err(error)=>return crate::RetainedWorkOutcome{result:Err(PagedListReleaseFailure::Work(error)),work}}
+  self.root=None;self.nodes.pop();crate::RetainedWorkOutcome{result:Ok(PagedListReleaseOutcome::Ready(PagedListProgress{progressed:true,..Default::default()})),work}
+ }
 }
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for NumericIndex<K,V>{
- fn retirement(self)->Box<dyn RetirementCursor>{crate::retirement::sequence(vec![crate::retirement::deferred(self.nodes),crate::retirement::deferred(self.root),crate::retirement::deferred(self.generation)])}
- fn retirement_birth_bytes(&self)->Option<usize>{crate::retirement::sequence_birth_bytes(&[crate::retirement::deferred_birth_bytes_for(&self.nodes),crate::retirement::deferred_birth_bytes_for(&self.root),crate::retirement::deferred_birth_bytes_for(&self.generation)])}
+ type RetirementCursor=crate::retirement_fields_type!(PagedList<Node<K,V>,{usize::MAX}>,Option<usize>,u64);
+ fn retirement_seed(self)->Self::RetirementCursor{crate::retirement_fields_seed!(self.nodes,self.root,self.generation)}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }
 

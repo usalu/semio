@@ -12,7 +12,8 @@ fn reserve<T>(values:&mut Vec<T>,count:usize,control:&mut SqliteSnapshotControl<
 struct Token{text:String,quoted:bool,literal:bool,start:usize,end:usize}
 /// 🪙️ A token's only owned allocation is its text: the scalar positions need no cursor, so one byte cursor retires the whole token.
 impl semio_framework_value::retirement::RetireOwned for Token{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::bytes(self.text.into_bytes())}
+ type RetirementCursor=<String as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::RetireOwned::retirement_seed(self.text)}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::bytes_birth_bytes())}
  fn controlled_retirement_supported()->bool{true}
 }
@@ -34,7 +35,7 @@ impl SchemaValidationStorage{
  pub fn empty()->Self{Self{units:PagedList::new()}}
  fn parse(&mut self,sql:&str,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<usize>{
   if sql.len()>control.limits().max_schema_bytes{return Err(overflow())}
-  while !self.units.has_reserved_slot(){let quote=self.units.next_allocation_bytes().map_err(|_|overflow())?;let available=control.allocation_remaining_bytes();control.admit_allocation_bytes(quote)?;let result=self.units.reserve_one(available).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"SQLite schema owner page"))?;if result.allocated_bytes!=quote{return Err(invalid("SQLite schema owner extent"))}}
+  while !self.units.has_reserved_slot(){let quote=self.units.next_allocation_bytes().map_err(|_|overflow())?;let stock=control.allocation_remaining_bytes();control.admit_allocation_bytes(quote)?;let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:quote,maximum_depth:1,..Default::default()};let done=semio_framework_value::AuthoringWallet::new(semio_framework_value::RetainedCloneGrant{maximum_capacity_bytes:stock,..grant},1).run(grant,1,|effect|self.units.reserve_one(effect))?.ok_or_else(||invalid("SQLite schema owner page work was not admitted"))?;control.record_performed_work(u64::try_from(done.performed).map_err(|_|overflow())?)?;match done.output.result{Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(step)) if step.allocated_bytes==quote=>{},Ok(_)=>return Err(invalid("SQLite schema owner extent")),Err(_)=>return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"SQLite schema owner page"))}}
   let index=self.units.len();self.units.push_reserved(Unit::empty()).map_err(|_|invalid("SQLite schema owner slot"))?;let unit=&mut self.units[index];lex_into(unit,sql,phase,control)?;parse_into(unit,phase,control)?;Ok(index)
  }
 }

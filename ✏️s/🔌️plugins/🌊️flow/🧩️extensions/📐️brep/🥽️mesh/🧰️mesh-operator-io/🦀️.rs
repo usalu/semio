@@ -29,19 +29,27 @@ use super::{MeshOperatorJob};
 
 pub const LIMIT: usize = 100_000;
 pub fn invalid(message: impl Into<String>) -> EvalError { EvalError::InvalidInput(message.into()) }
-/// 🎟️ Advances a kernel modeling job by up to `budget` units under the same funding the kernel's own synchronous drivers grant it.
-pub fn modeling_slice(job: &mut MeshModelingJob, budget: usize) -> Result<MeshModelingStep, MeshKernelError> {
-    let grant = RetainedCloneGrant { maximum_items: budget.max(1), maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
-    job.step(budget, grant, &mut RetainedCloneProgress::default())
+/// 🎟️ Advances a kernel modeling job by up to `budget` units inside the caller's own turn: the turn's grant and fuel fund one original effect.
+pub fn modeling_slice(job: &mut MeshModelingJob, budget: usize, cx: &mut semio_framework_job::StepContext<'_>) -> Result<MeshModelingStep, MeshKernelError> {
+    let grant = cx.retained_grant();
+    let Some((step, _)) = cx.with_original_effect(grant, |_, effect| job.step(budget, effect, &mut RetainedCloneProgress::default())).map_err(MeshKernelError::Retained)? else { return Ok(MeshModelingStep::Working(job.progress())) };
+    step
 }
 
-/// 🎟️ Advances a kernel tessellation by up to `events` producer events, each under the exact grant its own quote asks for.
-pub fn tessellation_slice(job: &mut MeshTessellationJob, events: usize) -> Result<MeshTessellationStep, MeshKernelError> {
+/// 🧱️ Drives a modeling job to its output where no job turn exists, under an explicit authoring stock.
+pub fn modeling_cold(job: &mut MeshModelingJob, budget: usize) -> Result<MeshModelingStep, MeshKernelError> {
+    let grant = RetainedCloneGrant { maximum_items: budget.max(1), maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 1 << 10 };
+    let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 1_000_000_000_000);
+    match wallet.run(grant, 1 << 20, |effect| job.step(budget, effect, &mut RetainedCloneProgress::default())).map_err(MeshKernelError::Retained)? { Some(done) => done.output, None => Err(MeshKernelError::InvalidInput("modeling quote refused".into())) }
+}
+
+/// 🎟️ Advances a kernel tessellation by up to `events` producer events, each inside the caller's own turn.
+pub fn tessellation_slice(job: &mut MeshTessellationJob, events: usize, cx: &mut semio_framework_job::StepContext<'_>) -> Result<MeshTessellationStep, MeshKernelError> {
     let mut last = MeshTessellationStep::Working(job.progress());
     for _ in 0..events.max(1) {
-        let copy = job.next_normal_copy_byte_demand().map_err(MeshKernelError::Retained)?.max(128);
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: job.next_normal_capacity_byte_demand(copy).map_err(MeshKernelError::Retained)?, maximum_release_bytes: job.next_normal_release_byte_demand().map_err(MeshKernelError::Retained)?, maximum_depth: job.next_normal_depth_demand().map_err(MeshKernelError::Retained)? };
-        last = job.step(grant).map_err(MeshKernelError::Retained)?.0;
+        let grant = cx.retained_grant();
+        let Some((step, _)) = cx.with_original_effect(grant, |_, effect| job.step(effect)).map_err(MeshKernelError::Retained)? else { break };
+        last = step.map_err(MeshKernelError::Retained)?.0;
         if !matches!(last, MeshTessellationStep::Working(_)) {
             break;
         }
@@ -150,7 +158,7 @@ impl PolygonMeshSourceGeometry for PolygonMeshSource {
         }
         Ok(Self { vertices,faces,attributes,materials:mesh.materials().clone(),textures:mesh.textures().clone() })
     }
-    fn mesh(self)->Result<HalfedgeMesh,EvalError> {let mut job=HalfedgeMesh::polygon_source_job(self).map_err(mesh_error)?;loop {match modeling_slice(&mut job,4096).map_err(mesh_error)? {MeshModelingStep::Done(mesh)=>return Ok(mesh),MeshModelingStep::Working(_)=>{},_=>return Err(invalid("mesh construction cancelled"))}}}
+    fn mesh(self)->Result<HalfedgeMesh,EvalError> {let mut job=HalfedgeMesh::polygon_source_job(self).map_err(mesh_error)?;loop {match modeling_cold(&mut job,4096).map_err(mesh_error)? {MeshModelingStep::Done(mesh)=>return Ok(mesh),MeshModelingStep::Working(_)=>{},_=>return Err(invalid("mesh construction cancelled"))}}}
 }
 pub fn encode_mesh(mesh: &HalfedgeMesh) -> Result<String, EvalError> { Ok(semio_framework_mesh_engine::io::text::encode_polygon_mesh_source(&PolygonMeshSource::from_mesh(mesh)?)) }
 pub fn indexed_triangle_mesh(positions: &[f32], indices: &[u32]) -> Result<HalfedgeMesh, EvalError> {

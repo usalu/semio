@@ -1,6 +1,8 @@
 //! 🧳️ Precommit custody returns the exact original boxed edit beside its prepared causal message.
 use super::*;
 use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::RetainedAllocationEffect;
+use crate::completed;
 use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneSourceTake,RetainedCloneClose};
 
 /// 📤️ One issuer owns the original edit, its bounded encoder and every cancellation frontier.
@@ -31,15 +33,16 @@ impl<M:RetireOwned+Send+Sync+'static> ArtifactOriginalEditMessage<M>{
             _=>return Err(invalid()),
         };d.copy_bytes=d.copy_bytes.checked_add(size_of::<u8>()).ok_or_else(invalid)?;Ok(d)
     }
-    pub fn advance(&mut self,headers:OriginalEditWireHeaders<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn advance(&mut self,headers:OriginalEditWireHeaders<'_>,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
         if self.closing{return Err(invalid())}if self.phase==4{return Ok(RetainedCloneStep::Complete(Default::default()))}
         let d=self.demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}let g=RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-size_of::<u8>(),..grant};
         let mut p=match self.phase{
-            0 if self.admission.is_some()=>{let admission=self.admission.as_mut().ok_or_else(invalid)?;if admission.phase()=="ready"{let step=admission.take_output(&mut self.source,g).result?;if admission.terminal_is_empty(){self.admission.take();}step.progress()}else{admission.advance(g).result?.progress()}},
-            0=>{let(owner,p)=self.source.as_ref().ok_or_else(invalid)?.project_owned(0,|edit|&**edit,g).result?;*self.projection=Some(owner);self.phase=1;p},
+            0 if self.admission.is_some()=>{let admission=self.admission.as_mut().ok_or_else(invalid)?;if admission.phase()=="ready"{let step=admission.take_output(&mut self.source,g).result?;if admission.terminal_is_empty(){self.admission.take();}step.progress()}else{admission.advance(&mut effect.nested(g)).result?.progress()}},
+            0=>{let(owner,p)=self.source.as_ref().ok_or_else(invalid)?.project_owned(0,|edit|&**edit,&mut effect.nested(g)).result?;*self.projection=Some(owner);self.phase=1;p},
             1=>{let(owner,mut p)=ArtifactOriginalEditWire::admit(&mut self.projection,self.wire,semio_framework_replication_causal::binary::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES,4*semio_framework_replication_causal::binary::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES,g)?.ok_or_else(invalid)?;*self.writer=Some(Box::new(owner));p.retained_capacity_bytes+=size_of::<ArtifactOriginalEditWire<M>>();p.copied_bytes+=size_of::<Option<Box<ArtifactOriginalEditWire<M>>>>();self.phase=2;p},
-            2=>{let step=self.writer.as_mut().ok_or_else(invalid)?.advance(headers,g)?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=3}step.progress()},
-            3=>match self.source.as_mut().ok_or_else(invalid)?.take_authority(g).result?{RetainedCloneSourceTake::Pending(p)=>p,RetainedCloneSourceTake::Ready(edit,p)=>{*self.returned=Some(edit);self.phase=4;p}},
+            2=>{let step=self.writer.as_mut().ok_or_else(invalid)?.advance(headers,&mut effect.nested(g))?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=3}step.progress()},
+            3=>match completed(self.source.as_mut().ok_or_else(invalid)?.take_authority(&mut effect.nested(g)))?{RetainedCloneSourceTake::Pending(p)=>p,RetainedCloneSourceTake::Ready(edit,p)=>{*self.returned=Some(edit);self.phase=4;p}},
             _=>return Err(invalid()),
         };p.copied_bytes+=size_of::<u8>();p.copied_items=p.copied_items.max(1);if !p.fits(grant){return Err(invalid().with_retained_progress(p))}Ok(if self.phase==4{RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})
     }
@@ -55,14 +58,14 @@ impl<M:RetireOwned+Send+Sync+'static> ArtifactOriginalEditMessage<M>{
         if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(header::<Option<RetainedCloneSource<Box<Edit<M>>>>>())}else{source.next_close_demand(body)}}
         self.returned_close.next_owner_demands::<Box<Edit<M>>>(self.returned.is_some(),&None,body)
     }
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        if !self.closing{return Err(invalid())}let d=self.close_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();if !self.closing{return Err(invalid())}let d=self.close_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
         let p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()};
-        if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,grant);if let Some((edit,()))=returned{*self.returned=Some(edit);}if admission.terminal_is_empty(){self.admission.take();}return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()))}
-        if let Some(writer)=self.writer.as_mut(){if !writer.terminal_is_empty(){return writer.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}drop(self.writer.take());return Ok(RetainedCloneStep::Progress(p))}
-        if let Some(owner)=self.projection.as_mut(){if !owner.terminal_is_empty(){return owner.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()))}self.projection.take();return Ok(RetainedCloneStep::Progress(p))}
-        if let Some(source)=self.source.as_mut(){if !source.terminal_is_empty(){return source.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()))}self.source.take();return Ok(RetainedCloneStep::Progress(p))}
-        if let Some(step)=self.returned_close.begin_granted(&mut self.returned,grant).result?{return Ok(step)}self.returned_close.step_granted(grant).result
+        if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,effect);if let Some((edit,()))=returned{*self.returned=Some(edit);}if admission.terminal_is_empty(){self.admission.take();}return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()))}
+        if let Some(writer)=self.writer.as_mut(){if !writer.terminal_is_empty(){return writer.close_step(effect).map(|step|RetainedCloneStep::Progress(step.progress()))}drop(self.writer.take());return Ok(RetainedCloneStep::Progress(p))}
+        if let Some(owner)=self.projection.as_mut(){if !owner.terminal_is_empty(){return completed(owner.close_step(effect)).map(|step|RetainedCloneStep::Progress(step.progress()))}self.projection.take();return Ok(RetainedCloneStep::Progress(p))}
+        if let Some(source)=self.source.as_mut(){if !source.terminal_is_empty(){return completed(source.close_step(effect)).map(|step|RetainedCloneStep::Progress(step.progress()))}self.source.take();return Ok(RetainedCloneStep::Progress(p))}
+        if let Some(step)=self.returned_close.begin_granted(&mut self.returned,effect).result?{return Ok(step)}completed(self.returned_close.step_granted(effect))
     }
     pub fn terminal_is_empty(&self)->bool{self.admission.is_none()&&self.writer.is_none()&&self.projection.is_none()&&self.source.is_none()&&self.returned.is_none()&&self.returned_close.is_empty()}
 }

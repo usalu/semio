@@ -33,6 +33,7 @@ impl AssemblyCsrBuild {
     }
     pub fn next_demands(&self) -> Result<RetirementDemand, &'static [u8]> { self.csr.next_demands() }
     pub fn step_one_funded(&mut self, grant: RetainedCloneGrant) -> Result<(bool, RetainedCloneProgress), &'static [u8]> { self.csr.step_one_funded(grant) }
+    pub fn step_one_in(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(bool, RetainedCloneProgress), &'static [u8]> { self.csr.step_one_in(effect) }
     pub fn take_demands(&self) -> Option<RetirementDemand> { self.csr.take_demands() }
     pub fn take_complete(&mut self, grant: RetainedCloneGrant) -> Option<(Csr, RetainedCloneProgress)> { self.csr.take_complete(grant) }
     /// ⚖️ Borrows one original full-system triplet for constrained-reaction recovery.

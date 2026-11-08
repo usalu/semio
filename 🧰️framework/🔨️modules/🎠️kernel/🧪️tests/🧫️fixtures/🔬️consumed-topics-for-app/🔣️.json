@@ -1,0 +1,34 @@
+{
+  "schema": "semio.kernel.consumed-topics-for-app/1",
+  "note": "An app's pack is cut to its OWNER's consumes row, narrowed by the receiver's row; an app no other loaded plugin owns keeps the receiver's row whole.",
+  "registry": [
+    { "pluginId": "demonstrator", "consumes": ["forms.questionKind", "process.machines", "cad.computer", "sourcing.module", "flow.extension"] },
+    { "pluginId": "cad", "consumes": ["cad.computer"] },
+    { "pluginId": "process", "consumes": ["process.machines"] },
+    { "pluginId": "sourcing", "consumes": ["sourcing.module"] },
+    { "pluginId": "procedural", "consumes": ["forms.questionKind", "flow.extension"] },
+    { "pluginId": "puzzle", "consumes": [] },
+    { "pluginId": "flow", "consumes": ["flow.extension"] },
+    { "pluginId": "wide", "consumes": ["cad.computer", "gis.layer"] }
+  ],
+  "loaded": [
+    { "pluginId": "demonstrator", "apps": ["s.demonstrator.playground@1/*#editor", "s.cad.cad@1/*#editor", "s.process.process3d@1/*#editor", "s.sourcing.curation@1/*#editor", "s.procedural.generation3d@1/*#editor", "s.puzzle.puzzle3d@1/*#editor"] },
+    { "pluginId": "cad", "apps": ["s.cad.cad@1/*#editor"] },
+    { "pluginId": "process", "apps": ["s.process.process3d@1/*#editor"] },
+    { "pluginId": "sourcing", "apps": ["s.sourcing.curation@1/*#editor"] },
+    { "pluginId": "procedural", "apps": ["s.procedural.generation3d@1/*#editor"] },
+    { "pluginId": "puzzle", "apps": ["s.puzzle.puzzle3d@1/*#editor"] },
+    { "pluginId": "flow", "apps": ["s.flow.flow@1/*#editor"] },
+    { "pluginId": "wide", "apps": ["s.cad.cad@1/*#editor"] }
+  ],
+  "cases": [
+    { "id": "cad-app-takes-only-the-cad-owner-row", "receiver": "demonstrator", "app": "s.cad.cad@1/*#editor", "expect": ["cad.computer"] },
+    { "id": "process-app-takes-only-the-process-owner-row", "receiver": "demonstrator", "app": "s.process.process3d@1/*#editor", "expect": ["process.machines"] },
+    { "id": "sourcing-app-takes-only-the-sourcing-owner-row", "receiver": "demonstrator", "app": "s.sourcing.curation@1/*#editor", "expect": ["sourcing.module"] },
+    { "id": "generator-app-takes-the-procedural-owner-row", "receiver": "demonstrator", "app": "s.procedural.generation3d@1/*#editor", "expect": ["forms.questionKind", "flow.extension"] },
+    { "id": "an-owner-that-consumes-nothing-gives-the-app-nothing", "receiver": "demonstrator", "app": "s.puzzle.puzzle3d@1/*#editor", "expect": [] },
+    { "id": "an-app-no-other-plugin-owns-keeps-the-receiver-row", "receiver": "demonstrator", "app": "s.demonstrator.playground@1/*#editor", "expect": ["forms.questionKind", "process.machines", "cad.computer", "sourcing.module", "flow.extension"] },
+    { "id": "a-standalone-plugin-keeps-its-own-row", "receiver": "flow", "app": "s.flow.flow@1/*#editor", "expect": ["flow.extension"] },
+    { "id": "an-owner-topic-outside-the-receiver-row-never-widens-it", "receiver": "demonstrator", "app": "s.cad.cad@1/*#editor", "owner": "wide", "expect": ["cad.computer"] }
+  ]
+}

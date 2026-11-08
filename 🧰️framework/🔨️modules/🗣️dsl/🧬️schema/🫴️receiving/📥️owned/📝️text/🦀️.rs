@@ -1,45 +1,48 @@
-//! 📝️ Paged UTF-8 receives one authored text chunk per funded turn, so a large text never needs one unbounded copy.
+//! 📝️ Paged UTF-8 receives through the funded append cursor, so a large text never needs one unbounded copy.
 use super::*;
-use semio_framework_value::paged::{PagedUtf8,PAGED_UTF8_CHUNK_BYTES};
+use semio_framework_value::{ErasedSnapshotRetirement,paged::{PagedUtf8,PagedUtf8AppendCursor}};
 /// 📝️ The source text stays resident until its last chunk is appended and its own paid retirement completes.
-pub struct TextReceiving<const N:usize>{source:OwnedSlot<FieldValue>,output:OwnedSlot<PagedUtf8<N>>,offset:usize,length:usize,phase:u8,closing:bool,failed:bool}
-impl<const N:usize>Default for TextReceiving<N>{fn default()->Self{Self{source:Default::default(),output:Default::default(),offset:0,length:0,phase:0,closing:false,failed:false}}}
+pub struct TextReceiving<const N:usize>{source:OwnedSlot<FieldValue>,output:OwnedSlot<PagedUtf8<N>>,append:PagedUtf8AppendCursor,phase:u8,closing:bool,failed:bool}
+impl<const N:usize>Default for TextReceiving<N>{fn default()->Self{Self{source:Default::default(),output:Default::default(),append:Default::default(),phase:0,closing:false,failed:false}}}
 impl<const N:usize>DslOwnedReceivingField for PagedUtf8<N>{type Cursor=TextReceiving<N>;fn receiving_cursor()->Self::Cursor{Self::Cursor::default()}}
-/// ✂️ The next chunk never splits a character and never exceeds the paged chunk size.
-fn chunk_end(text:&str,offset:usize)->usize{let mut end=(offset+PAGED_UTF8_CHUNK_BYTES).min(text.len());while !text.is_char_boundary(end){end-=1}end}
 impl<const N:usize>TextReceiving<N>{
  fn text(&self)->Result<&str,ValueError>{match self.source.value.as_ref(){Some(FieldValue::Text(text))=>Ok(text.as_str()),_=>Err(invariant())}}
- fn selected(&mut self,source:&mut Option<FieldValue>,native:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{
-  if self.failed||self.closing{return RetainedWorkOutcome{result:Err(invariant().into()),work:0}}
-  if self.phase==3{return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
-  let d=match self.demands(source,body){Ok(d)=>d,Err(e)=>return RetainedWorkOutcome{result:Err(e.into()),work:0}};
-  if !funds(g,d){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
-  if self.phase==2&&!self.source.terminal_is_empty(){return close_source(&mut self.source,native,g)}
-  if let Err(e)=native.checkpoint(){return RetainedWorkOutcome{result:Err(e.into()),work:0}}
-  let result=(||{match self.phase{
-   0=>{let Some(FieldValue::Text(text))=source.as_ref()else{return Err(invalid())};if text.len()>N{return Err(invalid())}self.length=text.len();*self.source.value=source.take();*self.output.value=Some(PagedUtf8::default());self.phase=1;},
-   1 if self.offset<self.length=>{let (start,end)={let text=self.text()?;(self.offset,chunk_end(text,self.offset))};let chunk=match self.source.value.as_ref(){Some(FieldValue::Text(text))=>&text[start..end],_=>return Err(invariant())};let output=self.output.value.as_mut().ok_or_else(invariant)?;output.try_push_str_controlled(chunk,native)?;self.offset=end;},
-   1=>self.phase=2,
-   2=>self.phase=3,
-   _=>return Err(invariant())}Ok(receipt(d))})();
-  RetainedWorkOutcome{result:result.map_err(|error:ValueError|OriginalReceivingPrimary::from(error.with_retained_progress(receipt(metadata::<()>())))),work:1}
- }
+ fn append_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.append.next_advance_demand(self.text()?,self.output.value.as_ref().ok_or_else(invariant)?,body)}
 }
 impl<const N:usize>OwnedFieldReceiving<PagedUtf8<N>>for TextReceiving<N>{
- fn demands(&self,_:&Option<FieldValue>,body:usize)->Result<RetirementDemand,ValueError>{if self.failed||self.closing{return Err(invariant())}match self.phase{1 if self.offset<self.length=>{let text=self.text()?;Ok(RetirementDemand{copy_bytes:chunk_end(text,self.offset)-self.offset,depth:1,..Default::default()})},2 if !self.source.terminal_is_empty()=>self.source.close_demands(body),3=>Ok(Default::default()),_=>Ok(metadata::<()>())}}
- fn step(&mut self,source:&mut Option<FieldValue>,native:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{let turn=self.selected(source,native,body,g);if turn.result.is_err()&&turn.work>0{self.failed=true}turn}
- fn is_ready(&self)->bool{!self.closing&&!self.failed&&self.phase==3&&self.output.value.is_some()}
- fn take_into(&mut self,output:&mut Option<PagedUtf8<N>>,g:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress>{if !self.is_ready(){return RetainedWorkOutcome{result:Err(invariant()),work:0}}move_into(&mut self.output.value,output,g)}
- fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if !self.closing{return Ok(metadata::<()>())}if !self.output.terminal_is_empty(){return self.output.close_demands(body)}self.source.close_demands(body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress>{if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}let d=match self.close_demands(g.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return RetainedWorkOutcome{result:Err(e),work:0}};if !funds(g,d){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}if !self.closing{self.closing=true;return RetainedWorkOutcome{result:Ok(receipt(d)),work:1}}if !self.output.terminal_is_empty(){return self.output.close_step(g)}self.source.close_step(g)}
- fn terminal_is_empty(&self)->bool{self.output.terminal_is_empty()&&self.source.terminal_is_empty()}
+ fn demands(&self,_:&Option<FieldValue>,body:usize)->Result<RetirementDemand,ValueError>{if self.failed||self.closing{return Err(invariant())}match self.phase{1=>self.append_demand(body),2=>ErasedSnapshotRetirement::next_demand(&self.append,body),3 if !self.source.terminal_is_empty()=>self.source.close_demands(body),4=>Ok(Default::default()),_=>Ok(metadata::<()>())}}
+ fn select_advance(&self,_:&Option<FieldValue>,body:usize,maximum_work_units:u64)->Result<OwnedAdvanceSelection,ValueError>{if self.failed||self.closing{return Err(invariant())}Ok(OwnedAdvanceSelection::Local{work:match self.phase{1=>maximum_work_units.clamp(1,4),2=>ErasedSnapshotRetirement::next_computational_work(&self.append,body)?,3 if !self.source.terminal_is_empty()=>self.source.close_work_demand(body)?,4=>0,_=>1}})}
+ fn advance_local(&mut self,source:&mut Option<FieldValue>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OwnedPoll{
+  if self.failed||self.closing{return done(effect,Err(invariant().into()))}if self.phase==4{return idle(effect)}
+  let d=match self.demands(source,body){Ok(d)=>d,Err(error)=>return done(effect,Err(error.into()))};if !admits(effect,d){return idle(effect)}
+  let poll=match self.phase{
+   0=>local(effect,d,||{let Some(FieldValue::Text(text))=source.as_ref()else{return Err(invalid())};if text.len()>N{return Err(invalid())}*self.source.value=source.take();*self.output.value=Some(PagedUtf8::default());self.phase=1;Ok(())}),
+   1=>{
+    let grant=effect.grant();let turn=match(self.source.value.as_ref(),self.output.value.as_mut()){(Some(FieldValue::Text(text)),Some(output))=>self.append.advance(text.as_str(),output,body,grant),_=>return done(effect,Err(invariant().into()))};
+    let result=owe(effect,turn.work).and_then(|()|turn.result).map(|step|step.progress()).map_err(Into::into);
+    if result.is_ok()&&self.append.complete{self.append.begin_close();self.phase=2}done(effect,result)
+   },
+   2=>{let poll=self.append.close_step(effect);if self.append.terminal_is_empty(){self.phase=3}settle(effect,receiving(physical(poll)))},
+   _=>{let poll=self.source.close_step(effect);if self.source.terminal_is_empty(){self.phase=4}settle(effect,receiving(poll))},
+  };
+  poison(&mut self.failed,&poll);poll
+ }
+ fn is_ready(&self)->bool{!self.closing&&!self.failed&&self.phase==4&&self.output.value.is_some()}
+ fn take_into(&mut self,output:&mut Option<PagedUtf8<N>>,effect:&mut RetainedAllocationEffect<'_>)->OwnedTake{if !self.is_ready(){return done(effect,Err(invariant()))}move_into(&mut self.output.value,output,effect)}
+ fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if !self.closing{return Ok(metadata::<()>())}if !self.append.terminal_is_empty(){return ErasedSnapshotRetirement::next_demand(&self.append,body)}if !self.output.terminal_is_empty(){return self.output.close_demands(body)}self.source.close_demands(body)}
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if self.terminal_is_empty(){return Ok(0)}if !self.closing{return Ok(1)}if !self.append.terminal_is_empty(){return ErasedSnapshotRetirement::next_computational_work(&self.append,body)}if !self.output.terminal_is_empty(){return self.output.close_work_demand(body)}self.source.close_work_demand(body)}
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OwnedClose{if self.terminal_is_empty(){return idle(effect)}let d=match self.close_demands(effect.grant().maximum_copy_bytes){Ok(d)=>d,Err(error)=>return done(effect,Err(error.into()))};if !admits(effect,d){return idle(effect)}if !self.closing{return local_close(effect,d,||{self.closing=true;self.append.begin_close();Ok(())})}if !self.append.terminal_is_empty(){let poll=self.append.close_step(effect);return settle(effect,physical(poll))}if !self.output.terminal_is_empty(){return self.output.close_step(effect)}self.source.close_step(effect)}
+ fn terminal_is_empty(&self)->bool{self.append.terminal_is_empty()&&self.output.terminal_is_empty()&&self.source.terminal_is_empty()}
 }
 impl<const N:usize>crate::DslReceivingField for PagedUtf8<N>{
- fn receive_value(value:&FieldValue,owner:&mut super::super::NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<Self,super::super::NativeSnapshotFailure>{
+ fn receive_value(value:&FieldValue,output:&mut Option<Self>,owner:&mut super::super::NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<(),super::super::NativeSnapshotFailure>{
   let FieldValue::Text(text)=value else{return RetainedWorkOutcome{result:Err(invalid().into()),work:0}};
-  owner.receive::<PagedUtf8<N>,PagedUtf8<N>,super::super::NativeSnapshotFailure>(|slot,native,body|super::super::receiving_turn(|meter|{
+  owner.receive::<PagedUtf8<N>,PagedUtf8<N>,super::super::NativeSnapshotFailure>(output,&mut |slot,result,marker,failure,native,body|super::super::receiving_turn(|meter|{
    *slot=Some(PagedUtf8::default());body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:text.len(),maximum_capacity_bytes:text.len(),maximum_depth:1,..Default::default()})?;
-   native.checkpoint()?;meter.performed();let mut offset=0;while offset<text.len(){let end=chunk_end(text,offset);slot.as_mut().ok_or_else(invariant)?.try_push_str_controlled(&text[offset..end],native)?;offset=end}Ok(slot.take().ok_or_else(invariant)?)
+   native.checkpoint()?;meter.performed();let mut offset=0;while offset<text.len(){let end=chunk_end(text,offset);slot.as_mut().ok_or_else(invariant)?.try_push_str_controlled(&text[offset..end],native)?;offset=end}
+   let quote=super::super::NativeSnapshotDecodeEffectQuote::decode(body,native,RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()})?;meter.take(quote.run(marker,failure,&mut |performed,physical|{*result=slot.take();*performed=true;*physical=RetainedCloneProgress{copied_items:1,..Default::default()};Ok(())}))?;Ok(())
   }))
  }
 }
+/// ✂️ The next chunk never splits a character and never exceeds the paged chunk size.
+fn chunk_end(text:&str,offset:usize)->usize{let mut end=(offset+semio_framework_value::paged::PAGED_UTF8_CHUNK_BYTES).min(text.len());while !text.is_char_boundary(end){end-=1}end}

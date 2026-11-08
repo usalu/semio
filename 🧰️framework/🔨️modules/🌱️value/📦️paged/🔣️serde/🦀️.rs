@@ -47,7 +47,7 @@ impl<'de, V: Deserialize<'de>, const N: usize> Visitor<'de> for ObjectVisitor<V,
             if output.entries.iter().any(|entry| entry.0 == key) { return Err(A::Error::custom("duplicate paged object key")); }
             while !output.entries.has_reserved_slot() {
                 let bytes = output.entries.next_allocation_bytes().map_err(A::Error::custom)?;
-                output.entries.reserve_one(bytes).map_err(|error| A::Error::custom(error.refusal()))?;
+                output.entries.reserve_one_cold(bytes).map_err(|error| A::Error::custom(error.refusal()))?;
             }
             output.entries.push_reserved((key, value)).map_err(|_| A::Error::custom("paged object rejected its admitted slot"))?;
         }

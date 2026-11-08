@@ -79,6 +79,16 @@ mod original_commit;
 pub use commit_metadata::{advance_batch_metadata,BatchCommitMetadataStep};
 
 //#region 📬️OneItemPublication
+/// ⛽️ The computational work one preparation step may perform inside its effect.
+const STEP_WORK:u64=64;
+
+/// 🧊️ Runs one effect-shaped step under an explicit wallet funded by the item grant when no receiving control is in reach; `None` means the work quote was not admitted.
+fn authored<R>(grant:ArtifactStoreOneItemGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->R)->Result<Option<R>,ValueError>{
+    let stock=grant.retained_grant();
+    let mut wallet=semio_framework_value::AuthoringWallet::new(stock,u128::from(STEP_WORK));
+    Ok(wallet.run(stock,STEP_WORK,run)?.map(|done|done.output))
+}
+
 /// ⏭️ Advances at most one preparation, fold, cursor, preflight, or atomic move-publication
 /// unit. Exactly one admitted mutation is folded into the staged edit per fold turn; the
 /// post-snapshot each item produced is an already-built `Arc` and is moved into the stage.
@@ -86,8 +96,7 @@ pub fn advance_apply_batch<P,Mutation>(store:&mut StoreParts<'_,P,Mutation>,publ
 where P:semio_os_spr::StoreState,Mutation:semio_os_spr::StoreMutationFor<P>{
     publication.turn_work=0;let before=receiving.actual_work();
     let result=advance_apply_batch_inner(store,publication,body,grant,receiving);
-    if matches!(result,Ok(ArtifactStoreOneItemAdvance::Blocked)){static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<3||n%512==0{eprintln!("[DEBUG] aggregator-gate BL n={} phase={:?} census={} closing={} cancel={} prep={} stage_fold={} items={} copy={} depth={} cap={} rel={} body={} dig_complete={:?} dig_owner={:?} dig_ready={:?} dig_term_empty={:?} diag_rows={:?} diag_term_empty={:?} diag_joined={:?} dig_demand={:?} cap_in={}",n,publication.phase,publication.source_census_finished,publication.item_closing,publication.cancel_requested,publication.preparation.is_some(),publication.stage.as_ref().is_some_and(|s|s.folding.is_some()),grant.maximum_items,grant.maximum_copy_bytes,grant.maximum_depth,grant.maximum_capacity_bytes,grant.maximum_release_bytes,body,publication.stage.as_ref().map(|s|s.digest_complete),publication.stage.as_ref().map(|s|s.digest_owner.is_some()),publication.stage.as_ref().and_then(|s|s.digest_owner.as_ref().map(|o|o.ready())),publication.stage.as_ref().and_then(|s|s.digest_owner.as_ref().map(|o|o.terminal_is_empty())),publication.stage.as_ref().map(|s|s.diagnostics.row_count()),publication.stage.as_ref().map(|s|s.diagnostics.terminal_is_empty()),publication.stage.as_ref().map(|s|s.diagnostics.joined()),publication.stage.as_ref().and_then(|s|s.digest_owner.as_ref().map(|o|o.next_digest_demand().map(|d|(d.copy_bytes,d.capacity_bytes,d.release_bytes,d.depth)).map_err(|e|e.into_message()))),grant.maximum_capacity_bytes);}}
-    let observed=receiving.actual_work().saturating_sub(before);
+    let observed=u64::try_from(receiving.actual_work().saturating_sub(before)).unwrap_or(u64::MAX);
     let coordination=match &result{Ok(ArtifactStoreOneItemAdvance::Blocked|ArtifactStoreOneItemAdvance::AwaitingAck(_)|ArtifactStoreOneItemAdvance::Complete)=>0,Ok(_)=>1,Err(_)=>0};
     let reported=publication.turn_work;publication.turn_work=reported.max(observed).max(coordination);
     publication.turn_work=semio_os_store_one_item::original_one_item_turn_work(reported,observed,coordination!=0).map_err(VcsError::InverseRefused)?;result
@@ -136,7 +145,7 @@ where
                 return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
             }
             if publication.item_closing {
-                if let Some(stage)=publication.stage.as_mut(){if stage.retiring.is_some(){let step=artifact_retirement_box_close_step(&mut stage.retiring,item_grant.retained_grant()).result.map_err(|error|VcsError::ValidationFailed(error.into_message()))?;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress()));}}
+                if let Some(stage)=publication.stage.as_mut(){if stage.retiring.is_some(){let Some(poll)=receiving.with_effect(item_grant.retained_grant(),STEP_WORK,|_,effect|artifact_retirement_box_close_step(&mut stage.retiring,effect)).map_err(|error|VcsError::ValidationFailed(error.into_message()))? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};let step=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|error|VcsError::ValidationFailed(error.into_value_error().into_message()))?,semio_framework_value::RetainedWorkPoll::Pending{..}=>return Ok(ArtifactStoreOneItemAdvance::Blocked)};return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress()));}}
                 if publication.preparation.is_none(){return Err(VcsError::ValidationFailed("staged batch item lost its original preparation before closure".into()));}
                 let step=match spend_item_close_grant(&mut publication.preparation,item_grant,receiving){Ok(step)=>step,Err(failure)=>{*publication.receiving_fault=Some(failure);publication.begin_close();return Ok(ArtifactStoreOneItemAdvance::PreparationRefused)}};
                 if matches!(step,RetainedCloneStep::Complete(_)){publication.item_closing=false;}
@@ -221,7 +230,8 @@ where
                 if let Some(bytes) = existing.inverse.next_capacity_allocation_bytes(capacity).map_err(|error| VcsError::ValidationFailed(error.reason.into()))? {
                     let depth=existing.inverse.next_reserve_depth_demand().map_err(|error|VcsError::ValidationFailed(error.reason.into()))?;
                     if bytes>grant.maximum_capacity_bytes||grant.maximum_depth<depth{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
-                    let step = existing.inverse.reserve_capacity_one(capacity, grant.maximum_capacity_bytes).map_err(|error| VcsError::ValidationFailed(error.reason.into()))?;
+                    let Some(done)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|existing.inverse.reserve_capacity_one(capacity,effect)).map_err(|error|VcsError::ValidationFailed(error.into_message()))? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};
+                    let step=match done.result{Ok(semio_framework_value_native_owned::list::PagedListReservationOutcome::Ready(step))=>step,Ok(semio_framework_value_native_owned::list::PagedListReservationOutcome::Denied)=>return Ok(ArtifactStoreOneItemAdvance::Blocked),Err(semio_framework_value_native_owned::list::PagedListReservationFailure::Allocation{error,..})=>return Err(VcsError::ValidationFailed(error.reason.into())),Err(semio_framework_value_native_owned::list::PagedListReservationFailure::Work(error))=>return Err(VcsError::ValidationFailed(error.into_message()))};
                     if !step.progressed || step.allocated_bytes > grant.maximum_capacity_bytes {
                         return Err(VcsError::ValidationFailed("batched inverse backing failed its exact allocation admission".into()));
                     }
@@ -239,7 +249,7 @@ where
             if let Some(owner)=stage.digest_owner.as_mut(){
                 if owner.ready(){let Some((edit,digest,ownership))=owner.take_edit(grant.retained_grant()).map_err(refusal)?else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};stage.edit=Some(edit);stage.digest=digest;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));}
                 if owner.terminal_is_empty(){let released=size_of_val(owner.as_ref());if grant.maximum_release_bytes<released||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.digest_owner=None;stage.digest_complete=true;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}));}
-                let step=owner.advance_digest(grant.retained_grant()).map_err(refusal)?;let ownership=semio_framework_value::retained_clone::admit_retained_clone_progress(grant.retained_grant(),step.progress(),"original batch digest normal step").map_err(refusal)?;return Ok(if ownership==Default::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership)});
+                let Some(step)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|owner.advance_digest(effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};let ownership=semio_framework_value::retained_clone::admit_retained_clone_progress(grant.retained_grant(),step.progress(),"original batch digest normal step").map_err(refusal)?;return Ok(if ownership==Default::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership)});
             }
 
             let meta = stage.edit.as_ref().expect("live staged edit owner").mutation_meta.first().ok_or_else(|| VcsError::ValidationFailed("batched edit lacks its exact authority metadata".into()))?;
@@ -275,8 +285,8 @@ where
                 let Some((owner,ownership))=admitted.map_err(refusal)?else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};stage.digest_owner=Some(owner);return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));
             }
 
-            if stage.diagnostics.row_count()==0 { if !stage.diagnostics.terminal_is_empty(){stage.diagnostics.begin_close();let step=stage.diagnostics.close_step(grant.retained_grant()).map_err(refusal)?;return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress())});} }
-            else if !stage.diagnostics.joined(){let step=stage.diagnostics.advance_join(grant.retained_grant()).map_err(refusal)?;return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress())});}
+            if stage.diagnostics.row_count()==0 { if !stage.diagnostics.terminal_is_empty(){stage.diagnostics.begin_close();let Some(step)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|stage.diagnostics.close_step(effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress())});} }
+            else if !stage.diagnostics.joined(){let Some(step)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|stage.diagnostics.advance_join(effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress())});}
             let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
             store.owners.displaced_retirements.reserve(12)?;
             if store.owners.snapshot_retirement_factory.is_none() || store.owners.mutation_retirement_factory.is_none() {
@@ -286,13 +296,13 @@ where
             Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))
         }
         ArtifactStoreOneItemPublicationPhase::Publishing => {
-            if publication.outbound&&!publication.transaction_open&&batch_amend_target_ref(store,publication.transaction.as_ref()).is_none()&&store.log.operation_wire.as_ref().is_some_and(|wire|wire.original_message_admission.is_some()){return original_commit::advance_original_commit(store,publication,body,grant)}
+            if publication.outbound&&!publication.transaction_open&&batch_amend_target_ref(store,publication.transaction.as_ref()).is_none()&&store.log.operation_wire.as_ref().is_some_and(|wire|wire.original_message_admission.is_some()){return original_commit::advance_original_commit(store,publication,body,grant,receiving)}
 
             let refusal=|error:ValueError|VcsError::ValidationFailed(error.into_message());
             let staged=publication.stage.as_mut().ok_or_else(||VcsError::ValidationFailed("diagnostic publication lost its original batch stage".into()))?;
             if staged.diagnostics.row_count()!=0 {
                 let identity=batch_amend_target_ref(store, publication.transaction.as_ref()).unwrap_or_else(||staged.edit.as_ref().expect("staged original diagnostic edit").id.as_str());
-                if !staged.diagnostics.prepared(){let step=staged.diagnostics.advance(identity,grant.retained_grant()).map_err(refusal)?;return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress())});}
+                if !staged.diagnostics.prepared(){let Some(step)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|staged.diagnostics.advance(identity,effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress())});}
                 let bytes=staged.diagnostics.measured_bytes(identity).map_err(refusal)?;
                 if !store.log.envelope.edit_messages.admits_measured(identity,bytes){return Err(VcsError::ValidationFailed("prepared diagnostic entry exceeds its fixed ledger authority".into()));}
                 if store.log.envelope.edit_messages.get_by_id(identity).is_some()&&staged.diagnostics.displaced.is_none(){let receipt=staged.diagnostics.admit_displaced(grant.retained_grant()).map_err(refusal)?;return Ok(if receipt==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),receipt)});}
@@ -440,12 +450,13 @@ where
         let depth = current.next_close_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch preparation Box depth overflow"))?;
         if grant.maximum_depth < depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch preparation exceeds admitted Box depth").into()); }
         let child_grant = ArtifactStoreOneItemGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step=receiving.with_retirement(child_grant.retained_grant(),|retirement|retirement.with_original_close(|original|current.close_original_step(original,child_grant)))?;
+        let Some(polled)=receiving.with_effect(child_grant.retained_grant(),STEP_WORK,|receiving,effect|receiving.with_retirement::<_,semio_framework_value::OriginalReceivingPrimary>(child_grant.retained_grant(),|retirement|retirement.with_original_close(|original|Ok(current.close_original_step(original,effect)))))? else{return Ok(RetainedCloneStep::Progress(Default::default()))};
+        let step=match polled?{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result?,semio_framework_value::RetainedWorkPoll::Pending{..}=>return Ok(RetainedCloneStep::Progress(Default::default()))};
         let step = semio_framework_value::retained_clone::admit_retained_clone_close(child_grant.retained_grant(), step, current.terminal_is_empty(), "batch original item preparation")?;
         return Ok(RetainedCloneStep::Progress(step.progress()));
     }
     if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-    if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch preparation Box requires admitted depth")); }
+    if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch preparation Box requires admitted depth").into()); }
     let bytes = size_of_val(current.as_ref());
     if bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
     drop(owner.take());

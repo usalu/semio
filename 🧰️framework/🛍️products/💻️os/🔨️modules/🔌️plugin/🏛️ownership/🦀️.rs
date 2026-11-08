@@ -7,7 +7,7 @@ use crate::sdk_fault::plugin_sdk_fault;
 #[path="⚠️failure/🦀️.rs"]
 mod original_failure;
 pub use original_failure::{PluginLifecycleFailure,PluginLifecyclePrimary};
-pub use original_failure::{original_lifecycle_net_after,original_lifecycle_grant,original_lifecycle_step,original_lifecycle_delta,original_lifecycle_unposted};
+pub use original_failure::{original_lifecycle_net_after,original_lifecycle_grant,original_lifecycle_step,original_lifecycle_effect_step,plugin_settle_poll,plugin_grant_step,plugin_unit_step,plugin_effect_close,plugin_effect_turn,plugin_failure_error,plugin_settle_value,plugin_pay_unit,original_lifecycle_delta,original_lifecycle_unposted};
 
 
 
@@ -183,9 +183,11 @@ pub fn plugin_typed_owner_work_demand<T: semio_framework_value::retirement::Reti
 }
 
 /// 🎟️ Preserves actual typed-frame work on success and refusal.
-pub fn plugin_typed_owner_original<T: semio_framework_value::retirement::RetireOwned>(original: &mut Option<T>, active: &mut Option<ControlledRetirement<T>>, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome {
- let mut work=0;let result=(||{
+pub fn plugin_typed_owner_original<T: semio_framework_value::retirement::RetireOwned>(original: &mut Option<T>, active: &mut Option<ControlledRetirement<T>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+ use semio_framework_value::RetirementPollExit as Exit;
+ let result=(||->Result<RetainedCloneStep,Exit>{
     use semio_framework_value::retirement::controlled::ControlledRetirement;
+    let grant = effect.grant();
     let empty = RetainedCloneProgress::default();
     if active.is_none() {
         if original.is_none() {
@@ -194,7 +196,6 @@ pub fn plugin_typed_owner_original<T: semio_framework_value::retirement::RetireO
         if grant.maximum_items == 0 || grant.maximum_depth == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
         }
-        work=1;
         let value = original.take().expect("typed original was observed");
         return match ControlledRetirement::new(value) {
             Ok(owner) => {
@@ -210,13 +211,13 @@ pub fn plugin_typed_owner_original<T: semio_framework_value::retirement::RetireO
     let owner = active.as_mut().expect("typed owner frame was observed");
     if owner.terminal_is_empty() {
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        *active = None;work=1;
+        *active = None;
         return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
     }
-    let result=owner.step(grant);work=owner.last_turn_work();let step=result?;
+    let step = Exit::resume(owner.step(effect))?;
     semio_framework_value::retained_clone::admit_retained_clone_progress(grant, step.progress(), "typed owner retirement")?;
     Ok(RetainedCloneStep::Progress(step.progress()))
-})();semio_framework_value::RetainedWorkOutcome{result,work}
+ })();Exit::settle(effect,result)
 }
 
 /// 📏️ Quotes the next close turn of one owned byte vector: any payload truncation, then its whole physical backing.
@@ -479,22 +480,31 @@ pub fn original_plugin_turn_grant(policy:RetainedCloneGrant,remaining:RetainedCl
 mod typed_owner_work_tests {
     use super::*;
 
+    fn run(caller: &mut semio_framework_job::OriginalJobFixtureCaller, original: &mut Option<String>, active: &mut Option<ControlledRetirement<String>>, grant: RetainedCloneGrant) -> (RetainedCloneStep, u128) {
+        let turn = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 16, maximum_release_bytes: 1 << 16, maximum_depth: 16 };
+        let (poll, performed) = caller.turn(turn, |cx| Ok(cx.with_original_effect(grant, |_, effect| plugin_typed_owner_original(original, active, effect))?)).expect("original fixture effect turn").expect("original effect work quote admitted");
+        match poll { semio_framework_value::RetainedWorkPoll::Complete(done) => (done.result.expect("denied admission is not a failure"), performed), semio_framework_value::RetainedWorkPoll::Pending { .. } => panic!("typed owner admission never suspends") }
+    }
+
     #[test]
     fn denied_original_admission_preserves_owner_and_work() {
+        let stock = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 16, maximum_release_bytes: 1 << 16, maximum_depth: 16 };
+        let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(61), semio_framework_job::Generation(1), stock, || Some(1), 1_000_000, 1_000_000_000);
         let mut original = Some(String::from("original"));
         let address = original.as_ref().unwrap().as_ptr();
         let mut active = None;
         assert_eq!(plugin_typed_owner_work_demand(&original, &active, 1).unwrap(), 1);
-        let turn = plugin_typed_owner_original(&mut original, &mut active, RetainedCloneGrant::default());
-        assert_eq!(turn.work, 0);
-        assert_eq!(turn.result.unwrap().progress(), RetainedCloneProgress::default());
+        let (step, work) = run(&mut caller, &mut original, &mut active, RetainedCloneGrant::default());
+        assert_eq!(work, 0);
+        assert_eq!(step.progress(), RetainedCloneProgress::default());
         assert_eq!(original.as_ref().unwrap().as_ptr(), address);
         assert!(active.is_none());
         let depth_denied = RetainedCloneGrant { maximum_items: 1, ..RetainedCloneGrant::default() };
-        let turn = plugin_typed_owner_original(&mut original, &mut active, depth_denied);
-        assert_eq!(turn.work, 0);
-        assert_eq!(turn.result.unwrap().progress(), RetainedCloneProgress::default());
+        let (step, work) = run(&mut caller, &mut original, &mut active, depth_denied);
+        assert_eq!(work, 0);
+        assert_eq!(step.progress(), RetainedCloneProgress::default());
         assert_eq!(original.as_ref().unwrap().as_ptr(), address);
         assert!(active.is_none());
+        caller.retire(stock);
     }
 }

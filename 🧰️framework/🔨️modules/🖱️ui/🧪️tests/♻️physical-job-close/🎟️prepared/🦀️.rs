@@ -115,7 +115,7 @@ fn prepared_original_abandoned_owners_report_full_physical_grants() {
         let original = PREPARED_RENDER_INPUT_ABANDONMENT_OWNER[slot].load(Ordering::Acquire);
         assert!(!original.is_null());
         for grant in [RetainedCloneGrant::default()] {
-            let (step, births, frees) = measured(|| PreparedRenderInput::close_abandoned_step(grant).unwrap());
+            let (step, births, frees) = measured(|| semio_ui_prepared::retirement::prepared_close_authored(grant, PreparedRenderInput::close_abandoned_step).unwrap());
             assert!(matches!(step, Close::Pending { progress } if progress == Default::default()));
             assert_eq!((births, frees), (0, 0));
             assert_eq!(PREPARED_RENDER_INPUT_ABANDONMENT_OWNER[slot].load(Ordering::Acquire), original);
@@ -127,12 +127,12 @@ fn prepared_original_abandoned_owners_report_full_physical_grants() {
             if grant.maximum_release_bytes != 0 {
                 let original = PREPARED_RENDER_INPUT_ABANDONMENT_OWNER[slot].load(Ordering::Acquire);
                 let denied = RetainedCloneGrant { maximum_release_bytes: grant.maximum_release_bytes - 1, ..grant };
-                let (step, births, frees) = measured(|| PreparedRenderInput::close_abandoned_step(denied).unwrap());
+                let (step, births, frees) = measured(|| semio_ui_prepared::retirement::prepared_close_authored(denied, PreparedRenderInput::close_abandoned_step).unwrap());
                 assert!(matches!(step, Close::Pending { progress } if progress == Default::default()));
                 assert_eq!((births, frees), (0, 0));
                 assert_eq!(PREPARED_RENDER_INPUT_ABANDONMENT_OWNER[slot].load(Ordering::Acquire), original);
             }
-            let (step, births, frees) = measured(|| PreparedRenderInput::close_abandoned_step(grant).unwrap());
+            let (step, births, frees) = measured(|| semio_ui_prepared::retirement::prepared_close_authored(grant, PreparedRenderInput::close_abandoned_step).unwrap());
             let progress = match step { Close::Pending { progress } | Close::Complete { progress } => progress, step => panic!("original abandoned input failed: {step:?}") };
             assert!(progress.fits(grant));
             assert_eq!((progress.retained_capacity_bytes, progress.released_bytes), (births, frees));

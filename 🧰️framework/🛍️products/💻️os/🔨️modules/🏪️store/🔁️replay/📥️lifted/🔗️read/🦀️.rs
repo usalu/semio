@@ -19,7 +19,7 @@ impl ArtifactStoreSupersessionRetirement {
 
 impl ErasedSnapshotRetirement for ArtifactStoreSupersessionRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owner.next_demand(body) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {self.owner.step(grant)})(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();semio_framework_value::RetirementPollExit::resume(self.owner.step(effect))})(); semio_framework_value::RetirementPollExit::settle(effect, result) }
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.owner.next_capacity_byte_demand(copy)}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_release_byte_demand()}
@@ -57,19 +57,19 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
         Ok(usize::from(self.values.is_some()))
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let mut work = 0u64; let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        if grant.maximum_depth < self.next_depth_demand()? { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "string history retirement exceeds admitted depth")); }
+        if grant.maximum_depth < self.next_depth_demand()? { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "string history retirement exceeds admitted depth").into()); }
         if let Some(active) = self.active.as_mut() {
             if active.terminal_is_empty() {
                 drop(self.active.take());
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
             }
             let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let turn = active.close_step(child_grant); work += turn.work; let step = turn.result?;
+            let step = semio_framework_value::RetirementPollExit::resume(active.close_step(&mut effect.nested(child_grant)))?;
             admit_retained_clone_close(child_grant, step, active.terminal_is_empty(), "Store string history child")?;
             return Ok(match step { RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => RetainedCloneStep::Progress(progress) });
         }
@@ -81,12 +81,12 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
         let release = values.next_empty_page_release_byte_demand().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "string history retains owners in an empty page"))?;
         if release != 0 {
             if grant.maximum_release_bytes < release { return Ok(RetainedCloneStep::Progress(empty)); }
-            if !values.release_empty_page() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "string history page changed after exact release demand")); }
+            if !values.release_empty_page() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "string history page changed after exact release demand").into()); }
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: release, ..empty }));
         }
         drop(self.values.take());
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))
-    })(); if work == 0 { work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); } semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
 
     fn terminal_is_empty(&self) -> bool {
         self.values.is_none() && self.active.is_none()
