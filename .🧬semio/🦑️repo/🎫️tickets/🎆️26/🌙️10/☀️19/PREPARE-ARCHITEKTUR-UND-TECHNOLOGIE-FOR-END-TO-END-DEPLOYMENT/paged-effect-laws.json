@@ -1,0 +1,54 @@
+{
+  "cases": [
+    {
+      "items": 1,
+      "copy": 32,
+      "depth": 3,
+      "work": 4,
+      "needCopy": 32,
+      "needDepth": 3,
+      "needWork": 4,
+      "admit": true
+    },
+    {
+      "items": 0,
+      "copy": 32,
+      "depth": 3,
+      "work": 4,
+      "needCopy": 32,
+      "needDepth": 3,
+      "needWork": 4,
+      "admit": false
+    },
+    {
+      "items": 1,
+      "copy": 31,
+      "depth": 3,
+      "work": 4,
+      "needCopy": 32,
+      "needDepth": 3,
+      "needWork": 4,
+      "admit": false
+    },
+    {
+      "items": 1,
+      "copy": 32,
+      "depth": 2,
+      "work": 4,
+      "needCopy": 32,
+      "needDepth": 3,
+      "needWork": 4,
+      "admit": false
+    },
+    {
+      "items": 1,
+      "copy": 32,
+      "depth": 3,
+      "work": 3,
+      "needCopy": 32,
+      "needDepth": 3,
+      "needWork": 4,
+      "admit": false
+    }
+  ]
+}

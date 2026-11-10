@@ -1,0 +1,5 @@
+{
+  "engine": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔐️shared-slots/📦️packages/🦀️rust",
+  "dependency": "semio-framework-value-native-shared-slots",
+  "type": "NativeSharedSlots"
+}

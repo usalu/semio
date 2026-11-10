@@ -27,6 +27,7 @@
         "serviceLimitMegabytes": 4096,
         "initialOwnerMegabytes": 256,
         "safetyMarginBasisPoints": 1000,
+        "hostAvailableFloorMegabytes": 1536,
         "budgetEnvironment": "SEMIO_GRAPH_MEMORY_MB",
         "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN",
         "limitEnvironment": "SEMIO_GRAPH_MEMORY_LIMIT_MB"

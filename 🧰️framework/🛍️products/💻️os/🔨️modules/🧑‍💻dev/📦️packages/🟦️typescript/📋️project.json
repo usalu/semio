@@ -3,6 +3,15 @@
   "$schema": "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
   "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⚙️runtime/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/**/*"
+    ],
     "default": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",

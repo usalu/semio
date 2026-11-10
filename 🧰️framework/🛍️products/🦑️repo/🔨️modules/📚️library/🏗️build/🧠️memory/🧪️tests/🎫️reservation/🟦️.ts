@@ -13,3 +13,36 @@ import{retireOwnedGraphPoolV1}from"../../../🕸️graph/📥️inference/📦�
 test("owned pool shrink closes admission then drains accepted work before retirement",async()=>{const validate=new Ajv({strict:true}).compile(schema.definitions.WorkerRefreshCase),db=new Database(":memory:");try{for(const row of corpus.refresh){expect(validate(row)).toBe(true);const oracle=db.query("select case when json_type(?1,'$.next')='null' or json_extract(?1,'$.next.workers')<json_extract(?1,'$.previous.workers') or json_extract(?1,'$.next.megabytes')<json_extract(?1,'$.previous.megabytes') then 1 else 0 end retire").get(JSON.stringify(row));expect(Boolean(oracle.retire)).toBe(row.retire);let finish;const events=[],work=new Promise(resolve=>finish=resolve),pool={...row.previous,ready:true,work:new Set([work]),farm:{close:async()=>{events.push("closed");}},release:()=>events.push("released")},settled=retireOwnedGraphPoolV1(pool,row.next??undefined);await new Promise(resolve=>setImmediate(resolve));if(row.retire){expect(pool.ready).toBe(false);expect(events).toEqual([]);}finish();expect(await settled).toBe(row.retire);expect(events).toEqual(row.retire?["closed","released"]:[]);}}finally{db.close();}});
 
 test("an unreadable grant row surfaces its error and is never read as the declared minimum",()=>{const configured=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!configured)throw Error("Caller-owned broken reader artifacts required");const directory=mkdtempSync(join(resolve(configured),"graph-broken-")),id="graph_broken_001",environment={SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_HOST_CAPACITY_PLAN:JSON.stringify({version:1,id,jobs:8,cpu:8,memoryMegabytes:16384,fixedMegabytes:461,floorMegabytes:1981})};try{mkdirSync(join(directory,"grants",id+".json"),{recursive:true});expect(()=>memory.graphMemoryAllocationV1(environment)).toThrow();rmSync(join(directory,"grants",id+".json"),{recursive:true});expect(memory.graphMemoryAllocationV1(environment).qualified).toBe(false);}finally{rmSync(directory,{recursive:true,force:true});}});
+
+test("an explicit parent budget keeps one owned worker when fixed overhead would otherwise consume a scaled grant",()=>{
+ const configured=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!configured)throw Error("Caller-owned allocation artifacts required");
+ const directory=mkdtempSync(join(resolve(configured),"graph-explicit-")),id="graph_explicit_01",reserved=2574,parentBudget=1024,db=new Database(":memory:");
+ const environment={SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_GRAPH_MEMORY_MB:String(parentBudget),SEMIO_HOST_CAPACITY_PLAN:JSON.stringify({version:1,id,jobs:2,cpu:2,memoryMegabytes:reserved,fixedMegabytes:1536,floorMegabytes:2035})};
+ mkdirSync(join(directory,"grants"));
+ try{
+  writeFileSync(join(directory,"grants",id+".json"),JSON.stringify({id,operation:"run",jobs:2,cpu:2,reservedMegabytes:reserved,admittedAtMs:Date.now(),observedMegabytes:null,pid:process.pid,bootAtMs:Math.round((Date.now()-uptime()*1000)/1000)*1000}));
+  const allocation=memory.graphMemoryAllocationV1(environment),own=ownGrantPoolV1(environment);
+  const oracle=db.query("select ?2 parent,?1-?2-1024 fixed,1024 worker").get(reserved,parentBudget);
+  expect(allocation.parentMegabytes).toBe(oracle.parent);
+  expect(allocation.fixedMegabytes).toBe(oracle.fixed);
+  expect(allocation.workerMegabytes).toBe(oracle.worker);
+  expect(own).toEqual({source:"own",workers:1,megabytes:oracle.worker});
+  expect(allocation.parentMegabytes+allocation.fixedMegabytes+own.workers*own.megabytes).toBe(reserved);
+ }finally{db.close();rmSync(directory,{recursive:true,force:true});}
+});
+
+test("an explicit parent budget shrinks so one owned worker still fits a one-job grant",()=>{
+ const configured=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!configured)throw Error("Caller-owned allocation artifacts required");
+ const directory=mkdtempSync(join(resolve(configured),"graph-tight-")),id="graph_tight_0001",reserved=1638,db=new Database(":memory:");
+ const environment={SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_GRAPH_MEMORY_MB:"1024",SEMIO_HOST_CAPACITY_PLAN:JSON.stringify({version:1,id,jobs:1,cpu:1,memoryMegabytes:reserved,fixedMegabytes:1536,floorMegabytes:2035})};
+ mkdirSync(join(directory,"grants"));
+ try{
+  writeFileSync(join(directory,"grants",id+".json"),JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:reserved,admittedAtMs:Date.now(),observedMegabytes:null,pid:process.pid,bootAtMs:Math.round((Date.now()-uptime()*1000)/1000)*1000}));
+  const allocation=memory.graphMemoryAllocationV1(environment),own=ownGrantPoolV1(environment);
+  const oracle=db.query("select ?1-1024 parent,0 fixed,1024 worker").get(reserved);
+  expect(allocation.parentMegabytes).toBe(oracle.parent);
+  expect(allocation.fixedMegabytes).toBe(oracle.fixed);
+  expect(allocation.workerMegabytes).toBe(oracle.worker);
+  expect(own).toEqual({source:"own",workers:1,megabytes:oracle.worker});
+ }finally{db.close();rmSync(directory,{recursive:true,force:true});}
+});

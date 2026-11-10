@@ -1,0 +1,44 @@
+{
+  "stock": {
+    "items": 1000,
+    "copyBytes": 100000,
+    "capacityBytes": 100000,
+    "releaseBytes": 100000,
+    "depth": 64,
+    "fuel": 10000
+  },
+  "cases": [
+    {
+      "values": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "left": 0,
+      "right": 3,
+      "expected": [
+        4,
+        2,
+        3,
+        1
+      ],
+      "popped": 1
+    },
+    {
+      "values": [
+        5,
+        6,
+        7
+      ],
+      "left": 1,
+      "right": 1,
+      "expected": [
+        5,
+        6,
+        7
+      ],
+      "popped": 7
+    }
+  ]
+}

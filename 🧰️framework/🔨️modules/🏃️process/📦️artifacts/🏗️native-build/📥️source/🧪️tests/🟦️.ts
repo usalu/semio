@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve,relative } from "node:path";
+import { dirname, join, resolve,relative } from "node:path";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
 import { readRustSourceClosureV1, rustCfgMatchesV1, selectRustSourceV1 } from "../🟦️.ts";
@@ -88,4 +88,22 @@ for(const row of corpus.closures)test(row.name,async()=>{
  const root=resolve("virtual-source-role"),read=async(path:string)=>{const local=relative(root,path).replaceAll("\\","/");return Object.hasOwn(row.files,local)?new TextEncoder().encode(row.files[local]!):null;},inputs=await readRustSourceClosureV1([row.entry],root,row.cfg,read);
  expect(inputs.map(({path,kind})=>({path,kind}))).toEqual(row.expected);
  if(row.name==="inactive inner file Source")expect(inputs[0]!.activeLines).toBe(0);
+});
+
+test("shared engine registers its existing canonical slot implementation", () => {
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/shared-engine.json"), "utf8")) as { engine: string; dependency: string; type: string };
+  const validate = new Ajv().compile(JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/shared-engine.schema.json"), "utf8")));
+  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+  let root = resolve(import.meta.dir);
+  while (!existsSync(join(root, "🎓️teaching/Cargo.lock"))) { const parent = dirname(root); if (parent === root) throw Error("workspace root missing"); root = parent; }
+  const engine = join(root, fixture.engine);
+  const manifest = Bun.TOML.parse(readFileSync(join(engine, "Cargo.toml"), "utf8")) as { dependencies: Record<string, { path: string }> };
+  const dependency = manifest.dependencies[fixture.dependency];
+  expect(dependency).toBeDefined();
+  const source = readFileSync(join(engine, "🦀️.rs"), "utf8");
+  expect(source).toContain(`pub use ${fixture.dependency.replaceAll("-", "_")}::${fixture.type};`);
+  const packageRoot = resolve(engine, dependency.path);
+  const packageManifest = Bun.TOML.parse(readFileSync(join(packageRoot, "Cargo.toml"), "utf8")) as { package: { name: string }; lib: { path: string } };
+  expect(packageManifest.package.name).toBe(fixture.dependency);
+  expect(readFileSync(resolve(packageRoot, packageManifest.lib.path), "utf8")).toContain(`pub struct ${fixture.type}<`);
 });

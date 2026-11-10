@@ -30,3 +30,4 @@ process.on("message", async message => {
     try { process.send({ type: "fatal", name: String(error?.name ?? "Error"), message: String(error?.message ?? error) }); } finally { process.exit(1); }
   }
 });
+try { process.send({ type: "listening" }); } catch { process.exit(1); }

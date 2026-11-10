@@ -1,0 +1,1 @@
+$all=@(Get-CimInstance Win32_Process);$ids=@(26884,28772,19564,19120,22592,30428,240);foreach($id in $ids){$p=$all|Where-Object ProcessId -eq $id;if($p){[PSCustomObject]@{pid=$p.ProcessId;parent=$p.ParentProcessId;birth=$p.CreationDate.ToUniversalTime().ToString('o');image=$p.ExecutablePath}|ConvertTo-Json -Compress}}; 'snapshot-complete'

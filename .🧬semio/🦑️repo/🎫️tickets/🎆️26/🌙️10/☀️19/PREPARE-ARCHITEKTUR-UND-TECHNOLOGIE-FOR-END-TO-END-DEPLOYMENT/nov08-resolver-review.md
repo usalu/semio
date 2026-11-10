@@ -1,0 +1,9 @@
+# Native Producer Path Resolver Review
+
+Reviewed the focused production function and neutral schema/fixture/test in graph inference script-inputs. Normalizing both virtual output keys and TypeScript probes through native path resolution addresses the reproduced Windows separator mismatch; original declared producer/custody checks remain present. No package metadata or alias changes are needed.
+
+Two focused review findings were sent to the owner before releasing new canonical commands. First, resolving resolvedFileName before the existing absolute-path guard changes behavior for a relative compiler answer; preserve the original fail-closed rejection, then canonicalize absolute paths. Second, the positive fixture can accidentally stop exercising future output when another task materializes dist; its host should hide that declared output without deleting/building it, while the independent TypeScript oracle supplies virtual existence. Add actual assertions for both paths and rerun the focused suite. These strengthen the introduced boundary and make the regression reliable; no broader path/custody change requested.
+
+Initial native test already reproduced red and passed green1test/4assertions; strengthened tests pending. Required paid Rust gate92418 remains unchanged. No canonical fresh cohort launched by this review.
+
+Owner added forced-unbuilt output and relative-answer refusal cases before correction. Native red42623:1pass/1fail,5expectations; production incorrectly accepted relative.js as D:/semio/relative.js. Correction normalizes only absolute resolved names and preserves prior relative rejection. Final actual normal Bun green:2tests/5expectations, inner/outer0, independent TypeScript oracle and real declared producer. Review approved. No package metadata/alias change, cache patch, prebuilt artifact or custody bypass.

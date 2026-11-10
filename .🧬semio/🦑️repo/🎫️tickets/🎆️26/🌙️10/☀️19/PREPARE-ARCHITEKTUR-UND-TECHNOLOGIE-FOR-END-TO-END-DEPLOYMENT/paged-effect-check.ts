@@ -1,0 +1,6 @@
+import {test,expect} from 'bun:test';
+import {Database} from 'bun:sqlite';
+import {createRequire} from 'node:module';
+import {readFileSync} from 'node:fs';
+const root='D:/semio',here=import.meta.dir,require=createRequire(root+'/package.json'),Ajv=require('ajv'),laws=JSON.parse(readFileSync(here+'/paged-effect-laws.json','utf8')),schema=JSON.parse(readFileSync(here+'/paged-effect-schema.json','utf8'));
+test('neutral funded movement laws match independent SQLite and primitive source contract',()=>{expect(new Ajv({strict:true}).validate(schema,laws)).toBe(true);const db=new Database(':memory:');try{for(const row of laws.cases){const x=db.query('select ?1>0 and ?2>=?5 and ?3>=?6 and ?4>=?7 admitted').get(row.items,row.copy,row.depth,row.work,row.needCopy,row.needDepth,row.needWork) as {admitted:number};expect(Boolean(x.admitted)).toBe(row.admit)}}finally{db.close()}const source=readFileSync(root+'/🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs','utf8');expect(source).toMatch(/pub fn pop_source_step\([^\n]*effect:\s*&mut/);expect(source).toContain('pub fn swap_source_step(');expect(source).toContain('pub fn swap_source_demand(');expect(source).toContain('pub fn swap_source_work_demand(');});

@@ -2,6 +2,15 @@
   "name": "@semio-tech/remodel-js",
   "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/**/*"
+    ],
     "default": [
       "{projectRoot}/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🧪️tests/🎚️config/🟦️.ts",

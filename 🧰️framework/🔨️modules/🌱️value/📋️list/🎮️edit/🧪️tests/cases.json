@@ -1,0 +1,47 @@
+{
+  "cases": [
+    {
+      "name": "insert",
+      "input": [
+        1,
+        3
+      ],
+      "index": 1,
+      "item": 2,
+      "expected": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "remove",
+      "input": [
+        1,
+        2,
+        3
+      ],
+      "index": 1,
+      "item": null,
+      "expected": [
+        1,
+        3
+      ]
+    }
+  ],
+  "denialAxes": [
+    "items",
+    "copy",
+    "depth",
+    "work"
+  ],
+  "stock": {
+    "items": 10000,
+    "copyBytes": 1000000,
+    "capacityBytes": 1000000,
+    "releaseBytes": 1000000,
+    "depth": 256,
+    "fuel": 1000000
+  },
+  "maximumTurns": 10000
+}

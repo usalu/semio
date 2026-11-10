@@ -1,0 +1,30 @@
+{
+  "stock": {
+    "items": 128,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 64,
+    "fuel": 65536
+  },
+  "cases": [
+    {
+      "name": "first-allocation",
+      "successfulReservations": 0,
+      "attempts": 1,
+      "work": 1,
+      "marker": 0,
+      "allocated": 0,
+      "copied": 0
+    },
+    {
+      "name": "after-retained-backing",
+      "successfulReservations": 1,
+      "attempts": 1,
+      "work": 1,
+      "marker": 0,
+      "allocated": 0,
+      "copied": 0
+    }
+  ]
+}

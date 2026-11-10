@@ -134,10 +134,10 @@ export function workspacePackageModuleV1(containing, specifier, workspaceRoot, c
    const physical=host.realpath?host.realpath(manifest):manifest,local=relative(workspaceRoot,physical);if(local===""||local.startsWith("..")||isAbsolute(local)||local.split(sep).includes("node_modules"))continue;
    const text=host.readFile(physical);if(text===undefined||JSON.parse(text).name!==packageName)continue;
    const producer=readTypeScriptPackageProducerV1(dirname(physical),workspaceRoot,path=>host.readFile(path));packages.push({root:dirname(physical),producer});if(!producer)continue;
-   for(const output of producer.outputs){future.set(output,output);future.set(resolve(dirname(manifest),relative(dirname(physical),output)),output);}
+   for(const output of producer.outputs){future.set(resolve(output),output);future.set(resolve(dirname(manifest),relative(dirname(physical),output)),output);}
   }
-  if(future.size){const view={...host,fileExists:path=>future.has(path)||host.fileExists(path),directoryExists:path=>[...future.keys()].some(file=>dirname(file)===path)||host.directoryExists?.(path)===true,realpath:path=>future.get(path)??(host.realpath?host.realpath(path):path)};resolution=compiler.resolveModuleName(specifier,containing,options,view,undefined,undefined,mode);}
-  const resolved=resolution.resolvedModule?.resolvedFileName??(declarations&&promised?.declarations?resolve(workspaceRoot,promised.declarations):undefined);
+  if(future.size){const view={...host,fileExists:path=>future.has(resolve(path))||host.fileExists(path),directoryExists:path=>[...future.keys()].some(file=>dirname(file)===resolve(path))||host.directoryExists?.(path)===true,realpath:path=>future.get(resolve(path))??(host.realpath?host.realpath(path):path)};resolution=compiler.resolveModuleName(specifier,containing,options,view,undefined,undefined,mode);}
+  const resolvedName=resolution.resolvedModule?.resolvedFileName??(declarations&&promised?.declarations?resolve(workspaceRoot,promised.declarations):undefined),resolved=resolvedName===undefined?undefined:isAbsolute(resolvedName)?resolve(resolvedName):resolvedName;
   if (!resolved) {
     const packageName=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0];
     for(const manifest of resolution.affectingLocations??[]){

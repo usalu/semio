@@ -1,0 +1,7 @@
+# Registered Course PDF Aggregate
+
+The course manifest `🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json` declares `repo run @teaching/architecture-course:build --parallel=1 --lang=en` as an existing finite aggregate for all four localized PDF producers. Each of those producers declares Print fonts, deps-tectonic, deps-tex and generate. The aggregate also builds assets, styling tokens and the site. `dev-site` includes the same PDF prerequisites but is continuous. No dedicated PDF-only aggregate appears in this manifest. This is a declaration audit, not execution evidence.
+
+The actual course aggregate 13586 entered source admission, then waited on a peer graph and normal capacity. Root directed normal cancellation to prioritize correction and validation of a separately observed Windows graph resolver failure; Ctrl+C drained the retained unified handle with outer exit 1. No course target or PDF result was observed. A normal 768 MiB post-check fresh CIM snapshot found no process matching the course build argv or its unique log path; no pre-cancellation child identity was captured, so this does not prove absence of every possible orphan. Registry release is a separate check. No manual cleanup or replacement was performed.
+
+Root capacity snapshot 1794095801195 showed zero grants, waiters and sessions after cancellation. Default metadata lease snapshot 1794095805510 showed zero waiters, edges, cycles and violations but retained queue-source shared rows for PIDs 26888 and 748. Full registry cleanup is not established.

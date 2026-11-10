@@ -4,6 +4,7 @@ import{createBoundedCacheV1}from"../../🧊️bounded/🟨️.mjs";
 import{createHash,randomBytes}from"node:crypto";
 import{brotliCompressSync,brotliDecompressSync,constants as zlibConstants}from"node:zlib";
 import{lstat,mkdir,open,readdir,readFile,rename,rm}from"node:fs/promises";
+import{existsSync,readFileSync,readdirSync}from"node:fs";
 import{dirname,join,sep}from"node:path";
 import{createProjectFileIndexV1}from"../🧭️file-owner/🟨️.mjs";
 import{graphStringInternerV1,internJsonStringsV1}from"../../🧠️memory/🟨️.mjs";
@@ -18,8 +19,8 @@ import{createNodeStoreV1}from"../🧮️derived-nodes/💾️store/🟨️.mjs";
 import{selectDoubtfulRowsV1}from"./🔎️doubt/🟨️.mjs";
 import{derivedOwnerNameV1,derivedUpsertsV1,holdersOfDerivedV1,isDerivedOwnerV1,orphanedDerivedOwnersV1,scopeWithDerivedV1,splitStaleConsumersV1,suspectRowsV1,suspectsWithinV1,unsupportedDerivedV1,verifiableRowIdsV1}from"./✂️cutoff/🟨️.mjs";
 import{GENERATION_POLICY_V1,P,HEX,sha256,isObject,unpack,aborted,fail,requireKeys,requireHex,requireCount,requireText}from"./🧱️guards/🟨️.mjs";
-import{ROW_KEY_TEXT_LIMIT_V1,createFactIndexV1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1}from"./🧮️fact-rows/🟨️.mjs";
-export{GENERATION_POLICY_V1,ROW_KEY_TEXT_LIMIT_V1,createFactIndexV1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1};
+import{ROW_KEY_TEXT_LIMIT_V1,createFactIndexV1 as createFactIndexRowsV1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1}from"./🧮️fact-rows/🟨️.mjs";
+export{GENERATION_POLICY_V1,ROW_KEY_TEXT_LIMIT_V1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1};
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 export{canonicalJsonV1,compareCodePointsV1,createFrontierV1,diffFrontiersV1,frontierFactHoldsV1,frontierHoldsV1,stableDirectoriesV1};
@@ -106,6 +107,15 @@ function readFactIndexV1(value){
  return value;
 }
 
+export function createFactIndexV1(ownerRows){
+ let rows=ownerRows;
+ for(const list of ownerRows.values())if(typeof list==="string"){
+  rows=new Map();
+  for(const[name,value]of ownerRows)rows.set(name,typeof value==="string"?JSON.parse(readFileSync(value,"utf8")):value);
+  break;
+ }
+ return createFactIndexRowsV1(rows);
+}
 /** 🗂️ The filesystem port on real files: a missing file reads undefined, writes are atomic by rename, a content addressed write that finds its file does nothing. */
 export function createNodeFilePortV1(){
  return Object.freeze({
@@ -350,7 +360,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const name of result.carried??[])if(owners[name]&&!returned.has(name))owners[name]={...owners[name],edgesEnv:envDigest};
   for(const[name,row]of Object.entries(owners))if(row.edgesEnv!==envDigest)throw fail("Every owner needs edges of the published environment: "+name+" ("+JSON.stringify({kind:row.kind,tag:row.tag??null,edges:String(row.edgesEnv??"none").slice(0,12),environment:String(envDigest).slice(0,12),root:row.root,dirty:names.includes(name),returned:returned.has(name),dropped:dropped.has(name),carried:(result.carried??[]).includes(name),sameRootReturned:[...returned].filter(other=>owners[other]?.root===row.root)})+")","GENERATION_INCOMPLETE");
   upserts.set(P.envOwner,result.env.rows??[]);
-  for(const[name,rows]of derivedUpsertsV1(result.derived??[],found.refresh))upserts.set(name,rows);
+  for(const[name,rows]of derivedUpsertsV1(result.derived??[],found.refresh))upserts.set(name,rows);if(result.derivedSpill&&existsSync(join(result.derivedSpill,"derived")))for(const name of readdirSync(join(result.derivedSpill,"derived")))if(name.endsWith(".json"))upserts.set(name.slice(0,-5),join(result.derivedSpill,"derived",name));
   let index=cold?createFactIndexV1(upserts):patchFactIndexV1(await readIndex(usable.factIndex),{drop:[...dropped],upserts,append});
   const orphans=orphanedDerivedOwnersV1(index);if(orphans.length)index=patchFactIndexV1(index,{drop:orphans});
   const unsupported=unsupportedDerivedV1(index);if(unsupported.length)throw fail("Derived facts need a supporting computation: "+unsupported.slice(0,3).map(row=>row.path.slice(0,96)).join(", "),"GENERATION_INCOMPLETE");

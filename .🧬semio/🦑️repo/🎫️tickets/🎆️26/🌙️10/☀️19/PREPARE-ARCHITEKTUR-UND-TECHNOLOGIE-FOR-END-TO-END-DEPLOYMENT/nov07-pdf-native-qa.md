@@ -1,0 +1,17 @@
+# Native PDF Visual QA Preparation
+
+PDF skill read for read-only validation of canonical course-build handouts. No standalone PDF authoring/content edit was performed by this workflow; artifact authoring marker is not required for read-only work. User native-only and repository-interface constraints apply. Temporary render output belongs under ticket generated; actual product PDFs remain at their canonical build destinations.
+
+Codex bundled workspace dependencies26.1103.10131 were located with the workspace dependency tool. Its override native-executables.json resolves pdfinfo and pdftoppm to native/poppler/Library/bin executables, not files directly in the override directory. Both resolved binaries were verified as files. No installation is needed. Absolute paths: C:\Users\Anna\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\poppler\Library\bin\pdfinfo.exe and C:\Users\Anna\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\poppler\Library\bin\pdftoppm.exe.
+
+Execution must be through the established native repo capacity run interface, with an authored bounded QA workload, explicit argv, retained inner/outer exit and ticket-generated logs/PNGs. Product build/runtime graphs and required budgets remain unchanged. Inspect every rendered page after canonical four-PDF generation, checking clipping/overlap/glyphs/typography/page numbering, and separately verify real served PDF links in both browser languages. Neither rendering nor product PDF generation has run yet.
+
+The manifest outputs are protected mode-dependent Print artifact paths; do not guess/directly inspect those under an unissued cache context. Final QA will prefer controlled HTTP fetch of the four real same-origin links from the verified normal running stack into fresh ticket-generated files, validate status/MIME/magic/size, then render those exact served bytes with governed native Poppler. This verifies delivered content and avoids direct cache custody assumptions. No fetch/render has run.
+
+Prepared retained input native-pdf-qa.mjs for four distinct served handouts, bounded streamed download/MIME/magic/hash checks and per-page native Poppler rendering with progress/cancellation. Its plan supplies verified native tools and actual observed URLs; all output is fresh beneath ticket generated, paths <=256. It is prepared, not yet executed or visually accepted.
+
+Prepared renderer argv now uses ASCII leaf names with the fresh owned output directory supplied as process cwd, through the same generic native-tool runner. Node retains absolute verified output paths for validation/reporting. This keeps native PDF argument paths short and avoids depending on CLI encoding of the emoji-bearing ticket ancestors; no alias, shell or compatibility adapter was added. Actual rendering remains pending generated/served documents.
+
+## Native Tool Startup and Input Syntax Verification
+
+Actual native repo capacity-run commands, ordinary768MiB/oneCPU, completed terminal0: pdftoppm -v and pdfinfo -v each report26.07.0; no additional installation was required. Bundled native Node --check against retained native-pdf-qa.mjs also completed0, with its emoji-bearing full ticket input path. These verify native executable startup and helper syntax only. No PDF download/render/layout or browser acceptance is claimed. Both independent tool checks and Node syntax job completed, with no Root live session left.

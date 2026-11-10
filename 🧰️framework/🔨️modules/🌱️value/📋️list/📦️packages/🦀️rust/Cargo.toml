@@ -43,3 +43,7 @@ path = "../../📤️discard/🧪️tests/native.rs"
 [[test]]
 name = "original-paid-edit"
 path = "../../🎮️edit/🧪️tests/native.rs"
+
+[[test]]
+name = "paid-edit-faults"
+path = "../../🎮️edit/🧪️tests/faults.rs"

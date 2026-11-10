@@ -275,6 +275,24 @@ test("the farm starts the worker its own capacity grant pays for, accepts a host
  expect(lines.some(line=>line.includes("3 of 566")||line.includes("projects inferred by 2 worker processes"))).toBe(true);
 });
 
+test("a cold generation starts the owned worker before a quarter of the projects miss",async()=>{
+ const root=scratch(),children:ScriptedChild[]=[],lines:string[]=[],log:string[]=[];
+ const id="farm_cold_00001",capacity=join(root,"capacity"),plan=JSON.stringify({version:1,id,jobs:1,cpu:1,memoryMegabytes:2048,fixedMegabytes:1536,floorMegabytes:1981});
+ mkdirSync(join(capacity,"grants"),{recursive:true});
+ writeFileSync(join(capacity,"grants",id+".json"),JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:7168,admittedAtMs:Date.now(),observedMegabytes:null,pid:process.pid,bootAtMs:Math.round((Date.now()-uptime()*1000)/1000)*1000}));
+ let grant!:(value:{jobs:number;megabytes:number}|undefined)=>void;
+ const farm=openProjectFarmV1({workspaceRoot:root,context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:capacity,SEMIO_HOST_CAPACITY_PLAN:plan},processed:()=>400,cores:10,write:line=>lines.push(line),engage:true,spawnProcess:(()=>{const child=new ScriptedChild("cold",log);children.push(child);return child;}) as never,request:(()=>({granted:new Promise<{jobs:number;megabytes:number}|undefined>(done=>{grant=done;}),release:()=>undefined})) as never})!;
+ expect(children.length).toBe(1);
+ expect(lines.some(line=>line.includes("inside the capacity grant of this process"))).toBe(true);
+ const job={name:"p",root:"p",json:{},native:false,pipeline:false,nativeRoot:"p",selectedInputs:[],head:[],cacheKey:"0".repeat(24)};
+ expect(await farm.prepare(job)).toBe(false);
+ await new Promise<number>(done=>farm.onReady(done));
+ await farm.prepare(job);
+ expect(log).toEqual(["cold:run"]);
+ grant(undefined);
+ await farm.close();
+});
+
 test("a farm without a capacity grant of its own and a host that grants nothing infers in the parent, and a host grant of zero jobs starts no pool",async()=>{
  const root=scratch(),children:ScriptedChild[]=[],lines:string[]=[];
  let grant!:(value:{jobs:number;megabytes:number}|undefined)=>void;

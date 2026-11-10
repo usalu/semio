@@ -1,0 +1,3 @@
+import {spawnSync} from 'node:child_process';
+const script = '$rows = @(Get-CimInstance Win32_Process); $ids = @(33624,25344,23616); for ($i=0; $i -lt 8; $i++) { $next = @($rows | Where-Object { $ids -contains [int]$_.ParentProcessId } | ForEach-Object { [int]$_.ProcessId }); $ids = @($ids + $next | Select-Object -Unique) }; @($rows | Where-Object { $ids -contains [int]$_.ProcessId } | Select-Object ProcessId,ParentProcessId,CreationDate,ExecutablePath,CommandLine) | ConvertTo-Json -Depth 4 -Compress';
+const r=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',script],{encoding:'utf8'});process.stdout.write('PROBE_EXIT='+r.status+' OUTPUT='+JSON.stringify(r.stdout)+'\n');process.stderr.write(r.stderr);process.exitCode=r.status??1;

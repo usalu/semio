@@ -39,7 +39,7 @@ export function hostMemoryMegabytesV1(){
  return Number.isFinite(bytes)&&bytes>0?Math.floor(bytes/MEGABYTE):0;
 }
 
-/** 🎫️ Partitions the qualified live reservation between the graph parent, fixed overhead and owned workers; an enlarged carried tool envelope cannot fund additional memory. */
+/** 🎫️ Partitions the qualified live reservation between the graph parent, fixed overhead and owned workers; an enlarged carried tool envelope cannot fund additional memory. An explicit parent budget leaves one minimum owned worker when the reservation can pay for that worker beside the parent, so a scaled-down grant still infers outside the parent. */
 export function graphMemoryAllocationV1(environment,policy=P,hostMegabytes=hostMemoryMegabytesV1()){
  const reservation=readLiveHostCapacityReservationV1(environment,BUILD_HOST_CAPACITY_POLICY_V1);
  const carried=environment[policy.planEnvironment]!==undefined&&environment[policy.planEnvironment]!=="",part=value=>typeof value==="number"&&Number.isFinite(value)&&value>0?value:0;
@@ -48,8 +48,12 @@ export function graphMemoryAllocationV1(environment,policy=P,hostMegabytes=hostM
  let parent=Math.min(reservation?.reservedMegabytes??Infinity,Math.max(policy.minimumBudgetMegabytes,Math.min(policy.maximumBudgetMegabytes,derived))),text=environment[policy.budgetEnvironment];
  if(text!==undefined){const explicit=Number(text);if(!Number.isFinite(explicit)||explicit<policy.minimumBudgetMegabytes)throw Error("Graph memory budget of at least "+policy.minimumBudgetMegabytes+" MB required: "+policy.budgetEnvironment);parent=Math.min(Math.floor(explicit),parent);}
  const plan=JSON.parse(environment[policy.planEnvironment]||"null");
- const total=reservation?.reservedMegabytes??0,fixed=reservation===undefined?0:Math.min(Math.floor(part(plan?.fixedMegabytes)),Math.max(0,total-parent));
- return Object.freeze({qualified:reservation!==undefined,reservedMegabytes:total,parentMegabytes:parent,fixedMegabytes:fixed,workerMegabytes:Math.max(0,total-parent-fixed),jobs:reservation?.jobs??0});
+ const total=reservation?.reservedMegabytes??0,room=Math.max(0,total-parent),explicitParent=text!==undefined,parentFloor=256;
+ let fixed=reservation===undefined?0:Math.min(Math.floor(part(plan?.fixedMegabytes)),room);
+ if(explicitParent&&room>=policy.minimumBudgetMegabytes)fixed=Math.min(fixed,room-policy.minimumBudgetMegabytes);
+ let worker=Math.max(0,room-fixed);
+ if(explicitParent&&worker<policy.minimumBudgetMegabytes&&total-policy.minimumBudgetMegabytes>=parentFloor){parent=total-policy.minimumBudgetMegabytes;fixed=0;worker=policy.minimumBudgetMegabytes;}
+ return Object.freeze({qualified:reservation!==undefined,reservedMegabytes:total,parentMegabytes:parent,fixedMegabytes:fixed,workerMegabytes:worker,jobs:reservation?.jobs??0});
 }
 /** 🧒️ The memory JavaScriptCore is told the graph child process may use (`BUN_JSC_forceRAMSize`), which sets how far its heap grows before it collects: the declared child size, never the capacity grant of the run, because the grant pays for every process of the run and a larger size only lets the child keep more garbage (36 refreshed projects in one process: 2 GiB peaks at 5.5 GB resident and 2.0 GB footprint, 8 GiB at 7.5 GB and 2.8 GB, with identical rows and wall time).
  * @see ./🧬️schema/🔣️.json */

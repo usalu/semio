@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "package",
+    "containing",
+    "specifier",
+    "output"
+  ],
+  "properties": {
+    "package": {
+      "type": "string",
+      "minLength": 1
+    },
+    "containing": {
+      "type": "string",
+      "minLength": 1
+    },
+    "specifier": {
+      "type": "string",
+      "minLength": 1
+    },
+    "output": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

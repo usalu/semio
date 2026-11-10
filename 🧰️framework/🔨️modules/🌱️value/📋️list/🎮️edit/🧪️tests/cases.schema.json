@@ -1,0 +1,107 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "denialAxes",
+    "stock",
+    "maximumTurns"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "input",
+          "index",
+          "item",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "insert",
+              "remove"
+            ]
+          },
+          "input": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "item": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "denialAxes": {
+      "const": [
+        "items",
+        "copy",
+        "depth",
+        "work"
+      ]
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "fuel"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

@@ -116,8 +116,21 @@ function sourceAnalysisProviderV1(provider){const registered=sourceAnalyses.get(
 /** 📁️ Directories one inference round already proved real; the round's final receipt still rechecks every recorded fact. */
 const roundDirectories=new WeakMap();
 const rowChecks=new WeakMap();
+function residentFactV1(fact){
+ if(fact===null||typeof fact!=="object")return true;
+ if(Array.isArray(fact))return fact.length<=32&&fact.every(residentFactV1);
+ for(const value of Object.values(fact)){
+  if(typeof value==="string"){if(value.length>8192)return false;}
+  else if(Array.isArray(value)){if(value.length>32)return false;}
+  else if(value!==null&&typeof value==="object"&&!residentFactV1(value))return false;
+ }
+ return true;
+}
+function residentRowsV1(rows){return rows.filter(row=>residentFactV1(row?.fact));}
 function projectObservationHoldsV1(row,parent){
  parent=inferenceValidationScopes.getStore()??parent;
+ const factText=JSON.stringify(row.fact);
+ if(factText.length>8192)return row.kind==="file"?fileFactHolds(row.path,row.fact)&&JSON.stringify(facts.file(row.path)?.sha256??null)===JSON.stringify(row.fact.sha256??null):current([row]);
  let checks=parent&&projectChecks.get(parent),rows=parent&&rowChecks.get(parent);if(parent&&!checks){checks=new Map();projectChecks.set(parent,checks);}if(parent&&!rows){rows=new Map();rowChecks.set(parent,rows);}
  const shared=rows?.get(row);if(shared!==undefined)return shared;
  const key=observationIdentityV1(row),fact=JSON.stringify(row.fact),previous=checks?.get(key);if(previous?.fact===fact){rows?.set(row,previous.holds);return previous.holds;}
@@ -148,6 +161,7 @@ export function adoptInferenceAuthorityV1(rows){
 export async function observeProjectInferenceV1({cachePath,key,owner,reusable,stamps=[],prepare},compute){
  requireCurrentObservationV1();requireInferenceReuseV1(reusable);originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
  const parent=scopes.getStore(),identity=sha256HexV1(JSON.stringify([recordStampV1(),null,key])),previous=projectImages.get(cachePath);
+ if(previous&&previous.identity!==identity){const stashedIdentity=sha256HexV1(JSON.stringify([recordStampV1(),inferenceAuthorityDigestV1(),key]));if(previous.identity===stashedIdentity)previous.identity=identity;}
  const inherit=rows=>{retainSourceFactsV1(rows);retainObservationsV1(parent,rows);};
  if(previous?.identity===identity&&previous.image!==null&&previous.observations.every(row=>projectObservationHoldsV1(row,parent))){
   const value=internJsonStringsV1(JSON.parse(previous.image.toString("utf8")),graphStringInternerV1);
@@ -403,6 +417,11 @@ export function recordClosureFactV1(path,answer){record("closure",path,answer);}
 /** 📏️ The entry counts of the in-process caches a graph construction fills (what {@link releaseInferenceMemoryV1} drops). */
 export function inferenceCacheSizesV1(){return {interned:rowTableV1.size(),rowStore:rowTableV1.stats(),analysisImages:sourceAnalysisImages.size,analysisBytes:sourceAnalysisBytes,settledReadBytes,fileRecordImageBytes,verifiedBlockRows,settledReads:settledReads.size,projectImages:projectImages.size,publications:originalInferencePublications.size,registryFiles:registryOwnersV1.stats().entries};}
 /** 🕊️ Drops every in-process cache a graph construction filled (interned rows, verified blocks, project images and publications, settled reads, analysis images, registry rows): they only save recomputation, a process that keeps them while it idles (a loader through a long Bazel phase) pins gigabytes. Safe only when no inference runs; the next inference refills what it needs. */
+export function releaseProjectInferenceRetentionV1(cachePath){
+ originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
+ const held=projectImages.get(cachePath);if(held?.image)retainedProjectImageBytes-=held.image.length;
+ retainedProjectImages.delete(cachePath);projectImages.delete(cachePath);
+}
 export function releaseInferenceMemoryV1(){
  rowTableV1.clear();verifiedBlocks.clear();verifiedBlockRows=0;blocksByIdentity.clear();blocksRefused.clear();
  settledReads.clear();settledReadBytes=0;fileRecordImages.clear();fileRecordImageBytes=0;sourceAnalysisImages.clear();sourceAnalysisBytes=0;
@@ -882,7 +901,7 @@ async function observeInferenceComputationV1({cachePath,key,reusable,prepare},co
   const digest = sha256HexV1(JSON.stringify([nestedProject?recordStampV1():OBSERVATION_REVISION, null, key])), hints = new Map(), authority=nestedProject?[]:[...loadObservations.values()];
   const lookup=async()=>{
   let candidate;
-  let record;try{record=readInferencePhysicalRecordV1(cachePath,true);}catch(error){if(!observationBlockDamagedV1(error))throw error;record=null;}if(record){const{header,line}=record;if(header.digest===digest){await settleClosureRowsV1(header.observations,record.value);if(nestedProject?sharedObservationsHoldV1(header.observations,parent):current(header.observations))candidate={value:record.value,header,headerDigest:sha256HexV1(line)};}for(const{kind,path,fact}of header.observations)if(kind==="file"&&typeof fact?.sha256==="string")hints.set(path,fact);}
+  let record;try{record=readInferencePhysicalRecordV1(cachePath,true);}catch(error){if(!observationBlockDamagedV1(error))throw error;record=null;}if(record){const{header,line}=record;if(header.digest===digest){await settleClosureRowsV1(header.observations,record.value);if(nestedProject?sharedObservationsHoldV1(header.observations,parent):current(header.observations))candidate={value:record.value,header,headerDigest:sha256HexV1(line)};}else await settleClosureRowsV1(header.observations,record.value);for(const{kind,path,fact}of header.observations)if(kind==="file"&&typeof fact?.sha256==="string")hints.set(path,fact);}
   if(candidate&&await inferenceReusableV1(reusable,candidate.value)&&(nestedProject?sharedObservationsHoldV1(candidate.header.observations,parent):current(candidate.header.observations))){const{header,value,headerDigest}=candidate;retainSourceFactsV1(header.observations);retainObservationsV1(parent,header.observations);usedInference.set(cachePath,headerDigest);originalInferencePublications.set(cachePath,{path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations});return{value};}
   return undefined;
   };

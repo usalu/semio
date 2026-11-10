@@ -2,7 +2,7 @@ import{graphMemoryAllocationV1,GRAPH_MEMORY_POLICY_V1}from"../../../../../🧠�
 import { createBoundedCacheV1 } from "../../../../../🧊️bounded/🟨️.mjs";
 import {noticeLanguagesV1} from "../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import { spawn } from "node:child_process";
-import { closeSync, constants, mkdtempSync, openSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { serialize } from "node:v8";
@@ -118,7 +118,7 @@ const reclaimedDirectoriesV1 = createBoundedCacheV1({ name: "inference:reclaimed
 /**
  * 🧵️ A pool of worker processes, each running one service module (`open(session, where)` once, then `run(job)` per job, one at a time). Every job ends as `{ reply }`, `{ failure }` (the service threw) or `{ lost }` (the process died or timed out on every attempt), so a caller decides what a failed job means; nothing is thrown except the abort reason of the signal.
  * A lost job is sent again to a fresh process up to `maximumAttempts` times; more than `maximumRestarts` lost processes disable the pool. `accept(identity)` decides whether a worker that announced its identity may serve; a refusal disables the pool. A worker that grew past its memory budget is replaced after its job; `retired(slot, generation)` tells the caller that a process is gone, so it can reclaim what that process left.
- * With `auxiliaryFile` every worker reads that private regular file as descriptor 3 (opened read-only and without following links for each start, so no two workers share a file offset; a file is read in one pass, a pipe needs this process scheduled for every chunk) and the channel moves to descriptor 4.
+ * With `auxiliaryFile` every worker reads that private regular file as descriptor 3 (opened read-only and without following links for each start, so no two workers share a file offset; a file is read in one pass, a pipe needs this process scheduled for every chunk) and the channel moves to descriptor 4. The same path is `SEMIO_GRAPH_WORKER_SNAPSHOT`, so a worker opens the file itself when descriptor 3 is not a regular file.
  */
 export function createFarmV1({ entry, service, session, workers, megabytes, environment = process.env, signal, policy = P, accept = () => true, report = () => {}, retired = () => {}, spawnProcess = spawn, runtime = graphFarmRuntimeV1(), command = process.execPath, commandArguments = [], auxiliaryFile = undefined }) {
   if (!Number.isSafeInteger(workers) || workers < 1) throw Error("Graph farm of at least one worker required");
@@ -127,7 +127,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
   const stats = { workers, jobs: 0, replies: 0, failures: 0, lost: 0, recycled: 0, started: 0, peakRssMegabytes: 0, queuedMilliseconds: 0, workedMilliseconds: 0, bootMilliseconds: 0 };
   let nextId = 0, closed = false, disabled, restarts = 0, sessionDirectory, sessionFile, readyAccept, closeWork;
   const ready = new Promise(done => { readyAccept = done; });
-  const childEnvironment = { ...environment, ...graphFarmRuntimeEnvironmentV1(runtime, megabytes, policy), SEMIO_GRAPH_WORKER: "1" };
+  const childEnvironment = { ...environment, ...graphFarmRuntimeEnvironmentV1(runtime, megabytes, policy), SEMIO_GRAPH_WORKER: "1", ...(auxiliaryFile === undefined ? {} : { SEMIO_GRAPH_WORKER_SNAPSHOT: auxiliaryFile }) };
   delete childEnvironment[policy.workersEnvironment];
 
   const settle = (job, value) => { if (job.settled) return; job.settled = true; clearTimeout(job.timer); job.resolve(value); };
@@ -180,14 +180,14 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     slot.state = "starting"; slot.generation++; slot.served = 0; slot.baseline = undefined; stats.started++; slot.spawned = performance.now();
     if (sessionFile === undefined) { sessionDirectory = createFarmTemporaryDirectoryV1("session", { policy }); sessionFile = join(sessionDirectory, "session.bin"); writeFileSync(sessionFile, serialize(session)); }
     let child, descriptor;
-    try { descriptor = auxiliaryFile === undefined ? undefined : openSync(auxiliaryFile, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0)); child = spawnProcess(command, [...commandArguments, entry], { stdio: descriptor === undefined ? ["ignore", "inherit", "inherit", "ipc"] : ["ignore", "inherit", "inherit", descriptor, "ipc"], serialization: "json", env: childEnvironment }); }
+    try { descriptor = undefined; child = spawnProcess(command, [...commandArguments, entry], { stdio: ["ignore", "inherit", "inherit", "ipc"], serialization: "json", env: childEnvironment }); }
     catch (error) { lose(slot, String(error?.message ?? error)); return; }
     finally { if (descriptor !== undefined) closeSync(descriptor); }
     slot.child = child;
     slot.timer = setTimeout(() => lose(slot, "init timeout"), policy.initTimeoutMilliseconds);
-    slot.timer.unref?.();
     child.on("message", message => {
       if (slot.child !== child) return;
+      if (message?.type === "listening") { try { child.send({ type: "init", service, sessionFile, slot: slot.index, generation: slot.generation }); } catch (error) { lose(slot, String(error?.message ?? error)); } return; }
       if (message?.type === "ready") {
         clearTimeout(slot.timer);
         if (!accept(message.identity)) { disable("identity differs"); return; }
@@ -213,7 +213,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     });
     child.once("exit", () => { if (slot.child === child) lose(slot, "exited"); });
     child.once("error", error => { if (slot.child === child) lose(slot, String(error?.message ?? error)); });
-    try { child.send({ type: "init", service, sessionFile, slot: slot.index, generation: slot.generation }); } catch (error) { lose(slot, String(error?.message ?? error)); }
+    
   };
   const pump = () => {
     if (closed || disabled !== undefined) return;
