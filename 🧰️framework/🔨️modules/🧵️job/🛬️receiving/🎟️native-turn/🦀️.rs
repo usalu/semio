@@ -1,17 +1,20 @@
 //! 🧵️ Job native authorities own their exact paid Source loans and recorded clock context.
 use semio_framework_job_context::{OriginalCallerSourceLoan,StepContext};
-use semio_framework_value_control_contract::{OriginalConstructionAccept,OriginalConstructionAcceptComplete,OriginalConstructionGrant,OriginalConstructionGrantComplete,OriginalConstructionRecipient,OriginalSourceTurnIdentity,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkRecipient,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,retained_clone_grant_admits};
-use std::{mem::{size_of,ManuallyDrop},sync::Mutex};
+use semio_framework_value_control_contract::{RetainedOwnerGate,OriginalConstructionAccept,OriginalConstructionAcceptComplete,OriginalConstructionGrant,OriginalConstructionGrantComplete,OriginalConstructionRecipient,OriginalSourceTurnIdentity,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkRecipient,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,retained_clone_grant_admits};
+use std::mem::{size_of,ManuallyDrop};
+#[path="🌱️birth/🦀️.rs"]
+mod birth;
+pub use birth::{OriginalJobReturnBirth,OriginalJobReturnBirthTurn,original_return_birth_quote,original_return_refresh_quote};
 fn refused(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 
 /// 🫴️ Lends the same actual Job context to Work and physical authorities for one native turn.
-pub struct OriginalJobNativeTurnContext<'view,'turn,'source>{context:&'view Mutex<&'turn mut StepContext<'source>>}
+pub struct OriginalJobNativeTurnContext<'view,'turn,'source>{context:&'view RetainedOwnerGate<&'turn mut StepContext<'source>>}
 impl<'view,'turn,'source> OriginalJobNativeTurnContext<'view,'turn,'source>{
- pub fn new(context:&'view Mutex<&'turn mut StepContext<'source>>)->Self{Self{context}}
+ pub fn new(context:&'view RetainedOwnerGate<&'turn mut StepContext<'source>>)->Self{Self{context}}
  /// 🧭️ Borrows the same actual Source for short-lived close validation.
  pub fn source_close_context(&self)->semio_framework_job_context::OriginalSourceCloseContext<'_>{semio_framework_job_context::OriginalSourceCloseContext::new(self.context)}
  /// 🔗️ Borrows the actual current Source only during this invocation.
- fn with_source<R>(&self,run:impl FnOnce(&mut StepContext<'source>)->R)->R{let mut context=self.context.lock().unwrap_or_else(|poison|poison.into_inner());run(&mut context)}
+ fn with_source<R>(&self,run:impl FnOnce(&mut StepContext<'source>)->R)->R{let mut context=self.context.try_lock().expect("original native turn context is never re-entered");run(&mut context)}
 }
 mod sealed{pub trait Sealed{}}
 impl sealed::Sealed for OriginalJobNativeTurnContext<'_,'_,'_>{}
@@ -31,7 +34,7 @@ impl OriginalJobNativeContext for OriginalJobNativeTurnContext<'_,'_,'_>{
  fn source_turn(&self)->Option<OriginalSourceTurnIdentity>{self.with_source(|cx|cx.original_source_turn_identity())}
  fn admit_work(&self,_observed:u64,additional:u64)->Result<bool,ValueError>{self.with_source(|cx|{let parent=cx.original_source_parent()?;if !parent.recorded_clock_allows(cx)?{return Ok(false)}Ok(additional<=cx.fuel_remaining())})}
  fn settle_work<'receipt>(&self,source:&OriginalCallerSourceLoan,check:OriginalWorkPartialCheck<'receipt>)->OriginalWorkPartialCheckComplete<'receipt>{self.with_source(|cx|source.settle_original_work(cx,check))}
- fn grant_construction(&self,demand:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{self.with_source(|cx|{let parent=cx.original_source_parent()?;if !parent.recorded_clock_allows(cx)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Source clock declined new construction"))}let grant=cx.retained_grant();if !retained_clone_grant_admits(grant,demand){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original Source declined construction extent"))}Ok(grant)})}
+ fn grant_construction(&self,demand:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{self.with_source(|cx|{let parent=cx.original_source_parent()?;if !parent.recorded_clock_allows(cx)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Source clock declined new construction"))}let grant=cx.retained_grant();if retained_clone_grant_admits(grant,demand){return Ok(grant)}if retained_clone_grant_admits(cx.original_source_total_grant(),demand){return Ok(RetainedCloneGrant::default())}Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original construction demand exceeds the whole grant of its Source and can never fit"))})}
  fn accept_construction(&self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{self.with_source(|cx|{let admitted=progress.fits(grant);cx.consume_retained(progress)?;if !admitted{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original construction exceeded its grant").with_retained_progress(progress))}Ok(())})}
 }
 trait SourceProducer:Sized{fn source(&self)->Option<&OriginalCallerSourceLoan>;fn new(source:OriginalCallerSourceLoan)->Self;fn take(&mut self)->Option<OriginalCallerSourceLoan>;fn ready(&self)->bool;}

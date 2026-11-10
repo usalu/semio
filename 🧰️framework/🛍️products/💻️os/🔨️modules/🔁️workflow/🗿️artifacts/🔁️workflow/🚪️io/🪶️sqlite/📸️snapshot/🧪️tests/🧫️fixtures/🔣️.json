@@ -21,7 +21,10 @@
               "id": "",
               "spec": {
                 "id": "",
-                "label": "\u0000世界",
+                "label": {
+                  "native": { "de": "世界\u0000", "en": "\u0000世界" },
+                  "reuse": { "de": "", "en": "😀" }
+                },
                 "direction": "out",
                 "mediaType": {
                   "class": "data",
@@ -36,7 +39,10 @@
               "id": "",
               "spec": {
                 "id": "./!@",
-                "label": "",
+                "label": {
+                  "native": { "de": "ä", "en": "a" },
+                  "reuse": { "de": "b", "en": "" }
+                },
                 "direction": "in",
                 "mediaType": {
                   "class": "twoD",
@@ -52,7 +58,10 @@
               "id": "\u0000😀",
               "spec": {
                 "id": "",
-                "label": "",
+                "label": {
+                  "native": { "de": "", "en": "" },
+                  "reuse": { "de": "", "en": "" }
+                },
                 "direction": "in",
                 "mediaType": {
                   "class": "presentation",

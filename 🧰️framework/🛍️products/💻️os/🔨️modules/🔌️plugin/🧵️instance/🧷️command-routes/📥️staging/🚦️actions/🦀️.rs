@@ -55,9 +55,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let meta=metadata.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original host metadata was not restored after typing"))?;
         if !self.original_emission.advance_host(cx)?{return Ok(None)}
         if matches!(source.original_tool_tag,Some(ToolTag::Scrub(_))){
-            use semio_framework_job::{OriginalConstructionDemand,admit_original_construction};
             let bytes=std::mem::size_of::<(ToolTag,Option<ToolTag>,Option<semio_plugin_tool_machine::ScrubTag>)>();
-            admit_original_construction(cx,&mut source.original_press_tag,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{let Some(ToolTag::Scrub(tag))=source.original_tool_tag.take()else{unreachable!()};RetainedWorkOutcome{result:Ok((tag,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;
+            let p=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};
+            if !cx.is_cancelled()&&!cx.should_yield()&&cx.fuel_remaining()>=1&&p.fits(cx.retained_grant()){cx.consume_retained(p)?;cx.consume_fuel(1);let Some(ToolTag::Scrub(tag))=source.original_tool_tag.take()else{unreachable!()};source.original_press_tag=Some(tag);}
             return Ok(None)
         }
         if source.original_press_result.is_none(){

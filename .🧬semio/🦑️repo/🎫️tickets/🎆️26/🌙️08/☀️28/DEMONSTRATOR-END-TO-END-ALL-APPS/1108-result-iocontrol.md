@@ -1,0 +1,60 @@
+# iocontrol (semio-framework-io-control decode redesign)
+State: lib FIXED-verified native W-iocontrol-2 (rc 0) and wasm32-wasip2 W-iocontrol-3 (rc 0).
+- value-native-decoding: added NativeDecodeControl::{cancel_constructed_action, settle_constructed_progress} (cancel unspent granted action; post actual span + finish_accepted/finish_refused).
+- io-control: decode quote now holds an OriginalConstructionAction (NativeSnapshotConstruction token replaces the bare grant in NativeSnapshotBodyWallet::admit_constructed / record_constructed_progress and NativeSnapshotDecodeOwner likewise); NativeSnapshotDecodeEffectQuote holds the action through run/post_decode/cancel_decode; SnapshotAdmission decode quote_frame = hold+cancel, submit_frame = hold+settle (same shape as encode quote_construction); settlement begin_effect_settlement gets maximum_work=1.
+- Wallet type kept (local ledger, ~70 downstream files use it); no grant is minted locally, all grants come from the recipient action. Debt: full removal is a fleet-wide API change.
+Rerun: "$C/1105b-tools/chk.sh" W-iocontrol-<n> <io-control Cargo.toml> native
+- --tests W-iocontrol-4: rc 1, blocked upstream in dev-dep semio-framework-dsl-record-model (26 errors, close_step/PersistentListBuilder ports); no io-control error reached. Existing io-control tests only pass the admit_constructed result through to record_constructed_progress (shape-compatible).
+
+STATUS: FIXED-verified W-iocontrol-3
+
+## dsl-record-model (coordinator follow-up)
+- FIXED-verified lib native W-iocontrol-10 and wasm32-wasip2 W-iocontrol-11 (rc 0).
+- Changes: OwnedFieldReceiving::advance_nested gains `witness:OriginalSourceTurnWitness<'_>` after `native` (contract, vector, persistent, intrinsic, wrapping, storage, mapping, transparent, derive ✨️derive/📥️owned; re-exported as receiving::owned::OriginalSourceTurnWitness; external caller store native-snapshot 🫴️receiving must pass the turn witness). Persistent cursor drives PersistentListBuilder via advance_into/finish_into/adopt_into/take_into, paid begin_close_paid then close_into, sealed birth via prepare_birth/publish. Intrinsic cursor: receiver begin_close_into then RetirementCursor::close_into, take_output(effect), step_progress/primary helpers. `body` args added to close_step calls; encode projection of NativeAllocationRefusal (Owned shown, Retained null). value-native-owned 🔄️map: one import (RetainedCursorRelease).
+- Not compiled: derive crate expansion in a consumer; ErasedSnapshotRetirement::close_step is called with body arg ignored by the intrinsic cursor.
+- io-control --tests W-iocontrol-12 rc 1: blocked by next dev-dep semio-framework-dsl-record-emission (🛫️encoding: RetirementCursor::close_step removed, retirement.step needs body) - 5 errors in 🗣️dsl/🧬️schema/🖨️printing/..../🛫️encoding/🦀️.rs lines 63, 92, 329. Not touched.
+STATUS: FIXED-verified W-iocontrol-11
+
+## store native-snapshot + presence json (advance_nested callers): BLOCKED on witness plumbing
+Nothing edited in these two files. Findings:
+- Both need an `OriginalSourceTurnWitness` for `NativeReceivingOriginal::advance` / `OwnedFieldReceiving::advance_nested` (store 🫴️receiving `step` line ~70; presence 🔤️json `frame.advance(native,...)`).
+- No witness is reachable there: `NativeSnapshotDecodeOwner` holds only `native`+grant, and `cx.with_native_receiving(|native,grant|..)` (job-context 🦀️.rs:191) hands the closure no witness. `cx.original_source_turn_witness()` borrows cx, which conflicts with the `&mut cx` call, so callers cannot fetch it beforehand.
+- ~12 plugin callers use `decode_presence_json(bytes, owner)`, so the witness has to live in the owner.
+- Proposed design (needs owner of job-context/job-receiving + io-control): `with_native_receiving` closure gets `(native, grant, witness)`; `NativeSnapshotDecodeOwner::new(native, grant, witness)` stores it (Copy); `owner.receive` callbacks and `step(...)` take it from the owner. Presence json then ports: `admission.take_output(&mut original, effect)` via effect_step with `take_output_demand()`; receiver `begin_close_into` + `RetirementCursor::close_into` through a borrowed reply slot (same helpers as dsl-record-model intrinsic `receiver_close`); `frame.take` stays poll-shaped.
+- Derive consumer compile (OwnedFieldReceiving expansion) and io-control --tests not run: --tests waits on dsl-record-emission (declint).
+STATUS: BLOCKED witness plumbing (job-context with_native_receiving + NativeSnapshotDecodeOwner) for store native-snapshot and presence json
+
+## Witness plumbing (coordinator-approved; deviation: rides on NativeDecodeControl, no closure-arity change)
+- `NativeDecodeControl` gained `source: Option<OriginalSourceTurnWitness<'a>>` with `bind_source_witness` / `source_witness()?`; carried through all four control rebuilds (child, construction run, observer, work). `NativeRetirementDecodeContinuation::decode(progress, source, op)` binds it. job-receiving state `receive/run_on_caller/run_scoped_on_caller` take `source`; job-context 🛬️owned destructures `source_turn` and passes `token().witness()`. This leaves all ~80 `with_native_receiving(|native,grant|..)` callers and the ~12 plugin `decode_presence_json` callers unchanged (no closure arity change, no owner field).
+- store native-snapshot 🫴️receiving: `native.source_witness()?` passed to `advance_nested` (edited, UNVERIFIED: store codec closure red upstream: replication-mutation 🌐️foreign close_step body arg, artifact-reference derive paths).
+- presence json: take_output via effect_step, receiver begin_close_into + RetirementCursor::close_into (receiver_close), advance with witness. FIXED-verified native W-iocontrol-19, wasm32-wasip2 W-iocontrol-21 (semio-os-presence-native-snapshot rc 0).
+- job-receiving lib FIXED-verified native W-iocontrol-22, wasm W-iocontrol-23; value-native-decoding compiles within them.
+- job-context 🛬️owned edit UNVERIFIED: W-iocontrol-18 stops at semio-framework-job-failure (RetirementCursor::close_step removed, step body arg; 5 errors in 📦️domain/🦀️.rs and 📦️frame/🦀️.rs) - not mine.
+- Not done: derive consumer compile for OwnedFieldReceiving expansion; io-control --tests (waits declint dsl-record-emission).
+STATUS: FIXED-verified W-iocontrol-23 (job-receiving, presence json); store native-snapshot and job-context unverified (upstream)
+
+## job-failure / job-context (coordinator follow-up)
+- job-failure: already fixed by toolrun; my check W-iocontrol-25 native rc 0 (wasm by W-toolrun-39).
+- job-context W-iocontrol-26 native: 61 errors, none from the witness edit. Heaviest: 📬️outcome/⏸️continuation/🎟️source (16+10+9+2), 🎟️source (10+5+4: CancelTokenRetirement, ReturnCell, RetirementCursor::close_step), ♻️retirement/🎟️context (OriginalRetirementFailure path), 🛬️owned lines 56 and 62 (private `OriginalReturnBudget.table`; only `table()` getter exists, no mutable one), 📸️capture. These are escrow/construct Source-continuation work; I left them.
+- Source budget: not re-measurable while the crate is red; my change adds ~170 bytes to 🛬️owned/🦀️.rs (12.9 KB file) and nothing else in job-context.
+STATUS: FIXED-verified W-iocontrol-23 (job-receiving, presence json); job-context blocked by 61 Source-continuation errors outside this lane
+
+## job-context (coordinator: "yours now"): 61 -> 15 errors (W-iocontrol-26 -> W-iocontrol-31, native)
+Root cause: HEAD (733) job-context was never ported to the same commit's budget/receiving redesign; the 61 errors are 733 fallout, not the witness edit.
+Done: budget crate got `table_mut()` / `publisher_mut()` (additive); budget-field reads/writes ported to accessors in 📬️outcome/⏸️continuation/🎟️source/{🦀️,🛡️guard,📤️header,📮️exposure}.rs and 🛬️owned; re-exported CancelTokenRetirement(+Error) in ⏱️context/🦀️.rs:33; SourceRetirement uses reply-shaped `close_into`; `OriginalRetirementFailure` paths fixed; `ReturnCell` alias added to the job-receiving native-source macro (733 omission); `close_original_effect_step` made generic over `E:Into<OriginalTurnPrimary>`; child/source closes ported to `close_original_(retained_)effect_step` (effect-shaped: witnessed close, ledger close, cancel return_alias_step, owned-loan return_borrowed_alias).
+Remaining 15 (all one design gap, not mechanical):
+- Table/publisher/origin BIRTH in 📬️outcome/⏸️continuation/🎟️source/🦀️ (`admit_original_return_table` line 76, `admit_original_escrow_publisher` line 65) still use removed `OriginalReturnEscrowTable::admit`, `OriginalEscrowPublisher::admit`, `budget.bind(..)`, direct `budget.table=Some(..)`. 733's budget exposes the two-phase birth instead (`table_birth_demand`, `bind_table_birth_action(origin_proof, NativeReceivingConstructionBinding, effect)`, `advance_table_birth(.., reply)`, `stage_initial_origin`, `refresh_turn`, `*_with_post`, accepted-proof locks) and needs a receiving-frame/construction-binding driver in StepContext that does not exist yet. That driver is the other machine's unpushed part; it needs a design owner (escrow/construct), not a port.
+- Same cause: 🏠️native macro (`table` private, MutexGuard vs RetainedOwnerGateGuard, Result type mismatches), 📮️exposure `origin` private, 📤️header `close_header_failure_step` removed + double &mut borrow, 📸️capture unresolved self-crate import (cascade).
+STATUS: BLOCKED job-context birth protocol (table/publisher/origin two-phase births) needs a design owner; 46 of 61 errors fixed
+
+## Final verification round (coordinator: job-context green)
+- store codec (native-snapshot witness edit): W-iocontrol-32 rc 1, all 30 shown errors are replication-mutation retained-field/diff/set-field/span/patch/diagnostic (RetainedFieldPreparation advance/close_step, 2-vs-3 arg), none in native-snapshot 🫴️receiving. Edit stays UNVERIFIED until retfield/bridge lands replication-mutation.
+- io-control --tests: W-iocontrol-33 rc 1, blocked in dev-dep crates job-park (2), job-testing-caller (4), job-return (6) (OriginalCallerSourceParent::admit gone, close_original_effect_step not exported at crate root for job-return, private close_step/into_source_loan/into_borrowed_parent). io-control's own tests unreached; unit tests not run.
+- job-context source budget: not re-measured by me (the measuring tool is the coordinator's); my net change to job-context is +~170 B in 🛬️owned plus ~equal-size rewrites in 🎟️source/👶️child and 🎟️source/🦀️.
+STATUS: FIXED-verified W-iocontrol-23 (job-receiving, presence json); store codec + io-control --tests blocked upstream (replication-mutation; job-park/job-return/job-testing-caller)
+
+## semio-framework-job + io-control tests (final)
+- semio-framework-job FIXED-verified native W-iocontrol-38, wasm32-wasip2 W-iocontrol-39: return/worker closes via close_original_retained_effect_step, page transfer inside with_original_effect, `admit_original_construction` on OriginalEffectAuthority + new `ConstructionProducer`/`ConstructionRun` (witness from native.source_witness(); work topped up through the effect; child failure kept via child_primary). No callers found in 🔨️modules/✏️s; compile-checked only.
+- io-control own tests NOT ported (stopped at context limit). W-iocontrol-40 `--tests` rc 1, all errors in io-control test files (~260 KB across 🧪️tests/{🦀️,🧾️receipt,🧭️drive,♻️settlement,🥣️companion,nested-io}, 🧾️failure/🧪️tests, 🛫️snapshot/🧪️tests, 📦️octets/🧪️tests): removed NativeDecodeConstructionRecipient / NativeDecodeWorkRecipient / NativeConstructionRecipientIssuer / NativeEncodeConstructionRecipient / NativeEncodeWorkRecipient, RetireOwned::Retirement, `super` depth in 🧾️failure/🧪️tests, and four duplicate #[global_allocator] (📦️packages lib line 3, 🧪️testing/🧪️tests:3, 🧪️tests/🥣️companion:3, 🧪️tests/♻️settlement:6) against semio_framework_value_testing's allocator. Port target: the OriginalWorkFixture / EffectBank harness (value 🧪️testing/📥️admission/receiver-driver.rs, 🎟️effect) as in 1108-result-receivers2.md. No pass counts exist.
+- Lib state: io-control lib green native+wasm (W-iocontrol-2/3).
+STATUS: BLOCKED io-control test port not done (context limit); libs FIXED-verified W-iocontrol-3, W-iocontrol-39

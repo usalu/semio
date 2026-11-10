@@ -251,7 +251,7 @@ pub fn drawing_io() -> semio_framework::AppIo {
 pub fn drawing_vector_out_port() -> semio_framework::MediaPortSpec {
     semio_framework::MediaPortSpec {
         id: "vector:out".into(),
-        label: "Vector".into(),
+        label: LocalizedLabel::native("Vector", "Vektor"),
         direction: semio_framework::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: Some("2d.drawing".into()),

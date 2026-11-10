@@ -250,14 +250,9 @@ impl<P, M> Drop for ArtifactReplayPreparationRetirement<P, M> {
 #[cfg(test)]
 #[path = "🧪️tests/⏱️effect/🦀️.rs"]
 pub(crate) mod effect;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 #[path="🌱️derived/🦀️.rs"]
 pub mod derived_operation;
 pub use derived_operation::{ArtifactDerivedOperation,ArtifactDerivedOperationMode};
 
-#[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+

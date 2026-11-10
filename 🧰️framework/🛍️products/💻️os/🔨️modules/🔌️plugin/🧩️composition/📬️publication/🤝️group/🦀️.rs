@@ -156,7 +156,7 @@ pub struct PrivateOwnedPublicationLane {
             }
             if let Some(publication)=self.publication.as_mut(){
                 if publication.requires_receiving_close(){
-                    let before=cx.retained_progress();let called=cx.with_native_retirement_receiving_value(&mut self.native_scope,|native,issued|{let turn=publication.close_receiving_native(native,issued.maximum_copy_bytes,issued);Ok(turn.result.map(|_|()))})?;
+                    let before=cx.retained_progress();let called=cx.with_native_retirement_receiving_value(&mut self.native_scope,(grant,cx.fuel_remaining()),|native,issued|{let turn=publication.close_receiving_native(native,issued.maximum_copy_bytes,issued);Ok(turn.result.map(|_|()))})?;
                     if !called{return Ok(RetainedCloneStep::Progress(Default::default()))}
                     let after=cx.retained_progress();let progress=RetainedCloneProgress{copied_items:after.copied_items.checked_sub(before.copied_items).ok_or_else(||ValueError::invariant("original Source item receipt regressed"))?,copied_bytes:after.copied_bytes.checked_sub(before.copied_bytes).ok_or_else(||ValueError::invariant("original Source copy receipt regressed"))?,retained_capacity_bytes:after.retained_capacity_bytes.checked_sub(before.retained_capacity_bytes).ok_or_else(||ValueError::invariant("original Source capacity receipt regressed"))?,released_bytes:after.released_bytes.checked_sub(before.released_bytes).ok_or_else(||ValueError::invariant("original Source release receipt regressed"))?};
                     return Ok(RetainedCloneStep::Progress(progress))

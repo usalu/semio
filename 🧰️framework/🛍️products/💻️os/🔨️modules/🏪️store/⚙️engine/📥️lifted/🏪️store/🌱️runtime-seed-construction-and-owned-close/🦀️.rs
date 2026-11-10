@@ -364,7 +364,7 @@ where
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
             }
             if !self.owners.factory_retirement_tickets.terminal_is_empty() {
-                let step = semio_framework_value::RetirementPollExit::resume(self.owners.factory_retirement_tickets.close_step(&mut effect.nested(child)))?;
+                let step = semio_framework_value::RetirementPollExit::resume(self.owners.factory_retirement_tickets.close_step(effect.grant().maximum_copy_bytes,&mut effect.nested(child)))?;
                 semio_framework_value::retained_clone::admit_retained_clone_close(child, step, self.owners.factory_retirement_tickets.terminal_is_empty(), "store factory tickets")?;
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }

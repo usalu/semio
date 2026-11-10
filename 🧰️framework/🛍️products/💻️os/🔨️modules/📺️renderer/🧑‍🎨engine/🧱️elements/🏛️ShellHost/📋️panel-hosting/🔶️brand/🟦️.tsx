@@ -114,7 +114,7 @@ export function useBrandState({ core }: { readonly core: ShellCoreAfterDockAssem
       <div key="logoAndTitle" className="flex min-w-0 shrink-0 items-center gap-single">
         {brand?.logoSvg ? <ShellBrandLogo svg={brand.logoSvg} className="size-workbench shrink-0" /> : <SemioLogo className="size-workbench shrink-0" />}
         <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
-          <ResponsiveLabel full={brand?.windowTitle ?? appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology))} short={brand?.shortWindowTitle} />
+          <ResponsiveLabel full={brand?.windowTitle ?? appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology, uiLocale))} short={brand?.shortWindowTitle} />
         </span>
         <span data-slot="surface-role-chip" data-role={session.app.role} data-app-id={session.app.id} title={session.app.role === "viewer" ? viewerReadOnlyNoticeText(uiLocale) : undefined} className="rounded-sm border border-border px-single text-xs text-muted-foreground">
           {surfaceRoleChipText(session.app.role, uiLocale)}

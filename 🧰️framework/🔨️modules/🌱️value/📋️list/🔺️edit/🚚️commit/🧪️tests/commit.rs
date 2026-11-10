@@ -1,0 +1,55 @@
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value_control_contract::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome};
+use semio_framework_value_retained_clone::retained_clone::{RetainedCloneRef,retained_clone_grant_admits};
+use semio_framework_value_retirement::RetirementDemand;
+use semio_framework_value_testing_allocator::observe_retirement_allocations;
+use semio_framework_value_edit::*;
+#[path="../../🧪️tests/support.rs"] mod support;
+use indexed_collection_commit::IndexedCollectionCommit;
+use semio_framework_value_retained_clone::retained_clone::RetainedCloneSource;
+use semio_framework_value_retirement::retirement::{RetireOwned,controlled::ControlledRetirement};
+#[derive(semio_framework_value_derive::RetainedClone,semio_framework_value_derive::RetireOwned)]#[value(crate="semio_framework_value")]
+struct Row{id:u64,text:String}
+impl Clone for Row{fn clone(&self)->Self{panic!("unchanged owned row must never be cloned")}}
+fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+fn source<T:RetireOwned+Sync+'static>(value:T)->RetainedCloneSource<T>{let d=RetainedCloneSource::<T>::owned_constructor_demand::<()>();semio_framework_value_clone_source_testing::admit_owned(&mut semio_framework_value_testing_effect_bank::EffectBank::new(semio_framework_value_testing_effect_bank::Wallet::new(RetainedCloneGrant{maximum_items:1048576,maximum_copy_bytes:16777216,maximum_capacity_bytes:16777216,maximum_release_bytes:33554432,maximum_depth:256},1048576)),value,(),grant(RetirementDemand{copy_bytes:RetainedCloneSource::<T>::constructor_copy_bytes()+4096,capacity_bytes:d.capacity_bytes,depth:d.depth,..Default::default()})).result.unwrap_or_else(|recovery|panic!("{:?}",recovery.error())).0}
+fn drain<T:RetireOwned>(value:T){let mut owner=support::driver::Rig::new(ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap());let mut turns=0;while !owner.terminal_is_empty(){let d=owner.selected_demand(4096).unwrap();assert!(d.copy_bytes<=4096);let issued=RetainedCloneGrant{maximum_copy_bytes:4096,..grant(d)};let(answer,heap,_)=owner.turn(issued,|owner,recover,effect,reply|if recover{owner.recover_step_into(4096,effect,reply)}else{owner.step_into(4096,effect,reply)});let step=answer.unwrap();assert!(step.progress().fits(issued));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));turns+=1;assert!(turns<100000,"indexed commit output retirement did not settle: {d:?}");}}
+/// 🏁️ One fresh commit action recorded directly into its original reply.
+fn advance_turn(owner:&mut support::driver::Rig<IndexedCollectionCommit<Row>>,plan:&IndexedEditPlan,post:&mut Option<Vec<Row>>,field:Option<RetainedCloneRef<'_,Row>>,issued:RetainedCloneGrant)->(RetainedCloneStep,(usize,usize)){let(answer,heap,_)=owner.turn(issued,|owner,recover,effect,reply|if recover{owner.recover_advance_into(plan,post,field,4096,support::effect::WORK,effect,reply)}else{owner.advance_into(plan,post,field,4096,support::effect::WORK,effect,reply)});(answer.unwrap(),heap)}
+fn close_commit_turn(owner:&mut support::driver::Rig<IndexedCollectionCommit<Row>>,issued:RetainedCloneGrant)->(RetainedCloneStep,(usize,usize)){let(answer,heap,_)=owner.turn(issued,|owner,recover,effect,reply|{let body=effect.grant().maximum_copy_bytes;if recover{owner.recover_close_into(body,effect,reply)}else{owner.close_into(body,effect,reply)}});(answer.unwrap(),heap)}
+fn close_plan_turn(plan:&mut IndexedEditPlan,issued:RetainedCloneGrant)->(RetainedCloneStep,(usize,usize)){let(answer,heap,_)=support::driver::close_turn(plan,IndexedEditPlan::new(plan.shape()),issued);(answer.unwrap(),heap)}
+fn close_plan(plan:&mut IndexedEditPlan){plan.begin_close();let mut turns=0;while !plan.terminal_is_empty(){let d=plan.close_demand(4096).unwrap();assert!(d.copy_bytes<=4096);let issued=RetainedCloneGrant{maximum_copy_bytes:4096,..grant(d)};let(step,heap)=close_plan_turn(plan,issued);assert!(step.progress().fits(issued));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));turns+=1;assert!(turns<100000,"indexed plan retirement did not settle: {d:?}");}}
+fn close_source<T:RetireOwned+Sync+'static>(source:RetainedCloneSource<T>){let mut source=support::driver::Rig::new(source);let mut turns=0;while !source.terminal_is_empty(){let d=source.next_close_demand(4096).unwrap();assert!(d.copy_bytes<=4096);let issued=RetainedCloneGrant{maximum_copy_bytes:4096,..grant(d)};let(answer,heap,_)=source.turn(issued,|source,recover,effect,reply|if recover{source.recover_close_into(4096,effect,reply)}else{source.close_into(4096,effect,reply)});let step=answer.unwrap();assert!(step.progress().fits(issued));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));turns+=1;assert!(turns<100000,"indexed commit source retirement did not settle: {d:?}");}}
+fn check(base:Vec<String>,removed:Vec<usize>,added:Vec<(usize,String)>,expected:Vec<String>,cut:Option<usize>){
+ let base_bytes:usize=base.iter().map(String::len).sum();let added_bytes:usize=added.iter().map(|(_,s)|s.len()).sum();let limit=1024+200*(base_bytes+added_bytes+base.len()+added.len());
+ let mut plan=IndexedEditPlan::new(IndexedEditShape{base_len:base.len(),removed:removed.len(),modified:0,added:added.len()});
+ while !plan.settled(){let d=plan.demand().unwrap();let step=support::effect::settle(grant(d),|effect|plan.advance(effect,|kind,index|RetainedWorkOutcome{result:Ok(match kind{IndexedEditKind::Removed=>removed[index],IndexedEditKind::Added=>added[index].0,_=>unreachable!()}),work:1})).result.unwrap();assert!(!matches!(step,IndexedEditStep::Refused(..)));}assert!(plan.ready());
+ let mut post:Option<Vec<Row>>=Some(base.into_iter().enumerate().map(|(id,text)|Row{id:id as u64,text}).collect());let original_backing=post.as_ref().unwrap().as_ptr();let original_payloads:Vec<*const u8>=post.as_ref().unwrap().iter().map(|row|row.text.as_ptr()).collect();
+ let original_count=post.as_ref().unwrap().len();let mut expected_ids:Vec<u64>=(0..original_count).filter(|index|!removed.contains(index)).map(|index|index as u64).collect();let mut added_order:Vec<usize>=(0..added.len()).collect();added_order.sort_by_key(|index|added[*index].0);for ordinal in added_order{expected_ids.insert(added[ordinal].0,(original_count+ordinal)as u64);}
+ let mut authored=source(added.into_iter().enumerate().map(|(id,(_,text))|Row{id:(original_count+id)as u64,text}).collect::<Vec<_>>());let authored_pointers:Vec<*const u8>=authored.borrow().get().iter().map(|row|row.text.as_ptr()).collect();
+ let(mut owner,heap)=observe_retirement_allocations(||support::driver::Rig::new(IndexedCollectionCommit::<Row>::new()));assert_eq!(heap,(0,0));let mut turns=0;
+ while !owner.complete()&&cut.is_none_or(|cut|turns<cut){
+  let ordinal=owner.next_added_ordinal(&plan).unwrap();let field=ordinal.map(|index|authored.borrow().project(index,|rows|&rows[index]));let d=owner.demand(&plan,&post,field,4096,support::effect::WORK).unwrap();let issued=RetainedCloneGrant{maximum_copy_bytes:4096.max(d.copy_bytes),..grant(d)};
+  let(step,heap)=advance_turn(&mut owner,&plan,&mut post,field,RetainedCloneGrant{maximum_items:0,..issued});assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));
+  if d.capacity_bytes>0{let(step,heap)=advance_turn(&mut owner,&plan,&mut post,field,RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes-1,..issued});assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
+  let(step,heap)=advance_turn(&mut owner,&plan,&mut post,field,issued);assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress().fits(issued));turns+=1;assert!(turns<limit);
+  if let Some(first)=owner.remaining().first(){assert_eq!(first.text.as_ptr(),original_payloads[first.id as usize]);assert_eq!(owner.remaining().as_ptr(),original_backing.wrapping_add(first.id as usize));}
+ }
+ if cut.is_none(){assert!(owner.complete());let rows=post.as_ref().unwrap();assert_eq!(rows.iter().map(|row|row.text.as_str()).collect::<Vec<_>>(),expected.iter().map(String::as_str).collect::<Vec<_>>());assert_eq!(rows.iter().map(|row|row.id).collect::<Vec<_>>(),expected_ids);for row in rows{if (row.id as usize)<original_count{assert_eq!(row.text.as_ptr(),original_payloads[row.id as usize]);}else if !row.text.is_empty(){assert_ne!(row.text.as_ptr(),authored_pointers[row.id as usize-original_count]);}}if plan.shape().removed==0&&plan.shape().added==0{assert_eq!(rows.as_ptr(),original_backing);}}
+ for(index,row)in authored.borrow().get().iter().enumerate(){assert_eq!(row.text.as_ptr(),authored_pointers[index]);}
+ owner.control(|owner|owner.begin_close());let mut close_turns=0;while !owner.terminal_is_empty(){let d=owner.close_demand(4096).unwrap();assert!(d.copy_bytes<=4096);let issued=RetainedCloneGrant{maximum_copy_bytes:4096,..grant(d)};let(step,heap)=close_commit_turn(&mut owner,RetainedCloneGrant{maximum_items:0,..issued});assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));let(step,heap)=close_commit_turn(&mut owner,issued);assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));close_turns+=1;assert!(close_turns<limit,"commit close stalled: quote {d:?} issued {issued:?} step {:?}",step.progress());}
+ assert_eq!(observe_retirement_allocations(||drop(owner)).1,(0,0));close_plan(&mut plan);close_source(authored);if let Some(rows)=post{drain(rows)}
+}
+/// 🧪️ Actual native object headers preserve survivor allocations and close exact originals at every neutral frontier.
+#[test]
+fn indexed_collection_commit_preserves_original_payloads_and_exact_cancellation(){
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🚚️commit/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ for row in fixture["cases"].as_array().unwrap(){for cut in std::iter::once(None).chain(fixture["cancelCuts"].as_array().unwrap().iter().map(|cut|Some(cut.as_u64().unwrap()as usize))){
+  let strings=|key:&str|row[key].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_string()).collect::<Vec<_>>();let removed=row["removed"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize).collect();let added=row["added"].as_array().unwrap().iter().map(|value|(value["index"].as_u64().unwrap()as usize,value["item"].as_str().unwrap().to_string())).collect();check(strings("base"),removed,added,strings("expected"),cut);
+ }}
+}
+/// 📦️ Long authored fields remain on real native projection cursors instead of a whole-row Clone shortcut.
+#[test]
+fn indexed_collection_commit_copies_large_authored_fields_without_cloning_survivors(){
+ for cut in[Some(0),Some(2),Some(9),Some(17),Some(1025),None]{check(vec!["original-left".into(),"original-right".into()],vec![],vec![(1,"x".repeat(65537))],vec!["original-left".into(),"x".repeat(65537),"original-right".into()],cut);}
+}

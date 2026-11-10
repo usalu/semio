@@ -76,11 +76,9 @@ impl Drop for RegisteredActionBusAlias {
 pub struct RegisteredSourceRetirement {
     source: ManuallyDrop<Option<RegisteredActionBusSource>>,
 }
-impl RetirementCursor for RegisteredSourceRetirement {
-    fn next_demand(&self, _: usize) -> Result<RetirementDemand, ValueError> {
-        Ok(if self.source.is_some() { RetirementDemand { copy_bytes: size_of::<Option<RegisteredActionBusSource>>(), depth: 1, ..Default::default() } } else { Default::default() })
-    }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetirementStep {
+use semio_framework_value::retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete};
+impl RegisteredSourceRetirement {
+    fn close_registered(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetirementStep {
         if self.source.is_none() {
             return RetirementStep::Complete(0);
         }
@@ -92,6 +90,14 @@ impl RetirementCursor for RegisteredSourceRetirement {
         let work = match semio_framework_value::retirement::record_retirement_work(effect, 1) { Ok(work) => work, Err((error, work)) => return RetirementStep::Failure(error.into(), work) };
         drop(self.source.take());
         RetirementStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() }, work)
+    }
+}
+impl RetirementCursor for RegisteredSourceRetirement {
+    fn next_demand(&self, _: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(if self.source.is_some() { RetirementDemand { copy_bytes: size_of::<Option<RegisteredActionBusSource>>(), depth: 1, ..Default::default() } } else { Default::default() })
+    }
+    fn close_into<'reply>(&mut self, _: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: OriginalEffectReply<'reply, RetirementStep, semio_framework_value::OriginalRetirementFailure>) -> Result<OriginalEffectReplyComplete<'reply, RetirementStep, semio_framework_value::OriginalRetirementFailure>, ValueError> {
+        Ok(reply.complete(Ok(self.close_registered(effect))))
     }
     fn next_computational_work(&self, _: usize) -> Result<u64, ValueError> {
         Ok(u64::from(self.source.is_some()))

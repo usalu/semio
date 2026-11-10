@@ -1,5 +1,5 @@
 //! ⏸️ An actual caller delegates its remaining wallet once and retains the owned issuing recipient through await.
-use semio_framework_job_context::{StepContext,StepBudget,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalRetainedLoanIdentity,OriginalTurnFailure,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,InteractiveJobCloseStep,OriginalSourceBinding,OriginalSourceTurn,ParkedState,receive_original_retained_work};
+use semio_framework_job_context::{OriginalSourceTurnWitness,StepContext,StepBudget,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalRetainedLoanIdentity,OriginalTurnFailure,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,InteractiveJobCloseStep,OriginalSourceBinding,OriginalSourceTurn,ParkedState,receive_original_retained_work};
 use semio_framework_value_retained_clone::{ValueError,ValueRefusalKind};
 use std::mem::ManuallyDrop;
 
@@ -43,7 +43,7 @@ impl OriginalOwnedCallerTurn{
     pub fn original_epoch(&self)->u64{self.epoch}
     pub fn original_clock(&self)->fn()->Option<u64>{self.clock}
     /// 🤝️ See `README.md`.
-    pub async fn execute<R>(mut self,run:impl for<'turn> AsyncFnOnce(&mut StepContext<'turn>,super::OriginalSourceTurnWitness<'turn>)->Result<R,OriginalTurnFailure>)->OriginalOwnedCallerReturn<R>{
+    pub async fn execute<R>(mut self,run:impl for<'turn> AsyncFnOnce(&mut StepContext<'turn>,OriginalSourceTurnWitness<'turn>)->Result<R,OriginalTurnFailure>)->OriginalOwnedCallerReturn<R>{
         let mut receiving_refusal=None;
         let original=if self.issued||!self.ready{Err(ValueError::invariant("owned original turn cannot issue its wallet twice").into())}else{
             self.issued=true;let wallet=self.wallet.take().expect("one sealed original wallet remains before its only issue");let budget=StepBudget{fuel:wallet.fuel,deadline_us:wallet.deadline,retained:wallet.grant};

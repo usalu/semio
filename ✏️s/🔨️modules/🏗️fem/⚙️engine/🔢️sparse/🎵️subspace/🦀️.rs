@@ -24,6 +24,8 @@ use semio_framework_job::StepContext;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
 use semio_s_fem_sparse::numerical_close_original;
+use semio_s_fem_sparse::numerical_close_effect;
+use semio_framework_value::RetainedAllocationEffect;
 use semio_s_fem_sparse::write_numerical_entry;
 use semio_s_fem_payload_turns::NumericalPayloadSlot;
 use semio_s_fem_payload_turns::numerical_open_writer;
@@ -100,9 +102,6 @@ pub use run_and_publish::*;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-#[cfg(test)]
-#[global_allocator]
-static ORIGINAL_SUBSPACE_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 #[cfg(test)]
 #[path="🧪️tests/🎯️positive-spectrum/🦀️.rs"]
 mod positive_spectrum_tests;

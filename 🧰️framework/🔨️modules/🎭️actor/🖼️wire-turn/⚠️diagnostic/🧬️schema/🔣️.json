@@ -314,10 +314,10 @@
     },
     "originalDriver": {
       "const": {
-        "maximumCopyBytes": 4096,
+        "maximumCopyBytes": 16384,
         "maximumDepth": 4096,
         "maximumReleaseBytes": 262144,
-        "maximumItems": 1,
+        "maximumItems": 2,
         "maximumCapacityBytes": 4096
       }
     },

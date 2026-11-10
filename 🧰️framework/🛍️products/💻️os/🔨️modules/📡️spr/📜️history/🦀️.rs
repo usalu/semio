@@ -183,7 +183,7 @@ fn supplied(issued:Option<(RetainedCloneGrant,RetainedCloneProgress)>,effect:&Re
 }
 
 fn close_recipient(control:&mut NativeDecodeControl<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,last_work:&mut u128)->Result<RetainedCloneStep,OriginalRetirementFailure>{
- match control.with_allocated_effect(quoted(demand,grant),RetainedHistorySourceDecode::work_demand(grant),|control,effect|control.close_retirement_recipient(effect)){
+ match control.with_allocated_effect(quoted(demand,grant),RetainedHistorySourceDecode::work_demand(grant),|control,effect|control.close_retirement_recipient(effect.grant().maximum_copy_bytes,effect)){
   Ok(Some(poll))=>polled(poll,last_work),
   Ok(None)=>Ok(RetainedCloneStep::Progress(Default::default())),
   Err(error)=>Err(OriginalRetirementFailure::from_work_refusal(error)),
@@ -195,7 +195,7 @@ fn close_box(control:&mut NativeDecodeControl<'_>,slot:&mut Option<Box<dyn Erase
  match control.with_allocated_effect(quoted(demand,grant),RetainedHistorySourceDecode::work_demand(grant),|control,effect|{
   let funded=effect.grant();
   let child=if nonterminal{RetainedCloneGrant{maximum_depth:funded.maximum_depth.saturating_sub(1),..funded}}else{funded};
-  control.with_retirement(child,|original|Ok::<_,ValueError>(close_factory_ticket_controlled(slot,&mut effect.nested(child),original)))
+  control.with_retirement(child,|original|Ok::<_,ValueError>(close_factory_ticket_controlled(slot,child.maximum_copy_bytes,&mut effect.nested(child),original)))
  }){
   Ok(Some(Ok(poll)))=>polled(poll,last_work),
   Ok(Some(Err(error)))=>Err(OriginalRetirementFailure::from_work_refusal(error)),
@@ -1010,10 +1010,6 @@ pub async fn frontier_delta(local: &FrontierSummary, remote: &FrontierSummary) -
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
-
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 
 #[cfg(test)]
 use semio_os_history_testing_retirement as test_retirement;

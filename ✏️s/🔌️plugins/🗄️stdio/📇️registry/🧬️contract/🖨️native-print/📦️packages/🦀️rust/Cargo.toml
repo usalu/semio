@@ -18,5 +18,6 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 
 [dev-dependencies]

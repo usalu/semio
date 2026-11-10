@@ -185,7 +185,7 @@ impl semio_framework_job::InteractiveJob for NativeClipboardJob {
         if !self.fault.terminal_is_empty(){
             let mut demand=self.fault.retirement_demands()?;
             demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"clipboard fault close depth overflow"))?;
-            return semio_framework_job::close_original_retained_step(cx,demand,|grant|self.fault.close_step_granted(semio_framework_job::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}));
+            return semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_framework_value::RetainedWorkPoll::Complete(self.fault.close_step(effect)));
         }
         if self.operation.is_none(){return Ok(Close::Complete{progress:Progress::default()})}
         let bytes=match self.operation.as_ref(){Some(NativeClipboardOperation::Write(text))=>text.capacity(),_=>0};

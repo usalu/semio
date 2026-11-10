@@ -4,10 +4,11 @@
 use super::*;
 
 use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::{RetainedAllocationEffect,RetirementPollExit};
+use crate::child_view::pay_work;
 use std::mem::ManuallyDrop;
 /// 👁️ Returns exact child reads to their original registries before releasing final view backing.
 pub struct ChildContentReadRetirement {
- work:u64,
  view:ManuallyDrop<ChildContentView>,
  pending:ManuallyDrop<Option<ChildContentEntry>>,
  returned:ManuallyDrop<Option<ControlledRetirement<store::os_store::snapshot_read::SnapshotReadReturn>>>,
@@ -28,7 +29,7 @@ impl ChildContentRetainers for ChildContentReadAliases {
 }
 
 impl ChildContentReadRetirement {
- pub fn new(view:ChildContentView)->Self{Self{work:0,view:ManuallyDrop::new(view),pending:ManuallyDrop::new(None),returned:ManuallyDrop::new(None),metadata:ManuallyDrop::new(None)}}
+ pub fn new(view:ChildContentView)->Self{Self{view:ManuallyDrop::new(view),pending:ManuallyDrop::new(None),returned:ManuallyDrop::new(None),metadata:ManuallyDrop::new(None)}}
  fn child_demands<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,copy:usize)->Result<RetirementDemand,ValueError>{if owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()})}let mut demand=owner.next_demand(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original child read depth overflow"))?;Ok(demand)}
  pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if let Some(owner)=self.returned.as_ref(){return Self::child_demands(owner,copy)}
@@ -36,22 +37,25 @@ impl ChildContentReadRetirement {
   if self.pending.is_some(){return Ok(store::os_store::snapshot_read::ErasedSnapshotRead::prepared_return_demands())}
   Ok(RetirementDemand{release_bytes:self.view.next_take_release_bytes(),depth:usize::from(!self.terminal_is_empty()),..Default::default()})
  }
- pub fn last_turn_work(&self)->u64{self.work}
- pub fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.work=0;self.step_original(grant)}
- fn step_original(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}let d=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes||grant.maximum_depth<d.depth{return Ok(RetainedCloneStep::Progress(empty))}
-  self.work=1;
-  if let Some(owner)=self.returned.as_mut(){if owner.terminal_is_empty(){self.returned.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}let turn=owner.step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});self.work=owner.last_turn_work();return turn.map(|step|RetainedCloneStep::Progress(step.progress()))}
-  if let Some(owner)=self.metadata.as_mut(){if owner.terminal_is_empty(){self.metadata.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}let turn=owner.step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});self.work=owner.last_turn_work();return turn.map(|step|RetainedCloneStep::Progress(step.progress()))}
-  if let Some(entry)=self.pending.take(){let ChildContentEntry{owner,slot,child_id,artifact_id,dialect,revision,snapshot}=entry;match snapshot.try_return_to_registry_witness(grant){Ok((returned,progress))=>{*self.returned=Some(ControlledRetirement::new(returned).unwrap_or_else(|_|unreachable!("original returned read defines full closure")));*self.metadata=Some(ControlledRetirement::new(ChildContentReadMetadata{owner,slot,child_id,artifact_id,dialect,revision}).unwrap_or_else(|_|unreachable!("original child read metadata defines full closure")));return Ok(RetainedCloneStep::Progress(progress))},Err((error,snapshot))=>{*self.pending=Some(ChildContentEntry{owner,slot,child_id,artifact_id,dialect,revision,snapshot});return Err(error)}}}
+ pub fn work_demand(&self,body:usize)->Result<u64,ValueError>{
+  if self.terminal_is_empty(){return Ok(0)}
+  for owner in [self.returned.as_ref().map(|owner|(owner.terminal_is_empty(),owner.next_computational_work(body))),self.metadata.as_ref().map(|owner|(owner.terminal_is_empty(),owner.next_computational_work(body)))].into_iter().flatten(){return if owner.0{Ok(1)}else{owner.1}}
+  Ok(1)
+ }
+ pub fn step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+  let grant=effect.grant();let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}let d=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes||grant.maximum_depth<d.depth{return Ok(RetainedCloneStep::Progress(empty))}
+  if let Some(owner)=self.returned.as_mut(){if owner.terminal_is_empty(){pay_work(effect,1)?;self.returned.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}return RetirementPollExit::resume(owner.step(body,&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}))).map(|step|RetainedCloneStep::Progress(step.progress()))}
+  if let Some(owner)=self.metadata.as_mut(){if owner.terminal_is_empty(){pay_work(effect,1)?;self.metadata.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}return RetirementPollExit::resume(owner.step(body,&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}))).map(|step|RetainedCloneStep::Progress(step.progress()))}
+  pay_work(effect,1)?;
+  if let Some(entry)=self.pending.take(){let ChildContentEntry{owner,slot,child_id,artifact_id,dialect,revision,snapshot}=entry;match snapshot.try_return_to_registry_witness(){Ok(returned)=>{*self.returned=Some(ControlledRetirement::new(returned).unwrap_or_else(|_|unreachable!("original returned read defines full closure")));*self.metadata=Some(ControlledRetirement::new(ChildContentReadMetadata{owner,slot,child_id,artifact_id,dialect,revision}).unwrap_or_else(|_|unreachable!("original child read metadata defines full closure")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))},Err(snapshot)=>{*self.pending=Some(ChildContentEntry{owner,slot,child_id,artifact_id,dialect,revision,snapshot});return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original child read cannot return to its registry").into())}}}
   match self.view.take_one(&ChildContentView::EMPTY,&ChildContentReadAliases){ChildContentTake::Blocked=>Ok(RetainedCloneStep::Progress(empty)),ChildContentTake::Snapshot(entry,released_bytes)=>{*self.pending=Some(entry);Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..empty}))},ChildContentTake::Released(released_bytes)=>Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..empty})),ChildContentTake::Complete(released_bytes)=>Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes,..empty}))}
  }
  pub fn terminal_is_empty(&self)->bool{self.view.root.is_none()&&self.pending.is_none()&&self.returned.is_none()&&self.metadata.is_none()}
 }
 impl semio_framework_value::retirement::RetirementCursor for ChildContentReadRetirement {
+ semio_framework_value::native_retirement_reply!();
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.work_demand(body)}
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
-
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;match self.step(grant){Err(error)=>RetirementStep::Failure(error,self.work),Ok(RetainedCloneStep::Progress(p)|RetainedCloneStep::Complete(p))if p!=Default::default()||self.work!=0=>RetirementStep::Progress(p,self.work),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete(self.work),Ok(_)=>RetirementStep::BudgetExhausted}}
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
  fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.demands(copy).ok().map(|d|d.capacity_bytes)}
@@ -60,8 +64,15 @@ impl semio_framework_value::retirement::RetirementCursor for ChildContentReadRet
  fn allows_admitted_narrow_work(&self)->bool{true}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
+impl ChildContentReadRetirement {
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+  use semio_framework_value::retirement::RetirementStep;
+  match self.step(body,effect){Err(RetirementPollExit::Pending(work))=>RetirementStep::Pending(work),Err(RetirementPollExit::Failed(failure))=>RetirementStep::Failure(failure,effect.performed_work()),Ok(RetainedCloneStep::Progress(p)|RetainedCloneStep::Complete(p))if p!=Default::default()||effect.performed_work()!=0=>RetirementStep::Progress(p,effect.performed_work()),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete(effect.performed_work()),Ok(_)=>RetirementStep::BudgetExhausted}
+ }
+}
 impl semio_framework_value::retirement::RetireOwned for ChildContentView {
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(ChildContentReadRetirement::new(self))}
+ type RetirementCursor=ChildContentReadRetirement;
+ fn retirement_seed(self)->Self::RetirementCursor{ChildContentReadRetirement::new(self)}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ChildContentReadRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }

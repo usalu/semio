@@ -1,5 +1,5 @@
 //! 🏦️ Synchronous authoring outside any Job turn spends one explicit finite stock and records every performed unit through one original receipt.
-use super::{OriginalWorkActionIdentity,OriginalWorkPerformedReceipt,OriginalSourceTurnIdentity,OriginalWork,OriginalWorkAuthority,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkRecipient,OriginalWorkSink,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,RetainedWorkPoll,ValueError,ValueRefusalKind};
+use super::{OriginalEffectAuthority,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,OriginalWorkActionIdentity,OriginalWorkPerformedReceipt,OriginalSourceTurnIdentity,OriginalWork,OriginalWorkAuthority,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkRecipient,OriginalWorkSink,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,RetainedWorkPoll,ValueError,ValueRefusalKind};
 
 struct AuthoringDriver;
 struct AuthoringContext<'a>{remaining:&'a u128}
@@ -12,6 +12,41 @@ impl OriginalWorkRecipient for AuthoringDriver{
  fn recover_partial<'reply,'turn,'source>(&mut self,_:&mut AuthoringContext<'turn>,check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.pending()}
 }
 
+
+type Call<'a>=dyn FnMut(&mut RetainedAllocationEffect<'_>)+'a;
+struct CallFrame<'a,'b>{call:&'a mut Call<'b>,source:Option<OriginalSourceTurnIdentity>}
+struct CallProducer;
+impl OriginalEffectProducer for CallProducer{
+ type Output=();type Failure=ValueError;type Context<'a,'b>=CallFrame<'a,'b> where 'b:'a;
+ fn validate_context<'a,'b>(&self,_:&Self::Context<'a,'b>)->Result<(),ValueError> where 'b:'a{Ok(())}
+ fn source_turn<'a,'b>(&self,c:&Self::Context<'a,'b>)->Option<OriginalSourceTurnIdentity> where 'b:'a{c.source}
+ fn receive<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,(),ValueError>)->Result<OriginalEffectReplyComplete<'r,(),ValueError>,ValueError> where 'b:'a{(c.call)(effect);Ok(reply.complete(Ok(())))}
+ fn recover<'r,'a,'b>(&mut self,_:&mut Self::Context<'a,'b>,_:&mut RetainedAllocationEffect<'_>,_:OriginalEffectReply<'r,(),ValueError>)->Result<OriginalEffectReplyComplete<'r,(),ValueError>,ValueError> where 'b:'a{Err(ValueError::invariant("synchronous authoring call has no unrecorded callback"))}
+}
+/// ⛽️ The one work unit the producer engine charges to move a recorded reply out of an invoked effect.
+pub const ORIGINAL_INVOCATION_WORK:u64=1;
+/// 📐️ Widens a caller's exact grant and work ceiling by the reply handoff that [`invoke_original`] pays on the same effect; the operation itself still sees only the caller's own extent.
+pub fn invocation_extent(grant:RetainedCloneGrant,maximum_work:u64)->Result<(RetainedCloneGrant,u64),ValueError>{
+ let handoff=OriginalEffectAuthority::<CallProducer>::transfer_reply_demand()?;
+ let widened=RetainedCloneGrant{maximum_items:grant.maximum_items.max(1),maximum_copy_bytes:grant.maximum_copy_bytes.saturating_add(handoff.copy_bytes),maximum_depth:grant.maximum_depth.max(handoff.depth),..grant};
+ Ok((widened,maximum_work.saturating_add(ORIGINAL_INVOCATION_WORK)))
+}
+/// 🧵️ Runs the operation as the receive callback of one real original producer invocation on an effect opened with [`invocation_extent`], then transfers and clears its recorded reply, so `effect.invocation()` is present for every nested reply-shaped owner. With `narrow` the operation sees exactly that grant and work; without it the whole widened extent, which also funds the metadata nested owners forward under the invocation.
+pub fn invoke_original<R>(effect:&mut RetainedAllocationEffect<'_>,narrow:Option<(RetainedCloneGrant,u64)>,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->Result<R,ValueError>{
+ let mut operation=Some(operation);let mut output=None;let mut failure=None;
+ let mut call=|effect:&mut RetainedAllocationEffect<'_>|{if let Some(operation)=operation.take(){match narrow{None=>output=Some(operation(effect)),Some((grant,maximum_work))=>match effect.reborrow(grant,maximum_work){Ok(mut inner)=>output=Some(operation(&mut inner)),Err(error)=>failure=Some(error)}}}};
+ let mut authority=OriginalEffectAuthority::new(CallProducer);let mut frame=CallFrame{call:&mut call,source:effect.work_source_turn()};let(mut action,mut reply)=(None,None);
+ if !authority.drive(&mut frame,effect,&mut action)?{return Err(ValueError::invariant("synchronous original call stayed pending"))}
+ match authority.transfer_reply_into(&mut frame,&mut action,&mut reply,effect).result{
+  Ok(Some(_))=>{},
+  Ok(None)=>{action.as_mut().ok_or_else(||ValueError::invariant("synchronous original action absent"))?.transfer_reply(&mut reply)?;authority.finish(&mut action)?;},
+  Err(error)=>{if let Some(open)=action.as_mut(){let _=open.transfer_reply(&mut reply);}let _=authority.finish(&mut action);return Err(error)},
+ }
+ reply.take().ok_or_else(||ValueError::invariant("synchronous original reply absent"))??;
+ authority.into_producer().map(drop).map_err(|_|ValueError::invariant("synchronous original producer remains active"))?;
+ if let Some(error)=failure{return Err(error)}
+ output.ok_or_else(||ValueError::invariant("synchronous original call never ran"))
+}
 /// 🧾️ One authored effect: the closure's output, the work its receipt recorded and the physical allocation marker it left.
 pub struct AuthoredEffect<R>{pub output:R,pub performed:u128,pub actual:Option<usize>}
 
@@ -65,22 +100,27 @@ impl AuthoringWallet{
   self.stock.maximum_items-=progress.copied_items;self.stock.maximum_copy_bytes-=progress.copied_bytes;self.stock.maximum_capacity_bytes-=progress.retained_capacity_bytes;self.stock.maximum_release_bytes-=progress.released_bytes;Ok(())
  }
  /// 🪙️ Runs one closure inside one original effect over a performed-work receipt settled against this wallet; `None` means the work quote was not admitted and nothing ran.
- pub fn run<R>(&mut self,grant:RetainedCloneGrant,maximum_work:u64,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->Result<Option<AuthoredEffect<R>>,ValueError>{
+ pub fn run<R>(&mut self,grant:RetainedCloneGrant,maximum_work:u64,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->Result<Option<AuthoredEffect<R>>,ValueError>{self.run_with(grant,maximum_work,false,operation)}
+ /// 🧵️ [`Self::run`] for steps whose nested retirements are reply-shaped: the closure runs under [`invoke_original`] on an effect widened by its reply handoff, which the wallet stock never pays.
+ pub fn run_invoked<R>(&mut self,grant:RetainedCloneGrant,maximum_work:u64,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->Result<Option<AuthoredEffect<R>>,ValueError>{self.run_with(grant,maximum_work,true,operation)}
+ fn run_with<R>(&mut self,grant:RetainedCloneGrant,maximum_work:u64,invoked:bool,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->Result<Option<AuthoredEffect<R>>,ValueError>{
   if grant.restricted_by(self.stock)!=grant{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"authoring grant exceeds its explicit stock"))}
   if u128::from(maximum_work)>self.work{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"authoring work exceeds its explicit stock"))}
-  let remaining=self.work;let mut authority=OriginalWorkAuthority::new(AuthoringDriver);let mut spent=0u128;
+  let remaining=self.work+u128::from(invoked)*u128::from(ORIGINAL_INVOCATION_WORK);let mut authority=OriginalWorkAuthority::new(AuthoringDriver);let mut spent=0u128;
+  let(effect_grant,effect_work)=if invoked{invocation_extent(grant,maximum_work)?}else{(grant,maximum_work)};
   let settled=authority.with_loan(&mut AuthoringContext{remaining:&remaining},|loan|{
    let mut loan=loan.reborrow();let mut work=OriginalWork::empty();work.recipient=Some(&mut loan);
-   let taken=run_original_effect(&mut work,grant,maximum_work,&mut spent,operation)?;Ok::<_,ValueError>(taken)
+   let taken=run_original_effect(&mut work,effect_grant,effect_work,&mut spent,|effect|if invoked{invoke_original(effect,None,operation)}else{Ok(operation(effect))})?;
+   Ok::<_,ValueError>(taken)
   });
   self.work=self.work.saturating_sub(spent);
   let settled=settled??;
   if authority.has_live_actions(){return Err(ValueError::invariant("authoring left a live work action"))}
-  Ok(settled)
+  match settled{None=>Ok(None),Some(done)=>Ok(Some(AuthoredEffect{output:done.output?,performed:done.performed,actual:done.actual}))}
  }
  /// 🏁️ [`Self::run`] for a poll-returning step: a suspended poll cannot be awaited synchronously and is refused typed.
  pub fn run_settled<T,E>(&mut self,grant:RetainedCloneGrant,maximum_work:u64,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkPoll<T,E>)->Result<Option<(RetainedWorkOutcome<T,E>,Option<usize>)>,ValueError>{
-  match self.run(grant,maximum_work,operation)?{
+  match self.run_invoked(grant,maximum_work,operation)?{
    None=>Ok(None),
    Some(done)=>match done.output{RetainedWorkPoll::Complete(turn)=>Ok(Some((turn,done.actual))),RetainedWorkPoll::Pending{..}=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"synchronous authoring cannot await a pending original effect"))},
   }

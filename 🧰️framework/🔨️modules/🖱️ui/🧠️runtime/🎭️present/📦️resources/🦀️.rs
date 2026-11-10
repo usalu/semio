@@ -201,8 +201,9 @@ impl std::ops::Deref for UiNativeFailurePlace { type Target = semio_framework_jo
 impl std::ops::DerefMut for UiNativeFailurePlace { fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 } }
 
 fn close_native_failure_place(place: &mut UiNativeFailurePlace, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
-    let demand = place.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
-    semio_framework_job::close_original_effect_step(cx, demand, |effect| place.close_step(effect))?;
+    let body = cx.retained_grant().maximum_copy_bytes;
+    let demand = place.retirement_demands(body)?;
+    semio_framework_job::close_original_effect_step(cx, demand, |effect| place.close_step(body, effect))?;
     Ok(())
 }
 

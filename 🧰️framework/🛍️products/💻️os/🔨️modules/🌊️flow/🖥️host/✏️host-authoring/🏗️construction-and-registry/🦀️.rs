@@ -6,7 +6,7 @@ impl FlowHost {
     /// 📔️ Supplies immutable operator implementations owned by this host's composition.
     pub fn with_operator_registry(mut self, registry: neural::SharedRegistry) -> Self {
         assert!(self.operator_registry.is_none(), "operator registry is supplied once");
-        self.set_neuron_kind_info_map(Arc::new(registry.operator_infos().map(|info| (info.id.clone(),info.clone())).collect()));
+        self.set_neuron_kind_info_map(SharedOwner::from_cold(registry.operator_infos().map(|info| (info.id.clone(),info.clone())).collect()));
         self.operator_registry = Some(registry);
         self.baseline_registry_generation = 0;
         self
@@ -33,21 +33,21 @@ impl FlowHost {
     /// 🏭️ Selects the actual baseline Store producer supplied by this host's child composition.
     pub fn with_history_store_factory(mut self,producer:semio_os_kernel::os_store::OriginalStoreGenesisFactory<FlowHostSnapshot,FlowMutation>)->Self{assert!(self.history_store_factory.is_none()&&self.history_store.is_none(),"original history producer is supplied once before Store birth");self.history_store_factory=Some(producer);self}
     pub fn from_host_snapshot(host_snapshot: FlowHostSnapshot) -> Self {
-        Self::from_host_snapshot_with_cache(host_snapshot, Arc::new(NeuralCache::new()))
+        Self::from_host_snapshot_with_cache(host_snapshot, SharedOwner::from_cold(NeuralCache::new()))
     }
 
     /// 🧠️ Builds a host sharing an existing [`NeuralCache`] — lets a long-lived caller (e.g. a
     /// stateless request/response program boundary that reconstructs `FlowHost` on every call)
     /// keep per-node memoization alive across those reconstructions instead of discarding it.
-    pub fn from_host_snapshot_with_cache(host_snapshot: FlowHostSnapshot, neural_cache: Arc<NeuralCache>) -> Self {
-        Self::from_host_snapshot_with_cache_and_infos(host_snapshot, neural_cache, Arc::default())
+    pub fn from_host_snapshot_with_cache(host_snapshot: FlowHostSnapshot, neural_cache: SharedOwner<NeuralCache>) -> Self {
+        Self::from_host_snapshot_with_cache_and_infos(host_snapshot, neural_cache, SharedOwner::from_cold(Default::default()))
     }
 
     /// 🏠️ Builds a host that ALREADY indexes `kind_infos`. The ONE construction path for a caller
     /// that would set the operator catalogue immediately afterwards: the bare constructor builds its
     /// dag against an empty catalogue, and the setter's own `rebuild_dag` then throws that work away
     /// — twice per evaluation tick (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn from_host_snapshot_with_cache_and_infos(host_snapshot: FlowHostSnapshot, neural_cache: Arc<NeuralCache>, kind_infos: Arc<HistoryFoldIndex<String, OperatorInfo>>) -> Self {
+    pub fn from_host_snapshot_with_cache_and_infos(host_snapshot: FlowHostSnapshot, neural_cache: SharedOwner<NeuralCache>, kind_infos: SharedOwner<HistoryFoldIndex<String, OperatorInfo>>) -> Self {
         let host_snapshot = deduplicated_loaded_widgets(host_snapshot);
         let mut host = Self {
             geometry_port: None,

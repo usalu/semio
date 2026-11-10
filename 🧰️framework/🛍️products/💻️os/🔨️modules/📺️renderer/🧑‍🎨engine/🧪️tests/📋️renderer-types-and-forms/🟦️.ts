@@ -26,7 +26,7 @@ describe("framework renderer types", () => {
       id: "puzzle3d-play",
       label: "Puzzle 3D",
       breadcrumb: ["semio", "puzzle", "3d"],
-      terminologyBreadcrumbs: { reuse: ["Entwerfen mit Bestand", "Aggregator"] },
+      terminologyBreadcrumbs: { reuse: [{ native: { de: "Entwerfen", en: "Design" }, reuse: { de: "Entwerfen mit Bestand", en: "Design with existing stock" } }, { native: { de: "Aggregator", en: "Aggregator" }, reuse: { de: "Sammler", en: "Aggregator" } }] },
       controllerId: "puzzle3d-play",
       modes: [],
       windowKinds: [],
@@ -37,16 +37,19 @@ describe("framework renderer types", () => {
     expect(appWindowLabel(app, "native", "Flow")).toBe("Flow");
     expect(appWindowLabel(app, "native", "Preview")).toBe("Preview");
     expect(appWindowLabel(app, "native", "")).toBe("Puzzle 3D");
-    expect(appWindowLabel(app, "reuse", "")).toBe("Aggregator");
-    expect(resolveAppBreadcrumb(app, "native")).toEqual(["semio", "puzzle", "3d"]);
-    expect(resolveAppBreadcrumb(app, "reuse")).toEqual(["Entwerfen mit Bestand", "Aggregator"]);
-    expect(appBreadcrumb(resolveAppBreadcrumb(app, "reuse"))).toBe("Entwerfen mit Bestand · Aggregator");
+    expect(appWindowLabel(app, "reuse", "", "en")).toBe("Aggregator");
+    expect(appWindowLabel(app, "reuse", "", "de")).toBe("Sammler");
+    expect(resolveAppBreadcrumb(app, "native", "en")).toEqual(["semio", "puzzle", "3d"]);
+    expect(resolveAppBreadcrumb(app, "native", "de")).toEqual(["semio", "puzzle", "3d"]);
+    expect(resolveAppBreadcrumb(app, "reuse", "en")).toEqual(["Design with existing stock", "Aggregator"]);
+    expect(resolveAppBreadcrumb(app, "reuse", "de")).toEqual(["Entwerfen mit Bestand", "Sammler"]);
+    expect(appBreadcrumb(resolveAppBreadcrumb(app, "reuse", "de"))).toBe("Entwerfen mit Bestand · Sammler");
   });
 
   it("survives an app whose manifest declares no breadcrumb at all", () => {
     const app: Parameters<typeof resolveAppBreadcrumb>[0] = { breadcrumb: [], terminologyBreadcrumbs: {} };
-    expect(resolveAppBreadcrumb(app, "native")).toEqual([]);
-    expect(appBreadcrumb(resolveAppBreadcrumb(app, "native"))).toBe("");
+    expect(resolveAppBreadcrumb(app, "native", "en")).toEqual([]);
+    expect(appBreadcrumb(resolveAppBreadcrumb(app, "native", "de"))).toBe("");
     expect(appBreadcrumb(undefined)).toBe("");
   });
 

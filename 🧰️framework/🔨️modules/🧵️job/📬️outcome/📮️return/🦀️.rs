@@ -85,7 +85,7 @@ impl<const N:usize> OriginalJobPageReturnRegistry<N>{
 
    let pending=owners.pending.is_some();
    if let Some(owner)=if pending{owners.pending.as_mut()}else{owners.returned.as_mut()}{
-    if !owner.terminal_is_empty(){let mut demand=owner.retirement_demands();demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"returned original page parent depth overflow"))?;return close_original_retained_step(cx,demand,|grant|owner.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}))}
+    if !owner.terminal_is_empty(){let mut demand=owner.retirement_demands();demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"returned original page parent depth overflow"))?;return close_original_retained_effect_step(cx,demand,|effect|{let g=effect.grant();owner.close_step(&mut effect.nested(RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g})).result})}
     return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{if pending{owners.pending.take();}else{owners.returned.take();}semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})
    }
    if let Some(source)=owners.source.as_mut(){if !source.terminal_is_empty(){return source.close_step(parent,cx)}
@@ -113,12 +113,12 @@ impl<const N:usize> OriginalJobPageReservation<N>{
   if payload.page_count()==0&&checked.owners().pending.is_none(){return Ok(false)}
   if payload.payload_authority_identity()!=Some(cx.payload_authority_identity()){return Err(refusal("supplied page requires its actual live original payload source").into())}
   if !registry_control_ready(cx){return Ok(false)}
-  let turn=payload.transfer_last_original_page(&mut checked.owners().pending,cx.retained_grant());
+  let grant=cx.retained_grant();let Some((turn,_))=cx.with_original_effect(grant,|_,effect|payload.transfer_last_original_page(&mut checked.owners().pending,effect))?else{return Ok(false)};
   if checked.owners().pending.as_ref().is_some_and(RetainedJobPageTransfer::is_ready){
    *output=Some(OriginalSuppliedJobPage{target:self.registry,index:self.index,generation:self.generation,page:checked.owners().pending.take()});self.active=false;checked.restore=ISSUED;
   }
   #[cfg(test)]if output.is_some(){admission_work_tests::narrow_publication(cx);}
-  receive_original_retained_work(cx,turn)?;Ok(output.is_some())
+  turn.result?;Ok(output.is_some())
 
  }
 }

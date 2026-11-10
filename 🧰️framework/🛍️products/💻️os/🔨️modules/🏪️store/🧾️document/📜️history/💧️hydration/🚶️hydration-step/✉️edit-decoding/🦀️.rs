@@ -131,7 +131,7 @@ where
             if !work.copy_bytes(std::mem::size_of::<Phase>()+std::mem::size_of::<usize>()){return Ok(false)}
             Ok(true)
         })();
-        let progress=work.receipt();let consumed=work.actual_work()+u64::from(result==Ok(true));let receipt=cx.consume_retained(progress);cx.consume_fuel(consumed);
+        let progress=work.receipt();let consumed=u64::try_from(work.actual_work()).unwrap_or(u64::MAX)+u64::from(result==Ok(true));let receipt=cx.consume_retained(progress);cx.consume_fuel(consumed);
         if let Err(error)=result{let mut failure=semio_framework_job::OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::InvalidValue,error));failure.effects=progress;failure.receipt_refusal=receipt.err();*self.original_failure=Some(failure);return self.reject(MemberOpenDiagnostic::Capacity)}
         if let Err(error)=receipt{*self.original_context_failure=Some(error.into());return self.reject(MemberOpenDiagnostic::Capacity)}
         if result==Ok(true){self.operation_index=0;self.phase=Phase::DecodeForward}

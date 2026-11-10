@@ -40,7 +40,7 @@ pub enum Phase {
     Complete,
 }
 
-pub struct MemberFactorySelection<M: MemberFactory> {
+pub struct MemberFactorySelection<M: MemberFactory + 'static> {
     pub input: ManuallyDrop<Option<VerifiedMemberHistoryInput>>,
     pub row: usize,
     earlier: usize,
@@ -172,9 +172,9 @@ impl<M: MemberFactory> MemberFactorySelection<M> {
     }
 }
 
-impl<M: MemberFactory> ErasedSnapshotRetirement for MemberFactorySelection<M> {
+impl<M: MemberFactory + 'static> ErasedSnapshotRetirement for MemberFactorySelection<M> {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; self.selected = None; }
         close_owner(&mut self.input, effect)
     })(); let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()))); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work }) }
@@ -187,13 +187,13 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for MemberFactorySelection<M> {
 impl<M: MemberFactory> MemberFactorySelection<M> {
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_os_store_read::retirement_owner_demands(&self.input, body) }
 }
-impl<M: MemberFactory> Drop for MemberFactorySelection<M> {
+impl<M: MemberFactory + 'static> Drop for MemberFactorySelection<M> {
     fn drop(&mut self) {
         assert!(self.terminal_is_empty(), "factory selection requires retained close or handoff");
     }
 }
 
-pub struct SelectedMemberHistoryInput<M: MemberFactory> {
+pub struct SelectedMemberHistoryInput<M: MemberFactory + 'static> {
     pub input: ManuallyDrop<Option<VerifiedMemberHistoryInput>>,
     pub declaration: &'static MemberOpenDeclaration,
     pub diagnostic: Option<MemberOpenDiagnostic>,
@@ -235,9 +235,9 @@ impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
     }
 }
 
-impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryInput<M> {
+impl<M: MemberFactory + 'static> ErasedSnapshotRetirement for SelectedMemberHistoryInput<M> {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; }
         close_owner(&mut self.input, effect)
     })(); let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()))); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work }) }
@@ -251,13 +251,13 @@ impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
     pub fn history_limits(&self)->protocol::codec::HistoryReadLimits{self.declaration.history_limits}
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_os_store_read::retirement_owner_demands(&self.input, body) }
 }
-impl<M: MemberFactory> Drop for SelectedMemberHistoryInput<M> {
+impl<M: MemberFactory + 'static> Drop for SelectedMemberHistoryInput<M> {
     fn drop(&mut self) {
         assert!(self.terminal_is_empty(), "selected input requires retained close or semantic handoff");
     }
 }
 
-pub struct SelectedMemberHistoryDictionary<M: MemberFactory> {
+pub struct SelectedMemberHistoryDictionary<M: MemberFactory + 'static> {
     pub owner: ManuallyDrop<Option<MemberHistoryDictionaryOwner>>,
     pub declaration: &'static MemberOpenDeclaration,
     pub factory: PhantomData<fn() -> M>,
@@ -277,9 +277,9 @@ impl<M: MemberFactory> SelectedMemberHistoryDictionary<M> {
     }
 }
 
-impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryDictionary<M> {
+impl<M: MemberFactory + 'static> ErasedSnapshotRetirement for SelectedMemberHistoryDictionary<M> {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         close_owner(&mut self.owner, effect)
     })(); let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()))); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work }) }
     fn terminal_is_empty(&self) -> bool { self.owner.is_none() }
@@ -291,13 +291,13 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryDiction
 impl<M: MemberFactory> SelectedMemberHistoryDictionary<M> {
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_os_store_read::retirement_owner_demands(&self.owner, body) }
 }
-impl<M: MemberFactory> Drop for SelectedMemberHistoryDictionary<M> {
+impl<M: MemberFactory + 'static> Drop for SelectedMemberHistoryDictionary<M> {
     fn drop(&mut self) {
         assert!(self.terminal_is_empty(), "selected dictionary requires bounded retirement");
     }
 }
 
-pub struct SelectedVerifiedMemberHistory<M: MemberFactory> {
+pub struct SelectedVerifiedMemberHistory<M: MemberFactory + 'static> {
     pub input: ManuallyDrop<Option<VerifiedMemberHistoryDictionary>>,
     pub declaration: &'static MemberOpenDeclaration,
     pub factory: PhantomData<fn() -> M>,
@@ -337,9 +337,9 @@ impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
     }
 }
 
-impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedVerifiedMemberHistory<M> {
+impl<M: MemberFactory + 'static> ErasedSnapshotRetirement for SelectedVerifiedMemberHistory<M> {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         close_owner(&mut self.input, effect)
     })(); let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()))); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work }) }
     fn terminal_is_empty(&self) -> bool { self.input.is_none() }
@@ -351,7 +351,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedVerifiedMemberHistor
 impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_os_store_read::retirement_owner_demands(&self.input, body) }
 }
-impl<M: MemberFactory> Drop for SelectedVerifiedMemberHistory<M> {
+impl<M: MemberFactory + 'static> Drop for SelectedVerifiedMemberHistory<M> {
     fn drop(&mut self) {
         assert!(self.terminal_is_empty(), "selected semantic input requires bounded retirement");
     }

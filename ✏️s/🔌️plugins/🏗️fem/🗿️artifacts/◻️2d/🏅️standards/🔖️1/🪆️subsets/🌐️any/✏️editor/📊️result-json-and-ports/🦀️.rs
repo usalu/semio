@@ -78,7 +78,7 @@ pub fn fem2d_io() -> AppIo {
 pub fn fem2d_geometry_in_port() -> semio_plugin::MediaPortSpec {
     semio_plugin::MediaPortSpec {
         id: "geometry:in".into(),
-        label: "Geometry".into(),
+        label: semio_plugin::LocalizedLabel::native("Geometry", "Geometrie"),
         direction: semio_plugin::MediaPortDirection::In,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: None,
@@ -92,7 +92,7 @@ pub fn fem2d_geometry_in_port() -> semio_plugin::MediaPortSpec {
 pub fn fem2d_results_out_port() -> semio_plugin::MediaPortSpec {
     semio_plugin::MediaPortSpec {
         id: "results:out".into(),
-        label: "Results".into(),
+        label: semio_plugin::LocalizedLabel::native("Results", "Ergebnisse"),
         direction: semio_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         kind_id: Some("computation.fem2d".into()),

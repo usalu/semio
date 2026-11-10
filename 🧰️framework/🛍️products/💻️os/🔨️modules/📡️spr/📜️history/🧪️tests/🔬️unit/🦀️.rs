@@ -120,12 +120,12 @@ include!("⏳️native-fold-law/🦀️.rs");
 #[test]
 fn original_history_receipt_mismatch_retains_primary_without_allocating_a_failure_frame(){
  let law:serde_json::Value=serde_json::from_str(include_str!("history-receipt.json")).unwrap();
- let(positive,born,_)=semio_framework_trace_memory_testing::observe_backing(||Vec::<u8>::with_capacity(73));assert_eq!(born,73);drop(positive);
+ let(positive,born,_)=semio_os_history_testing_retirement::observe_backing(||Vec::<u8>::with_capacity(73));assert_eq!(born,73);drop(positive);
  for row in law["cases"].as_array().unwrap(){
   let primary=ValueError::new(ValueRefusalKind::InvalidValue,law["primary"].as_str().unwrap().to_owned());let pointer=primary.message.as_ptr();
   let grant=RetainedCloneGrant{maximum_items:1,maximum_depth:1,maximum_copy_bytes:row["copiedBytes"].as_u64().unwrap()as usize,..Default::default()};let original=if row["grantMatches"].as_bool().unwrap(){grant}else{RetainedCloneGrant{maximum_items:0,..grant}};
   let progress=RetainedCloneProgress{copied_items:1,copied_bytes:grant.maximum_copy_bytes,..Default::default()};
-  let(failure,born,released)=semio_framework_trace_memory_testing::observe_backing(||receive_failure(Some((original,progress)),grant,primary));
+  let(failure,born,released)=semio_os_history_testing_retirement::observe_backing(||receive_failure(Some((original,progress)),grant,primary));
   assert_eq!((born,released),(0,0));assert_eq!(failure.primary().unwrap().message.as_ptr(),pointer);assert_eq!(failure.receipt_refusal().is_some(),row["receiptRefused"].as_bool().unwrap());assert_eq!(failure.retained_progress(),progress);
  }
 }

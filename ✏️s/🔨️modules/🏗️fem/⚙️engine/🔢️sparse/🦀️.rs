@@ -3,8 +3,8 @@
 
 use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value_persistent::list::PagedListReservationOutcome;
-use semio_framework_value::{AuthoringWallet, RetainedAllocationEffect};
-use semio_framework_job::{InteractiveJob, InteractiveJobStep, OriginalJobReturnClaim, OriginalTurnFailure, close_original_retained_step, receive_original_retained_work};
+use semio_framework_value::{AuthoringWallet, OriginalRetirementFailure, RetainedAllocationEffect, RetainedWorkPoll};
+use semio_framework_job::{InteractiveJob, InteractiveJobStep, OriginalJobReturnClaim, OriginalTurnFailure, close_original_effect_step, close_original_retained_step, receive_original_retained_work};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_job::JobOutcomeBorrow;
 use semio_framework_job::JobOutcomeDescriptor;
@@ -54,8 +54,5 @@ pub use checkpoint_pages::*;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-#[cfg(test)]
-#[global_allocator]
-static ORIGINAL_SPARSE_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 // #endregion 🔖️Tests

@@ -3,15 +3,15 @@ use super::*;
 use semio_os_store_engine_owners::{BoundedArtifactRetirementFactory,DocumentStoreOwnersAdmissionError,lifted_store::ArtifactStoreCursorDisposer};
 use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 /// 🧬️ A document supplies its original catalog constructor without an erased global fallback.
-pub trait ArtifactCodecOwnerSource<P:ToValue,M:ToValue+FromValue+Mutation<P>> {
+pub trait ArtifactCodecOwnerSource<P:ToValue+Send+Sync+'static,M:ToValue+FromValue+Mutation<P>+Send+Sync+'static> {
  fn demand()->Result<RetirementDemand,ValueError>;
  fn admit(grant:RetainedCloneGrant)->Result<(DocumentStoreOwners<P,M>,RetainedCloneProgress),DocumentStoreOwnersAdmissionError<P,M>>;
 }
 /// 🧺️ Ordinary codecs retain the framework's bounded typed retirement factories.
 pub struct BoundedArtifactCodecOwners;
 impl<P,M> ArtifactCodecOwnerSource<P,M> for BoundedArtifactCodecOwners
-where P:ToValue+ArtifactPack+semio_framework_value::retirement::RetireOwned+Sync,
-M:ToValue+FromValue+Mutation<P>+OpBinary+OpText+semio_framework_value::retirement::RetireOwned+ArtifactCanonicalJsonTree+Sync {
+where P:ToValue+ArtifactPack+semio_framework_value::retirement::RetireOwned+Send+Sync+'static,
+M:ToValue+FromValue+Mutation<P>+OpBinary+OpText+semio_framework_value::retirement::RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static {
  fn demand()->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{capacity_bytes:DocumentStoreOwners::<P,M>::source_birth_bytes::<BoundedArtifactRetirementFactory<P>,BoundedArtifactRetirementFactory<P>,BoundedArtifactRetirementFactory<M>,ArtifactStoreCursorDisposer<P,M>>()?,depth:1,..Default::default()})}
  fn admit(grant:RetainedCloneGrant)->Result<(DocumentStoreOwners<P,M>,RetainedCloneProgress),DocumentStoreOwnersAdmissionError<P,M>>{DocumentStoreOwners::admit_source_constructor(grant,||(BoundedArtifactRetirementFactory::<P>::new(),BoundedArtifactRetirementFactory::<P>::new(),BoundedArtifactRetirementFactory::<M>::new(),ArtifactStoreCursorDisposer::<P,M>::new())).map(|(owners,progress)|(owners.with_batch_digest(),progress))}
 }

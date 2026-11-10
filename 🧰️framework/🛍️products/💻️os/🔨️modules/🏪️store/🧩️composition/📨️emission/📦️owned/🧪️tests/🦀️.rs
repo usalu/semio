@@ -12,6 +12,20 @@ fn close_measured(caller: &mut semio_framework_job::OriginalJobFixtureCaller, ba
     caller.turn(TURN, |cx| Ok(cx.with_original_effect(grant, |_, effect| batch.close_granted(effect))?)).expect("original fixture effect turn").unwrap_or((Ok(RetainedCloneStep::Progress(Default::default())), 0))
 }
 
+/// 🧾️ Closes with a funded grant: a refused original effect quote is a failure, never silent no-progress.
+fn close_exact_measured(caller: &mut semio_framework_job::OriginalJobFixtureCaller, batch: &mut MemberStoreOwnedBatch, grant: RetainedCloneGrant) -> (Result<RetainedCloneStep, ValueError>, u128) {
+    caller.turn(TURN, |cx| Ok(cx.with_original_effect(grant, |_, effect| batch.close_granted(effect))?)).expect("original fixture effect turn").unwrap_or_else(|| panic!("original effect quote refused the funded close grant {grant:?}"))
+}
+
+fn close_exact(caller: &mut semio_framework_job::OriginalJobFixtureCaller, batch: &mut MemberStoreOwnedBatch, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { close_exact_measured(caller, batch, grant).0 }
+
+/// 📐️ Derives a close grant from the batch's own exact quote so no fixture cap can hide a short quote.
+fn quoted(batch: &MemberStoreOwnedBatch, grant: RetainedCloneGrant) -> RetainedCloneGrant {
+    let copy = batch.next_copy_byte_demand().unwrap();
+    let demand = batch.next_demands(copy).unwrap();
+    RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(copy), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1), ..grant }
+}
+
 fn close_batch(caller: &mut semio_framework_job::OriginalJobFixtureCaller, batch: &mut MemberStoreOwnedBatch, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { close_measured(caller, batch, grant).0 }
 
 #[test]
@@ -25,15 +39,16 @@ fn member_owned_batch_copy_query_preserves_zero_work_and_exact_physical_receipts
         assert_eq!(serde_json::to_value(&values).unwrap(), serde_json::Value::Array((0..count).map(|index| fixture["values"][index % original.len()].clone()).collect()));
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
         let (mut owner, _) = MemberStoreOwnedBatch::try_new(values, grant).unwrap_or_else(|_| panic!("exact scalar source scaffold admitted"));
+        let row_stage = fixture["copyDemand"]["minimumCopyBytes"].as_u64().unwrap() as usize + std::mem::size_of::<usize>();
         let mut work = 0;
+        let mut trace = Vec::new();
         let mut released = 0;
         for _ in 0..count * 8 + 32 {
             let copy = owner.next_copy_byte_demand().unwrap();
             let demand = owner.next_demands(copy).unwrap();
             let (capacity, release) = (demand.capacity_bytes, demand.release_bytes);
-            assert!(copy <= 64 && capacity <= 4096 && release <= 4096);
+            assert!(copy <= TURN.maximum_copy_bytes && capacity <= TURN.maximum_capacity_bytes && release <= TURN.maximum_release_bytes);
             if copy != 0 {
-                assert_eq!(copy, fixture["copyDemand"]["minimumCopyBytes"].as_u64().unwrap() as usize);
                 let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close_batch(&mut caller, &mut owner, RetainedCloneGrant { maximum_copy_bytes: 0, maximum_capacity_bytes: capacity, maximum_release_bytes: release, ..grant }).unwrap());
                 assert_eq!(step.progress(), RetainedCloneProgress::default());
                 assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
@@ -41,16 +56,18 @@ fn member_owned_batch_copy_query_preserves_zero_work_and_exact_physical_receipts
                 assert_eq!(owner.next_demands(copy).unwrap(), demand);
             }
             let exact = RetainedCloneGrant { maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, ..grant };
-            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close_batch(&mut caller, &mut owner, exact).unwrap());
+            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close_exact(&mut caller, &mut owner, exact).unwrap());
             let progress = step.progress();
             assert!(progress.fits(exact));
             assert_eq!((events.requested_bytes, events.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
-            work += progress.copied_bytes;
+            assert!(copy == 0 || progress.copied_bytes == copy, "rows={count} stage {demand:?} charges exactly its quoted copy, got {progress:?}");
+            trace.push((demand, progress.copied_bytes));
+            if copy == row_stage { work += progress.copied_bytes; }
             released += progress.released_bytes;
             if owner.terminal_is_empty() { break; }
         }
         assert!(owner.terminal_is_empty());
-        assert_eq!(work, count * std::mem::size_of::<i32>());
+        assert_eq!(work, count * row_stage, "rows={count} stages {trace:?}");
     }
     caller.retire(STOCK);
 }
@@ -72,8 +89,7 @@ fn member_owned_batch_borrowed_admission_preserves_original_parent_source() {
     assert!(source.is_none()&&progress.fits(grant));
     assert_eq!(batch.mutations::<i32>().unwrap().as_ptr(),pointer);
     assert_eq!(serde_json::to_value(batch.mutations::<i32>().unwrap()).unwrap(),fixture["values"]);
-    let close=RetainedCloneGrant{maximum_capacity_bytes:4096,..grant};
-    for _ in 0..1024{if batch.terminal_is_empty(){break;}assert!(close_batch(&mut caller, &mut batch, close).unwrap().progress().fits(close));}
+    for _ in 0..1024{if batch.terminal_is_empty(){break;}let close=quoted(&batch,grant);assert!(close_exact(&mut caller, &mut batch, close).unwrap().progress().fits(close));}
     assert!(batch.terminal_is_empty());
     caller.retire(STOCK);
 }
@@ -89,8 +105,8 @@ fn member_owned_batch_phase_queries_fund_actual_scalar_retirement_births() {
         if batch.terminal_is_empty() { break; }
         let demand = batch.next_demands(grant.maximum_copy_bytes).unwrap();
         let (capacity, release) = (demand.capacity_bytes, demand.release_bytes);
-        let exact = RetainedCloneGrant { maximum_capacity_bytes: capacity, maximum_release_bytes: release.max(1), ..grant };
-        let progress = close_batch(&mut caller, &mut batch, exact).unwrap().progress();
+        let exact = RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: capacity, maximum_release_bytes: release.max(1), ..grant };
+        let progress = close_exact(&mut caller, &mut batch, exact).unwrap().progress();
         assert!(progress.fits(exact));
         assert!(progress.copied_items > 0 || progress.retained_capacity_bytes > 0 || progress.released_bytes > 0, "queried scalar phase must fund its real birth or release");
     }
@@ -133,14 +149,16 @@ fn member_owned_batch_retains_exact_type_source_and_physical_grants() {
         assert!(capacity <= grant.maximum_capacity_bytes && release <= grant.maximum_release_bytes);
         if batch.owner.as_ref().is_some_and(|owner| owner.terminal_is_empty()) {
             assert!(release > 0);
-            let zero = close_batch(&mut caller, &mut batch, RetainedCloneGrant { maximum_release_bytes: 0, ..grant }).unwrap();
+            let funded = quoted(&batch, grant);
+            let zero = close_batch(&mut caller, &mut batch, RetainedCloneGrant { maximum_release_bytes: 0, ..funded }).unwrap();
             assert_eq!(zero.progress(), RetainedCloneProgress::default());
-            let refused = close_batch(&mut caller, &mut batch, RetainedCloneGrant { maximum_release_bytes: release - 1, ..grant }).unwrap();
+            let refused = close_batch(&mut caller, &mut batch, RetainedCloneGrant { maximum_release_bytes: release - 1, ..funded }).unwrap();
             assert_eq!(refused.progress(), RetainedCloneProgress::default());
             assert_eq!(batch.next_demands(grant.maximum_copy_bytes).unwrap(), demand);
         }
-        let step = close_batch(&mut caller, &mut batch, grant).unwrap();
-        assert!(step.progress().fits(grant));
+        let funded = quoted(&batch, grant);
+        let step = close_exact(&mut caller, &mut batch, funded).unwrap();
+        assert!(step.progress().fits(funded));
         released += step.progress().released_bytes;
     }
     assert!(batch.terminal_is_empty());
@@ -188,7 +206,7 @@ fn member_owned_batch_child_depth_refusal_keeps_original_before_allocating_retir
         if batch.terminal_is_empty() { break; }
         let demand = batch.next_demands(grant.maximum_copy_bytes).unwrap();
         let exact = RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth, ..grant };
-        let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close_batch(&mut caller, &mut batch, exact).unwrap());
+        let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close_exact(&mut caller, &mut batch, exact).unwrap());
         assert!(step.progress().fits(exact));
         assert_eq!((events.requested_bytes, events.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
     }
@@ -213,12 +231,12 @@ fn member_owned_batch_preserves_actual_delegate_work_and_denied_zero_work() {
         assert_eq!(denied_work,u128::from(fixture["work"]["denied"].as_u64().unwrap()));
         assert_eq!(batch.next_demands(grant.maximum_copy_bytes).unwrap(),demand);
         let had_owner=batch.owner.as_ref().is_some_and(|owner|!owner.terminal_is_empty());
-        let(result,work)=close_measured(&mut caller,&mut batch,grant);
+        let funded=quoted(&batch,grant);let(result,work)=close_exact_measured(&mut caller,&mut batch,funded);
         if had_owner{assert!(work>0)}
         else{assert_eq!(work,u128::from(fixture["work"]["shellRelease"].as_u64().unwrap()))}
-        assert!(result.unwrap().progress().fits(grant));observed_work+=work;
+        assert!(result.unwrap().progress().fits(funded));observed_work+=work;
     }
     assert!(batch.terminal_is_empty()&&observed_work>0);
-    let(last,last_work)=close_measured(&mut caller,&mut batch,grant);last.unwrap();assert_eq!(last_work,0);
+    let(last,last_work)=close_exact_measured(&mut caller,&mut batch,grant);last.unwrap();assert_eq!(last_work,0);
     caller.retire(STOCK);
 }

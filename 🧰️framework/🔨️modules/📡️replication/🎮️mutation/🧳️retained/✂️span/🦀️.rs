@@ -30,11 +30,11 @@ impl RetainedByteSpan{
  pub fn take(&mut self,grant:RetainedCloneGrant)->Result<Option<(Vec<u8>,RetainedCloneProgress)>,ValueError>{let d=self.take_demand()?;if !retained_mutation_demand_fits(d,grant){return Ok(None);}self.phase=3;Ok(Some((self.output.take().unwrap(),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original byte span close has not begun"));}self.retirement.next_owner_demands::<Vec<u8>>(self.output.is_some(),&self.source,body)}
- pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}let d=self.close_demand(grant.maximum_copy_bytes)?;if !retained_mutation_demand_fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if !self.retirement.is_empty(){let turn=RetirementPollExit::settled(self.retirement.step_granted(effect))?;work=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));}
+  if !self.retirement.is_empty(){let turn=RetirementPollExit::settled(self.retirement.step_granted(body,effect))?;work=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));}
   let turn=self.retirement.begin_granted(&mut self.output,effect);work=turn.work;if let Some(p)=turn.result?{return Ok(RetainedCloneStep::Progress(p.progress()));}
-  let turn=RetirementPollExit::settled(close_retained_binding(&mut self.source,effect))?;work+=turn.work;Ok(turn.result?)
+  let turn=RetirementPollExit::settled(close_retained_binding(&mut self.source,body,effect))?;work+=turn.work;Ok(turn.result?)
  })();settle_exit(effect,base,result,work)}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.source.is_none()&&self.output.is_none()&&self.retirement.is_empty()}
 }

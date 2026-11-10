@@ -318,8 +318,7 @@ impl RendererIoNode {
             }
             if let Some(owner) = params_retirement.as_mut() {
                 if !owner.terminal_is_empty() {
-                    let step = owner.return_alias_step(cx.original_cancel_token(), grant);
-                    cx.consume_fuel(step.work);
+                    let step = cx.with_original_effect(grant, |cx, effect| owner.return_alias_step(cx.original_cancel_token(), effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0}, |(turn, _)| turn);
                     match step.result {
                         Ok(step) => {
                             cx.consume_retained(step.progress())?;
@@ -360,7 +359,7 @@ impl RendererIoNode {
             }
             match owner.has_original_cancel_alias_witness(cx.original_cancel_token()) {
                 Ok(true) => {
-                    let alias = owner.return_original_cancel_alias_step(cx.original_cancel_token(), grant);
+                    let alias = cx.with_original_effect(grant,|cx,effect|owner.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn);
                     cx.consume_fuel(alias.work);
                     match alias.result {
                         Ok(Some(step)) => {

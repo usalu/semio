@@ -17,7 +17,15 @@ impl ParamsBoxRetirement{
 }
 impl RetirementCursor for ParamsBoxRetirement{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(self.demand())}
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+ semio_framework_value_retirement::native_retirement_reply!();
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
+ fn terminal_is_empty(&self)->bool{self.source.is_none()}
+ fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+ fn next_close_byte_demand(&self)->Option<usize>{Some(self.demand().release_bytes)}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl ParamsBoxRetirement{
+ fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
   let grant=effect.grant();
   let action=self.action();if matches!(action,Action::Done){return RetirementStep::Complete(0)}
   let demand=self.demand();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
@@ -31,10 +39,6 @@ impl RetirementCursor for ParamsBoxRetirement{
    Action::Done=>return RetirementStep::Complete(0),
   };RetirementStep::Progress(progress,1)
  }
- fn terminal_is_empty(&self)->bool{self.source.is_none()}
- fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
- fn next_close_byte_demand(&self)->Option<usize>{Some(self.demand().release_bytes)}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl Drop for ParamsBoxRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"diagnostic parameter cursor retains original backing")}}
 pub(super) fn demands()->RetirementDemand{RetirementDemand{capacity_bytes:size_of::<ParamsBoxRetirement>(),depth:1,..Default::default()}}

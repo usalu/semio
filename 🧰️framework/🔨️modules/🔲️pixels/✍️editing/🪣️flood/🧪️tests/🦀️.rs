@@ -1,7 +1,7 @@
 //! 🧪️ The native bounded flood consumes the same region corpus and quotes every retained phase.
 use super::*;
-const GRANT:RetainedCloneGrant=RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:32768,maximum_capacity_bytes:16777216,maximum_release_bytes:1048576,maximum_depth:4096};
-#[path="../../../../🌱️value/♻️retirement/📦️owner/🧪️work/effect.rs"]
+const GRANT:RetainedCloneGrant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:32768,maximum_capacity_bytes:16777216,maximum_release_bytes:1048576,maximum_depth:4096};
+#[path="../../../../◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs"]
 mod effect;
 /// 🪢️ Runs one flood close turn inside one actual original effect and settles its poll.
 fn closed(cursor:&mut FloodRegionCursor,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{effect::settled(effect::with_effect(grant,1<<20,&mut None,|effect|cursor.close_step(effect)))}

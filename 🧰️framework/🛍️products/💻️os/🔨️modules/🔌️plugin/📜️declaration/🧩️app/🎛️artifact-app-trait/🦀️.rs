@@ -28,7 +28,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 📬️ Measures the original typed completion's exact app-owned cleanup constructor.
     fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<Self>)->Option<usize>{crate::completion_retirement::derived_completion_birth_bytes(value)}
     /// 🎟️ Admits the original completion payload without consuming it on an unfunded or unsupported route.
-    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<Self>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{crate::completion_retirement::derived_admit_completion_retirement(value,grant)}
+    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<Self>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{crate::completion_retirement::derived_admit_completion_retirement(value,effect)}
     /// 📱️ Declares the exact first-party scaffold birth for an applying parent mutation source.
     fn owned_mutation_batch_birth_bytes()->Option<usize>{None}
     /// 🪵️ Retains the original parent source on every refused or unfunded admission.

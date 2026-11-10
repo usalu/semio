@@ -2,6 +2,7 @@
 
 #[test]
 fn terrain_visibility_requires_the_complete_family_marker() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     let tile = (3, 4, 5);
     assert!(!terrain_family_visible(&state.terrain, tile));
@@ -9,14 +10,6 @@ fn terrain_visibility_requires_the_complete_family_marker() {
     assert!(terrain_family_visible(&state.terrain, tile));
 }
 
-fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
-    loop {
-        let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
-        let step=mesh3d_allocate_step(token,grant).unwrap();
-        assert!(step.progress.fits(grant));
-        if step.complete{break}
-    }
-}
 
 fn close_oracle_mesh(lease:Mesh3dLease) {
     loop {
@@ -58,6 +51,7 @@ fn face_overlay_test_mesh(generation: u64, revision: u64, face_id: u32) -> Mesh3
 
 #[test]
 fn face_overlay_writer_matches_legacy_winding_and_retires_stale_generation() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.interaction_revision = 7;
     state.scene.draw_generation = 11;
@@ -114,6 +108,7 @@ fn face_overlay_writer_matches_legacy_winding_and_retires_stale_generation() {
 
 #[test]
 fn face_overlay_family_becomes_visible_only_after_every_bucket_is_published() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.interaction_revision = 7;
     state.scene.draw_generation = 11;
@@ -168,6 +163,7 @@ fn face_overlay_family_becomes_visible_only_after_every_bucket_is_published() {
 
 #[test]
 fn world_object_registry_build_is_one_owner_per_turn_and_interruptible() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.interaction_revision = 7;
     let mesh = publish_oracle_mesh(mesh_oracle_from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2]));
@@ -208,6 +204,7 @@ fn world_object_registry_build_is_one_owner_per_turn_and_interruptible() {
 
 #[test]
 fn world_vortex_and_reference_pick_cursors_resume_revalidate_and_close() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.interaction_revision = 3;
     state.interaction.interaction_objects.revision = 3;
@@ -244,6 +241,7 @@ fn world_vortex_and_reference_pick_cursors_resume_revalidate_and_close() {
 
 #[test]
 fn world_component_cursor_steps_one_topology_item_and_rejects_aba() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.interaction_revision = 5;
     state.interaction.interaction_objects.revision = 5;
@@ -310,6 +308,7 @@ fn world_component_cursor_steps_one_topology_item_and_rejects_aba() {
 /// `RIGHT: null`, pan on Shift, orbit on Alt), so an unmodified right-drag moves no camera either.
 #[test]
 fn a_right_gesture_publishes_nothing_while_it_runs() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.interaction_revision = 4;
     state.interaction.interaction_objects.revision = 4;
@@ -346,6 +345,7 @@ fn a_right_gesture_publishes_nothing_while_it_runs() {
 /// retires as before.
 #[test]
 fn an_intent_aimed_outside_the_surface_retires_instead_of_faulting_the_frame() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.bounds = Rect { x: 536.0, y: 54.0, w: 1061.0, h: 913.0 };
     state.interaction.interaction_objects.revision = state.session.interaction_revision;
@@ -386,6 +386,7 @@ fn an_intent_aimed_outside_the_surface_retires_instead_of_faulting_the_frame() {
 
 #[test]
 fn world_marquee_overlay_points_reads_authority_gesture() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     let mut gesture = WorldMarqueeGesture::new(1, 1, [10.0, 20.0]);
     assert!(gesture.push([100.0, 80.0]));
@@ -397,6 +398,7 @@ fn world_marquee_overlay_points_reads_authority_gesture() {
 
 #[test]
 fn world_marquee_click_retires_points_before_exact_release_retry() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.interaction.interaction_objects.revision = state.session.interaction_revision;
     let modifiers = PointerModifiers::default();
@@ -424,6 +426,7 @@ fn world_marquee_click_retires_points_before_exact_release_retry() {
 /// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`.
 #[test]
 fn world_marquee_pages_build_one_target_per_grant_and_publish_atomically_fifo() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.interaction_revision = 6;
     state.interaction.interaction_objects.revision = 6;
@@ -461,6 +464,7 @@ fn world_marquee_pages_build_one_target_per_grant_and_publish_atomically_fifo() 
 
 #[test]
 fn world_marquee_page_claim_saturation_preserves_all_results_for_exact_retry() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.interaction_revision = 6;
     state.interaction.interaction_objects.revision = 6;
@@ -557,6 +561,7 @@ fn world_marquee_cursor_ids(state: &World3dState, points: &[[f32; 2]]) -> Vec<St
 
 #[test]
 fn world_marquee_mesh_cursor_matches_legacy_window_crossing_disjoint_and_degenerate_cases() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let state = world_marquee_geometry_fixture(1);
     let viewport = render_pick_viewport(&state.session);
     let view_projection = state.camera.orbit.to_camera().view_proj(800.0, 800.0);
@@ -578,6 +583,7 @@ fn world_marquee_mesh_cursor_matches_legacy_window_crossing_disjoint_and_degener
 
 #[test]
 fn world_marquee_mesh_cursor_preserves_legacy_multi_page_draw_order() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let state = world_marquee_geometry_fixture(WORLD_MARQUEE_RESULT_PAGE_CAPACITY + 1);
     let points = [[0.0, 0.0], [400.0, 400.0]];
     let view_projection = state.camera.orbit.to_camera().view_proj(800.0, 800.0);
@@ -590,6 +596,7 @@ fn world_marquee_mesh_cursor_preserves_legacy_multi_page_draw_order() {
 
 #[test]
 fn world_marquee_lasso_edge_cursor_matches_legacy_and_rejects_object_aba() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = world_marquee_geometry_fixture(1);
     state.selection.selection_method = "lasso".into();
     let viewport = render_pick_viewport(&state.session);
@@ -649,6 +656,7 @@ fn world_component_marquee_cursor_ids(state: &World3dState, points: &[[f32; 2]])
 
 #[test]
 fn world_component_marquee_cursor_matches_legacy_vertex_edge_face_geometry() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = world_marquee_geometry_fixture_from(component_triangle_mesh_oracle(), 1);
     let viewport = render_pick_viewport(&state.session);
     let view_projection = state.camera.orbit.to_camera().view_proj(800.0, 800.0);
@@ -665,6 +673,7 @@ fn world_component_marquee_cursor_matches_legacy_vertex_edge_face_geometry() {
 
 #[test]
 fn world_component_marquee_publish_preserves_shared_merge_and_exact_targets() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = world_marquee_geometry_fixture(1);
     state.selection.granularity = "vertex".into();
     state.selection.component_ids = vec!["7".into()];

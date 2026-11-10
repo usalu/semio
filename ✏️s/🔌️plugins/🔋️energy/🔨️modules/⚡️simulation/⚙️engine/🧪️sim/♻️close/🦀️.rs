@@ -51,7 +51,7 @@ impl EnergyJobAuthority{
   if !energy_grant_covers(grant,demand){return Ok(energy_idle())}
   if let Some(close)=self.closing_tail.as_mut(){
    if close.terminal_is_empty(){self.closing_tail=None;return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}})}
-   return crate::retirement::energy_poll(close.step(effect)).map(|step|InteractiveJobCloseStep::Pending{progress:step.map(|step|step.progress()).unwrap_or_default()})
+   return crate::retirement::energy_poll(close.step(effect.grant().maximum_copy_bytes, effect)).map(|step|InteractiveJobCloseStep::Pending{progress:step.map(|step|step.progress()).unwrap_or_default()})
   }
   if !self.tail_moved{
    if !<EnergyAuthorityRetirement as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Energy retained terminal owners have no controlled retirement"))}

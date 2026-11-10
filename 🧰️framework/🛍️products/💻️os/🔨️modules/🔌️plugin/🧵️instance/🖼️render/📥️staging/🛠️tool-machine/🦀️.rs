@@ -218,7 +218,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|owner.advance(ArtifactStore::<A::Config,A::ConfigMutation>::snapshot_alias_retirement_birth_bytes(),effect,|alias,child|self.stores.config_store.retire_snapshot_alias(alias,child)))? else{return Ok(RetainedCloneStep::Progress(Default::default()))};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));return semio_plugin_ownership::bounded_ownership::plugin_settle_value(poll);
         }
         if self.tool_machines.pending_config_aliases.is_some(){let(owner,progress)=ToolOriginalAliasBatch::admit_original(&mut self.tool_machines.pending_config_aliases,grant)?.expect("admitted original config overlay batch");self.tool_machines.config_alias_retirement=Some(owner);return Ok(RetainedCloneStep::Progress(progress));}
-        self.stores.window_config_store.preview_retirement_step(grant)
+        let Some((step,performed))=cx.with_original_effect(grant,|_,effect|self.stores.window_config_store.preview_retirement_step(effect))? else{return Ok(RetainedCloneStep::Progress(Default::default()))};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));step
     }
 
     /// 🎚️ Rides every lane of `emit` — its artifact leaves, its owned children's shares (design §12), its app-config and
@@ -257,8 +257,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         use semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage as Stage;
         if *stage==Stage::Complete{return Ok(true)}
         if *stage==Stage::Capture{
-            let mut done=None;let bytes=std::mem::size_of::<GestureOperation<A::Mutation>>()+std::mem::size_of::<Stage>()+2*std::mem::size_of::<bool>()+std::mem::size_of::<u64>();
-            semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{let driven=self.settle_gesture_slot(operation,matches!(publication,ArtifactToolCompletionValue::Emit(Ok(_),_)));if let ArtifactToolCompletionValue::Emit(Ok(emit),_)=publication{if driven&&emit.transaction.is_none()&&emit.artifact_mutations.is_empty(){*command_logged=true}}if !self.tool_machines.gesture_operations.iter().flatten().any(|owner|owner.operation==operation&&!owner.settled){*stage=match self.tool_machines.operation_tag(operation){Some(ToolTag::Scrub(_))=>Stage::Scrub,Some(ToolTag::Typing(_))=>Stage::Typing,None=>Stage::Plain}}semio_framework_value::RetainedWorkOutcome{result:Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;return Ok(false)
+            let bytes=std::mem::size_of::<GestureOperation<A::Mutation>>()+std::mem::size_of::<Stage>()+2*std::mem::size_of::<bool>()+std::mem::size_of::<u64>();let p=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};
+            if !cx.is_cancelled()&&!cx.should_yield()&&cx.fuel_remaining()>=1&&p.fits(cx.retained_grant()){cx.consume_retained(p)?;cx.consume_fuel(1);let driven=self.settle_gesture_slot(operation,matches!(publication,ArtifactToolCompletionValue::Emit(Ok(_),_)));if let ArtifactToolCompletionValue::Emit(Ok(emit),_)=publication{if driven&&emit.transaction.is_none()&&emit.artifact_mutations.is_empty(){*command_logged=true}}if !self.tool_machines.gesture_operations.iter().flatten().any(|owner|owner.operation==operation&&!owner.settled){*stage=match self.tool_machines.operation_tag(operation){Some(ToolTag::Scrub(_))=>Stage::Scrub,Some(ToolTag::Typing(_))=>Stage::Typing,None=>Stage::Plain}}}return Ok(false)
         }
         if *stage==Stage::Plain{return Ok(true)}
         let ArtifactToolCompletionValue::Emit(Ok(emit),_)=publication else{

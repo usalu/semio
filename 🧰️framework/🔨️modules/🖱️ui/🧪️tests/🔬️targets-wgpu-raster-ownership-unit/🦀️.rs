@@ -31,20 +31,20 @@ fn original_raster_lease_full_grant_closes_final_pool_with_physical_receipts() {
         let copy=copy.as_u64().unwrap() as usize;
         let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:copy,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
         for denied in [zero,RetainedCloneGrant{maximum_items:1,maximum_depth:0,..zero}]{
-            let (result,births,frees)=measured(||lease.close_step(denied));
+            let (result,births,frees)=measured(||step_lease(&mut lease,copy,denied));
             assert!(matches!(result.unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));assert_eq!((births,frees),(0,0));
             assert_eq!(lease.with_rows(0,bytes,|pixels,_|pixels.as_ptr()).unwrap(),pointer);
         }
         let mut retained_births=0;let mut released=0;let mut turns=0;let mut refusals=0;
         loop{
             turns+=1;assert!(turns<32768);
-            lease.next_close_copy_byte_demand().unwrap();
-            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:lease.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:lease.next_close_release_byte_demand().unwrap(),maximum_depth:lease.next_close_depth_demand().unwrap()};
+            let mut body=copy;let demand=loop{let demand=lease.next_close_demand(body).unwrap();if demand.copy_bytes<=body{break demand}body=demand.copy_bytes;};
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
             for denied in [grant.maximum_capacity_bytes.checked_sub(1).map(|bytes|RetainedCloneGrant{maximum_capacity_bytes:bytes,..grant}),grant.maximum_release_bytes.checked_sub(1).map(|bytes|RetainedCloneGrant{maximum_release_bytes:bytes,..grant})].into_iter().flatten(){
-                let (result,births,frees)=measured(||lease.close_step(denied));
+                let (result,births,frees)=measured(||step_lease(&mut lease,body,denied));
                 assert!(matches!(result.unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));assert_eq!((births,frees),(0,0));refusals+=1;
             }
-            let (result,births,frees)=measured(||lease.close_step(grant));let result=result.unwrap();let progress=result.progress();
+            let (result,births,frees)=measured(||step_lease(&mut lease,body,grant));let result=result.unwrap();let progress=result.progress();
             assert!(progress.fits(grant));assert_eq!((births,frees),(progress.retained_capacity_bytes,progress.released_bytes));retained_births+=births;released+=frees;
             if matches!(result,RetainedCloneStep::Complete(_)){break}
         }
@@ -53,6 +53,11 @@ fn original_raster_lease_full_grant_closes_final_pool_with_physical_receipts() {
     }}
 }
 
+fn step_lease(lease:&mut SceneRasterLease,body:usize,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
+    funding::settled(funding::with_effect(grant,funding::WORK,&mut None,|effect|lease.close_step(body,effect))).result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)
+}
+#[path = "../../../◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs"]
+mod funding;
 fn limits(lease_capacity_per_slot: usize) -> SceneRasterPoolLimits {
     SceneRasterPoolLimits { item_bytes: 32, pool_bytes: 64, slot_capacity: 2, lease_capacity_per_slot, transfer_bytes: 8, retire_bytes: 8, gpu_resident_bytes: 96 }
 }

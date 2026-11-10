@@ -116,10 +116,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// the member's place once every op is shown. `true` while the fold still owns this turn — also while the retirement
     /// of the reads it replaced is saturated (retryable), so the job waits instead of leasing more; a fold that cannot
     /// apply its ops (they do not decode as the member's vocabulary) faults the run.
-    pub(super)  fn refresh_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<bool, Fault> {
+    pub(super)  fn refresh_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<bool, Fault> {
         let Some(mut member) = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.member.take()) else { return Ok(false) };
         let mut progress=RetainedCloneProgress::default();
-        let outcome = self.child_composition.refresh_member_overlay(&mut member, deadline,grant,receiving,&mut progress);
+        let outcome = self.child_composition.refresh_member_overlay(&mut member, deadline,grant,receiving,effect,&mut progress);
         let entry = selected_entry_required!(self.tool_runs,"member refresh")?;
         entry.member = Some(member);
         self.tool_runs.retain_original_receipt(grant,progress)?;
@@ -149,11 +149,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 🪦️ A terminal member run holds no provisional op and shows none: the composed reads it replaced retire and its
     /// overlay rests on the member head again, so the run owes nothing. A member that is gone has no head to rest on; a
     /// saturated retirement ring (retryable) is retried on the next turn.
-    pub(super)  fn settle_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), Fault> {
+    pub(super)  fn settle_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(), Fault> {
         let Some(mut member) = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.member.take()) else { return Ok(()) };
         let mut progress=RetainedCloneProgress::default();
         let outcome = if self.child_composition.children.get(&(member.slot.clone(), member.child_id.clone())).is_some() {
-            self.child_composition.refresh_member_overlay(&mut member, deadline,grant,receiving,&mut progress).map(|_| ())
+            self.child_composition.refresh_member_overlay(&mut member, deadline,grant,receiving,effect,&mut progress).map(|_| ())
         } else {
             member.rebase = false;
             let stale = std::mem::take(&mut member.stale);
@@ -172,7 +172,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// carries the run's `TransactionRef` and group id: one history row whose mutations are the member's leaves, editable on
     /// that member store. A member that is gone or ops that do not decode reject the publication like a conflicting parent
     /// batch.
-    async fn publish_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), Fault> {
+    async fn publish_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(), Fault> {
         let app_instance_id = self.app.instance_id().await;
         let entry = selected_entry_required!(self.tool_runs,"member publication")?;
         let (run, generation) = (entry.slot.run, entry.slot.generation);
@@ -182,7 +182,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             return Ok(());
         }
         if member.emit.is_none(){
-            let decoded = self.child_composition.children.get(&(member.slot.clone(), member.child_id.clone())).map(|child| child.member.visit_member(ToolRunMemberEmit { slot: &member.slot, child_id: &member.child_id, ops: &member.ops, emit: &mut member.emit, owner:&mut member.emission_owner, grant }));
+            let decoded = self.child_composition.children.get(&(member.slot.clone(), member.child_id.clone())).map(|child| child.member.visit_member(ToolRunMemberEmit { slot: &member.slot, child_id: &member.child_id, ops: &member.ops, emit: &mut member.emit, owner:&mut member.emission_owner, grant, effect }));
             match decoded {
                 Some(Ok((_,progress)))=>{self.tool_runs.retain_original_receipt(grant,progress)?;return Ok(());},
                 _ => return self.reject_tool_run_publication(run, generation),

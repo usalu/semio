@@ -361,12 +361,7 @@ impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,const N:u
 impl<T:RetireOwned,const N:usize> NativeDefaultValue for UiFixedList<T,N>{
     fn default_demand()->RetirementDemand{fixed(size_of::<Option<Self>>())}
     fn default_work_demand()->Result<u64,ValueError>{Ok(1)}
-    fn default_allocates()->bool{false}
-    fn admit_default(output:&mut Option<Self>,grant:RetainedCloneGrant,_actual:Option<&mut Option<usize>>)->RetainedWorkOutcome{
-        if output.is_some(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
-        let demand=Self::default_demand();
-        if !retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-        *output=Some(Self::empty());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(demand))),work:1}
-    }
+    fn admit_default<'reply>(output:&mut Option<Self>,effect:&mut ::semio_framework_value::RetainedAllocationEffect<'_>,reply: ::semio_framework_value_native_owned::native_decoding::OriginalEffectReply<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>)->Result<::semio_framework_value_native_owned::native_decoding::OriginalEffectReplyComplete<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>,::semio_framework_value::ValueError>{::semio_framework_value_native_owned::native_decoding::owned::native_admit_default(output,<Self as ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue>::default_demand(),||Self::empty(),effect,reply)}
+fn recover_default<'reply>(_:&mut Option<Self>,_:&mut ::semio_framework_value::RetainedAllocationEffect<'_>,reply: ::semio_framework_value_native_owned::native_decoding::OriginalEffectReply<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>)->Result<::semio_framework_value_native_owned::native_decoding::OriginalEffectReplyComplete<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>,::semio_framework_value::ValueError>{Ok(reply.pending())}
 }
 impl<T:RetireOwned,const N:usize> NativeDefault for UiFixedList<T,N>{type Cursor=NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{Self::Cursor::new()}}

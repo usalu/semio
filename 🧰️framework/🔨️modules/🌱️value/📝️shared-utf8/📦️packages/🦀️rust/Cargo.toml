@@ -1,0 +1,47 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-value-shared-utf8"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Shared immutable UTF8 adopting its original byte allocation with funded clone and retirement cursors."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-shared-utf8"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_shared_utf8"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value-retained-clone = { path = "../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-intrinsic = { path = "../../../🌳️intrinsic/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+
+[[test]]
+name = "value-shared-utf8-lease"
+path = "../../🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value-shared-utf8-native"
+path = "../../🎟️native/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value-shared-utf8-admission"
+path = "../../🎟️admission/🧪️tests/🦀️.rs"

@@ -49,7 +49,7 @@ impl RetirementQueue {
     fn selected(&self)->Option<&dyn ErasedSnapshotRetirement>{self.pending.as_deref().or_else(||self.frames.get(self.frames.len().saturating_sub(1)).map(Box::as_ref))}
     pub fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if self.terminal_is_empty(){return Ok(0)}self.selected().map_or(Ok(1),|owner|if owner.terminal_is_empty(){Ok(1)}else{owner.next_computational_work(body)})}
     fn requires_original_birth(&self)->bool{self.selected().is_some_and(|owner|!owner.terminal_is_empty()&&owner.requires_original_birth())}
-    fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{let done=|result:Result<RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>|RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:0});let retained=self.len();let Some(depth)=grant.maximum_depth.checked_sub(retained)else{return done(Err(refusal(ValueRefusalKind::DepthLimit,"retirement queue retained frames exceed the admitted depth").into()))};let index=self.frames.len().saturating_sub(1);let owner=if let Some(owner)=self.pending.as_mut(){Some(owner)}else{self.frames.get_mut(index)};match owner{Some(owner)=>owner.close_original_birth_step(original,RetainedCloneGrant{maximum_depth:depth,..grant}),None=>done(Err(refusal(ValueRefusalKind::InvariantViolated,"retirement queue has no selected original birth").into()))}}
+    fn close_original_birth_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{let done=|result:Result<RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>|RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:0});let retained=self.len();let Some(depth)=grant.maximum_depth.checked_sub(retained)else{return done(Err(refusal(ValueRefusalKind::DepthLimit,"retirement queue retained frames exceed the admitted depth").into()))};let index=self.frames.len().saturating_sub(1);let owner=if let Some(owner)=self.pending.as_mut(){Some(owner)}else{self.frames.get_mut(index)};match owner{Some(owner)=>owner.close_original_birth_step(original,RetainedCloneGrant{maximum_depth:depth,..grant}),None=>done(Err(refusal(ValueRefusalKind::InvariantViolated,"retirement queue has no selected original birth").into()))}}
     /// ⏭️ Quotes only the original active owner or its terminal frame and queue backing.
     pub fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if self.terminal_is_empty(){return Ok(Default::default());}
@@ -77,12 +77,12 @@ impl RetirementQueue {
     }
     /// 🧾️ Borrows the original queue turn receipt, including genuine failed-child effects.
     pub fn step_progress(&self)->RetainedCloneProgress{self.step_progress}
-    pub fn step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementOutcome{self.step_with(body,effect,|owner,effect|owner.close_step(body,effect))}
+    pub fn step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.step_with(body,effect,|owner,effect|owner.close_step(body,effect))}
     fn requires_original_control(&self)->bool{self.selected().is_some_and(|owner|!owner.terminal_is_empty()&&owner.requires_original_control())}
-    fn step_with(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,invoke:impl FnOnce(&mut dyn ErasedSnapshotRetirement,&mut RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementOutcome)->semio_framework_value_retirement::OriginalRetirementOutcome {let grant=effect.grant();let mut work=0;let result=(||{
-        self.step_progress=empty_progress();match {let turn=self.step_original(body,effect,invoke);work=turn.work;turn.result}{Ok(step)=>{self.step_progress=step.progress();Ok(step)},Err(error)=>{if error.retained_progress()!=empty_progress(){self.step_progress=error.retained_progress();}Err(error.with_retained_progress(self.step_progress))}}
-    })();RetainedWorkOutcome{result,work}}
-    fn step_original(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,invoke:impl FnOnce(&mut dyn ErasedSnapshotRetirement,&mut RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementOutcome)->semio_framework_value_retirement::OriginalRetirementOutcome {let grant=effect.grant();let mut work=0;let result=(||{
+    fn step_with(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,invoke:impl FnOnce(&mut dyn ErasedSnapshotRetirement,&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->OriginalRetirementPoll {let mut work=0;self.step_progress=empty_progress();
+        let result=match self.step_original(body,effect,invoke,&mut work){Ok(step)=>{self.step_progress=step.progress();Ok(step)},Err(RetirementPollExit::Failed(error))=>{if error.retained_progress()!=empty_progress(){self.step_progress=error.retained_progress();}Err(RetirementPollExit::Failed(error.with_retained_progress(self.step_progress)))},Err(pending)=>Err(pending)};
+        RetirementPollExit::finish(result,work)}
+    fn step_original(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,invoke:impl FnOnce(&mut dyn ErasedSnapshotRetirement,&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll,work:&mut u128)->Result<RetainedCloneStep,RetirementPollExit> {let grant=effect.grant();
         let empty=empty_progress();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         if grant.maximum_items==0||effect.maximum_work_units()<self.next_computational_work(body)?{return Ok(RetainedCloneStep::Progress(empty));}
@@ -90,25 +90,26 @@ impl RetirementQueue {
         if demand.depth>grant.maximum_depth{return Err(refusal(ValueRefusalKind::DepthLimit,"retirement queue exceeds admitted depth").into());}
         if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
         if self.frames.is_empty()&&self.pending.is_none() {
-            let step=self.frames.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;work=step.work;
+            let turn=self.frames.release_empty_page(effect);*work=turn.work;
+            let step=match turn.result{Ok(list::PagedListReleaseOutcome::Denied)=>return Ok(RetainedCloneStep::Progress(empty)),Ok(list::PagedListReleaseOutcome::Ready(step))=>step,Err(list::PagedListReleaseFailure::Work(error))=>return Err(error.into()),Err(list::PagedListReleaseFailure::Release(error))=>return Err(ValueError::from(error).into())};
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}));
         }
         let index=self.frames.len().saturating_sub(1);
-        let owner=self.selected().unwrap();
+        let owner=self.selected().ok_or_else(||ValueError::invariant("retirement queue has no selected owner"))?;
         if owner.terminal_is_empty() {
             let bytes=size_of_val(owner);
             if bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
-            work=1;if self.pending.is_some(){self.pending.take();}else{self.frames.pop();}
+            if !effect.performed(1)?{return Err(refusal(ValueRefusalKind::WorkLimit,"retirement queue pop exceeds its work grant").into())}*work=1;if self.pending.is_some(){self.pending.take();}else{self.frames.pop();}
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));
         }
         let retained=self.len();
-        let child_grant=RetainedCloneGrant {maximum_depth:grant.maximum_depth-retained,..grant};
-        let owner=if let Some(owner)=self.pending.as_mut(){owner}else{self.frames.get_mut(index).unwrap()};
-        let turn=invoke(owner.as_mut(),&mut effect.reborrow(child_grant,effect.maximum_work_units()).expect("queue child exceeds original effect"));work=turn.work;let step=turn.result?;
+        let child_grant=RetainedCloneGrant {maximum_depth:grant.maximum_depth.checked_sub(retained).ok_or_else(||refusal(ValueRefusalKind::DepthLimit,"retirement queue retained frames exceed the admitted depth"))?,..grant};
+        let owner=if let Some(owner)=self.pending.as_mut(){owner}else{self.frames.get_mut(index).ok_or_else(||ValueError::invariant("retirement queue lost its selected frame"))?};
+        let turn=RetirementPollExit::settled(invoke(owner.as_mut(),&mut effect.nested(child_grant)))?;*work=turn.work;let step=turn.result?;
         self.step_progress=step.progress();
         let progress=admit_retained_clone_close(child_grant,step,owner.terminal_is_empty(),"retirement queue original frame")?.progress();
         Ok(RetainedCloneStep::Progress(progress))
-    })();RetainedWorkOutcome{result,work}}
+    }
 }
 impl Drop for RetirementQueue {
     fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"retirement queue abandoned original ownership");if self.terminal_is_empty(){unsafe {ManuallyDrop::drop(&mut self.frames);ManuallyDrop::drop(&mut self.pending);}}}
@@ -122,7 +123,7 @@ impl RetireOwned for RetirementQueue {
 fn cursor_turn(poll:OriginalRetirementPoll)->RetirementStep{retirement::erased_cursor_turn(poll)}
 impl RetirementCursor for RetirementQueue {
  fn requires_original_birth(&self)->bool{RetirementQueue::requires_original_birth(self)}
- fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{cursor_turn(RetirementQueue::close_original_birth_step(self,original,grant))}
+ fn close_original_birth_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{cursor_turn(RetirementQueue::close_original_birth_step(self,original,grant))}
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{RetirementQueue::next_computational_work(self,body)}
 
  fn requires_original_control(&self)->bool{RetirementQueue::requires_original_control(self)}
@@ -137,15 +138,6 @@ impl RetirementCursor for RetirementQueue {
     fn next_close_byte_demand(&self)->Option<usize> {self.next_release_byte_demand().ok()}
     fn next_birth_bytes(&self,maximum_body_bytes:usize)->Option<usize> {self.next_capacity_byte_demand(maximum_body_bytes).ok()}
     fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(size_of::<Self>())}
-}
-impl RetirementQueue {
- fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();
-        let turn=self.step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));match turn.result {
-            Err(error)=>RetirementStep::Failure(error,turn.work),
-            Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),
-            Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work),
-        }
-    }
 }
 
 fn empty_progress()->RetainedCloneProgress {RetainedCloneProgress {copied_items:0,copied_bytes:0,retained_capacity_bytes:0,released_bytes:0}}

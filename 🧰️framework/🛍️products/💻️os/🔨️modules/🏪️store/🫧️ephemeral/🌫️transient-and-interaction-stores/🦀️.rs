@@ -77,7 +77,7 @@ impl<P, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
     }
 
     /// 🧹️ Advances one returned read through a root-only retirement authority, for stores that own no owned-value factory.
-    pub fn maintenance_returned_reads_step_root(&mut self, factory: &dyn SnapshotRetirementFactory<P>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll
+    pub fn maintenance_returned_reads_step_root(&mut self, factory: &std::sync::Arc<dyn SnapshotRetirementFactory<P>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll
     where
         P: Send + Sync + 'static,
     {
@@ -85,13 +85,13 @@ impl<P, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
     }
 
     /// 📏️ Quotes the next returned read's birth or physical retirement under a root-only retirement authority.
-    pub fn maintenance_returned_reads_demands_root(&self, factory: &dyn SnapshotRetirementFactory<P>, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>
+    pub fn maintenance_returned_reads_demands_root(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>
     where
         P: Send + Sync + 'static,
     {
         if let Some(owner) = self.active_returned_read.as_ref() { return artifact_retirement_box_demands(owner, body); }
         match self.reads.as_ref() {
-            Some(reads) if reads.has_returned() => reads.returned_admission_demands::<P>(|root| semio_framework_value::RetirementDemand { capacity_bytes: factory.retirement_birth_bytes(root), depth: 1, ..Default::default() }).map_err(SnapshotReadLeaseRefusal::into_value_error),
+            Some(reads) if reads.has_returned() => reads.returned_admission_demands::<P>(|_| semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::factory::ArcRootRetirement::<P>::constructor_capacity_bytes(), depth: 1, ..Default::default() }).map_err(SnapshotReadLeaseRefusal::into_value_error),
             _ => Ok(Default::default()),
         }
     }
@@ -294,7 +294,7 @@ impl<P, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
                 let generation_before = self.generation;
                 let previous = self.current.replace(prepared.next_root).expect("live transient publication root remains");
                 *publication.displaced_root_retirement = Some(if let Some(factory) = publication.owned_retirement_factory.as_ref() {
-                    Box::new(ReturnedSnapshotReadRetirement::new(previous, factory.clone()))
+                    Box::new(crate::DisplacedOwnedRootRetirement::new(previous, factory.clone()))
                 } else {
                     ArtifactStoreDisplacedSnapshotRetirement::boxed(previous, Arc::clone(publication.root_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"transient publication lost its local-root retirement factory"))?))
                 });
@@ -419,7 +419,7 @@ impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
         if self.factory.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         self.factory_close.as_ref().map_or(Ok(Default::default()), |factory| nested(factory.demands(body)?))
     }
-    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = self.close_inner(effect); semio_framework_value::RetirementPollExit::settle(effect, result) }
+    pub fn close_step(&mut self,_body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = self.close_inner(effect); semio_framework_value::RetirementPollExit::settle(effect, result) }
     fn close_inner(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress};
         let grant = effect.grant();
@@ -430,15 +430,15 @@ impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(reads) = self.reads.as_ref() { if self.active_returned.is_some() || reads.has_returned() { let factory = self.factory.as_ref().ok_or_else(|| ValueError::invariant("retained transient factory is absent"))?; return semio_framework_value::RetirementPollExit::resume(advance_returned_snapshot_read(reads, &mut self.active_returned, factory, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress())); } }
-        if self.active_root.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active_root, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active_root.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active_root, grant.maximum_copy_bytes, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if self.root.is_some() {
             let mut factory = self.factory.clone();
-            let poll = ReturnedSnapshotReadRetirement::admit_original(&mut self.root, &mut factory, &mut self.active_root, &mut effect.nested(child)).map_err(Into::into);
+            let poll = ReturnedSnapshotReadRetirement::admit_original(&mut self.root, &mut factory, &mut self.active_root, &mut effect.nested(child));
             return semio_framework_value::RetirementPollExit::resume(poll);
         }
         if let Some(reads) = self.reads.as_ref() { if !SnapshotReadLeaseRegistry::terminal_is_empty(reads) { return Ok(RetainedCloneStep::Progress(Default::default())); } return semio_framework_value::RetirementPollExit::resume(snapshot_registry_alias_close_step(&mut self.reads, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(factory) = self.factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
-        let factory = self.factory_close.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("retained transient factory ticket is absent"))?; let step = semio_framework_value::RetirementPollExit::resume(factory.step(&mut effect.nested(child)))?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "transient factory")?; if factory.terminal_is_empty() { self.factory_close = None; } Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
+        let factory = self.factory_close.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("retained transient factory ticket is absent"))?; let step = semio_framework_value::RetirementPollExit::resume(factory.step(child.maximum_copy_bytes,&mut effect.nested(child)))?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "transient factory")?; if factory.terminal_is_empty() { self.factory_close = None; } Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
 }
 

@@ -23,6 +23,9 @@ where
         macro_rules! original {
             ($field:ident) => { if self.$field.is_some() { return semio_os_store_read::artifact_retirement_owned_birth_demands(&self.$field); } };
         }
+        macro_rules! leased {
+            ($field:ident) => { if let Some(alias) = self.$field.as_ref() { return semio_os_store_read::artifact_retirement_owned_birth_demands(&Some(semio_framework_value::retirement::arc_custody::ArcLease::new(std::sync::Arc::clone(alias)))); } };
+        }
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "hydration child depth overflow"))?; Ok(demand) };
         let frame = |bytes| RetirementDemand { capacity_bytes: bytes, depth: 2, ..Default::default() };
         if let Some(job)=self.fold_job.as_ref(){if self.target==PersistedDocumentHydrationTarget::Envelope{return job.next_original_close_demand(body)}return semio_os_store_read::retirement_owner_demands(&self.fold_job,body)}
@@ -32,7 +35,7 @@ where
         if self.target_decoder.is_some() { return semio_os_store_read::retirement_owner_demands(&self.target_decoder, body); }
         original!(pending_target);
         original!(target_address);
-        original!(target_source);
+        leased!(target_source);
         original!(replay_ids);
         original!(replay_order);
         if let Some(catalog) = self.initialization_catalog.as_ref() { return nested(catalog.close_demands()?); }
@@ -45,7 +48,7 @@ where
             let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration original projection lost its declared factory"))?;
             return Ok(frame(owners.initial_snapshot_retirement.retirement_birth_bytes(initial)));
         }
-        original!(history);
+        leased!(history);
         original!(mutation_lookup);
         original!(pin_refs);
         original!(edit_lookup);
@@ -72,7 +75,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.depth) }
 
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
         let grant = effect.grant();
         let turn = (|| -> semio_framework_value::RetainedWorkOutcome {
         if self.target==PersistedDocumentHydrationTarget::Envelope&&self.fold_job.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original fold retirement requires its actual Source decoder")),work:0}}
@@ -93,10 +96,13 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.phase = Phase::Rejected;
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
-        if self.active.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, effect)); }
+        if self.active.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)); }
         if self.fold_job.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.fold_job, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         macro_rules! original {
             ($field:ident) => { if self.$field.is_some() { return semio_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, effect).result; } };
+        }
+        macro_rules! leased {
+            ($field:ident) => { if self.$field.is_some() { let mut lease = self.$field.take().map(semio_framework_value::retirement::arc_custody::ArcLease::new); let turn = semio_os_store_read::artifact_retirement_admit_owned(&mut lease, &mut self.active, effect); *self.$field = lease.and_then(|lease| lease.0); return turn.result; } };
         }
         original!(normalized_conflicts);
         original!(normalized_transitions);
@@ -104,7 +110,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         if self.target_decoder.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.target_decoder, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         original!(pending_target);
         original!(target_address);
-        original!(target_source);
+        leased!(target_source);
         original!(replay_ids);
         original!(replay_order);
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
@@ -167,7 +173,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
                 Err(error) => return Err(error),
             }
         }
-        original!(history);
+        leased!(history);
         original!(mutation_lookup);
         original!(pin_refs);
         original!(edit_lookup);

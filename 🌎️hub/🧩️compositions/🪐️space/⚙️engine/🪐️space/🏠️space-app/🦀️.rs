@@ -476,7 +476,7 @@ impl ArtifactApp for SpaceApp {
         let labels = semio_plugin::resolve_labels::<SStudioLabels>(view_state);
         match body_key {
             semio_hub_space_foundation::S_PLAY_BODY_WORKFLOW => {
-                crate::modes::main::windows::workflow::render(&SpaceApp, projection, config).await.map(semio_plugin::built_to_component_tree)
+                crate::modes::main::windows::workflow::render(&SpaceApp, projection, config, view_state).await.map(semio_plugin::built_to_component_tree)
             }
             crate::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::modes::main::windows::media_vfs::render(projection, view_state).await.map(semio_plugin::built_to_component_tree),
             crate::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::modes::main::windows::compiled_dag::render(projection).await.map(semio_plugin::built_to_component_tree),

@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_value_native_decoding::native_decoding::{OriginalEffectReply,OriginalEffectReplyComplete};
 
 /// 🚦️ Distinguishes preflight denial, an unresolved original action and a settled result.
-#[derive(Clone,Copy,Debug,PartialEq,Eq)]pub enum NativeSchemaKeyPoll{Denied,Pending{work:u128},Ready{work:u128}}
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]pub enum NativeSchemaKeyPoll{Denied,Pending{work:u128},Ready{work:u128,progress:RetainedCloneProgress}}
 /// 🧭️ Selects a separately funded phase of the original acknowledgement owner.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum NativeSchemaKeyMetadata{Bind,CancelBinding,Prepare,CloseMetadata,Rearm,CloseAuthority}
@@ -11,11 +11,11 @@ impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
  /// 📐️ Quotes the initial actual Source-bound key authority.
  pub fn key_start_demand(&self)->Result<RetirementDemand,ValueError>{if self.closing||!self.key_backing.initialized(){return Err(invalid())}Ok(NativeSchemaKeyFrame::<I>::start_demand())}
  /// 🌱️ Seats the original key producer under the same actual Work effect.
- pub fn key_start_into<'r>(&mut self,input:RetainedCloneRef<'_,I>,witness:crate::OriginalSourceTurnWitness<'_>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,ValueError>,ValueError>{self.key_start_demand()?;self.key_backing.validate_effect(effect)?;self.key_backing.get_mut().ok_or_else(invalid)?.start_into(input,self.key_source,witness,effect,reply)}
- /// 📐️ Quotes the frozen original key Source action.
- pub fn key_action_demand(&self,input:RetainedCloneRef<'_,I>,witness:crate::OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->Result<(RetirementDemand,u64),ValueError>{if self.closing{return Err(invalid())}self.key_backing.get().ok_or_else(invalid)?.demand(input,witness,body,maximum,grant)}
+ pub fn key_start_into<'r>(&mut self,input:RetainedCloneRef<'_,I>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,ValueError>,ValueError>{self.key_start_demand()?;self.key_backing.validate_effect(effect)?;self.key_backing.get_mut().ok_or_else(invalid)?.start_into(input,self.key_source,effect,reply)}
+ /// 📐️ Quotes the frozen original key Source action and its Work without any callback authority.
+ pub fn key_action_quote(&self,input:RetainedCloneRef<'_,I>)->Result<(RetirementDemand,u64),ValueError>{if self.closing{return Err(invalid())}self.key_backing.get().ok_or_else(invalid)?.quote(input)}
  /// 🧵️ Drives or resumes the actual original key Source action.
- pub fn key_action_advance(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:crate::OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->Result<NativeSchemaKeyPoll,ValueError>{if self.closing{return Err(invalid())}let binding=control.original_work_borrow().binding_identity()?;self.key_backing.validate_work_binding(binding)?;let state=self.key_backing.get_mut().ok_or_else(invalid)?.advance(input,control,witness,body,maximum,grant)?;Ok(match state{crate::source::key_frame::NativeSchemaKeyFramePoll::Denied=>NativeSchemaKeyPoll::Denied,crate::source::key_frame::NativeSchemaKeyFramePoll::Pending{work}=>NativeSchemaKeyPoll::Pending{work},crate::source::key_frame::NativeSchemaKeyFramePoll::Ready{work}=>NativeSchemaKeyPoll::Ready{work}})}
+ pub fn key_action_advance(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:crate::OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->Result<NativeSchemaKeyPoll,ValueError>{if self.closing{return Err(invalid())}let binding=control.original_work_borrow().binding_identity()?;self.key_backing.validate_work_binding(binding)?;let state=self.key_backing.get_mut().ok_or_else(invalid)?.advance(input,control,witness,body,maximum,grant)?;Ok(match state{crate::source::key_frame::NativeSchemaKeyFramePoll::Denied=>NativeSchemaKeyPoll::Denied,crate::source::key_frame::NativeSchemaKeyFramePoll::Pending{work}=>NativeSchemaKeyPoll::Pending{work},crate::source::key_frame::NativeSchemaKeyFramePoll::Ready{work,progress}=>NativeSchemaKeyPoll::Ready{work,progress}})}
  /// ⏳️ Reports a frozen key request that has not reached Ready.
  pub fn key_request_unsettled(&self)->bool{self.key_backing.get().is_some_and(NativeSchemaKeyFrame::pending)}
  /// 🛑️ Reports a checkpoint interruption that needs its original recovery owner.
@@ -51,11 +51,11 @@ impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
  /// 📐️ Quotes direct movement of the original owned key refusal.
  pub(crate) fn key_error_demand(&self)->Result<RetirementDemand,ValueError>{if !self.key_error_ready()?{return Err(invalid())}Ok(NativeSchemaKeyFrame::<I>::transfer_error_demand())}
  /// 📤️ Moves the exact original key refusal into the caller-resident slot.
- pub(crate) fn key_error_into<'r>(&mut self,output:&mut Option<ValueError>,witness:crate::OriginalSourceTurnWitness<'_>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,ValueError>,ValueError>{self.key_error_demand()?;self.key_backing.validate_effect(effect)?;self.key_backing.get_mut().ok_or_else(invalid)?.transfer_error_into(output,witness,effect,reply)}
+ pub(crate) fn key_error_into<'r>(&mut self,output:&mut Option<ValueError>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,ValueError>,ValueError>{self.key_error_demand()?;self.key_backing.validate_effect(effect)?;self.key_backing.get_mut().ok_or_else(invalid)?.transfer_error_into(output,effect,reply)}
  /// 📐️ Quotes clearing a fully consumed native key reference.
  pub(crate) fn key_clear_demand(&self)->Result<RetirementDemand,ValueError>{if self.key_value()?.is_none(){return Err(invalid())}Ok(NativeSchemaKeyFrame::<I>::release_key_demand())}
  /// 🧹️ Clears only the settled key reference under its original Source and Work effect.
- pub(crate) fn key_clear_into<'r>(&mut self,witness:crate::OriginalSourceTurnWitness<'_>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,ValueError>,ValueError>{self.key_clear_demand()?;self.key_backing.validate_effect(effect)?;self.key_backing.get_mut().ok_or_else(invalid)?.release_key_into(witness,effect,reply)}
+ pub(crate) fn key_clear_into<'r>(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,ValueError>,ValueError>{self.key_clear_demand()?;self.key_backing.validate_effect(effect)?;self.key_backing.get_mut().ok_or_else(invalid)?.release_key_into(effect,reply)}
  /// 📐️ Quotes binding the settled key to its initial resident matcher frame.
  pub fn key_bind_demand(&self)->Result<RetirementDemand,ValueError>{if self.closing||self.key.is_some()||self.pending.is_some()||!self.frames.is_empty()||self.key_value()?.is_none(){return Err(invalid())}let bytes=size_of::<Option<Key>>().checked_add(size_of::<Option<SchemaFrame>>()).and_then(|value|value.checked_add(size_of::<Option<Result<RetainedCloneStep,ValueError>>>())).ok_or_else(invalid)?;Ok(fixed(bytes))}
  /// 🧷️ Installs only the settled key and fixed native root descriptor under the actual Work effect.

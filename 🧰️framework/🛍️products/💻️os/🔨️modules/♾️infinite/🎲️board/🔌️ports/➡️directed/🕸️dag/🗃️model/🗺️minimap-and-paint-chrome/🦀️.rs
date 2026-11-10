@@ -84,8 +84,3 @@ semio_framework_value::artifact_retire_leaf!(DagInteractionProjection);
 
 semio_framework_value::artifact_retire_struct!(NoteEditState {node_id,caret,anchor});
 
-impl RetireOwned for DagGraphEdit {
- fn retirement(self)->Box<dyn RetirementCursor>{match self{Self::Connect{source_node_id,source_port_id,target_node_id,target_port_id}=>(source_node_id,source_port_id,target_node_id,target_port_id).retirement(),Self::Disconnect{synapse_id}=>synapse_id.retirement(),Self::Move{gesture_id,node_ids,dx,dy}=>(gesture_id,node_ids,dx,dy).retirement(),Self::SetSlider{node_id,value}=>(node_id,value).retirement(),Self::InsertPort{node_id,side,index}=>(node_id,side,index).retirement()}}
- fn retirement_birth_bytes(&self)->Option<usize>{match self{Self::Connect{source_node_id,source_port_id,target_node_id,target_port_id}=>sequence_birth_bytes(&[deferred_birth_bytes_for(source_node_id),deferred_birth_bytes_for(source_port_id),deferred_birth_bytes_for(target_node_id),deferred_birth_bytes_for(target_port_id)]),Self::Disconnect{synapse_id}=>synapse_id.retirement_birth_bytes(),Self::Move{gesture_id,node_ids,dx,dy}=>sequence_birth_bytes(&[deferred_birth_bytes_for(gesture_id),deferred_birth_bytes_for(node_ids),deferred_birth_bytes_for(dx),deferred_birth_bytes_for(dy)]),Self::SetSlider{node_id,value}=>sequence_birth_bytes(&[deferred_birth_bytes_for(node_id),deferred_birth_bytes_for(value)]),Self::InsertPort{node_id,side,index}=>sequence_birth_bytes(&[deferred_birth_bytes_for(node_id),deferred_birth_bytes_for(side),deferred_birth_bytes_for(index)])}}
- fn controlled_retirement_supported()->bool{true}
-}

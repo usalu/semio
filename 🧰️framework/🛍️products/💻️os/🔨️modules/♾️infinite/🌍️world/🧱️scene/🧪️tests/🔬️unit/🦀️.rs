@@ -1,6 +1,6 @@
 //! 🧪️ scene tests (🔬️unit): compiled against the `testkit` surface of the world crates.
 
-use semio_os_infinite_world_model::{World3dBuildContext, WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_MESH_CAPACITY, world_mesh_ownership_grant, world_scene_raster_pool, WorldCursorWakeAuthority, WorldDynamicFault, WorldEnvironmentRecord, WorldEnvironmentShadowRecord, WorldEnvironmentSunRecord, WorldInteractionMeshRegistry};
+use semio_os_infinite_world_model::{prepared_world_build_context, retire_world_build_context, with_world_effect, with_world_step_context, world_original_fixture_grant, World3dBuildContext, WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_MESH_CAPACITY, world_mesh_ownership_grant, world_scene_raster_pool, WorldCursorWakeAuthority, WorldDynamicFault, WorldEnvironmentRecord, WorldEnvironmentShadowRecord, WorldEnvironmentSunRecord, WorldInteractionMeshRegistry};
 use semio_os_infinite_world_components::{placeholder_triangle, placeholder_triangle_normal, TerrainTileMeshPayload, WorldPlaceholderKind, WorldPlaceholderMeshCursor, WorldPlaceholderMeshStep};
 use semio_os_infinite_world_scene::{append_lod_grid_lines, bounded_reference_image, chunk_center, chunk_distance_visible, chunk_key_indices, collect_world3d_asset_bytes, decode_reference_image_bytes, environment_light_dir, GUMBALL_PLANE_MESH, hypsometric_color, mesh_style_paint, MeshStyleKind, MeshStyleState, parse_color, resolve_mesh_style, retain_ensured_world_draws, terrain_tile_url, world3d_style_paint, WORLD_ASSET_REQUEST_CAPACITY, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_GRID_MAX_DIVISIONS, WorldAssetFault, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetResponsePage, WorldTerrainMeshCursor, WorldTerrainMeshPhase, WorldTerrainMeshStep};
 use semio_framework_test_fixtures::fixture_text;
@@ -134,26 +134,9 @@ pub(crate) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revis
 
 fn assert_send<T: Send>() {}
 
-pub(crate) fn with_world_step_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
-    let mut sequence = 0;
-    let grant=world_original_fixture_grant();
-    let mut receipt=semio_framework_value::RetainedCloneProgress::default();
-    let mut context = semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(1),
-        semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(fuel, u64::MAX,grant),
-        semio_framework_job::root_cancel_token(),
-        semio_framework_job::default_now_us,
-        &mut sequence,
-        &mut receipt,
-    );
-    let result=step(&mut context);
-    assert!(context.retained_progress().fits(grant));
-    result
-}
-
 #[test]
 fn placeholder_writer_matches_legacy_geometry_and_closes_interrupted_authority() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     for (name, kind) in [("box", WorldPlaceholderKind::Box), ("plane", WorldPlaceholderKind::Plane), ("cylinder", WorldPlaceholderKind::Cylinder), ("cone", WorldPlaceholderKind::Cone), ("vortex-marker", WorldPlaceholderKind::Icosphere)] {
         let legacy = placeholder_mesh(name);
         let mut positions = Vec::new();
@@ -176,10 +159,10 @@ fn placeholder_writer_matches_legacy_geometry_and_closes_interrupted_authority()
     }
 
     let mut interrupted = WorldPlaceholderMeshCursor::new("interrupted", WorldPlaceholderKind::Icosphere, 41, 7).expect("placeholder authority");
-    assert!(matches!(interrupted.step(), WorldPlaceholderMeshStep::Pending));
-    assert!(matches!(interrupted.step(), WorldPlaceholderMeshStep::Pending));
+    assert!(matches!(with_world_effect(|effect| interrupted.step(effect)), WorldPlaceholderMeshStep::Pending));
+    assert!(matches!(with_world_effect(|effect| interrupted.step(effect)), WorldPlaceholderMeshStep::Pending));
     let mut turns = 0;
-    while !interrupted.close_step() || !interrupted.terminal_is_empty() {
+    while !with_world_effect(|effect| interrupted.close_step(effect)) || !interrupted.terminal_is_empty() {
         turns += 1;
         assert!(turns < 64);
     }
@@ -188,6 +171,7 @@ fn placeholder_writer_matches_legacy_geometry_and_closes_interrupted_authority()
 
 #[test]
 fn terrain_writer_matches_the_vertex_coloured_tile_oracle_and_closes_interrupted_authority() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     fn payload() -> TerrainTileMeshPayload {
         TerrainTileMeshPayload {
             positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 0.0, 0.0, 2.0, 1.0, 0.0],
@@ -266,6 +250,7 @@ fn close_oracle_mesh(lease:Mesh3dLease) {
 
 #[test]
 fn world_mesh_registry_enforces_fixed_capacity_id_topology_and_aba() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let mesh = publish_oracle_mesh(triangle_mesh_oracle());
     let mut registry = WorldInteractionMeshRegistry::default();
     let first = registry.admit("mesh-0", 1, mesh).expect("first mesh token");
@@ -289,8 +274,9 @@ fn world_mesh_registry_enforces_fixed_capacity_id_topology_and_aba() {
 
 #[test]
 fn prepared_world_resources_are_send_and_deduplicate_uploads() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     assert_send::<World3dBuildContext>();
-    let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut resources = prepared_world_build_context();
     let mesh = publish_oracle_mesh(triangle_mesh_oracle());
     resources.ensure_mesh("mesh", 3, mesh);
     resources.ensure_mesh("mesh", 3, mesh);
@@ -301,30 +287,31 @@ fn prepared_world_resources_are_send_and_deduplicate_uploads() {
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
-    assert_eq!(resources.append_step(&mut input).ok(), Some(false));
-    assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert_eq!(resources.append_step(&mut input).ok(), Some(true));
     assert_eq!(input.uploads.len(), 2, "one mesh and one lease-backed raster upload survive key dedupe");
     assert_eq!(input.raster_producers.len(), 0);
     assert_eq!(input.evictions.len(), 1);
     assert_eq!(input.evictions.get(0), Some(&PreparedRenderEviction::Mesh { key: "stale".into() }));
     for _ in 0..4096 {
-        let grant = semio_framework_job::RetainedCloneGrant { maximum_copy_bytes: 16 * 1024, ..input.next_close_demands(16 * 1024).expect("prepared input close demand") };
-        if matches!(input.close_step(grant).expect("prepared input close step"), semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {
+        let quote = semio_framework_job::RetainedCloneGrant { maximum_copy_bytes: 16 * 1024, ..input.next_close_demands(16 * 1024).expect("prepared input close demand") };
+        if matches!(with_world_step_context(64, |context| semio_ui_prepared::retirement::prepared_close_turn(context, quote, |effect| input.close_step(effect))).expect("prepared input close step"), semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {
             break;
         }
     }
     assert!(input.terminal_is_empty());
+    retire_world_build_context(resources);
 }
 
 #[test]
 fn chunk_key_indices_buckets_negative_coordinates() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     assert_eq!(chunk_key_indices([-10.0, 5.0, 0.0], 256.0), (-1, 0, 0));
     assert_eq!(chunk_key_indices([300.0, 300.0, 0.0], 256.0), (1, 1, 0));
 }
 
 #[test]
 fn chunk_distance_visible_uses_hysteresis() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let center = chunk_center((0, 0, 0), 256.0);
     let cam_near = Vec3::new(0.0, 0.0, 0.0);
     assert!(chunk_distance_visible(cam_near, center, 256.0, 8000.0, false));
@@ -336,6 +323,7 @@ fn chunk_distance_visible_uses_hysteresis() {
 //#region GlbAssetTests
 #[test]
 fn asset_request_cancellation_is_exact_and_cannot_cancel_a_reused_slot() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📤️asset-cancellation/🔣️.json")).unwrap();
     for stage in fixture["stages"].as_array().unwrap() {
         let mut lane = WorldAssetIoAuthority::default();
@@ -362,6 +350,7 @@ fn asset_request_cancellation_is_exact_and_cannot_cancel_a_reused_slot() {
 
 #[test]
 fn asset_authority_rejects_request_and_byte_capacity_plus_one_before_string_ownership() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let mut lane = WorldAssetIoAuthority::default();
     for index in 0..WORLD_ASSET_REQUEST_CAPACITY {
         lane.reserve(1, 1, WorldAssetRequestKind::Glb, &format!("asset-{index}"), 1).unwrap();
@@ -378,6 +367,7 @@ fn asset_authority_rejects_request_and_byte_capacity_plus_one_before_string_owne
 
 #[test]
 fn asset_authority_reopens_after_terminal_close_so_later_reserves_succeed() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let mut lane = WorldAssetIoAuthority::default();
     lane.reserve_request(1, 1, WorldAssetRequestKind::Glb, "first").unwrap();
     lane.begin_close();
@@ -399,6 +389,7 @@ fn asset_authority_reopens_after_terminal_close_so_later_reserves_succeed() {
 
 #[test]
 fn asset_response_rejects_page_plus_one_and_retires_partial_stream_one_page_per_step() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let bytes = vec![7; WORLD_ASSET_RESPONSE_PAGE_BYTES + 1];
     assert_eq!(WorldAssetResponsePage::try_from_owned(bytes).expect_err("page +1 exact owner").len(), WORLD_ASSET_RESPONSE_PAGE_BYTES + 1);
 
@@ -419,6 +410,7 @@ fn asset_response_rejects_page_plus_one_and_retires_partial_stream_one_page_per_
 
 #[test]
 fn asset_decode_resume_and_stale_generation_keep_claimed_pages_until_terminal_return() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let mut lane = WorldAssetIoAuthority::default();
     let token = lane.reserve(4, 9, WorldAssetRequestKind::Glb, "mesh", 16).unwrap();
     let mut fetch = lane.take_next().unwrap();
@@ -441,6 +433,7 @@ fn asset_decode_resume_and_stale_generation_keep_claimed_pages_until_terminal_re
 
 #[test]
 fn asset_unknown_length_releases_unused_aggregate_credit_at_seal() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let mut lane = WorldAssetIoAuthority::default();
     let token = lane.reserve_request(7, 11, WorldAssetRequestKind::Glb, "chunked").unwrap();
     let mut owner = lane.take_next().unwrap();
@@ -459,6 +452,7 @@ fn asset_unknown_length_releases_unused_aggregate_credit_at_seal() {
 
 #[test]
 fn asset_completed_cursor_advances_one_fixed_slot_per_grant_and_hands_back_exact_owner() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let mut lane = WorldAssetIoAuthority::default();
     let token = lane.reserve_request(8, 12, WorldAssetRequestKind::Glb, "cursor.glb").unwrap();
     let mut fetch = lane.take_next().unwrap();
@@ -484,6 +478,7 @@ fn asset_completed_cursor_advances_one_fixed_slot_per_grant_and_hands_back_exact
 /// straight-RGBA credit. The puzzle3d playground's plan is 2275×2560, or 23 296 000 bytes.
 #[test]
 fn a_reference_underlay_preserves_its_natural_full_quality_dimensions() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let plan = semio_framework_pixels::RasterImage::new(2275, 2560);
     let bounded = bounded_reference_image(plan);
     assert_eq!((bounded.width, bounded.height), (2275, 2560));
@@ -500,6 +495,7 @@ fn a_reference_underlay_preserves_its_natural_full_quality_dimensions() {
 /// frame Worker down with it — the second half of the puzzle3d wgpu boot fault.
 #[test]
 fn collecting_a_multi_page_asset_response_answers_each_page_once() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let mut lane = WorldAssetIoAuthority::default();
     lane.reserve_request(3, 4, WorldAssetRequestKind::ReferenceImage, "plan.jpg").unwrap();
     let mut fetch = lane.take_next().unwrap();
@@ -528,6 +524,7 @@ fn collecting_a_multi_page_asset_response_answers_each_page_once() {
 /// pixel extent, so a `Top` pane gets a grid of its own instead of the perspective one's.
 #[test]
 fn lod_grid_lines_keep_reacts_band_spacing_and_fade_inside_the_far_plane() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let viewport = Rect { x: 0.0, y: 0.0, w: 956.0, h: 814.0 };
     let camera = OrbitController::default().to_camera();
     let mut lines = Vec::new();
@@ -560,6 +557,7 @@ fn lod_grid_lines_keep_reacts_band_spacing_and_fade_inside_the_far_plane() {
 /// ☀️ Azimuth=90, elevation=0 -> pure +Y direction (cos(0)*cos(90)=~0, cos(0)*sin(90)=1, sin(0)=0).
 #[test]
 fn environment_light_dir_uses_sun_direction_only_when_enabled() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let disabled = WorldEnvironmentRecord { sun: Some(WorldEnvironmentSunRecord { enabled: Some(false), azimuth: Some(90.0), elevation: Some(0.0), ..Default::default() }), ..Default::default() };
     assert_eq!(environment_light_dir(&disabled), [0.4, 0.6, 0.8]);
 
@@ -572,6 +570,7 @@ fn environment_light_dir_uses_sun_direction_only_when_enabled() {
 
 #[test]
 fn environment_shadow_requires_the_configured_sun_and_ignores_react_dead_controls() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let mut environment = WorldEnvironmentRecord {
         sun: Some(WorldEnvironmentSunRecord { enabled: Some(false), azimuth: Some(120.0), elevation: Some(25.0), ..Default::default() }),
         shadow: Some(WorldEnvironmentShadowRecord { enabled: Some(true), opacity: Some(1.5), softness: Some(7.0) }),
@@ -594,6 +593,7 @@ fn environment_shadow_requires_the_configured_sun_and_ignores_react_dead_control
 
 #[test]
 fn neutral_shadow_fixture_maps_to_world_draw_roles_and_exact_profiles() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🌑️scene-shadow-parity/🔣️.json")).unwrap();
     assert_eq!(World3dShadowProfile::World.map_size(), fixture["profiles"]["world"]["mapSize"].as_u64().unwrap() as u32);
     assert_eq!(World3dShadowProfile::IconPng.map_size(), fixture["profiles"]["iconPng"]["mapSize"].as_u64().unwrap() as u32);
@@ -615,6 +615,7 @@ fn neutral_shadow_fixture_maps_to_world_draw_roles_and_exact_profiles() {
 
 #[test]
 fn svg_icon_profile_is_flat_lit_while_world_and_png_remain_raster_pbr() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     assert_eq!(World3dShadowProfile::IconSvg.render_profile(), ui_scene::math::SceneRenderProfile3d::SvgFlatLit);
     for profile in [World3dShadowProfile::World, World3dShadowProfile::IconPng, World3dShadowProfile::Unshadowed] {
         assert_eq!(profile.render_profile(), ui_scene::math::SceneRenderProfile3d::RasterPbr);
@@ -623,6 +624,7 @@ fn svg_icon_profile_is_flat_lit_while_world_and_png_remain_raster_pbr() {
 
 #[test]
 fn svg_icon_flat_lighting_matches_the_neutral_three_fixture() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎨️icon-svg-lighting/🔣️.json")).unwrap();
     let to_srgb = |value: f32| if value < 0.0031308 { value * 12.92 } else { 1.055 * value.powf(0.41666) - 0.055 };
     for row in fixture["cases"].as_array().unwrap() {
@@ -645,6 +647,7 @@ fn svg_icon_flat_lighting_matches_the_neutral_three_fixture() {
 //#region TerrainTests
 #[test]
 fn hypsometric_color_matches_reference_stops() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let low = hypsometric_color(0.0);
     assert!((low[0] - 0x4b as f32 / 255.0).abs() < 1e-3);
     let peak = hypsometric_color(1.0);
@@ -656,6 +659,7 @@ fn hypsometric_color_matches_reference_stops() {
 /// triangle 0 is flat at elevation ratio 0.0, triangle 1 is flat at elevation ratio 1.0.
 #[test]
 fn build_terrain_tile_mesh_oracle_colours_every_vertex_along_the_continuous_ramp() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let mesh = TerrainTileMeshPayload {
         positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 10.0, 3.0, 0.0, 10.0, 2.0, 1.0, 10.0],
         normals: vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
@@ -672,6 +676,7 @@ fn build_terrain_tile_mesh_oracle_colours_every_vertex_along_the_continuous_ramp
 
 #[test]
 fn terrain_tile_url_substitutes_z_x_y() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     assert_eq!(terrain_tile_url("/dem/{z}/{x}/{y}.png", 12, 34, 56), "/dem/12/34/56.png");
 }
 
@@ -688,7 +693,8 @@ fn terrain_tile_url_substitutes_z_x_y() {
 /// `📓️w11a-prepared-world-mesh-missing.md`).
 #[test]
 fn a_world_draw_without_this_frames_upload_is_never_published() {
-    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let _gate = semio_os_infinite_world_model::world_test_gate();
+    let mut gpu = prepared_world_build_context();
     gpu.ensure_mesh("resident", 3, publish_oracle_mesh(triangle_mesh_oracle()));
     let draw = |key: &str, version: u64| SceneDraw3d { mesh_key: key.into(), mesh_version: version, instances: vec![Instance3d { component_source: None, id: key.into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() };
     let mut draws = vec![draw("resident", 3), draw("resident", 4), draw("ghost-still-landing", 0)];
@@ -697,12 +703,14 @@ fn a_world_draw_without_this_frames_upload_is_never_published() {
     assert_eq!(draws.len(), 1, "only the draw whose exact identity this frame uploads survives");
     assert_eq!((draws[0].mesh_key.as_str(), draws[0].mesh_version), ("resident", 3), "and it is the ensured one, not a stale version of the same key");
     assert!(gpu.has_mesh_request("resident", 3) && !gpu.has_mesh_request("resident", 4), "the predicate is exact on BOTH key and version");
+    retire_world_build_context(gpu);
 }
 
 /// 🔘️ LAW: the gumball plane is PINNED in the mesh pool. It belongs to no document draw, so every
 /// `sync_mesh_pool` would otherwise see it as stale and evict the mesh the very next frame draws.
 #[test]
 fn the_gumball_plane_is_pinned_against_pool_eviction() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let world = WORLD_SOURCE();
     let pinned = world.split("const PINNED: &[&str] = &[").nth(1).expect("sync_mesh_pool declares a PINNED list").split("];").next().expect("PINNED list closes");
     assert!(pinned.contains("GUMBALL_PLANE_MESH"), "the gumball plane must be pinned: {pinned}");
@@ -720,6 +728,7 @@ fn the_gumball_plane_is_pinned_against_pool_eviction() {
 /// (`📓️w8b-orthographic-camera-and-3d-parity.md` §7.4).
 #[test]
 fn the_mesh_style_table_is_reacts_whole_paint_table() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let theme = semio_ui_theme::Theme::light();
     let rgba = |color: semio_ui_theme::Rgba| [color.r, color.g, color.b, color.a];
     let (primary, secondary, tertiary) = (rgba(theme.celebrate[0]), rgba(theme.celebrate[1]), rgba(theme.celebrate[2]));
@@ -767,6 +776,7 @@ fn the_mesh_style_table_is_reacts_whole_paint_table() {
 /// are carried through the packed instance material instead of inferred from interaction flags.
 #[test]
 fn retained_color_provenance_and_static_material_policy_match_react() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let light = semio_ui_theme::Theme::light();
     let dark = semio_ui_theme::Theme::dark();
     let instance = |source| Instance3d { component_source: None,
@@ -818,6 +828,7 @@ fn retained_color_provenance_and_static_material_policy_match_react() {
 /// `lodGridStepWorld` step however far the camera is.
 #[test]
 fn the_grid_never_ends_on_a_hard_edge_however_far_the_camera_is() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let viewport = Rect { x: 0.0, y: 0.0, w: 956.0, h: 814.0 };
     let base = OrbitController::default().to_camera();
     let step = ui_scene::math::lod_grid_step_world(2.0, 10.0).expect("React's helper answers a step") as f32;
@@ -841,6 +852,7 @@ fn the_grid_never_ends_on_a_hard_edge_however_far_the_camera_is() {
 /// applies before the generation-owned pixels cross the World publication boundary.
 #[test]
 fn reference_decode_applies_exif_orientation_before_publication() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     use image::ImageEncoder as _;
 
     let source = image::RgbImage::from_fn(3, 2, |x, y| image::Rgb([(x * 70 + y * 13) as u8, (y * 100 + x * 9) as u8, (x * 30 + y * 40) as u8]));
@@ -875,6 +887,7 @@ fn distance(left: [u8; 4], right: [u8; 4]) -> i32 {
 
 #[test]
 fn terrain_mesh_fault_preserves_busy_and_semantic_owner_refusals() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     for fault in [ui_scene::math::Mesh3dFault::Busy, ui_scene::math::Mesh3dFault::Closing, ui_scene::math::Mesh3dFault::Schema, ui_scene::math::Mesh3dFault::Stale] {
         assert_eq!(WorldTerrainMeshCursor::mesh_fault(fault), WorldDynamicFault::Mesh(fault));
     }
@@ -882,12 +895,13 @@ fn terrain_mesh_fault_preserves_busy_and_semantic_owner_refusals() {
 
 #[test]
 fn terrain_mesh_zero_grant_retains_original_payload_and_phase() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let payload = TerrainTileMeshPayload { positions: vec![0.0; 9], normals: vec![0.0; 9], indices: vec![0,1,2], uvs: vec![0.0; 6] };
     let pointer = payload.positions.as_ptr();
     let capacity = payload.positions.capacity();
     let mut cursor = terrain_test_admit("surface", (3,4,5), payload, 90, 9, 9).expect("original cursor");
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items:0, maximum_copy_bytes:0, maximum_capacity_bytes:0, maximum_release_bytes:0, maximum_depth:0 };
-    let (step, progress) = cursor.step_live(grant).expect("zero grant pauses");
+    let (step, progress) = with_world_step_context(64, |context| cursor.step_live(grant, context)).expect("zero grant pauses");
     assert!(matches!(step, WorldTerrainMeshStep::Pending));
     assert_eq!(progress, semio_framework_value::retained_clone::RetainedCloneProgress::default());
     assert_eq!(cursor.phase, WorldTerrainMeshPhase::Begin);
@@ -896,7 +910,7 @@ fn terrain_mesh_zero_grant_retains_original_payload_and_phase() {
     assert_eq!(cursor.payload.positions.len(), 9);
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:65536, maximum_release_bytes:65536, maximum_depth:64 };
     for _ in 0..512 {
-        let step = cursor.close_step(grant).expect("finite original source close");
+        let step = with_world_step_context(64, |context| cursor.close_step(grant, context)).expect("finite original source close");
         assert!(step.progress.fits(grant));
         if step.complete { break; }
     }
@@ -914,7 +928,7 @@ fn terrain_test_step(cursor:&mut WorldTerrainMeshCursor,revision:u64,terrain_rev
 }
 
 fn terrain_test_close(cursor:&mut WorldTerrainMeshCursor)->bool {
-    match cursor.close_step(terrain_test_grant()) {
+    match with_world_step_context(64, |context| cursor.close_step(terrain_test_grant(), context)) {
         Ok(step)=>{assert!(step.progress.fits(terrain_test_grant()));step.complete}
         Err(WorldDynamicFault::Mesh(ui_scene::math::Mesh3dFault::Busy))=>false,
         Err(fault)=>panic!("semantic terrain owner refusal: {fault:?}"),
@@ -923,6 +937,7 @@ fn terrain_test_close(cursor:&mut WorldTerrainMeshCursor)->bool {
 
 #[test]
 fn terrain_constructor_refusal_preserves_original_payload_pointer_and_capacity() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
     let payload=TerrainTileMeshPayload{positions:vec![0.0;9],normals:vec![0.0;9],indices:vec![0,1,2],uvs:vec![0.0;6]};
     let pointer=payload.positions.as_ptr();let capacity=payload.positions.capacity();
@@ -933,6 +948,7 @@ fn terrain_constructor_refusal_preserves_original_payload_pointer_and_capacity()
 
 #[test]
 fn terrain_owner_yield_and_copy_1_3_64_keep_the_original_write_cursor() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     for maximum_copy_bytes in [1,3,64] {
         let payload=TerrainTileMeshPayload{positions:vec![0.0;9],normals:vec![0.0;9],indices:vec![0,1,2],uvs:vec![0.0;6]};
         let mut cursor=terrain_test_admit("surface",(0,0,0),payload,92,1,1).expect("funded original payload");
@@ -942,7 +958,7 @@ fn terrain_owner_yield_and_copy_1_3_64_keep_the_original_write_cursor() {
         for _ in 0..512 {if cursor.phase==WorldTerrainMeshPhase::Positions {break;}terrain_test_step(&mut cursor,1,1);}
         assert_eq!(cursor.phase,WorldTerrainMeshPhase::Positions);
         let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_copy_bytes,..terrain_test_grant()};
-        let (step,progress)=cursor.step_live(grant).expect("caller byte budget");
+        let (step,progress)=with_world_step_context(64,|context|cursor.step_live(grant,context)).expect("caller byte budget");
         assert!(matches!(step,WorldTerrainMeshStep::Pending));assert!(progress.fits(grant));
         assert_eq!(cursor.vertex,if maximum_copy_bytes<12 {0} else {1});
         for _ in 0..512 {if terrain_test_close(&mut cursor) {break;}}
@@ -950,15 +966,11 @@ fn terrain_owner_yield_and_copy_1_3_64_keep_the_original_write_cursor() {
     }
 }
 
-fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
-    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
-    semio_framework_value::RetainedCloneGrant{maximum_items:axes["items"].as_u64().unwrap()as usize,maximum_copy_bytes:axes["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:axes["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:axes["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:axes["depth"].as_u64().unwrap()as usize}
-}
-
 #[test]
 fn original_asset_page_ordinals_retain_gaps_until_complete_seal(){
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let mut lane=WorldAssetIoAuthority::default();let token=lane.reserve(41,9,WorldAssetRequestKind::Glb,"original-order",3).unwrap();let mut fetch=lane.take_next().unwrap();
     for index in[2u16,1,0]{fetch.push_page_at(index,WorldAssetResponsePage::try_from_owned(vec![index as u8]).unwrap()).unwrap();if index!=0{assert_eq!(fetch.seal(),Err(WorldAssetFault::Incomplete));}}
-    let duplicate=WorldAssetResponsePage::try_from_owned(vec![7]).unwrap();assert_eq!(fetch.push_page_at(1,duplicate).unwrap_err().bytes(),&[7]);fetch.seal().unwrap();
-    for index in 0..3{let page=fetch.take_decode_page().unwrap().unwrap();assert_eq!(page.bytes(),&[index]);}assert!(fetch.take_decode_page().unwrap().is_none());fetch.begin_close();while !fetch.close_step(){}lane.finish(fetch).unwrap();assert!(lane.terminal_is_empty());let _=token;
+    let duplicate=WorldAssetResponsePage::try_from_owned(vec![7]).unwrap();assert_eq!(fetch.push_page_at(1,duplicate).unwrap_err().bytes(),&[7]);lane.seal_response(&mut fetch).unwrap();let mut fetch=match lane.return_owner(fetch){Ok(())=>lane.take_completed(token,41,9).unwrap(),Err(_)=>panic!("the sealed owner returns to its claim")};
+    for index in 0..3{let page=fetch.take_decode_page().unwrap().unwrap();assert_eq!(page.bytes(),&[index]);}assert!(fetch.take_decode_page().unwrap().is_none());fetch.begin_close();while !fetch.close_step(){}lane.finish(fetch).unwrap();assert!(lane.terminal_is_empty());
 }

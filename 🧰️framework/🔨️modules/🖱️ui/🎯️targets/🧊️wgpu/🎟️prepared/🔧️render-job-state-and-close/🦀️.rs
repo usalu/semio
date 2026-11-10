@@ -172,8 +172,7 @@ impl PreparedRenderJob {
         }
         if !self.receiver.terminal_is_empty() { return prepared_close_child(self.receiver.close_granted(effect)) }
         if !self.fault_payload.terminal_is_empty() {
-            let turn = self.fault_payload.close_step_granted(grant);
-            RetirementPollExit::pay(effect, turn.work)?;
+            let turn = self.fault_payload.close_step(effect);
             return turn.result.map(|step|CloseStep::Pending { progress: step.progress() }).map_err(Into::into);
         }
         if self.abandonment_slot != u8::MAX {

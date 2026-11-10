@@ -48,6 +48,7 @@ impl<T:Send+Sync+'static> RetainedOriginalRead<T>{
   self.authenticate(effect)?;let invocation=effect.invocation().ok_or_else(||fault("original slot read lacks its native invocation"))?;
   if invocation.mode()!=if recover{OriginalEffectCallbackMode::Recover}else{OriginalEffectCallbackMode::Receive}{return Err(fault("original slot callback mode changed"))}
   let key=(invocation.identity(),mode,body);if recover&&self.route!=Some(key)||!recover&&self.route.is_some(){return Err(fault("original slot read route changed"))}
+  if !recover&&self.inner.is_none()&&self.owner.demand(mode,body)?.is_some(){let quote=self.quoted(mode,body)?;if effect.remaining_work_units()?<self.owner.work_demand(mode,body)?||!crate::retained_clone_grant_admits(effect.grant(),quote){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}}
   let state=self;let mut scope=reply.progress().scope(&mut state.route,key)?;
   if state.owner.projection_drive_required_for(mode)?{
    let frame=state.owner.projection_frame(effect)?;let mut context=frame.context()?;let ready=frame.authority()?.drive(&mut context,effect,&mut state.inner)?;
@@ -68,7 +69,7 @@ impl<T:Send+Sync+'static> RetainedOriginalReadOwner<T> for RetainedOriginalRead<
  fn birth_work_demand(&self,body:usize)->Result<u64,ValueError>{self.birth_demands(body)?;if self.owner.terminal_is_empty(){Ok(1)}else{self.owner.work_demand(OriginalSourceMode::Original,body)}}
  fn advance_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:ReadReply<'r>,recover:bool)->Result<ReadComplete<'r>,ValueError>{
   self.authenticate(effect)?;if self.returning{return Err(fault("returning original read cannot advance"))}
-  if self.owner.terminal_is_empty(){if recover{return Err(fault("native original read capture has no unrecorded callback"))}let mut inner=None;drop(self.owner.capture_into(&mut self.staged,effect,OriginalEffectReply::borrow(&mut inner)?)?);return semio_framework_value_retirement::forward_original_value_reply(&mut inner,reply)}
+  if self.owner.terminal_is_empty(){if recover{return Err(fault("native original read capture has no unrecorded callback"))}let mut inner=None;drop(self.owner.capture_into(&mut self.staged,effect,OriginalEffectReply::borrow(&mut inner)?)?);if let Some(Ok(step))=inner.as_mut(){*step=RetainedCloneStep::Progress(step.progress())}return semio_framework_value_retirement::forward_original_value_reply(&mut inner,reply)}
   self.drive_into(OriginalSourceMode::Original,body,None,effect,reply,recover)
  }
  fn return_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -123,6 +124,8 @@ impl<T> RetainedOriginalSlot<T>{
  pub fn take_original(&mut self,key:RetainedOriginalSlotKey,output:&mut Option<T>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{self.admit_key(key)?;if self.has_read()||self.original.is_none()||output.is_some(){return Err(fault("original slot withdrawal requires its unique payload and empty recipient"));}let generation=self.generation.checked_add(1).ok_or_else(||fault("original slot generation exhausted"))?;let d=Self::transfer_demand();if !retained_clone_grant_admits(grant,d){return Ok(None)}*output=self.original.take();self.generation=generation;Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
  /// 📥️ Adopts an actual original into its vacant resident without allocating an address or cloning a payload.
  pub fn install_original(&mut self,key:RetainedOriginalSlotKey,input:&mut Option<T>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{self.admit_key(key)?;if !self.is_empty()||input.is_none(){return Err(fault("original slot installation requires its vacant resident and original input"));}let generation=self.generation.checked_add(1).ok_or_else(||fault("original slot generation exhausted"))?;let d=Self::transfer_demand();if !retained_clone_grant_admits(grant,d){return Ok(None)}self.original=input.take();self.generation=generation;Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+ /// 🧷️ Borrows the captured issuer of the resident read or its pending birth.
+ pub fn read_issuer(&self)->Option<&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>{self.read.as_ref().map(|read|read.factory()).or_else(||self.birth.as_ref().and_then(|birth|birth.issuer()))}
  pub fn key(&self)->RetainedOriginalSlotKey{RetainedOriginalSlotKey{issuance:self.issuance,generation:self.generation}}
  fn admit_key(&self,key:RetainedOriginalSlotKey)->Result<(),ValueError>{if self.key()==key{Ok(())}else{Err(fault("original slot read belongs to another source generation"))}}
  pub fn has_read(&self)->bool{self.read.is_some()||self.birth.is_some()}

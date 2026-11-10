@@ -98,6 +98,7 @@ impl Ui {
                 RetainedPaintPhase::Scenes => "scenes",
                 RetainedPaintPhase::Tooltip => "tooltip",
                 RetainedPaintPhase::Hits => "hits",
+                RetainedPaintPhase::Borders => "borders",
                 RetainedPaintPhase::Publish => "publish",
                 RetainedPaintPhase::Complete => "complete",
                 RetainedPaintPhase::Fault => "fault",

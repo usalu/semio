@@ -81,10 +81,22 @@ impl OriginalReturnEscrowBirth{
   else if !self.header{D{copy_bytes:std::mem::size_of::<Option<(usize,u8)>>()+std::mem::size_of::<u64>()+std::mem::size_of::<Option<(u64,u32)>>()  +2*std::mem::size_of::<u32>()+std::mem::size_of::<bool>(),depth:1,..Default::default()}}
   else{D{copy_bytes:std::mem::size_of::<Option<Box<OriginalReturnEscrowTable>>>()+std::mem::size_of::<Option<std::ptr::NonNull<OriginalReturnEscrowTable>>>()+std::mem::size_of::<Option<semio_framework_value_control_contract::OriginalWorkBindingIdentity>>()+std::mem::size_of::<usize>()+std::mem::size_of::<bool>(),depth:1,..Default::default()}}
  }
+ /// 🧮️ Sums every remaining paid step (allocation, rows, header, placement) as items and extents, exactly as the stage will charge them.
+ pub fn remaining_demand(&self)->(usize,semio_framework_value_retained_clone::RetirementDemand){
+  let(mut backing,mut initialized,mut header)=(self.backing.is_some(),self.initialized,self.header);let mut items=0usize;let mut total=semio_framework_value_retained_clone::RetirementDemand::default();
+  loop{
+   let scratch=std::mem::ManuallyDrop::new(Self{backing:backing.then(std::ptr::NonNull::dangling),binding:None,initialized,header});let step=scratch.demand();
+   items+=1;total.copy_bytes+=step.copy_bytes;total.capacity_bytes+=step.capacity_bytes;total.release_bytes+=step.release_bytes;total.depth=total.depth.max(step.depth);
+   if !backing{backing=true}else if initialized<ORIGINAL_RETURN_ESCROW_CELLS{initialized+=1}else if !header{header=true}else{break}
+  }
+  (items,total)
+ }
  /// 👁️ Reveals only whether the original backing remains in this birth.
  pub fn is_empty(&self)->bool{self.backing.is_none()&&self.binding.is_none()}
  /// 📤️ Reports only whether every field is initialized before the separate output placement.
  pub fn ready_to_publish(&self)->bool{self.backing.is_some()&&self.initialized==ORIGINAL_RETURN_ESCROW_CELLS&&self.header}
+ /// ⛽️ Quotes the exact Work units of the remaining allocation, rows, header and output placement.
+ pub fn remaining_work(&self)->u64{u64::from(self.backing.is_none())+(ORIGINAL_RETURN_ESCROW_CELLS-self.initialized) as u64+u64::from(!self.header)+1}
  /// 📥️ Records the actual paid native step directly in the caller's original reply.
  pub fn advance_into<'a>(&mut self,output:&mut Option<Box<OriginalReturnEscrowTable>>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'a,semio_framework_value_retained_clone::RetainedCloneStep,ValueError>)->semio_framework_value_control_contract::OriginalEffectReplyComplete<'a,semio_framework_value_retained_clone::RetainedCloneStep,ValueError>{
   use semio_framework_value_retained_clone::{RetainedCloneStep as S,RetainedCloneProgress as P};

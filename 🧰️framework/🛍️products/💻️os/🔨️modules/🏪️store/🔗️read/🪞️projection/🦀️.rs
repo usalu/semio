@@ -22,9 +22,9 @@ impl<T:Send+Sync+'static> Cursor<T>{
   if self.root.read.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
   self.active.as_ref().map_or(Ok(Default::default()),|owner|Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?}))
  }
- fn step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
+ fn step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
   let grant=effect.grant();let mut work=0;
-  let demand=match self.demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};
+  let demand=match self.demands(body){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};
   if grant.maximum_items==0||effect.maximum_work_units()==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return RetirementStep::Progress(Default::default(),0);}
   let moved=|work:u128|RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},work);
   if self.root.projection.is_some(){if let Err(error)=crate::pay_pure_work(effect,&mut work){return RetirementStep::Failure(error.into(),work);}drop(self.root.projection.take());return moved(work);}
@@ -34,13 +34,14 @@ impl<T:Send+Sync+'static> Cursor<T>{
   }
   let Some(owner)=self.active.as_mut()else{return RetirementStep::Progress(Default::default(),0)};
   if owner.terminal_is_empty(){if let Err(error)=crate::pay_pure_work(effect,&mut work){return RetirementStep::Failure(error.into(),work);}drop(self.active.take());return moved(work);}
-  match owner.step(effect){RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
+  match owner.step(body,effect){RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
  }
 }
 impl<T:Send+Sync+'static> RetireOwned for SnapshotReadProjection<T>{type RetirementCursor=Cursor<T>;fn retirement_seed(self)->Self::RetirementCursor{Cursor{root:self,active:ManuallyDrop::new(None)}}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<T>>())}fn controlled_retirement_supported()->bool{true}}
 impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
     fn next_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.demands(body) }
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0);}self.step(effect)}
+ fn close_into<'r>(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Ok(reply.complete(Ok(self.close_sync(body,effect))))}
+    fn recover_close_into<'r>(&mut self,_body:usize,_:&mut semio_framework_value::RetainedAllocationEffect<'_>,_:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::invariant("synchronous close has no unrecorded callback"))}
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if self.terminal_is_empty(){return Ok(0)}match self.active.as_ref(){Some(owner)if !owner.terminal_is_empty()=>owner.next_computational_work(body),_=>Ok(1)}}
  fn terminal_is_empty(&self)->bool{self.root.projection.is_none()&&self.root.read.is_none()&&self.active.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
@@ -48,6 +49,9 @@ impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
  fn next_close_byte_demand(&self)->Option<usize>{self.demands(0).ok().map(|demand|demand.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl<T:Send+Sync+'static> Cursor<T>{
+ fn close_sync(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0);}self.step(body,effect)}
 }
 impl<T:Send+Sync+'static> Drop for Cursor<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"context cursor retains original source custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.active);}}}}
 

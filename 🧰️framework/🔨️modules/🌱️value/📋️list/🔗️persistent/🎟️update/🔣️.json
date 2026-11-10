@@ -9,7 +9,8 @@
     "operations",
     "cancelPrefixes",
     "stock",
-    "rules"
+    "rules",
+    "admission"
   ],
   "properties": {
     "inputCount": {
@@ -58,6 +59,22 @@
         "parentPublicationSeparate": true,
         "independentVectorOracle": true,
         "sameFiniteBank": true
+      }
+    },
+    "admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "turns",
+        "work"
+      ],
+      "properties": {
+        "turns": {
+          "const": 17
+        },
+        "work": {
+          "const": 37
+        }
       }
     }
   }

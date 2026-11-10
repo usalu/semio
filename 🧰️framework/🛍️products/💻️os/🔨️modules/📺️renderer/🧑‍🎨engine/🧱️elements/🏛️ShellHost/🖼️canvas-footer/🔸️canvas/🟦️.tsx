@@ -56,7 +56,7 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
         </p>
       );
     if (!session || !initialExampleReady) return <CanvasSkeleton label={shellLabel("ui.common.loadingPlugins")} className={cn(loadingBorderClass, "h-full w-full")} />;
-    const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology)) }];
+    const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology, uiLocale)) }];
     const studioHomeBar =
       hostMode && session.app.id === hostAppId && !panel?.activeSpawnedId ? (
         <button
@@ -74,7 +74,7 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
           ← {shellLabel("ui.common.backToWorkflow")}
         </button>
         <span>·</span>
-        <span>{appBreadcrumb(resolveArtifactByAppId(loadedPlugins, focusedSpawned.appId, focusedSpawned.breadcrumb, uiTerminology))}</span>
+        <span>{appBreadcrumb(resolveArtifactByAppId(loadedPlugins, focusedSpawned.appId, focusedSpawned.breadcrumb, uiTerminology, uiLocale))}</span>
       </div>
     ) : null;
     return (

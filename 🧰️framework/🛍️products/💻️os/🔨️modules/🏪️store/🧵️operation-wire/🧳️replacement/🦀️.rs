@@ -1,18 +1,20 @@
 //! 🧬️ The installed receiver retains the exact replacement payload until every original typed projection returns.
 use crate::{ArtifactOperationWire,ArtifactOriginalOperationReceiving};
 use semio_os_spr::InputReplacement;
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory,OriginalRetirementPoll,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneSource,RetainedOwnedProjection,RetainedWorkPoll,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind};
-use semio_framework_value::retained_clone::{RetainedCloneSourceAdmission,RetainedCloneSourceTake};
-use semio_framework_value_native_owned::{NativeAllocationIdentity,native_decoding::{NativeDecodeControl,OriginalReceivingPrimary}};
+use semio_framework_pack_json::{retained_alias,retained_alias_demand};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory,OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneSource,RetainedOwnedProjection,RetainedWorkPoll,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind};
+use semio_framework_value::retained_clone::{OriginalEffectReply,RetainedCloneSourceAdmission};
+use semio_framework_value_native_owned::{NativeAllocationIdentity,native_decoding::{NativeDecodeControl,NativeReceivingFailure,OriginalReceivingPrimary}};
 use semio_os_store_one_item_publication::native_source::{pay,polled};
 use std::{mem::size_of,sync::Arc};
 /// 🧳️ The original input row, native decoder ledger and retirement recipient remain bound through cancellation.
-pub struct OriginalReplacementReceiving<M:Sync>{admission:Option<RetainedCloneSourceAdmission<Vec<u8>,Vec<u8>>>,source:Option<RetainedCloneSource<Vec<u8>>>,wire:Option<RetainedOwnedProjection<Vec<u8>>>,receiver:Option<Box<dyn ArtifactOriginalOperationReceiving<M>>>,input:Option<RetainedOwnedProjection<M>>,binding:Option<(NativeAllocationIdentity,u64,usize)>,closing:bool,pending_work:Option<u128>}
-impl<M:Sync> Default for OriginalReplacementReceiving<M>{fn default()->Self{Self{admission:None,source:None,wire:None,receiver:None,input:None,binding:None,closing:false,pending_work:None}}}
+pub struct OriginalReplacementReceiving<M:Sync>{admission:Option<RetainedCloneSourceAdmission<Vec<u8>,Vec<u8>>>,source:Option<RetainedCloneSource<Vec<u8>>>,wire:Option<RetainedOwnedProjection<Vec<u8>>>,receiver:Option<Box<dyn ArtifactOriginalOperationReceiving<M>>>,input:Option<RetainedOwnedProjection<M>>,binding:Option<(NativeAllocationIdentity,u64,usize)>,closing:bool,pending_work:Option<u128>,returned:Option<Vec<u8>>,take_reply:Option<Result<RetainedCloneStep,OriginalRetirementFailure>>,take_pending:bool}
+impl<M:Sync> Default for OriginalReplacementReceiving<M>{fn default()->Self{Self{admission:None,source:None,wire:None,receiver:None,input:None,binding:None,closing:false,pending_work:None,returned:None,take_reply:None,take_pending:false}}}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"replacement receiving requires its original input row, decoder and retirement recipient")}
 fn header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
 fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand)}
-fn refused(failure:OriginalReceivingPrimary)->ValueError{let progress=failure.progress;failure.primary.or(failure.quote_refusal).or(failure.allocation_refusal).unwrap_or_else(invalid).with_retained_progress(progress)}
+fn primary(failure:OriginalReceivingPrimary)->ValueError{let progress=failure.progress;failure.primary.or(failure.quote_refusal).or(failure.allocation_refusal).unwrap_or_else(invalid).with_retained_progress(progress)}
+fn refused(failure:NativeReceivingFailure)->ValueError{let progress=failure.retained_progress();match failure{NativeReceivingFailure::Primary(failure)=>primary(failure),NativeReceivingFailure::ValueEffect(effect)=>effect.child.or(effect.producer_refusal).or(effect.work_refusal).unwrap_or_else(||primary(effect.receiving)).with_retained_progress(progress),NativeReceivingFailure::RetirementEffect(effect)=>effect.child.map(OriginalRetirementFailure::into_value_error).or(effect.producer_refusal).or(effect.work_refusal).unwrap_or_else(||primary(effect.receiving)).with_retained_progress(progress),NativeReceivingFailure::ReceivingEffect(effect)=>effect.child.map(primary).or(effect.producer_refusal).or(effect.work_refusal).unwrap_or_else(||primary(effect.receiving)).with_retained_progress(progress)}}
 fn progress(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
 impl<M:Sync+'static> OriginalReplacementReceiving<M>{
  fn validate(&self,row:&InputReplacement,ledger:NativeAllocationIdentity,recipient:Option<u64>)->Result<(NativeAllocationIdentity,u64,usize),ValueError>{let identity=(ledger,recipient.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"replacement receiving requires the original native retirement recipient"))?,row as*const _ as usize);if self.binding.is_some_and(|original|original!=identity){return Err(invalid())}Ok(identity)}
@@ -24,8 +26,8 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
  pub fn borrow_payload(&self)->Result<semio_framework_value::RetainedCloneRef<'_,Vec<u8>>,ValueError>{if self.closing{return Err(invalid())}self.source.as_ref().ok_or_else(invalid)?.try_borrow()}
  /// 📏️ Prices one actual source capture, wire alias, receiver birth or native receiving step.
  pub fn demands(&self,codec:&ArtifactOperationWire<M>,body:usize)->Result<RetirementDemand,ValueError>{
-  if self.source.is_none(){if let Some(admission)=self.admission.as_ref(){return if admission.phase()=="ready"{Ok(header::<Option<RetainedCloneSource<Vec<u8>>>>())}else{admission.next_demand()}}let mut d=header::<Self>();d.copy_bytes+=size_of::<Vec<u8>>();return Ok(d)}
-  if self.wire.is_none()&&self.receiver.is_none(){return Ok(RetainedOwnedProjection::<Vec<u8>>::constructor_demand())}
+  if self.source.is_none(){if let Some(admission)=self.admission.as_ref(){return match admission.phase(){"ready"=>Ok(header::<Option<RetainedCloneSource<Vec<u8>>>>()),"projectionStart"=>admission.owned_projection_demand(),_=>admission.next_demand()}}let mut d=header::<Self>();d.copy_bytes+=size_of::<Vec<u8>>();return Ok(d)}
+  if self.wire.is_none()&&self.receiver.is_none(){return retained_alias_demand(self.source.as_ref().ok_or_else(invalid)?.try_borrow()?)}
   if self.receiver.is_none(){return Ok((codec.original_receiving.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"installed operation wire has no original receiving capability"))?.demands)())}
   let receiver=self.receiver.as_ref().unwrap();if receiver.ready(){return Ok(header::<Option<RetainedOwnedProjection<M>>>())}receiver.demands(body)
  }
@@ -49,7 +51,7 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
   result
  }
 /// ⏳️ A pending receive keeps its receiver and records the newly performed work; only a completed turn clears it.
- fn settle_receive(&mut self,poll:RetainedWorkPoll<RetainedCloneStep,OriginalReceivingPrimary>)->Result<RetainedCloneProgress,ValueError>{
+ fn settle_receive(&mut self,poll:RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure>)->Result<RetainedCloneProgress,ValueError>{
   match poll{RetainedWorkPoll::Pending{work}=>{self.pending_work=Some(self.pending_work.unwrap_or(0).saturating_add(work));Ok(Default::default())},RetainedWorkPoll::Complete(turn)=>{self.pending_work=None;turn.result.map(|step|step.progress()).map_err(refused)}}
  }
  /// ⏳️ Observes the cumulative work of receives that are still pending; it is never a debit, the committed work is.
@@ -57,10 +59,9 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
  fn advance_local(&mut self,row:&mut InputReplacement,identity:(NativeAllocationIdentity,u64,usize),d:RetirementDemand,child:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
   if self.source.is_none(){
    let Some(admission)=self.admission.as_mut()else{let InputReplacement::Input{payload,..}=row else{return Err(invalid())};pay(effect,1)?;let bytes=std::mem::take(payload);self.admission=Some(RetainedCloneSource::<Vec<u8>>::admission_owned(bytes,()));self.binding=Some(identity);return Ok(progress(d))};
-   if admission.phase()=="ready"{let turn=admission.take_output(&mut self.source,child);pay(effect,turn.work)?;let step=turn.result?;if admission.terminal_is_empty(){self.admission=None;}return Ok(step.progress())}
-   return Ok(admission.advance(&mut effect.nested(child)).result?.progress())
+   match admission.phase(){"ready"=>{let step=admission.take_output(&mut self.source,&mut effect.nested(child)).result?;if admission.terminal_is_empty(){self.admission=None;}return Ok(step.progress())},"projectionStart"=>return Ok(admission.project_owned(&mut effect.nested(child)).result?.progress()),_=>return Ok(admission.advance(&mut effect.nested(child)).result?.progress())}
   }
-  let(wire,p)=self.source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.retain_original(&mut effect.nested(child)).result?;self.wire=Some(wire);Ok(p)
+  let Some((wire,p))=retained_alias(self.source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.try_borrow()?,&mut effect.nested(child))? else{return Ok(Default::default())};self.wire=Some(wire);Ok(p)
  }
  /// 🤝️ Transfers only the original typed projection after authenticating the same decoder and input recipient.
  pub fn take_input_native(&mut self,output:&mut Option<RetainedOwnedProjection<M>>,control:&NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{if self.binding.is_some_and(|(ledger,recipient,_)|ledger!=control.ledger_identity()||Some(recipient)!=control.retirement_recipient_identity()){return Err(invalid())}if output.is_some(){return Err(invalid())}let d=header::<Option<RetainedOwnedProjection<M>>>();if self.input.is_none()||!permits(grant,d){return Ok(Default::default())}*output=self.input.take();Ok(progress(d))}
@@ -80,11 +81,11 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
   let grant=effect.grant();
   let result=(||->Result<RetainedCloneStep,RetirementPollExit>{
    self.validate(row,control.ledger_identity(),control.retirement_recipient_identity())?;self.begin_close();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demands(grant.maximum_copy_bytes)?;if !permits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-   if let Some(admission)=self.admission.as_mut(){if admission.phase()=="ready"{let turn=admission.take_output(&mut self.source,grant);pay(effect,turn.work)?;let step=turn.result?;if admission.terminal_is_empty(){self.admission=None;}return Ok(RetainedCloneStep::Progress(step.progress()))}let InputReplacement::Input{payload,..}=row else{return Err(invalid().into())};let mut returned=None;let turn=admission.return_inputs(&mut returned,effect);if let Some((bytes,()))=returned{*payload=bytes;}if admission.terminal_is_empty(){self.admission=None;}return Ok(RetainedCloneStep::Progress(turn.result?.progress()))}
-   if let Some(input)=self.input.as_mut(){if input.terminal_is_empty(){self.input=None;return Ok(RetainedCloneStep::Progress(progress(d)))}control.charge(d.capacity_bytes)?;return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(input.close_step(effect))?.progress()))}
+   if let Some(admission)=self.admission.as_mut(){if admission.phase()=="ready"{let step=admission.take_output(&mut self.source,effect).result?;if admission.terminal_is_empty(){self.admission=None;}return Ok(RetainedCloneStep::Progress(step.progress()))}if admission.phase()=="projectionStart"{return Ok(RetainedCloneStep::Progress(admission.project_owned(effect).result?.progress()))}let InputReplacement::Input{payload,..}=row else{return Err(invalid().into())};let mut returned=None;let turn=admission.return_inputs(&mut returned,effect);if let Some((bytes,()))=returned{*payload=bytes;}if admission.terminal_is_empty(){self.admission=None;}return Ok(RetainedCloneStep::Progress(turn.result?.progress()))}
+   if let Some(input)=self.input.as_mut(){if input.terminal_is_empty(){self.input=None;return Ok(RetainedCloneStep::Progress(progress(d)))}control.charge(d.capacity_bytes)?;return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(input.close_step(grant.maximum_copy_bytes,effect))?.progress()))}
    if let Some(receiver)=self.receiver.as_mut(){if !receiver.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(receiver.close_step(control,effect))?.progress()))}self.receiver=None;return Ok(RetainedCloneStep::Progress(progress(d)))}
-   if let Some(wire)=self.wire.as_mut(){if wire.terminal_is_empty(){self.wire=None;return Ok(RetainedCloneStep::Progress(progress(d)))}control.charge(d.capacity_bytes)?;return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(wire.close_step(effect))?.progress()))}
-   if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source=None;return Ok(RetainedCloneStep::Progress(progress(d)))}let InputReplacement::Input{payload,..}=row else{return Err(invalid().into())};if !payload.is_empty()||payload.capacity()!=0{return Err(invalid().into())}control.charge(d.capacity_bytes)?;return Ok(match RetirementPollExit::resume(source.take_authority(effect))?{RetainedCloneSourceTake::Pending(p)=>RetainedCloneStep::Progress(p),RetainedCloneSourceTake::Ready(bytes,p)=>{*payload=bytes;RetainedCloneStep::Progress(p)}})}
+   if let Some(wire)=self.wire.as_mut(){if wire.terminal_is_empty(){self.wire=None;return Ok(RetainedCloneStep::Progress(progress(d)))}control.charge(d.capacity_bytes)?;return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(wire.close_step(grant.maximum_copy_bytes,effect))?.progress()))}
+   if let Some(source)=self.source.as_mut(){if source.terminal_is_empty()&&!self.take_pending{self.source=None;return Ok(RetainedCloneStep::Progress(progress(d)))}let InputReplacement::Input{payload,..}=row else{return Err(invalid().into())};if !payload.is_empty()||payload.capacity()!=0{return Err(invalid().into())}if !self.take_pending{control.charge(d.capacity_bytes)?;}if self.take_reply.is_none(){let reply=OriginalEffectReply::borrow(&mut self.take_reply)?;let done=if self.take_pending{source.recover_take_authority_into(&mut self.returned,grant.maximum_copy_bytes,effect,reply)?}else{source.take_authority_into(&mut self.returned,grant.maximum_copy_bytes,effect,reply)?};drop(done);}return match self.take_reply.take(){None=>{self.take_pending=true;Err(RetirementPollExit::Pending(0))},Some(result)=>{self.take_pending=false;let step=result?;if let Some(bytes)=self.returned.take(){*payload=bytes;}Ok(RetainedCloneStep::Progress(step.progress()))}}}
    self.binding=None;Ok(RetainedCloneStep::Complete(progress(d)))
   })();
   RetirementPollExit::settle(effect,result)
@@ -122,7 +123,7 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
 }
 impl<M:Sync> OriginalReplacementReceiving<M>{
  /// 🫙️ Every original parser, payload, typed projection and decoder binding has settled.
- pub fn terminal_is_empty(&self)->bool{self.admission.is_none()&&self.source.is_none()&&self.wire.is_none()&&self.receiver.is_none()&&self.input.is_none()&&self.binding.is_none()}
+ pub fn terminal_is_empty(&self)->bool{self.admission.is_none()&&self.source.is_none()&&self.wire.is_none()&&self.receiver.is_none()&&self.input.is_none()&&self.binding.is_none()&&self.returned.is_none()&&!self.take_pending}
 }
 impl<M:Sync> Drop for OriginalReplacementReceiving<M>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original replacement payload must return to its exact input row before Drop")}}
 

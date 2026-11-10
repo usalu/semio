@@ -91,14 +91,14 @@ impl ArtifactStoreBackboneRetirement {
 
 impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { if let Some(outbox)=self.outbox.as_ref().filter(|owner|!owner.terminal_is_empty()){outbox.close_demands(body)}else if let Some(paged)=self.paged.as_ref().filter(|owner|!owner.terminal_is_empty()){paged.next_demand(body)}else{self.demands()} }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+    fn close_step(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
         let grant = effect.grant();
         let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         if let Some(outbox)=self.outbox.as_mut(){if !outbox.terminal_is_empty(){return outbox.close_step(effect).map(|step|RetainedCloneStep::Progress(step.progress()))}let demand=self.demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty))}self.outbox.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
-        if let Some(paged)=self.paged.as_mut(){let d=if paged.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<Option<PagedRetirement>>(),depth:1,..Default::default()}}else{paged.next_demand(grant.maximum_copy_bytes)?};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(empty))}if !paged.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(paged.step(effect)).map(|step|RetainedCloneStep::Progress(step.progress()))}self.paged.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+        if let Some(paged)=self.paged.as_mut(){let d=if paged.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<Option<PagedRetirement>>(),depth:1,..Default::default()}}else{paged.next_demand(grant.maximum_copy_bytes)?};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(empty))}if !paged.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(paged.step(body,effect)).map(|step|RetainedCloneStep::Progress(step.progress()))}self.paged.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
         let demand = self.demands()?;
         if grant.maximum_copy_bytes<demand.copy_bytes{return Ok(RetainedCloneStep::Progress(empty))}
         if grant.maximum_depth < demand.depth || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }

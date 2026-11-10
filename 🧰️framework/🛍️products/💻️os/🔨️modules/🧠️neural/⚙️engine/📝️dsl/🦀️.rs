@@ -77,3 +77,5 @@ fn value_key<'a>(value:&'a Value,path:&[usize],index:usize)->Result<&'a str,Valu
 dynamic_literal!(Atom,"an atom",address,atom_view,atom_key);
 dynamic_literal!(Dictionary,"a dictionary",dictionary_identity,dictionary_view,dictionary_key);
 dynamic_literal!(Value,"a value",value_identity,value_view,value_key);
+// 🧬️ A dictionary field and a block tree field receive natively from the field source without a per-type cursor.
+semio_framework_dsl_record::native_field_receiving!(Dictionary,Tree);

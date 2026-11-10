@@ -26,16 +26,17 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 if owner.frozen(){
                     const CODE:&str="timeTravel.frozen";const MESSAGE:&str="a history edit freezes this original document press";
                     let mut d=Host::<A>::shell_close_demands();d.copy_bytes+=CODE.len()+MESSAGE.len()+2*std::mem::size_of::<Fault>()+std::mem::size_of::<u64>()+std::mem::size_of::<bool>();d.capacity_bytes=CODE.len()+MESSAGE.len()+std::mem::size_of::<semio_framework::FaultScope>();
-                    let mut fault=None;
-                    semio_framework_job::admit_original_construction(cx,&mut fault,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|_|{let result=(||{self.tools.original_scrub_dispatch.take();self.as_render().follow_tool_machines(true);Ok((Fault::new(FaultOrigin::Framework,FaultCode::new(CODE),MESSAGE),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
-                    return if let Some(fault)=fault{Err(fault.into())}else{Ok(None)}
+                    let ready=typing.birth.built(cx,&mut typing.fault,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},||Ok((Fault::new(FaultOrigin::Framework,FaultCode::new(CODE),MESSAGE),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes})))?;
+                    if !ready{return Ok(None)}
+                    self.tools.original_scrub_dispatch.take();self.as_render().follow_tool_machines(true);
+                    return Err(typing.fault.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frozen fault was not constructed"))?.into())
                 }
                 let mut demand=Host::<A>::shell_close_demands();demand.copy_bytes+=std::mem::size_of::<u64>()+std::mem::size_of::<bool>();let mut received=false;
                 semio_framework_job::close_original_retained_step(cx,demand,|_|{let result=(||{self.tools.original_scrub_dispatch.take();self.as_render().follow_tool_machines(true);received=true;Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
                 return Ok(if received{*decision}else{None})
             }
         }else if decision.is_some(){return Ok(*decision)}
-        if !self.capture_original_tool_tag(action,args,meta,cx,tag,ready).await?{return Ok(None)}
+        if !self.capture_original_tool_tag(action,args,meta,cx,tag,ready,typing).await?{return Ok(None)}
         if self.tools.original_scrub_dispatch.is_none(){
             let frozen=X::freezes_document(&*self.time_travel,&*self.tool_runs)&&matches!(tag,Some(ToolTag::Scrub(ScrubTag{phase:ScrubPhase::Tick{..}|ScrubPhase::Commit{..},..})));
             Host::<A>::admit(&self.tool_machines.presses,meta.view_state.as_deref(),frozen,&mut self.tools.original_scrub_dispatch,cx)?;return Ok(None)
@@ -50,8 +51,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     async fn advance_original_typing_pass(&mut self,action:&str,args:Option<&DslValue>,metadata:&mut Option<ActionMeta>,typing:&mut crate::original_typing::OriginalTypingDispatch<A>,control:bool,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         use crate::original_typing::OriginalTypingCommit;
         use semio_framework_tool_machine::OriginalToolLedgerSource;
-        use semio_framework_job::{admit_original_construction,OriginalConstructionDemand};
-        use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
+        use semio_framework_value::{ValueError,ValueRefusalKind};
         let invalid=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original typing dispatch lost its retained source");
         if !typing.pending(){
             let buffer=args.and_then(|args|args.get(TYPING_BUFFER_ARG)).and_then(DslValue::as_str).filter(|s|!s.is_empty());
@@ -87,7 +87,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             3=>{
                 if typing.transaction.is_some(){typing.transition(4,cx)?;return Ok(false)}
                 if let Some(row)=typing.row.as_mut(){if row.ready(){if row.take_into(&self.tool_machines.typing,&mut typing.transaction,&mut typing.values,cx)?{typing.transition(4,cx)?;}}else{row.advance(&mut self.tool_machines.typing,cx)?;}}
-                else{OriginalTypingCommit::admit(&self.tool_machines.typing,typing.after.as_ref().ok_or_else(invalid)?,typing.key.ok_or_else(invalid)?,cx,&mut typing.row)?;}
+                else{OriginalTypingCommit::admit(&self.tool_machines.typing,typing.after.as_ref().ok_or_else(invalid)?,typing.key.ok_or_else(invalid)?,cx,&mut typing.birth,&mut typing.row)?;}
                 if typing.transaction.is_some(){typing.transition(4,cx)?;}
             },
             4=>{
@@ -95,7 +95,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 if typing.metadata.is_some(){typing.transition(5,cx)?;return Ok(false)}
                 typing.original_metadata.as_ref().ok_or_else(invalid)?.admit_routing_alias(&mut typing.metadata,cx)?;
             },
-            5=>{if typing.prepare_verb(cx)?{typing.make_input(cx)?;}},
+            5=>{if typing.input.is_some()||typing.prepare_verb(cx)?{typing.make_input(cx)?;}},
             6=>{
                 if typing.receipt.is_some(){typing.transition(7,cx)?;return Ok(false)}
                 self.as_dispatch().dispatch_original_emission(&mut typing.input,&mut typing.receipt,cx).await?;
@@ -107,8 +107,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             },
             8=>{
                 if !typing.close_receipt(cx)?{return Ok(false)}
-                let bytes=std::mem::size_of::<u8>()+std::mem::size_of::<u64>()+std::mem::size_of::<bool>();let mut done=None;
-                admit_original_construction(cx,&mut done,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{let result=(||{self.as_render().follow_tool_machines(true);typing.phase=1;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
+                let bytes=std::mem::size_of::<u8>()+std::mem::size_of::<u64>()+std::mem::size_of::<bool>();
+                if typing.unit(cx,semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()})?{self.as_render().follow_tool_machines(true);typing.phase=1;}
             },
             9=>return Ok(true),
             _=>return Err(invalid().into())

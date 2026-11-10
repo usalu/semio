@@ -8597,7 +8597,16 @@
           "ports": [
             {
               "id": "graph:out",
-              "label": "Graph",
+              "label": {
+                "native": {
+                  "en": "Graph",
+                  "de": "Graph"
+                },
+                "reuse": {
+                  "en": "Graph",
+                  "de": "Graph"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "graph",
@@ -18514,7 +18523,16 @@
           "ports": [
             {
               "id": "graph:in",
-              "label": "Graph",
+              "label": {
+                "native": {
+                  "en": "Graph",
+                  "de": "Graph"
+                },
+                "reuse": {
+                  "en": "Graph",
+                  "de": "Graph"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "graph",
@@ -18526,7 +18544,16 @@
             },
             {
               "id": "graph:out",
-              "label": "Graph",
+              "label": {
+                "native": {
+                  "en": "Graph",
+                  "de": "Graph"
+                },
+                "reuse": {
+                  "en": "Graph",
+                  "de": "Graph"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "graph",

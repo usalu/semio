@@ -19,6 +19,14 @@ pub trait DslReceivingVariants:RetireOwned+Sized{
  fn receive_named_record(keyword:&str,record:&RecordValue,output:&mut Option<Self>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<(),NativeSnapshotFailure>;
 }
 pub use semio_framework_io_control::{NativeSnapshotWork as ReceivingWork,native_snapshot_turn as receiving_turn};
+/// 📬️ A borrowed receiving turn reports the whole work it performed and every original refusal.
+pub type ReceivingOutcome=RetainedWorkOutcome<(),NativeSnapshotFailure>;
+/// 🧬️ A field whose native decoder owns every allocation receives through one measured construction.
+pub fn receive_decoded<T:crate::DslField+RetireOwned>(value:&FieldValue,output:&mut Option<T>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->ReceivingOutcome{
+ owner.receive::<T,T,NativeSnapshotFailure>(output,&mut |_,result,_marker,_failure,native,_|receiving_turn(|meter|{*result=Some(meter.measured(native,|native|T::from_value_controlled(value,native))?);Ok(())}))
+}
+impl DslReceivingField for semio_framework_value_ordered::ordered::OrderedSet{fn receive_value(value:&FieldValue,output:&mut Option<Self>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->ReceivingOutcome{receive_decoded(value,output,owner)}}
+impl<V:crate::DslField+RetireOwned+Sync> DslReceivingField for semio_framework_value_ordered::ordered::OrderedMap<V>{fn receive_value(value:&FieldValue,output:&mut Option<Self>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->ReceivingOutcome{receive_decoded(value,output,owner)}}
 /// 🎟️ Admits actual field movements through independent original copy authority.
 pub fn work(owner:&mut NativeSnapshotDecodeOwner<'_,'_>,bytes:usize,depth:usize)->Result<(),ValueError>{
  owner.native().checkpoint()?;let remaining=owner.remaining_grant();

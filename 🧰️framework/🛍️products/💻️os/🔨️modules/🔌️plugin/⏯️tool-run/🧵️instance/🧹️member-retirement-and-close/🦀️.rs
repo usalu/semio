@@ -42,7 +42,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()})));
                 }
                 let step=match children.get(&(member.slot.clone(),member.child_id.clone())){
-                    Some(child)=>child.member.visit_member(ToolRunMemberEmissionRetire{owner:owner.as_mut(),grant})?,
+                    Some(child)=>child.member.visit_member(ToolRunMemberEmissionRetire{owner:owner.as_mut(),grant,effect:&mut *effect})?,
                     None=>owner.close_step(grant)?,
                 };return Ok(Some(step));
             }

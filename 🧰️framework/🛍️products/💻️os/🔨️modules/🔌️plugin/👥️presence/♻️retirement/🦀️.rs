@@ -1,10 +1,11 @@
 //! 👥️ Domain-authorized presence store closure preserves exact local and peer owner retirement.
 
 use crate::store::{Mutation, PresenceStore, PresenceStoreRetirement};
+use semio_framework_value::{RetirementPollExit, SharedValueRetirementFactory};
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_framework::Fault;
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::sync::Arc;
 
 fn yields(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
@@ -16,10 +17,6 @@ fn depth_refusal(grant: RetainedCloneGrant, demand: RetirementDemand, scope: &'s
 }
 
 const _: () = assert!(size_of::<crate::NoPresence>() == 0 && !std::mem::needs_drop::<crate::NoPresence>());
-
-/// 🫧️ Explicit ownership for the framework's zero-payload presence type only.
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub struct NoPresenceRetirementFactory;
 
 fn no_presence_is_empty(_: &crate::NoPresence) -> bool {
     true
@@ -63,11 +60,11 @@ fn presence_root_is_its_own_default<P: Default + PartialEq>(root: &P) -> bool {
 }
 
 pub fn no_presence_local_root_retirement_factory() -> Arc<dyn store::SnapshotRetirementFactory<crate::NoPresence>> {
-    Arc::new(NoPresenceRetirementFactory)
+    Arc::new(SharedValueRetirementFactory::<crate::NoPresence>::default())
 }
 
 pub fn no_presence_peer_retirement_factory() -> Arc<dyn store::SnapshotRetirementFactory<crate::NoPresence>> {
-    Arc::new(NoPresenceRetirementFactory)
+    Arc::new(SharedValueRetirementFactory::<crate::NoPresence>::default())
 }
 
 /// 🧹️ Bounded retirement for a displaced presence root of ANY payload type — the presence twin of
@@ -85,87 +82,9 @@ pub fn no_presence_peer_retirement_factory() -> Arc<dyn store::SnapshotRetiremen
 /// Declaring an owner explicitly still wins — this is `or_else`, not a replacement.
 pub fn bounded_presence_root_retirement_factory<P>() -> Arc<dyn store::SnapshotRetirementFactory<P>>
 where
-    P: pack::snapshot::ArtifactDsl + Send + Sync + 'static,
+    P: semio_framework_value::retirement::RetireOwned + Sync,
 {
-    Arc::new(BoundedPresenceRootRetirementFactory::<P>(std::marker::PhantomData))
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct BoundedPresenceRootRetirementFactory<P>(std::marker::PhantomData<fn() -> P>);
-
-impl<P> store::SnapshotRetirementFactory<P> for BoundedPresenceRootRetirementFactory<P>
-where
-    P: pack::snapshot::ArtifactDsl + Send + Sync + 'static,
-{
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { size_of::<BoundedPresenceRootRetirement<P>>() }
-
-    fn retire(&self, snapshot: Arc<P>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)> { let result = (|| -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)> {
-        let progress = match (RetainedCloneBirthDemand { capacity_bytes: size_of::<BoundedPresenceRootRetirement<P>>(), depth: 1 }).admit(grant) {
-            Ok(progress) => progress,
-            Err(error) => return Err((error, snapshot)),
-        };
-        let retained_bytes = pack::snapshot::ArtifactDsl::print_dsl(snapshot.as_ref()).len();
-        Ok((Box::new(BoundedPresenceRootRetirement { root: Some(snapshot), retained_bytes }), progress))
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
-}
-
-struct BoundedPresenceRootRetirement<P> {
-    root: Option<Arc<P>>,
-    retained_bytes: usize,
-}
-
-impl<P> BoundedPresenceRootRetirement<P> {
-    fn demand(&self) -> RetirementDemand {
-        RetirementDemand { copy_bytes: usize::from(self.retained_bytes != 0), depth: usize::from(!self.terminal_is_empty()), ..Default::default() }
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.root.is_none() && self.retained_bytes == 0
-    }
-}
-
-impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedPresenceRootRetirement<P> {
- fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(self.demand())}
-
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome { let mut work = 0; let result = (|| -> Result<RetainedCloneStep, ValueError> {
-        if self.terminal_is_empty() {
-            return Ok(RetainedCloneStep::Complete(Default::default()));
-        }
-        let demand = self.demand();
-        depth_refusal(grant, demand, "presence root retirement exceeds admitted depth")?;
-        if yields(grant, demand) {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
-        }
-        work = 1; let copied_bytes = self.retained_bytes.min(grant.maximum_copy_bytes);
-        if copied_bytes != 0 {
-            self.retained_bytes -= copied_bytes;
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, ..Default::default() }));
-        }
-        drop(self.root.take());
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-    })(); semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work } }
-
-    fn terminal_is_empty(&self) -> bool {
-        BoundedPresenceRootRetirement::terminal_is_empty(self)
-    }
-
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demand().copy_bytes) }
-
-    fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demand().depth) }
-}
-
-impl store::SnapshotRetirementFactory<crate::NoPresence> for NoPresenceRetirementFactory {
-    fn retirement_birth_bytes(&self, _: &Arc<crate::NoPresence>) -> usize {
-        semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<crate::NoPresence>()
-    }
-
-    fn retire(&self, source: Arc<crate::NoPresence>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<crate::NoPresence>)> {
-        semio_framework_value::retirement::arc_custody::admit_shared_retirement(source, grant, true)
-    }
+    Arc::new(SharedValueRetirementFactory::<P>::default())
 }
 
 /// 🛂️ A domain supplies its exact empty terminal root and predicate; the store supplies its installed factories.
@@ -212,7 +131,11 @@ impl<P: Clone + Send + Sync + 'static, M: Mutation<P> + 'static> ArtifactOwnedDi
         }
         if let Some(retirement) = self.retirement.as_mut() {
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = retirement.close_step(child).map_err(|error| Fault::from(error.into_message()))?;
+            let step = match retirement.close_step(&mut effect.nested(child)) {
+                Ok(step) => step,
+                Err(RetirementPollExit::Pending(_)) => RetainedCloneStep::Progress(Default::default()),
+                Err(RetirementPollExit::Failed(failure)) => return Err(Fault::from(semio_plugin_ownership::bounded_ownership::plugin_failure_error(failure).into_message())),
+            };
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, retirement.terminal_is_empty(), "presence store retirement").map_err(|error| Fault::from(error.into_message()))?;
             return Ok(PluginLifecycleStep::retained(step, false));
         }

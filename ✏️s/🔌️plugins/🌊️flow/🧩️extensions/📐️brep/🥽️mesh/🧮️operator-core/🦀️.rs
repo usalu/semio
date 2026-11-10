@@ -368,7 +368,9 @@ impl MeshOperatorJob {
                 return Ok(neural_engine::OperatorJobStep::Cancelled(self.progress));
             } else if let Some(source)=&mut state.source {
                 let text=Self::source_text(state.operation,state.input.as_ref().ok_or_else(||invalid("mesh preparation lost its original input"))?)?;
-                match source.step(text,semio_framework_mesh_engine::io::text::PolygonSourceGrant{maximum_units:1,maximum_projection_bytes:grant.maximum_copy_bytes,retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth}}).map(|step|step.source) {
+                let source_grant=semio_framework_mesh_engine::io::text::PolygonSourceGrant{maximum_units:1,maximum_projection_bytes:grant.maximum_copy_bytes,retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth}};
+                let prepared=match cx.with_original_effect(source_grant.retirement,|_,effect|source.step(text,source_grant,effect)) {Ok(Some((step,_)))=>step.map(|step|step.source),Ok(None)=>Ok(None),Err(error)=>Err(format!("{error:?}"))};
+                match prepared {
                     Ok(Some(source))=>{state.reconstruction=Some(HalfedgeMesh::polygon_source_job(source).map_err(mesh_error)?);self.retirement=Some(MeshRetirement::Source(state.source.take().unwrap()));self.progress.phase="mesh-source-capture";},
                     Ok(None)=>self.progress.phase=source.phase(),
                     Err(error)=>{self.fault=Some(invalid(error));self.retirement=Some(MeshRetirement::Source(state.source.take().unwrap()));state.retire_input=true;self.progress.phase="mesh-fault-retire";},

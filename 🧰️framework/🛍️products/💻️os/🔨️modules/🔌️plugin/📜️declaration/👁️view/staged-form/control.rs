@@ -103,12 +103,11 @@ impl StagedScalarCursor {
     pub fn terminal_is_empty(&self)->bool{self.node.is_none()&&self.retiring.is_none()}
 }
 impl Drop for StagedScalarCursor{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"staged scalar control requires original paid retirement");}}
-impl RetireOwned for StagedScalarCursor{
-    fn retirement(self)->Box<dyn RetirementCursor>{Box::new(self)}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}fn controlled_retirement_supported()->bool{true}
-}
+crate::payload::staged_close!(StagedScalarCursor,close);
 impl RetirementCursor for StagedScalarCursor{
     fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0);}match self.close(grant){Ok(step)=>RetirementStep::Progress(step.progress(),1),Err(error)=>RetirementStep::Failure(error,1)}}
+    semio_framework_value::native_retirement_reply!();
+    fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(1)}
     fn terminal_is_empty(&self)->bool{StagedScalarCursor::terminal_is_empty(self)}
     fn next_close_byte_demand(&self)->Option<usize>{Some(0)}fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(usize::MAX)?.copy_bytes)}

@@ -27,7 +27,6 @@ semio-os-history-record-decode = { path = "../../../../📋️record-set/📦️
 semio-os-history-testing-retirement = { path = "../../../../../🧪️testing/♻️retirement/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-trace-memory-testing = { path = "../../../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 
 [dev-dependencies]

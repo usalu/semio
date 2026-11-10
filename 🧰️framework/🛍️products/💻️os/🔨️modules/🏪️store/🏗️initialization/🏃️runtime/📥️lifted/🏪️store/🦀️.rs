@@ -11,7 +11,7 @@ use std::sync::Arc;
 use semio_os_store_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
 use semio_os_store_read::{ArtifactStoreMutationDagRetirement, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_value::factory::ArcRootRetirement as ReturnedSnapshotReadRetirement;
 use semio_os_vcs::{ArtifactHistoryKey, ArtifactHistoryLedger};
 use semio_os_store_space_schema::{ArtifactCursor, ArtifactEnvelopeOwners};
 //#region 🔖️EphemeralLanes
@@ -112,7 +112,7 @@ impl ArtifactStoreInitializationEditIndex {
     }
     pub fn retire_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
         let grant=effect.grant();let d=self.retirement_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-        if let Some(close)=self.close.as_mut(){if close.terminal_is_empty(){self.close.take();return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}return semio_os_store_read::settle_close_poll(close.step(effect)).map(|step|RetainedCloneStep::Progress(step.progress()))}
+        if let Some(close)=self.close.as_mut(){if close.terminal_is_empty(){self.close.take();return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}return semio_os_store_read::settle_close_poll(close.step(grant.maximum_copy_bytes,effect)).map(|step|RetainedCloneStep::Progress(step.progress()))}
         if self.positions.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}self.close=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(&mut self.positions)).unwrap_or_else(|_|unreachable!("native index declares original retirement")));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
     }
 }
@@ -276,7 +276,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     }
 
     pub fn settle_current_retirement_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
-        semio_os_store_read::settle_close_poll(artifact_retirement_box_close_step(&mut self.close_active, effect))
+        semio_os_store_read::settle_close_poll(artifact_retirement_box_close_step(&mut self.close_active,effect.grant().maximum_copy_bytes,effect))
     }
 
     /// ✏️ Installs the effective supersessions the initializer folds the applied edits with; the adopted store keeps
@@ -462,7 +462,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
                         semio_framework_value::RetainedWorkPoll::Complete(turn) => turn,
                     };
                     drop(alias);
-                    let receipt = turn.result?.progress();
+                    let receipt = turn.result.map_err(|failure| failure.into_value_error())?.progress();
                     let Some(owner) = output else { return Ok(RetainedCloneStep::Progress(empty)); };
                     *self.close_active = Some(owner);
                     self.close_phase = 1;

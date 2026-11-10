@@ -28,3 +28,12 @@ semio-framework-value-native-decode-handoff = { path = "../../../../../🌱️va
 semio-framework-job-context = { workspace = true }
 semio-framework-value-control-contract = { path = "../../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-decoding = { path = "../../../../../🌱️value/🛬️decode/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job-testing-caller = { workspace = true }
+semio-framework-job-context = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }
+
+[[test]]
+name = "birth-chain"
+path = "../../🧪️tests/birth-chain.rs"

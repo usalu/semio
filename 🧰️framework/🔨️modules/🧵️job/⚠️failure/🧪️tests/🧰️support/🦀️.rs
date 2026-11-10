@@ -1,5 +1,5 @@
 //! 🧰️ Shared real payloads, borrowed projections and paid-close witnesses for owning Original laws.
-use crate::{OriginalDomainFailure,OriginalDomainProjection,OriginalDomainView as V,close_original_retained_step,project_original_fault,key_original_fault};
+use crate::{OriginalDomainFailure,OriginalDomainProjection,OriginalDomainView as V,close_original_retained_step,close_original_effect_step,project_original_fault,key_original_fault};
 use semio_framework_diagnostic::FaultMessageOwner;
 use semio_framework_value::{ValueError,ValueRefusalKind,Number,RetainedCloneProgress as P,retirement::{RetireOwned,controlled::ControlledRetirement}};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
@@ -32,6 +32,6 @@ pub(crate) fn projected(source:&dyn OriginalDomainProjection,path:&mut Vec<usize
 }
 pub(crate) fn close<T:RetireOwned>(value:T,cx:&mut crate::StepContext<'_>,bound:usize){
  let(mut owner,heap)=observe(||ControlledRetirement::new(value).unwrap_or_else(|_|panic!("fixture owner must support controlled close")));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- for _ in 0..bound{if owner.terminal_is_empty(){break}let grant=cx.retained_grant();let demand=owner.selected_demand(grant.maximum_copy_bytes).unwrap();let(result,heap)=observe(||close_original_effect_step(cx,demand,|effect|owner.step(effect)));let progress=result.unwrap().progress();assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}
+ for _ in 0..bound{if owner.terminal_is_empty(){break}let grant=cx.retained_grant();let demand=owner.selected_demand(grant.maximum_copy_bytes).unwrap();let(result,heap)=observe(||close_original_effect_step(cx,demand,|effect|owner.step(grant.maximum_copy_bytes,effect)));let progress=result.unwrap().progress();assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}
  assert!(owner.terminal_is_empty());let(_,heap)=observe(||drop(owner));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }

@@ -1,0 +1,16 @@
+# edit-c result (value-edit: edit root, named producer, commit)
+Files: value/📋️list/🔺️edit/{🦀️.rs, 🔑️named/🦀️.rs, 🚚️commit/🦀️.rs} (lib only; tests not yet ported).
+## Done (uncompiled at last step: upstream retirement crate red with `$crate::__control` at ♻️retirement/🦀️.rs:223)
+- Root: IndexedEditPlan close is reply-shaped (close_into / recover_close_into / close_original_into / recover_close_original_into, close_route key). New shared pub(crate) items: CloseKey, LoanKey, invocation_identity, loan_key, trait CloseReply (impl for RetainedCloneClose, IndexedEditPlan), deposit (child receipt with parent header bytes), Reply/Done aliases.
+- Named: NamedEditPlan same four close fns via close_reply_named; CloseReply impl for AdmittedNamedKeyIndex dispatches to its inherent four fns (edit-a must provide them).
+- Commit: IndexedCollectionCommit::advance_into/recover_advance_into (post is Option<Vec<T>>, routes 3 field advance, 4 field take, 5 retirement step, 6 field close forwarded; admit_into/take_front_into sync via copy_reply), close_into/recover_close_into (routes 1 field, 2 retirement, 3 original vector); fixed header bytes dropped (were 0).
+## Status 20:5x
+- W-edit-c-8 native: zero errors in edit root, named/🦀️.rs, 🚚️commit; the 10 remaining errors are all edit-b (root + root/receive: close_step/close_original_step, missing close_route).
+- Tests ported (unverified, compile needs --tests chain): 🧪️tests/driver.rs (new, crate::driver::turn/turn_mut: reply turn through OriginalEffectAuthority, returns answer, heap, work; mounted cfg(test) in packages/🦀️rust/🦀️.rs), root 🧪️tests/{🦀️,actual}.rs, 🚚️commit/🧪️tests/🦀️.rs (post is Option<Vec<Row>>), 🔑️named/🧪️tests/🦀️.rs.
+## Update 22:3x sliced work + real pending fixture
+- IndexedEditPlan::advance pays Work incrementally (1 unit up front, the coordinate read right after the closure) via record_owed, and refuses to start (Progress default, no work) unless effect.remaining_work_units() >= new pub fn work_demand() (1, or 2 while filling a directory). Receivers must size the original ceiling with plan.work_demand().
+- Fixture: Pends/PendCursor (RetireOwned whose close_into returns without recording a reply, recover_close_into pends 3 more times then completes), adopted into the plan's close custody via testkit IndexedEditPlan::adopt; Rig::step keeps the open action across pending turns, accumulates heap, posts one receipt on completion.
+- Law (indexed_edit, 5/5): pending turns exactly 4 (1 fresh + 3 recoveries), child close calls 1, recoveries 4, pends 3, final recovery pays exactly 1 Work, then terminal.
+- W-edit-c-30 native whole crate: lib 0, indexed_commit 2/2, indexed_edit 5/5, named_edit 2/2, named_index 3/3, named_ranked 1/1 pass; named_root_receive (edit-b) 0/2: (a) heap accounting (2206,1054) vs expected in 🛬️receive tests line 105 with their [DEBUG] output, (b) construction.rs:21 unsettled reply; the 'work exceeded' failure is gone. transfer target not reached in this run's log excerpt. wasm lib W-edit-c-31 rc as logged.
+Rerun: tst.sh W-edit-c-N 🧰️framework/Cargo.toml native -p semio-framework-value-edit
+STATUS: FIXED-verified W-edit-c-30 for my targets (indexed_edit 5, indexed_commit 2, named_edit 2, named_ranked 1); receive 0/2 is edit-b's

@@ -53,48 +53,48 @@ impl<T:RetireOwned,O:RetireOwned> ErasedSnapshotRetirement for NativeSnapshotRec
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if self.action_pending(){return Ok(semio_framework_value::RetirementDemand{depth:2,..Default::default()})}let mut demand=if let Some(pending)=self.pending.as_ref(){semio_framework_value::factory_ticket_demands(pending,body)?}else{self.active().next_demand(body)?};demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"snapshot receiving child depth overflow"))?;Ok(demand)}
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if self.terminal_is_empty(){Ok(0)}else if self.terminal_pending()||self.action_pending(){Ok(1)}else{self.active().next_computational_work(body)}}
  fn requires_original_control(&self)->bool{true}
- fn close_step_controlled(&mut self,effect:&mut RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->OriginalRetirementPoll{
+ fn close_step_controlled(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->OriginalRetirementPoll{
   let grant=effect.grant();
   if !self.terminal_is_empty()&&control.failure_storage_pool().is_empty(){return semio_framework_value::refill_original_failure_storage(control,grant)}
   let demand=match self.next_demand(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return settled(Err(error.into()))};
   if self.terminal_is_empty(){return settled(Ok(RetainedCloneStep::Complete(Default::default())))}
   if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return settled(Ok(RetainedCloneStep::Progress(Default::default())))}
   let mut child=grant;child.maximum_depth=child.maximum_depth.saturating_sub(1);
-  if self.pending.is_some(){return close_factory_ticket_controlled(&mut self.pending,&mut effect.nested(child),control)}
-  if !self.intermediate.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(&self.intermediate){return ErasedSnapshotRetirement::close_step_controlled(&mut self.intermediate,&mut effect.nested(child),control)}
-  if self.intermediate.terminal_is_empty(){if let Some(failure)=self.unwind_failure.as_mut().filter(|failure|!failure.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(&**failure)){return ErasedSnapshotRetirement::close_step_controlled(failure,&mut effect.nested(child),control)}}
-  if self.intermediate.terminal_is_empty()&&self.unwind_failure.as_ref().is_none_or(|failure|failure.terminal_is_empty())&&self.action_failure.is_none()&&!self.output.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(&self.output){return ErasedSnapshotRetirement::close_step_controlled(&mut self.output,&mut effect.nested(child),control)}
+  if self.pending.is_some(){return close_factory_ticket_controlled(&mut self.pending,body,&mut effect.nested(child),control)}
+  if !self.intermediate.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(&self.intermediate){return ErasedSnapshotRetirement::close_step_controlled(&mut self.intermediate,body,&mut effect.nested(child),control)}
+  if self.intermediate.terminal_is_empty(){if let Some(failure)=self.unwind_failure.as_mut().filter(|failure|!failure.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(&**failure)){return ErasedSnapshotRetirement::close_step_controlled(failure,body,&mut effect.nested(child),control)}}
+  if self.intermediate.terminal_is_empty()&&self.unwind_failure.as_ref().is_none_or(|failure|failure.terminal_is_empty())&&self.action_failure.is_none()&&!self.output.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(&self.output){return ErasedSnapshotRetirement::close_step_controlled(&mut self.output,body,&mut effect.nested(child),control)}
   match self.next_computational_work(grant.maximum_copy_bytes){Ok(work)=>if work>effect.maximum_work_units(){return settled(Ok(RetainedCloneStep::Progress(Default::default())))},Err(error)=>return settled(Err(error.into()))}
   if let Err(error)=control.charge(demand.capacity_bytes){return settled(Err(error.into()))}
-  self.close_step(effect)
+  self.close_step(body,effect)
  }
- fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+ fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   let grant=effect.grant();
   if !self.terminal_is_empty()&&original.failure_storage_pool().is_empty(){return semio_framework_value::refill_original_failure_storage(original,grant)}
   let demand=match self.next_demand(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return settled(Err(error.into()))};
   if self.terminal_is_empty(){return settled(Ok(RetainedCloneStep::Complete(Default::default())))}
   if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return settled(Ok(RetainedCloneStep::Progress(Default::default())))}
   let mut child=grant;child.maximum_depth=child.maximum_depth.saturating_sub(1);
-  if self.pending.is_some(){return close_factory_ticket_original(&mut self.pending,original,&mut effect.nested(child))}
-  if !self.intermediate.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(&self.intermediate){return ErasedSnapshotRetirement::close_original_step(&mut self.intermediate,original,&mut effect.nested(child))}
-  if self.intermediate.terminal_is_empty(){if let Some(failure)=self.unwind_failure.as_mut().filter(|failure|!failure.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(&**failure)){return ErasedSnapshotRetirement::close_original_step(failure,original,&mut effect.nested(child))}}
-  if self.intermediate.terminal_is_empty()&&self.unwind_failure.as_ref().is_none_or(|failure|failure.terminal_is_empty())&&self.action_failure.is_none()&&!self.output.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(&self.output){return ErasedSnapshotRetirement::close_original_step(&mut self.output,original,&mut effect.nested(child))}
+  if self.pending.is_some(){return close_factory_ticket_original(&mut self.pending,original,body,&mut effect.nested(child))}
+  if !self.intermediate.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(&self.intermediate){return ErasedSnapshotRetirement::close_original_step(&mut self.intermediate,original,body,&mut effect.nested(child))}
+  if self.intermediate.terminal_is_empty(){if let Some(failure)=self.unwind_failure.as_mut().filter(|failure|!failure.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(&**failure)){return ErasedSnapshotRetirement::close_original_step(failure,original,body,&mut effect.nested(child))}}
+  if self.intermediate.terminal_is_empty()&&self.unwind_failure.as_ref().is_none_or(|failure|failure.terminal_is_empty())&&self.action_failure.is_none()&&!self.output.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(&self.output){return ErasedSnapshotRetirement::close_original_step(&mut self.output,original,body,&mut effect.nested(child))}
   match self.next_computational_work(grant.maximum_copy_bytes){Ok(work)=>if work>effect.maximum_work_units(){return settled(Ok(RetainedCloneStep::Progress(Default::default())))},Err(error)=>return settled(Err(error.into()))}
   if let Err(error)=original.charge(demand.capacity_bytes){return settled(Err(error.into()))}
-  self.close_step(effect)
+  self.close_step(body,effect)
  }
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+ fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   let grant=effect.grant();let mut work=0u128;
   let result=(||->Result<RetainedCloneStep,RetirementPollExit>{
    if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
    if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
    if grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"snapshot receiving child exceeds parent depth").into())}
    let mut child=grant;child.maximum_depth=child.maximum_depth.saturating_sub(1);
-   if self.pending.is_some(){absorb(close_factory_ticket(&mut self.pending,&mut effect.nested(child)),&mut work)}
-   else if !self.intermediate.terminal_is_empty(){absorb(self.intermediate.step(&mut effect.nested(child)),&mut work)}
-   else if let Some(failure)=self.unwind_failure.as_mut().filter(|failure|!failure.terminal_is_empty()){absorb(failure.step(&mut effect.nested(child)),&mut work)}
+   if self.pending.is_some(){absorb(close_factory_ticket(&mut self.pending,body,&mut effect.nested(child)),&mut work)}
+   else if !self.intermediate.terminal_is_empty(){absorb(self.intermediate.step(body,&mut effect.nested(child)),&mut work)}
+   else if let Some(failure)=self.unwind_failure.as_mut().filter(|failure|!failure.terminal_is_empty()){absorb(failure.step(body,&mut effect.nested(child)),&mut work)}
    else if self.action_failure.is_some(){let Some(failure)=self.action_failure.take()else{return Err(ValueError::invariant("snapshot receiving action failure absent").into())};self.unwind_failure=Some(ControlledRetirement::retain(failure));match record_retirement_work(effect,1){Ok(units)=>work+=units,Err((error,units))=>{work+=units;return Err(error.into())}}Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-   else{absorb(self.output.step(&mut effect.nested(child)),&mut work)}
+   else{absorb(self.output.step(body,&mut effect.nested(child)),&mut work)}
   })();
   RetirementPollExit::finish(result,work)
  }
@@ -128,7 +128,7 @@ macro_rules! snapshot_admission{
  }};
 }
 snapshot_admission!(NativeEncodeControl<'_>,|native:&mut NativeEncodeControl<'_>,demand:semio_framework_value::RetirementDemand|native.construction_grant(demand).map(Some),|native:&mut NativeEncodeControl<'_>,grant:RetainedCloneGrant,progress:RetainedCloneProgress|native.submit_constructed_progress(grant,progress),retire_encode);
-snapshot_admission!(semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,|native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,demand:semio_framework_value::RetirementDemand|native.construction_grant(demand).map(Some),|native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant,progress:RetainedCloneProgress|native.submit_constructed_progress(grant,progress),retire_decode);
+snapshot_admission!(semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,|native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,demand:semio_framework_value::RetirementDemand|{let (grant,mut action)=super::hold_construction(native,demand)?;native.cancel_constructed_action(&mut action)?;Ok(Some(grant))},|native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant,progress:RetainedCloneProgress|{if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"constructed progress exceeds its original grant"))}let demand=RetirementDemand{copy_bytes:progress.copied_bytes,capacity_bytes:progress.retained_capacity_bytes,release_bytes:progress.released_bytes,depth:usize::from(grant.maximum_depth>0)};let (_,mut action)=super::hold_construction(native,demand)?;native.settle_constructed_progress(&mut action,progress)},retire_decode);
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
@@ -220,7 +220,7 @@ fn retire_inputs<T:RetireOwned,O:RetireOwned,N:SnapshotAdmission>(frame:&mut Nat
   native.checkpoint()?;native.charge(demand.capacity_bytes)?;
   let quote=match frame.pending.as_ref(){Some(child)=>if child.terminal_is_empty(){1}else{child.next_computational_work(grant.maximum_copy_bytes)?},None=>frame.intermediate.next_computational_work(grant.maximum_copy_bytes)?};
   let pending=&mut frame.pending;let intermediate=&mut frame.intermediate;
-  let (turn,progress)=native.retire_effect(driver,performed,demand,quote,&mut |effect|{let poll=if closing_child{close_factory_ticket(&mut *pending,effect)}else{intermediate.step(effect)};let copied=if header>0&&!intermediate.original_is_untouched(){header}else{0};(poll,copied)});
+  let (turn,progress)=native.retire_effect(driver,performed,demand,quote,&mut |effect|{let poll=if closing_child{close_factory_ticket(&mut *pending,grant.maximum_copy_bytes,effect)}else{intermediate.step(grant.maximum_copy_bytes,effect)};let copied=if header>0&&!intermediate.original_is_untouched(){header}else{0};(poll,copied)});
   *work=work.checked_add(turn.work).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"native snapshot work report exceeds its original counter"))?;
   let step=turn.result?;
   semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,if closing_child{frame.pending.is_none()}else{frame.intermediate.terminal_is_empty()},"snapshot receiving original")?;

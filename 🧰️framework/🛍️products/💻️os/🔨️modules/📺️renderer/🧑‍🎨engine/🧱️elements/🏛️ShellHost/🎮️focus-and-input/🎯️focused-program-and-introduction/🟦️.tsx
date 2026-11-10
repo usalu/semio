@@ -54,7 +54,7 @@ export function useFocusedProgramAndIntroductionState({ core }: { readonly core:
   core.spawnedAppsRef = spawnedAppsRef;
   spawnedAppsRef.current = panel?.spawnedApps ?? [];
   const activeSpawnedEntry = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
-  const activeAppTitle = appBreadcrumb(activeSpawnedEntry ? resolveArtifactByAppId(loadedPlugins, activeSpawnedEntry.appId, activeSpawnedEntry.breadcrumb, uiTerminology) : session ? resolveAppBreadcrumb(session.app, uiTerminology) : []);
+  const activeAppTitle = appBreadcrumb(activeSpawnedEntry ? resolveArtifactByAppId(loadedPlugins, activeSpawnedEntry.appId, activeSpawnedEntry.breadcrumb, uiTerminology, uiLocale) : session ? resolveAppBreadcrumb(session.app, uiTerminology, uiLocale) : []);
   /** 🪟️ Every live spawned instance id, for the host↔guest window-id translation. A ref too, because
    * `onAction` and the keydown lane read it at dispatch time from stable callbacks. */
   const spawnedIds = useMemo(() => (panel?.spawnedApps ?? []).map((entry) => entry.id), [panel?.spawnedApps]);

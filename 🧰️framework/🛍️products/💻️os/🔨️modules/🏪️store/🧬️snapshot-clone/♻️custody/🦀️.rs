@@ -21,7 +21,7 @@ impl<T:RetireOwned> RetainedEditCustody<T>{
   if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original domain fields exceed admitted close depth"));}
   if let Some(owner)=self.close.as_mut(){
    if owner.terminal_is_empty(){pay(effect,1)?;self.close=None;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-   return match owner.step(&mut effect.nested(RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant})){
+   return match owner.step(grant.maximum_copy_bytes,&mut effect.nested(RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant})){
     RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default())),
     RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|failure|failure.into_value_error()),
    };

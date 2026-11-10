@@ -205,7 +205,7 @@ fn nested(poll:semio_framework_value::OriginalRetirementPoll)->Result<RetainedCl
 }
 impl ErasedSnapshotRetirement for ForeignStepCopy {
  fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:self.owner.capacity(self.owner.close_phase),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let g=effect.grant();let base=effect.performed_work();let result=Self::close_step(self,g);let work=u128::from(result.as_ref().is_ok_and(|step|step.progress()!=semio_framework_value::RetainedCloneProgress::default()));settle(effect,base,result.map_err(Into::into),work)}
+ fn close_step(&mut self,_:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let g=effect.grant();let base=effect.performed_work();let result=Self::close_step(self,g);let work=u128::from(result.as_ref().is_ok_and(|step|step.progress()!=semio_framework_value::RetainedCloneProgress::default()));settle(effect,base,result.map_err(Into::into),work)}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.next_close_copy_byte_demand()}
  fn next_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{self.next_close_capacity_byte_demand(b)}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Self::next_release_byte_demand(self)}
@@ -219,7 +219,7 @@ impl ForeignStepRetirement {
 }
 impl ErasedSnapshotRetirement for ForeignStepRetirement {
  fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:self.owner.capacity(self.owner.close_phase),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let g=effect.grant();let base=effect.performed_work();let result=self.owner.close_step(g);let work=u128::from(result.as_ref().is_ok_and(|step|step.progress()!=semio_framework_value::RetainedCloneProgress::default()));settle(effect,base,result.map_err(Into::into),work)}
+ fn close_step(&mut self,_:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let g=effect.grant();let base=effect.performed_work();let result=self.owner.close_step(g);let work=u128::from(result.as_ref().is_ok_and(|step|step.progress()!=semio_framework_value::RetainedCloneProgress::default()));settle(effect,base,result.map_err(Into::into),work)}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.owner.capacity(self.owner.close_phase))}
@@ -250,11 +250,11 @@ impl ForeignStepsOwner {
  /// ⛓️ Moves the already paid original row sequence; no source encoding or allocation occurs.
  pub fn take(&mut self,grant:RetainedCloneGrant)->Option<(Vec<ForeignStep>,RetainedCloneProgress)>{if self.closing||self.child.is_some()||!permits(grant,0,0){return None;}Some((std::mem::take(&mut*self.values),RetainedCloneProgress{copied_items:1,..Default::default()}))}
  pub fn begin_close(&mut self){self.closing=true;}
- pub fn close_one(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{let grant=effect.grant();
+ pub fn close_one(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{let grant=effect.grant();
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   if !self.closing||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
   let child_grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-  if let Some(child)=self.child.as_mut(){let step=nested(child.close_step(&mut effect.nested(child_grant)))?;if !step.progress().fits(child_grant){return Err(refusal(ValueRefusalKind::InvariantViolated).into());}if child.terminal_is_empty(){self.child=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if let Some(child)=self.child.as_mut(){let step=nested(child.close_step(body,&mut effect.nested(child_grant)))?;if !step.progress().fits(child_grant){return Err(refusal(ValueRefusalKind::InvariantViolated).into());}if child.terminal_is_empty(){self.child=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
   if !self.values.is_empty(){if child_grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}let original=self.values.pop().ok_or_else(||refusal(ValueRefusalKind::InvariantViolated))?;return match ForeignStepRetirement::admit(original,child_grant){Ok((child,p))=>{self.child=Some(child);Ok(RetainedCloneStep::Progress(p))},Err((e,original))=>{self.values.push(original);Err(e.into())}};}
   let release=self.values.capacity().checked_mul(size_of::<ForeignStep>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))?;if grant.maximum_release_bytes<release{return Ok(RetainedCloneStep::Progress(Default::default()));}
   drop(std::mem::take(&mut*self.values));Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()}))
@@ -263,7 +263,7 @@ impl ForeignStepsOwner {
 }
 impl ErasedSnapshotRetirement for ForeignStepsOwner {
  fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if let Some(child)=&self.child{let mut demand=child.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||refusal(ValueRefusalKind::DepthLimit))?;return Ok(demand);}Ok(semio_framework_value::RetirementDemand{release_bytes:if self.values.is_empty(){self.values.capacity().checked_mul(size_of::<ForeignStep>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))?}else{0},depth:if self.values.is_empty(){usize::from(!self.terminal_is_empty())}else{2},..Default::default()})}
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let base=effect.performed_work();let result=self.close_one(effect);let work=effect.performed_work().saturating_sub(base)+1;settle(effect,base,result,work)}
+ fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let base=effect.performed_work();let result=self.close_one(body,effect);let work=effect.performed_work().saturating_sub(base)+1;settle(effect,base,result,work)}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(c)=&self.child{c.next_copy_byte_demand()}else{Ok(0)}}
  fn next_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{if let Some(c)=&self.child{c.next_capacity_byte_demand(b)}else{Ok(0)}}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(c)=&self.child{c.next_release_byte_demand()}else if self.values.is_empty(){self.values.capacity().checked_mul(size_of::<ForeignStep>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))}else{Ok(0)}}
@@ -325,19 +325,19 @@ impl ForeignStepsPreparation {
  pub fn take_prepared(&mut self,grant:RetainedCloneGrant)->Option<(Vec<ForeignStep>,RetainedCloneProgress)>{if !self.is_complete()||self.copy.is_some()||self.pending.is_some(){return None;}let child=Self::child_grant(grant).ok()?;self.values.take(child)}
  pub fn begin_close(&mut self){self.closing=true;if let Some(copy)=self.copy.as_mut(){copy.cancel();}self.values.begin_close();}
  pub fn terminal_is_empty(&self)->bool{self.copy.is_none()&&self.pending.is_none()&&self.retiring.is_none()&&self.values.terminal_is_empty()}
- fn close_one(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{let grant=effect.grant();
+ fn close_one(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{let grant=effect.grant();
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   if !self.closing||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
   let child_grant=Self::child_grant(grant)?;
   if let Some(copy)=self.copy.as_mut(){let step=copy.close_step(child_grant)?;let mut progress=step.progress();if copy.terminal_is_empty(){self.copy=None;progress.copied_items=progress.copied_items.max(1);}return Ok(RetainedCloneStep::Progress(progress));}
-  if let Some(retiring)=self.retiring.as_mut(){let step=nested(retiring.close_step(&mut effect.nested(child_grant)))?;if retiring.terminal_is_empty(){self.retiring=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if let Some(retiring)=self.retiring.as_mut(){let step=nested(retiring.close_step(body,&mut effect.nested(child_grant)))?;if retiring.terminal_is_empty(){self.retiring=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
   if self.pending.is_some(){if !permits(child_grant,0,0){return Ok(RetainedCloneStep::Progress(Default::default()));}let value=self.pending.take().ok_or_else(||refusal(ValueRefusalKind::InvariantViolated))?;return match ForeignStepRetirement::admit(value,child_grant){Ok((owner,p))=>{self.retiring=Some(owner);Ok(RetainedCloneStep::Progress(p))},Err((e,value))=>{*self.pending=Some(value);Err(e.into())}};}
-  let step=nested(self.values.close_step(&mut effect.nested(child_grant)))?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+  let step=nested(self.values.close_step(body,&mut effect.nested(child_grant)))?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
  }
 }
 impl ErasedSnapshotRetirement for ForeignStepsPreparation {
  fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let mut demand=if let Some(child)=&self.copy{ErasedSnapshotRetirement::next_demand(child,body)?}else if let Some(child)=&self.retiring{child.next_demand(body)?}else if self.pending.is_some(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{self.values.next_demand(body)?};demand.depth=demand.depth.checked_add(usize::from(!self.terminal_is_empty())).ok_or_else(||refusal(ValueRefusalKind::DepthLimit))?;Ok(demand)}
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let base=effect.performed_work();let result=self.close_one(effect);let work=effect.performed_work().saturating_sub(base)+1;settle(effect,base,result,work)}
+ fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let base=effect.performed_work();let result=self.close_one(body,effect);let work=effect.performed_work().saturating_sub(base)+1;settle(effect,base,result,work)}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(v)=&self.copy{v.next_close_copy_byte_demand()}else if let Some(v)=&self.retiring{v.next_copy_byte_demand()}else{self.values.next_copy_byte_demand()}}
  fn next_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{if let Some(v)=&self.copy{v.next_close_capacity_byte_demand(b)}else if let Some(v)=&self.retiring{v.next_capacity_byte_demand(b)}else{self.values.next_capacity_byte_demand(b)}}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(v)=&self.copy{v.next_release_byte_demand()}else if let Some(v)=&self.retiring{v.next_release_byte_demand()}else if self.pending.is_some(){Ok(0)}else{self.values.next_release_byte_demand()}}

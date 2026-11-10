@@ -58,10 +58,12 @@ fn charged(control:&mut semio_framework_value_native_owned::native_decoding::Nat
 /// 🗂️ Reserves one exact collection through the turn effect and records its physical attempt once.
 fn effect_vec<T>(control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,count:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Vec<T>,ValueError>{
     let bytes=count.checked_mul(size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON collection size overflow"))?;
-    charged(control,bytes)?;let mut output=Vec::new();if bytes==0{return Ok(output)}
+    let mut output=Vec::new();if bytes==0{return charged(control,bytes).map(|()|output)}
     if effect.actual().is_some(){return Err(ValueError::invariant("JSON collection allocation attempt is occupied"))}
     let reserved=output.try_reserve_exact(count);*effect.actual()=Some(if reserved.is_ok(){output.capacity()*size_of::<T>()}else{0});
-    reserved.map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"JSON collection allocation failed"))?;Ok(output)
+    reserved.map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"JSON collection allocation failed"))?;
+    if let Err(error)=charged(control,bytes){drop(output);*effect.actual()=Some(0);return Err(error)}
+    Ok(output)
 }
 
 fn json_candidate_slot<T>(owner:&mut JsonCandidates<T>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,receipt:&mut RetainedCloneProgress)->Result<bool,JsonError> {
@@ -98,8 +100,8 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
             else if frame.object&&!frame.entries.is_empty(){demand.depth=demand.depth.max(frame.entries.next_pop_depth_demand().map_err(ValueError::from)?);}
             else if !frame.object&&!frame.values.is_empty(){demand.depth=demand.depth.max(frame.values.next_pop_depth_demand().map_err(ValueError::from)?);}
             else if frame.entries.is_empty()&&frame.values.is_empty(){
-                if !frame.entries.terminal_is_empty(){demand.release_bytes=frame.entries.next_release_allocation_bytes().map_err(ValueError::from)?;demand.depth=demand.depth.max(frame.entries.next_release_depth_demand().map_err(ValueError::from)?);}
-                else if !frame.values.terminal_is_empty(){demand.release_bytes=frame.values.next_release_allocation_bytes().map_err(ValueError::from)?;demand.depth=demand.depth.max(frame.values.next_release_depth_demand().map_err(ValueError::from)?);}
+                if !frame.entries.terminal_is_empty(){demand.copy_bytes=frame.entries.next_release_copy_byte_demand().map_err(ValueError::from)?;demand.release_bytes=frame.entries.next_release_allocation_bytes().map_err(ValueError::from)?;demand.depth=demand.depth.max(frame.entries.next_release_depth_demand().map_err(ValueError::from)?);}
+                else if !frame.values.terminal_is_empty(){demand.copy_bytes=frame.values.next_release_copy_byte_demand().map_err(ValueError::from)?;demand.release_bytes=frame.values.next_release_allocation_bytes().map_err(ValueError::from)?;demand.depth=demand.depth.max(frame.values.next_release_depth_demand().map_err(ValueError::from)?);}
             }
             return Ok(demand);
         }
@@ -308,31 +310,48 @@ pub struct JsonProjectionIterator<T> {pub values:std::vec::IntoIter<T>,pub alloc
 
 impl<T> JsonProjectionIterator<T> {pub(super) fn new(values:Vec<T>)->Self {let allocation=values.capacity().saturating_mul(size_of::<T>());Self {values:values.into_iter(),allocation}}pub(super) fn next(&mut self)->Option<T>{self.values.next()}pub(super) fn len(&self)->usize{self.values.len()}}
 
+/// 📮️ Records the synchronous original reply of a cursor whose inherent `close_step(body,effect)` returns a retirement step.
+macro_rules! json_retirement_reply{()=>{
+    fn close_into<'reply>(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'reply,semio_framework_value::retirement::RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'reply,semio_framework_value::retirement::RetirementStep,semio_framework_value::OriginalRetirementFailure>,ValueError>{
+        if effect.invocation().is_none(){return Err(ValueError::invariant("JSON retirement requires its original producer invocation"))}
+        Ok(match Self::close_step(self,body,effect){semio_framework_value::retirement::RetirementStep::Failure(error,_)=>reply.complete(Err(error)),step=>reply.complete(Ok(step))})
+    }
+}}
+
 #[doc(hidden)]
-pub struct JsonProjectionIteratorRetirement<T:semio_framework_value::retirement::RetireOwned> {pub values:std::mem::ManuallyDrop<std::vec::IntoIter<T>>,pub remaining:usize,pub released:bool}
+pub struct JsonProjectionIteratorRetirement<T:semio_framework_value::retirement::RetireOwned> {pub values:std::mem::ManuallyDrop<std::vec::IntoIter<T>>,pub remaining:usize,pub released:bool,staged:Option<T>}
 
 impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetirementCursor for JsonProjectionIteratorRetirement<T> {
-        fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let capacity_bytes=if self.released||self.values.len()==0{0}else{self.values.as_slice().last().unwrap().retirement_birth_bytes().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"JSON iterator child has no admitted constructor"))?};Ok(semio_framework_value::RetirementDemand{capacity_bytes,release_bytes:if !self.released&&self.values.len()==0{self.remaining}else{0},depth:usize::from(!self.released),..Default::default()})}
+        json_retirement_reply!();
+        fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let capacity_bytes=if self.released||self.empty(){0}else{self.next_child().unwrap().retirement_birth_bytes().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"JSON iterator child has no admitted constructor"))?};Ok(semio_framework_value::RetirementDemand{copy_bytes:if capacity_bytes==0{0}else{size_of::<Option<T>>()+capacity_bytes},capacity_bytes,release_bytes:if !self.released&&self.empty(){self.remaining}else{0},depth:usize::from(!self.released),..Default::default()})}
 
-fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep {
-        use semio_framework_value::retirement::RetirementStep;let grant=effect.grant();
-        if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.released{return RetirementStep::Complete(0);}
-        if let Some(value)=self.values.next_back(){return RetirementStep::Child(Box::new(semio_framework_value::retirement::RetireOwned::retirement_seed(value)));}
-        if self.remaining>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}
-        let bytes=std::mem::take(&mut self.remaining);unsafe{std::mem::ManuallyDrop::drop(&mut self.values)};self.released=true;if bytes==0{RetirementStep::Complete(1)}else{RetirementStep::Bytes(bytes)}
-    }
+
     fn next_computational_work(&self,_:usize)->Result<u64,semio_framework_value::ValueError>{Ok(u64::from(!self.released))}
     fn terminal_is_empty(&self)->bool{self.released}
-    fn next_close_byte_demand(&self)->Option<usize>{Some(if !self.released&&self.values.len()==0{self.remaining}else{0})}
-    fn next_birth_bytes(&self,_:usize)->Option<usize>{if self.released||self.values.len()==0{Some(0)}else{self.values.as_slice().last()?.retirement_birth_bytes()}}
+    fn next_close_byte_demand(&self)->Option<usize>{Some(if !self.released&&self.empty(){self.remaining}else{0})}
+    fn next_birth_bytes(&self,_:usize)->Option<usize>{if self.released||self.empty(){Some(0)}else{self.next_child()?.retirement_birth_bytes()}}
     fn terminal_release_bytes(&self)->Option<usize>{self.released.then_some(size_of::<Self>())}
+}
+
+impl<T:semio_framework_value::retirement::RetireOwned> JsonProjectionIteratorRetirement<T> {
+    fn next_child(&self)->Option<&T>{self.staged.as_ref().or_else(||self.values.as_slice().last())}
+    fn empty(&self)->bool{self.staged.is_none()&&self.values.len()==0}
+    fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep {
+        use semio_framework_value::retirement::{record_retirement_work,RetirementStep};let grant=effect.grant();
+        if self.released{return RetirementStep::Complete(0);}
+        if grant.maximum_items==0||effect.maximum_work_units()==0||self.empty()&&self.remaining>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}
+        if self.staged.is_none(){self.staged=self.values.next_back();}
+        if self.staged.is_some(){let turn=semio_framework_value::retirement::admit_retirement_cursor(&mut self.staged,effect);return match turn.result{Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress,turn.work),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)};}
+        let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};
+        let bytes=std::mem::take(&mut self.remaining);unsafe{std::mem::ManuallyDrop::drop(&mut self.values)};self.released=true;RetirementStep::Progress(semio_framework_value::RetainedCloneProgress{released_bytes:bytes,..Default::default()},work)
+    }
 }
 
 impl<T:semio_framework_value::retirement::RetireOwned> Drop for JsonProjectionIteratorRetirement<T> {fn drop(&mut self){assert!(std::thread::panicking()||self.released,"JSON projection backing retired before terminal-empty");}}
 
 impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for JsonProjectionIterator<T> {
     type RetirementCursor=JsonProjectionIteratorRetirement<T>;
-    fn retirement_seed(self)->Self::RetirementCursor{JsonProjectionIteratorRetirement {values:std::mem::ManuallyDrop::new(self.values),remaining:self.allocation,released:false}}
+    fn retirement_seed(self)->Self::RetirementCursor{JsonProjectionIteratorRetirement {values:std::mem::ManuallyDrop::new(self.values),remaining:self.allocation,released:false,staged:None}}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<JsonProjectionIteratorRetirement<T>>())}
     fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
 }
@@ -349,14 +368,26 @@ impl JsonCompletedFrameRetirement {
 }
 
 impl semio_framework_value::retirement::RetirementCursor for JsonCompletedFrameRetirement {
+        json_retirement_reply!();
         fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:self.release_demand(),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
 
-fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;let grant=effect.grant();if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.phase==4{return RetirementStep::Complete(0);}let bytes=self.release_demand();if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}match self.phase{0=>drop(std::mem::replace(&mut self.frame.values,JsonProjectionIterator::new(Vec::new()))),1=>drop(std::mem::replace(&mut self.frame.entries,JsonProjectionIterator::new(Vec::new()))),2=>drop(std::mem::take(&mut self.frame.array)),3=>drop(std::mem::take(&mut self.frame.object)),_=>unreachable!()}self.phase+=1;if bytes==0{RetirementStep::Advanced}else{RetirementStep::Bytes(bytes)}}
+
     fn terminal_is_empty(&self)->bool{self.phase==4}
     fn next_computational_work(&self,_:usize)->Result<u64,semio_framework_value::ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
     fn next_close_byte_demand(&self)->Option<usize>{Some(self.release_demand())}
     fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
     fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+
+impl JsonCompletedFrameRetirement {
+    pub fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+        use semio_framework_value::retirement::{record_retirement_work,RetirementStep};let grant=effect.grant();
+        if self.phase==4{return RetirementStep::Complete(0);}let bytes=self.release_demand();
+        if grant.maximum_items==0||effect.maximum_work_units()==0||bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}
+        let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};
+        match self.phase{0=>drop(std::mem::replace(&mut self.frame.values,JsonProjectionIterator::new(Vec::new()))),1=>drop(std::mem::replace(&mut self.frame.entries,JsonProjectionIterator::new(Vec::new()))),2=>drop(std::mem::take(&mut self.frame.array)),3=>drop(std::mem::take(&mut self.frame.object)),_=>unreachable!()}
+        self.phase+=1;RetirementStep::Progress(semio_framework_value::RetainedCloneProgress{released_bytes:bytes,..Default::default()},work)
+    }
 }
 
 impl Drop for JsonCompletedFrameRetirement {fn drop(&mut self){if self.phase!=4{assert!(std::thread::panicking(),"completed JSON input frame must release its original backing before drop");return;}unsafe{std::mem::ManuallyDrop::drop(&mut self.frame);}}}
@@ -390,7 +421,7 @@ impl JsonValueProjection {
             let mut released_bytes=0;let value=if let Some(retirement)=self.retirement.as_mut(){
                 use semio_framework_value::retirement::{RetirementCursor,RetirementStep};
                 if retirement.terminal_is_empty(){self.retirement=None;}
-                else{match retirement.close_step(&mut effect.nested(remaining)){RetirementStep::Failure(error,_)=>return Err(error.into_parts().0.unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON projection retirement failed without a primary refusal"))),RetirementStep::Bytes(bytes)=>released_bytes=bytes,RetirementStep::Progress(progress,_)=>released_bytes=progress.released_bytes,RetirementStep::BudgetExhausted=>break,_=>{}}}
+                else{match retirement.close_step(remaining.maximum_copy_bytes,&mut effect.nested(remaining)){RetirementStep::Failure(error,_)=>return Err(error.into_parts().0.unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON projection retirement failed without a primary refusal"))),RetirementStep::Bytes(bytes)=>released_bytes=bytes,RetirementStep::Progress(progress,_)=>released_bytes=progress.released_bytes,RetirementStep::BudgetExhausted=>break,_=>{}}}
                 None
             }else{self.advance(1,maximum_bytes,control)?};
             self.normal_step_progress=self.normal_step_progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:control.owned_bytes()-before,released_bytes})?;normal_remaining(grant,self.normal_step_progress)?;

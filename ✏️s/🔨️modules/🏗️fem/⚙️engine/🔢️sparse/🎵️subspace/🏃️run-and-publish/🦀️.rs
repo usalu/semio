@@ -261,17 +261,18 @@ impl SubspaceIterationJob {
         match self.close_frontier()?{Some(demand)=>Ok(demand),None=>self.rung_demand()}
     }
 
-    fn close_turn(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
-        if let Some(step) = self.desk.close_step(grant) {
+    fn close_turn(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
+        if let Some(step) = self.desk.close_step(effect) {
             return step;
         }
-        if let Some(step) = numerical_writer_close(&mut self.checkpoint_writer, grant) {
+        if let Some(step) = numerical_writer_close(&mut self.checkpoint_writer, effect) {
             return step;
         }
-        if let Some(step) = numerical_writer_close(&mut self.preview_writer, grant) {
+        if let Some(step) = numerical_writer_close(&mut self.preview_writer, effect) {
             return step;
         }
-        if let Some(step) = numerical_writer_close(&mut self.terminal_writer, grant) {
+        if let Some(step) = numerical_writer_close(&mut self.terminal_writer, effect) {
             return step;
         }
         Ok(numerical_ladder_turn(self.close_retained_step(grant.maximum_release_bytes)))
@@ -294,7 +295,7 @@ impl InteractiveJob for SubspaceIterationJob {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
         }
         let demand = self.close_demand()?;
-        numerical_close_original(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
+        numerical_close_effect(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.copy_bytes) }
@@ -324,7 +325,8 @@ impl NumericalStep for SubspaceIterationJob {
 impl SubspaceIterationJob {
     /// 🎟️ One close turn under an explicit grant: the owners of a child job and the original-context `close_step`
     /// both admit it through the job's own quote.
-    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    pub fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
         let frontier = self.close_frontier()?;
         if self.terminal_is_empty() {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
@@ -332,7 +334,7 @@ impl SubspaceIterationJob {
         if !numerical_close_gate(grant, frontier) {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
-        self.close_turn(grant)?.admit(grant, self.terminal_is_empty())
+        self.close_turn(effect)?.admit(grant, self.terminal_is_empty())
     }
 }
 

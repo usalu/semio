@@ -34,7 +34,7 @@ impl RetainedHistoryOriginPartial{
  fn child_close(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
   let g=effect.grant();let start=effect.performed_work();self.last_work=0;let d=self.child_demands(g.maximum_copy_bytes)?;if !permits(g,d){return Ok(Default::default())}
   let child=self.retiring.as_mut().ok_or_else(refusal)?;if child.terminal_is_empty(){self.last_work=crate::settle_since(effect,start,1)?;drop(self.retiring.take());return Ok(RetainedCloneProgress{released_bytes:d.release_bytes,..metadata()})}
-  let nested=RetainedCloneGrant{maximum_depth:g.maximum_depth.saturating_sub(2),..g};let poll=child.close_step(&mut effect.nested(nested));self.last_work=effect.performed_work();
+  let nested=RetainedCloneGrant{maximum_depth:g.maximum_depth.saturating_sub(2),..g};let poll=child.close_step(g.maximum_copy_bytes,&mut effect.nested(nested));self.last_work=effect.performed_work();
   let result=match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>return Ok(Default::default()),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)};
   let p=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};if !p.fits(nested){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original origin child exceeded its supplied grant").with_retained_progress(p))}result.map(|_|p)
  }

@@ -8510,7 +8510,16 @@
           "ports": [
             {
               "id": "vector:out",
-              "label": "Vector",
+              "label": {
+                "native": {
+                  "en": "Vector",
+                  "de": "Vektor"
+                },
+                "reuse": {
+                  "en": "Vector",
+                  "de": "Vektor"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "twoD",

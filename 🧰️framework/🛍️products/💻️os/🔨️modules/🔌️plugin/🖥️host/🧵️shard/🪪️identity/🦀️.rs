@@ -1,6 +1,6 @@
 //! 🪪️ A shard retains the original caller's receiving ledger, allocation port and return slot.
 use semio_plugin_host_guest_runtime::{GuestInstance, GuestRuntime, GuestRuntimes};
-use semio_framework_plugin_guest_contract::{PluginHostError,TurnFault};
+use semio_plugin_guest_contract::{PluginHostError,TurnFault};
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},native_encoding::{NativeEncodeControl,NativeAllocationRequest,NativeEncodeAllocationPort,NativeEncodeProgress,NativeEncodeRetirementRecipient,NativeForwardedEncodeReceipt}};
 use semio_os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority,Observer};
 use std::pin::Pin;
@@ -79,7 +79,7 @@ impl OriginalShardIdentity{
  }
  /// 🏃️ Retains the same caller admission after successful, yielded and refused actor turns.
  pub async fn execute_turn(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,events:&mut [semio_framework::kernel::Event],budget:semio_framework::kernel::Budget)->Result<semio_framework::kernel::TurnResult,TurnFault>{
-  let mut identity=self.loan().map_err(semio_framework_plugin_guest_contract::identity_turn_fault)?;
+  let mut identity=self.loan().map_err(semio_plugin_guest_contract::identity_turn_fault)?;
   runtime.execute_turn(instance,events,budget,&mut *identity).await
  }
 }

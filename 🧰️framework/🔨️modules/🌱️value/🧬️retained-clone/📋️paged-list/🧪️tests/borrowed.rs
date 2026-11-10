@@ -35,8 +35,8 @@ impl PagedCloneElement<u64> for Element{
  fn close_started(&self)->bool{self.closing}
  fn close_demands(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{depth:1,..Default::default()})}
  fn close_work_demand(&self,_:usize)->Result<u64,ValueError>{Ok(0)}
- fn close_into<'r>(&mut self,_:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{assert!(self.output.is_none());Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}
- fn recover_close_into<'r>(&mut self,_:&mut RetainedAllocationEffect<'_>,_:Reply<'r>)->Result<Complete<'r>,ValueError>{panic!("recorded native close must not replay")}
+ fn close_into<'r>(&mut self,_:usize,_:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{assert!(self.output.is_none());Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}
+ fn recover_close_into<'r>(&mut self,_:usize,_:&mut RetainedAllocationEffect<'_>,_:Reply<'r>)->Result<Complete<'r>,ValueError>{panic!("recorded native close must not replay")}
  fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()}
 }
 impl Drop for Element{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking());DROPS.fetch_add(1,Ordering::SeqCst);}}
@@ -47,8 +47,8 @@ impl OriginalEffectProducer for Producer{
  type Output=RetainedCloneStep;type Failure=OriginalRetirementFailure;type Context<'a,'s>=Context<'a,'s>where 's:'a;
  fn validate_context<'a,'s>(&self,_:&Self::Context<'a,'s>)->Result<(),ValueError>where 's:'a{Ok(())}
  fn source_turn<'a,'s>(&self,_:&Self::Context<'a,'s>)->Option<OriginalSourceTurnIdentity>where 's:'a{None}
- fn receive<'r,'a,'s>(&mut self,c:&mut Self::Context<'a,'s>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>where 's:'a{match &mut c.command{Command::Advance=>c.engine.advance_into(c.source,65536,1024,effect,reply),Command::Begin=>c.engine.begin_close_into(effect,reply),Command::Close=>c.engine.close_into(effect,reply),Command::Retire(close,output)=>{if close.is_empty(){let turn=close.begin_granted(output,effect);Ok(reply.complete(turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into)))}else{close.step_into(effect,reply)}}}}
- fn recover<'r,'a,'s>(&mut self,c:&mut Self::Context<'a,'s>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>where 's:'a{match &mut c.command{Command::Advance=>c.engine.recover_advance_into(c.source,65536,1024,effect,reply),Command::Begin=>c.engine.recover_begin_close_into(effect,reply),Command::Close=>c.engine.recover_close_into(effect,reply),Command::Retire(close,_)=>close.recover_step_into(effect,reply)}}
+ fn receive<'r,'a,'s>(&mut self,c:&mut Self::Context<'a,'s>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>where 's:'a{match &mut c.command{Command::Advance=>c.engine.advance_into(c.source,65536,1024,effect,reply),Command::Begin=>c.engine.begin_close_into(effect,reply),Command::Close=>c.engine.close_into(65536,effect,reply),Command::Retire(close,output)=>{if close.is_empty(){let turn=close.begin_granted(output,effect);Ok(reply.complete(turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into)))}else{close.step_into(65536,effect,reply)}}}}
+ fn recover<'r,'a,'s>(&mut self,c:&mut Self::Context<'a,'s>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>where 's:'a{match &mut c.command{Command::Advance=>c.engine.recover_advance_into(c.source,65536,1024,effect,reply),Command::Begin=>c.engine.recover_begin_close_into(effect,reply),Command::Close=>c.engine.recover_close_into(65536,effect,reply),Command::Retire(close,_)=>close.recover_step_into(65536,effect,reply)}}
 }
 struct TakeContext<'a>{engine:&'a mut Engine,output:&'a mut Option<List>}
 struct Take;

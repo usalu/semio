@@ -95,7 +95,7 @@ pub fn rewriting_io() -> semio_plugin::AppIo {
         ports: vec![
             semio_plugin::MediaPortSpec {
                 id: "graph:in".into(),
-                label: "Graph".into(),
+                label: LocalizedLabel::native("Graph", "Graph"),
                 direction: semio_plugin::MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
                 kind_id: Some("graph.trinity".into()),
@@ -104,7 +104,7 @@ pub fn rewriting_io() -> semio_plugin::AppIo {
             },
             semio_plugin::MediaPortSpec {
                 id: "graph:out".into(),
-                label: "Graph".into(),
+                label: LocalizedLabel::native("Graph", "Graph"),
                 direction: semio_plugin::MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
                 kind_id: Some("graph.trinity".into()),

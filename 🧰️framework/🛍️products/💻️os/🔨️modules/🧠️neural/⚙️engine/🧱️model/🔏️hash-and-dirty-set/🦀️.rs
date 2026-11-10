@@ -4,6 +4,7 @@
 
 use super::*;
 use std::hash::Hash;
+use semio_framework_value_ordered::ordered::SharedOwner;
 
 // #region 🔖️Cache
 fn hash_str<H: Hasher>(hasher: &mut H, value: &str) {
@@ -93,17 +94,18 @@ fn incoming_edges_signature(tree: &Tree, neuron_id: &str) -> u64 {
 }
 
 /// 📸️ Retains the exact original tree and seed source allocations of an evaluation.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct TreeSnapshot {
-    pub(crate) tree: Arc<Tree>,
-    pub(crate) seeds: Arc<HistoryFoldIndex<String,Dictionary>>,
+    pub(crate) tree: SharedOwner<Tree>,
+    pub(crate) seeds: SharedOwner<HistoryFoldIndex<String,Dictionary>>,
 }
-impl Default for TreeSnapshot{fn default()->Self{Self{tree:Arc::new(Tree::default()),seeds:Arc::new(HistoryFoldIndex::new())}}}
+impl PartialEq for TreeSnapshot{fn eq(&self,other:&Self)->bool{*self.tree==*other.tree&&*self.seeds==*other.seeds}}
+impl Default for TreeSnapshot{fn default()->Self{Self{tree:SharedOwner::from_cold(Tree::default()),seeds:SharedOwner::from_cold(HistoryFoldIndex::new())}}}
 impl TreeSnapshot {
     /// 🧊️ Captures synchronous diagnostic inputs within their existing cold caller scope.
-    pub fn capture(tree:&Tree,seeds:&HashMap<String,Dictionary>)->Self{Self{tree:Arc::new(tree.clone()),seeds:Arc::new(seeds.iter().map(|(key,value)|(key.clone(),value.clone())).collect())}}
+    pub fn capture(tree:&Tree,seeds:&HashMap<String,Dictionary>)->Self{Self{tree:SharedOwner::from_cold(tree.clone()),seeds:SharedOwner::from_cold(seeds.iter().map(|(key,value)|(key.clone(),value.clone())).collect())}}
     /// 🔗️ Moves the exact preborn immutable sources under the original admitted handoff.
-    pub fn capture_retained(tree:Arc<Tree>,seeds:Arc<HistoryFoldIndex<String,Dictionary>>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,Arc<Tree>,Arc<HistoryFoldIndex<String,Dictionary>>)>{
+    pub fn capture_retained(tree:SharedOwner<Tree>,seeds:SharedOwner<HistoryFoldIndex<String,Dictionary>>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,SharedOwner<Tree>,SharedOwner<HistoryFoldIndex<String,Dictionary>>)>{
         if grant.maximum_items==0{return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original snapshot handoff requires admitted item"),tree,seeds))}
         if grant.maximum_depth==0{return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original snapshot handoff requires admitted depth"),tree,seeds))}
         Ok((Self{tree,seeds},RetainedCloneProgress{copied_items:1,..Default::default()}))
@@ -119,7 +121,7 @@ pub fn compute_dirty_set(previous:Option<&TreeSnapshot>,current:&TreeSnapshot)->
     for node in &current.tree.neurons{
         let original=previous.tree.neurons.iter().find(|old|old.id==node.id);
         let changed=original.is_none_or(|old|neuron_key_hash(old)!=neuron_key_hash(node)||incoming_edges_signature(&previous.tree,&old.id)!=incoming_edges_signature(&current.tree,&node.id));
-        if changed||previous.seeds.get(&node.id)!=current.seeds.get(&node.id){direct.insert(node.id.clone());}
+        if changed||previous.seed_source().get(&node.id)!=current.seed_source().get(&node.id){direct.insert(node.id.clone());}
     }
     for removed in &previous.tree.neurons{if !contains(&removed.id){for edge in &previous.tree.synapses{if edge.from==removed.id&&contains(&edge.to){direct.insert(edge.to.clone());}}}}
     let mut dirty=HashSet::new();let mut queue:VecDeque<String>=direct.into_iter().collect();

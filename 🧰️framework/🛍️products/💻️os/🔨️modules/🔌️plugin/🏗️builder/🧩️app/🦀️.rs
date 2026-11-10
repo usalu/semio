@@ -118,7 +118,7 @@ pub struct AppBuilder {
     named_layouts: Vec<NamedLayout>,
     default_layout: Option<WindowLayout>,
     terminologies: Vec<String>,
-    terminology_breadcrumbs: HashMap<String, Vec<String>>,
+    terminology_breadcrumbs: HashMap<String, Vec<LocalizedLabel>>,
     introduction: Option<IntroductionDefinition>,
     tutorials: Vec<TutorialDefinition>,
     pub dialogs: Vec<DialogDefinition>,

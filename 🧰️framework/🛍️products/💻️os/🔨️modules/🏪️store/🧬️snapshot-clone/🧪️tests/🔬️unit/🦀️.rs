@@ -1,8 +1,11 @@
 use super::*;
 use semio_framework_pack_json::ArtifactCanonicalJsonNode;
+use crate::effect_fixture::{invoked as fx,prime};
+use semio_framework_value::testing::settled;
 
 #[test]
 fn snapshot_publication_original_build_six_frontiers_preserve_native_pointers_and_paid_cancellation(){
+    prime();
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️assembly/🔣️.json")).unwrap();
     let grant=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
@@ -10,12 +13,12 @@ fn snapshot_publication_original_build_six_frontiers_preserve_native_pointers_an
         let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), [0;32], 0, 1, semio_os_spr::HybridLogicalTimestamp::new(1,0), "actor α\0😀".into(), None, None, None));
         let((mutation,inverse),initial)=observe(||(BirthMutation{text:"forward α\0😀".repeat(8192)},vec![BirthMutation{text:"first inverse".repeat(8192)},BirthMutation{text:"second inverse".repeat(8192)}]));
         let forward_pointer=mutation.text.as_ptr();let inverse_pointer=inverse[0].text.as_ptr();
-        let((source,_,_),source_birth)=observe(||semio_framework_value::testing::admit_owned_source(mutation,SharedControlledRetirement::lease(Arc::clone(&authority))));
-        let mut owner=RetainedClonePreparation::<u64,BirthMutation,BirthEdit>{pending_base:None,pending_base_close:None,pending_mutation_close:None,pending_mutation:None,pending_mutation_authority:None,edit:None,source:None,clone_cursor:None,clone_handoff:None,copied:Some(7),edit_cursor:None,foreign_step_presence:None,inverse:Some(inverse),publication_post:None,publication_post_close:None,publication_inverse:None,publication_metadata:None,publication_metadata_close:None,publication_edit:None,publication_edit_close:None,build_stage:0,mutation:Some(source),authority:Some(Arc::clone(&authority)),sealer:None,mutation_retirement:None,snapshot_retirement:None,source_admission:None,mutation_admission:None,copied_close:None,inverse_close:None,authority_close:None,factory_close:None,footprint:ArtifactStoreOneItemFootprint{retained_bytes:usize::MAX,work_items:2},retained_capacity_bytes:0,maximum_depth:4096,checkpoint:Default::default(),ownership:Default::default(),seal_base:Default::default(),phase:RetainedClonePreparationPhase::Build,cancelled:false,closing:false};
+        let((source,_,_),source_birth)=observe(||semio_framework_value::testing::admit_owned_source(mutation,ArcLease::new(Arc::clone(&authority))));
+        let mut owner=RetainedClonePreparation::<u64,BirthMutation,BirthEdit>{pending_base:None,pending_base_close:None,pending_mutation_close:None,pending_mutation:None,pending_mutation_authority:None,pending_mutation_authority_close:None,edit:None,source:None,clone_cursor:None,clone_handoff:None,copied:Some(7),edit_cursor:None,foreign_step_presence:None,inverse:Some(inverse),assembly:OriginalPublicationAssembly::default(),build_stage:0,mutation:Some(source),authority:Some(Arc::clone(&authority)),mutation_retirement:None,snapshot_retirement:None,source_admission:None,source_projection:StagedProjection::default(),mutation_admission:None,mutation_projection:StagedProjection::default(),clone_reply:ReplyStash::default(),mutation_reply:ReplyStash::default(),copied_close:None,inverse_close:None,authority_close:None,factory_close:None,footprint:ArtifactStoreOneItemFootprint{retained_bytes:usize::MAX,work_items:2},retained_capacity_bytes:0,maximum_depth:4096,checkpoint:Default::default(),ownership:Default::default(),last_work:0,seal_base:Default::default(),phase:RetainedClonePreparationPhase::Build,cancelled:false,closing:false};
         let mut births=source_birth.requested_bytes;let mut releases=source_birth.released_bytes;
-        for _ in 0..100000{if owner.build_stage as usize==stop{break;}let stage=owner.build_stage;let(result,heap)=observe(||owner.build_sealer(ArtifactStoreOneItemGrant{maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0,..grant}).unwrap());assert!(!result);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.build_stage,stage);let(result,heap)=observe(||owner.build_sealer(grant).unwrap());assert!(result);let receipt=owner.ownership;assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;if let Some(source)=owner.mutation.as_ref(){if let Ok(original)=source.try_borrow(){assert_eq!(original.get().text.as_ptr(),forward_pointer);}}if let Some(original)=owner.pending_mutation.as_ref(){assert_eq!(original.text.as_ptr(),forward_pointer);}if let Some(inverse)=owner.publication_inverse.as_ref(){assert_eq!(inverse.remaining()[0].text.as_ptr(),inverse_pointer);}if let Some(post)=owner.publication_post.as_ref(){assert_eq!(**post,7);}}
+        for _ in 0..100000{if owner.build_stage as usize==stop{break;}let stage=owner.build_stage;let(result,heap)=observe(||{let denied=ArtifactStoreOneItemGrant{maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0,..grant};fx(denied.retained_grant(),|e|owner.build_sealer(denied,e)).unwrap()});assert!(!result);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.build_stage,stage);let(result,heap)=observe(||fx(grant.retained_grant(),|e|owner.build_sealer(grant,e)).unwrap());assert!(result);let receipt=owner.ownership;assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;if let Some(source)=owner.mutation.as_ref(){if let Ok(original)=source.try_borrow(){assert_eq!(original.get().text.as_ptr(),forward_pointer);}}if let Some(original)=owner.pending_mutation.as_ref(){assert_eq!(original.text.as_ptr(),forward_pointer);}if let Some(inverse)=owner.assembly.publication_inverse.as_ref(){assert_eq!(inverse.remaining()[0].text.as_ptr(),inverse_pointer);}if let Some(post)=owner.assembly.publication_post.as_ref(){assert_eq!(**post,7);}}
         assert_eq!(owner.build_stage as usize,stop);owner.begin_close();
-        for _ in 0..100000{if owner.terminal_is_empty(){break;}let(step,heap)=observe(||owner.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;}
+        for _ in 0..100000{if owner.terminal_is_empty(){break;}let(step,heap)=observe(||settled(fx(grant.retained_grant(),|e|owner.close_step(e))).result.unwrap());let receipt=step.progress();assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;}
         assert!(owner.terminal_is_empty());let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(releases,initial.requested_bytes+births);
     }
 }
@@ -34,13 +37,14 @@ fn lifecycle_fixture_is_schema_first() {
 
 #[test]
 fn snapshot_clone_original_inline_custody_observes_exact_granted_birth_work_and_release() {
+    prime();
     fn run<T: RetireOwned>(value: T) {
         let mut original = Some(value);
         let mut owner = None;
         let initial = pending::demands(&original, &owner, 0).unwrap();
         assert_eq!(initial.copy_bytes, size_of::<T>());
         let below = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: initial.copy_bytes.saturating_sub(1), maximum_depth: initial.depth, ..Default::default() };
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| pending::close(&mut original, &mut owner, below).result.unwrap().unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| fx(below, |e| pending::close(&mut original, &mut owner, e)).unwrap_or_else(|_| panic!("original inline close refused")).unwrap());
         assert_eq!(step.progress(), RetainedCloneProgress::default());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(original.is_some());
@@ -57,10 +61,10 @@ fn snapshot_clone_original_inline_custody_observes_exact_granted_birth_work_and_
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert!(demand.copy_bytes + demand.capacity_bytes + demand.release_bytes <= 4096);
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let (zero, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| pending::close(&mut original, &mut owner, RetainedCloneGrant { maximum_items: 0, ..grant }).result.unwrap().unwrap());
+            let (zero, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| fx(RetainedCloneGrant { maximum_items: 0, ..grant }, |e| pending::close(&mut original, &mut owner, e)).unwrap_or_else(|_| panic!("original inline close refused")).unwrap());
             assert_eq!(zero.progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| pending::close(&mut original, &mut owner, grant).result.unwrap().unwrap());
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| fx(grant, |e| pending::close(&mut original, &mut owner, e)).unwrap_or_else(|_| panic!("original inline close refused")).unwrap());
             assert!(step.progress().fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
             if grant.maximum_copy_bytes > 0 && grant.maximum_release_bytes == 0 { assert_eq!(heap.released_bytes, 0); }
@@ -96,14 +100,13 @@ impl RetainedCloneEdit<u64, BirthMutation> for BirthEdit {
 }
 impl RetainedCloneEditCursor<u64, BirthMutation> for BirthCursor {
     fn next_work_demand(&self,_:RetainedCloneRef<'_,u64>,_:&u64,_:RetainedCloneRef<'_,BirthMutation>,_:usize)->Result<u64,ValueError>{unreachable!()}
-    fn last_turn_work(&self)->u64{0}
     fn foreign_step_presence(&self)->bool{false}
     fn advance_demands(&self, _: RetainedCloneRef<'_, u64>, _: &u64, _: RetainedCloneRef<'_, BirthMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { unreachable!() }
-    fn advance(&mut self, _: RetainedCloneRef<'_, u64>, _: &mut u64, _: RetainedCloneRef<'_, BirthMutation>, _: usize, _: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> { unreachable!() }
+    fn advance(&mut self, _: RetainedCloneRef<'_, u64>, _: &mut u64, _: RetainedCloneRef<'_, BirthMutation>, _: usize, _: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneEditStep, ValueError> { unreachable!() }
     fn take_inverse(&mut self) -> Option<Vec<BirthMutation>> { None }
     fn cancel(&mut self) {}
     fn begin_close(&mut self) -> bool { true }
-    fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+    fn close_step(&mut self, _: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
@@ -113,6 +116,7 @@ impl RetainedCloneEditCursor<u64, BirthMutation> for BirthCursor {
 
 #[test]
 fn snapshot_clone_preparation_birth_returns_original_request_before_domain_work() {
+    prime();
     use semio_framework_value_snapshot_read::SnapshotReadRegistryHandle;
 use semio_os_store_one_item_publication::ArtifactStoreOneItemLiveAuthority;
     use semio_framework_trace::observe_heap_allocations_on_this_thread;
@@ -154,7 +158,7 @@ use semio_os_store_one_item_publication::ArtifactStoreOneItemLiveAuthority;
         if owner.terminal_is_empty() { break; }
         let copy = owner.next_close_copy_byte_demand().unwrap();
         let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_close_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: owner.next_close_release_byte_demand().unwrap(), maximum_depth: owner.next_close_depth_demand().unwrap() };
-        let (step, heap) = observe_heap_allocations_on_this_thread(|| owner.close_step(grant).unwrap());
+        let (step, heap) = observe_heap_allocations_on_this_thread(|| settled(fx(grant.retained_grant(), |e| owner.close_step(e))).result.unwrap());
         assert!(step.progress().fits(grant.retained_grant()));
         assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
         births += heap.requested_bytes;

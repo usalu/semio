@@ -270,7 +270,7 @@ pub fn create_process3d_app() -> AppDefinition {
             })
             .document(["semio", "process", "3d"])
             .terminology("reuse")
-            .terminology_document("reuse", ["Entwerfen mit Bestand", "Bearbeiten"])
+            .terminology_document("reuse", [LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::native("Edit", "Bearbeiten")])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.process".into(),
                 label: LocalizedLabel::native("3D Process", "3D-Prozess"),
@@ -428,7 +428,7 @@ pub fn process3d_io() -> semio_plugin::AppIo {
         ports: vec![
             semio_plugin::MediaPortSpec {
                 id: "geometry:in".into(),
-                label: "Geometry".into(),
+                label: LocalizedLabel::native("Geometry", "Geometrie"),
                 direction: semio_plugin::MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
                 kind_id: None,
@@ -437,7 +437,7 @@ pub fn process3d_io() -> semio_plugin::AppIo {
             },
             semio_plugin::MediaPortSpec {
                 id: "brep:out".into(),
-                label: "Brep".into(),
+                label: LocalizedLabel::native("Brep", "B-Rep"),
                 direction: semio_plugin::MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
                 kind_id: Some("3d.process".into()),

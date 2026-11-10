@@ -4780,7 +4780,16 @@
           "ports": [
             {
               "id": "frames:in",
-              "label": "Frames",
+              "label": {
+                "native": {
+                  "en": "Frames",
+                  "de": "Einzelbilder"
+                },
+                "reuse": {
+                  "en": "Frames",
+                  "de": "Einzelbilder"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "twoD",

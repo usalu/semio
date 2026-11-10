@@ -22,23 +22,7 @@ fn read_joined(paths: &[&str]) -> &'static str {
     Box::leak(joined.into_boxed_str())
 }
 
-pub(crate) fn with_world_step_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
-    let mut sequence = 0;
-    let grant=world_original_fixture_grant();
-    let mut receipt=semio_framework_value::RetainedCloneProgress::default();
-    let mut context = semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(1),
-        semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(fuel, u64::MAX,grant),
-        semio_framework_job::root_cancel_token(),
-        semio_framework_job::default_now_us,
-        &mut sequence,
-        &mut receipt,
-    );
-    let result=step(&mut context);
-    assert!(context.retained_progress().fits(grant));
-    result
-}
+use semio_os_infinite_world_host::with_world_step_context;
 
 fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
@@ -97,6 +81,7 @@ fn selected_surface(window_kind_id: &str, action_ids: &[String]) -> World3dState
 /// this fixture discriminating rather than merely agreeing.
 #[test]
 fn a_surface_offers_a_gumball_only_when_its_window_kind_declares_a_transform_verb() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut discriminating = 0;
     for case in cases() {
         let name = case["name"].as_str().expect("case name");
@@ -123,6 +108,7 @@ fn a_surface_offers_a_gumball_only_when_its_window_kind_declares_a_transform_ver
 
 #[test]
 fn a_primary_press_enters_gumball_pick_only_on_a_surface_that_declares_one() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     for case in cases() {
         let name = case["name"].as_str().expect("case name");
         let mut state = selected_surface(case["windowKindId"].as_str().expect("windowKindId"), &declared(&case));

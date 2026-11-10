@@ -61,6 +61,7 @@ semio-plugin-guest-contract = { workspace = true }
 semio-plugin-interpreter-runtime = { workspace = true }
 
 [dev-dependencies]
+semio-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
 # 🌀️ async-first rewrite (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet

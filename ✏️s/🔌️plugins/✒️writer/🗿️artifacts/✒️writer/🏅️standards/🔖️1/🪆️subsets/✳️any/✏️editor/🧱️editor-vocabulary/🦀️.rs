@@ -73,7 +73,7 @@ pub fn writer_io() -> AppIo {
         artifact_media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
         ports: vec![semio_plugin::MediaPortSpec {
             id: "text:out".into(),
-            label: "Text".into(),
+            label: semio_plugin::LocalizedLabel::native("Text", "Text"),
             direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
             kind_id: Some("text.document".into()),

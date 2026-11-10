@@ -63,8 +63,8 @@ pub fn dock_tab_node_of(tab: &PanelTabDefinition, terminology: Terminology, loca
 /// (`🏛️ShellHost/🟦️.tsx:10058`), through the SAME `semio_framework::manifest` pair React's
 /// `🛠️ShellHelpers/🟦️.tsx:1348-1355` twins, so `" · "` is one separator constant and a terminology
 /// override (`reuse` → `Entwerfen mit Bestand · Aggregator`) lands identically on both renderers.
-pub fn shell_navbar_title(app: &AppDefinition, terminology_id: &str) -> String {
-    semio_framework::manifest::app_breadcrumb(semio_framework::manifest::resolve_app_breadcrumb(app, terminology_id))
+pub fn shell_navbar_title(app: &AppDefinition, terminology_id: &str, locale: semio_ui_locale::Locale) -> String {
+    semio_framework::manifest::app_breadcrumb(&semio_framework::manifest::resolve_app_breadcrumb(app, terminology_id, locale))
 }
 
 /// 📚️ The example a fresh session announces — the Rust twin of React's `resolveBootExampleId`

@@ -8673,7 +8673,16 @@
           "ports": [
             {
               "id": "chapters:in",
-              "label": "Chapters",
+              "label": {
+                "native": {
+                  "en": "Chapters",
+                  "de": "Kapitel"
+                },
+                "reuse": {
+                  "en": "Chapters",
+                  "de": "Kapitel"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "text",

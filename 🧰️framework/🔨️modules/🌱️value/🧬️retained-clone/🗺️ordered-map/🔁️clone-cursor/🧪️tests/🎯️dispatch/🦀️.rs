@@ -6,4 +6,4 @@ use crate::retained_clone::RetainedCloneSource;
 mod contract;
 pub(super) use contract::record;
 #[test]
-fn ordered_map_generic_close_dispatch_selects_one_body_correlated_event(){contract::verify(||[(1u64,())].into_iter().collect::<RetainedOrderedMap<u64,()>>(),RetainedOrderedMapCloneCursor::<u64,()>::close_demands);}
+fn ordered_map_generic_close_dispatch_selects_one_body_correlated_event(){contract::verify(||[(1u64,())].into_iter().collect::<RetainedOrderedMap<u64,()>>(),RetainedOrderedMapCloneCursor::<u64,()>::close_demands,|c|c.retained_cursor().map(|state|state as *const _ as usize));}

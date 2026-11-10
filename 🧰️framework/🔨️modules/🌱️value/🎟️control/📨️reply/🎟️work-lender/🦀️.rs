@@ -2,10 +2,10 @@
 #[macro_export]
 macro_rules! original_work_lender_engine {()=>{
 /// 🧵️ Lends sequential access to the same original receipt without issuing new Work.
-pub struct OriginalWorkLender<'receipt>{receipt:std::sync::Mutex<&'receipt mut OriginalWorkPerformedReceipt>,limit:u128}
+pub struct OriginalWorkLender<'receipt>{receipt:crate::RetainedOwnerGate<&'receipt mut OriginalWorkPerformedReceipt>,limit:u128}
 impl<'receipt> OriginalWorkLender<'receipt>{
  /// 🪢️ Holds the actual issued receipt and one shared Work window for all shorter loans.
- pub fn new(receipt:&'receipt mut OriginalWorkPerformedReceipt,maximum:u64)->Result<Self,ValueError>{if maximum>receipt.remaining_work_units()?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"shared Work window exceeds its original receipt"))}let limit=receipt.observed_work().checked_add(u128::from(maximum)).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"shared Work window overflow"))?;Ok(Self{receipt:std::sync::Mutex::new(receipt),limit})}
+ pub fn new(receipt:&'receipt mut OriginalWorkPerformedReceipt,maximum:u64)->Result<Self,ValueError>{if maximum>receipt.remaining_work_units()?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"shared Work window exceeds its original receipt"))}let limit=receipt.observed_work().checked_add(u128::from(maximum)).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"shared Work window overflow"))?;Ok(Self{receipt:crate::RetainedOwnerGate::new(receipt),limit})}
  /// 🫴️ Lends the same receipt to one native Work consumer.
  pub fn loan(&self)->OriginalWorkLenderLoan<'_,'receipt>{OriginalWorkLenderLoan{lender:self}}
 }
@@ -13,11 +13,11 @@ impl<'receipt> OriginalWorkLender<'receipt>{
 pub struct OriginalWorkLenderLoan<'loan,'receipt>{lender:&'loan OriginalWorkLender<'receipt>}
 impl sealed_work_sink::Sealed for OriginalWorkLenderLoan<'_,'_>{}
 impl OriginalWorkSink for OriginalWorkLenderLoan<'_,'_>{
- fn performed(&mut self,delta:u64)->Result<bool,ValueError>{let mut receipt=self.lender.receipt.lock().unwrap_or_else(|poisoned|poisoned.into_inner());let admitted=receipt.performed(delta)?;Ok(admitted&&receipt.observed_work()<=self.lender.limit)}
- fn observed_work(&self)->u128{self.lender.receipt.lock().unwrap_or_else(|poisoned|poisoned.into_inner()).observed_work()}
- fn remaining_work_units(&self)->Result<u64,ValueError>{let receipt=self.lender.receipt.lock().unwrap_or_else(|poisoned|poisoned.into_inner());let local=self.lender.limit.checked_sub(receipt.observed_work()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"shared Work window exceeded"))?;Ok(receipt.remaining_work_units()?.min(u64::try_from(local).map_err(|_|ValueError::invariant("shared Work window overflow"))?))}
- fn identity(&self)->OriginalWorkPerformedIdentity{self.lender.receipt.lock().unwrap_or_else(|poisoned|poisoned.into_inner()).identity()}
- fn source_turn(&self)->Option<crate::OriginalSourceTurnIdentity>{self.lender.receipt.lock().unwrap_or_else(|poisoned|poisoned.into_inner()).source_turn()}
+ fn performed(&mut self,delta:u64)->Result<bool,ValueError>{let mut receipt=self.lender.receipt.try_lock().expect("original performed receipt is lent to one consumer at a time");let admitted=receipt.performed(delta)?;Ok(admitted&&receipt.observed_work()<=self.lender.limit)}
+ fn observed_work(&self)->u128{self.lender.receipt.try_lock().expect("original performed receipt is lent to one consumer at a time").observed_work()}
+ fn remaining_work_units(&self)->Result<u64,ValueError>{let receipt=self.lender.receipt.try_lock().expect("original performed receipt is lent to one consumer at a time");let local=self.lender.limit.checked_sub(receipt.observed_work()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"shared Work window exceeded"))?;Ok(receipt.remaining_work_units()?.min(u64::try_from(local).map_err(|_|ValueError::invariant("shared Work window overflow"))?))}
+ fn identity(&self)->OriginalWorkPerformedIdentity{self.lender.receipt.try_lock().expect("original performed receipt is lent to one consumer at a time").identity()}
+ fn source_turn(&self)->Option<crate::OriginalSourceTurnIdentity>{self.lender.receipt.try_lock().expect("original performed receipt is lent to one consumer at a time").source_turn()}
 }
 }}
 

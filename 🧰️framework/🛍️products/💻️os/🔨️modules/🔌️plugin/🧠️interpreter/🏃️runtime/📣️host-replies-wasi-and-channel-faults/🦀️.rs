@@ -176,7 +176,7 @@ pub(super) fn admit_owned_channel(state: &mut OwnedGuestInstance) -> Result<(), 
 /// 📥️ Preserves current fixed actor receipts before decoding an owned JSON result and its typed guest fault.
 pub fn decode_owned_result<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, TurnFault> {
     if bytes.starts_with(b"SAC3") {
-        let original = original_actor_context::OriginalActorFixedReceipt::read(bytes).map_err(identity_turn_fault)?;
+        let original = original_actor_context::OriginalActorFixedReceipt::read(bytes).map(|(call,_)|call).map_err(identity_turn_fault)?;
         return Err(TurnFault::ActorCall(original));
     }
     let result: Result<T, Vec<u8>> = serde_json::from_slice(bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;

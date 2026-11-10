@@ -33,6 +33,7 @@ testkit = ["semio-framework-job-context/testkit"]
 [dev-dependencies]
 semio-framework-job-testing-caller = { workspace = true }
 semio-framework-trace = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 
 [[test]]

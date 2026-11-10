@@ -7,7 +7,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
     /// 📬️ Borrows this editor's original typed completion retirement birth.
     fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<EditorApp<Self>>)->Option<usize>{semio_plugin_decl_app::completion_retirement::derived_completion_birth_bytes(value)}
     /// 🎟️ Retains the editor completion on every unsupported or unfunded cleanup admission.
-    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<EditorApp<Self>>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{semio_plugin_decl_app::completion_retirement::derived_admit_completion_retirement(value,grant)}
+    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<EditorApp<Self>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{semio_plugin_decl_app::completion_retirement::derived_admit_completion_retirement(value,effect)}
     /// 📐️ Declares the physical authority frame needed to retain this editor's original mutation batch.
     fn owned_mutation_batch_birth_bytes() -> Option<usize> { None }
 

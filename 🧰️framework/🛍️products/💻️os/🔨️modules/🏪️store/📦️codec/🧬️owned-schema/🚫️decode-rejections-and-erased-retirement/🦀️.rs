@@ -41,15 +41,15 @@ impl<P, Mutation> ArtifactEnvelopeDecodeRejected<P, Mutation> {
 
 impl<P, Mutation> ErasedSnapshotRetirement for ArtifactEnvelopeDecodeRejected<P, Mutation>
 where
-    P: Send,
-    Mutation: Send,
+    P: Send + Sync + 'static,
+    Mutation: Send + Sync + 'static,
 {
         fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(self.demands(body)?.unwrap_or(semio_framework_value::RetirementDemand{depth:1,..Default::default()}))}
 
 /// 🧱️ A retained decode page is a GRANULE: it is released whole or not at all, so a turn
     /// that cannot pay a full page buys nothing. The empty record husk still completes under
     /// any grant — its last page has already been paid for.
-    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit<ValueError>> {
+    fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit<ValueError>> {
         let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if grant.maximum_items == 0 {
@@ -69,7 +69,7 @@ where
                 self.field_returned = true;
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
             }
-            let Some(demand) = self.demands(grant.maximum_copy_bytes)? else { return Ok(RetainedCloneStep::Progress(empty)) };
+            let Some(demand) = self.demands(body)? else { return Ok(RetainedCloneStep::Progress(empty)) };
             if grant.maximum_depth < demand.depth {
                 return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "artifact envelope rejected field owner exceeds admitted depth")).into());
             }
@@ -171,16 +171,16 @@ impl<P, Mutation> ArtifactEnvelopeUnadmittedDecodeRejected<P, Mutation> {
 
 impl<P, Mutation> ErasedSnapshotRetirement for ArtifactEnvelopeUnadmittedDecodeRejected<P, Mutation>
 where
-    P: Send,
-    Mutation: Send,
+    P: Send + Sync + 'static,
+    Mutation: Send + Sync + 'static,
 {
-    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit<ValueError>> {
+    fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit<ValueError>> {
         let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
         }
-        let demand = self.demands(grant.maximum_copy_bytes)?;
+        let demand = self.demands(body)?;
         if grant.maximum_depth < demand.depth {
             return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "unadmitted envelope rejection exceeds admitted depth")).into());
         }

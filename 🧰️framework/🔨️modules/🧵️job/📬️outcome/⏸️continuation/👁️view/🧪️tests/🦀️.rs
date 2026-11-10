@@ -2,12 +2,10 @@
 use semio_framework_job_context::*;
 use semio_framework_job_return::*;
 use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
-use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-#[global_allocator]
-static VIEW_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
 fn inspect(value:&OriginalJobContinuation,row:&serde_json::Value,caller:&OriginalJobFixtureCaller){
  let fuel=caller.fuel_remaining();let(receipt,heap)=observe(||{let v=value.view();(v.callback.map(|f|f.primary.message()),v.callback.and_then(|f|f.receipt_refusal.as_ref().map(|e|e.message.as_ref())),v.callback.and_then(|f|f.context_refusal.as_ref().map(|e|e.message.as_ref())),v.qualification.map(|f|f.primary.message()),v.receipt_qualification.map(|f|f.primary.message()),v.descriptor.is_some_and(|d|d.kind()==JobOutcomeKind::Yield))});
- assert_eq!(serde_json::to_value(receipt).unwrap(),row["view"]);assert_eq!(caller.fuel_remaining(),fuel);assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+ assert_eq!(serde_json::to_value(receipt).unwrap(),row["view"]);assert_eq!(caller.fuel_remaining(),fuel);assert_eq!(heap,(0,0));
 }
 #[test]
 fn continuation_view_preserves_complete_original_causes_across_return_receiving_and_insertion(){
@@ -18,6 +16,6 @@ fn continuation_view_preserves_complete_original_causes_across_return_receiving_
   caller.turn(q,|cx|{let claim=origin.enter_body(cx)?.unwrap();let(result,receipt)=if row["name"]=="callback"{let mut failure=OriginalTurnFailure::from(semio_framework_value_retained_clone::ValueError::literal(semio_framework_value_retained_clone::ValueRefusalKind::UnsupportedOwner,"Original callback cause"));failure.receipt_refusal=Some(semio_framework_value_retained_clone::ValueError::literal(semio_framework_value_retained_clone::ValueRefusalKind::OwnershipLimit,"Original receipt refusal"));failure.context_refusal=Some(semio_framework_value_retained_clone::ValueError::literal(semio_framework_value_retained_clone::ValueRefusalKind::InvariantViolated,"Original context refusal"));(InteractiveJobStep::Continuation(failure),None)}else{(InteractiveJobStep::from_callback(JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from)),Some(OriginalTurnFailure::from(semio_framework_value_retained_clone::ValueError::literal(semio_framework_value_retained_clone::ValueRefusalKind::InvariantViolated,"Original receipt qualification"))))};match claim.finish(cx,result,receipt){OriginalJobReturn::Continuation(value)=>returned=Some(value),_=>panic!("genuine failed original continuation")};Ok(())}).unwrap();
   inspect(returned.as_ref().unwrap(),row,&caller);caller.turn(q,|cx|{assert!(origin.receive_continuation(cx,&mut returned)?);Ok(())}).unwrap();assert!(returned.is_none());inspect(origin.continuation().unwrap(),row,&caller);
   for _ in 0..2{caller.turn(q,|cx|origin.close_step(cx).map(|_|())).unwrap();}inspect(origin.continuation().unwrap(),row,&caller);
-  for _ in 0..law["maximumTurns"].as_u64().unwrap(){if origin.terminal_is_empty(){break}caller.turn(q,|cx|origin.close_step(cx).map(|_|())).unwrap();}assert!(origin.terminal_is_empty());let(_,heap)=observe(||drop(origin));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));caller.retire(stock);
+  for _ in 0..law["maximumTurns"].as_u64().unwrap(){if origin.terminal_is_empty(){break}caller.turn(q,|cx|origin.close_step(cx).map(|_|())).unwrap();}assert!(origin.terminal_is_empty());let(_,heap)=observe(||drop(origin));assert_eq!(heap,(0,0));caller.retire(stock);
  }
 }

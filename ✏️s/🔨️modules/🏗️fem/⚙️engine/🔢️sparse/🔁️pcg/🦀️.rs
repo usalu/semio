@@ -31,6 +31,8 @@ use semio_framework_value::ValueError;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use semio_s_fem_sparse::numerical_close_original;
+use semio_s_fem_sparse::numerical_close_effect;
+use semio_framework_value::RetainedAllocationEffect;
 use semio_s_fem_sparse::Csr;
 use semio_s_fem_sparse::MountedScalarSlots;
 use semio_s_fem_sparse::NumericalCheckpointFault;
@@ -81,7 +83,4 @@ pub use run_and_entry::*;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-#[cfg(test)]
-#[global_allocator]
-static ORIGINAL_PCG_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 // #endregion 🔖️Tests

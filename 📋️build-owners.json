@@ -1996,12 +1996,6 @@
       "packages": []
     },
     {
-      "name": "@semio-tech/framework-pack-json-output-receiving-rs",
-      "root": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🫴️unique/📦️packages/🦀️rust",
-      "manifest": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🫴️unique/📦️packages/🦀️rust/📋️project.json",
-      "packages": []
-    },
-    {
       "name": "@semio-tech/framework-pack-json-rs",
       "root": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json",
@@ -10379,6 +10373,12 @@
       "name": "semio-framework-pack-json-native-input",
       "root": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🪪️native-input/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🪪️native-input/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "semio-framework-pack-json-output-receiving",
+      "root": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🫴️unique/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🫴️unique/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {

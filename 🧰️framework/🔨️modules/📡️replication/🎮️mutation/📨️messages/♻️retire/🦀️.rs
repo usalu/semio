@@ -106,8 +106,9 @@ impl MutationMessageLedgerRetirement {
 impl ErasedSnapshotRetirement for MutationMessageLedgerRetirement {
     fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { copy_bytes: Self::next_copy_byte_demand(self), capacity_bytes: Self::next_capacity_byte_demand(self,body)?, release_bytes: Self::next_release_byte_demand(self)?, depth: Self::next_depth_demand(self)? }) }
-    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{crate::replay_retirement::erased_close(effect,|grant|{let result=Self::close_step(self,grant);semio_framework_value::RetainedWorkOutcome{result,work:u128::from(self.last_turn_work())}})}
+    fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{crate::replay_retirement::erased_close(effect,|grant|{let result=Self::close_step(self,grant);semio_framework_value::RetainedWorkOutcome{result,work:u128::from(self.last_turn_work())}})}
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(Self::next_copy_byte_demand(self)) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Self::next_capacity_byte_demand(self, body) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Self::next_release_byte_demand(self) }
@@ -160,8 +161,9 @@ impl EditMessageLedgerRetirement {
 impl ErasedSnapshotRetirement for EditMessageLedgerRetirement {
     fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
     fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:self.next_copy_byte_demand()?,capacity_bytes:self.next_capacity_byte_demand(body)?,release_bytes:self.next_release_byte_demand()?,depth:self.next_depth_demand()?})}
-    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{crate::replay_retirement::erased_close(effect,|grant|{let result=Self::close_step(self,grant);semio_framework_value::RetainedWorkOutcome{result,work:u128::from(self.last_turn_work())}})}
+    fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{crate::replay_retirement::erased_close(effect,|grant|{let result=Self::close_step(self,grant);semio_framework_value::RetainedWorkOutcome{result,work:u128::from(self.last_turn_work())}})}
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Self::next_copy_byte_demand(self) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Self::next_capacity_byte_demand(self,body) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Self::next_release_byte_demand(self) }

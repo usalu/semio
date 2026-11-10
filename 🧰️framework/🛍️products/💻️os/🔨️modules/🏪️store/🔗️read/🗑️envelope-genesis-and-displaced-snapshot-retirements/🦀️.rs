@@ -38,7 +38,7 @@ impl<P, Mutation> ArtifactStoreEnvelopeRetirement<P, Mutation> {
     pub fn ownership_is_empty(&self) -> bool { self.vcs.is_none() && self.messages.is_none() && self.metadata.is_none() && self.active.is_none() }
 }
 
-impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactStoreEnvelopeRetirement<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactStoreEnvelopeRetirement<P, Mutation> {
     pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, body); }
         if self.vcs.is_some() { return retirement_owner_demands(&self.vcs, body); }
@@ -47,10 +47,10 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactStoreEnvelopeRe
     }
 }
 
-impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreEnvelopeRetirement<P, Mutation> {
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactStoreEnvelopeRetirement<P, Mutation> {
+    fn close_step(&mut self,_body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         if self.ownership_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-        let step = if self.active.is_some() { semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, effect)) }
+        let step = if self.active.is_some() { semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)) }
             else if self.vcs.is_some() { semio_framework_value::RetirementPollExit::resume(retirement_owner_close(&mut self.vcs, effect)) }
             else if self.messages.is_some() { ArtifactEditMessageLedgerRetirement::admit_boxed(&mut self.messages, &mut self.active, grant).map(RetainedCloneStep::Progress).map_err(semio_framework_value::RetirementPollExit::from) }
             else { artifact_retirement_admit_owned(&mut self.metadata, &mut self.active, effect).result.map_err(semio_framework_value::RetirementPollExit::from) }?;
@@ -72,29 +72,36 @@ impl<P, Mutation> Drop for ArtifactStoreEnvelopeRetirement<P, Mutation> {
 }
 
 pub struct ArtifactGenesisRetirement<P: Send + Sync + 'static> {
-    pub snapshot: std::mem::ManuallyDrop<Option<ReturnedSnapshotReadRetirement<P>>>,
-    pub pack: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<Vec<u8>>>>,
+    pub snapshot: std::mem::ManuallyDrop<Option<Arc<P>>>,
+    pub factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>>,
+    pub pack: std::mem::ManuallyDrop<Option<Arc<Vec<u8>>>>,
+    pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
 
 impl<P: Send + Sync + 'static> ArtifactGenesisRetirement<P> {
     pub fn new(genesis: AdmittedArtifactGenesis<P>, factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>) -> Self {
         let (snapshot, pack) = genesis.into_owners();
-        Self { snapshot: std::mem::ManuallyDrop::new(Some(ReturnedSnapshotReadRetirement::new(snapshot, factory))), pack: std::mem::ManuallyDrop::new(Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(pack))) }
+        Self { snapshot: std::mem::ManuallyDrop::new(Some(snapshot)), factory: std::mem::ManuallyDrop::new(Some(factory)), pack: std::mem::ManuallyDrop::new(Some(pack)), active: std::mem::ManuallyDrop::new(None) }
     }
     pub fn demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
-        if self.snapshot.is_some() { retirement_owner_demands(&self.snapshot, copy) } else { retirement_owner_demands(&self.pack, copy) }
+        use semio_framework_value::RetirementDemand;
+        if let Some(active) = self.active.as_ref() { return semio_framework_value::factory_ticket_demands(active, copy); }
+        if self.snapshot.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Option<Arc<P>>>() * 2 + std::mem::size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>(), capacity_bytes: semio_framework_value::factory::ArcRootRetirement::<P>::constructor_capacity_bytes(), depth: 1, ..Default::default() }); }
+        if self.pack.is_some() { return Ok(RetirementDemand { capacity_bytes: semio_framework_value_snapshot_read::arc_lease_birth_bytes::<Vec<u8>>(), depth: 1, ..Default::default() }); }
+        Ok(Default::default())
     }
 }
 
 impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactGenesisRetirement<P> {
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
-        use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
+    fn close_step(&mut self,body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
+        use semio_framework_value::retained_clone::RetainedCloneStep;
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-        let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-        let step = if self.snapshot.is_some() { semio_framework_value::RetirementPollExit::resume(retirement_owner_close(&mut self.snapshot, effect))? } else { semio_framework_value::RetirementPollExit::resume(retirement_owner_close(&mut self.pack, effect))? };
-        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
+        let step = if self.active.is_some() { let step = semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, body, effect))?; if self.active.as_ref().is_some_and(|owner| owner.terminal_is_empty()) { self.active = std::mem::ManuallyDrop::new(None); } step }
+        else if self.snapshot.is_some() { semio_framework_value::RetirementPollExit::resume(semio_framework_value::factory::ArcRootRetirement::admit_original(&mut self.snapshot, &mut self.factory, &mut self.active, effect))? }
+        else { let turn = semio_framework_value_snapshot_read::admit_arc_lease(&mut self.pack, effect); match turn.result { Ok(Some((owner, progress))) => { *self.active = Some(owner); RetainedCloneStep::Progress(progress) } Ok(None) => RetainedCloneStep::Progress(Default::default()), Err(failure) => return Err(semio_framework_value::RetirementPollExit::Failed(failure)) } };
+        Ok(RetainedCloneStep::Progress(step.progress()))
     })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
-    fn terminal_is_empty(&self) -> bool { self.snapshot.is_none() && self.pack.is_none() }
+    fn terminal_is_empty(&self) -> bool { self.snapshot.is_none() && self.pack.is_none() && self.active.is_none() && self.factory.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.demands(copy)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
@@ -105,7 +112,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactGenesisRetir
 impl<P: Send + Sync + 'static> Drop for ArtifactGenesisRetirement<P> {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty(), "genesis retired before both immutable owners became terminal-empty");
-        if self.terminal_is_empty() { unsafe { std::mem::ManuallyDrop::drop(&mut self.snapshot); std::mem::ManuallyDrop::drop(&mut self.pack); } }
+        if self.terminal_is_empty() { unsafe { std::mem::ManuallyDrop::drop(&mut self.snapshot); std::mem::ManuallyDrop::drop(&mut self.factory); std::mem::ManuallyDrop::drop(&mut self.pack); std::mem::ManuallyDrop::drop(&mut self.active); } }
     }
 }
 
@@ -127,7 +134,7 @@ impl<P: Send + Sync + 'static> ArtifactStoreDisplacedSnapshotRetirement<P> {
     pub fn demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "displaced snapshot depth overflow"))?; Ok(demand) };
-        if let Some(snapshot) = self.pending.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced snapshot lost its original factory"))?.retirement_birth_bytes(snapshot), depth: 2, ..Default::default() }); }
+        if self.pending.is_some() { return Ok(semio_framework_value::factory::ArcRootRetirement::<P>::admission_demand()); }
         if let Some(active) = self.active.as_ref() { return nested(semio_framework_value::factory_ticket_demands(active, copy)?); }
         if self.factory.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if let Some(authority) = self.closing_factory.as_ref() { return nested(authority.demands(copy)?); }
@@ -136,7 +143,7 @@ impl<P: Send + Sync + 'static> ArtifactStoreDisplacedSnapshotRetirement<P> {
 }
 
 impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactStoreDisplacedSnapshotRetirement<P> {
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
+    fn close_step(&mut self,_body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         use semio_framework_value::retained_clone::admit_retained_clone_close;
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -145,20 +152,14 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactStoreDisplac
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "displaced snapshot exceeds admitted depth").into()); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.pending.is_some() {
-            let Some(factory) = self.factory.as_ref() else { return Err(ValueError::invariant("pending displaced snapshot factory is absent").into()); };
-            let (owner, progress) = semio_framework_value::RetirementPollExit::resume(semio_framework_value::factory_retire_snapshot(&**factory, &mut self.pending, &mut effect.nested(child)))?;
-            *self.active = Some(owner);
-            if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced snapshot constructor changed its admitted receipt").into()); }
-            return Ok(RetainedCloneStep::Progress(progress));
-        }
-        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(semio_framework_value::close_factory_ticket(&mut self.active, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.pending.is_some() { let step = semio_framework_value::RetirementPollExit::resume(semio_framework_value::factory::ArcRootRetirement::admit_snapshot(&mut self.pending, &mut self.factory, &mut self.active, &mut effect.nested(child)))?; return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(semio_framework_value::close_factory_ticket(&mut self.active, child.maximum_copy_bytes, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(factory) = self.factory.take() {
             *self.closing_factory = Some(semio_framework_value::FactoryAuthority::new(factory));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
         }
         let authority = self.closing_factory.as_mut().expect("displaced snapshot retains its closing factory");
-        let step = semio_framework_value::RetirementPollExit::resume(authority.step(&mut effect.nested(child)))?;
+        let step = semio_framework_value::RetirementPollExit::resume(authority.step(child.maximum_copy_bytes,&mut effect.nested(child)))?;
         let step = admit_retained_clone_close(child, step, authority.terminal_is_empty(), "displaced snapshot factory capability")?;
         if authority.terminal_is_empty() { drop(self.closing_factory.take()); }
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
@@ -267,7 +268,7 @@ impl ArtifactStoreDisplacedRetirements {
         Ok(Default::default())
     }
 
-    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+    pub fn close_step(&mut self,_body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
         use semio_framework_value::RetirementPollExit as Exit;
         let result = (|| -> Result<RetainedCloneStep, Exit> {
             let grant = effect.grant();
@@ -283,7 +284,7 @@ impl ArtifactStoreDisplacedRetirements {
                 drop(self.owners.pop_front());
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty }));
             }
-            let step = Exit::resume(owner.close_step(&mut effect.nested(child)))?;
+            let step = Exit::resume(owner.close_step(child.maximum_copy_bytes,&mut effect.nested(child)))?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original displaced queue child")?;
             if matches!(step, RetainedCloneStep::Complete(_)) && !owner.terminal_is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced child reported completion while original ownership remains").into()); }
             Ok(RetainedCloneStep::Progress(step.progress()))

@@ -4075,7 +4075,16 @@
           "ports": [
             {
               "id": "catalog:out",
-              "label": "Kit Catalog",
+              "label": {
+                "native": {
+                  "en": "Kit Catalog",
+                  "de": "Kit-Katalog"
+                },
+                "reuse": {
+                  "en": "Kit Catalog",
+                  "de": "Kit-Katalog"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "kit",
@@ -9712,7 +9721,16 @@
           "ports": [
             {
               "id": "catalog:out",
-              "label": "Kit Catalog",
+              "label": {
+                "native": {
+                  "en": "Kit Catalog",
+                  "de": "Kit-Katalog"
+                },
+                "reuse": {
+                  "en": "Kit Catalog",
+                  "de": "Kit-Katalog"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "kit",
@@ -15344,7 +15362,16 @@
           "ports": [
             {
               "id": "catalog:out",
-              "label": "Kit Catalog",
+              "label": {
+                "native": {
+                  "en": "Kit Catalog",
+                  "de": "Kit-Katalog"
+                },
+                "reuse": {
+                  "en": "Kit Catalog",
+                  "de": "Kit-Katalog"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "kit",

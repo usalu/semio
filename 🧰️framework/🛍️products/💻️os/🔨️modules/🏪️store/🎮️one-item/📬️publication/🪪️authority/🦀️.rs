@@ -21,12 +21,16 @@ impl RetireOwned for ArtifactStoreOneItemLiveAuthority {
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<PublicationAuthorityFieldsRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
+impl PublicationAuthorityFieldsRetirement {
+    fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{erased_cursor_turn(self.0.step(body,effect))}
+}
 impl RetirementCursor for PublicationAuthorityFieldsRetirement {
+    semio_framework_value::native_retirement_reply!();
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.next_demand(body) }
-    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{erased_cursor_turn(self.0.step(effect))}
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.0.next_copy_byte_demand()}
     fn allows_admitted_narrow_work(&self)->bool{true}
+    fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.0.next_computational_work(body)}
     fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.0.next_capacity_byte_demand(copy).ok()}
     fn next_close_byte_demand(&self)->Option<usize>{self.0.next_release_byte_demand().ok()}
     fn next_depth_demand(&self)->Result<usize,ValueError>{self.0.next_depth_demand()}

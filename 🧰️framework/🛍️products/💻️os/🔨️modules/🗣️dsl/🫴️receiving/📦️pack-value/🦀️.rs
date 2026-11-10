@@ -84,7 +84,7 @@ impl<M:FromValue+RetireOwned> OriginalPackValueReceiving<M>{
   if !self.output.terminal_is_empty(){return stepped(self.output.close_step(&mut effect.nested(child)))}
   if !self.value.terminal_is_empty(){return stepped(self.value.close_step(&mut effect.nested(child)))}
   if let Some(record)=&mut self.record{
-   if !record.terminal_is_empty(){return match record.close_step(&mut effect.nested(child)){RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work})}}
+   if !record.terminal_is_empty(){return match record.close_step(grant.maximum_copy_bytes,&mut effect.nested(child)){RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work})}}
    if let Err(error)=perform(effect,1){return settle(effect,Err(error))}
    self.record=None;return settle(effect,Ok(RetainedCloneStep::Progress(receipt(demand))))
   }
@@ -119,8 +119,11 @@ impl<M:FromValue+RetireOwned> RetireOwned for OriginalPackValueReceiving<M>{
  fn retirement_seed(self)->Self::RetirementCursor{PackValueRetirement(ManuallyDrop::new(self))}
  fn controlled_retirement_supported()->bool{true}
 }
+impl<M:FromValue+RetireOwned> PackValueRetirement<M>{
+ fn close_step(&mut self,_body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{erased_cursor_turn(self.0.close(effect))}
+}
 impl<M:FromValue+RetireOwned> RetirementCursor for PackValueRetirement<M>{
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{erased_cursor_turn(self.0.close(effect))}
+ semio_framework_value::native_retirement_reply!();
  fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
  fn terminal_is_empty(&self)->bool{self.0.closed}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demand(usize::MAX)?.depth)}

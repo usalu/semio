@@ -37,6 +37,8 @@ semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦�
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path = "../../../../🌱️value/🗂️ordered/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde = { version = "1.0", features = ["derive"] }
@@ -93,6 +95,10 @@ path = "../../🧪️tests/🔗️scalar-newtype-receiving/🦀️.rs"
 [[test]]
 name = "paged_text_receiving"
 path = "../../🧪️tests/📝️paged-text-receiving/🦀️.rs"
+
+[[test]]
+name = "field_receiving"
+path = "../../🧪️tests/🧊️field-receiving/🦀️.rs"
 
 [[test]]
 name = "transparent_receiving"

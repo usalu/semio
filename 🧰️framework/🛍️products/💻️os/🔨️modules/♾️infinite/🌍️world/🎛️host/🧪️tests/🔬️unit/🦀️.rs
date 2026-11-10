@@ -34,6 +34,9 @@ use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use serde_json::json;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
+fn read_static(path_from_manifest: &str) -> &'static str {
+    fixture_text!(path_from_manifest)
+}
 
 /// 📖️ Reads several test inputs at run time and joins them into the one text the unsplit sources formed.
 fn read_joined(paths: &[&str]) -> &'static str {
@@ -85,85 +88,9 @@ fn triangle_mesh_oracle() -> TerrainMeshOracleData {
     mesh_oracle_from_buffers(vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2])
 }
 
-pub(crate) fn mesh_oracle_from_buffers(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>) -> TerrainMeshOracleData {
-    TerrainMeshOracleData { positions, normals, indices, face_ids: Vec::new(), vertex_ids: Vec::new(), edge_positions: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), colors: Vec::new() }
-}
 
-pub(crate) fn publish_oracle_mesh(data: TerrainMeshOracleData) -> Mesh3dLease {
-    publish_oracle_mesh_at_revision(data, 0)
-}
-
-/// 🧊️ An oracle mesh stamped with a chosen interaction revision — what
-/// `publish_world3d_asset_mesh_lease` witnesses before it stores a decoded GLB under its url's id.
-pub(crate) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revision: u64) -> Mesh3dLease {
-    assert!(data.positions.len().is_multiple_of(3));
-    assert_eq!(data.normals.len(), data.positions.len());
-    assert!(data.edge_positions.len().is_multiple_of(6));
-    assert!(data.uvs.len().is_multiple_of(2));
-    assert!(data.colors.len().is_multiple_of(4));
-    static GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(10_000);
-    let schema = Mesh3dSchema {
-        vertices: (data.positions.len() / 3) as u32,
-        indices: data.indices.len() as u32,
-        face_ids: data.face_ids.len() as u32,
-        vertex_ids: data.vertex_ids.len() as u32,
-        edges: (data.edge_positions.len() / 6) as u32,
-        edge_ids: data.edge_ids.len() as u32,
-        uvs: (data.uvs.len() / 2) as u32,
-        colors: (data.colors.len() / 4) as u32,
-    surface_uvs:[0;4],tangents:0,};
-    let generation = GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_begin_capacity_byte_demand(),0,1);
-    let (token,progress)=mesh3d_begin(generation,revision,schema,grant).expect("oracle mesh claim");
-    assert!(progress.fits(grant));
-    allocate_oracle_mesh(token);
-    for value in data.positions.as_chunks::<3>().0 {
-        mesh3d_write_vec3(token, Mesh3dField::Positions, *value).unwrap();
-    }
-    for value in data.normals.as_chunks::<3>().0 {
-        mesh3d_write_vec3(token, Mesh3dField::Normals, *value).unwrap();
-    }
-    for value in data.indices {
-        mesh3d_write_u32(token, Mesh3dField::Indices, value).unwrap();
-    }
-    for value in data.face_ids {
-        mesh3d_write_u32(token, Mesh3dField::FaceIds, value).unwrap();
-    }
-    for value in data.vertex_ids {
-        mesh3d_write_u32(token, Mesh3dField::VertexIds, value).unwrap();
-    }
-    for value in data.edge_positions.as_chunks::<6>().0 {
-        mesh3d_write_edge(token, [value[..3].try_into().unwrap(), value[3..].try_into().unwrap()]).unwrap();
-    }
-    for value in data.edge_ids {
-        mesh3d_write_u32(token, Mesh3dField::EdgeIds, value).unwrap();
-    }
-    for value in data.uvs.as_chunks::<2>().0 {
-        ui_scene::math::mesh3d_write_vec2(token, Mesh3dField::Uvs, *value).unwrap();
-    }
-    for value in data.colors.as_chunks::<4>().0 {
-        ui_scene::math::mesh3d_write_vec4(token, Mesh3dField::Colors, *value).unwrap();
-    }
-    mesh3d_seal(token).expect("oracle mesh publication")
-}
-
-pub(crate) fn with_world_step_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
-    let mut sequence = 0;
-    let grant=world_original_fixture_grant();
-    let mut receipt=semio_framework_value::RetainedCloneProgress::default();
-    let mut context = semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(1),
-        semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(fuel, u64::MAX,grant),
-        semio_framework_job::root_cancel_token(),
-        semio_framework_job::default_now_us,
-        &mut sequence,
-        &mut receipt,
-    );
-    let result=step(&mut context);
-    assert!(context.retained_progress().fits(grant));
-    result
-}
+use semio_os_infinite_world_host::with_world_step_context;
+use semio_os_infinite_world_host::{allocate_oracle_mesh, mesh_oracle_from_buffers, publish_oracle_mesh, publish_oracle_mesh_at_revision};
 
 include!("🔲️cursor-and-marquee-laws/🦀️.rs");
 

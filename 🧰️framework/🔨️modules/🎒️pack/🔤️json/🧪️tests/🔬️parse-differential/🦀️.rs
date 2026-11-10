@@ -1,5 +1,5 @@
 //! 🧪️ Differential law: the owned JSON parser accepts and rejects exactly what serde_json does and yields the same value tree.
-use semio_framework_pack_json::{parse, JsonMemberPolicy};
+use semio_framework_pack_json::{parse, to_dsl_value, to_json_string, JsonMemberPolicy};
 
 #[test]
 fn owned_parser_agrees_with_serde_json_on_the_portable_corpus() {
@@ -8,7 +8,7 @@ fn owned_parser_agrees_with_serde_json_on_the_portable_corpus() {
         let text = text.as_str().expect("text");
         let oracle: serde_json::Value = serde_json::from_str(text).expect("oracle accepts");
         let value = parse(text, JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("owned parser refused {text:?}: {error:?}"));
-        assert_eq!(serde_json::to_value(&value).expect("project"), oracle, "{text:?}");
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&to_dsl_value(&value))).expect("project"), oracle, "{text:?}");
     }
     for text in corpus["invalid"].as_array().expect("invalid") {
         let text = text.as_str().expect("text");

@@ -41,7 +41,7 @@ pub(crate) trait LocalInteractionQueryCapture {
     fn cancel(&mut self);
     fn begin_close(&mut self);
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -67,8 +67,8 @@ impl LocalInteractionQueryCapture for LocalInteractionCaptureCursor {
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         LocalInteractionCaptureCursor::retirement_demands(self,body)
     }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        LocalInteractionCaptureCursor::close_step(self,grant)
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        LocalInteractionCaptureCursor::close_step(self,effect)
     }
     fn terminal_is_empty(&self) -> bool {
         LocalInteractionCaptureCursor::terminal_is_empty(self)
@@ -207,30 +207,35 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
     }
 
     #[doc(hidden)]
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let idle = RetainedCloneProgress::default();
-        if self.terminal_is_empty() {
-            return Ok(RetainedCloneStep::Complete(idle));
-        }
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(RetainedCloneStep::Progress(idle));
-        }
-        let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth {
-            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "local interaction query close exceeds admitted depth"));
-        }
-        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
-            return Ok(RetainedCloneStep::Progress(idle));
-        }
-        if self.length != 0 {
-            let copied_bytes = self.retire_page(grant.maximum_copy_bytes);
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, ..idle }));
-        }
-        let step = self.capture.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?;
-        Ok(match step {
-            RetainedCloneStep::Complete(progress) if !self.terminal_is_empty() => RetainedCloneStep::Progress(progress),
-            step => step,
-        })
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        use semio_framework_value::RetirementPollExit;
+        let grant = effect.grant();
+        let result = (|| -> Result<RetainedCloneStep, RetirementPollExit> {
+            let idle = RetainedCloneProgress::default();
+            if self.terminal_is_empty() {
+                return Ok(RetainedCloneStep::Complete(idle));
+            }
+            if !self.closing || grant.maximum_items == 0 {
+                return Ok(RetainedCloneStep::Progress(idle));
+            }
+            let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
+            if grant.maximum_depth < demand.depth {
+                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "local interaction query close exceeds admitted depth").into());
+            }
+            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+                return Ok(RetainedCloneStep::Progress(idle));
+            }
+            if self.length != 0 {
+                let copied_bytes = self.retire_page(grant.maximum_copy_bytes);
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, ..idle }));
+            }
+            let step = RetirementPollExit::resume(self.capture.close_step(&mut effect.nested(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })))?;
+            Ok(match step {
+                RetainedCloneStep::Complete(progress) if !self.terminal_is_empty() => RetainedCloneStep::Progress(progress),
+                step => step,
+            })
+        })();
+        RetirementPollExit::settle(effect, result)
     }
 
     fn retire_page(&mut self, maximum_bytes: usize) -> usize {

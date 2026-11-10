@@ -8,7 +8,7 @@ pub use semio_framework_value_control_physical::allocation;
 mod allocation_effect;
 #[path="🎟️authoring/🦀️.rs"]
 mod authoring;
-pub use authoring::{AuthoredEffect,AuthoringWallet,run_original_effect,OriginalEffectRun};
+pub use authoring::{AuthoredEffect,AuthoringWallet,ORIGINAL_INVOCATION_WORK,invocation_extent,invoke_original,run_original_effect,OriginalEffectRun};
 #[path="🎟️lent/🦀️.rs"]
 mod lent;
 pub use lent::{EffectLend,LentEffectSlot};

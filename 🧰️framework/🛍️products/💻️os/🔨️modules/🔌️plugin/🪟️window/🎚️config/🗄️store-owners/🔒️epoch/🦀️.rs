@@ -11,20 +11,20 @@ impl<O:WindowConfigOwner> WindowConfigPartition<O>{
   if !self.epoch_private_pending(){return Ok(Default::default())}
   self.preview_cancel_demand(body,false)
  }
- pub fn epoch_close_step(&mut self,epoch:u64,published:bool,body:usize,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<(bool,RetainedCloneProgress),ValueError>{
-  let demand=self.epoch_close_demands(epoch,published,body)?;if !registry::fits(grant,demand){return Ok((false,Default::default()))}
+ pub fn epoch_close_step(&mut self,epoch:u64,published:bool,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<(bool,RetainedCloneProgress),ValueError>{
+  let demand=self.epoch_close_demands(epoch,published,body)?;if !registry::fits(effect.grant(),demand){return Ok((false,Default::default()))}
   if !self.epoch_private_pending(){return Ok((true,Default::default()))}
   let p=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
   if published&&self.prepared_epoch==epoch{
-   if self.epoch_displaced_pending(){return self.preview_retirement_step_original(body,grant,Some(control)).map(|step|(false,step.progress()))}
+   if self.epoch_displaced_pending(){return self.preview_retirement_step_original(body,effect,Some(&mut *control)).map(|step|(false,step.progress()))}
    if self.published_preview.is_some(){self.pending_preview=self.published_preview.take();self.published_epoch=0;return Ok((false,p))}
    self.published_preview=self.prepared_preview.take();self.published_epoch=epoch;self.prepared_epoch=0;return Ok((false,p))
   }
   if self.semantic_preview.as_ref().is_some_and(WindowSemanticPreview::needs_cancellation){self.semantic_preview.as_mut().unwrap().cancel();return Ok((false,p))}
-  if self.epoch_displaced_pending(){return self.preview_retirement_step_original(body,grant,Some(control)).map(|step|(false,step.progress()))}
+  if self.epoch_displaced_pending(){return self.preview_retirement_step_original(body,effect,Some(&mut *control)).map(|step|(false,step.progress()))}
   if self.prepared_epoch!=0||self.prepared_preview.is_some(){self.pending_preview=self.prepared_preview.take();self.prepared_epoch=0;return Ok((false,p))}
   if self.finish_preview_read.is_some(){self.pending_preview_projection_read=self.finish_preview_read.take();return Ok((false,p))}
   if self.finish_preview_base.is_some(){self.pending_preview_projection=self.finish_preview_base.take();return Ok((false,p))}
-  let step=self.preview_retirement_step_original(body,grant,Some(control))?;Ok((!self.epoch_private_pending(),step.progress()))
+  let step=self.preview_retirement_step_original(body,effect,Some(&mut *control))?;Ok((!self.epoch_private_pending(),step.progress()))
  }
 }

@@ -11,13 +11,13 @@
   "properties": {
     "stock": {
       "const": {
-        "items": 100000,
-        "fuel": 100000,
-        "copyBytes": 33554432,
+        "items": 1000000,
+        "fuel": 2000000,
+        "copyBytes": 134217728,
         "capacityBytes": 33554432,
         "releaseBytes": 33554432,
         "depth": 64,
-        "maximumTurns": 100000
+        "maximumTurns": 1000000
       }
     },
     "cases": {

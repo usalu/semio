@@ -56,7 +56,7 @@ pub fn create_puzzle2d_app() -> semio_plugin::AppDefinition {
             .artifact_kind(crate::standards::v1::subsets::any::schema::records::artifact_kind())
             .icon_id("puzzle")
             .terminology("reuse")
-            .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "2d"])
+            .terminology_document("reuse", [LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::data("puzzle"), LocalizedLabel::data("2d")])
             .mode_def(edit::definition())
             .default_mode_id(edit::PUZZLE2D_PLAY_MODE_EDIT)
             .window_kind_def(overview::definition())

@@ -227,9 +227,9 @@ include!("../🪟️mounted/♻️frontier/🦀️.rs");
 
 
 /// 🪢️ Returns the worker's original cancellation ancestor alias against the lease root the operation still owns, since that root can never become unique while the operation retains it.
-fn return_session_cancel_alias(session: &semio_framework_job_worker::MountedWorkerJobSession<semio_framework::ErasedToolJob>, lease: &Option<ToolCancellationLease>, grant: RetainedCloneGrant) -> Option<Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure>> {
+fn return_session_cancel_alias(session: &semio_framework_job_worker::MountedWorkerJobSession<semio_framework::ErasedToolJob>, lease: &Option<ToolCancellationLease>, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Option<Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure>> {
     let lease = lease.as_ref()?;
-    matches!(session.has_original_cancel_alias_witness(lease.cancel_token()), Ok(true)).then(|| match session.return_original_cancel_alias_step(lease.cancel_token(), grant).result {
+    matches!(session.has_original_cancel_alias_witness(lease.cancel_token()), Ok(true)).then(|| match match cx.with_original_effect(grant, |_, effect| session.return_original_cancel_alias_step(lease.cancel_token(), effect)) { Ok(Some((turn, _))) => turn.result, Ok(None) => Ok(None), Err(error) => return Err(error.into()) } {
         Ok(Some(step)) => Ok(PluginLifecycleStep::Progress(step.progress())),
         Ok(None) | Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => Ok(PluginLifecycleStep::AwaitingInput { reason: "typed operation original cancellation alias awaits its issuing root" }),
         Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => Err(error.into()),
@@ -331,7 +331,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 drop(self.session.take());self.stage=MountedTypedCommandFullOperationStage::Publishing;
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));
             }
-            if let Some(step)=return_session_cancel_alias(session,&self.cancellation_lease,grant){return step.map_err(semio_framework_job::OriginalTurnFailure::from);}
+            if let Some(step)=return_session_cancel_alias(session,&self.cancellation_lease,cx,grant){return step.map_err(semio_framework_job::OriginalTurnFailure::from);}
             let demand=match session.retirement_demands(grant.maximum_copy_bytes){
                 Ok(demand)=>demand,
                 Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation original worker close quote awaits its handback"}),
@@ -561,7 +561,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_bytes: bytes, ..item }));
             }
             session.begin_close();
-            if let Some(step) = return_session_cancel_alias(session, &self.cancellation_lease, grant) { return step.map_err(semio_framework_job::OriginalTurnFailure::from); }
+            if let Some(step) = return_session_cancel_alias(session, &self.cancellation_lease, cx, grant) { return step.map_err(semio_framework_job::OriginalTurnFailure::from); }
             let demand = match session.retirement_demands(grant.maximum_copy_bytes) {
                 Ok(demand) => demand,
                 Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => return Ok(PluginLifecycleStep::AwaitingInput { reason: "typed operation original worker close quote awaits its handback" }),

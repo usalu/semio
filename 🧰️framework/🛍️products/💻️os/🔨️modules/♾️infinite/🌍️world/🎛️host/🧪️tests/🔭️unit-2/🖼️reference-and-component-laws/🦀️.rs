@@ -4,6 +4,7 @@
 /// matrix family/FOV. A later local projection command acquires the spec without framing content.
 #[test]
 fn delivered_preserve_camera_policy_cancels_frame_debt_until_local_projection_selection() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = camera_framing_fixture();
     let projection_fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
     assert!(projection_fixture["framePolicies"].as_array().unwrap().iter().any(|row| row["value"] == "preserveCamera" && row["expectedFramesContent"] == false));
@@ -50,6 +51,7 @@ fn delivered_preserve_camera_policy_cancels_frame_debt_until_local_projection_se
 /// 🖼️ LAW: reference identity, geometry, and visual state come from the shared Three fixture.
 #[test]
 fn reference_visual_identity_geometry_and_interaction_match_three() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🖼️reference-visual/🔣️.json")).expect("reference visual fixture");
     let identity = fixture["identityCases"].as_array().expect("identity cases");
     let shared_url = identity[0]["url"].as_str().expect("shared URL");
@@ -126,6 +128,7 @@ fn reference_visual_identity_geometry_and_interaction_match_three() {
 
 #[test]
 fn reference_visual_geometry_reaches_the_actual_textured_scene_pass() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🖼️reference-visual/🔣️.json")).unwrap();
     let geometry = &fixture["geometry"];
     let url = fixture["identityCases"][0]["url"].as_str().unwrap();
@@ -139,7 +142,7 @@ fn reference_visual_geometry_reaches_the_actual_textured_scene_pass() {
     drive_scene_bridge(&mut state, &scene, bounds);
     let size = &geometry["sourceNaturalSize"];
     let _ = state.scene.reference_pixels.insert(url.into(), test_world_scene_raster(size[0].as_u64().unwrap() as u32, size[1].as_u64().unwrap() as u32, 0));
-    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut gpu = semio_os_infinite_world_host::prepared_world_build_context();
     let mut draw = semio_ui_draw_contract::DrawList::default();
     let mut atlas = semio_ui_text::FontAtlas::builtin();
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
@@ -164,6 +167,7 @@ fn reference_visual_geometry_reaches_the_actual_textured_scene_pass() {
             assert!((point[axis] - geometry["expectedCorners"][index][axis].as_f64().unwrap() as f32).abs() < 1e-5, "emitted corner {index} axis {axis}");
         }
     }
+    semio_os_infinite_world_host::retire_world_build_context(gpu);
     retire_bridged_surface(&mut state);
 }
 
@@ -171,6 +175,7 @@ fn reference_visual_geometry_reaches_the_actual_textured_scene_pass() {
 /// finite grid line vertices. The later overlay lanes remain ordinary line geometry.
 #[test]
 fn an_actual_world_grid_is_one_camera_projected_procedural_scalar_without_grid_lines() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut scene = scene_with_selection("{}");
     let world = scene.world_3d.as_mut().unwrap();world.meshes_json = "[]".into();world.instances_json = "[]".into();
     let bounds = Rect::new(0.0, 0.0, 320.0, 240.0);
@@ -182,7 +187,7 @@ fn an_actual_world_grid_is_one_camera_projected_procedural_scalar_without_grid_l
     state.scene.lod.show_grid = true;
     state.scene.lod.grid_datum = Some([3.0, 5.0, 2.0]);
     drive_scene_bridge(&mut state, &scene, bounds);
-    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut gpu = semio_os_infinite_world_host::prepared_world_build_context();
     let mut draw = semio_ui_draw_contract::DrawList::default();
     let mut atlas = semio_ui_text::FontAtlas::builtin();
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
@@ -209,11 +214,13 @@ fn an_actual_world_grid_is_one_camera_projected_procedural_scalar_without_grid_l
     assert_eq!(grid.cell_color, [theme.text_element.r, theme.text_element.g, theme.text_element.b], "the retained grid owns the linear element token");
     let retained_line_vertices = pass.line_draws.iter().map(|draw| draw.vertices.len()).sum::<usize>();
     assert_eq!(retained_line_vertices, 0, "the grid is one procedural scalar, never a camera-target-anchored LineList");
+    semio_os_infinite_world_host::retire_world_build_context(gpu);
     retire_bridged_surface(&mut state);
 }
 
 #[test]
 fn isolated_world_presentation_suppresses_chrome_and_input_but_retains_frame_work() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut scene = scene_with_selection("{}");
     scene.world_3d.as_mut().expect("world fixture").presentation_json = Some(
         serde_json::to_string(&World3dPresentation {
@@ -230,7 +237,7 @@ fn isolated_world_presentation_suppresses_chrome_and_input_but_retains_frame_wor
     let mut state = World3dState::new("surface-icon".into(), "controller-icon".into());
     drive_scene_bridge(&mut state, &scene, bounds);
     state.scene.retired_draws = Some(WorldDrawRegistry::default());
-    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut gpu = semio_os_infinite_world_host::prepared_world_build_context();
     let mut draw = semio_ui_draw_contract::DrawList::default();
     let mut atlas = semio_ui_text::FontAtlas::builtin();
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
@@ -255,12 +262,14 @@ fn isolated_world_presentation_suppresses_chrome_and_input_but_retains_frame_wor
     assert_eq!(draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.overlay_ui_instances.len()).sum::<usize>(), 0, "noninteractive isolated worlds paint no gizmo or fallback clear quad");
     assert!(gpu.take_cursor_wake().expect("wake authority remains open").is_some(), "retained scene work still wakes an isolated world");
     state.scene.retired_draws = None;
+    semio_os_infinite_world_host::retire_world_build_context(gpu);
     retire_bridged_surface(&mut state);
 }
 
 /// 🎨️ LAW: the retained Basic-material appearance follows authored opacity and live theme tokens.
 #[test]
 fn reference_visual_state_uses_authored_opacity_and_live_theme() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🖼️reference-visual/🔣️.json")).expect("reference visual fixture");
     for row in fixture["stateCases"].as_array().unwrap() {
         if row["sourceProfileId"] != "world-image" || row["hidden"].as_bool().unwrap() {
@@ -304,6 +313,7 @@ fn reference_visual_state_uses_authored_opacity_and_live_theme() {
 /// 🎯️ Native picks and marquee retain exact analytic labels through the original scene bridge.
 #[test]
 fn world_native_analytic_component_picks_and_marquee_preserve_original_source() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🎯️analytic-component-picking/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let expected = row["expected"].as_str().unwrap();
@@ -378,6 +388,7 @@ fn world_native_analytic_component_picks_and_marquee_preserve_original_source() 
 /// 🖱️ Optimistic preview reads the original encoded target text and exact analytic source.
 #[test]
 fn world_component_contract_preview_reads_exact_target_text() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🎯️analytic-component-picking/🔣️.json")).unwrap();
     let row = &fixture["cases"][0];
     let mut mesh = fixture["mesh"].clone(); mesh["componentReferences"] = serde_json::json!({"face":[row["label"]]});
@@ -403,12 +414,14 @@ fn world_component_contract_preview_reads_exact_target_text() {
 /// 📍️ Native vertex picking skips surface samples and resolves the original analytic point label.
 #[test]
 fn world_native_analytic_vertex_pick_skips_surface_samples() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     assert_native_original_vertex_selection(false);
 }
 
 /// 🎨️ Authored face and corner attributes retain unindexed original vertices through expansion.
 #[test]
 fn world_native_analytic_vertex_pick_survives_authored_expansion() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     assert_native_original_vertex_selection(true);
 }
 
@@ -479,6 +492,7 @@ fn assert_native_original_vertex_selection(expanded: bool) {
 /// 🤝️ Equal component groups retain their original object ownership through every shared merge mode.
 #[test]
 fn world_component_selection_merge_preserves_remaining_object_projection() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let mut mesh = fixture["mesh"].clone();mesh["componentReferences"] = serde_json::json!({"face":[fixture["source"]["label"]]});
     let mut scene = scene_with_selection_and_domain("{}",Some(("geometry","object")));
@@ -504,12 +518,14 @@ fn world_component_selection_merge_preserves_remaining_object_projection() {
 /// 🧵️ The original Scene bridge retains pure analytic wires for vertex and edge selection.
 #[test]
 fn world_native_analytic_wire_preserves_original_vertex_and_edge_picking() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     assert_native_original_wire(false);
 }
 
 /// 🧵️ Edge-only source samples remain visible without inventing selectable topology vertices.
 #[test]
 fn world_native_analytic_wire_preserves_edge_only_scene() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     assert_native_original_wire(true);
 }
 
@@ -596,6 +612,7 @@ fn assert_native_original_wire(edge_only: bool) {
 /// 🧷️ A pure point paints through the original native primitive owner in ordinary object mode.
 #[test]
 fn world_native_analytic_point_paints_without_component_targeting() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture:serde_json::Value=serde_json::from_str(read_static("../../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
     let row=fixture["cases"].as_array().unwrap().iter().find(|row|row["kind"]=="point").unwrap();
     let point=serde_json::from_value::<[f32;3]>(row["points"][0].clone()).unwrap();
@@ -615,6 +632,7 @@ fn world_native_analytic_point_paints_without_component_targeting() {
 /// 🪡️ A wire is primary geometry even when surface outlines and component targeting are disabled.
 #[test]
 fn world_native_analytic_wire_paints_without_surface_outlines() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture:serde_json::Value=serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
     for show_edges in [true,false] {
         let mut scene=scene_with_selection("{}");let world=scene.world_3d.as_mut().unwrap();
@@ -630,6 +648,7 @@ fn world_native_analytic_wire_paints_without_surface_outlines() {
 /// 🖌️ Equal local face groups retain their original object when the selected overlay is scanned.
 #[test]
 fn world_face_selection_overlay_is_scoped_to_original_object() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let mut mesh = fixture["mesh"].clone();mesh["componentReferences"] = serde_json::json!({"face":[fixture["source"]["label"]]});
     let mut scene = scene_with_selection_and_domain("{}",Some(("geometry","object")));
@@ -661,6 +680,7 @@ fn world_face_selection_overlay_is_scoped_to_original_object() {
 /// 🔐️ The original analytic face scan consumes the fresh Guest source lane and refuses ambiguity.
 #[test]
 fn world_face_selection_overlay_validates_fresh_guest_source_targets() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let refusals: serde_json::Value = serde_json::from_str(read_static("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️analytic-component-target.json")).unwrap();
     let mut rows: Vec<serde_json::Value> = fixture["steps"].as_array().unwrap().iter().map(|step|serde_json::json!({"name":step["merge"],"targets":step["selected"].as_array().unwrap().iter().map(|index|fixture["targets"][index.as_u64().unwrap() as usize].clone()).collect::<Vec<_>>(),"labels":[fixture["source"]["label"]],"selected":step["selected"],"active":step["active"],"groups":step["groups"]})).collect();

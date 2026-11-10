@@ -43,4 +43,4 @@ pub mod retained_turn_wire;
 #[path = "../🧪️tests/💡️service-operation/🦀️.rs"]
 mod service_operation_tests;
 
-pub use retained_turn_wire::jobs::{ack_from_wit, budget_to_wit, cancel_from_wit, output_from_wit, start_from_wit, step_from_wit};
+pub use retained_turn_wire::jobs::{ack_from_wit, admission_budget, admission_charge, after_admission, budget_to_wit, refused_start_from_wit, start_after_admission, cancel_from_wit, output_from_wit, start_from_wit, step_from_wit};

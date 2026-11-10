@@ -734,10 +734,6 @@ impl ActionBus {
 #[path = "../🖥️platform/🦀️.rs"]
 pub mod platform;
 
-#[cfg(test)]
-#[global_allocator]
-static TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
-
 //#region 🎯️ToolJobBus
 #[cfg(test)]
 #[path = "🧹️wire-retirement/🧪️tests/🔬️standalone/🦀️.rs"]

@@ -1,5 +1,8 @@
 //! 🧪️ Explicit native target authority borrows actual authored segment storage.
-use super::*;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_os_store_one_item_publication::lifted_prepared_operation_wire::{whole_document_target,ArtifactOperationTargets,ArtifactOperationWire};
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 #[test]
 fn original_targets_preserve_authored_path_without_fallback(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
@@ -22,7 +25,7 @@ fn installed_original_history_digest_preserves_borrowed_staged_inverse(){
         let wire=ArtifactOperationWire::<bool>::canonical();let mut cursor=NativeEditDigest::default();
         let full=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};
         for denied in [RetainedCloneGrant{maximum_items:0,..full},RetainedCloneGrant{maximum_copy_bytes:0,..full},RetainedCloneGrant{maximum_depth:0,..full}]{let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||step(wire,&mut cursor,&edit,&inverse,denied));assert_eq!(turn.work,0);let p=turn.result.unwrap();assert_eq!(p,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(cursor.digest().is_none());}
-        let mut work=0u64;for _ in 0..100000{let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||step(wire,&mut cursor,&edit,&inverse,full));work+=turn.work;let p=turn.result.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert!(p.copied_bytes<=4096);assert_eq!(edit.inverse.len(),2);if cursor.digest().is_some(){break}}assert!(work>0);
+        let mut work=0u128;for _ in 0..100000{let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||step(wire,&mut cursor,&edit,&inverse,full));work+=turn.work;let p=turn.result.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert!(p.copied_bytes<=4096);assert_eq!(edit.inverse.len(),2);if cursor.digest().is_some(){break}}assert!(work>0);
         let expected=case["digest"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect::<Vec<_>>();assert_eq!(cursor.digest().unwrap().as_slice(),expected);
     }
 }

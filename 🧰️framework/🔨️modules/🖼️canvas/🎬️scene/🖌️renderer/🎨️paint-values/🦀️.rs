@@ -132,9 +132,8 @@ pub struct RasterImage {
 }
 
 impl semio_framework_value::retirement::RetireOwned for RasterImage {
-    type RetirementCursor=Box<dyn semio_framework_value::retirement::RetirementCursor>;
-    fn retirement_seed(self)->Self::RetirementCursor{use semio_framework_value::retirement::{sequence,deferred,arc_custody::SharedControlledRetirement};sequence(vec![Box::new(deferred(self.width)),Box::new(deferred(self.height)),Box::new(SharedControlledRetirement::lease(self.data))])}
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for,arc_custody::shared_retirement_birth_bytes};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.width),deferred_birth_bytes_for(&self.height),shared_retirement_birth_bytes::<Vec<u8>>()])}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(u32,u32,semio_framework_value::retirement::arc_custody::ArcLease<Vec<u8>>);
+    fn retirement_seed(self)->Self::RetirementCursor{let Self{width,height,data}=self;semio_framework_value::retirement_fields_seed!(width,height,semio_framework_value::retirement::arc_custody::ArcLease::new(data))}
     fn controlled_retirement_supported()->bool{true}
 }
 

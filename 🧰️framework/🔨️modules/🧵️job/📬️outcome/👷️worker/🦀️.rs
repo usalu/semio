@@ -51,7 +51,7 @@ impl OriginalWorkerPageReservation{
   if self.has_pending_return(){let before=cx.retained_progress();self.receive_pending(cx)?;let after=cx.retained_progress();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}})}
 
   if !self.closing{return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.closing=true;semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
-  if let Some(builder)=self.fault.as_mut(){if !builder.terminal_is_empty(){let demand=builder.retirement_demands()?;return close_original_retained_step(cx,demand,|grant|builder.close_step_granted(grant))}
+  if let Some(builder)=self.fault.as_mut(){if !builder.terminal_is_empty(){let demand=builder.retirement_demands()?;return close_original_retained_effect_step(cx,demand,|effect|builder.close_step(effect).result)}
    let demand=RetainedPayloadBuilder::boxed_release_demands();return close_original_retained_step(cx,demand,|_|{drop(self.fault.take());semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}})
   }
   if !self.origin.terminal_is_empty(){return self.origin.close_step(cx)}

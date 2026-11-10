@@ -168,7 +168,7 @@ pub fn forms_io() -> semio_plugin::AppIo {
         artifact_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         ports: vec![semio_plugin::MediaPortSpec {
             id: "dictionary:out".into(),
-            label: "Dictionary".into(),
+            label: LocalizedLabel::native("Dictionary", "Wörterbuch"),
             direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: Some("form.dictionary".into()),

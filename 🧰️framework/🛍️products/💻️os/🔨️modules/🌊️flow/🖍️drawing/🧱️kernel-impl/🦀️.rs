@@ -170,9 +170,14 @@ fn boolean_path_operands(inputs: &[&[semio_framework_2d::PathSegment]], operatio
     });
     let operands = inputs.iter().map(|path| PathBooleanOperand { segments: path.to_vec(), transform: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], tolerance: 0.01, fill_rule: BooleanFillRule::Nonzero }).collect();
     let mut job = PathBooleanJob::new(PathBooleanInput { operation, operands, epsilon: 1e-8f64.max(magnitude * f64::EPSILON * 32.0), max_edges: 65536, max_parameters: 262144, max_atomic_edges: 65536, max_segments: 65536, max_work: 100000000 });
+    let mut wallet = semio_framework_value::AuthoringWallet::new(STOCK, 1 << 48);
     let outcome = (|| loop {
-        let mut allocation = None;
-        let progress = job.advance(4096, &mut RetainedWorkLedger::new(STOCK), &mut allocation).map_err(|error| DrawingError::Operation(error.to_string()))?;
+        let advanced = wallet.run_settled(STOCK, 1 << 24, |effect| {
+            let result = job.advance(4096, &mut RetainedWorkLedger::new(STOCK), effect);
+            semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work() })
+        });
+        let advanced = advanced.map_err(|error| DrawingError::Operation(error.to_string()))?.ok_or_else(|| DrawingError::Operation("Boolean work was not admitted".into()))?.0;
+        let progress = advanced.result.map_err(|error| DrawingError::Operation(error.to_string()))?;
         if progress.done {
             return job.result().map(<[PathSegment]>::to_vec).map_err(|error| DrawingError::Operation(error.to_string()));
         }
@@ -184,7 +189,6 @@ fn boolean_path_operands(inputs: &[&[semio_framework_2d::PathSegment]], operatio
     fn refused<E>(_: E) -> DrawingError {
         DrawingError::Operation("Boolean retirement refused its physical grant".into())
     }
-    let mut wallet = semio_framework_value::AuthoringWallet::new(STOCK, 1 << 48);
     let drained = (|| -> Result<(), DrawingError> {
         while !retired.terminal_is_empty() {
             let mut body = 0;
@@ -201,7 +205,7 @@ fn boolean_path_operands(inputs: &[&[semio_framework_2d::PathSegment]], operatio
                 return Err(DrawingError::Operation("Boolean retirement quote did not settle".into()));
             };
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let step = wallet.run_settled(grant, 1 << 24, |effect| retired.close_step(effect)).map_err(refused)?.ok_or_else(|| DrawingError::Operation("Boolean retirement work was not admitted".into()))?.0;
+            let step = wallet.run_settled(grant, 1 << 24, |effect| retired.close_step(body, effect)).map_err(refused)?.ok_or_else(|| DrawingError::Operation("Boolean retirement work was not admitted".into()))?.0;
             let work = step.work;
             let step = step.result.map_err(refused)?;
             wallet.post(step.progress()).map_err(refused)?;

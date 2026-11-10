@@ -59,14 +59,14 @@ macro_rules! __semio_actor_exports {
             async fn cancel_job(job: u64, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::jobs::JobCancelCall {
                 $crate::reactor::original_actor_context::exports::cancel_job_wit(job, budget)
             }
-            async fn publish_actor_failure(job: u64, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::jobs::JobStepCall {
-                $crate::reactor::original_actor_context::exports::publish_actor_failure_wit(job, budget)
+            async fn publish_actor_failure(reference: $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureCallReference, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorFailurePublishCall {
+                $crate::reactor::original_actor_context::exports::publish_actor_failure_wit(reference, budget)
             }
-            async fn read_actor_failure(job: u64, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::jobs::JobOutputCall {
-                $crate::reactor::original_actor_context::exports::read_actor_failure_wit(job, budget)
+            async fn read_actor_failure(reference: $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureCallReference, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureReadCall {
+                $crate::reactor::original_actor_context::exports::read_actor_failure_wit(reference, budget)
             }
-            async fn acknowledge_actor_failure(job: u64, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::jobs::JobOutputAckCall {
-                $crate::reactor::original_actor_context::exports::acknowledge_actor_failure_wit(job, budget)
+            async fn acknowledge_actor_failure(reference: $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureCallReference, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureAckCall {
+                $crate::reactor::original_actor_context::exports::acknowledge_actor_failure_wit(reference, budget)
             }
             async fn close_jobs(budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::jobs::JobCancelCall {
                 $ensure();
@@ -188,7 +188,7 @@ macro_rules! __semio_actor_exports {
                 let ActorInputWire::SqliteClose{input} = wire::codec_input(&budget)? else { return Err(wire::wrong_codec_code()) };
                 let ticket=input.ticket;
                 let grant=input.native.native().map_err(|error| $crate::operation_authority::refusal_code(error.kind))?;
-                $crate::operation_authority::snapshot_close(ticket,grant).map(|(retirement,progress,refusal)|$crate::component::wasip2::exports::semio::framework::codec::SnapshotCloseReceipt {
+                $crate::operation_authority::snapshot_close(ticket,grant,$crate::sqlite_wire::SnapshotCloseBudget{fuel:budget.fuel,deadline_us:budget.deadline_us,clock_binding:budget.input.work.clock_binding}).map(|(retirement,progress,refusal)|$crate::component::wasip2::exports::semio::framework::codec::SnapshotCloseReceipt {
                     retirement:$crate::component::wasip2::sqlite_retirement(retirement),
                     progress:$crate::component::wasip2::semio::framework::types::RetainedCloneProgress{copied_items:progress.copied_items as u64,copied_bytes:progress.copied_bytes as u64,retained_capacity_bytes:progress.retained_capacity_bytes as u64,released_bytes:progress.released_bytes as u64},refusal,
                 }).map_err(|error| $crate::operation_authority::refusal_code(error.kind))
@@ -414,7 +414,8 @@ macro_rules! __semio_owned_core_exports {
             let input=unsafe{$crate::owned_abi::take_json::<$crate::sqlite_wire::SnapshotCloseInput>(pointer,length)};
             let input=match input{Ok(input)=>input,Err(error)=>return $crate::owned_abi::return_json(&Err::<$crate::sqlite_wire::SnapshotCloseReceipt,_>(error))};
             let grant=match input.native.native(){Ok(grant)=>grant,Err(error)=>return $crate::operation_authority::owned_result::encode_refusal(error.kind)};
-            match $crate::operation_authority::snapshot_close(input.ticket,grant){Ok((retirement,progress,refusal))=>$crate::owned_abi::return_json(&Ok::<_,Vec<u8>>($crate::sqlite_wire::SnapshotCloseReceipt{retirement,progress:progress.into(),refusal})),Err(error)=>$crate::operation_authority::owned_result::encode_refusal(error.kind)}
+            let Some(budget)=input.budget else{return $crate::operation_authority::owned_result::encode_refusal($crate::operation_authority::refusal(4).kind)};
+            match $crate::operation_authority::snapshot_close(input.ticket,grant,budget){Ok((retirement,progress,refusal))=>$crate::owned_abi::return_json(&Ok::<_,Vec<u8>>($crate::sqlite_wire::SnapshotCloseReceipt{retirement,progress:progress.into(),refusal})),Err(error)=>$crate::operation_authority::owned_result::encode_refusal(error.kind)}
         }
         #[cfg(all(target_arch="wasm32",target_env="p2"))]
         #[unsafe(no_mangle)]

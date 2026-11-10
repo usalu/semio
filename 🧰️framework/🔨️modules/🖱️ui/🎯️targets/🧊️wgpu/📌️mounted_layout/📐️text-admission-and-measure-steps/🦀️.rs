@@ -82,9 +82,13 @@ impl MountedLayoutJob {
             Ok(ui_contract::PagedListReservationOutcome::Denied) => return Ok(false),
             Err(_) => return Err(fault),
         };
-        let step = semio_framework_value::RetainedWorkOutcome { result: Ok::<_, semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(progress)), work: performed };
-        semio_framework_job::receive_original_retained_work(cx, step).map_err(|_| fault)?;
+        Self::receive_funding(cx, progress, performed, fault)?;
         Ok(false)
+    }
+
+    fn receive_funding(cx: &mut semio_framework_job::StepContext<'_>, progress: semio_framework_value::retained_clone::RetainedCloneProgress, performed: u128, fault: MountedLayoutFault) -> Result<(), MountedLayoutFault> {
+        let step = semio_framework_value::RetainedWorkOutcome { result: Ok::<_, semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(progress)), work: performed };
+        semio_framework_job::receive_original_retained_work(cx, step).map(|_| ()).map_err(|_| fault)
     }
 
     /// 🔎️ What the next text admission turn pushes: the same decision `admit_text_one` takes, read without moving.
@@ -125,10 +129,13 @@ impl MountedLayoutJob {
                 if !Self::fund_list(self.walk.as_deref_mut().expect("live layout list owner"), cx, MountedLayoutFault::DepthCredits)? {
                     return Ok(false);
                 }
-                match self.flex.fund_next_node(cx.retained_grant()).map_err(|_| MountedLayoutFault::NodeCredits)? {
+                let grant = cx.retained_grant();
+                let flex = &mut self.flex;
+                let Some((turn, performed)) = cx.with_original_effect(grant, |_, effect| flex.fund_next_node(effect)).map_err(|_| MountedLayoutFault::NodeCredits)? else { return Ok(false) };
+                match turn.result.map_err(|_| MountedLayoutFault::NodeCredits)? {
                     NodeFunding::Ready => Ok(true),
                     NodeFunding::Funded(progress) => {
-                        cx.consume_retained(progress).map_err(|_| MountedLayoutFault::NodeCredits)?;
+                        Self::receive_funding(cx, progress, performed, MountedLayoutFault::NodeCredits)?;
                         Ok(false)
                     }
                     NodeFunding::Denied => Ok(false),
@@ -163,10 +170,12 @@ impl MountedLayoutJob {
                 if nodes.get(index).is_none() {
                     return Ok(true);
                 }
-                match flex.fund_scratch(index, Siblings::of(nodes, index), cx.retained_grant()).map_err(|_| MountedLayoutFault::Solver)? {
+                let grant = cx.retained_grant();
+                let Some((turn, performed)) = cx.with_original_effect(grant, |_, effect| flex.fund_scratch(index, Siblings::of(nodes, index), effect)).map_err(|_| MountedLayoutFault::Solver)? else { return Ok(false) };
+                match turn.result.map_err(|_| MountedLayoutFault::Solver)? {
                     NodeFunding::Ready => Ok(true),
                     NodeFunding::Funded(progress) => {
-                        cx.consume_retained(progress).map_err(|_| MountedLayoutFault::Solver)?;
+                        Self::receive_funding(cx, progress, performed, MountedLayoutFault::Solver)?;
                         Ok(false)
                     }
                     NodeFunding::Denied => Ok(false),

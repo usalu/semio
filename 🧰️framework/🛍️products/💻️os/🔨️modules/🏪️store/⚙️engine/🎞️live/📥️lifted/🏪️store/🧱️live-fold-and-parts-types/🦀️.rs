@@ -17,7 +17,7 @@ use super::*;
 /// ⚡️ The incrementally maintained fold of one store: the live snapshot, the tail undo cache, the supersessions, the prefix ring and the fold frontier.
 pub struct StoreLive<P, Mutation>
 where
-    P: ToValue,
+    P: ToValue + Send + Sync + 'static,
     Mutation: ToValue + super::Mutation<P>,
 {
     /// ⚡️ The live, incrementally-maintained RAW fold of `initial_snapshot` over every
@@ -64,7 +64,7 @@ where
 /// 🐢️ The deferred reprojection of one store: the remote and local replay budgets, the pending reprojection and the pending command report.
 pub struct StoreReplay<P, Mutation>
 where
-    P: ToValue,
+    P: ToValue + Send + Sync + 'static,
     Mutation: ToValue + super::Mutation<P>,
 {
     /// 🐢️ How far one turn of a deferred remote reprojection replays; `None` replays inside the ingest.
@@ -97,7 +97,7 @@ where
 /// 🧩️ The six components of one store borrowed at once: what staging code below the composer takes instead of `&mut ArtifactStore`.
 pub struct StoreParts<'a, P, Mutation>
 where
-    P: ToValue,
+    P: ToValue + Send + Sync + 'static,
     Mutation: ToValue + super::Mutation<P>,
 {
     pub log: &'a mut StoreLog<P, Mutation>,
@@ -111,7 +111,7 @@ where
 /// 🧩️ The shared counterpart of [`StoreParts`] for code that only reads the store.
 pub struct StorePartsRef<'a, P, Mutation>
 where
-    P: ToValue,
+    P: ToValue + Send + Sync + 'static,
     Mutation: ToValue + super::Mutation<P>,
 {
     pub log: &'a StoreLog<P, Mutation>,
@@ -124,7 +124,7 @@ where
 
 impl<'a, P, Mutation> StoreParts<'a, P, Mutation>
 where
-    P: ToValue,
+    P: ToValue + Send + Sync + 'static,
     Mutation: ToValue + super::Mutation<P>,
 {
     /// 🧩️ Reborrows the components for read-only helpers.

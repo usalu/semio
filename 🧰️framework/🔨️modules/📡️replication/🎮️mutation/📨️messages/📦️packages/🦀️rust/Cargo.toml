@@ -31,7 +31,7 @@ semio-framework-value-persistent.workspace = true
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-replication-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../../🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 serde_json = "1.0.140"

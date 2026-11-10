@@ -9,6 +9,7 @@ unsafe impl<T:Sync> Sync for OriginalReadBirth<T>{}
 impl<T> OriginalReadBirth<T>{
  fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.matches_effect(effect){return Err(fault("original read birth changed its actual Source or Work"))}Ok(())}
  pub(super) fn matches_factory(&self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>)->bool{!self.closing&&self.factory.as_ref().is_some_and(|actual|Arc::ptr_eq(actual,factory))}
+ pub(super) fn issuer(&self)->Option<&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>{self.factory.as_ref()}
  pub(super) fn terminal_is_empty(&self)->bool{self.factory.is_none()&&self.backing.is_none()}
  pub(super) fn return_demand(&self)->RetirementDemand{if !self.closing{RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}}else if self.factory.is_some(){RetirementDemand{copy_bytes:2*size_of::<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>(),depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:size_of::<Option<NonNull<u8>>>()+size_of::<Option<Self>>(),release_bytes:usize::from(self.backing.is_some())*self.layout.size(),depth:1,..Default::default()}}}
  pub(super) fn return_into<'r>(&mut self,output:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>,effect:&mut RetainedAllocationEffect<'_>,reply:ReadReply<'r>)->Result<ReadComplete<'r>,ValueError>{

@@ -2,6 +2,8 @@
 use super::{FieldProjectionSource,FieldProjectionView as V,projection_path_error};
 use semio_framework_value::{ValueError,RetainedCloneProgress,Number};
 use semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary;
+/// 🔭️ A vaulted allocation refusal stays with its issuer and projects as null.
+fn owned(refusal:&Option<semio_framework_value_native_owned::NativeAllocationRefusal>)->Option<&ValueError>{match refusal{Some(semio_framework_value_native_owned::NativeAllocationRefusal::Owned(error))=>Some(error),_=>None}}
 #[derive(Clone,Copy)]
 enum Node<'a>{Receiving(&'a OriginalReceivingPrimary),Allocation(&'a semio_framework_value_native_owned::NativeAllocationFailure),AllocationProgress(semio_framework_value_native_owned::NativeAllocationProgress),Null,Value(&'a ValueError),Progress(RetainedCloneProgress),Text(&'a str),UInt(usize)}
 impl<'a> Node<'a>{
@@ -14,7 +16,7 @@ impl<'a> Node<'a>{
  }}
  fn child(self,index:usize)->Result<Self,ValueError>{Ok(match self{
   Self::Receiving(value)=>match self.key(index)?{"primary"=>Self::Value(value.primary.as_ref().unwrap()),"quoteRefusal"=>Self::Value(value.quote_refusal.as_ref().unwrap()),"allocationRefusal"=>Self::Value(value.allocation_refusal.as_ref().unwrap()),"allocationFailure"=>Self::Allocation(value.allocation_failure.as_ref().unwrap()),"receiptRefusal"=>Self::Value(value.receipt_refusal.as_ref().unwrap()),"receiptCompletion"=>Self::Value(value.receipt_completion().unwrap()),"retainedProgress"=>Self::Progress(value.progress),_=>return Err(projection_path_error())},
-  Self::Allocation(value)=>{if index==12{Self::AllocationProgress(value.progress)}else{let cause=[&value.primary,&value.admission,&value.forwarded_admission,&value.scoped_admission,&value.forwarded_quote,&value.scoped_quote,&value.forwarded_post,&value.scoped_post,&value.forwarded_cancel,&value.scoped_cancel,&value.receipt,&value.extent].get(index).copied().ok_or_else(projection_path_error)?;cause.as_ref().map_or(Self::Null,Self::Value)}},
+  Self::Allocation(value)=>{if index==12{Self::AllocationProgress(value.progress)}else{let cause=match index{0=>value.primary.as_ref(),1=>value.admission.as_ref(),2=>owned(&value.forwarded_admission),3=>owned(&value.scoped_admission),4=>owned(&value.forwarded_quote),5=>owned(&value.scoped_quote),6=>owned(&value.forwarded_post),7=>owned(&value.scoped_post),8=>owned(&value.forwarded_cancel),9=>owned(&value.scoped_cancel),10=>value.receipt.as_ref(),11=>value.extent.as_ref(),_=>return Err(projection_path_error())};cause.map_or(Self::Null,Self::Value)}},
   Self::AllocationProgress(value)=>match index{0=>Self::UInt(value.admitted_bytes),1=>value.actual_capacity_bytes.map_or(Self::Null,Self::UInt),2=>value.prior_admitted_bytes.map_or(Self::Null,Self::UInt),3=>value.requested_bytes.map_or(Self::Null,Self::UInt),4=>value.maximum_bytes.map_or(Self::Null,Self::UInt),_=>return Err(projection_path_error())},
   Self::Value(value)=>match index{0=>Self::Text(value.kind.as_str()),1=>Self::Text(&value.message),2=>Self::Progress(value.retained_progress()),_=>return Err(projection_path_error())},
   Self::Progress(value)=>Self::UInt(*[value.copied_items,value.copied_bytes,value.retained_capacity_bytes,value.released_bytes].get(index).ok_or_else(projection_path_error)?),_=>return Err(projection_path_error())

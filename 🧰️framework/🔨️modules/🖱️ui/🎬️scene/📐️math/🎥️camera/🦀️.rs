@@ -635,10 +635,11 @@ pub fn ray_segment_closest(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3) -> Option<
     let along_segment = offset.dot_m(ab);
     let directions = dir.dot_m(ab);
     let mut best: Option<(f32, f32, f32)> = None;
+    let tie = 1e-13 * len_sq.max(offset.dot_m(offset));
     let mut consider = |ray: f32, segment: f32| {
         let gap = offset.add_m(dir.scale_m(ray)).sub_m(ab.scale_m(segment));
         let squared = gap.dot_m(gap);
-        if ray.is_finite() && segment.is_finite() && squared.is_finite() && best.is_none_or(|previous| squared < previous.0 || (squared == previous.0 && ray < previous.1)) {
+        if ray.is_finite() && segment.is_finite() && squared.is_finite() && best.is_none_or(|previous| squared + tie < previous.0 || (squared <= previous.0 + tie && ray < previous.1)) {
             best = Some((squared, ray, segment));
         }
     };

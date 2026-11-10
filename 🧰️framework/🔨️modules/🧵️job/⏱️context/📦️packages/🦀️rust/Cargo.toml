@@ -122,3 +122,8 @@ path = "../../🧪️tests/🅿️park-state/🦀️.rs"
 [[test]]
 name = "original_source_resident_birth"
 path = "../../🎟️source/🏭️admission/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-native-progress"
+required-features = ["testkit"]
+path = "../../🧪️tests/📊️native-progress/🦀️.rs"

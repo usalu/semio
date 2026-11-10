@@ -419,7 +419,7 @@ pub mod playback {
             artifact_media_type: MEDIA_TYPE,
             ports: vec![MediaPortSpec {
                 id: PORT_ID.into(),
-                label: "Playback".into(),
+                label: semio_plugin::LocalizedLabel::native("Playback", "Wiedergabe"),
                 direction: MediaPortDirection::Out,
                 media_type: MEDIA_TYPE,
                 kind_id: Some("s.stdio.mp3".into()),

@@ -25,6 +25,7 @@ use semio_framework_job_payload::RetainedJobPayload;
 
 use semio_s_fem_payload_turns::{NumericalPayloadSlot, numerical_begin_page, numerical_commit_page, numerical_finish_writer, numerical_open_writer, numerical_post, numerical_writer_close, numerical_writer_demand};
 use semio_framework_value::ValueError;
+use semio_framework_value_testing_admission::{EffectBank, Wallet, bank_run};
 use semio_s_fem_payload_turns::NumericalStep;
 
 use semio_framework_job::RevisionId;
@@ -105,8 +106,27 @@ pub fn close_job(job: &mut impl InteractiveJob) {
 pub fn close_payload(mut payload: RetainedJobPayload) {
     while !payload.terminal_is_empty() {
         let demand = payload.retirement_demands().expect("a locally owned payload quotes its close demand");
-        payload.close_step(close_grant(demand)).result.expect("a locally owned payload close has no external owner");
+        payload_close(&mut payload, demand);
     }
+}
+
+thread_local! { static BANK: std::cell::RefCell<EffectBank> = std::cell::RefCell::new(EffectBank::new(Wallet::new(RetainedCloneGrant { maximum_items: 1 << 30, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 1 << 20 }, 1 << 40))); }
+
+/// 🎟️ Runs one body inside the genuine original effect of the shared effect bank, funded with exactly `grant`.
+pub fn granted<R>(grant: RetainedCloneGrant, run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> R {
+    BANK.with(|bank| {
+        let mut output = None;
+        bank_run(&mut bank.borrow_mut(), grant, 1 << 20, |effect| {
+            output = Some(run(&mut *effect));
+            semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: Ok::<(), ValueError>(()), work: effect.performed_work() })
+        });
+        output.expect("the shared effect bank ran its original action")
+    })
+}
+
+/// 🎟️ Closes one payload frontier inside the shared bank's original effect that grants exactly its quote.
+fn payload_close(payload: &mut RetainedJobPayload, demand: RetirementDemand) -> semio_framework_job::RetainedCloneStep {
+    granted(close_grant(demand), |effect| payload.close_step(effect).result).expect("a locally owned payload close has no external owner")
 }
 
 /// 🪪️ Runs one body inside a fresh single-fuel step context under the shared test wallet.
@@ -146,7 +166,7 @@ pub fn close_writer(writer: &mut NumericalPayloadSlot) {
     let operation = test_operation(0);
     while writer.is_some() {
         let grant = match numerical_writer_demand(writer) { Some(demand) => close_grant(demand.expect("a locally owned builder quotes its close demand")), None => break };
-        if with_context(operation, |_| numerical_writer_close(writer, grant)).is_none() { break; }
+        if granted(grant, |effect| numerical_writer_close(writer, effect)).is_none() { break; }
     }
 }
 
@@ -156,7 +176,7 @@ pub fn close_payload_page_bytes(mut payload: RetainedJobPayload) -> usize {
     while !payload.terminal_is_empty() {
         let demand = payload.retirement_demands().expect("a locally owned payload quotes its close demand");
         let pages = payload.page_count();
-        let step = payload.close_step(close_grant(demand)).result.expect("a locally owned payload close has no external owner");
+        let step = payload_close(&mut payload, demand);
         if payload.page_count() < pages {
             released += step.progress().released_bytes;
         }
@@ -262,8 +282,8 @@ impl OriginalNumericalFixture{
         }
         self.finish_writer(writer)
     }
-    pub fn close_payload(&mut self,payload:&mut RetainedJobPayload){while !payload.terminal_is_empty(){let demand=payload.retirement_demands().expect("original payload close quote");self.turn(close_grant(demand),1,u64::MAX,|cx|semio_framework_job::close_original_retained_step(cx,demand,|grant|payload.close_step(grant))).expect("same original payload close");}}
-    pub fn close_writer(&mut self,writer:&mut NumericalPayloadSlot){while let Some(demand)=numerical_writer_demand(writer){let demand=demand.expect("original writer close quote");self.turn(close_grant(demand),1,u64::MAX,|cx|{let grant=cx.retained_grant();Ok(numerical_writer_close(writer,grant))}).expect("same original writer close");}}
+    pub fn close_payload(&mut self,payload:&mut RetainedJobPayload){while !payload.terminal_is_empty(){let demand=payload.retirement_demands().expect("original payload close quote");self.turn(close_grant(demand),1,u64::MAX,|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_framework_value::RetainedWorkPoll::Complete(payload.close_step(effect)))).expect("same original payload close");}}
+    pub fn close_writer(&mut self,writer:&mut NumericalPayloadSlot){while let Some(demand)=numerical_writer_demand(writer){let demand=demand.expect("original writer close quote");self.turn(close_grant(demand),1,u64::MAX,|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:match numerical_writer_close(writer,effect){Some(Ok(step))=>Ok(semio_framework_job::RetainedCloneStep::Progress(step.progress())),Some(Err(error))=>Err(error),None=>Ok(semio_framework_job::RetainedCloneStep::Complete(Default::default()))},work:effect.performed_work()}))).expect("same original writer close");}}
     pub fn finish(mut self){while !self.decoder.terminal_is_empty(){let grant=self.caller.remaining_grant();self.caller.turn(grant,|cx|self.decoder.close_on_source(cx)).expect("original numerical decoder return");}self.caller.retire(Self::STOCK);}
 }
 

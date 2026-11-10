@@ -473,7 +473,7 @@ impl OriginalReplayDiagnostics {
         } else if let Some(row) = self.row.take() {
             self.row_close = Some(ArtifactStoreMessageLedgerRetirement::new(row.edit_id, row.messages));
         } else if let Some(ledger) = self.retiring.as_mut() {
-            p = match ledger.close_step(&mut effect.nested(grant)) { semio_framework_value::RetainedWorkPoll::Pending { .. } => Default::default(), semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?.progress() };
+            p = match ledger.close_step(grant.maximum_copy_bytes, &mut effect.nested(grant)) { semio_framework_value::RetainedWorkPoll::Pending { .. } => Default::default(), semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?.progress() };
             if ledger.terminal_is_empty() {
                 self.retiring = None;
             }

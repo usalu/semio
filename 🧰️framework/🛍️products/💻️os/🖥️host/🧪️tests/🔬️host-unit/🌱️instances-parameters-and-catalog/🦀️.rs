@@ -6,7 +6,7 @@
         seed_draw_plugin();
         let mut space_store = test_space_store();
         let mut store = test_workflow_store();
-        store.add_workflow_node("draw", "draw", None, 40.0, 40.0, &mut space_store, &mut identity).expect("spawn");
+        store.add_workflow_node("draw", "draw", "Draw", 40.0, 40.0, &mut space_store, &mut identity).expect("spawn");
         assert_eq!(store.snapshot().expect("projection").graph.nodes.len(), 1);
         assert!(space_store.snapshot().expect("projection").programs.contains(&"draw".to_string()), "spawning a node must install its plugin into the owning space");
         store.dispatch_text("undo", &mut identity).expect("undo");
@@ -118,8 +118,8 @@
         seed_sink_plugin();
         let mut space_store_a = test_space_store();
         let mut store_a = test_workflow_store();
-        let node_a_id = store_a.add_workflow_node("draw", "draw", None, 0.0, 0.0, &mut space_store_a, &mut identity).expect("spawn a");
-        let node_b_id = store_a.add_workflow_node("sink", "sink", None, 200.0, 0.0, &mut space_store_a, &mut identity).expect("spawn b");
+        let node_a_id = store_a.add_workflow_node("draw", "draw", "Draw", 0.0, 0.0, &mut space_store_a, &mut identity).expect("spawn a");
+        let node_b_id = store_a.add_workflow_node("sink", "sink", "Sink", 200.0, 0.0, &mut space_store_a, &mut identity).expect("spawn b");
         let mut store_b = OsWorkflowStore::new(store_a.document(), protocol::ActorId("workflow-peer-b".into())).expect("valid replicated workflow store fixture");
 
         let (backbone_a, backbone_b) = resolve_kernel_future(MemoryBackbone::pair("mem://reconcile-race", "mem://reconcile-race"));

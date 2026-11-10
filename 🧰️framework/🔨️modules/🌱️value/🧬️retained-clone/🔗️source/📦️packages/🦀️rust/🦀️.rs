@@ -128,7 +128,8 @@ pub struct RetainedCloneBorrowAuthority<A:RetireOwned+Sync>{source:RetainedClone
 impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthority<A>{
  pub fn constructor_capacity_bytes()->usize{RetainedCloneSource::<A>::owned_constructor_capacity_bytes::<()>()}
  pub fn constructor_copy_bytes()->usize{RetainedCloneSource::<A>::constructor_copy_bytes()}
- pub fn admission(authority:A)->RetainedCloneBorrowAuthorityAdmission<A>{RetainedCloneBorrowAuthorityAdmission{source:RetainedCloneSource::admission_owned(authority,())}}
+ /// 🪪️ Wraps one source whose original projection admission already finished as the authority of its own owner.
+ pub fn from_admitted_source(source:RetainedCloneSource<A>)->Self{Self{source}}
  pub fn borrow<T:?Sized,F>(&self,discriminator:usize,project:F)->RetainedCloneRef<'_,T>where F:for<'source>FnOnce(&'source A)->&'source T{self.source.borrow().project(discriminator,project)}
  /// 🧾️ Borrows the one actual source close quote with every independent physical currency.
  /// ⛽️ Quotes the same original source owner's selected computational work.
@@ -181,26 +182,6 @@ mod actual_source_work_tests;
 #[path="../../../♻️close/🦀️.rs"]
 mod clone_close;
 pub use clone_close::{RetainedCloneClose,RetainedEmptyOwner,RetainedCloseSelection,close_retained_binding};
-
-/// 🎟️ A borrowed authority's staged birth preserves the same original source admission.
-pub struct RetainedCloneBorrowAuthorityAdmission<A:RetireOwned+Sync>{source:RetainedCloneSourceAdmission<A,A>}
-impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthorityAdmission<A>{
- pub fn next_demand(&self)->Result<RetirementDemand,ValueError>{self.source.next_demand()}
- /// ⛽️ Borrows the actual current source handback work quote.
- pub fn return_work_demand(&self)->Result<u64,ValueError>{self.source.return_work_demand()}
- pub fn next_return_demand(&self)->Result<RetirementDemand,ValueError>{self.source.next_return_demand()}
- /// 🪙️ Writes actual allocator extent into the caller's retained marker before publishing the outcome.
- pub fn advance_work_demand(&self)->Result<u64,ValueError>{self.source.advance_work_demand()}
- pub fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.source.advance(effect)}
- pub fn take_output_demand(&self)->Result<RetirementDemand,ValueError>{let mut demand=self.source.take_output_demand();if self.source.take_output_work_demand()==0{return Ok(demand)}demand.copy_bytes=demand.copy_bytes.checked_add(std::mem::size_of::<Option<RetainedCloneBorrowAuthority<A>>>()).ok_or_else(||ValueError::invariant("borrow authority publication copy overflow"))?;Ok(demand)}
- pub fn take_output_work_demand(&self)->u64{self.source.take_output_work_demand()}
- pub fn take_output(&mut self,output:&mut Option<RetainedCloneBorrowAuthority<A>>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
-  if output.is_some(){return RetainedWorkOutcome{result:Err(ValueError::invariant("original borrow authority output is occupied")),work:0}}let demand=match self.take_output_demand(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if !retained_clone::retained_clone_grant_admits(effect.grant(),demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}let mut source=None;let turn=self.source.take_output(&mut source,effect);if let Some(source)=source{*output=Some(RetainedCloneBorrowAuthority{source})}RetainedWorkOutcome{result:turn.result.map(|step|if output.is_some(){let mut progress=step.progress();progress.copied_bytes=demand.copy_bytes;RetainedCloneStep::Complete(progress)}else{step}),work:turn.work}
- }
-
- pub fn return_inputs(&mut self,output:&mut Option<(A,())>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.source.return_inputs(output,effect)}
- pub fn terminal_is_empty(&self)->bool{self.source.terminal_is_empty()}
-}
 
 #[cfg(test)]
 #[path="../../🧪️law-bank/🦀️.rs"]

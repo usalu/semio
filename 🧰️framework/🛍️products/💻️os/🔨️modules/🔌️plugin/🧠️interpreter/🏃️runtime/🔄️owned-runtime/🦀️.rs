@@ -105,7 +105,7 @@ impl OwnedRuntime {
     fn actor_context_call(&self,state:&mut OwnedGuestInstance,operation:OwnedOperation,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<original_actor_context::OriginalActorFixedCall,TurnFault>{
         if state.pending.is_none(){let encoded=identity.encode(|control|operation::input::encode_json_input(&(input,budget.retained_policy),control)).map_err(identity_turn_fault)?;identity.encode(|control|control.charge(encoded.len())).map_err(identity_turn_fault)?;begin_owned_operation(state,operation,Some(encoded))?;}
         let invocation=resume_owned_operation_observed(state,operation,budget.fuel,budget.deadline_us,OwnedDeadline::Original,|_,_|{},None)?;
-        original_actor_context::OriginalActorFixedReceipt::read(&invocation.output).map_err(identity_turn_fault)
+        original_actor_context::OriginalActorFixedReceipt::read(&invocation.output).map(|(call,_)|call).map_err(identity_turn_fault)
     }
 
     /// 🎬️ Runs one actor turn over `events`, or resumes the turn `state` has in flight when `events` is empty.
@@ -268,7 +268,7 @@ impl OwnedRuntime {
             Err(failure) if !failure.submitted=>OriginalGuestJobCall::unsubmitted(execution,source,failure.fault),
             Err(failure)=>OriginalGuestJobCall{original:Err(failure.fault),execution:receipt(failure.spent),returned_unsubmitted_source:None},
             Ok((bytes,spent))=>{
-                let original=OriginalOwnedJobFixedReceipt::read(&bytes).map_err(identity_turn_fault).and_then(|call|if call.input==budget.input{reply(call,source)}else{Err(identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"owned job receipt differs from its original crossing")))});
+                let original=OriginalOwnedJobFixedReceipt::read(&bytes).map(|(call,_)|call).map_err(identity_turn_fault).and_then(|call|if call.input==budget.input{reply(call,source)}else{Err(identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"owned job receipt differs from its original crossing")))});
                 OriginalGuestJobCall{original,execution:receipt(spent),returned_unsubmitted_source:None}
             }
         }
@@ -311,7 +311,7 @@ impl OwnedRuntime {
         let acknowledged=self.drive_job(state,OwnedOperation::AcknowledgeJobOutputChunk,None,arguments,execution.fuel.saturating_sub(spent_so_far),execution.deadline_us);
         let (receipt,spent_ack)=match acknowledged{Ok(done)=>done,Err(failure)=>return OriginalGuestJobCall{original:Err(failure.fault),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel:Some(spent_so_far.saturating_add(failure.spent).min(execution.fuel)),submitted:true},returned_unsubmitted_source:None}};
         let total=spent_so_far.saturating_add(spent_ack).min(execution.fuel);
-        let original=OriginalOwnedJobFixedReceipt::read(&receipt).map_err(identity_turn_fault).and_then(|ack|match ack.status{
+        let original=OriginalOwnedJobFixedReceipt::read(&receipt).map(|(ack,_)|ack).map_err(identity_turn_fault).and_then(|ack|match ack.status{
             OriginalOwnedJobStatus::Acknowledge{acknowledged:true,..} if ack.refusal.is_none()&&ack.input==budget.input=>page.spent.checked_add(ack.spent).map(|spent|finish(Some(bytes),spent,page.work_units_spent.saturating_add(ack.work_units_spent))).map_err(identity_turn_fault),
             _=>Err(job_status_fault()),
         });

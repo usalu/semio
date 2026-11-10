@@ -53,7 +53,12 @@ impl<T:OriginalDomainFailure> DomainOwner for DomainFrame<T>{
  fn into_retirement(self:Box<Self>)->Box<dyn RetirementCursor>{self}
 }
 impl<T:OriginalDomainFailure> RetirementCursor for DomainFrame<T>{
- fn close_step(&mut self,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>)->RetirementStep{RetirementCursor::close_step(&mut self.owner,effect)}
+ fn close_into<'r>(&mut self,body:usize,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>,reply:semio_framework_value_retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>)->Result<semio_framework_value_retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,ValueError>{RetirementCursor::close_into(&mut self.owner,body,effect,reply)}
+ fn recover_close_into<'r>(&mut self,body:usize,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>,reply:semio_framework_value_retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>)->Result<semio_framework_value_retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,ValueError>{RetirementCursor::recover_close_into(&mut self.owner,body,effect,reply)}
+ fn close_original_into<'r>(&mut self,original:&mut semio_framework_value_retained_clone::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>,reply:semio_framework_value_retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>)->Result<semio_framework_value_retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,ValueError>{RetirementCursor::close_original_into(&mut self.owner,original,body,effect,reply)}
+ fn recover_close_original_into<'r>(&mut self,original:&mut semio_framework_value_retained_clone::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>,reply:semio_framework_value_retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>)->Result<semio_framework_value_retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,ValueError>{RetirementCursor::recover_close_original_into(&mut self.owner,original,body,effect,reply)}
+ fn requires_original_birth(&self)->bool{RetirementCursor::requires_original_birth(&self.owner)}
+ fn requires_original_control(&self)->bool{RetirementCursor::requires_original_control(&self.owner)}
  fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
  fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.owner.selected_demand(body)?.copy_bytes)}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
@@ -129,11 +134,11 @@ impl<T:OriginalDomainFailure> OriginalDomainReservation<T>{
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{let Some(frame)=&self.frame else{return Ok(Default::default())};if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}if frame.owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<DomainFrame<T>>(),depth:1,..Default::default()})}else{frame.owner.next_demand(body)}}
  /// ⛽️ Quotes the actual selected frame, child retirement, or final release work.
  pub fn retirement_work(&self,body:usize)->Result<u64,ValueError>{let Some(frame)=&self.frame else{return Ok(0)};if !self.closing||frame.owner.terminal_is_empty(){Ok(1)}else{frame.owner.next_computational_work(body)}}
- pub fn close_step(&mut self,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>)->semio_framework_value_retained_clone::OriginalRetirementPoll{
+ pub fn close_step(&mut self,body:usize,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>)->semio_framework_value_retained_clone::OriginalRetirementPoll{
   use semio_framework_value_retained_clone::RetainedWorkPoll::Complete;let grant=effect.grant();
   let Some(frame)=self.frame.as_mut()else{return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})};
   if !self.closing{if grant.maximum_items==0||grant.maximum_depth==0{return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}self.closing=true;return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})}
-  if !frame.owner.terminal_is_empty(){return frame.owner.step(effect)}
+  if !frame.owner.terminal_is_empty(){return frame.owner.step(body,effect)}
   let d=RetirementDemand{release_bytes:size_of::<DomainFrame<T>>(),depth:1,..Default::default()};if !semio_framework_value_retained_clone::retained_clone::retained_clone_grant_admits(grant,d){return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}
   drop(self.frame.take());self.source=None;Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()})),work:1})
  }
@@ -141,9 +146,12 @@ impl<T:OriginalDomainFailure> OriginalDomainReservation<T>{
 
 #[doc(hidden)]
 pub struct DomainReservationRetirement<T:OriginalDomainFailure>{reservation:OriginalDomainReservation<T>}
+impl<T:OriginalDomainFailure> DomainReservationRetirement<T>{
+ fn close_step(&mut self,body:usize,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>)->RetirementStep{match self.reservation.close_step(body,effect){semio_framework_value_retained_clone::RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),semio_framework_value_retained_clone::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>if step.progress()==Default::default()&&self.terminal_is_empty(){RetirementStep::Complete(turn.work)}else{RetirementStep::Progress(step.progress(),turn.work)},Err(error)=>RetirementStep::Failure(error,turn.work)}}}
+}
 impl<T:OriginalDomainFailure> RetirementCursor for DomainReservationRetirement<T>{
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.reservation.retirement_work(body)}
- fn close_step(&mut self,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>)->RetirementStep{match self.reservation.close_step(effect){semio_framework_value_retained_clone::RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),semio_framework_value_retained_clone::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>if step.progress()==Default::default()&&self.terminal_is_empty(){RetirementStep::Complete(turn.work)}else{RetirementStep::Progress(step.progress(),turn.work)},Err(error)=>RetirementStep::Failure(error,turn.work)}}}
+ semio_framework_value::native_retirement_reply!();
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.reservation.retirement_demands(body)}
  fn terminal_is_empty(&self)->bool{self.reservation.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.reservation.retirement_demands(0)?.copy_bytes)}

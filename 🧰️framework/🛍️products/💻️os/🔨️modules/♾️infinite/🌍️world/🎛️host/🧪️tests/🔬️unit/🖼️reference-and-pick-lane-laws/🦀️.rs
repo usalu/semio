@@ -9,6 +9,7 @@
 /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` §1 and W9b's regression).
 #[test]
 fn a_reference_underlay_is_offered_every_render_and_a_refused_admission_is_not_a_fault() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.scene.reference_pixels.insert("/plan.jpg".into(), test_world_scene_raster(4, 2, 7)).expect("reference pixels admitted");
     for render in 0..4 {
@@ -27,6 +28,7 @@ fn a_reference_underlay_is_offered_every_render_and_a_refused_admission_is_not_a
 
 #[test]
 fn six_reference_gpu_residents_progress_through_two_cpu_slots_and_a_lost_texture_resumes_its_source() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     fn publish(pool: &SceneRasterPool, descriptor: SceneRasterDescriptor, owner: u64, fill: u8) -> SceneRasterLease {
         for _ in 0..=2 {
             match pool.begin(descriptor, owner, SceneRasterWriteMode::Streamed) {
@@ -54,15 +56,15 @@ fn six_reference_gpu_residents_progress_through_two_cpu_slots_and_a_lost_texture
         let identity = lease.identity();
         state.scene.reference_pixels.insert(url.clone(), WorldSceneRaster { identity, pending: Mutex::new(Some(lease)) }).expect("reference identity");
         let upload = world_raster_upload_in_pool(&state.scene, &url, &url, false, &pool).expect("pending CPU upload");
-        let mut producer = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+        let mut producer = semio_os_infinite_world_host::prepared_world_build_context();
         producer.ensure_world_plane_texture(&url, upload);
         let mut input = semio_ui_prepared::PreparedRenderInput::try_new(revision, revision, semio_ui_draw_contract::DrawList::default(), None, 0.0).unwrap_or_else(|mut rejected| {
-            let fault=rejected.fault();while !rejected.close_step() {}
+            let fault=rejected.fault();while !matches!(rejected.close_step(world_original_fixture_grant()).expect("prepared input rejection close"), semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {}
             panic!("prepared reference input admission: {fault}");
         });
         assert!(matches!(producer.append_step(&mut input), Ok(false)), "lease enters actual prepared upload");
-        assert!(matches!(producer.append_step(&mut input), Ok(false)), "producer retires its exact key");
         assert!(matches!(producer.append_step(&mut input), Ok(true)), "producer reaches terminal");
+        semio_os_infinite_world_host::retire_world_build_context(producer);
         let PreparedRenderUpload::SceneRaster { key, lease } = input.uploads.get(0).expect("actual producer publishes the scene lease") else { panic!("scene raster upload") };
         assert_eq!(key, &url);
         gpu.push(lease.release_witness().expect("CPU witness").commit_gpu(&url).expect("GPU commit"));
@@ -178,6 +180,7 @@ fn scene_with_selection_and_domain(selection_json: &str, domain: Option<(&str, &
 
 #[test]
 fn sync_parses_scene_reference_lanes() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let references = r#"[{"id":"ref-masterarbeit","url":"/infinite-assets/plan.jpg","origin":[7.0,0.0,0.01],"widthWorld":50.0,"locked":true,"hidden":false}]"#;
     let mut scene = scene_with_selection("{}");
     if let Some(world) = scene.world_3d.as_mut() {
@@ -211,6 +214,7 @@ fn scene_with_engagement_preview(preview_json: Option<&str>) -> UiComponentScene
 
 #[test]
 fn sync_parses_the_engagement_preview_lane() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     sync_world3d_state(&mut state, &scene_with_engagement_preview(Some(ENGAGEMENT_PREVIEW_JSON)), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
     assert_eq!(state.scene.engagement_preview.len(), 4);
@@ -224,6 +228,7 @@ fn sync_parses_the_engagement_preview_lane() {
 
 #[test]
 fn an_absent_or_broken_engagement_preview_lane_leaves_the_state_empty() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     sync_world3d_state(&mut state, &scene_with_engagement_preview(None), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
     assert!(state.scene.engagement_preview.is_empty());
@@ -235,6 +240,7 @@ fn an_absent_or_broken_engagement_preview_lane_leaves_the_state_empty() {
 /// line vertices, and the box wireframe extrudes UP from `cornerA.z` by `height`.
 #[test]
 fn the_engagement_preview_lane_paints_world_lines() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     sync_world3d_state(&mut state, &scene_with_engagement_preview(Some(ENGAGEMENT_PREVIEW_JSON)), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
     let mut lines = Vec::new();
@@ -248,6 +254,7 @@ fn the_engagement_preview_lane_paints_world_lines() {
 /// 🩹️ React floors width/depth/height at `0.05`, so a degenerate footprint still shows a sliver.
 #[test]
 fn a_degenerate_box_preview_keeps_the_react_minimum_extent() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     sync_world3d_state(&mut state, &scene_with_engagement_preview(Some(r#"[{"kind":"box-preview","cornerA":[0.0,0.0,0.0],"cornerB":[0.0,0.0,0.0]}]"#)), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
     let mut lines = Vec::new();
@@ -262,6 +269,7 @@ fn a_degenerate_box_preview_keeps_the_react_minimum_extent() {
 
 #[test]
 fn an_engagement_preview_item_missing_its_geometry_is_skipped_not_faulted() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     sync_world3d_state(
         &mut state,
@@ -326,6 +334,7 @@ fn pick_target_ray(state: &World3dState) -> (Vec3, Vec3) {
 /// 🎯️ `targets` is JSON TEXT on the wire (see `push_interaction_targets`), never a nested array.
 #[test]
 fn the_pick_target_lane_hit_tests_finest_first_skips_unselectable_rows_and_dispatches_react_payloads() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     sync_world3d_state(&mut state, &scene_with_pick_targets(Some(PICK_TARGETS_JSON)), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
     assert_eq!(state.selection.pick_targets.len(), 3, "the lane is parsed off the scene, not only off a hand-built state");
@@ -374,6 +383,7 @@ fn the_pick_target_lane_hit_tests_finest_first_skips_unselectable_rows_and_dispa
 /// 🎨️ Each flag resolves to its OWN row of React's table, not to the two rows that existed here.
 #[test]
 fn the_instance_lane_carries_locked_opacity_and_the_three_unreachable_style_rows() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let instances = r##"[
         {"id":"obj-1","meshId":"mesh-1","position":[0,0,0],"color":"#ffffff","disabled":true,"opacity":0.35},
         {"id":"obj-2","meshId":"mesh-1","position":[1,0,0],"color":"#ffffff","highlighted":true},
@@ -402,6 +412,7 @@ fn the_instance_lane_carries_locked_opacity_and_the_three_unreachable_style_rows
 /// semantic case crosses the snapshot as white and is resolved from the live theme only at paint.
 #[test]
 fn the_scene_bridge_retains_semantic_authored_and_environment_color_provenance() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     for (id, authored, environment, expected_source) in [
         ("semantic", None, None, ui_scene::math::SceneColorSource3d::SemanticNeutral),
         ("authored", Some("#3f80bf"), None, ui_scene::math::SceneColorSource3d::Authored),
@@ -442,6 +453,7 @@ fn the_scene_bridge_retains_semantic_authored_and_environment_color_provenance()
 /// 📐️ A Top pane's `xy` drafting plane keeps the in-plane move/scale pair and the NORMAL rotation.
 #[test]
 fn the_gumball_offers_the_authored_config_then_the_transform_mode_fallback_intersected_with_the_plane() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     sync_world3d_state(
         &mut state,
@@ -477,6 +489,7 @@ fn the_gumball_offers_the_authored_config_then_the_transform_mode_fallback_inter
 /// 🩸️ The pre-W14g cross was `VERTEX_BASE_SCALE * 0.15` = 0.0075 world units, at ANY distance.
 #[test]
 fn vertex_markers_hold_their_pixel_size_at_every_camera_distance() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.session.bounds = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
     let viewport = state.session.bounds;
@@ -504,6 +517,7 @@ fn vertex_markers_hold_their_pixel_size_at_every_camera_distance() {
 
 #[test]
 fn sync_parses_selection_targets_and_active_object() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let selection = r#"{
             "granularity":"vertex",
             "targets":{"mesh":true,"vertex":true,"edge":false,"face":false},
@@ -532,6 +546,7 @@ const BOOT_FRAME_FIT_JSON: &str = r#"{"enabled":true,"revision":7,"padding":1.12
 
 #[test]
 fn a_world_surface_frames_the_producers_delivered_bounds_on_the_first_delivery_of_a_document() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let bounds = Rect { x: 0.0, y: 0.0, w: 1600.0, h: 900.0 };
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     drive_scene_bridge(&mut state, &scene_with_fit(Some(r#"{"enabled":true,"revision":7,"padding":1.12}"#)), bounds);
@@ -564,6 +579,7 @@ fn a_world_surface_frames_the_producers_delivered_bounds_on_the_first_delivery_o
 
 #[test]
 fn a_re_delivery_of_the_same_document_never_takes_back_a_camera_the_user_moved() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let bounds = Rect { x: 0.0, y: 0.0, w: 1600.0, h: 900.0 };
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let scene = scene_with_fit(Some(BOOT_FRAME_FIT_JSON));
@@ -590,6 +606,7 @@ fn a_re_delivery_of_the_same_document_never_takes_back_a_camera_the_user_moved()
 
 #[test]
 fn sync_parses_numeric_component_ids_and_hovered_component() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let selection = r#"{
             "granularity":"vertex",
             "componentIds":[1,2],
@@ -609,6 +626,7 @@ fn sync_parses_numeric_component_ids_and_hovered_component() {
 /// ⚪️ 4 from edges + 24 from 4 vertex crosses
 #[test]
 fn append_component_vertex_spheres_render_base_vertices() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "vertex".into();
@@ -629,6 +647,7 @@ const COMPONENT_OVERLAY_VIEWPORT: Rect = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400
 
 #[test]
 fn append_component_overlays_highlights_only_hovered_edge() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "edge".into();
@@ -646,6 +665,7 @@ fn append_component_overlays_highlights_only_hovered_edge() {
 
 #[test]
 fn append_component_overlays_highlights_selected_edge() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "edge".into();
@@ -661,6 +681,7 @@ fn append_component_overlays_highlights_selected_edge() {
 
 #[test]
 fn component_mode_does_not_apply_mesh_instance_hover() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "face".into();
     state.selection.hovered_component_object_id = Some("obj-1".into());
@@ -672,6 +693,7 @@ fn component_mode_does_not_apply_mesh_instance_hover() {
 
 #[test]
 fn runtime_draw_flags_clear_stale_instance_selected_when_selection_is_empty() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.selected_ids.clear();
     state.selection.local_hover_id = None;
@@ -683,6 +705,7 @@ fn runtime_draw_flags_clear_stale_instance_selected_when_selection_is_empty() {
 
 #[test]
 fn pick_select_emits_original_vertex_interaction_target() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "vertex".into();

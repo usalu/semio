@@ -1,0 +1,6 @@
+{"actionWork":40,"stages":[
+ {"stage":"table","minimumWork":2,"items":2,"maximumCopyBytes":4096},
+ {"stage":"tableCommit","minimumWork":1,"items":1,"maximumCopyBytes":4096},
+ {"stage":"publisher","minimumWork":2,"items":2,"maximumCopyBytes":4096},
+ {"stage":"publisherCommit","minimumWork":1,"items":1,"maximumCopyBytes":4096},
+ {"stage":"release","minimumWork":1,"items":1,"maximumCopyBytes":4096}]}

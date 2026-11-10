@@ -1,8 +1,15 @@
 use super::*;
 use ui_contract::{AbsoluteLayout, Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, LeafLayout, ScrollAxes, ScrollLayout, Sizing, SpaceToken, StackLayout};
 
-#[global_allocator]
-static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+fn funded<T, E: std::fmt::Debug>(operation: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome<T, E>) -> T {
+    use semio_framework_value_testing_admission::{bank_run, EffectBank, Wallet};
+    let stock = ui_contract::UI_WORKER_RETIREMENT_POLICY;
+    let mut bank = EffectBank::new(Wallet::new(RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 1 << 10 }, 1 << 30));
+    match bank_run(&mut bank, stock, 1 << 20, |effect| semio_framework_value::RetainedWorkPoll::Complete(operation(effect))).0 {
+        semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.expect("funded layout turn"),
+        semio_framework_value::RetainedWorkPoll::Pending { .. } => panic!("a funded layout turn stayed pending"),
+    }
+}
 
 #[test]
 fn original_flex_grid_close_preserves_native_depth_denial_and_exact_release(){
@@ -42,7 +49,7 @@ impl Fixture {
     fn push(&mut self, kind: LayoutNodeKind, parent: Option<usize>, authored: Option<&LayoutSpec>) -> usize {
         let index = self.children.len();
         let parent_kind = parent.map(|parent| self.kinds[parent]);
-        while !matches!(self.flex.fund_next_node(ui_contract::UI_WORKER_RETIREMENT_POLICY).expect("node table funding"), NodeFunding::Ready) {}
+        while !matches!(funded(|effect| self.flex.fund_next_node(effect)), NodeFunding::Ready) {}
         assert!(self.flex.push(kind, parent, authored, &self.metrics, parent_kind, None).is_some(), "push {index}");
         self.children.push(Vec::new());
         self.parents.push(parent);
@@ -74,7 +81,7 @@ impl Fixture {
     }
 
     fn fund(&mut self, index: usize) {
-        while !matches!(self.flex.fund_scratch(index, self.children[index].iter().copied(), ui_contract::UI_WORKER_RETIREMENT_POLICY).expect("track table funding"), NodeFunding::Ready) {}
+        while !matches!(funded(|effect| self.flex.fund_scratch(index, self.children[index].iter().copied(), effect)), NodeFunding::Ready) {}
     }
 
     fn rect(&self, index: usize) -> FlexRect {
@@ -508,7 +515,7 @@ fn the_flex_tree_releases_exactly_one_node_per_close_grant() {
     let metrics = TreeRowMetrics::from_theme(&semio_ui_theme::Theme::default());
     let mut flex = FlexTree::new();
     for index in 0..4 {
-        while !matches!(flex.fund_next_node(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap(), NodeFunding::Ready) {}
+        while !matches!(funded(|effect| flex.fund_next_node(effect)), NodeFunding::Ready) {}
         assert!(flex.push(LayoutNodeKind::Leaf, if index == 0 { None } else { Some(0) }, None, &metrics, None, None).is_some());
     }
     let grant = |release| RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 0, maximum_release_bytes: release, maximum_depth: 64 };

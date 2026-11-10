@@ -44,7 +44,7 @@ pub fn playback_app_io<S: IncrementalMediaExportSpec>() -> semio_plugin::AppIo {
         artifact_media_type: PLAYBACK_MEDIA_TYPE,
         ports: vec![MediaPortSpec {
             id: PLAYBACK_PORT_ID.into(),
-            label: "Playback".into(),
+            label: semio_plugin::LocalizedLabel::native("Playback", "Wiedergabe"),
             direction: MediaPortDirection::Out,
             media_type: PLAYBACK_MEDIA_TYPE,
             kind_id: Some(S::KIND_ID.into()),
@@ -161,7 +161,7 @@ impl<S: IncrementalMediaExportSpec> InteractiveJob for IncrementalMediaExportJob
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{self.begin_close();let mut work=0;let result=self.close_turn(grant,&mut work).map(semio_framework_value::RetainedCloneStep::Progress);RetainedWorkOutcome{result,work}})?;
+        let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{self.begin_close();self.close_turn(effect)})?;
         Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
     fn terminal_is_empty(&self)->bool{self.cursor.is_none()&&self.page.capacity()==0&&self.chunks.is_none()&&self.output_retirement.is_none()&&self.fault.is_none()&&self.fault_publication.terminal_is_empty()&&self.completion.is_none()&&self.credit.is_none()&&self.snapshot.is_none()&&self.snapshot_close.is_none()&&self.request_metadata.is_none()&&self.metadata_retirement.is_none()&&self.pending_result.is_none()}
@@ -218,33 +218,35 @@ impl<S:IncrementalMediaExportSpec> IncrementalMediaExportJob<S>{
         Ok(Default::default())
     }
 
-    fn charge(work:&mut u64,turn:RetainedWorkOutcome)->Result<RetainedCloneProgress,ValueError>{*work+=turn.work;turn.result.map(|step|step.progress())}
-
-    fn close_turn(&mut self,grant:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneProgress,ValueError>{
-        use semio_plugin::plugin_app_close_prelude::store::{os_store::snapshot_read::artifact_retirement_admit_owned,os_store::snapshot_read::artifact_retirement_box_close_step};
-        let demand=self.close_demands(grant.maximum_copy_bytes)?;
-        if demand==RetirementDemand::default(){return Ok(Default::default());}
-        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"media export close exceeds its admitted depth"));}
-        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(Default::default());}
+    fn close_turn(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+        use semio_framework_value::{OriginalRetirementFailure as Failure,RetainedWorkOutcome as Turn,RetainedWorkPoll as Poll};
+        use semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::{artifact_retirement_admit_owned,artifact_retirement_box_close_step};
+        let grant=effect.grant();let body=grant.maximum_copy_bytes;
+        let done=|result:Result<RetainedCloneProgress,Failure>,work:u128|Poll::Complete(Turn{result:result.map(semio_framework_value::RetainedCloneStep::Progress),work});
+        let admit=|turn:Turn<semio_framework_value::RetainedCloneStep,ValueError>|Poll::Complete(Turn{result:turn.result.map_err(Failure::from),work:turn.work});
+        let demand=match self.close_demands(body){Ok(demand)=>demand,Err(error)=>return done(Err(error.into()),0)};
+        if demand==RetirementDemand::default(){return done(Ok(Default::default()),0);}
+        if grant.maximum_depth<demand.depth{return done(Err(ValueError::literal(ValueRefusalKind::DepthLimit,"media export close exceeds its admitted depth").into()),0);}
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return done(Ok(Default::default()),0);}
         let item=RetainedCloneProgress{copied_items:1,..Default::default()};
-        if self.output_retirement.is_some(){return Self::charge(work,artifact_retirement_box_close_step(&mut self.output_retirement,grant));}
-        if !self.fault_publication.terminal_is_empty(){return Self::charge(work,self.fault_publication.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}));}
-        if self.fault.is_some(){return Self::charge(work,artifact_retirement_admit_owned(&mut self.fault,&mut self.output_retirement,grant));}
-        if self.cursor.is_some(){return Self::charge(work,artifact_retirement_admit_owned(&mut self.cursor,&mut self.output_retirement,grant));}
-        if self.page.capacity()!=0{let released=std::mem::take(&mut self.page).capacity();return Ok(RetainedCloneProgress{released_bytes:released,..item});}
-        if self.chunks.is_some(){return Self::charge(work,artifact_retirement_admit_owned(&mut self.chunks,&mut self.output_retirement,grant));}
-        if self.pending_result.is_some(){return Self::charge(work,artifact_retirement_admit_owned(&mut self.pending_result,&mut self.output_retirement,grant));}
-        if self.completion.is_some(){return Self::charge(work,artifact_retirement_admit_owned(&mut self.completion,&mut self.output_retirement,grant));}
-        if self.credit.is_some(){return Self::charge(work,artifact_retirement_admit_owned(&mut self.credit,&mut self.output_retirement,grant));}
+        if self.output_retirement.is_some(){return artifact_retirement_box_close_step(&mut self.output_retirement,body,effect);}
+        if !self.fault_publication.terminal_is_empty(){let turn=self.fault_publication.close_step(effect);return Poll::Complete(Turn{result:turn.result.map_err(Failure::from),work:turn.work});}
+        if self.fault.is_some(){return admit(artifact_retirement_admit_owned(&mut self.fault,&mut self.output_retirement,effect));}
+        if self.cursor.is_some(){return admit(artifact_retirement_admit_owned(&mut self.cursor,&mut self.output_retirement,effect));}
+        if self.page.capacity()!=0{let released=std::mem::take(&mut self.page).capacity();return done(Ok(RetainedCloneProgress{released_bytes:released,..item}),1);}
+        if self.chunks.is_some(){return admit(artifact_retirement_admit_owned(&mut self.chunks,&mut self.output_retirement,effect));}
+        if self.pending_result.is_some(){return admit(artifact_retirement_admit_owned(&mut self.pending_result,&mut self.output_retirement,effect));}
+        if self.completion.is_some(){return admit(artifact_retirement_admit_owned(&mut self.completion,&mut self.output_retirement,effect));}
+        if self.credit.is_some(){return admit(artifact_retirement_admit_owned(&mut self.credit,&mut self.output_retirement,effect));}
         if let Some(snapshot)=self.snapshot.as_ref(){
-            if !self.snapshot_close.as_ref().is_some_and(|lease|lease.can_release(snapshot)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"media export snapshot has no live close witness"));}
+            if !self.snapshot_close.as_ref().is_some_and(|lease|lease.can_release(snapshot)){return done(Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"media export snapshot has no live close witness").into()),0);}
             self.snapshot=None;
-            return Ok(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..item});
+            return done(Ok(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..item}),1);
         }
-        if let Some(lease)=self.snapshot_close.as_mut(){if lease.terminal_is_empty(){self.snapshot_close=None;return Ok(item)}return lease.close_step(grant).map(|step|step.progress());}
-        if let Some(owner)=self.metadata_retirement.as_mut(){if owner.terminal_is_empty(){self.metadata_retirement.take();return Ok(item)}return owner.step(grant).map(|step|step.progress());}
-        if let Some(metadata)=self.request_metadata.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(metadata){Ok(owner)=>*self.metadata_retirement=Some(owner),Err((error,metadata))=>{*self.request_metadata=Some(metadata);return Err(error)}}return Ok(item);}
-        Ok(item)
+        if let Some(lease)=self.snapshot_close.as_mut(){if lease.terminal_is_empty(){self.snapshot_close=None;return done(Ok(item),1)}return done(lease.close_step(grant).map(|step|step.progress()).map_err(Failure::from),1);}
+        if let Some(owner)=self.metadata_retirement.as_mut(){if owner.terminal_is_empty(){self.metadata_retirement.take();return done(Ok(item),1)}return owner.step(body,effect);}
+        if let Some(metadata)=self.request_metadata.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(metadata){Ok(owner)=>*self.metadata_retirement=Some(owner),Err((error,metadata))=>{*self.request_metadata=Some(metadata);return done(Err(error.into()),1)}}return done(Ok(item),1);}
+        done(Ok(item),0)
     }
 }
 impl<S:IncrementalMediaExportSpec> ArtifactReservedJob for IncrementalMediaExportJob<S>{}

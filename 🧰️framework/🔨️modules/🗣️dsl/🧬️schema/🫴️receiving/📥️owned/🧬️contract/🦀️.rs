@@ -20,7 +20,7 @@ pub enum OwnedAdvanceSelection{Local{work:u64},Nested}
 pub trait OwnedFieldReceiving<T:RetireOwned>:Send+'static{
  fn demands(&self,source:&Option<FieldValue>,body:usize)->Result<RetirementDemand,ValueError>;
  fn select_advance(&self,source:&Option<FieldValue>,body:usize,maximum_work_units:u64)->Result<OwnedAdvanceSelection,ValueError>;
- fn advance_nested(&mut self,source:&mut Option<FieldValue>,native:&mut NativeDecodeControl<'_>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->OwnedPoll{let _=(source,native,body,maximum_work_units,grant);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invariant().into()),work:0})}
+ fn advance_nested(&mut self,source:&mut Option<FieldValue>,native:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->OwnedPoll{let _=(source,native,witness,body,maximum_work_units,grant);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invariant().into()),work:0})}
  fn advance_local(&mut self,source:&mut Option<FieldValue>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OwnedPoll;
  fn is_ready(&self)->bool;
  fn take_work_demand(&self)->Result<u64,ValueError>{Ok(1)}
@@ -93,7 +93,7 @@ impl<T:RetireOwned>OwnedSlot<T>{
  pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OwnedClose{
   if self.terminal_is_empty(){return idle(effect)}
   let d=match self.close_demands(effect.grant().maximum_copy_bytes){Ok(d)=>d,Err(error)=>return done(effect,Err(error.into()))};if !admits(effect,d){return idle(effect)}
-  if let Some(owner)=self.retiring.as_mut(){if owner.terminal_is_empty(){let result=perform(effect).map(|()|{self.retiring.take();receipt(d)}).map_err(Into::into);return done(effect,result)}let poll=owner.step(effect);return settle(effect,physical(poll))}
+  if let Some(owner)=self.retiring.as_mut(){if owner.terminal_is_empty(){let result=perform(effect).map(|()|{self.retiring.take();receipt(d)}).map_err(Into::into);return done(effect,result)}let poll=owner.step(effect.grant().maximum_copy_bytes,effect);return settle(effect,physical(poll))}
   if let Err(error)=perform(effect){return done(effect,Err(error.into()))}
   let value=match self.value.take(){Some(value)=>value,None=>return done(effect,Err(ValueError::invariant("value absent").into()))};
   match ControlledRetirement::new(value){Ok(owner)=>{*self.retiring=Some(owner);done(effect,Ok(receipt(d)))},Err((error,value))=>{*self.value=Some(value);done(effect,Err(error.into()))}}

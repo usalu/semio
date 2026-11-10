@@ -220,7 +220,8 @@ where
     }
 
     pub fn maintenance_retirements_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
-        self.displaced_retirements.close_step(effect)
+        let body = effect.grant().maximum_copy_bytes;
+        self.displaced_retirements.close_step(body, effect)
     }
 
     /// 🚚️ Transfers an interrupted publication to this Store's bounded maintenance queue before
@@ -273,7 +274,7 @@ where
         let mut output=None;
         match ReturnedSnapshotReadRetirement::admit_original(alias,&mut factory,&mut output,effect){
             semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(None),
-            semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|output.take().map(|owner|(owner,step.progress()))),
+            semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error).map(|step|output.take().map(|owner|(owner,step.progress()))),
         }
     }
 

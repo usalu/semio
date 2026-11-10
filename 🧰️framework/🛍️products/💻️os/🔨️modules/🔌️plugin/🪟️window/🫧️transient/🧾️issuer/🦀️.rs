@@ -22,7 +22,8 @@ impl CapturedWindowMutationIssuer{
     fn factory<M:Send+Sync+'static>(&self)->Result<&Arc<dyn store::ArtifactOwnedValueRetirementFactory<M>>,ValueError>{self.source.as_any().downcast_ref::<RegisteredWindowMutationIssuer<M>>().map(|issuer|&issuer.factory).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"captured Window mutation differs from its registered typed issuer"))}
 }
 impl RetireOwned for CapturedWindowMutationIssuer{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let factory:Arc<dyn semio_framework_value::FactoryRetirement>=self.source;semio_framework_value::FactoryAuthority::new(factory).retirement()}
+    type RetirementCursor=semio_framework_value::FactoryAuthority;
+    fn retirement_seed(self)->Self::RetirementCursor{let factory:Arc<dyn semio_framework_value::FactoryRetirement>=self.source;semio_framework_value::FactoryAuthority::new(factory)}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::FactoryAuthority>())}
     fn controlled_retirement_supported()->bool{true}
 }

@@ -30,7 +30,7 @@ impl From<semio_framework_canvas::camera::Camera> for Camera {
 }
 
 /// 🎯️ Semantic board event emitted after interaction or selection changes.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum BoardEvent {
     HoverChanged { id: Option<u64> },
     NodeMoved { id: NodeId, x: f64, y: f64 },
@@ -100,8 +100,9 @@ pub enum InteractionMode {
     Idle,
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) struct ProximityConnection {
+pub struct ProximityConnection {
     pub source: HandleId,
     pub target: HandleId,
 }

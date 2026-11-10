@@ -16,8 +16,11 @@ impl<T> std::ops::DerefMut for Held<T>{fn deref_mut(&mut self)->&mut T{&mut self
 /// 🎒️ The held plain value drops as one paid inline action.
 pub struct HeldCursor<T>(Option<Held<T>>);
 impl<T:Send+'static> RetireOwned for Held<T>{type RetirementCursor=HeldCursor<T>;fn retirement_seed(self)->Self::RetirementCursor{HeldCursor(Some(self))}fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<HeldCursor<T>>())}fn controlled_retirement_supported()->bool{true}}
+impl<T:Send+'static> HeldCursor<T>{
+    fn close_step(&mut self,_body:usize,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::{RetirementStep,record_retirement_work};if self.0.is_none(){return RetirementStep::Complete(0)}match record_retirement_work(effect,1){Ok(work)=>{self.0=None;RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},work)},Err((error,work))=>RetirementStep::Failure(error.into(),work)}}
+}
 impl<T:Send+'static> semio_framework_value::retirement::RetirementCursor for HeldCursor<T>{
-    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::{RetirementStep,record_retirement_work};if self.0.is_none(){return RetirementStep::Complete(0)}match record_retirement_work(effect,1){Ok(work)=>{self.0=None;RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},work)},Err((error,work))=>RetirementStep::Failure(error.into(),work)}}
+    semio_framework_value::native_retirement_reply!();
     fn terminal_is_empty(&self)->bool{self.0.is_none()}
 }
 

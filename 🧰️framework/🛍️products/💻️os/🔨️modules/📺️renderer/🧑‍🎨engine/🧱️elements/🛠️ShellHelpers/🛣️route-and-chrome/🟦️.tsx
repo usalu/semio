@@ -123,15 +123,16 @@ export function appBreadcrumb(breadcrumb: readonly string[] | undefined): string
 }
 
 /** 🗺️ Resolves the breadcrumb effective under the active terminology; unknown/native ids fall back to `app.breadcrumb`, and an app that declares none at all to the empty breadcrumb (the field is optional — see {@link appBreadcrumb}). */
-export function resolveAppBreadcrumb(app: Pick<AppDefinition, "breadcrumb" | "terminologyBreadcrumbs">, terminology: string): readonly string[] {
-  return app.terminologyBreadcrumbs?.[terminology] ?? app.breadcrumb ?? [];
+export function resolveAppBreadcrumb(app: Pick<AppDefinition, "breadcrumb" | "terminologyBreadcrumbs">, terminology: string, locale: string): readonly string[] {
+  const segments = app.terminologyBreadcrumbs?.[terminology];
+  return segments === undefined ? app.breadcrumb ?? [] : segments.map((segment) => resolveManifestLabel(segment, terminology, locale));
 }
 
 /** 🗺️ Resolves the breadcrumb for a non-active app (studio spawn palette/spawned entries) by looking up its `AppDefinition` across loaded plugins; falls back to the raw breadcrumb when the app can't be found. */
-export function resolveArtifactByAppId(loadedPlugins: readonly LoadedProgramState[], appId: string, breadcrumb: readonly string[], terminology: string): readonly string[] {
+export function resolveArtifactByAppId(loadedPlugins: readonly LoadedProgramState[], appId: string, breadcrumb: readonly string[], terminology: string, locale: string): readonly string[] {
   for (const program of loadedPlugins) {
     const app = program.manifest.apps.find((candidate) => candidate.id === appId);
-    if (app) return resolveAppBreadcrumb(app, terminology);
+    if (app) return resolveAppBreadcrumb(app, terminology, locale);
   }
   return breadcrumb;
 }
@@ -140,7 +141,8 @@ export function appWindowLabel(app: Pick<AppDefinition, "label" | "breadcrumb" |
   const trimmed = windowLabel.trim();
   if (trimmed) return trimmed;
   const override = app.terminologyBreadcrumbs?.[terminology];
-  return override?.[override.length - 1]?.trim() || resolveManifestLabel(app.label, terminology, locale).trim();
+  const last = override?.[override.length - 1];
+  return (last === undefined ? "" : resolveManifestLabel(last, terminology, locale).trim()) || resolveManifestLabel(app.label, terminology, locale).trim();
 }
 
 /** 🧭️ Default anchor a plugin-declared panel-tab `group` docks into — groups only ever map to the four corners; the four edge-middle anchors start empty and are user-populated via drag-and-drop or a dock skeleton override. */

@@ -44,7 +44,7 @@ impl PagedUtf8AppendCursor {
     pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
     /// 🪙️ Reads the original pending chunk or terminal frame release.
     pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
-    pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll {let grant=effect.grant();
+    pub fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll {let grant=effect.grant();
         if self.terminal_is_empty() { return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }); }
         if grant.maximum_items == 0 { return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }); }
         if !self.closing {
@@ -57,7 +57,7 @@ impl PagedUtf8AppendCursor {
             Err(error) => return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome { result: Err(error.into()), work: 0 }),
         };
         if !crate::retained_clone::retained_clone_grant_admits(grant, demand) { return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }); }
-        if !self.controlled_close.is_empty() { return self.controlled_close.step_granted(effect).map(|s|RetainedCloneStep::Progress(s.progress())); }
+        if !self.controlled_close.is_empty() { return self.controlled_close.step_granted(body,effect).map(|s|RetainedCloneStep::Progress(s.progress())); }
         if self.pending.is_some() {
             let turn = self.controlled_close.begin_granted(&mut self.pending, effect);
             return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome { result: turn.result.and_then(|step|step.map(|s|RetainedCloneStep::Progress(s.progress())).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "native UTF-8 append retirement omitted its retained pending chunk"))).map_err(Into::into), work: turn.work });
@@ -76,10 +76,10 @@ impl ErasedSnapshotRetirement for PagedUtf8AppendCursor {
  fn requires_original_birth(&self)->bool{self.controlled_close.requires_original_birth()}
  fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{self.controlled_close.step_original_birth(original,grant)}
  fn requires_original_control(&self)->bool{self.controlled_close.requires_original_control()}
- fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{if self.requires_original_birth(){return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"settle original birth first").into()),work:0})}if self.controlled_close.requires_original_control(){return self.controlled_close.step_original(original,effect)}Self::close_step(self,effect)}
+ fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{if self.requires_original_birth(){return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"settle original birth first").into()),work:0})}if self.controlled_close.requires_original_control(){return self.controlled_close.step_original(original,body,effect)}Self::close_step(self,body,effect)}
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if self.terminal_is_empty(){return Ok(0)}if !self.closing{return Ok(u64::from(!self.close_faulted))}if !self.controlled_close.is_empty(){return self.controlled_close.next_owner_work::<()>(false,&None,body)}if self.pending.is_some(){return self.controlled_close.next_owner_work::<String>(true,&None,body)}if self.bytes.is_some(){return self.controlled_close.next_owner_work::<Vec<u8>>(true,&None,body)}Ok(1)}
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.close_demands(body)}
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll {Self::close_step(self,effect)}
+    fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll {Self::close_step(self,body,effect)}
     fn terminal_is_empty(&self) -> bool { PagedUtf8AppendCursor::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.next_close_copy_byte_demand() }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.next_close_capacity_byte_demand(copy) }

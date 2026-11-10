@@ -45,3 +45,9 @@ fn scoped_native_progress_observers_restore_nested_and_unwound_owners(){
  });
  assert_eq!(outer.borrow().as_slice(),[0,0]);assert_eq!(inner.borrow().as_slice(),[0]);close(caller,decoder);
 }
+#[test]
+fn a_thousand_receiving_turns_on_one_owner_never_exhaust_the_escrow_table(){
+ let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut completed=0;
+ for _ in 0..100000{if completed==1000{break}let mut ran=false;measured(&mut caller,&mut decoder,|cx|{let mut out=None;account(cx,|cx|cx.with_native_receiving(&mut out,|native,_|{ran=true;native.checkpoint()}))?;account(cx,|_|drop(out));if ran{cx.consume_receiving_retained(cx.receiving_issued_grant().unwrap(),RetainedCloneProgress::default())?;}Ok(())});completed+=usize::from(ran);}
+ assert_eq!(completed,1000);close(caller,decoder);
+}

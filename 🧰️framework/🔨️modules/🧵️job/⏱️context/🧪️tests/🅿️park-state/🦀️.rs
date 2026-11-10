@@ -1,8 +1,6 @@
 //! 🅿️ Parking hands out only a snapshot: it leaves no fuel and exactly the posted grant, and restoring or returning never changes either.
 use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation,OriginalTurnFailure};
 use semio_framework_value::RetainedCloneGrant;
-#[global_allocator]
-static PARK_STATE_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:100000,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:128}}
 fn quantum()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:128}}
 #[test]

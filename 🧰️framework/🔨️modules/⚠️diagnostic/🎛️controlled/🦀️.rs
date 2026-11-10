@@ -80,7 +80,7 @@ pub(super) fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T
             work.issue_performed_for_action(action, &mut receipt).expect("diagnostic retirement receipt");
             let poll = {
                 let mut effect = semio_framework_value::RetainedAllocationEffect::new(grant, maximum, &mut actual, receipt.as_mut().expect("diagnostic retirement receipt issued"));
-                cursor.step(&mut effect)
+                cursor.step(grant.maximum_copy_bytes,&mut effect)
             };
             let performed = OriginalWorkSink::observed_work(receipt.as_ref().expect("diagnostic retirement receipt issued"));
             work.claim_performed_for_action(action, &mut receipt).expect("diagnostic retirement claim");

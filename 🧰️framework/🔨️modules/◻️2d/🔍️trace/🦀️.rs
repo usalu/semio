@@ -52,10 +52,10 @@ pub struct BitmapTraceJob<M:AsRef<[u8]>> {
  left:usize,right:usize,pixel:usize,edge:usize,winding:i32,changes:NumericIndex<usize,i32>,covering:bool,output:Vec<PathSegment>,pixels:usize,threshold:u8,edge_count:usize,scan_side:u8,pending:RetirementDemand,last_turn_work:u64,last_turn_semantic_work:u64,step_work:u64,
  outgoing_insert:Option<NumericWorkInsertCursor<usize,Vec<usize>>>,position_insert:Option<NumericWorkInsertCursor<usize,usize>>,kept_insert:Option<NumericWorkInsertCursor<usize,()>>,change_insert:Option<NumericWorkInsertCursor<usize,i32>>,position_remove:Option<NumericWorkRemoveCursor<usize,usize>>,change_remove:Option<NumericWorkRemoveCursor<usize,i32>>,
 }
-fn trace_slot<T>(values:&mut Vec<T>,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,BitmapTraceError>{let target=if values.len()==values.capacity(){values.capacity().checked_mul(2).unwrap_or(usize::MAX).max(16)}else{values.len()+1};if !work.reserve_vec(values,target,alloc).map_err(BitmapTraceError::Invalid)?{return Ok(false);}work.vec_slot(values).map_err(BitmapTraceError::Invalid)}
-fn trace_insert<K:Copy+Ord,V>(cursor:&mut Option<NumericWorkInsertCursor<K,V>>,index:&mut NumericIndex<K,V>,key:K,value:impl FnOnce()->V,work:&mut RetainedWorkLedger,actual:&mut u64,alloc:&mut Option<usize>)->Result<bool,BitmapTraceError>{
+fn trace_slot<T>(values:&mut Vec<T>,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,BitmapTraceError>{let target=if values.len()==values.capacity(){values.capacity().checked_mul(2).unwrap_or(usize::MAX).max(16)}else{values.len()+1};if !work.reserve_vec(values,target,effect.actual()).map_err(BitmapTraceError::Invalid)?{return Ok(false);}work.vec_slot(values).map_err(BitmapTraceError::Invalid)}
+fn trace_insert<K:Copy+Ord,V>(cursor:&mut Option<NumericWorkInsertCursor<K,V>>,index:&mut NumericIndex<K,V>,key:K,value:impl FnOnce()->V,work:&mut RetainedWorkLedger,actual:&mut u64,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,BitmapTraceError>{
  if cursor.is_none(){if !work.can_step(){return Ok(false);}*cursor=Some(NumericWorkInsertCursor::new(key,value()));*actual=1;return Ok(false);}
- let child=cursor.as_mut().ok_or(BitmapTraceError::Invalid("cursor absent"))?;if child.is_complete(){return Ok(true);}let result=child.advance(index,1,work,alloc);*actual=child.last_turn_work();result.map_err(BitmapTraceError::Refused)?;Ok(false)
+ let child=cursor.as_mut().ok_or(BitmapTraceError::Invalid("cursor absent"))?;if child.is_complete(){return Ok(true);}let result=child.advance(index,1,work,effect);*actual=child.last_turn_work();result.map_err(BitmapTraceError::Refused)?;Ok(false)
 }
 fn trace_remove<K:Copy+Ord,V>(cursor:&mut Option<NumericWorkRemoveCursor<K,V>>,index:&mut NumericIndex<K,V>,key:K,work:&mut RetainedWorkLedger,actual:&mut u64)->Result<bool,BitmapTraceError>{
  if cursor.is_none(){if !work.can_step(){return Ok(false);}*cursor=Some(NumericWorkRemoveCursor::new(key));*actual=1;return Ok(false);}
@@ -78,7 +78,7 @@ impl<M:AsRef<[u8]>> BitmapTraceJob<M> {
  fn on(&self,x:i32,y:i32)->bool {x>=0&&y>=0&&x<(self.input.width as i32)&&y<(self.input.height as i32)&&self.input.mask.as_ref().unwrap().as_ref()[y as usize*self.input.width as usize+x as usize]>=self.threshold}
  fn key(&self,p:Vec2)->usize {p[1] as usize*(self.input.width as usize+1)+p[0] as usize}
  fn fallback(&mut self) {self.simplified=false;self.phase=BitmapTracePhase::Emit;self.contour=0;self.at=0;}
- fn step(&mut self,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,BitmapTraceError>{
+ fn step(&mut self,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,BitmapTraceError>{
   match self.phase{
    BitmapTracePhase::Scan=>{
     if self.scanned==self.pixels{self.phase=BitmapTracePhase::Contours;return Ok(true);}
@@ -89,17 +89,17 @@ impl<M:AsRef<[u8]>> BitmapTraceJob<M> {
     if !boundary{self.scan_side+=1;return Ok(true);}
     if self.edges.len()>=self.input.max_edges{return Err(BitmapTraceError::Invalid("Bitmap trace exceeds edge budget"));}
     let(a,b)=match side{0=>([px,py],[px+1.0,py]),1=>([px+1.0,py],[px+1.0,py+1.0]),2=>([px+1.0,py+1.0],[px,py+1.0]),_=>([px,py+1.0],[px,py])};let key=self.key(a);
-    if (self.outgoing_insert.is_some()||!self.outgoing.contains_key(&key))&&!trace_insert(&mut self.outgoing_insert,&mut self.outgoing,key,Vec::new,work,&mut self.step_work,alloc)?{return Ok(false);}
-    let target=self.outgoing.get_mut(&key).ok_or(BitmapTraceError::Invalid("get_mut target absent"))?;if !trace_slot(target,work,alloc)?||!trace_slot(&mut self.edges,work,alloc)?{return Ok(false);}
+    if (self.outgoing_insert.is_some()||!self.outgoing.contains_key(&key))&&!trace_insert(&mut self.outgoing_insert,&mut self.outgoing,key,Vec::new,work,&mut self.step_work,effect)?{return Ok(false);}
+    let target=self.outgoing.get_mut(&key).ok_or(BitmapTraceError::Invalid("get_mut target absent"))?;if !trace_slot(target,work,effect)?||!trace_slot(&mut self.edges,work,effect)?{return Ok(false);}
     work.vec_push(target,self.edges.len()).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;
     work.vec_push(&mut self.edges,Edge{a,b,direction:side,used:false}).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;self.edge_count+=1;self.scan_side+=1;self.outgoing_insert=None;
    },
    BitmapTracePhase::Contours=>{
     if self.split.is_some(){
-     if self.split_copy{if self.split_at<self.ring.len(){let target=self.split.as_mut().ok_or(BitmapTraceError::Invalid("split absent"))?;if !trace_slot(target,work,alloc)?{return Ok(false);}work.vec_push(target,self.ring[self.split_at]).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;self.split_at+=1;return Ok(true);}self.split_copy=false;return Ok(true);}
+     if self.split_copy{if self.split_at<self.ring.len(){let target=self.split.as_mut().ok_or(BitmapTraceError::Invalid("split absent"))?;if !trace_slot(target,work,effect)?{return Ok(false);}work.vec_push(target,self.ring[self.split_at]).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;self.split_at+=1;return Ok(true);}self.split_copy=false;return Ok(true);}
      if self.ring.len()>self.split_stop{let p=*self.ring.last().ok_or(BitmapTraceError::Invalid("last target absent"))?;let key=self.key(p);if !trace_remove(&mut self.position_remove,&mut self.positions,key,work,&mut self.step_work)?{return Ok(false);}if !work.can_step(){return Ok(false);}self.ring.pop();self.position_remove=None;return Ok(true);}
      if self.split.as_ref().ok_or(BitmapTraceError::Invalid("split absent"))?.len()<3{return Err(BitmapTraceError::Invalid("Bitmap trace split contour is degenerate"));}
-     if !trace_slot(&mut self.raw,work,alloc)?{return Ok(false);}let split=self.split.take().ok_or(BitmapTraceError::Invalid("split absent"))?;if let Err((error,split))=work.vec_push(&mut self.raw,split){self.split=Some(split);return Err(BitmapTraceError::Invalid(error));}return Ok(true);
+     if !trace_slot(&mut self.raw,work,effect)?{return Ok(false);}let split=self.split.take().ok_or(BitmapTraceError::Invalid("split absent"))?;if let Err((error,split))=work.vec_push(&mut self.raw,split){self.split=Some(split);return Err(BitmapTraceError::Invalid(error));}return Ok(true);
     }
     let Some(current)=self.current else{
      if self.first==self.edges.len(){self.phase=BitmapTracePhase::Compact;self.contour=0;self.at=0;return Ok(true);}
@@ -107,8 +107,8 @@ impl<M:AsRef<[u8]>> BitmapTraceJob<M> {
     };
     let edge=self.edges[current];if edge.used{return Err(BitmapTraceError::Invalid("Bitmap trace contour is not manifold"));}let key=self.key(edge.a);
     if self.position_insert.is_none(){if let Some(repeated)=self.positions.get(&key).copied(){self.split=Some(Vec::new());self.split_at=repeated;self.split_stop=repeated;self.split_copy=true;return Ok(true);}}
-    let ring_len=self.ring.len();if !trace_insert(&mut self.position_insert,&mut self.positions,key,||ring_len,work,&mut self.step_work,alloc)?{return Ok(false);}
-    if !trace_slot(&mut self.ring,work,alloc)?{return Ok(false);}if edge.b==self.start&&!trace_slot(&mut self.raw,work,alloc)?{return Ok(false);}
+    let ring_len=self.ring.len();if !trace_insert(&mut self.position_insert,&mut self.positions,key,||ring_len,work,&mut self.step_work,effect)?{return Ok(false);}
+    if !trace_slot(&mut self.ring,work,effect)?{return Ok(false);}if edge.b==self.start&&!trace_slot(&mut self.raw,work,effect)?{return Ok(false);}
     work.vec_push(&mut self.ring,edge.a).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;self.edges[current].used=true;self.position_insert=None;
     if edge.b==self.start{let ring=std::mem::take(&mut self.ring);if let Err((error,ring))=work.vec_push(&mut self.raw,ring){self.ring=ring;return Err(BitmapTraceError::Invalid(error));}self.current=None;return Ok(true);}
     let mut next=None;let mut priority=5;
@@ -117,15 +117,15 @@ impl<M:AsRef<[u8]>> BitmapTraceJob<M> {
    },
    BitmapTracePhase::Compact=>{
     if self.contour==self.raw.len(){self.contour=0;self.at=0;self.phase=if self.input.simplify_epsilon>0.0{BitmapTracePhase::Simplify}else{BitmapTracePhase::Emit};return Ok(true);}
-    if self.base.len()==self.contour{if !trace_slot(&mut self.base,work,alloc)?{return Ok(false);}work.vec_push(&mut self.base,Vec::new()).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;return Ok(true);}
+    if self.base.len()==self.contour{if !trace_slot(&mut self.base,work,effect)?{return Ok(false);}work.vec_push(&mut self.base,Vec::new()).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;return Ok(true);}
     let raw=&self.raw[self.contour];let p=raw[self.at];let previous=raw[(self.at+raw.len()-1)%raw.len()];let next=raw[(self.at+1)%raw.len()];
-    if cross(previous,p,next)!=0.0{let target=&mut self.base[self.contour];if !trace_slot(target,work,alloc)?{return Ok(false);}work.vec_push(target,p).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;}
+    if cross(previous,p,next)!=0.0{let target=&mut self.base[self.contour];if !trace_slot(target,work,effect)?{return Ok(false);}work.vec_push(target,p).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;}
     self.at+=1;if self.at==raw.len(){if self.base[self.contour].len()<3{return Err(BitmapTraceError::Invalid("Bitmap trace contour is degenerate"));}self.contour+=1;self.at=0;}
    },
    BitmapTracePhase::Simplify=>{
     if self.mode==Mode::Edges{
      if self.contour==self.candidate.len(){if !self.changed{self.fallback();return Ok(true);}self.simplified=true;self.phase=BitmapTracePhase::Topology;return Ok(true);}
-     let ring=&self.candidate[self.contour];if !trace_slot(&mut self.flat,work,alloc)?{return Ok(false);}work.vec_push(&mut self.flat,(ring[self.at],ring[(self.at+1)%ring.len()])).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;self.at+=1;if self.at==ring.len(){self.contour+=1;self.at=0;}return Ok(true);
+     let ring=&self.candidate[self.contour];if !trace_slot(&mut self.flat,work,effect)?{return Ok(false);}work.vec_push(&mut self.flat,(ring[self.at],ring[(self.at+1)%ring.len()])).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;self.at+=1;if self.at==ring.len(){self.contour+=1;self.at=0;}return Ok(true);
     }
     if self.contour==self.base.len(){self.contour=0;self.at=0;self.mode=Mode::Edges;return Ok(true);}let ring=&self.base[self.contour];let n=ring.len();
     match self.mode{
@@ -134,24 +134,24 @@ impl<M:AsRef<[u8]>> BitmapTraceJob<M> {
       self.base_area+=p[0]*ring[(self.at+1)%n][1]-ring[(self.at+1)%n][0]*p[1];self.at+=1;
       if self.at==n{self.kept.reset();self.ranges.clear();self.mode=Mode::SeedZero;}
      },
-     Mode::SeedZero=>{if !trace_insert(&mut self.kept_insert,&mut self.kept,0,||(),work,&mut self.step_work,alloc)?{return Ok(false);}self.kept_insert=None;self.mode=Mode::SeedAnchor;},
+     Mode::SeedZero=>{if !trace_insert(&mut self.kept_insert,&mut self.kept,0,||(),work,&mut self.step_work,effect)?{return Ok(false);}self.kept_insert=None;self.mode=Mode::SeedAnchor;},
      Mode::SeedAnchor=>{
-      if !trace_insert(&mut self.kept_insert,&mut self.kept,self.anchor,||(),work,&mut self.step_work,alloc)?{return Ok(false);}
-      if !work.reserve_vec(&mut self.ranges,2,alloc).map_err(BitmapTraceError::Invalid)?{return Ok(false);}
+      if !trace_insert(&mut self.kept_insert,&mut self.kept,self.anchor,||(),work,&mut self.step_work,effect)?{return Ok(false);}
+      if !work.reserve_vec(&mut self.ranges,2,effect.actual()).map_err(BitmapTraceError::Invalid)?{return Ok(false);}
       if !work.copy_bytes(2*size_of::<Range>()){return Ok(false);}
       self.ranges.extend([Range{a:self.anchor,b:n,at:self.anchor+1,distance:0.0,index:0},Range{a:0,b:self.anchor,at:1,distance:0.0,index:0}]);self.kept_insert=None;self.mode=Mode::Ranges;
      },
      Mode::Ranges=>{
-      let Some(range)=self.ranges.last().copied()else{if !trace_slot(&mut self.candidate,work,alloc)?{return Ok(false);}work.vec_push(&mut self.candidate,Vec::new()).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;self.mode=Mode::Build;self.at=0;return Ok(true);};
+      let Some(range)=self.ranges.last().copied()else{if !trace_slot(&mut self.candidate,work,effect)?{return Ok(false);}work.vec_push(&mut self.candidate,Vec::new()).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;self.mode=Mode::Build;self.at=0;return Ok(true);};
       if range.at<range.b{let d=distance(ring[range.at%n],ring[range.a%n],ring[range.b%n]);let target=self.ranges.last_mut().ok_or(BitmapTraceError::Invalid("last_mut target absent"))?;if d>target.distance{target.distance=d;target.index=target.at;}target.at+=1;return Ok(true);}
       if range.distance>self.input.simplify_epsilon{
-       if !trace_insert(&mut self.kept_insert,&mut self.kept,range.index%n,||(),work,&mut self.step_work,alloc)?{return Ok(false);}
-       let target=self.ranges.len()+1;if !work.reserve_vec(&mut self.ranges,target,alloc).map_err(BitmapTraceError::Invalid)?{return Ok(false);}
+       if !trace_insert(&mut self.kept_insert,&mut self.kept,range.index%n,||(),work,&mut self.step_work,effect)?{return Ok(false);}
+       let target=self.ranges.len()+1;if !work.reserve_vec(&mut self.ranges,target,effect.actual()).map_err(BitmapTraceError::Invalid)?{return Ok(false);}
        if !work.copy_bytes(2*size_of::<Range>()){return Ok(false);}self.ranges.pop();self.ranges.extend([Range{a:range.index,b:range.b,at:range.index+1,distance:0.0,index:0},Range{a:range.a,b:range.index,at:range.a+1,distance:0.0,index:0}]);self.kept_insert=None;
       }else if work.can_step(){self.ranges.pop();}else{return Ok(false);}
      },
      Mode::Build=>{
-      if self.at<n{if self.kept.contains_key(&self.at){let p=ring[self.at];let target=&mut self.candidate[self.contour];if !trace_slot(target,work,alloc)?{return Ok(false);}work.vec_push(target,p).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;if let Some(previous)=self.previous{self.candidate_area+=previous[0]*p[1]-p[0]*previous[1];}self.previous=Some(p);}self.at+=1;return Ok(true);}
+      if self.at<n{if self.kept.contains_key(&self.at){let p=ring[self.at];let target=&mut self.candidate[self.contour];if !trace_slot(target,work,effect)?{return Ok(false);}work.vec_push(target,p).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;if let Some(previous)=self.previous{self.candidate_area+=previous[0]*p[1]-p[0]*previous[1];}self.previous=Some(p);}self.at+=1;return Ok(true);}
       let candidate=&self.candidate[self.contour];if let Some(previous)=self.previous{if !candidate.is_empty(){self.candidate_area+=previous[0]*candidate[0][1]-candidate[0][0]*previous[1];}}
       if candidate.len()<3||self.candidate_area.signum()!=self.base_area.signum(){self.fallback();return Ok(true);}
       self.changed|=candidate.len()!=n;self.contour+=1;self.at=0;self.anchor=0;self.farthest=0.0;self.base_area=0.0;self.candidate_area=0.0;self.previous=None;self.mode=Mode::Anchor;
@@ -171,7 +171,7 @@ impl<M:AsRef<[u8]>> BitmapTraceJob<M> {
      let crossing=a[0]+(y-a[1])*(b[0]-a[0])/(b[1]-a[1]);let end=(crossing-0.5).ceil();let sign=if b[1]>a[1]{1}else{-1};
      if(crossing-0.5).fract()==0.0&&crossing>=0.5&&crossing<width as f64{self.fallback();return Ok(true);}
      if end>0.0&&end<width as f64{
-      let key=end as usize;if self.change_insert.is_some()||!self.changes.contains_key(&key){if !trace_insert(&mut self.change_insert,&mut self.changes,key,||-sign,work,&mut self.step_work,alloc)?{return Ok(false);}self.change_insert=None;}else{if !work.can_step(){return Ok(false);}*self.changes.get_mut(&key).ok_or(BitmapTraceError::Invalid("get_mut target absent"))?-=sign;}
+      let key=end as usize;if self.change_insert.is_some()||!self.changes.contains_key(&key){if !trace_insert(&mut self.change_insert,&mut self.changes,key,||-sign,work,&mut self.step_work,effect)?{return Ok(false);}self.change_insert=None;}else{if !work.can_step(){return Ok(false);}*self.changes.get_mut(&key).ok_or(BitmapTraceError::Invalid("get_mut target absent"))?-=sign;}
      }
      if end>0.0{self.winding+=sign;}self.edge+=1;return Ok(true);
     }
@@ -182,7 +182,7 @@ impl<M:AsRef<[u8]>> BitmapTraceJob<M> {
    },
    BitmapTracePhase::Emit=>{
     let rings=if self.simplified{&self.candidate}else{&self.base};if self.contour==rings.len(){self.phase=BitmapTracePhase::Complete;self.step_work=1;return Ok(false);}
-    if self.output.len()>=self.input.max_segments{return Err(BitmapTraceError::Invalid("Bitmap trace exceeds segment budget"));}let ring=&rings[self.contour];if !trace_slot(&mut self.output,work,alloc)?{return Ok(false);}
+    if self.output.len()>=self.input.max_segments{return Err(BitmapTraceError::Invalid("Bitmap trace exceeds segment budget"));}let ring=&rings[self.contour];if !trace_slot(&mut self.output,work,effect)?{return Ok(false);}
     if self.at==ring.len(){work.vec_push(&mut self.output,PathSegment::Close).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;self.contour+=1;self.at=0;}else{work.vec_push(&mut self.output,if self.at==0{PathSegment::Move{to:ring[self.at]}}else{PathSegment::Line{to:ring[self.at]}}).map_err(|(error,_)|BitmapTraceError::Invalid(error))?;self.at+=1;}
    },
    BitmapTracePhase::Complete=>{}
@@ -194,13 +194,13 @@ impl<M:AsRef<[u8]>> BitmapTraceJob<M> {
  pub fn last_turn_work(&self)->u64{self.last_turn_work}
  pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
  fn progress(&self)->BitmapTraceProgress{BitmapTraceProgress{phase:self.phase,scanned:self.scanned,pixels:self.pixels,edges:self.edge_count,contours:self.base.len(),segments:self.output.len(),simplified:self.simplified,work:self.work,done:self.phase==BitmapTracePhase::Complete}}
- pub fn advance(&mut self,budget:usize,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<BitmapTraceProgress,BitmapTraceError>{
+ pub fn advance(&mut self,budget:usize,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<BitmapTraceProgress,BitmapTraceError>{
   self.last_turn_work=0;self.last_turn_semantic_work=0;if budget==0||budget as u128>9_007_199_254_740_991{return Err(BitmapTraceError::Invalid("Bitmap trace grant must be a positive integer"));}
   if self.cancelled{return Err(BitmapTraceError::Cancelled);}if let Some(error)=&self.failed{return Err(error.clone());}
   let d=self.pending;if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.progress());}
   let Some(root)=work.enter()else{self.pending=work.next_demand();return Ok(self.progress());};
   let result=(||{for _ in 0..budget{if self.phase==BitmapTracePhase::Complete||!work.can_step(){break;}if self.work>=self.input.max_work&&!self.settlement_pending(){let error=BitmapTraceError::Invalid("Bitmap trace exceeds work budget");self.failed=Some(error.clone());return Err(error);}
-   let before=work.receipt();self.step_work=0;let result=self.step(work,alloc);let semantic=matches!(&result,Ok(true)|Err(_));let actual=semantic||self.step_work>0||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=self.step_work.max(1);}if semantic{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failed=Some(error.clone());return Err(error);}if work.blocked(){break;}
+   let before=work.receipt();self.step_work=0;let result=self.step(work,effect);let semantic=matches!(&result,Ok(true)|Err(_));let actual=semantic||self.step_work>0||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=self.step_work.max(1);}if semantic{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failed=Some(error.clone());return Err(error);}if work.blocked(){break;}
   }Ok(self.progress())})();work.exit();result
  }
  pub fn result(&self)->Result<&[PathSegment],BitmapTraceError> {if self.cancelled {return Err(BitmapTraceError::Cancelled);}if let Some(error)=&self.failed {return Err(error.clone());}if self.phase!=BitmapTracePhase::Complete||self.taken{return Err(BitmapTraceError::Incomplete);}Ok(&self.output)}
@@ -211,7 +211,7 @@ impl<M:AsRef<[u8]>> BitmapTraceJob<M> {
 pub struct BitmapTraceRetirement<M:AsRef<[u8]>+semio_framework_value::retirement::RetireOwned>{owner:semio_framework_value::retirement::controlled::ControlledRetirement<BitmapTraceJob<M>>}
 impl<M:AsRef<[u8]>+semio_framework_value::retirement::RetireOwned> BitmapTraceRetirement<M>{
  pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
- pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{self.owner.step(effect)}
+ pub fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{self.owner.step(body,effect)}
  pub fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.owner.next_demand(body)}
  pub fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.owner.next_copy_byte_demand()}
  pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{self.owner.next_capacity_byte_demand(copy)}

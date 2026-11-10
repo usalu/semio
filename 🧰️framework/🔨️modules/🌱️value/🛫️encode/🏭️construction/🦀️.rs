@@ -5,20 +5,20 @@ pub use semio_framework_value_control_contract::{OriginalConstructionAuthority,O
 struct Scope<'owner,'call>{control:NativeEncodeControl<'call>,maximum:&'owner mut usize,scope_maximum:&'owner mut Option<usize>,ledger:&'owner mut Option<crate::native_receiving::NativeAllocationLedger>,completed:&'owner mut usize,total:&'owner mut usize,started:&'owner mut bool,stage:&'owner mut u64,depth:&'owner mut usize,work_state:&'owner mut super::action::WorkState}
 impl Drop for Scope<'_, '_>{fn drop(&mut self){*self.maximum=self.control.maximum_bytes;*self.scope_maximum=self.control.scope_maximum;*self.ledger=self.control.ledger.take();*self.completed=self.control.completed;*self.total=self.control.total;*self.started=self.control.started;*self.stage=self.control.stage;*self.depth=self.control.depth;*self.work_state=self.control.action.state.take();}}
 /// 🎟️ Quotes one original construction action and either cancels it unspent or posts its actual progress, always settling the action.
-fn quote_construction(loan:&mut OriginalConstructionLoan<'_>,demand:RetirementDemand,progress:Option<RetainedCloneProgress>)->Result<RetainedCloneGrant,ValueError>{
+fn quote_construction(loan:&mut OriginalConstructionLoan<'_>,work:&crate::OriginalWorkBorrow<'_>,demand:RetirementDemand,progress:Option<RetainedCloneProgress>)->Result<RetainedCloneGrant,ValueError>{
  let pending=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original construction reply is pending");
- let mut slot=None;loan.begin(demand,&mut slot)?;
+ let mut slot=None;loan.begin(demand,&mut slot,work)?;
  let outcome=(||{
   let action=slot.as_mut().ok_or_else(pending)?;loan.quote(action)?;
   let grant=loan.recover_grant(action)?.ok_or_else(pending)??;
   match progress{
    None=>loan.cancel(action,false,Default::default(),None)?,
-   Some(progress)=>{if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original construction grant no longer admits the posted progress"))}loan.post(action,progress,(progress.retained_capacity_bytes!=0).then_some(progress.retained_capacity_bytes))?;loan.recover_accept(action)?.ok_or_else(pending)??}
+   Some(progress)=>{if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original construction grant no longer admits the posted progress"))}loan.post(action,progress,(progress.retained_capacity_bytes!=0).then_some(progress.retained_capacity_bytes))?;loan.recover_accept(action)?.ok_or_else(pending)?;}
   }
   Ok(grant)
  })();
  if outcome.is_err(){if let Some(action)=slot.as_mut(){if matches!(action.phase(),OriginalConstructionPhase::Fresh|OriginalConstructionPhase::Granted){loan.cancel(action,false,Default::default(),None)?}}}
- if slot.as_ref().is_some_and(|action|matches!(action.phase(),OriginalConstructionPhase::GrantRefused|OriginalConstructionPhase::Settled)){loan.finish(&mut slot)?}
+ if let Some(action)=slot.as_ref(){match action.phase(){OriginalConstructionPhase::GrantRefused=>loan.finish(&mut slot)?,OriginalConstructionPhase::Settled if action.accept_succeeded()==Some(true)=>loan.finish_accepted(&mut slot)?,OriginalConstructionPhase::Settled if action.recorded_accept_status().is_none()=>loan.finish(&mut slot)?,OriginalConstructionPhase::Settled if action.accept_succeeded()==Some(false)=>{let refusal=loan.finish_refused(&mut slot)?;return Err(refusal)},_=>{}}}
  outcome
 }
 impl NativeEncodeControl<'_>{
@@ -27,11 +27,11 @@ impl NativeEncodeControl<'_>{
  /// 🔭️ Reads the original physical recipient’s actual submitted total.
  pub fn construction_submitted(&self)->Result<RetainedCloneProgress,ValueError>{self.construction.as_deref().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native encoder requires its original construction recipient"))?.submitted()}
  /// 🎟️ Quotes the real original recipient without introducing another payer.
- pub fn construction_grant(&mut self,demand:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{let loan=self.construction.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native encoder requires its original construction recipient"))?;quote_construction(loan,demand,None)}
+ pub fn construction_grant(&mut self,demand:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{let loan=self.construction.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native encoder requires its original construction recipient"))?;quote_construction(loan,&crate::OriginalWorkBorrow::new(&mut self.action),demand,None)}
  /// 🧾️ Publishes already-performed fresh effects under the caller's previously issued grant.
  pub fn submit_constructed_progress(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{
   if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"constructed progress exceeds its original grant"))}
-  let loan=self.construction.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native encoder requires its original construction recipient"))?;let demand=RetirementDemand{copy_bytes:progress.copied_bytes,capacity_bytes:progress.retained_capacity_bytes,release_bytes:progress.released_bytes,depth:usize::from(grant.maximum_depth>0)};quote_construction(loan,demand,Some(progress)).map(|_|())
+  let loan=self.construction.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native encoder requires its original construction recipient"))?;let demand=RetirementDemand{copy_bytes:progress.copied_bytes,capacity_bytes:progress.retained_capacity_bytes,release_bytes:progress.released_bytes,depth:usize::from(grant.maximum_depth>0)};quote_construction(loan,&crate::OriginalWorkBorrow::new(&mut self.action),demand,Some(progress)).map(|_|())
  }
  /// 🪢️ Borrows the actual physical recipient through this synchronous original owner.
  pub fn with_construction_recipient<T,E:From<ValueError>>(&mut self,loan:&mut OriginalConstructionLoan<'_>,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<T,E>)->Result<T,E>{

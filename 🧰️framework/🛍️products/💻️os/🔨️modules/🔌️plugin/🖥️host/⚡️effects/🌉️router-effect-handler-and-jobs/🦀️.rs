@@ -436,7 +436,8 @@ async fn close_unadmitted_router_effect<R: HostAsyncRuntime>(runtime: &R, job: &
                 break;
             }
             let step = caller.turn_retiring(&mut *wallet, |cx| {
-                let turn = retirement.return_alias_step(cx.original_cancel_token(), cx.retained_grant());
+                let grant = cx.retained_grant();
+                let turn = cx.with_original_effect(grant, |cx, effect| retirement.return_alias_step(cx.original_cancel_token(), effect))?.map_or(RetainedWorkOutcome { result: Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())), work: 0 }, |(turn, _)| turn);
                 let result = turn.result.map_err(|error| match error {
                     semio_framework_async::CancelTokenRetirementError::Refused(error) => error,
                     semio_framework_async::CancelTokenRetirementError::Blocked(_) => semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "router effect cancellation alias remains blocked"),

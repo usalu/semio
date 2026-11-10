@@ -39,6 +39,7 @@ ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️ru
 js-sys = { version = "0.3.83", optional = true }
 
 [dev-dependencies]
+semio-ui-prepared-staging = { path = "../../📤️staging/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value-testing-allocator = { path = "../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }

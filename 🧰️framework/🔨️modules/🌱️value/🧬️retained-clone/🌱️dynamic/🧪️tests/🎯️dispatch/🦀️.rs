@@ -6,4 +6,4 @@ use crate::retained_clone::RetainedCloneSource;
 mod contract;
 pub(super) use contract::record;
 #[test]
-fn dynamic_value_generic_close_dispatch_selects_one_body_correlated_event(){contract::verify(||DslValue::String("selected".into()),DslValueRetainedCloneCursor::close_demands);}
+fn dynamic_value_generic_close_dispatch_selects_one_body_correlated_event(){contract::verify(||DslValue::String("selected".into()),DslValueRetainedCloneCursor::close_demands,|c|Some(c as *const _ as usize));}

@@ -321,8 +321,8 @@ semio-ui-contract-presentation = { path = "../../../../../../../../../🔨️mod
 semio-ui-declaration = { path = "../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 semio-ui-draw-contract = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
 semio-ui-layout = { path = "../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
-semio-ui-prepared = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust" }
-semio-ui-prepared-staging = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust" }
+semio-ui-prepared = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-prepared-staging = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust", features = ["testkit"] }
 semio-ui-retained-tree = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust" }
 semio-ui-scene-camera = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust" }
 semio-ui-scene-mesh = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }

@@ -2,7 +2,7 @@
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_intrinsic::{DslValue,Number};
 pub use semio_framework_value_native_decoding::{native_decoding,native_decoding::{NativeDecodeControl,OriginalReceivingPrimary}};
-pub use semio_framework_value_native_receiver_protocol::{NativeReceiver,NativeReceiverSeed,NativeReceivingBatch,receiving_child_body_budget,native_receiver_backing_demands,close_native_receiver_backing};
+pub use semio_framework_value_native_receiver_protocol::{NativeReceiver,NativeReceiverSeed,NativeReceivingBatch,receiving_child_body_budget};
 pub use semio_framework_value_native_shared_engine::NativeSharedSlots;
 pub use semio_framework_value_persistent::list;
 pub use semio_framework_value_retained_clone::retained_clone;

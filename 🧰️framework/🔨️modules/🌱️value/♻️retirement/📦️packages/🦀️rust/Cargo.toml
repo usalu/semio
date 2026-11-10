@@ -49,3 +49,7 @@ path = "../../🎮️controlled/🎟️work/🧪️tests/owning.rs"
 [[test]]
 name = "original-inline-retirement"
 path = "../../🧪️tests/🪑️inline/🦀️.rs"
+
+[[test]]
+name = "controlled-retirement"
+path = "../../🎮️controlled/🧪️tests/native.rs"

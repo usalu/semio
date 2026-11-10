@@ -16,7 +16,15 @@ impl RetirementCursor for ExecutorSignalLease{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;if self.terminal_is_empty(){return Ok(Default::default())}Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<Arc<ExecutorWakeSignal>>>()+size_of::<Arc<ExecutorWakeSignal>>()+size_of::<Option<TaskId>>(),release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<ExecutorWakeSignal>(),depth:1,..Default::default()})}
 
  fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+ semio_framework_value::native_retirement_reply!();
+ fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.id.is_none()}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.terminal_is_empty(){0}else{size_of::<Option<Arc<ExecutorWakeSignal>>>()+size_of::<Arc<ExecutorWakeSignal>>()+size_of::<Option<TaskId>>()})}
+ fn next_close_byte_demand(&self)->Option<usize>{Some(if self.terminal_is_empty(){0}else{semio_framework_value::shared_retirement_allocation_bytes::<ExecutorWakeSignal>()})}
+ fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl ExecutorSignalLease{
+ pub fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
   let grant=effect.grant();
   if self.terminal_is_empty(){return RetirementStep::Complete(0)}
   let copy=self.next_work_byte_demand().unwrap();let release=self.next_close_byte_demand().unwrap();
@@ -26,11 +34,6 @@ impl RetirementCursor for ExecutorSignalLease{
   let released=Arc::into_inner(self.source.take().unwrap()).map_or(0,|original|{drop(original);release});self.id.take();
   RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:released,..Default::default()},effect.performed_work())
  }
- fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.id.is_none()}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.terminal_is_empty(){0}else{size_of::<Option<Arc<ExecutorWakeSignal>>>()+size_of::<Arc<ExecutorWakeSignal>>()+size_of::<Option<TaskId>>()})}
- fn next_close_byte_demand(&self)->Option<usize>{Some(if self.terminal_is_empty(){0}else{semio_framework_value::shared_retirement_allocation_bytes::<ExecutorWakeSignal>()})}
- fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl Drop for ExecutorSignalLease{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"executor atomic signal lease abandoned original custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.source);}}}}
 

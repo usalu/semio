@@ -2,7 +2,7 @@
 
 use super::*;
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: ArtifactCanonicalJsonTree + StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + semio_os_spr::ColdMutation<ParentP> + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -42,7 +42,7 @@ where
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: ArtifactCanonicalJsonTree + StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + semio_os_spr::ColdMutation<ParentP> + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -95,7 +95,7 @@ where
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> Drop for DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -109,7 +109,7 @@ where
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: ArtifactCanonicalJsonTree + StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + semio_os_spr::ColdMutation<ParentP> + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -159,7 +159,7 @@ Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked) => DurableOwnedMapRecoveryAdv
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> Drop for DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -173,7 +173,7 @@ where
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> Drop for DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -187,7 +187,7 @@ where
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<ParentP> + StoreMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -210,7 +210,7 @@ where
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + Clone + semio_os_spr::ColdMutation<ParentP> + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -319,7 +319,7 @@ where
     }
 }
 /// ♻️ Verifies every bound outcome of a decision against the three stores and answers its recovery frontier.
-pub fn recover_decision_store_owned<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+pub fn recover_decision_store_owned<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>(
     decision: &DurableOwnedThreeMemberDecisionV1,
     parent_store: &ArtifactStore<ParentP, ParentMutation>,
     drawing_store: &ArtifactStore<DrawingP, DrawingMutation>,
@@ -360,7 +360,7 @@ fn empty_binding_member() -> DurableOwnedGroupMemberV1 {
     DurableOwnedGroupMemberV1 { role: String::new(), reference: semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } }, owner: None, expected_generation: 0, expected_revision: [0;32], recovery_schema: String::new(), recovery_pack: Vec::new(), recovery_pack_sha256: String::new(), unbound_outcome_sha256: String::new(), post_generation: 0, post_revision: [0;32] }
 }
 
-fn advance_binding_member<P, M>(bound: &DurableStoreBoundOutcomeV1<P, M>, member: &mut DurableOwnedGroupMemberV1, grant: semio_framework_value::RetainedCloneGrant, native: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(bool, Option<semio_framework_value::RetainedCloneProgress>), DurableOwnedGroupDecisionError> {
+fn advance_binding_member<P: Send + Sync + 'static, M>(bound: &DurableStoreBoundOutcomeV1<P, M>, member: &mut DurableOwnedGroupMemberV1, grant: semio_framework_value::RetainedCloneGrant, native: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(bool, Option<semio_framework_value::RetainedCloneProgress>), DurableOwnedGroupDecisionError> {
     use semio_framework_value::{RetirementDemand, RetainedCloneProgress, retained_clone::retained_clone_grant_admits};
     let error = DurableOwnedGroupDecisionError::Retirement;
     let demand = if member.recovery_pack.capacity() == 0 && !bound.recovery_pack.is_empty() { RetirementDemand { copy_bytes: size_of::<Vec<u8>>(), capacity_bytes: bound.recovery_pack.len(), depth: 1, ..Default::default() } } else if member.recovery_pack.len() < bound.recovery_pack.len() { RetirementDemand { copy_bytes: 1 + size_of::<usize>(), depth: 1, ..Default::default() } } else if member.recovery_pack_sha256.is_empty() { RetirementDemand { copy_bytes: bound.recovery_pack_sha256.len() + size_of::<u64>() + 32, capacity_bytes: bound.recovery_pack_sha256.len(), depth: 1, ..Default::default() } } else { return Ok((true, None)); };

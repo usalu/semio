@@ -493,9 +493,9 @@ pub fn stage_world3d_scene_bridge(camera_state: &mut WorldCameraState, bridge_st
 /// world that is being torn down never leaves a snapshot slot reserved.
 pub fn step_world3d_scene_bridge_close(bridge_state: &mut WorldBridgeState,context:&mut semio_framework_job::StepContext<'_>) -> bool {
     if let Some(owner)=bridge_state.scene_bridge_close.as_mut(){
-        let result=owner.step(context.retained_grant());
-        let progress=match result{Ok(step)=>step.progress(),Err(_)=>owner.step_progress()};
-        context.consume_retained(progress).expect("original scene cursor retirement fits original remaining grant");
+        let body=context.retained_grant().maximum_copy_bytes;
+        let demand=owner.selected_demand(body).expect("original scene cursor retirement quotes its close");
+        semio_framework_job::close_original_effect_step(context,demand,|effect|owner.step(body,effect)).expect("original scene cursor retirement fits original remaining grant");
         if owner.terminal_is_empty(){bridge_state.scene_bridge_close=None;}
         return true;
     }

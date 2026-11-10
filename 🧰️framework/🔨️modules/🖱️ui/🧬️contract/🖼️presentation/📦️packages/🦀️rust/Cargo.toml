@@ -33,4 +33,6 @@ semio-framework-schema-registry = { workspace = true }
 serde_json.workspace = true
 
 semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true, features = ["testkit"] }

@@ -8462,7 +8462,16 @@
           "ports": [
             {
               "id": "geometry:in",
-              "label": "Geometry",
+              "label": {
+                "native": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                },
+                "reuse": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "twoD",
@@ -8473,7 +8482,16 @@
             },
             {
               "id": "results:out",
-              "label": "Results",
+              "label": {
+                "native": {
+                  "en": "Results",
+                  "de": "Ergebnisse"
+                },
+                "reuse": {
+                  "en": "Results",
+                  "de": "Ergebnisse"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "data",
@@ -17252,8 +17270,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Statik"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Statics",
+                "de": "Statik"
+              },
+              "reuse": {
+                "en": "Statics",
+                "de": "Statik"
+              }
+            }
           ]
         },
         "tutorials": [],
@@ -17440,7 +17476,16 @@
           "ports": [
             {
               "id": "geometry:in",
-              "label": "Geometry",
+              "label": {
+                "native": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                },
+                "reuse": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "threeD",
@@ -17451,7 +17496,16 @@
             },
             {
               "id": "results:out",
-              "label": "Results",
+              "label": {
+                "native": {
+                  "en": "Results",
+                  "de": "Ergebnisse"
+                },
+                "reuse": {
+                  "en": "Results",
+                  "de": "Ergebnisse"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "data",

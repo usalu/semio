@@ -28,6 +28,11 @@ proc-macro2 = "1.0"
 
 [dev-dependencies]
 semio-framework-value-clone-source-testing = { path = "../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-clone-source = { path = "../../../🧬️retained-clone/🔗️source/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-paged-list = { path = "../../../📋️list/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-value-derive-resources = { path = "../../🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust" }

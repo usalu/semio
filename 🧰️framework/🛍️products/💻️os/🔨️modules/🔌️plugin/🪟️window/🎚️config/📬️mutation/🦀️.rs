@@ -21,11 +21,7 @@ impl<T:Clone+Send+Sync+'static> ErasedWindowMutationValue for FactoryBoxedValue<
 pub struct ErasedWindowMutationRetirement{original:ManuallyDrop<Option<Box<dyn ErasedWindowMutationValue>>>}
 impl ErasedWindowMutationRetirement{
  fn demand(&self)->Result<RetirementDemand,ValueError>{let Some(original)=self.original.as_ref()else{return Ok(Default::default())};let mut demand=original.payload_birth_demand();demand.depth+=1;Ok(demand)}
-}
-impl RetirementCursor for ErasedWindowMutationRetirement{
- fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(self.original.is_some()))}
- fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{self.demand()}
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
+ fn close_step(&mut self,_body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
   let Some(original)=self.original.take()else{return RetirementStep::Complete(0)};
   let grant=effect.grant();
   if grant.maximum_depth<2{*self.original=Some(original);return RetirementStep::BudgetExhausted}
@@ -33,6 +29,11 @@ impl RetirementCursor for ErasedWindowMutationRetirement{
   let (rest,turn)=original.admit_payload(&mut child);*self.original=rest;
   match turn.result{Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress,turn.work),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)}
  }
+}
+impl RetirementCursor for ErasedWindowMutationRetirement{
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(self.original.is_some()))}
+ fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{self.demand()}
+ semio_framework_value_retirement::native_retirement_reply!();
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{self.original.as_ref().map_or(Some(0),|original|Some(original.payload_birth_demand().capacity_bytes))}

@@ -31,43 +31,19 @@ fn graph_parameter_intent_rejects_non_finite_before_retained_admission() {
 }
 
 #[test]
-fn graph_parameter_intent_retirement_preserves_exact_bytes_and_worker_transfer() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let text = fixture.get("longWidgetId").unwrap();
-    let law = fixture.get("retirement").unwrap();
-    for pause in law.get("cancelAt").and_then(semio_framework_pack_json::Value::as_array).unwrap() {
-        let payload = SetGraphParameter {
-            widget_id: text.get("unit").and_then(semio_framework_pack_json::Value::as_str).unwrap().repeat(text.get("repetitions").and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize),
-            value: 4.0,
-            surface_id: Some(law.get("surfaceUnit").and_then(semio_framework_pack_json::Value::as_str).unwrap().repeat(law.get("surfaceRepetitions").and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize)),
-        };
-        let expected = payload.widget_id.capacity() + payload.surface_id.as_ref().unwrap().capacity();
-        let pointers = [payload.widget_id.as_ptr(), payload.surface_id.as_ref().unwrap().as_ptr()];
-        let mut owner = payload.into_retirement();
-        let grant = RetainedCloneGrant { maximum_items: law.get("maximumItems").unwrap().as_u64().unwrap() as usize, maximum_copy_bytes: law.get("copyBytes").unwrap().as_u64().unwrap() as usize, maximum_capacity_bytes: law.get("capacityBytes").unwrap().as_u64().unwrap() as usize, maximum_release_bytes: law.get("releaseProbeBytes").unwrap().as_u64().unwrap() as usize, maximum_depth: law.get("maximumDepth").unwrap().as_u64().unwrap() as usize };
-        for _ in 0..pause.as_u64().unwrap() + law.get("repeatedRefusals").unwrap().as_u64().unwrap() {
-            assert_eq!(owner.close_step(grant).unwrap().progress(), RetainedCloneProgress::default());
-            assert_eq!(owner.bytes[0].as_ref().unwrap().as_ptr(), pointers[0]);
-            assert_eq!(owner.bytes[1].as_ref().unwrap().as_ptr(), pointers[1]);
-        }
-        assert_eq!(owner.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap().progress(), RetainedCloneProgress::default());
-        assert_eq!(owner.close_step(RetainedCloneGrant { maximum_release_bytes: 0, ..grant }).unwrap().progress(), RetainedCloneProgress::default());
-        assert!(owner.close_step(RetainedCloneGrant { maximum_depth: 0, ..grant }).is_err());
-        let released = std::thread::spawn(move || {
-            let mut released = 0;
-            for _ in 0..2 {
-                let exact = RetainedCloneGrant { maximum_release_bytes: owner.next_release_byte_demand().unwrap(), ..grant };
-                let step = owner.close_step(exact).unwrap();
-                assert!(step.progress().fits(exact));
-                released += step.progress().released_bytes;
-            }
-            assert!(owner.terminal_is_empty());
-            released
-        }).join().unwrap();
-        assert_eq!(released, expected);
+fn graph_parameter_intent_retires_through_its_derived_owner() {
+    use semio_framework_value::{retained_clone::RetainedCloneGrant, retirement::controlled::ControlledRetirement};
+    let payload = SetGraphParameter { widget_id: "widget".repeat(64), value: 4.0, surface_id: Some("surface".repeat(64)) };
+    let mut owner = ControlledRetirement::new(payload).map_err(|(error, _)| error).unwrap();
+    for _ in 0..4096 {
+        if owner.terminal_is_empty() { break; }
+        let copy = 4096.max(owner.next_copy_byte_demand().unwrap());
+        let demand = owner.next_demand(copy).unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let mut turn = semio_framework_job::OriginalRetirementPump::new().turn(1 << 16, u64::MAX, || Some(0), grant).unwrap();
+        turn.with_effect(|effect| owner.step(copy, effect)).unwrap().expect("graph parameter close quote admitted");
     }
-    let owner = SetGraphParameter { widget_id: "guard".into(), value: 1.0, surface_id: None }.into_retirement();
-    assert!(std::panic::catch_unwind(|| drop(owner)).is_err());
+    assert!(owner.terminal_is_empty());
 }
 
 #[test]

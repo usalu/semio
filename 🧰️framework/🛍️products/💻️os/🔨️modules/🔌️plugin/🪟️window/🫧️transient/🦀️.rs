@@ -2,7 +2,7 @@
 
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_ownership::bounded_ownership::{PluginLifecyclePrimary,PluginLifecycleStep};
-use semio_framework_plugin_window_config_registry::{WindowRegistry, fits};
+use semio_plugin_window_config_registry::{WindowRegistry, fits};
 use semio_framework_value::{FactoryAuthority, FactoryRetirement, RetirementDemand, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress};
 #[cfg(test)] use semio_framework_value::{RetainedCloneStep};
 use semio_plugin_ownership::transient_publication::transient_store_disposer;
@@ -38,7 +38,7 @@ fn demand_fault(error: ValueError) -> Fault {
 /// 🪟️ Declares the transient schema and bounded owners of one concrete window kind.
 pub trait WindowTransientOwner: Send + Sync + 'static {
     const WINDOW_KIND_ID: &'static str;
-    type State: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
+    type State: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<Self::State> + protocol::ColdMutation<Self::State> + PartialEq + Send + Sync + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + 'static;
 
     fn build_mutation_retirement_factory()->Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>>{Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Self::Mutation>::default())}

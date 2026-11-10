@@ -5416,8 +5416,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Verfolgen"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Trace",
+                "de": "Verfolgen"
+              },
+              "reuse": {
+                "en": "Trace",
+                "de": "Verfolgen"
+              }
+            }
           ]
         },
         "tutorials": [],
@@ -5518,7 +5536,16 @@
         "mediaInputs": [
           {
             "id": "features:in",
-            "label": "Features",
+            "label": {
+              "native": {
+                "en": "Features",
+                "de": "Objekte"
+              },
+              "reuse": {
+                "en": "Features",
+                "de": "Objekte"
+              }
+            },
             "direction": "in",
             "mediaType": {
               "class": "twoD",
@@ -5531,7 +5558,16 @@
         "mediaOutputs": [
           {
             "id": "map:out",
-            "label": "Map",
+            "label": {
+              "native": {
+                "en": "Map",
+                "de": "Karte"
+              },
+              "reuse": {
+                "en": "Map",
+                "de": "Karte"
+              }
+            },
             "direction": "out",
             "mediaType": {
               "class": "twoD",
@@ -5598,7 +5634,16 @@
           "ports": [
             {
               "id": "features:in",
-              "label": "Features",
+              "label": {
+                "native": {
+                  "en": "Features",
+                  "de": "Objekte"
+                },
+                "reuse": {
+                  "en": "Features",
+                  "de": "Objekte"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "twoD",
@@ -5609,7 +5654,16 @@
             },
             {
               "id": "map:out",
-              "label": "Map",
+              "label": {
+                "native": {
+                  "en": "Map",
+                  "de": "Karte"
+                },
+                "reuse": {
+                  "en": "Map",
+                  "de": "Karte"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "twoD",
@@ -10114,7 +10168,16 @@
         "mediaInputs": [
           {
             "id": "map:in",
-            "label": "Map",
+            "label": {
+              "native": {
+                "en": "Map",
+                "de": "Karte"
+              },
+              "reuse": {
+                "en": "Map",
+                "de": "Karte"
+              }
+            },
             "direction": "in",
             "mediaType": {
               "class": "twoD",
@@ -10128,7 +10191,16 @@
         "mediaOutputs": [
           {
             "id": "scene:out",
-            "label": "Scene",
+            "label": {
+              "native": {
+                "en": "Scene",
+                "de": "Szene"
+              },
+              "reuse": {
+                "en": "Scene",
+                "de": "Szene"
+              }
+            },
             "direction": "out",
             "mediaType": {
               "class": "threeD",
@@ -10195,7 +10267,16 @@
           "ports": [
             {
               "id": "map:in",
-              "label": "Map",
+              "label": {
+                "native": {
+                  "en": "Map",
+                  "de": "Karte"
+                },
+                "reuse": {
+                  "en": "Map",
+                  "de": "Karte"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "twoD",
@@ -10207,7 +10288,16 @@
             },
             {
               "id": "scene:out",
-              "label": "Scene",
+              "label": {
+                "native": {
+                  "en": "Scene",
+                  "de": "Szene"
+                },
+                "reuse": {
+                  "en": "Scene",
+                  "de": "Szene"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "threeD",

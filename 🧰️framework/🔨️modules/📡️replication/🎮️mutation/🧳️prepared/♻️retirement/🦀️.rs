@@ -1,18 +1,19 @@
 //! 🧳️ Prepared publication and refusal fields retain their original owners until each native admission.
 use super::ArtifactReplayPrepared;
 use crate::ArtifactReplayRetirementFactory;
-use semio_framework_value::{ErasedSnapshotRetirement,OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneProgress,RetainedCloneStep},retirement::{controlled::ControlledRetirement,frame::admit_retirement_frame as admit_artifact_retirement}};
+use semio_framework_value::{ErasedSnapshotRetirement,OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneProgress,RetainedCloneStep},retirement::{frame::admit_retirement_frame as admit_artifact_retirement}};
 use semio_framework_value::retirement::RetireOwned;
 type Factory<'a,P,M>=Option<&'a dyn ArtifactReplayRetirementFactory<P,M>>;
+fn controlled<T:RetireOwned>(value:&T)->Result<RetirementDemand,ValueError>{semio_framework_value::retirement::controlled::controlled_retirement_birth_demand(value)}
 fn frame<T>()->RetirementDemand{RetirementDemand{capacity_bytes:size_of::<T>(),depth:1,..Default::default()}}
 fn issuer<P,M>(factory:Factory<'_,P,M>)->Result<&dyn ArtifactReplayRetirementFactory<P,M>,ValueError>{factory.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"prepared replay publication retains its original without an installed retirement issuer"))}
 pub fn terminal<P,M>(prepared:&ArtifactReplayPrepared<P,M>)->bool{prepared.next.is_none()&&matches!(&prepared.inverse,Ok(inverse)if inverse.terminal_is_empty())&&prepared.messages.capacity()==0&&prepared.apply_refusal.is_none()&&prepared.input_refusal.is_none()}
 pub fn demands<P,M>(prepared:&ArtifactReplayPrepared<P,M>,factory:Factory<'_,P,M>)->Result<RetirementDemand,ValueError>{
  if prepared.next.is_some(){return Ok(RetirementDemand{capacity_bytes:issuer(factory)?.snapshot_birth_bytes(),depth:1,..Default::default()});}
- match &prepared.inverse{Err(_)=>return Ok(frame::<ControlledRetirement<ValueError>>()),Ok(inverse)if !inverse.terminal_is_empty()=>return Ok(RetirementDemand{capacity_bytes:issuer(factory)?.mutations_birth_bytes(),depth:1,..Default::default()}),Ok(_)=>{}}
+ match &prepared.inverse{Err(error)=>return controlled(error),Ok(inverse)if !inverse.terminal_is_empty()=>return Ok(RetirementDemand{capacity_bytes:issuer(factory)?.mutations_birth_bytes(),depth:1,..Default::default()}),Ok(_)=>{}}
  if prepared.messages.capacity()!=0{return Ok(frame::<crate::MutationMessageLedgerRetirement>());}
- if prepared.apply_refusal.is_some(){return Ok(frame::<ControlledRetirement<semio_framework_mutation_diff::MutationApplyError>>());}
- if prepared.input_refusal.is_some(){return Ok(frame::<ControlledRetirement<String>>());}
+ if let Some(refusal)=&prepared.apply_refusal{return controlled(refusal);}
+ if let Some(refusal)=&prepared.input_refusal{return controlled(refusal);}
  Ok(Default::default())
 }
 fn done(result:Result<RetainedCloneStep,OriginalRetirementFailure>,work:u128)->OriginalRetirementPoll{RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work})}

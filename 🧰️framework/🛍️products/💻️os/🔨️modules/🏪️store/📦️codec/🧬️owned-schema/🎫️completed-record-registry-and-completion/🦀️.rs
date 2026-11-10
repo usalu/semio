@@ -68,7 +68,7 @@ impl<P, Mutation> ArtifactEnvelopeCompletedRecordOwner<P, Mutation> {
 impl<P, Mutation> ArtifactEnvelopeCompletedRecord<P, Mutation> for ArtifactEnvelopeCompletedRecordOwner<P, Mutation>
 where
     P: Send + Sync + 'static,
-    Mutation: Send + 'static,
+    Mutation: Send + Sync + 'static,
 {
     fn try_publish_to(&mut self, target: &mut dyn ArtifactEnvelopeCompletedRecordTarget<P, Mutation>) -> bool {
         if self.retirement.is_some() || self.initial_snapshot_factory.is_none() || self.mutation_factory.is_none() { return false; }
@@ -112,7 +112,7 @@ where
         for index in 0..self.factory_retirement.len() {
             if let Some(factory) = self.factory_retirement[index].as_mut() {
                 let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-                let step = artifact_envelope_close_resume_with(factory.step(&mut effect.nested(child)), artifact_envelope_failure_error)?;
+                let step = artifact_envelope_close_resume_with(factory.step(grant.maximum_copy_bytes, &mut effect.nested(child)), artifact_envelope_failure_error)?;
                 semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "completed original factory")?;
                 if factory.terminal_is_empty() { self.factory_retirement[index] = None; }
                 return Ok(if self.ownership_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
@@ -130,7 +130,7 @@ where
     fn terminal_is_empty(&self) -> bool { self.ownership_is_empty() }
 }
 
-impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeCompletedRecordOwner<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactEnvelopeCompletedRecordOwner<P, Mutation> {
     /// 📏️ Quotes the original inline envelope child and separately retained factory capabilities.
     pub fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.retirement.is_some() { return retirement_owner_demands(&self.retirement, maximum_copy_bytes); }

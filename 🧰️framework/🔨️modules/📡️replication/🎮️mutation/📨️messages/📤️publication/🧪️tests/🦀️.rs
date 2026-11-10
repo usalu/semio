@@ -17,19 +17,19 @@ fn message_borrowed_publication_copies_exact_committed_sources_and_closes_partia
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
             for axis in 0..5 {
                 let denied = match axis { 0 => RetainedCloneGrant { maximum_items: 0, ..grant }, 1 if demand.copy_bytes != 0 => RetainedCloneGrant { maximum_copy_bytes: 0, ..grant }, 2 if demand.capacity_bytes != 0 => RetainedCloneGrant { maximum_capacity_bytes: 0, ..grant }, 3 if demand.release_bytes != 0 => RetainedCloneGrant { maximum_release_bytes: 0, ..grant }, 4 => RetainedCloneGrant { maximum_depth: 0, ..grant }, _ => continue };
-                let (step, heap) = observe_heap_allocations_on_this_thread(|| owner.advance(&source, denied).unwrap()); assert_eq!(step.progress(), Default::default()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                let (step, heap) = observe_heap_allocations_on_this_thread(|| owner.advance(&source, denied).result.unwrap()); assert_eq!(step.progress(), Default::default()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             }
-            let (step, heap) = observe_heap_allocations_on_this_thread(|| owner.advance(&source, grant).unwrap()); assert!(step.progress().fits(grant)); assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+            let (step, heap) = observe_heap_allocations_on_this_thread(|| owner.advance(&source, grant).result.unwrap()); assert!(step.progress().fits(grant)); assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
             let substitute = source.clone(); let (error, heap) = observe_heap_allocations_on_this_thread(|| owner.demands(&substitute)); assert!(error.is_err()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
         if case["cancelAt"].is_null() {
             assert!(owner.ready()); let (mut publication, receipt) = owner.take(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<MutationMessagePublication>(), maximum_depth: 1, ..Default::default() }).unwrap(); assert_eq!(receipt.copied_bytes, size_of::<MutationMessagePublication>());
             assert_eq!(publication.original_messages(), source); assert_eq!(publication.copied_messages(), source);
             for (original, copy) in source.iter().zip(publication.original_messages()) { if !original.message.is_empty() { assert_ne!(original.message.as_ptr(), copy.message.as_ptr()); } if !original.code.0.is_empty() { assert_ne!(original.code.0.as_ptr(), copy.code.0.as_ptr()); } }
-            publication.begin_close(); while !publication.terminal_is_empty() { let demand = publication.close_demands().unwrap(); publication.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }).unwrap(); }
+            publication.begin_close(); while !publication.terminal_is_empty() { let demand = publication.close_demands().unwrap(); publication.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }).result.unwrap(); }
         }
         owner.begin_close();
-        for _ in 0..100000 { if owner.terminal_is_empty() { break; } let demand = owner.close_demands().unwrap(); let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }; let (step, heap) = observe_heap_allocations_on_this_thread(|| owner.close_step(grant).unwrap()); assert!(step.progress().fits(grant)); assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes)); }
+        for _ in 0..100000 { if owner.terminal_is_empty() { break; } let demand = owner.close_demands().unwrap(); let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }; let (step, heap) = observe_heap_allocations_on_this_thread(|| owner.close_step(grant).result.unwrap()); assert!(step.progress().fits(grant)); assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes)); }
         assert!(owner.terminal_is_empty()); assert_eq!(source.iter().map(|row| row.message.as_ptr()).collect::<Vec<_>>(), originals);
         let (_, heap) = observe_heap_allocations_on_this_thread(|| drop(owner)); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     }
@@ -51,9 +51,9 @@ fn message_publication_join_preserves_payload_allocations_and_funded_cancellatio
             let rows: Vec<_> = fixture["cases"][index.as_u64().unwrap() as usize]["messages"].as_array().unwrap().iter().map(|row| MutationMessage { level: match row["level"].as_str().unwrap() { "warning" => Severity::Warning, "error" => Severity::Error, "fatal" => Severity::Fatal, _ => Severity::Info }, code: row["code"].as_str().unwrap().to_owned().into(), message: row["text"].as_str().unwrap().to_owned(), target: row["target"].as_array().unwrap().iter().map(|item| item.as_str().unwrap().to_owned()).collect(), op_index: Some(0) }).collect();
             pointers.extend(rows.iter().map(|row| row.message.as_ptr()));
             let mut owner = MutationMessagePublication::new(rows);
-            while !owner.ready() { let demand = owner.demands().unwrap(); owner.advance(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }).unwrap(); }
+            while !owner.ready() { let demand = owner.demands().unwrap(); owner.advance(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }).result.unwrap(); }
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<MutationMessagePublication>(), maximum_depth: 1, ..Default::default() };
-            match batch.append(owner, grant) { Ok(receipt) => assert!(receipt.fits(grant)), Err(mut owner) => { owner.begin_close(); while !owner.terminal_is_empty() { let demand = owner.close_demands().unwrap(); owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }).unwrap(); } panic!("exact batch owner slot unexpectedly refused"); } }
+            match batch.append(owner, grant) { Ok(receipt) => assert!(receipt.fits(grant)), Err(mut owner) => { owner.begin_close(); while !owner.terminal_is_empty() { let demand = owner.close_demands().unwrap(); owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }).result.unwrap(); } panic!("exact batch owner slot unexpectedly refused"); } }
         }
         assert_eq!(batch.rows().count(), case["expectedRows"].as_u64().unwrap() as usize);
         let mut join = MutationMessagePublicationJoin::new(batch, pointers.len());
@@ -62,9 +62,9 @@ fn message_publication_join_preserves_payload_allocations_and_funded_cancellatio
             if join.ready() { break; }
             let demand = join.demands().unwrap();
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let (blocked, heap) = observe_heap_allocations_on_this_thread(|| join.advance(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap());
+            let (blocked, heap) = observe_heap_allocations_on_this_thread(|| join.advance(RetainedCloneGrant { maximum_items: 0, ..grant }).result.unwrap());
             assert_eq!(blocked.progress(), Default::default()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            let (step, heap) = observe_heap_allocations_on_this_thread(|| join.advance(grant).unwrap());
+            let (step, heap) = observe_heap_allocations_on_this_thread(|| join.advance(grant).result.unwrap());
             assert!(step.progress().fits(grant)); assert_eq!(heap.requested_bytes, step.progress().retained_capacity_bytes); assert_eq!(heap.released_bytes, step.progress().released_bytes);
         }
         if case["cancelAt"].is_null() {
@@ -73,14 +73,14 @@ fn message_publication_join_preserves_payload_allocations_and_funded_cancellatio
             assert_eq!(receipt.copied_bytes, size_of::<MutationMessagePublication>());
             assert_eq!(owner.original_messages().iter().map(|row| row.message.as_ptr()).collect::<Vec<_>>(), pointers);
             assert_eq!(owner.original_messages(), owner.copied_messages());
-            owner.begin_close(); while !owner.terminal_is_empty() { let demand = owner.close_demands().unwrap(); owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }).unwrap(); }
+            owner.begin_close(); while !owner.terminal_is_empty() { let demand = owner.close_demands().unwrap(); owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }).result.unwrap(); }
         }
         join.begin_close();
         for _ in 0..100000 {
             if join.terminal_is_empty() { break; }
             let demand = join.close_demands().unwrap();
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let (step, heap) = observe_heap_allocations_on_this_thread(|| join.close_step(grant).unwrap());
+            let (step, heap) = observe_heap_allocations_on_this_thread(|| join.close_step(grant).result.unwrap());
             assert!(step.progress().fits(grant)); assert_eq!(heap.requested_bytes, 0); assert_eq!(heap.released_bytes, step.progress().released_bytes);
         }
         assert!(join.terminal_is_empty());
@@ -96,7 +96,7 @@ fn message_publication_stamps_actual_operation_offsets_without_payload_copy() {
         let mut owner = MutationMessagePublication::new(rows);
         while !owner.ready() {
             let demand = owner.demands().unwrap();
-            owner.advance(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }).unwrap();
+            owner.advance(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }).result.unwrap();
         }
         for (index, expected) in case["expected"].as_array().unwrap().iter().enumerate() {
             let pointer = owner.original_messages()[index].message.as_ptr();
@@ -111,7 +111,7 @@ fn message_publication_stamps_actual_operation_offsets_without_payload_copy() {
             assert_eq!(owner.original_messages()[index].message.as_ptr(), pointer);
         }
         owner.begin_close();
-        while !owner.terminal_is_empty() { let demand = owner.close_demands().unwrap(); owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }).unwrap(); }
+        while !owner.terminal_is_empty() { let demand = owner.close_demands().unwrap(); owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }).result.unwrap(); }
     }
 }
 
@@ -131,11 +131,11 @@ fn message_publication_copies_original_rows_under_independent_grants() {
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
             for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.saturating_sub(1), ..grant }, RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes.saturating_sub(1), ..grant }] {
                 if denied.maximum_items != 0 && denied == grant { continue; }
-                let (step, heap) = observe_heap_allocations_on_this_thread(|| cursor.advance(denied).unwrap());
+                let (step, heap) = observe_heap_allocations_on_this_thread(|| cursor.advance(denied).result.unwrap());
                 assert_eq!(step.progress(), RetainedCloneProgress::default());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             }
-            let (step, heap) = observe_heap_allocations_on_this_thread(|| cursor.advance(grant).unwrap());
+            let (step, heap) = observe_heap_allocations_on_this_thread(|| cursor.advance(grant).result.unwrap());
             assert!(step.progress().fits(grant));
             assert_eq!(heap.requested_bytes, step.progress().retained_capacity_bytes);
             assert_eq!(heap.released_bytes, step.progress().released_bytes);
@@ -158,7 +158,7 @@ fn message_publication_copies_original_rows_under_independent_grants() {
             if cursor.terminal_is_empty() { break; }
             let demand = cursor.close_demands().unwrap();
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let (step, heap) = observe_heap_allocations_on_this_thread(|| cursor.close_step(grant).unwrap());
+            let (step, heap) = observe_heap_allocations_on_this_thread(|| cursor.close_step(grant).result.unwrap());
             assert!(step.progress().fits(grant)); assert_eq!(heap.requested_bytes, 0); assert_eq!(heap.released_bytes, step.progress().released_bytes);
         }
         assert!(cursor.terminal_is_empty());
@@ -174,13 +174,13 @@ fn message_publication_final_selection_preserves_neutral_policy_and_partial_cust
             let original=make();let pointers=original.iter().map(|row|row.message.as_ptr()).collect::<Vec<_>>();let mut owner=MutationMessagePublication::from_copied_rows(original,make());let bytes=case["editId"].as_str().unwrap().len();
             for turn in 0..100000{
                 if cancel==Some(turn)||owner.selection_ready(bytes){break;}let demand=owner.selection_demands().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-                for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant}]{if denied==grant{continue;}let(step,heap)=observe_heap_allocations_on_this_thread(||owner.select(bytes,denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
-                let(step,heap)=observe_heap_allocations_on_this_thread(||owner.select(bytes,grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999);
+                for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant}]{if denied==grant{continue;}let(step,heap)=observe_heap_allocations_on_this_thread(||semio_framework_value::AuthoringWallet::new(denied,1<<16).run(denied,1<<16,|e|owner.select(bytes,e)).unwrap().unwrap().output.unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+                let(step,heap)=observe_heap_allocations_on_this_thread(||semio_framework_value::AuthoringWallet::new(grant,1<<16).run(grant,1<<16,|e|owner.select(bytes,e)).unwrap().unwrap().output.unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999);
             }
             if owner.selection_ready(bytes){let originals=owner.original_messages();assert_eq!(originals,owner.copied_messages());let kept=originals.iter().filter(|row|row.code.0!="mutation.cascade").map(|row|row.op_index.unwrap()as usize).collect::<Vec<_>>();assert_eq!(serde_json::to_value(kept).unwrap(),case["expectedKept"]);for(original,report)in originals.iter().zip(owner.copied_messages()){if !original.message.is_empty(){assert_ne!(original.message.as_ptr(),report.message.as_ptr());}if case["dropped"].as_u64()==Some(0){assert_eq!(original.message.as_ptr(),pointers[original.op_index.unwrap()as usize]);}}
                 let extent=originals.iter().fold(bytes,|extent,row|extent+semio_framework_replication_mutation::MUTATION_MESSAGE_OWNER_BYTES+row.code.0.len()+row.message.len()+row.target.iter().map(|target|semio_framework_replication_mutation::MUTATION_MESSAGE_TARGET_BYTES+target.len()).sum::<usize>());assert!(extent<=crate::MUTATION_MESSAGE_ENTRY_BYTES);
             }else{assert!(cancel.is_some());}
-            owner.begin_close();for turn in 0..100000{if owner.terminal_is_empty(){break;}let demand=owner.close_demands().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe_heap_allocations_on_this_thread(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999);}assert!(owner.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+            owner.begin_close();for turn in 0..100000{if owner.terminal_is_empty(){break;}let demand=owner.close_demands().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe_heap_allocations_on_this_thread(||owner.close_step(grant).result.unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999);}assert!(owner.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         }
     }
 }

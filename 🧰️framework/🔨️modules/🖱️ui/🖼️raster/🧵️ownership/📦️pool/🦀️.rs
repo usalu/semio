@@ -241,12 +241,9 @@ impl semio_framework_value::retirement::RetireOwned for SceneRasterPoolInner {
 impl RasterPoolRetirement {
     fn pixel_capacity(slot:&RasterSlot)->usize{match &slot.state{RasterSlotState::Vacant=>0,RasterSlotState::Writing(row)=>row.pixels.as_ref().map_or(0,Vec::capacity),RasterSlotState::Ready(row)=>row.pixels.capacity(),RasterSlotState::Retiring(row)=>row.pixels.capacity()}}
 }
-impl semio_framework_value::retirement::RetirementCursor for RasterPoolRetirement {
-    fn next_demand(&self,_body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:if let Some(slot)=self.state.slots.last(){Self::pixel_capacity(slot)}else if self.state.slots.capacity()!=0{self.state.slots.capacity()*size_of::<RasterSlot>()}else if !self.state.gpu_residents.is_empty(){0}else{self.state.gpu_residents.capacity()*size_of::<Option<SceneRasterGpuRecord>>()},..Default::default()})}
-
-    fn next_computational_work(&self,_:usize)->Result<u64,semio_framework_value::ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
-    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
-        use semio_framework_value::{retained_clone::RetainedCloneProgress,retirement::{RetirementStep,record_retirement_work}};
+impl RasterPoolRetirement {
+    pub fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+        use semio_framework_value::{retained_clone::RetainedCloneProgress,retirement::{RetirementCursor,RetirementStep,record_retirement_work}};
         if self.terminal_is_empty(){return RetirementStep::Complete(0)}
         let grant=effect.grant();
         if grant.maximum_items==0||effect.maximum_work_units()==0{return RetirementStep::BudgetExhausted}
@@ -259,6 +256,12 @@ impl semio_framework_value::retirement::RetirementCursor for RasterPoolRetiremen
         else{self.state.gpu_residents=Vec::new();}
         RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..RetainedCloneProgress::default()},work)
     }
+}
+impl semio_framework_value::retirement::RetirementCursor for RasterPoolRetirement {
+    semio_framework_value::native_retirement_reply!();
+    fn next_demand(&self,_body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:if let Some(slot)=self.state.slots.last(){Self::pixel_capacity(slot)}else if self.state.slots.capacity()!=0{self.state.slots.capacity()*size_of::<RasterSlot>()}else if !self.state.gpu_residents.is_empty(){0}else{self.state.gpu_residents.capacity()*size_of::<Option<SceneRasterGpuRecord>>()},..Default::default()})}
+
+    fn next_computational_work(&self,_:usize)->Result<u64,semio_framework_value::ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
     fn terminal_is_empty(&self)->bool{self.state.slots.is_empty()&&self.state.slots.capacity()==0&&self.state.gpu_residents.is_empty()&&self.state.gpu_residents.capacity()==0}
     fn next_close_byte_demand(&self)->Option<usize>{Some(if let Some(slot)=self.state.slots.last(){Self::pixel_capacity(slot)}else if self.state.slots.capacity()!=0{self.state.slots.capacity()*size_of::<RasterSlot>()}else if !self.state.gpu_residents.is_empty(){0}else{self.state.gpu_residents.capacity()*size_of::<Option<SceneRasterGpuRecord>>()})}
     fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
@@ -284,7 +287,7 @@ pub struct SceneRasterLease {
     inner: Option<Arc<SceneRasterPoolInner>>,
     token: Option<LeaseToken>,
     identity: SceneRasterIdentity,
-    retirement:Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<SceneRasterPoolInner>>,
+    retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::retirement::arc_custody::ArcLease<SceneRasterPoolInner>>>,
 }
 
 pub struct SceneRasterReleaseWitness {
@@ -383,13 +386,13 @@ impl fmt::Debug for SceneRasterLease {
 
 impl SceneRasterLease {
     /// ♻️ Keeps the original pooled pixels and final Arc payload under separately admitted ownership.
-    pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+    pub fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
         use semio_framework_value::{RetainedWorkOutcome,RetainedWorkPoll,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneProgress,RetainedCloneStep},retirement::record_retirement_work};
         let done=|result:Result<RetainedCloneStep,ValueError>,work:u128|RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map_err(Into::into),work});
         let empty=RetainedCloneProgress::default();
         let grant=effect.grant();
         if self.terminal_is_empty(){return done(Ok(RetainedCloneStep::Complete(empty)),0)}
-        let depth=match self.next_close_depth_demand(){Ok(depth)=>depth,Err(error)=>return done(Err(error),0)};
+        let depth=match self.next_close_demand(body){Ok(demand)=>demand.depth,Err(error)=>return done(Err(error),0)};
         if grant.maximum_items==0||grant.maximum_depth<depth||effect.maximum_work_units()==0{return done(Ok(RetainedCloneStep::Progress(empty)),0)}
         if let Some(token)=self.token{
             let Some(inner)=self.inner.as_ref()else{return done(Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"raster token lost its pool owner")),0)};
@@ -402,11 +405,11 @@ impl SceneRasterLease {
         }
         if self.inner.is_some(){
             let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return done(Err(error),work)};
-            if let Some(inner)=self.inner.take(){self.retirement=Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(inner));}
+            if let Some(inner)=self.inner.take(){self.retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::retain(semio_framework_value::retirement::arc_custody::ArcLease::new(inner)));}
             return done(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty})),work)
         }
         let Some(owner)=self.retirement.as_mut()else{return done(Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"raster lease has no retirement owner")),0)};
-        match owner.step(effect){
+        match owner.step(body,effect){
             RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},
             RetainedWorkPoll::Complete(turn)=>{
                 let result=match turn.result{
@@ -425,10 +428,7 @@ impl SceneRasterLease {
             }
         }
     }
-    pub fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.retirement.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
-    pub fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{self.retirement.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(copy))}
-    pub fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.retirement.as_ref().map_or(Ok(0),|owner|owner.next_release_byte_demand())}
-    pub fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.retirement.as_ref().map_or(Ok(usize::from(self.inner.is_some()||self.token.is_some())),|owner|owner.next_depth_demand())}
+    pub fn next_close_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.retirement.as_ref().map_or(Ok(semio_framework_value::RetirementDemand{depth:usize::from(self.inner.is_some()||self.token.is_some()),..Default::default()}),|owner|owner.next_demand(body))}
     pub fn terminal_is_empty(&self)->bool{self.token.is_none()&&self.inner.is_none()&&self.retirement.is_none()}
 
     pub fn identity(&self) -> SceneRasterIdentity {

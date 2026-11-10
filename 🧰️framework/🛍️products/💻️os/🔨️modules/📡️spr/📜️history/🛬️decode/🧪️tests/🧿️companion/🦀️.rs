@@ -3,9 +3,6 @@
 //! 🧭️ The tests are mounted unchanged from the production tree and reach the production crate through its public API only.
 #![cfg(test)]
 
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
-
 pub use semio_os_history_record_decode::*;
 use semio_os_history_testing_retirement as test_retirement;
 

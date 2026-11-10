@@ -306,18 +306,18 @@ impl EnergyJobAuthority {
     pub(super) fn drive_wire_publication(&mut self, context: &mut StepContext<'_>) -> Option<EnergyRun> {
         if self.builder_retiring.is_some() {
             context.consume_fuel(1);
-            let step = energy_builder_close(&mut self.builder_retiring, context.retained_grant());
-            return match energy_spend(context, step) {
+            let demand = match self.builder_retiring.as_deref().map(energy_builder_demand) { Some(Ok(demand)) => demand, _ => return Some(Self::fault()) };
+            let builder = &mut self.builder_retiring;
+            return match crate::retirement::energy_effect_step(context, demand, |effect| energy_builder_close(builder, effect)) {
                 Ok(_) => Some(EnergyRun::Yield),
                 Err(_) => Some(Self::fault()),
             };
         }
         if let Some(retiring) = self.publication.retiring_preview.as_mut() {
             context.consume_fuel(1);
-            let step = retiring.close_step(context.retained_grant());
-            match energy_spend(context, step) {
-                Ok(true) => { self.publication.retiring_preview = None; return Some(EnergyRun::Yield); },
-                Ok(false) => return Some(EnergyRun::Yield),
+            let demand = match retiring.retirement_demands() { Ok(demand) => demand, Err(_) => return Some(Self::fault()) };
+            match crate::retirement::energy_effect_step(context, demand, |effect| retiring.close_step(effect)) {
+                Ok(_) => { if retiring.terminal_is_empty() { self.publication.retiring_preview = None; } return Some(EnergyRun::Yield); },
                 Err(_) => return Some(Self::fault()),
             }
         }

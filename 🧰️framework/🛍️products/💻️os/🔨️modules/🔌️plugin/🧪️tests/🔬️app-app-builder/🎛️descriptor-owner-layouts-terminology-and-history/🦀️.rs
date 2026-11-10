@@ -139,7 +139,7 @@ pub async fn canonical_test_app_id(slug: &str) -> String {
             .await
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
             .await
-            .terminology_document("reuse", ["Entwerfen mit Bestand", "Bad"])
+            .terminology_document("reuse", [LocalizedLabel::data("Designing with Existing Stock"), LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::data("Bad")])
             .await;
         let result = std::panic::catch_unwind(move || __chain.build_definition());
         assert!(result.is_err());
@@ -160,10 +160,11 @@ pub async fn canonical_test_app_id(slug: &str) -> String {
             .await
             .terminology("reuse")
             .await
-            .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
+            .terminology_document("reuse", [LocalizedLabel::data("Designing with Existing Stock"), LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::native("Aggregator", "Aggregator")])
             .await
             .build_definition();
-        assert_eq!(definition.terminology_breadcrumbs.get("reuse").map(Vec::as_slice), Some(["Entwerfen mit Bestand".to_string(), "Aggregator".to_string()].as_slice()));
+        let resolved: Vec<_> = definition.terminology_breadcrumbs["reuse"].iter().map(|segment| (segment.resolve(Terminology::Reuse, Locale::En).to_string(), segment.resolve(Terminology::Reuse, Locale::De).to_string())).collect();
+        assert_eq!(resolved, [("Designing with Existing Stock".to_string(), "Entwerfen mit Bestand".to_string()), ("Aggregator".to_string(), "Aggregator".to_string())]);
     }
 
     async fn minimal_app(slug: &str) -> AppBuilder {

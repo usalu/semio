@@ -1,11 +1,34 @@
 //! 🏗️ The defining WidgetInputs constructor produces original owned strings and fixed-page label entries.
 use super::{Kind,Localized,Outputs,WidgetInputs};
 use semio_framework_job::{OriginalTurnFailure,StepContext};
-use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneProgress,ordered_map::{BoundedOrdGrant,RetainedOrderedMap,RetainedOrderedMapInsertCursor,RetainedOrderedMapInsertGrant,RetainedOrderedMapInsertProgress,RetainedOrderedMapInsertStep}},retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneProgress,RetainedCloneStep,ordered_map::{BoundedOrdGrant,RetainedOrderedMap,RetainedOrderedMapInsertCursor,RetainedOrderedMapInsertGrant}},retirement::{RetireOwned,RetirementCursor}};
 use std::mem::{ManuallyDrop,size_of};
 
 type Labels=RetainedOrderedMap<String,Localized>;
 type Insert=RetainedOrderedMapInsertCursor<String,Localized>;
+
+/// 🪜️ Advances one original insertion cursor under the calling turn's effect; denial or a pending callback keeps every byte of state.
+pub fn insert_advance<V:RetireOwned+Sync>(insertion:&mut RetainedOrderedMapInsertCursor<String,V>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+    let grant=cx.retained_grant();
+    let insert=RetainedOrderedMapInsertGrant{retirement:grant,comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:1},maximum_moved_items:grant.maximum_items,maximum_moved_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes};
+    let Some((step,_))=cx.with_original_effect(grant,|_,effect|insertion.advance_turn(grant.maximum_copy_bytes,insert,effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(())};
+    settle_insert(cx,step)
+}
+/// 📤️ Donates the finished dictionary of one original insertion cursor under the calling turn's effect.
+pub fn insert_take<V:RetireOwned+Sync>(insertion:&mut RetainedOrderedMapInsertCursor<String,V>,output:&mut Option<RetainedOrderedMap<String,V>>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+    let Some((step,_))=cx.with_original_effect(cx.retained_grant(),|_,effect|insertion.take_turn(output,effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(())};
+    settle_insert(cx,step)
+}
+/// ♻️ Closes one original insertion cursor, starting the close first, under the calling turn's effect.
+pub fn insert_close<V:RetireOwned+Sync>(insertion:&mut RetainedOrderedMapInsertCursor<String,V>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+    let grant=cx.retained_grant();
+    let Some((step,_))=cx.with_original_effect(grant,|_,effect|insertion.close_turn(grant.maximum_copy_bytes,effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(())};
+    settle_insert(cx,step)
+}
+fn settle_insert(cx:&mut StepContext<'_>,step:Result<Option<RetainedCloneStep>,ValueError>)->Result<(),OriginalTurnFailure>{
+    let Some(step)=step.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(())};
+    let receipt=step.progress();let result=cx.consume_retained(receipt);cx.consume_fuel(1);result.map_err(|error|error.with_retained_progress(receipt).into())
+}
 
 #[derive(Clone,Copy,PartialEq,Eq)]
 struct Source {operation:u64,generation:u64,parent:usize,widget:usize,widget_bytes:usize,kind:usize,ports:usize,port_count:usize}
@@ -55,27 +78,19 @@ impl WidgetInputsConstruction {
             }
             6=>{
                 let grant=cx.retained_grant();
-                if grant.maximum_copy_bytes<Insert::constructor_copy_bytes()||grant.maximum_capacity_bytes<Insert::constructor_capacity_bytes(){return Ok(None)}
+                let bytes=size_of::<Insert>();
+                if grant.maximum_copy_bytes<bytes{return Ok(None)}
                 let map=state.labels.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"widget input labels have no original workspace"))?;
                 let key=std::mem::take(&mut state.name);let label=Localized{en:std::mem::take(&mut state.en),de:std::mem::take(&mut state.de)};
-                match {let outcome=Insert::admit(map,key,label,grant);cx.consume_fuel(outcome.work);outcome.result}{
-                    Ok((insertion,receipt))=>{state.insertion=Some(insertion);state.phase=7;post(cx,receipt)?;}
-                    Err((error,map,key,label))=>{state.labels=Some(map);state.name=key;state.en=label.en;state.de=label.de;return Err(OriginalTurnFailure::debit_original(error,cx));}
-                }
+                state.insertion=Some(Insert::new(map,key,label));state.phase=7;post(cx,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
             }
             7=>{
                 let insertion=state.insertion.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"widget input label insertion disappeared"))?;
-                if insertion.output_ready(){
-                    post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.labels=insertion.take();insertion.begin_close();state.phase=8;
-                }else{
-                    let grant=cx.retained_grant();let step={let Some((outcome,performed))=cx.with_original_effect(grant,|_,effect|insertion.advance(RetainedOrderedMapInsertGrant{retirement:grant,comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:1},maximum_moved_items:grant.maximum_items,maximum_moved_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes},effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(None)};cx.consume_fuel(outcome.work.saturating_sub(u64::try_from(performed).unwrap_or(u64::MAX)));outcome.result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?};
-                    let receipt=match step{RetainedOrderedMapInsertStep::Progress(receipt)|RetainedOrderedMapInsertStep::Complete{progress:receipt,..}=>receipt};
-                    post(cx,insert_receipt(receipt)?)?;
-                }
+                if insertion.output_ready(){insert_take(insertion,&mut state.labels,cx)?;if state.labels.is_some(){state.phase=8;}}else{insert_advance(insertion,cx)?;}
             }
             8=>{
                 let insertion=state.insertion.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"widget input insertion close disappeared"))?;
-                let receipt={let outcome=insertion.close_step(cx.retained_grant());cx.consume_fuel(outcome.work);outcome.result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?.progress()};post(cx,receipt)?;
+                insert_close(insertion,cx)?;
                 if insertion.terminal_is_empty(){state.insertion.take();state.port+=1;state.phase=2;}
             }
             9=>{
@@ -101,7 +116,6 @@ impl WidgetInputsConstruction {
 
 fn open(cx:&StepContext<'_>)->bool{let grant=cx.retained_grant();!cx.should_yield()&&!cx.is_cancelled()&&grant.maximum_items>0&&grant.maximum_depth>0}
 fn post(cx:&mut StepContext<'_>,receipt:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{let result=cx.consume_retained(receipt);cx.consume_fuel(1);result.map_err(|error|error.with_retained_progress(receipt).into())}
-fn insert_receipt(receipt:RetainedOrderedMapInsertProgress)->Result<RetainedCloneProgress,ValueError>{receipt.retirement.checked_add(RetainedCloneProgress{copied_items:receipt.moved_items,copied_bytes:receipt.moved_bytes,retained_capacity_bytes:receipt.retained_capacity_bytes,..Default::default()})}
 
 pub fn text_event(output:&mut String,source:&str,byte:&mut usize,reserved:&mut bool,binding:&mut Option<(usize,usize)>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
     let identity=(source.as_ptr() as usize,source.len());

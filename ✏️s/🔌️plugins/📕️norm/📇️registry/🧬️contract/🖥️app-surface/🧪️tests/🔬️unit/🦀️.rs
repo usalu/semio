@@ -523,8 +523,8 @@ async fn de_locale_inputs_and_inspection_omit_hardcoded_english_chrome() {
     assert!(inputs.contains("DE-Anhang"), "{inputs}");
     assert!(inspection.contains("Kennung"), "{inspection}");
     assert!(unknown.contains("Unbekannter Inhalt"), "{unknown}");
-    assert!(io.ports.iter().any(|port| port.id == "model:in" && port.label.contains("Modell")), "{io:?}");
-    assert!(io.ports.iter().any(|port| port.id == "report:out" && port.label.contains("Bericht")), "{io:?}");
+    assert!(io.ports.iter().any(|port| port.id == "model:in" && port.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De) == "Modell"), "{io:?}");
+    assert!(io.ports.iter().any(|port| port.id == "report:out" && port.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De) == "Bericht"), "{io:?}");
 
     let combined = format!("{inputs}\n{inspection}\n{unknown}");
     for english in ["Unknown body:", "Id", "null", "Model", "Report"] {
@@ -535,7 +535,7 @@ async fn de_locale_inputs_and_inspection_omit_hardcoded_english_chrome() {
             _ => assert!(!combined.contains(english), "unexpected English chrome {english:?} in {combined}"),
         }
     }
-    assert!(!io.ports.iter().any(|port| port.label == "Model" || port.label == "Report"), "{io:?}");
+    assert!(io.ports.iter().all(|port| port.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De) != port.label.resolve(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En)), "{io:?}");
 }
 
 #[test]

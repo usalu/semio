@@ -458,7 +458,9 @@ pub fn step_world3d_dynamic_retirement(state: &mut World3dState, context: &mut s
         return false;
     }
     if let Some(cursor) = state.scene.placeholder_build.as_mut() {
-        if !cursor.close_step() || !cursor.terminal_is_empty() {
+        let grant = context.retained_grant();
+        let closed = context.with_original_effect(grant, |_, effect| cursor.close_step(effect)).ok().flatten().is_some_and(|(closed, _)| closed);
+        if !closed || !cursor.terminal_is_empty() {
             context.consume_fuel(1);
             return false;
         }

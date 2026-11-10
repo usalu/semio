@@ -39,7 +39,7 @@ pub fn drive_hydration_retirement(active: &mut Option<Box<dyn ErasedSnapshotReti
     if active.is_none() { return Ok(false); }
     if cx.is_cancelled() || cx.should_yield() { return Ok(true); }
     let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-    let Some((step, performed)) = cx.with_original_effect(grant, |_, effect| semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(active, effect))).map_err(|_| MemberOpenDiagnostic::Initialization)? else { return Ok(true) };
+    let Some((step, performed)) = cx.with_original_effect(grant, |_, effect| semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(active, grant.maximum_copy_bytes, effect))).map_err(|_| MemberOpenDiagnostic::Initialization)? else { return Ok(true) };
     let progress = step.map_err(|_| MemberOpenDiagnostic::Initialization)?.progress();
     semio_framework_os_store_member_open::record_member_step_performed(cx, progress, performed)?;
     Ok(true)

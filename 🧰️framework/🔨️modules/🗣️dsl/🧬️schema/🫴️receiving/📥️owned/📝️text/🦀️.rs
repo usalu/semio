@@ -22,7 +22,7 @@ impl<const N:usize>OwnedFieldReceiving<PagedUtf8<N>>for TextReceiving<N>{
     let result=owe(effect,turn.work).and_then(|()|turn.result).map(|step|step.progress()).map_err(Into::into);
     if result.is_ok()&&self.append.complete{self.append.begin_close();self.phase=2}done(effect,result)
    },
-   2=>{let poll=self.append.close_step(effect);if self.append.terminal_is_empty(){self.phase=3}settle(effect,receiving(physical(poll)))},
+   2=>{let poll=self.append.close_step(effect.grant().maximum_copy_bytes,effect);if self.append.terminal_is_empty(){self.phase=3}settle(effect,receiving(physical(poll)))},
    _=>{let poll=self.source.close_step(effect);if self.source.terminal_is_empty(){self.phase=4}settle(effect,receiving(poll))},
   };
   poison(&mut self.failed,&poll);poll
@@ -31,7 +31,7 @@ impl<const N:usize>OwnedFieldReceiving<PagedUtf8<N>>for TextReceiving<N>{
  fn take_into(&mut self,output:&mut Option<PagedUtf8<N>>,effect:&mut RetainedAllocationEffect<'_>)->OwnedTake{if !self.is_ready(){return done(effect,Err(invariant()))}move_into(&mut self.output.value,output,effect)}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if !self.closing{return Ok(metadata::<()>())}if !self.append.terminal_is_empty(){return ErasedSnapshotRetirement::next_demand(&self.append,body)}if !self.output.terminal_is_empty(){return self.output.close_demands(body)}self.source.close_demands(body)}
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if self.terminal_is_empty(){return Ok(0)}if !self.closing{return Ok(1)}if !self.append.terminal_is_empty(){return ErasedSnapshotRetirement::next_computational_work(&self.append,body)}if !self.output.terminal_is_empty(){return self.output.close_work_demand(body)}self.source.close_work_demand(body)}
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OwnedClose{if self.terminal_is_empty(){return idle(effect)}let d=match self.close_demands(effect.grant().maximum_copy_bytes){Ok(d)=>d,Err(error)=>return done(effect,Err(error.into()))};if !admits(effect,d){return idle(effect)}if !self.closing{return local_close(effect,d,||{self.closing=true;self.append.begin_close();Ok(())})}if !self.append.terminal_is_empty(){let poll=self.append.close_step(effect);return settle(effect,physical(poll))}if !self.output.terminal_is_empty(){return self.output.close_step(effect)}self.source.close_step(effect)}
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OwnedClose{if self.terminal_is_empty(){return idle(effect)}let d=match self.close_demands(effect.grant().maximum_copy_bytes){Ok(d)=>d,Err(error)=>return done(effect,Err(error.into()))};if !admits(effect,d){return idle(effect)}if !self.closing{return local_close(effect,d,||{self.closing=true;self.append.begin_close();Ok(())})}if !self.append.terminal_is_empty(){let poll=self.append.close_step(effect.grant().maximum_copy_bytes,effect);return settle(effect,physical(poll))}if !self.output.terminal_is_empty(){return self.output.close_step(effect)}self.source.close_step(effect)}
  fn terminal_is_empty(&self)->bool{self.append.terminal_is_empty()&&self.output.terminal_is_empty()&&self.source.terminal_is_empty()}
 }
 impl<const N:usize>crate::DslReceivingField for PagedUtf8<N>{

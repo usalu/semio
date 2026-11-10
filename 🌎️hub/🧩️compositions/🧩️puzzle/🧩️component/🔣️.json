@@ -11708,9 +11708,36 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "puzzle",
-            "2d"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "puzzle",
+                "de": "puzzle"
+              },
+              "reuse": {
+                "en": "puzzle",
+                "de": "puzzle"
+              }
+            },
+            {
+              "native": {
+                "en": "2d",
+                "de": "2d"
+              },
+              "reuse": {
+                "en": "2d",
+                "de": "2d"
+              }
+            }
           ]
         },
         "tutorials": [],
@@ -22222,8 +22249,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Aggregator"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Aggregator",
+                "de": "Aggregator"
+              },
+              "reuse": {
+                "en": "Aggregator",
+                "de": "Aggregator"
+              }
+            }
           ]
         },
         "introduction": {
@@ -22815,7 +22860,16 @@
           "ports": [
             {
               "id": "kit:in",
-              "label": "Kit Catalog",
+              "label": {
+                "native": {
+                  "en": "Kit Catalog",
+                  "de": "Kit-Katalog"
+                },
+                "reuse": {
+                  "en": "Kit Catalog",
+                  "de": "Kit-Katalog"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "kit",
@@ -34929,9 +34983,36 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "puzzle",
-            "5d"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "puzzle",
+                "de": "puzzle"
+              },
+              "reuse": {
+                "en": "puzzle",
+                "de": "puzzle"
+              }
+            },
+            {
+              "native": {
+                "en": "5d",
+                "de": "5d"
+              },
+              "reuse": {
+                "en": "5d",
+                "de": "5d"
+              }
+            }
           ]
         },
         "tutorials": [],

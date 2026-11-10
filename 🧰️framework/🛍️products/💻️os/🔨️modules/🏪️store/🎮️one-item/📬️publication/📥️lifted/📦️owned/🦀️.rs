@@ -9,14 +9,14 @@ use semio_framework_value::retirement::RetireOwned;
 
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 pub trait BatchRetirement: Send {
-    fn step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll;
+    fn step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll;
     fn terminal_is_empty(&self) -> bool;
     fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError>;
 }
 
 impl<T: RetireOwned> BatchRetirement for ControlledRetirement<T> {
-    fn step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { ControlledRetirement::step(self, effect) }
+    fn step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { ControlledRetirement::step(self, body, effect) }
     fn terminal_is_empty(&self) -> bool { self.terminal_is_empty() }
     fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { copy_bytes: self.next_copy_byte_demand()?, capacity_bytes: self.next_capacity_byte_demand(maximum_body_bytes)?, release_bytes: self.next_release_byte_demand()?, depth: self.next_depth_demand()? }) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { ControlledRetirement::next_copy_byte_demand(self) }

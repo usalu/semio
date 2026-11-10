@@ -21,6 +21,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "operation-unit"
+path = "../../🧪️tests/🔬️unit/🦀️.rs"
+
 [features]
 hot-path-census = ["semio-os-store-ledger/hot-path-census"]
 
@@ -45,10 +49,12 @@ semio-framework-value-persistent = { path = "../../../../../../../../🔨️modu
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 semio-framework-value-factory = { path = "../../../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
+semio-framework-value-source-hold = { path = "../../../../../../../../🔨️modules/🌱️value/🔗️source-hold/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-testing-admission = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 serde_json = "1.0.140"

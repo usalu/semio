@@ -13,7 +13,7 @@ test("tool member emission forwards original mutation and cause retirement grant
  const db=new Database(":memory:");db.exec("CREATE TABLE custody(id INTEGER PRIMARY KEY, owned INTEGER, released INTEGER)");db.query("INSERT INTO custody VALUES(7,1,0)").run();
  for(const admitted of vectors.admission){if(admitted)db.query("UPDATE custody SET owned=0,released=1 WHERE id=7").run();expect(db.query("SELECT owned+released AS total FROM custody WHERE id=7").get()).toEqual({total:1});}db.close();
  const native=readModuleTreeSource(new URL("../../../⏯️tool-run/🦀️.rs",import.meta.url));
- expect(native.includes("store.retire_owned_mutation(&mut typed.current,self.grant)")).toBe(true);expect(native.includes("fn close_step(&mut self,grant:RetainedCloneGrant)")).toBe(true);expect(native.includes("::protocol::close_protocol_error_one(&mut self.refusal,grant)")).toBe(true);
+ expect(native.includes("store.retire_owned_mutation(&mut typed.current,self.effect)")).toBe(true);expect(native.includes("fn close_step(&mut self,grant:RetainedCloneGrant)")).toBe(true);expect(native.includes("::protocol::close_protocol_error_one(&mut self.refusal,grant)")).toBe(true);
 });
 
 /** 🪞️ SQLite's held original batch blocks a second refold until exact maintenance admission. */

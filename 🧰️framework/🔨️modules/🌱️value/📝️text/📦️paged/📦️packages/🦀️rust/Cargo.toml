@@ -35,7 +35,6 @@ semio-framework-value-testing-effect-bank = { path = "../../../../🧪️testing
 
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
-semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [[test]]
 name = "staged-owner"

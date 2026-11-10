@@ -1,7 +1,7 @@
 //! 🧭️ The original sealed owner records a lifetime-bound projection before publishing it.
 use super::*;
 use semio_framework_value_receiving::span::effect::{OriginalEffectAuthority,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete};
-use crate::{RetainedAllocationEffect,RetirementDemand};
+use crate::{RetainedAllocationEffect,RetainedWorkOutcome,RetirementDemand};
 use std::{marker::PhantomData,mem::{ManuallyDrop,size_of},ptr::NonNull};
 
 /// 🫴️ Deposits only a reference borrowed from the original resident owner.
@@ -84,3 +84,28 @@ impl<T:Sync+'static,A:OriginalSourceProjection<T>> OriginalProjectionFrame<T,A>{
  pub(crate) fn transfer_answer(&mut self,owner:&mut Option<SealedShared<A>>,answer:&mut Option<Result<NonNull<T>,ValueError>>,effect:&mut RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{match self.producer.as_mut(){Some(producer)=>producer.transfer(owner,answer,effect),None=>crate::RetainedWorkOutcome{result:Err(ValueError::invariant("original projection producer not transferred")),work:0}}}
 }
 impl<T:Sync+'static,A:OriginalSourceProjection<T>> Drop for OriginalProjectionProducer<T,A>{fn drop(&mut self){assert!(std::thread::panicking()||(self.owner.is_none()&&self.answer.is_none()),"original projection requires paid owner and answer transfer")}}
+
+impl<T:Sync+'static,A:OriginalSourceProjection<T>+RetireOwned+Sync,B:RetireOwned> RetainedCloneSourceAdmission<T,A,B>{
+ /// 🧭️ Selects the next staged projection stage: 1 begin, 2 drive, 3 transfer producer, 4 accept answer, 5 finish; `None` when no projection is selected.
+ pub fn projection_stage(&self,frame:&Option<OriginalProjectionFrame<T,A>>)->Result<Option<u8>,ValueError>{
+  match frame{Some(frame)=>Ok(Some(match frame.phase()?{OriginalProjectionFramePhase::Drive=>2,OriginalProjectionFramePhase::TransferProducer=>3,OriginalProjectionFramePhase::AcceptAnswer=>4,OriginalProjectionFramePhase::Finish=>5,_=>return Err(ValueError::invariant("original projection requires its owner return"))})),None=>Ok((self.phase()=="projectionStart").then_some(1))}
+ }
+ /// 📐️ Quotes the physical demand and Work units of one staged projection stage.
+ pub fn projection_stage_quote(&self,frame:&Option<OriginalProjectionFrame<T,A>>,stage:u8)->Result<(RetirementDemand,u64),ValueError>{
+  match(stage,frame.as_ref()){(1,_)=>Ok((self.begin_projection_demand(),1)),(2,Some(f))=>Ok((f.projection_demand(),f.projection_work_demand()?)),(3,Some(f))=>Ok((f.producer_transfer_demand()?,1)),(4,Some(f))=>Ok((self.projection_answer_demand(f)?,2)),(5,_)=>Ok((self.finish_projection_demand(),1)),_=>Err(ValueError::invariant("original projection stage changed"))}
+ }
+ /// 🧭️ Runs one staged projection stage; a driven producer left unsettled reports Pending with its performed Work.
+ pub fn project_staged(&mut self,frame:&mut Option<OriginalProjectionFrame<T,A>>,action:&mut Option<crate::retained_clone::OriginalEffectAction<crate::RetainedCloneStep,ValueError>>,stage:u8,effect:&mut RetainedAllocationEffect<'_>)->crate::RetainedWorkPoll<crate::RetainedCloneStep,ValueError>{
+  use crate::{RetainedCloneStep,RetainedWorkPoll::{Complete,Pending}};
+  let step=|turn:RetainedWorkOutcome|Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work});
+  let gone=||Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("original projection frame absent")),work:0});
+  match stage{
+   1=>step(self.begin_projection(frame,effect)),
+   2=>{let before=effect.performed_work();let driven=(||->Result<Option<Result<RetainedCloneStep,ValueError>>,ValueError>{let selected=frame.as_mut().ok_or_else(||ValueError::invariant("original projection frame absent"))?;let mut context=selected.context()?;if !selected.authority()?.drive(&mut context,effect,action)?{return Ok(None)}let mut recorded=None;action.as_mut().ok_or_else(||ValueError::invariant("original projection action absent"))?.transfer_reply(&mut recorded)?;selected.authority()?.finish(action)?;Ok(Some(recorded.take().ok_or_else(||ValueError::invariant("original projection reply absent"))?))})();let work=effect.performed_work().saturating_sub(before);
+    match driven{Ok(None)=>Pending{work},Ok(Some(answer))=>Complete(RetainedWorkOutcome{result:answer.map(|step|RetainedCloneStep::Progress(step.progress())),work}),Err(error)=>Complete(RetainedWorkOutcome{result:Err(error),work})}},
+   3=>match frame.as_mut(){Some(selected)=>{let turn=selected.transfer_producer(effect);Complete(RetainedWorkOutcome{result:turn.result.map(|progress|RetainedCloneStep::Progress(progress.unwrap_or_default())),work:turn.work})},None=>gone()},
+   4=>match frame.as_mut(){Some(selected)=>step(self.accept_projection(selected,effect)),None=>gone()},
+   _=>step(self.finish_projection(frame,effect)),
+  }
+ }
+}

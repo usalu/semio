@@ -567,10 +567,9 @@ impl FrameDeferredCursor {
             if !owner.terminal_is_empty() {
                 if cx.retirement_should_yield() { return Ok(false); }
                 let grant = cx.retained_grant();
-                let step = if owner.is_original_alias_witness(cx.original_cancel_token()) {
-                    owner.return_alias_step(cx.original_cancel_token(), grant)
-                } else { owner.close_step(grant) };
-                let step = step.map_err(|error| match error {
+                let alias = owner.is_original_alias_witness(cx.original_cancel_token());
+                let turn = cx.with_original_effect(grant, |cx, effect| if alias { owner.return_alias_step(cx.original_cancel_token(), effect) } else { owner.close_step(effect) })?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0}, |(turn, _)| turn);
+                let step = turn.result.map_err(|error| match error {
                     semio_framework_async::CancelTokenRetirementError::Refused(error) => semio_framework_job::OriginalTurnFailure::debit_original(error, cx),
                     semio_framework_async::CancelTokenRetirementError::Blocked(_) => semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "frame deferred cancellation retains an unwitnessed supplier").into(),
                 })?;

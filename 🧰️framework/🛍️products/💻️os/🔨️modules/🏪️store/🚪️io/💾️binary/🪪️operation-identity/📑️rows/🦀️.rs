@@ -16,7 +16,7 @@ impl ErasedSnapshotRetirement for OperationWireRows{
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.active.as_ref().map(Vec::capacity).or_else(||self.rows.as_ref().map(|rows|rows.last().map(Vec::capacity).unwrap_or_else(||rows.capacity()*size_of::<Vec<u8>>()))).unwrap_or(0))}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(!self.terminal_is_empty()))}
     fn terminal_is_empty(&self)->bool{self.active.is_none()&&self.rows.is_none()}
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
+    fn close_step(&mut self,_body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"operation wire rows require admitted retirement depth").into());}

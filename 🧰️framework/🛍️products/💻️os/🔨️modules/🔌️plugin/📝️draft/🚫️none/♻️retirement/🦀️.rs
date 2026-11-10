@@ -5,92 +5,17 @@ use semio_plugin_ownership::store_lifecycle::{bounded_document_store_disposer, A
 use crate::NoDraft;
 use crate::NoDraftMutation;
 use crate::store;
-use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-use std::mem::ManuallyDrop;
-use std::sync::Arc;
-
-/// 🫙️ Releases one statically empty value as one owner and zero payload bytes, under ANY positive
-/// item grant — a zero-payload value has no byte minimum to wait for, so it never answers
-/// an empty receipt to a sub-page grant.
-struct ZeroPayloadRetirement<T> {
-    value: ManuallyDrop<Option<T>>,
-}
-
-impl<T: Send + 'static> store::ErasedSnapshotRetirement for ZeroPayloadRetirement<T> {
- fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(semio_framework_value::RetirementDemand{depth:usize::from(self.value.is_some()),..Default::default()})}
-
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome { let mut work = 0; let result = (|| -> Result<RetainedCloneStep, ValueError> {
-        if self.value.is_none() {
-            return Ok(RetainedCloneStep::Complete(Default::default()));
-        }
-        if grant.maximum_depth < 1 {
-            return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "zero-payload retirement exceeds admitted depth"));
-        }
-        if grant.maximum_items == 0 {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
-        }
-        drop(self.value.take()); work = 1;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-    })(); semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work } }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
-    }
-
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(self.value.is_some())) }
-}
-
-impl<T> Drop for ZeroPayloadRetirement<T> {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.value.is_none(), "zero-payload retirement reached Drop before exact terminal emptiness");
-    }
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct ZeroPayloadRetirementFactory<T>(std::marker::PhantomData<fn() -> T>);
-
-fn admit_zero_payload_birth<V>(grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
-    RetainedCloneBirthDemand { capacity_bytes: size_of::<ZeroPayloadRetirement<V>>(), depth: 1 }.admit(grant)
-}
-
-impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for ZeroPayloadRetirementFactory<T> {
-    fn retire_owned_work_demand(&self, _: &T) -> Result<u64, ValueError> { Ok(1) }
-    fn retirement_birth_bytes(&self, _value: &T) -> usize { size_of::<ZeroPayloadRetirement<T>>() }
-
-    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (semio_framework_value::OriginalRetirementFailure, T)> {let turn=(||{ let result = (|| -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)> {
-        match admit_zero_payload_birth::<T>(grant) {
-            Ok(progress) => Ok((Box::new(ZeroPayloadRetirement { value: ManuallyDrop::new(Some(value)) }), progress)),
-            Err(error) => Err((error, value)),
-        }
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
-}
-
-impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for ZeroPayloadRetirementFactory<T> {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<T>) -> usize { size_of::<ZeroPayloadRetirement<Arc<T>>>() }
-
-    fn retire(&self, snapshot: Arc<T>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<T>)> { let result = (|| -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<T>)> {
-        match admit_zero_payload_birth::<Arc<T>>(grant) {
-            Ok(progress) => Ok((Box::new(ZeroPayloadRetirement { value: ManuallyDrop::new(Some(snapshot)) }), progress)),
-            Err(error) => Err((error, snapshot)),
-        }
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
-}
+use semio_framework_value::{ValueError, OwnedValueRetirementFactory, SharedValueRetirementFactory, retained_clone::RetainedCloneBirthDemand, retirement::RetireOwned};
 
 /// 🫙️ Exact owner catalogue for a store whose snapshot and mutation types are statically empty.
 pub(super) fn zero_payload_store_owners<P, M>() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<P, M>, ValueError>
 where
-    P: pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
-    M: store::ArtifactCanonicalJsonTree + store::StoreMutationFor<P>,
+    P: RetireOwned + Sync + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
+    M: RetireOwned + store::ArtifactCanonicalJsonTree + store::StoreMutationFor<P>,
 {
-    let capacity_bytes = store::os_store::document_store_owners::DocumentStoreOwners::<P, M>::source_birth_bytes::<ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<M>, store::ArtifactStoreCursorDisposer<P, M>>()?;
+    let capacity_bytes = store::os_store::document_store_owners::DocumentStoreOwners::<P, M>::source_birth_bytes::<SharedValueRetirementFactory<P>, OwnedValueRetirementFactory<P>, OwnedValueRetirementFactory<M>, store::ArtifactStoreCursorDisposer<P, M>>()?;
     store::os_store::document_store_owners::fund_document_store_owners(RetainedCloneBirthDemand { capacity_bytes, depth: 1 }, |grant| {
-        store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor(grant, || (ZeroPayloadRetirementFactory::<P>(std::marker::PhantomData), ZeroPayloadRetirementFactory::<P>(std::marker::PhantomData), ZeroPayloadRetirementFactory::<M>(std::marker::PhantomData), store::ArtifactStoreCursorDisposer::<P, M>::new()))
+        store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor(grant, || (SharedValueRetirementFactory::<P>::default(), OwnedValueRetirementFactory::<P>::default(), OwnedValueRetirementFactory::<M>::default(), store::ArtifactStoreCursorDisposer::<P, M>::new()))
     })
 }
 

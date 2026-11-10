@@ -26,11 +26,11 @@ impl ValueCopy{
  pub(super) fn restore_output(&mut self,value:NeuralValue){assert_eq!(self.phase,4);*self.output=Some(value);self.phase=3}
  pub(super) fn begin_close(&mut self){self.closing=true;if let Some(text)=self.text.as_mut(){text.begin_close()}}
  pub(super) fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if let Some(text)=self.text.as_ref(){return if text.terminal_is_empty(){Ok(fixed(size_of::<Option<FundedText>>()))}else{text.close_demands(copy)}}if !self.retirement.is_empty(){return self.retirement.demands(copy)}if self.output.is_some(){return self.retirement.next_owner_demands::<NeuralValue>(true,&None,copy)}if self.text_output.is_some(){return self.retirement.next_owner_demands::<String>(true,&None,copy)}Ok(Default::default())}
- pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub(super) fn close_step(&mut self,grant:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
   if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}
   if let Some(text)=self.text.as_mut(){if text.terminal_is_empty(){let d=fixed(size_of::<Option<FundedText>>());if !retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.text=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress(d))),work:1}}return text.close_step(grant)}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(grant)}
-  macro_rules! owner{($field:ident)=>{if self.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.$field,grant);return RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
+  if !self.retirement.is_empty(){return poll_outcome(self.retirement.step_granted(grant.maximum_copy_bytes,effect))}
+  macro_rules! owner{($field:ident)=>{if self.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.$field,effect);return RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
   owner!(output);owner!(text_output);RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.text.is_none()&&self.output.is_none()&&self.text_output.is_none()&&self.retirement.is_empty()}

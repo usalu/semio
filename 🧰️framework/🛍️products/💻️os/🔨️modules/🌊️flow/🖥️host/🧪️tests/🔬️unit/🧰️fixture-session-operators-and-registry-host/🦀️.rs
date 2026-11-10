@@ -1,11 +1,15 @@
 /// 🧰️ Fixture session, operators and registry host: the session grant and fixture drain helpers, the preview phase projection law, the fixture operator and dispatch observer, the registry host and the math bridge.
 
 const FIXTURE_SESSION_GRANT:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096};
+/// 🧊️ Runs one turn-less fixture step inside an owner-less retirement-pump turn; a fixture grant that does not admit its quote is a test fault.
+fn funded<R>(grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->R)->R{
+    semio_os_flow_host_core::cold_effect(grant,run).expect("original fixture turn").expect("original fixture quote admitted")
+}
 fn settle_baseline(host:&mut FlowHost){
     for _ in 0..1_000_000{
         if host.baseline_publication_terminal_is_empty(){return}
         let demand=host.next_baseline_publication_demands(FIXTURE_SESSION_GRANT.maximum_copy_bytes).unwrap();
-        host.baseline_publication_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:FIXTURE_SESSION_GRANT.maximum_copy_bytes.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}).unwrap();
+        funded(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:FIXTURE_SESSION_GRANT.maximum_copy_bytes.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},|effect|host.baseline_publication_step(effect)).unwrap();
     }
     panic!("original fixture baseline publication stalled");
 }
@@ -14,14 +18,14 @@ fn prepare_fixture_window(session:&mut FlowEvalSession){
     panic!("original fixture window preparation stalled");
 }
 fn drain_fixture_cancellation(session:&mut FlowEvalSession){
-    for _ in 0..1_000_000{if session.preview_cancellation_terminal_is_empty(){return}session.preview_cancellation_step(FIXTURE_SESSION_GRANT).unwrap();}
+    for _ in 0..1_000_000{if session.preview_cancellation_terminal_is_empty(){return}funded(FIXTURE_SESSION_GRANT,|effect|session.preview_cancellation_step(effect)).unwrap();}
     panic!("original fixture cancellation stalled");
 }
 fn capture_fixture_baseline(session:&mut FlowEvalSession,host:&FlowHost){
-    session.capture_baseline_from(host,FIXTURE_SESSION_GRANT).unwrap();
+    funded(FIXTURE_SESSION_GRANT,|effect|session.capture_baseline_from(host,effect)).unwrap();
     if !session.baseline_capture_terminal_is_empty(){
         assert!(session.geometry_port.is_none());session.begin_retain_preview_meshes(Vec::new()).unwrap();
-        for _ in 0..1_000_000{if session.preview_retention_terminal_is_empty(){return}session.retain_preview_meshes_step(FIXTURE_SESSION_GRANT).unwrap();}
+        for _ in 0..1_000_000{if session.preview_retention_terminal_is_empty(){return}funded(FIXTURE_SESSION_GRANT,|effect|session.retain_preview_meshes_step(effect)).unwrap();}
         panic!("original empty fixture membership stalled");
     }
 }

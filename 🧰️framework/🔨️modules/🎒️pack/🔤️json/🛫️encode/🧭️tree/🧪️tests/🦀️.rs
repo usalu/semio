@@ -878,13 +878,18 @@ assert!(source.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this
 }
 }
 
+fn paid<T,E>(g:RetainedCloneGrant,f:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<T,E>)->Result<T,E>{
+ let mut bank=semio_framework_value_testing_admission::EffectBank::new(semio_framework_value_testing_admission::BankWallet::from_profile(&serde_json::json!({"items":1u64<<30,"copyBytes":1u64<<40,"capacityBytes":1u64<<40,"releaseBytes":1u64<<40,"depth":1u64<<20,"fuel":1u64<<60})));
+ match bank.run(g,1<<20,|effect|semio_framework_value::RetainedWorkPoll::Complete(f(effect))).0{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result,semio_framework_value::RetainedWorkPoll::Pending{..}=>panic!("synchronous birth stayed pending")}
+}
+fn sealed_row<T:semio_framework_value::retirement::RetireOwned+Send+Sync+'static>(value:T,g:RetainedCloneGrant)->semio_framework_value_shared_issuance::SealedShared<T>{let mut input=Some(value);let mut output=None;paid(g,|effect|semio_framework_value_shared_issuance::SealedShared::admit_from(&mut input,semio_framework_value_shared_issuance::SharedIssuer::owned(),&mut output,effect)).ok().expect("original row birth");output.expect("original row")}
 fn persistent_fixture(rows:&[i64])->semio_framework_value::persistent::PersistentList<i64>{
 use semio_framework_value::persistent::{PersistentList,PERSISTENT_PAGE_FANOUT};
 use semio_framework_value_shared_issuance::{SealedShared,SharedIssuer};
 if rows.is_empty(){return PersistentList::default();}
 let mut level=Vec::new();
-for chunk in rows.chunks(PERSISTENT_PAGE_FANOUT){let mut sealed=std::array::from_fn(|_|None);for(index,value)in chunk.iter().copied().enumerate(){let demand=RetirementDemand {capacity_bytes:SealedShared::<i64>::birth_bytes(),depth:1,..Default::default()};sealed[index]=Some(SealedShared::admit(value,SharedIssuer::owned(),admitted(demand),&mut None).result.map_err(|(error,_)|error).unwrap().0);}level.push(PersistentList::admit_leaf(sealed,chunk.len(),admitted(PersistentList::<i64>::page_birth_demand()),&mut None).result.map_err(|(error,_)|error).unwrap().0);}
-while level.len()>1{let mut next=Vec::new();let mut roots=level.into_iter();loop{let children=std::array::from_fn(|_|roots.next());if children[0].is_none(){break;}next.push(PersistentList::admit_branch(children,admitted(PersistentList::<i64>::page_birth_demand()),&mut None).result.map_err(|(error,_)|error).unwrap().0);}level=next;}
+for chunk in rows.chunks(PERSISTENT_PAGE_FANOUT){let mut sealed=std::array::from_fn(|_|None);for(index,value)in chunk.iter().copied().enumerate(){let demand=RetirementDemand {capacity_bytes:SealedShared::<i64>::birth_bytes(),depth:1,..Default::default()};sealed[index]=Some(sealed_row(value,admitted(demand)));}level.push(paid(admitted(PersistentList::<i64>::page_birth_demand()),|effect|PersistentList::admit_leaf(sealed,chunk.len(),effect)).ok().expect("persistent fixture leaf").0);}
+while level.len()>1{let mut next=Vec::new();let mut roots=level.into_iter();loop{let children=std::array::from_fn(|_|roots.next());if children[0].is_none(){break;}next.push(paid(admitted(PersistentList::<i64>::page_birth_demand()),|effect|PersistentList::admit_branch(children,effect)).ok().expect("persistent fixture branch").0);}level=next;}
 level.pop().unwrap()
 }
 

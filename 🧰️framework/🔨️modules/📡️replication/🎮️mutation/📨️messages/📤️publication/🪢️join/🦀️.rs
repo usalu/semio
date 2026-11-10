@@ -155,7 +155,7 @@ fn empty_row() -> MutationMessage { MutationMessage { level: semio_framework_dia
 impl ErasedSnapshotRetirement for MutationMessagePublicationJoin {
     fn next_demand(&self, _: usize) -> Result<RetirementDemand, ValueError> { self.close_demands() }
     fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{self.close_work_demand()}
-    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{crate::replay_retirement::erased_close(effect,|grant|Self::close_step(self,grant))}
+    fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{crate::replay_retirement::erased_close(effect,|grant|Self::close_step(self,grant))}
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands()?.copy_bytes) }
     fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(self.close_demands()?.capacity_bytes) }

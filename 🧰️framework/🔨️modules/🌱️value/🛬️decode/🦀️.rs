@@ -46,7 +46,7 @@ impl Drop for NativeDecodeContinuation{fn drop(&mut self){assert!(std::thread::p
 
 
 /// 🧮️ One caller-owned budget persists from input scanning through final typed construction.
-pub struct NativeDecodeControl<'a> { work:work::Work<'a>, ledger:Option<semio_framework_value_native_encoding::native_receiving::NativeAllocationLedger>, scope_maximum:Option<usize>, construction:Option<&'a mut OriginalConstructionLoan<'a>>, allocation:allocation::Binding<'a>, receiving:bool, retirement:Option<&'a mut NativeDecodeRetirementRecipient>, maximum_bytes:usize, completed:usize, total:usize, started:bool, stage:u64, depth:usize, callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool }
+pub struct NativeDecodeControl<'a> { work:work::Work<'a>, ledger:Option<semio_framework_value_native_encoding::native_receiving::NativeAllocationLedger>, scope_maximum:Option<usize>, construction:Option<&'a mut OriginalConstructionLoan<'a>>, allocation:allocation::Binding<'a>, receiving:bool, retirement:Option<&'a mut NativeDecodeRetirementRecipient>, maximum_bytes:usize, completed:usize, total:usize, started:bool, stage:u64, depth:usize, callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool, source:Option<semio_framework_value_control_contract::OriginalSourceTurnWitness<'a>> }
 struct StageScope<'owner,'control>{control:&'owner mut NativeDecodeControl<'control>,parent:(usize,usize,bool,u64)}
 impl Drop for StageScope<'_, '_>{fn drop(&mut self){if self.control.stage!=self.parent.3{self.control.completed=self.parent.0;self.control.total=self.parent.1;self.control.started=self.parent.2;self.control.stage=self.parent.3;}}}
 
@@ -138,10 +138,15 @@ impl<'a> NativeDecodeControl<'a> {
         if receipt.ledger.is_none()||(receipt.total!=0&&receipt.completed>receipt.total){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation has invalid cumulative accounting"),receipt));}
         Ok(Self::resume_validated(receipt,callback))
     }
-    fn resume_validated(mut receipt:NativeDecodeContinuation,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self{Self{work:work::Work{state:receipt.work.take(),recipient:None},ledger:receipt.ledger.take(),scope_maximum:None,construction:None,allocation:allocation::Binding::Local,receiving:receipt.receiving,retirement:None,maximum_bytes:receipt.maximum_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback}}
+    fn resume_validated(mut receipt:NativeDecodeContinuation,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self{Self{work:work::Work{state:receipt.work.take(),recipient:None},ledger:receipt.ledger.take(),scope_maximum:None,construction:None,allocation:allocation::Binding::Local,receiving:receipt.receiving,retirement:None,maximum_bytes:receipt.maximum_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback,source:None}}
 
     /// 🚦️ Binds the explicit allocation ceiling and cancellation callback.
-    pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self { Self{work:work::Work::empty(),ledger:Some(semio_framework_value_native_encoding::native_receiving::NativeAllocationLedger::new(0)),scope_maximum:None,construction:None,allocation:allocation::Binding::Local,receiving:false,retirement:None,maximum_bytes,completed:0,total:0,started:false,stage:0,depth:0,callback} }
+    pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self { Self{work:work::Work::empty(),ledger:Some(semio_framework_value_native_encoding::native_receiving::NativeAllocationLedger::new(0)),scope_maximum:None,construction:None,allocation:allocation::Binding::Local,receiving:false,retirement:None,maximum_bytes,completed:0,total:0,started:false,stage:0,depth:0,callback,source:None} }
+    /// 🧵️ Lends the original Source dispatch witness to this decoder for the whole turn.
+    /// 🔗️ Binds the Source turn witness for exactly one operation and restores the previous binding on exit, so a control never holds a witness beyond its turn.
+    pub fn with_source_witness<R>(&mut self,witness:Option<semio_framework_value_control_contract::OriginalSourceTurnWitness<'a>>,operation:impl FnOnce(&mut Self)->R)->R{let previous=std::mem::replace(&mut self.source,witness);let result=operation(self);self.source=previous;result}
+    /// 🪪️ Reads the bound original Source dispatch witness.
+    pub fn source_witness(&self)->Result<semio_framework_value_control_contract::OriginalSourceTurnWitness<'a>,ValueError>{self.source.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native decoder has no original Source dispatch witness"))}
     /// 🪆️ Bounds recursive typed construction independently of physical input parsing.
     pub fn scoped_depth<T,E:From<ValueError>>(&mut self,maximum:usize,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{
         if self.depth>=maximum{return Err(E::from(ValueError::literal(ValueRefusalKind::DepthLimit, "native typed construction exceeds depth limit")))}

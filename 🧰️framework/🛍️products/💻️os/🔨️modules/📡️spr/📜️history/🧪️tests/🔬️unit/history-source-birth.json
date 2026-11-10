@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "quoteWork": 3,
+  "quoteWork": 5,
   "cases": [
     {
       "kind": "physical denied",
@@ -27,7 +27,7 @@
       "attempted": true,
       "input": true,
       "output": false,
-      "work": 3
+      "work": 1
     },
     {
       "kind": "success",
@@ -36,23 +36,20 @@
       "attempted": true,
       "input": false,
       "output": true,
-      "work": 3
+      "work": 5
     }
   ],
   "layoutCases": [
     {
       "sourceHeader": 8,
-      "historyHeader": 256,
-      "quote": 512,
-      "success": 272,
-      "refused": 512
+      "admission": 600,
+      "quote": 616
     },
     {
       "sourceHeader": 256,
-      "historyHeader": 8,
-      "quote": 520,
-      "success": 520,
-      "refused": 16
+      "admission": 600,
+      "quote": 1112
     }
-  ]
+  ],
+  "refusedWork": 1
 }

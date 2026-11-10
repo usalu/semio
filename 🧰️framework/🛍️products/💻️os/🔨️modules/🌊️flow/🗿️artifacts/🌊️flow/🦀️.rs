@@ -21,12 +21,12 @@ pub mod artifact {
 }
 
 pub mod graph_parameter {
-    pub use semio_framework_artifact_flow_flow_model::graph_parameter::{SetGraphParameter, SetGraphParameterRetirement};
+    pub use semio_framework_artifact_flow_flow_model::graph_parameter::SetGraphParameter;
 }
 
 pub mod retained {
-    pub use semio_framework_artifact_flow_flow_model::retained::{FlowOwner, FlowRetirement};
-    pub use semio_framework_artifact_flow_flow_copy::{FlowCopyAllocations, FlowHostSnapshotCopy, FlowSnapshotCopyIntakeSource, FlowSnapshotIntakeProducer, FlowSnapshotProjection, FlowSynapseCopy, FlowWidgetCopy};
+    pub use semio_framework_artifact_flow_flow_model::retained::{cold_effect, FlowOwner, FlowRetirement};
+    pub use semio_framework_artifact_flow_flow_copy::{FlowCopyAllocations, FlowHostSnapshotCopy, FlowSnapshotCopyIntakeSource, FlowSnapshotAdmission, FlowSnapshotIntakeProducer, FlowSynapseCopy, FlowWidgetCopy};
 }
 
 pub mod vcs {

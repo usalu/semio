@@ -30,19 +30,19 @@
     256
   ],
   "moveWork": 2,
-  "freeWork": 1,
+  "freeWork": 2,
   "deniedWork": 0,
   "cachedWork": 0,
-  "poisonDropCalls": 0,
+  "poisonDropCalls": 1,
   "freshBoxAllocations": 0,
   "handoff": [
     {
       "pointerBytes": 4,
-      "copyBytes": 13
+      "copyBytes": 9
     },
     {
       "pointerBytes": 8,
-      "copyBytes": 25
+      "copyBytes": 17
     }
   ]
 }

@@ -8,7 +8,7 @@ use neural_engine as neural;
 use semio_os_infinite_directed_presentation::dag_host_snapshot_to_wire_literal;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use std::sync::Arc;
+pub use semio_framework_value_ordered::ordered::SharedOwner;
 use protocol::causal::transition::HistoryFoldIndex;
 use semio_framework_value_ordered::ordered::OrderedMap;
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
@@ -84,3 +84,14 @@ pub mod testkit{
 }
 
 pub use semio_os_flow_host_source::receiving::JsonField as FlowJsonField;
+/// 🎟️ Settles one retirement poll into a close step: a pending poll keeps its state and reports no progress, a refusal keeps its primary cause.
+pub fn poll_close_step(poll:semio_framework_value::OriginalRetirementPoll)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
+ match poll{
+  semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())),
+  semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
+ }
+}
+/// 🧊️ Runs one owner-less cold close step inside a host-pump retirement turn; `None` means its work quote was not admitted.
+pub fn cold_effect<R>(grant:semio_framework_value::RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->R)->Result<Option<R>,semio_framework_value::ValueError>{
+ semio_framework_job::OriginalRetirementPump::new().turn(1<<16,u64::MAX,||Some(0),grant)?.with_effect(run).map(|done|done.map(|(output,_)|output))
+}

@@ -170,13 +170,16 @@ pub trait RetirementCursor: Send {
 /// 📦️ A boxed cursor retires exactly as the cursor it owns.
 impl RetirementCursor for Box<dyn RetirementCursor> {
     fn requires_original_birth(&self)->bool{(**self).requires_original_birth()}
-    fn close_original_birth_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{(**self).close_original_birth_step(original,grant)}
+    fn close_original_birth_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{(**self).close_original_birth_step(original,grant)}
     fn requires_original_control(&self)->bool{(**self).requires_original_control()}
-    fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{(**self).close_step_controlled(effect,control)}
-    fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{(**self).close_original_step(original,effect)}
+    fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{(**self).close_step_controlled(body,effect,control)}
+    fn close_original_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{(**self).close_original_step(original,body,effect)}
     fn next_computational_work(&self,body:usize)->Result<u64,crate::ValueError>{(**self).next_computational_work(body)}
     fn next_demand(&self,maximum_body_bytes:usize)->Result<crate::RetirementDemand,crate::ValueError>{(**self).next_demand(maximum_body_bytes)}
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{(**self).close_step(effect)}
+    fn close_into<'reply>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,RetirementStep,crate::OriginalRetirementFailure>,crate::ValueError>{(**self).close_into(body,effect,reply)}
+    fn recover_close_into<'reply>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,RetirementStep,crate::OriginalRetirementFailure>,crate::ValueError>{(**self).recover_close_into(body,effect,reply)}
+    fn close_original_into<'reply>(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,RetirementStep,crate::OriginalRetirementFailure>,crate::ValueError>{(**self).close_original_into(original,body,effect,reply)}
+    fn recover_close_original_into<'reply>(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,RetirementStep,crate::OriginalRetirementFailure>,crate::ValueError>{(**self).recover_close_original_into(original,body,effect,reply)}
     fn terminal_is_empty(&self)->bool{(**self).terminal_is_empty()}
     fn next_depth_demand(&self)->Result<usize,crate::ValueError>{(**self).next_depth_demand()}
     fn next_close_byte_demand(&self)->Option<usize>{(**self).next_close_byte_demand()}
@@ -212,15 +215,19 @@ pub(crate) mod effect_fixture;
 #[path="🍃️leaf/🧪️tests/🦀️.rs"]
 mod original_leaf_tests;
 
+/// 📮️ Implements the synchronous original reply of a cursor whose inherent `close_step(body,effect)` returns a [`RetirementStep`].
+#[doc(hidden)]
+#[macro_export]
 macro_rules! native_retirement_reply{
  ()=>{
-  fn close_into<'reply>(&mut self,body:usize,effect:&mut $crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,$crate::retirement::RetirementStep,$crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,$crate::retirement::RetirementStep,$crate::OriginalRetirementFailure>,$crate::ValueError>{
+  fn close_into<'reply>(&mut self,body:usize,effect:&mut $crate::RetainedAllocationEffect<'_>,reply:$crate::retirement::__control::OriginalEffectReply<'reply,$crate::retirement::RetirementStep,$crate::OriginalRetirementFailure>)->Result<$crate::retirement::__control::OriginalEffectReplyComplete<'reply,$crate::retirement::RetirementStep,$crate::OriginalRetirementFailure>,$crate::ValueError>{
    if effect.invocation().is_none(){return Err($crate::ValueError::invariant("native retirement requires its original producer invocation"))}
    let step=Self::close_step(self,body,effect);Ok(match step{$crate::retirement::RetirementStep::Failure(error,_)=>reply.complete(Err(error)),step=>reply.complete(Ok(step))})
   }
  };
 }
-pub(crate) use native_retirement_reply;
+#[doc(hidden)]
+pub use semio_framework_value_control_contract as __control;
 
 impl<T: Copy + Send + 'static> RetirementCursor for Leaf<T> {
     native_retirement_reply!();
@@ -646,7 +653,7 @@ retire_tuple!(A:0,B:1,C:2,D:3,E:4,F:5,G:6,H:7,I:8,J:9);
 retire_tuple!(A:0,B:1,C:2,D:3,E:4,F:5,G:6,H:7,I:8,J:9,K:10);
 retire_tuple!(A:0,B:1,C:2,D:3,E:4,F:5,G:6,H:7,I:8,J:9,K:10,L:11);
 
-/// 🧱️ Drains a fixed array of owning elements one child cursor per turn, last element first.
+/// 🧱️ Drains a fixed array of owning elements one child cursor per turn, last element first; plain elements retire as one item per block that the copy quote fully determines.
 #[doc(hidden)]
 pub struct FixedArray<T:RetireOwned,const N:usize>{items:ManuallyDrop<[Option<T>;N]>,remaining:usize}
 impl<T:RetireOwned,const N:usize> RetirementCursor for FixedArray<T,N>{
@@ -661,7 +668,7 @@ impl<T:RetireOwned,const N:usize> RetirementCursor for FixedArray<T,N>{
 impl<T:RetireOwned,const N:usize> FixedArray<T,N>{
  fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{
   if self.remaining==0{return RetirementStep::Complete(0)}let grant=effect.grant();if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
-  if plain_elements::<T>(){let demand=match self.next_demand(body){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};if !crate::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}let count=self.remaining.min(grant.maximum_items).min((demand.copy_bytes-size_of::<usize>())/size_of::<Option<T>>());if count==0||grant.maximum_depth==0||effect.remaining_work_units().is_ok_and(|n|n==0){return RetirementStep::BudgetExhausted}let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};let end=self.remaining-count;for slot in &mut self.items[end..self.remaining]{*slot=None}self.remaining=end;return RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:count,copied_bytes:count*size_of::<Option<T>>()+size_of::<usize>(),..Default::default()},work)}
+  if plain_elements::<T>(){let demand=match self.next_demand(body){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};if !crate::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}let count=self.remaining.min((demand.copy_bytes-size_of::<usize>())/size_of::<Option<T>>());if count==0||grant.maximum_depth==0||effect.remaining_work_units().is_ok_and(|n|n==0){return RetirementStep::BudgetExhausted}let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};let end=self.remaining-count;for slot in &mut self.items[end..self.remaining]{*slot=None}self.remaining=end;return RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,copied_bytes:count*size_of::<Option<T>>()+size_of::<usize>(),..Default::default()},work)}
   let demand=match self.next_demand(body){Ok(d)=>d,Err(error)=>return RetirementStep::Failure(error.into(),0)};if !crate::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}let mut step=retirement_input_step(&mut self.items[self.remaining-1],effect);if self.items[self.remaining-1].is_none(){self.remaining-=1;match &mut step{RetirementStep::ChildProgress(_,p,_)|RetirementStep::Progress(p,_)=>p.copied_bytes+=size_of::<usize>(),_=>{}}}step
  }
 }

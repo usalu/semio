@@ -9,7 +9,7 @@ use std::rc::Rc;
 use std::sync::atomic::{AtomicPtr, AtomicU64, AtomicU8, AtomicUsize, Ordering};
 use std::sync::Mutex;
 use semio_framework_job::{InteractiveJobCloseStep as CloseStep, RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_value::{RetainedAllocationEffect, RetirementPollExit, ValueError, ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect, ValueError, ValueRefusalKind};
 
 #[path = "📊️credits-limits-and-fixed-lists/🦀️.rs"]
 mod credits_limits_and_fixed_lists;

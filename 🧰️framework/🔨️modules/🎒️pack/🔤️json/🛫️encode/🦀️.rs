@@ -7,7 +7,7 @@ mod native_scalar;
 pub use native_scalar::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonScalarBytes};
 #[path = "🧭️tree/🦀️.rs"]
 mod native_tree;
-pub use native_tree::{ArtifactCanonicalDecimalI64, ArtifactCanonicalDecimalU64, ArtifactCanonicalHexWordArray, ArtifactCanonicalHexWordF32, ArtifactCanonicalHexWordList, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonTreeWireCursor, ArtifactCanonicalJsonTreeWireStep};
+pub use native_tree::{retained_alias, retained_alias_demand, retained_alias_work_demand, ArtifactCanonicalDecimalI64, ArtifactCanonicalDecimalU64, ArtifactCanonicalHexWordArray, ArtifactCanonicalHexWordF32, ArtifactCanonicalHexWordList, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonTreeWireCursor, ArtifactCanonicalJsonTreeWireStep};
 
 #[cfg(feature = "testkit")]
 pub mod testkit { pub use super::native_tree::testkit as tree; }

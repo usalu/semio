@@ -167,32 +167,42 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
 
     /// ♻️ Closes one original owner under the complete caller grant; nested owners receive one item and one less depth.
     #[doc(hidden)]
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let idle = RetainedCloneProgress::default();
-        if self.owners_are_empty() {
-            return Ok(RetainedCloneStep::Complete(idle));
-        }
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(RetainedCloneStep::Progress(idle));
-        }
-        let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth {
-            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "live local interaction close exceeds admitted depth"));
-        }
-        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
-            return Ok(RetainedCloneStep::Progress(idle));
-        }
-        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = if self.owned.error_close.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.owned.error_close,child).result?}
-        else if self.owned.error.is_some(){let owned=&mut *self.owned;store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut owned.error,&mut owned.error_close,child).result?}
-        else if let Some(query) = self.owned.query.as_mut().filter(|query| !query.terminal_is_empty()) {
-            semio_framework_value::retained_clone::admit_retained_clone_close(child, query.close_step(child)?, query.terminal_is_empty(), "live local interaction query")?
-        } else {
-            let inputs = &mut self.owned.inputs;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child, inputs.close_step(child)?, inputs.terminal_is_empty(), "live local interaction inputs")?
-        };
-        let progress = step.progress();
-        Ok(if self.owners_are_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        use semio_framework_value::RetirementPollExit;
+        let grant = effect.grant();
+        let body = grant.maximum_copy_bytes;
+        let result = (|| -> Result<RetainedCloneStep, RetirementPollExit> {
+            let idle = RetainedCloneProgress::default();
+            if self.owners_are_empty() {
+                return Ok(RetainedCloneStep::Complete(idle));
+            }
+            if !self.closing || grant.maximum_items == 0 {
+                return Ok(RetainedCloneStep::Progress(idle));
+            }
+            let demand = self.retirement_demands(body)?;
+            if grant.maximum_depth < demand.depth {
+                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "live local interaction close exceeds admitted depth").into());
+            }
+            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+                return Ok(RetainedCloneStep::Progress(idle));
+            }
+            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+            let step = if self.owned.error_close.is_some() {
+                RetirementPollExit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.owned.error_close, body, &mut effect.nested(child)))?
+            } else if self.owned.error.is_some() {
+                let owned = &mut *self.owned;
+                store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut owned.error, &mut owned.error_close, &mut effect.nested(child)).result?
+            } else if let Some(query) = self.owned.query.as_mut().filter(|query| !query.terminal_is_empty()) {
+                let step = RetirementPollExit::resume(query.close_step(&mut effect.nested(child)))?;
+                semio_framework_value::retained_clone::admit_retained_clone_close(child, step, query.terminal_is_empty(), "live local interaction query")?
+            } else {
+                let inputs = &mut self.owned.inputs;
+                semio_framework_value::retained_clone::admit_retained_clone_close(child, inputs.close_step(child)?, inputs.terminal_is_empty(), "live local interaction inputs")?
+            };
+            let progress = step.progress();
+            Ok(if self.owners_are_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+        })();
+        RetirementPollExit::settle(effect, result)
     }
 
     #[doc(hidden)]

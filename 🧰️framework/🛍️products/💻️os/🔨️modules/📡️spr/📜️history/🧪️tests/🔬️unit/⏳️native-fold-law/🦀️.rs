@@ -48,7 +48,7 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
         let completed = job.completed();
         job.request_cancel();
         let mut closed = false;let already_empty=job.terminal_is_empty();let mut close_work=0_u64;
-        for _ in 0..100000 { let grant=job.next_step_grant(1,0).unwrap();let(turn,_)=semio_framework_value::AuthoringWallet::new(grant,64).run_settled(grant,64,|effect|job.close_step(effect)).unwrap().expect("fold close work quote was not admitted");close_work=close_work.checked_add(u64::try_from(turn.work).unwrap()).unwrap();let step=turn.result.unwrap();assert!(step.progress().fits(grant));if matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)){closed=true;break;} }
+        for _ in 0..100000 { let grant=job.next_step_grant(1,0).unwrap();let(turn,_)=semio_framework_value::AuthoringWallet::new(grant,64).run_settled(grant,64,|effect|job.close_step(grant.maximum_copy_bytes,effect)).unwrap().expect("fold close work quote was not admitted");close_work=close_work.checked_add(u64::try_from(turn.work).unwrap()).unwrap();let step=turn.result.unwrap();assert!(step.progress().fits(grant));if matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)){closed=true;break;} }
         assert_eq!(close_work==0,already_empty,"cancelled fold retirement reports its actual owned effects");
         assert!(closed && job.terminal_is_empty());
         assert_eq!(job.completed(), completed);

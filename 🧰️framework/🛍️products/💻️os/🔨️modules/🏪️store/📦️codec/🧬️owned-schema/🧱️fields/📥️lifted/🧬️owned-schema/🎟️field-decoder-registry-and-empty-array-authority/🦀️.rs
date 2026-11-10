@@ -55,7 +55,7 @@ impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for Ar
             self.terminal = true;
             if self.retirement.is_some() {
                 let fault = self.diagnostic("artifact-envelope.history-entry-retirement-fault", 0);
-                return artifact_envelope_close_resume_with(artifact_retirement_box_close_step(&mut self.retirement, effect), |failure| artifact_envelope_failure_diagnostic(fault, &failure)).map(|step| RetainedCloneStep::Progress(step.progress()));
+                return artifact_envelope_close_resume_with(artifact_retirement_box_close_step(&mut self.retirement,effect.grant().maximum_copy_bytes,effect), |failure| artifact_envelope_failure_diagnostic(fault, &failure)).map(|step| RetainedCloneStep::Progress(step.progress()));
             }
             if self.value.is_some() {
                 let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
@@ -76,7 +76,7 @@ impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for Ar
             let failure = self.diagnostic("artifact-envelope.history-entry-factory-close", 0);
             let owner = self.factory_close.as_mut().ok_or_else(|| failure.with_native(semio_framework_value::ValueError::invariant("remaining original history factory is absent")))?;
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = artifact_envelope_close_resume_with(owner.step(&mut effect.nested(child)), |error| artifact_envelope_failure_diagnostic(failure, &error))?;
+            let step = artifact_envelope_close_resume_with(owner.step(child.maximum_copy_bytes,&mut effect.nested(child)), |error| artifact_envelope_failure_diagnostic(failure, &error))?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original history decoder factory").map_err(|error| (self.diagnostic("artifact-envelope.history-entry-factory-receipt", 0)).with_native(error).with_progress(step.progress()))?;
             if terminal { drop(self.factory_close.take()); }
@@ -360,12 +360,12 @@ pub struct ArtifactEnvelopeReturnedFieldDecoder<P, Mutation> {
     pub owner: std::mem::ManuallyDrop<Option<Box<dyn ArtifactEnvelopeFieldDecoder<P, Mutation>>>>,
 }
 
-impl<P, Mutation> ErasedSnapshotRetirement for ArtifactEnvelopeReturnedFieldDecoder<P, Mutation>
+impl<P: 'static, Mutation: 'static> ErasedSnapshotRetirement for ArtifactEnvelopeReturnedFieldDecoder<P, Mutation>
 where
     P: Send,
     Mutation: Send,
 {
-    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+    fn close_step(&mut self, _body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit<ValueError>> {
             let grant = effect.grant();
             let empty = RetainedCloneProgress::default();
@@ -416,8 +416,8 @@ impl<P, Mutation> Drop for ArtifactEnvelopeReturnedFieldDecoder<P, Mutation> {
 
 impl<P, Mutation> ArtifactEnvelopeFieldDecoderRegistry<P, Mutation>
 where
-    P: Send,
-    Mutation: Send,
+    P: Send + 'static,
+    Mutation: Send + 'static,
 {
     /// ↩️ Detaches the exact returned decoder into the caller's resident slot, then closes it one step per call inside the caller's effect, so a worker [`release_step`] passes its `ticket_reclaimed` gate without waiting for the app's next maintenance visit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END `env-20`). A registry that cannot yet detach the ticket reports a contended empty turn.
     pub fn reclaim_returned_ticket_step(&self, ticket: ArtifactEnvelopeFieldDecoderTicket, slot: &mut Option<ArtifactEnvelopeReturnedFieldDecoder<P, Mutation>>, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
@@ -435,7 +435,7 @@ where
             drop(slot.take());
             return done(Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())));
         }
-        let poll = ErasedSnapshotRetirement::close_step(retired, effect);
+        let poll = ErasedSnapshotRetirement::close_step(retired, effect.grant().maximum_copy_bytes, effect);
         if slot.as_ref().is_some_and(|retired| retired.owner.is_none()) { drop(slot.take()); }
         poll
     }

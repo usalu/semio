@@ -243,10 +243,11 @@ impl PcgJobConstruction {
             }
         }
         let demand = self.close_demand()?;
-        numerical_close_original(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
+        numerical_close_effect(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
         self.closing = true;
         if grant.maximum_items == 0 {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
@@ -473,10 +474,11 @@ impl PcgRestoreCursor {
             }
         }
         let demand = self.close_frontier()?.unwrap_or_else(|| numerical_rung_demand(self.terminal_is_empty()));
-        numerical_close_original(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
+        numerical_close_effect(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
         self.closing = true;
         let frontier = self.close_frontier()?;
         if self.terminal_is_empty() {
@@ -485,7 +487,7 @@ impl PcgRestoreCursor {
         if !numerical_close_gate(grant, frontier) {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
-        if let Some(step) = numerical_restore_payload_close(&mut self.payload, grant) {
+        if let Some(step) = numerical_restore_payload_close(&mut self.payload, effect) {
             return step?.admit(grant, self.terminal_is_empty());
         }
         let Some(job) = self.job.as_mut() else { return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }) };

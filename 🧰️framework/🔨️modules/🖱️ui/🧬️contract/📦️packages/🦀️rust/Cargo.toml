@@ -50,6 +50,7 @@ semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/�
 semio-framework-schema-registry = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-testing-admission = { path = "../../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-ui-contract-values = { path = "../../🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 serde_json = { version = "1.0.140" }

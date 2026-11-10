@@ -77,7 +77,7 @@ impl NativeTraceCursor{
  pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
   let grant=effect.grant();let demand=self.close_demands(grant.maximum_copy_bytes)?;if !funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
   let moved=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
-  if let Some(owner)=&mut self.retiring{if !owner.terminal_is_empty(){return settled(owner.step(effect))}if !pure(effect)?{return Ok(RetainedCloneStep::Progress(Default::default()))}self.retiring=None;return Ok(RetainedCloneStep::Progress(moved))}
+  if let Some(owner)=&mut self.retiring{if !owner.terminal_is_empty(){return settled(owner.step(effect.grant().maximum_copy_bytes,effect))}if !pure(effect)?{return Ok(RetainedCloneStep::Progress(Default::default()))}self.retiring=None;return Ok(RetainedCloneStep::Progress(moved))}
   if self.page.is_some(){if !pure(effect)?{return Ok(RetainedCloneStep::Progress(Default::default()))}let Some(page)=self.page.take()else{return Err(malformed("native trace page absent"))};self.closing=true;match ControlledRetirement::new(page){Ok(owner)=>self.retiring=Some(owner),Err((error,page))=>{*self.page=Some(page);return Err(error)}}return Ok(RetainedCloneStep::Progress(moved))}
   self.close_parser_step(effect)
  }

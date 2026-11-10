@@ -10,6 +10,9 @@ use semio_framework_tool_run::ToolRunIdentity;
 use semio_framework_tool_run::ToolRunState;
 use semio_framework_tool_run::ToolRunStepRing;
 use std::sync::Arc;
+use semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage;
+use semio_framework_value::retirement::{RetirementStep,record_retirement_work};
+use semio_framework_value::RetainedAllocationEffect;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
 use semio_framework_value::ValueRefusalKind;
@@ -38,9 +41,13 @@ pub type ToolRunJob = Box<dyn semio_framework_job::InteractiveJob + Send>;
 
 /// 🔑️ The trace key allocator every job of one run shares: keys handed out lie above every key the run's
 /// ticks have upserted and every key allocated before.
-#[derive(Clone, Debug, Default, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct ToolRunTraceKeys {
-    next: Arc<std::sync::atomic::AtomicU64>,
+    next: SharedOriginalStorage<std::sync::atomic::AtomicU64>,
+}
+
+impl Default for ToolRunTraceKeys {
+    fn default() -> Self { Self { next: SharedOriginalStorage::from_cold(std::sync::atomic::AtomicU64::new(0)) } }
 }
 
 impl ToolRunTraceKeys {
@@ -171,10 +178,14 @@ impl OriginalToolRunJobPortRetirement{
     }
 
     /// 🪙️ Retires one real original frontier without draining queued effects.
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        let empty=Default::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}let demand=self.demands()?;if !tool_original_grant_funds(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}
-        if let Some(port)=self.source.take(){let state=Arc::into_inner(port.inner);let released_bytes=if let Some(state)=state{let effects=state.effects.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);*self.effects=Some(effects);demand.release_bytes}else{0};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..empty}));}
-        drop(self.effects.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..empty}))
+    pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
+        let _=body;let grant=effect.grant();
+        if self.terminal_is_empty(){return RetirementStep::Complete(0);}
+        let demand=match self.demands(){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};
+        if effect.maximum_work_units()==0||!tool_original_grant_funds(grant,demand){return RetirementStep::BudgetExhausted;}
+        let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};
+        if let Some(port)=self.source.take(){let state=Arc::into_inner(port.inner);let released_bytes=if let Some(state)=state{let effects=state.effects.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);*self.effects=Some(effects);demand.release_bytes}else{0};return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()},work);}
+        drop(self.effects.take());RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()},work)
     }
 
     /// 🏁️ Both original lease and final native queue must be gone.
@@ -185,21 +196,16 @@ impl Drop for OriginalToolRunJobPortRetirement{fn drop(&mut self){assert!(std::t
 
 /// 🎟️ Erases the original port lease and its final native queue behind the typed retirement ladder of owning containers.
 impl semio_framework_value::retirement::RetireOwned for ToolRunJobPort {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(OriginalToolRunJobPortRetirement{source:ManuallyDrop::new(Some(self)),effects:ManuallyDrop::new(None)})}
+    type RetirementCursor=OriginalToolRunJobPortRetirement;
+    fn retirement_seed(self)->Self::RetirementCursor{OriginalToolRunJobPortRetirement{source:ManuallyDrop::new(Some(self)),effects:ManuallyDrop::new(None)}}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OriginalToolRunJobPortRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
 
 impl semio_framework_value::retirement::RetirementCursor for OriginalToolRunJobPortRetirement {
- fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;self.demands()}
-
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
-        use semio_framework_value::retirement::RetirementStep;
-        match OriginalToolRunJobPortRetirement::close_step(self,grant){
-            Ok(step)=>{let progress=step.progress();if progress!=RetainedCloneProgress::default(){RetirementStep::Progress(progress,1)}else if self.terminal_is_empty(){RetirementStep::Complete(0)}else{RetirementStep::BudgetExhausted}}
-            Err(error)=>RetirementStep::Failure(error,0),
-        }
-    }
+    semio_framework_value::native_retirement_reply!();
+    fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
+    fn next_demand(&self,maximum_body_bytes:usize)->Result<RetirementDemand,ValueError>{let _=maximum_body_bytes;self.demands()}
     fn terminal_is_empty(&self)->bool{OriginalToolRunJobPortRetirement::terminal_is_empty(self)}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.depth)}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.copy_bytes)}
@@ -210,14 +216,20 @@ impl semio_framework_value::retirement::RetirementCursor for OriginalToolRunJobP
 
 /// 🪟️ What a renderer learns about the run on this document instance (§4.1 layer 1): its identity and state, the
 /// provisional entities, the §2.3 progress (stage, counters, step ring) and the latest plugin payload a tick carried.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct ToolRunView {
     pub tool_id: String,
     pub identity: ToolRunIdentity,
     pub state: ToolRunState,
-    pub provisional_entities: Arc<BTreeSet<u64>>,
+    pub provisional_entities: SharedOriginalStorage<BTreeSet<u64>>,
     pub progress: semio_framework_tool_run::ToolRunProgress,
-    pub payload: Option<Arc<Vec<u8>>>,
+    pub payload: Option<SharedOriginalStorage<Vec<u8>>>,
+}
+
+impl PartialEq for ToolRunView {
+    fn eq(&self, other: &Self) -> bool {
+        self.tool_id == other.tool_id && self.identity == other.identity && self.state == other.state && *self.provisional_entities == *other.provisional_entities && self.progress == other.progress && self.payload.as_deref() == other.payload.as_deref()
+    }
 }
 
 /// ⏯️ Fixed live run identity and state borrowed directly from its original ledger entry.
@@ -228,6 +240,6 @@ pub struct ToolRunView {
     /// 🏗️ A view of a run with no provisional entities, no progress yet and no payload.
     pub fn new(tool_id: impl Into<String>, identity: ToolRunIdentity, state: ToolRunState) -> Self {
         let progress = semio_framework_tool_run::ToolRunProgress { identity, sequence: 0, state, stage: 0, completed: 0, total: None, counters: Vec::new(), units_per_second: 0.0, conflicts: 0, steps: ToolRunStepRing::new() };
-        Self { tool_id: tool_id.into(), identity, state, provisional_entities: Arc::new(BTreeSet::new()), progress, payload: None }
+        Self { tool_id: tool_id.into(), identity, state, provisional_entities: SharedOriginalStorage::from_cold(BTreeSet::new()), progress, payload: None }
     }
 }

@@ -12397,7 +12397,16 @@
           "ports": [
             {
               "id": "params:in",
-              "label": "Parameters",
+              "label": {
+                "native": {
+                  "en": "Parameters",
+                  "de": "Parameter"
+                },
+                "reuse": {
+                  "en": "Parameters",
+                  "de": "Parameter"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -12408,7 +12417,16 @@
             },
             {
               "id": "drawing:out",
-              "label": "Drawing",
+              "label": {
+                "native": {
+                  "en": "Drawing",
+                  "de": "Zeichnung"
+                },
+                "reuse": {
+                  "en": "Drawing",
+                  "de": "Zeichnung"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "twoD",
@@ -28307,8 +28325,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Generator"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Generator",
+                "de": "Generator"
+              },
+              "reuse": {
+                "en": "Generator",
+                "de": "Generator"
+              }
+            }
           ]
         },
         "tutorials": [],
@@ -28465,7 +28501,16 @@
           "ports": [
             {
               "id": "params:in",
-              "label": "Parameters",
+              "label": {
+                "native": {
+                  "en": "Parameters",
+                  "de": "Parameter"
+                },
+                "reuse": {
+                  "en": "Parameters",
+                  "de": "Parameter"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -28476,7 +28521,16 @@
             },
             {
               "id": "geometry:out",
-              "label": "Geometry",
+              "label": {
+                "native": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                },
+                "reuse": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "threeD",

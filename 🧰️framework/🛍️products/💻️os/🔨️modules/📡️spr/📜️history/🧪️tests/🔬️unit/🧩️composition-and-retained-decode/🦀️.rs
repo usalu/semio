@@ -172,7 +172,7 @@ async fn retained_history_decode_refuses_a_demand_above_the_grant_and_allocates_
     paid_turn(&mut decode, &bytes, &turn, grant, &mut history);
     let denied = RetainedCloneGrant { maximum_copy_bytes: 0, ..grant };
     let before = decode.consumed_end();
-    let (outcome, born, released) = with_budget(&turn, |loan| semio_framework_trace_memory_testing::observe_backing(|| decode.step(&bytes, &turn, denied, &mut history, loan)));
+    let (outcome, born, released) = with_budget(&turn, |loan| semio_os_history_testing_retirement::observe_backing(|| decode.step(&bytes, &turn, denied, &mut history, loan)));
     settle_work(&turn, outcome.work);
     let step = outcome.result.expect("refuse retained decode");
     assert_eq!(step, RetainedHistorySourceStep::Blocked, "a demand above the grant is refused typed");

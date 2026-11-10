@@ -62,7 +62,7 @@ fn registered_bus_alias_keeps_the_original_process_registry() {
         assert!(d.copy_bytes <= TURN.maximum_copy_bytes && d.capacity_bytes <= TURN.maximum_capacity_bytes && d.release_bytes <= TURN.maximum_release_bytes && d.depth <= TURN.maximum_depth);
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| wallet.run(TURN, 1_000, |effect| match close.begin_granted(&mut original, effect).result.unwrap() {
             Some(step) => step,
-            None => match close.step_granted(effect) { semio_framework_value::RetainedWorkPoll::Complete(done) => done.result.unwrap(), _ => panic!("fixture close cannot stay pending") },
+            None => match close.step_granted(effect.grant().maximum_copy_bytes,effect) { semio_framework_value::RetainedWorkPoll::Complete(done) => done.result.unwrap(), _ => panic!("fixture close cannot stay pending") },
         }).unwrap().expect("authoring stock funds the fixture close").output);
         assert!(step.progress().fits(TURN));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));

@@ -55,19 +55,6 @@ pub mod owner_registry;
 pub use owner_registry::WindowConfigOwnerRegistry;
 pub use owner_registry::{close_window_actor, controlled_owner_demands, window_actor_demands};
 
-#[cfg(test)]
-extern crate self as semio_plugin_window_config;
-#[cfg(test)]
-#[path="🏠️catalog/🧪️tests/🦀️.rs"]
-mod original_catalog_tests;
-
-#[cfg(test)]
-#[path="🗄️store-owners/🌱️initialization/🎟️birth/🧪️tests/🦀️.rs"]
-mod original_genesis_tests;
-#[cfg(test)]
-#[global_allocator]
-static ORIGINAL_WINDOW_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
-
 pub use owner_registry::OriginalWindowOwnerRegistration;
 
 

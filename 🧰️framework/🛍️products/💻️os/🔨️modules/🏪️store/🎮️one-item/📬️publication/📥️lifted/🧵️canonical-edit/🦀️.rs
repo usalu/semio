@@ -11,7 +11,7 @@ use semio_os_spr::Edit;
 use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
-use semio_framework_value::{RetirementDemand, FactoryAuthority, RetainedAllocationEffect, OriginalRetirementPoll, RetirementPollExit, factory_retire_snapshot, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress}};
+use semio_framework_value::{RetirementDemand, FactoryAuthority, RetainedAllocationEffect, OriginalRetirementPoll, RetirementPollExit, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress}};
 use crate::native_source::{ArtifactStoreCanonicalOwner, ArtifactStoreCanonicalSource, pay};
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_os_store_canonical_json::ARTIFACT_CANONICAL_JSON_CHUNK_BYTES;
@@ -21,22 +21,26 @@ use semio_os_store_canonical_json::CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES;
 
 
 pub struct ArtifactStoreOneItemAuthorityRetirement {
-    pub owner: semio_framework_value::retirement::arc_custody::SharedControlledRetirement<ArtifactStoreOneItemLiveAuthority>,
+    pub owner: semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::retirement::arc_custody::ArcLease<ArtifactStoreOneItemLiveAuthority>>,
 }
 
 impl ArtifactStoreOneItemAuthorityRetirement {
     pub fn new(authority: Arc<ArtifactStoreOneItemLiveAuthority>) -> Self {
-        Self { owner: semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(authority) }
+        Self { owner: semio_framework_value::retirement::controlled::ControlledRetirement::retain(semio_framework_value::retirement::arc_custody::ArcLease::new(authority)) }
     }
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreOneItemAuthorityRetirement {
+    fn native_header_release(&self) -> Option<semio_framework_value::RetirementHeaderRelease> { self.owner.terminal_is_empty().then(|| unsafe { semio_framework_value::RetirementHeaderRelease::native(self, 0, 0) }) }
+    fn close_into<'r>(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::retained_clone::OriginalEffectReply<'r, semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>) -> Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r, semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>, ValueError> { self.owner.close_into(body, effect, reply) }
+    fn recover_close_into<'r>(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::retained_clone::OriginalEffectReply<'r, semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>) -> Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r, semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>, ValueError> { self.owner.recover_close_into(body, effect, reply) }
+    fn next_computational_work(&self, body: usize) -> Result<u64, ValueError> { self.owner.next_computational_work(body) }
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owner.next_demand(body) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_copy_byte_demand() }
     fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError> { self.owner.next_capacity_byte_demand(maximum_body_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_release_byte_demand() }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { self.owner.next_depth_demand() }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant(); semio_framework_value::RetirementPollExit::resume(self.owner.step(effect)) })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
+    fn close_step(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { self.owner.step(body, effect) }
     fn terminal_is_empty(&self) -> bool { self.owner.terminal_is_empty() }
 }
 
@@ -373,7 +377,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         if self.prepared.is_some() { let birth=ArtifactStoreOneItemPrepared::<P,M>::retirement_birth_demand();return Ok(RetirementDemand { capacity_bytes:birth.capacity_bytes,depth:birth.depth+1, ..Default::default() }); }
         if self.edit.is_some() { return Ok(RetirementDemand { release_bytes: size_of::<Edit<M>>(), depth: 1, ..Default::default() }); }
         if self.unboxed_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
-        if let Some(post) = self.post.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.snapshot_retirement.as_ref().expect("original sealer snapshot factory").retirement_birth_bytes(post), depth: 2, ..Default::default() }); }
+        if self.post.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<semio_framework_value::factory::ArcRootRetirement<P>>(), depth: 2, ..Default::default() }); }
         if let Some(value) = self.retirement_strings.iter().find_map(Option::as_ref) { return Ok(RetirementDemand { release_bytes: value.capacity(), depth: 1, ..Default::default() }); }
         if let Some(authority) = self.authority.as_ref() { let birth = authority.retirement_birth_demand(); return Ok(RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth.checked_add(1).ok_or_else(depth_error)?, ..Default::default() }); }
         if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
@@ -386,6 +390,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
     }
     fn close_ladder(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, RetirementPollExit> {
         let grant = effect.grant();
+        let body = grant.maximum_copy_bytes;
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
@@ -394,8 +399,8 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(owner)=self.native.as_mut(){if owner.terminal_is_empty(){self.native=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}return Ok(RetainedCloneStep::Progress(owner.advance(&mut effect.nested(child))?.progress()));}
         if let Some([a,b,c])=self.native_identities.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new((a,b,c)){Ok(owner)=>self.native_identities_close=Some(owner),Err((error,(a,b,c)))=>{self.native_identities=Some([a,b,c]);return Err(error.into());}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-        if let Some(owner)=self.native_identities_close.as_mut(){if owner.terminal_is_empty(){self.native_identities_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}let step=RetirementPollExit::resume(owner.step(&mut effect.nested(child)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if self.active_retirement.is_some() { let step=RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active_retirement, &mut effect.nested(child)))?;return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if let Some(owner)=self.native_identities_close.as_mut(){if owner.terminal_is_empty(){self.native_identities_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}let step=RetirementPollExit::resume(owner.step(body,&mut effect.nested(child)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if self.active_retirement.is_some() { let step=RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active_retirement, body, &mut effect.nested(child)))?;return Ok(RetainedCloneStep::Progress(step.progress())); }
         if let Some(bytes) = self.identities.iter_mut().find(|bytes| bytes.capacity() != 0) {
             let released_bytes = bytes.capacity();
             *bytes = Vec::new();
@@ -416,12 +421,12 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
                 Err((error, original)) => { self.unboxed_edit = Some(original); Err(error.into()) },
             };
         }
-        if self.post.is_some() {
-            let factory = self.snapshot_retirement.as_ref().ok_or_else(||ValueError::invariant("original snapshot factory"))?;
-            let (active, progress) = RetirementPollExit::resume(factory_retire_snapshot(factory.as_ref(), &mut self.post, &mut effect.nested(child)))?;
-            self.active_retirement = Some(active);
-            if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical sealer constructor changed its receipt").into()); }
-            return Ok(RetainedCloneStep::Progress(progress));
+        if let Some(post) = self.post.take() {
+            let factory = Arc::clone(self.snapshot_retirement.as_ref().ok_or_else(||ValueError::invariant("original snapshot factory"))?);
+            return match admit_artifact_retirement(post, child, |root| semio_framework_value::factory::ArcRootRetirement::new_snapshot(root, factory)) {
+                Ok((active, progress)) => { self.active_retirement = Some(active); Ok(RetainedCloneStep::Progress(progress)) },
+                Err((error, post)) => { self.post = Some(post); Err(error.into()) },
+            };
         }
         if let Some(value) = self.retirement_strings.iter_mut().find_map(Option::take) {
             let released_bytes = value.capacity();
@@ -446,7 +451,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         }
         if let Some(slot) = self.factory_close.iter_mut().find(|slot| slot.is_some()) {
             let factory = slot.as_mut().ok_or_else(||ValueError::invariant("sealer factory slot absent"))?;
-            let step = RetirementPollExit::resume(factory.step(&mut effect.nested(child)))?;
+            let step = RetirementPollExit::resume(factory.step(body, &mut effect.nested(child)))?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "canonical sealer factory")?;
             if factory.terminal_is_empty() { *slot = None; }
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });

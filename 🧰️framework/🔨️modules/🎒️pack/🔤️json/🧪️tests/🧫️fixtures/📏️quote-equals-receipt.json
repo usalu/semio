@@ -1,0 +1,21 @@
+{
+  "copies": [64, 128, 4096],
+  "cases": [
+    {"name": "null", "value": null},
+    {"name": "bool", "value": true},
+    {"name": "unsigned", "value": 18446744073709551615},
+    {"name": "signed", "value": -9223372036854775808},
+    {"name": "float", "value": 2.5},
+    {"name": "empty-string", "value": ""},
+    {"name": "ascii-string", "value": "quote equals receipt"},
+    {"name": "escaped-string", "value": "a\"b\\c\n\r\t\b\f\u0001\u001f"},
+    {"name": "multibyte-string", "value": "ä雪😀 mixed ünïcode 🧩"},
+    {"name": "long-string", "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+    {"name": "empty-array", "value": []},
+    {"name": "empty-object", "value": {}},
+    {"name": "flat-array", "value": [1, -2, 3.5, "x", null, false]},
+    {"name": "flat-object", "value": {"first": 1, "second": "two", "third": [true]}},
+    {"name": "escaped-keys", "value": {"k\"1": 1, "ключ": {"é": []}, "": ""}},
+    {"name": "nested", "value": {"a": [{"b": [[], {}, [1, [2, [3]]]]}, "tail"], "c": {"d": {"e": {"f": "deep"}}}}}
+  ]
+}

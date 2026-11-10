@@ -5,6 +5,8 @@ use crate::{ValueError,OriginalReceivingPrimary,OriginalRetirementFailure,Retain
 pub enum NativeReceivingFailure{Primary(OriginalReceivingPrimary),ValueEffect(NativeReceivingEffectFailure<ValueError>),RetirementEffect(NativeReceivingEffectFailure<OriginalRetirementFailure>),ReceivingEffect(NativeReceivingEffectFailure<OriginalReceivingPrimary>)}
 impl NativeReceivingFailure{
  /// 🧾️ Preserves the original enclosing action's actual physical span.
+ /// 🛬️ Borrows the complete receiving causes of whichever error domain the failure selected.
+ pub fn primary(&self)->&OriginalReceivingPrimary{match self{Self::Primary(error)=>error,Self::ValueEffect(error)=>&error.receiving,Self::RetirementEffect(error)=>&error.receiving,Self::ReceivingEffect(error)=>&error.receiving}}
  pub fn retained_progress(&self)->RetainedCloneProgress{match self{Self::Primary(error)=>error.retained_progress(),Self::ValueEffect(error)=>error.retained_progress(),Self::RetirementEffect(error)=>error.retained_progress(),Self::ReceivingEffect(error)=>error.retained_progress()}}
 }
 impl From<ValueError> for NativeReceivingFailure{fn from(error:ValueError)->Self{Self::Primary(error.into())}}

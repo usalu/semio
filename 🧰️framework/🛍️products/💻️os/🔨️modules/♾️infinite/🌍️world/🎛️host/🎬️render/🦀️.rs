@@ -29,7 +29,7 @@ pub fn render_world_3d(
         state.overlay.sub_element_paint = sub_element_paint;
         advance_world3d_view_revision(&mut state.session, &mut state.scene);
     }
-    step_world_placeholder_mesh(&mut state.session, &mut state.interaction, &mut state.authority, &mut state.scene);
+    pump_world_placeholder_mesh(&mut state.session, &mut state.interaction, &mut state.authority, &mut state.scene);
     state.session.pick_bounds = ctx.pick_clip.unwrap_or(bounds);
     sync_world3d_state(state, scene, bounds);
     let _ = step_world3d_camera_fit(state);

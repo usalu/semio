@@ -34,8 +34,9 @@ pub fn energy_builder_demand(builder: &semio_framework_job::RetainedPayloadBuild
     }
 }
 
-/// ♻️ Retires a boxed payload builder one funded step at a time; the box allocation is released only on the last, separately paid step.
-pub fn energy_builder_close(slot: &mut Option<Box<semio_framework_job::RetainedPayloadBuilder>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+/// ♻️ Retires a boxed payload builder one funded step at a time under the calling turn's effect; the box allocation is released only on the last, separately paid step.
+pub fn energy_builder_close(slot: &mut Option<Box<semio_framework_job::RetainedPayloadBuilder>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+    let grant = effect.grant();
     let Some(builder) = slot.as_mut() else { return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())) };
     if !energy_grant_covers(grant, energy_builder_demand(builder)?) {
         return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
@@ -44,7 +45,7 @@ pub fn energy_builder_close(slot: &mut Option<Box<semio_framework_job::RetainedP
         drop(slot.take());
         return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: std::mem::size_of::<semio_framework_job::RetainedPayloadBuilder>(), ..Default::default() }));
     }
-    builder.close_step_granted(grant).result.map(|step| RetainedCloneStep::Progress(step.progress()))
+    builder.close_step(effect).result.map(|step| RetainedCloneStep::Progress(step.progress()))
 }
 
 /// 🧾️ Wraps one owner step into the work-counted outcome the original retained-step ports account: one work unit iff the step made progress.

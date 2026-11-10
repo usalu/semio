@@ -71,7 +71,8 @@ impl PreparedRenderUpload {
     pub fn next_close_demands(&self, maximum_copy_bytes: usize) -> Result<RetainedCloneGrant, ValueError> {
         if let Self::SceneRaster { key, lease } = self {
             if key.capacity() == 0 && !lease.terminal_is_empty() {
-                return Ok(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: lease.next_close_copy_byte_demand()?, maximum_capacity_bytes: lease.next_close_capacity_byte_demand(maximum_copy_bytes)?, maximum_release_bytes: lease.next_close_release_byte_demand()?, maximum_depth: lease.next_close_depth_demand()? });
+                let demand = lease.next_close_demand(maximum_copy_bytes)?;
+                return Ok(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth });
             }
         }
         let mut demand = prepared_owner_demands(self.terminal_is_empty(), self.next_close_release_byte_demand())?;
@@ -109,7 +110,7 @@ impl PreparedRenderUpload {
             #[cfg(any(test, feature = "testkit"))]
             Self::Raster { key, pixels, .. } => if !pixels.is_empty() { Ok(0) } else if pixels.capacity() != 0 { prepared_vec_bytes(pixels) } else { Ok(if key.is_empty() { key.capacity() } else { 0 }) },
             Self::RasterPages { key, pixels } => pixels.next_close_release_byte_demand(key),
-            Self::SceneRaster { key, lease } => if key.capacity() != 0 { Ok(if key.is_empty() { key.capacity() } else { 0 }) } else { lease.next_close_release_byte_demand() },
+            Self::SceneRaster { key, lease } => if key.capacity() != 0 { Ok(if key.is_empty() { key.capacity() } else { 0 }) } else { lease.next_close_demand(0).map(|demand| demand.release_bytes) },
             Self::Mesh { key, .. } => Ok(if key.is_empty() { key.capacity() } else { 0 }),
         }
     }
@@ -127,7 +128,7 @@ impl PreparedRenderUpload {
             Self::RasterPages { key, pixels } => return pixels.close_with_key_granted(key, grant).map_err(Into::into),
             Self::SceneRaster { key, lease } => {
                 if key.capacity() != 0 { prepared_close_text(key); }
-                else { return prepared_close_poll(lease.close_step(effect)); }
+                else { return prepared_close_poll(lease.close_step(grant.maximum_copy_bytes, effect)); }
             }
             Self::Mesh { key, .. } => { prepared_close_text(key); }
         }

@@ -34,7 +34,7 @@
     "logicalBytes": 8,
     "minimumPages": 1,
     "copiedItems": 1,
-    "copiedBytes": 0,
+    "copiedBytes": "ownerMetadataStride",
     "retainedCapacityBytes": 0,
     "releasedBytes": "actualCapacityTimesPageStride",
     "terminalReceipt": "Complete"

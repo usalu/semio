@@ -82,7 +82,7 @@ impl OriginalResultPageBacking{
         }
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Option<ControlledRetirement<Vec<u8>>>>(),..grant};
         let Some(owner)=self.closing.as_mut()else{return RetainedWorkOutcome{result:Err(ValueError::invariant("page backing close owner absent")),work:effect.performed_work()}};
-        let result=super::poll_step(owner.step(&mut effect.nested(child)));
+        let result=super::poll_step(owner.step(child.maximum_copy_bytes,&mut effect.nested(child)));
         RetainedWorkOutcome{result,work:effect.performed_work()}
     }
 }

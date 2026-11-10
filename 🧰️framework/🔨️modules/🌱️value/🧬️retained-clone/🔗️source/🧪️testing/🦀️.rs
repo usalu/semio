@@ -65,7 +65,7 @@ pub fn observe_fixture_source_allocations<T>(operation:impl FnOnce()->T)->(T,(us
 }
 fn selected_grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
-use semio_framework_value_clone_source::{OriginalEffectAction,OriginalEffectAuthority,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,OriginalSourceTurnIdentity,RetainedWorkPoll,OriginalRetirementFailure,OriginalProjectionFrame};
+use semio_framework_value_clone_source::{OriginalEffectAction,OriginalEffectAuthority,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,OriginalRetirementFailure,OriginalProjectionFrame};
 fn fixture_bank()->EffectBank{EffectBank::new(Wallet::new(STOCK,CPU))}
 fn fixture_turn(bank:&mut EffectBank,demand:RetirementDemand,units:u64,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,ValueError>)->RetainedCloneStep{let g=bank.loan(1,demand.copy_bytes);fixture_turn_granted(bank,g,units,operation)}
 fn fixture_turn_granted(bank:&mut EffectBank,g:RetainedCloneGrant,units:u64,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,ValueError>)->RetainedCloneStep{let ((turn,actual),heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||bank.run(g,units,|effect|RetainedWorkPoll::Complete(operation(effect))));let RetainedWorkPoll::Complete(turn)=turn else{panic!("synchronous source fixture leaf unexpectedly pending")};let step=turn.result.expect("original source fixture leaf");if let Some(actual)=actual{assert_eq!(actual,heap.0)}assert_ne!(bank.take_admitted(),Some(false));bank.post(step.progress(),g,heap);step}
@@ -89,6 +89,10 @@ impl<T:RetireOwned+Sync+'static> std::ops::Deref for FixtureSource<T>{type Targe
 impl<T:RetireOwned+Sync+'static> FixtureSource<T>{
  /// 🧳️ Retains the already-admitted Source together with its unchanged idle bank.
  pub fn from_admitted(source:RetainedCloneSource<T>,bank:EffectBank)->Result<Self,(RetainedCloneSource<T>,EffectBank)>{if !bank.is_idle(){return Err((source,bank))}Ok(Self{source,bank:FixtureBank(Some(bank)),close:Some(OriginalEffectAuthority::new(FixtureCloseProducer(std::marker::PhantomData))),producer:None,action:None,answer:std::mem::ManuallyDrop::new(None),selected:None,observed:(0,0),work:0})}
+ /// 🌱️ Births the fixture through the actual retained Source admission on the stock bank.
+ pub fn from_owner(owner:T)->Self{<RetainedCloneSource<T> as FixtureSourceBirth<T>>::from_owner(owner)}
+ /// 🏦️ Births the fixture through the actual retained Source admission on the caller's idle bank.
+ pub fn from_owner_in(owner:T,bank:EffectBank)->Self{<RetainedCloneSource<T> as FixtureSourceBirth<T>>::from_owner_in(owner,bank)}
  /// 🏁️ Observes the actual Source and any retained close action together.
  pub fn terminal_is_empty(&self)->bool{self.source.terminal_is_empty()&&self.close.is_none()&&self.producer.is_none()&&self.selected.is_none()&&self.action.is_none()&&self.answer.is_none()&&self.bank.0.as_ref().is_none_or(EffectBank::is_idle)}
  /// 📤️ Returns the same real payer only after every Source and reply owner is terminal.
@@ -164,3 +168,98 @@ mod source_bank_tests{
 }
 
 #[cfg(test)] mod bank_return_tests{use super::*;#[test]fn terminal_fixture_returns_the_same_bank_without_replenishing_it(){let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/bank.json")).unwrap();let source=RetainedCloneSource::from_owner(String::from("bank"));let before=source.wallet().remaining_work();let remaining=source.wallet().remaining();let(result,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||source.into_bank());assert_eq!(heap,(0,0));assert_eq!(result.is_ok(),law["liveReturn"].as_bool().unwrap());let mut source=result.err().expect("live Source stays resident");assert_eq!(source.wallet().remaining_work(),before);assert_eq!(source.wallet().remaining(),remaining);let identity=source.with_bank(|_,bank|bank.source_witness().identity()).unwrap();for _ in 0..10000{if source.terminal_is_empty(){break}source.close_once().unwrap();}assert!(source.terminal_is_empty());let before=source.wallet().remaining_work();let remaining=source.wallet().remaining();let(result,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||source.into_bank());assert_eq!(heap,(0,0));assert_eq!(result.is_ok(),law["closedReturn"].as_bool().unwrap());let mut bank=result.ok().expect("closed original bank");assert_eq!(bank.wallet().remaining_work()+law["returnWork"].as_u64().unwrap(),before);assert_eq!(bank.wallet().remaining(),remaining);assert_eq!(bank.source_witness().identity(),identity);let grant=bank.loan(1,0);let(poll,marker)=bank.run(grant,1,|effect|{assert!(effect.performed(1).unwrap());RetainedWorkPoll::Complete(RetainedWorkOutcome::<_,ValueError>{result:Ok(()),work:1})});let RetainedWorkPoll::Complete(turn)=poll else{panic!("native bank reuse pending")};turn.result.unwrap();assert_eq!(marker,None);assert_eq!(bank.take_admitted(),Some(true));bank.post(Default::default(),grant,(0,0));assert_eq!(before-bank.wallet().remaining_work(),law["reuseWork"].as_u64().unwrap());assert_eq!(bank.source_witness().identity(),identity);}}
+
+/// 🎞️ Drives one poll-shaped close through the real original Work authority until its reply is recorded.
+pub mod drive{
+use semio_framework_value_control_contract::{OriginalEffectAuthority,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,OriginalSourceTurnIdentity,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,ValueError};
+use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
+use semio_framework_value_retirement::{OriginalRetirementFailure,OriginalRetirementPoll};
+use std::{cell::RefCell,mem::size_of};
+
+type Reply<'r>=OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>;
+type Done<'r>=OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>;
+type Call<'a>=dyn FnMut(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll+'a;
+struct Turn(OriginalSourceTurnIdentity);
+struct Frame<'a,'b>{call:&'a mut Call<'b>}
+fn answer<'r>(c:&mut Frame<'_,'_>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Done<'r>,ValueError>{match (c.call)(effect){RetainedWorkPoll::Complete(turn)=>Ok(reply.complete(turn.result)),RetainedWorkPoll::Pending{..}=>Ok(reply.pending())}}
+impl OriginalEffectProducer for Turn{
+ type Output=RetainedCloneStep;type Failure=OriginalRetirementFailure;type Context<'a,'b>=Frame<'a,'b> where 'b:'a;
+ fn validate_context<'a,'b>(&self,_:&Self::Context<'a,'b>)->Result<(),ValueError>where 'b:'a{Ok(())}
+ fn source_turn<'a,'b>(&self,_:&Self::Context<'a,'b>)->Option<OriginalSourceTurnIdentity>where 'b:'a{Some(self.0)}
+ fn receive<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Done<'r>,ValueError>where 'b:'a{answer(c,effect,reply)}
+ fn recover<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Done<'r>,ValueError>where 'b:'a{answer(c,effect,reply)}
+}
+fn measure<T,E>(bank:&mut EffectBank,g:RetainedCloneGrant,units:u64,run:&mut dyn FnMut(&mut RetainedAllocationEffect<'_>)->RetainedWorkPoll<T,E>)->(RetainedWorkPoll<T,E>,(usize,usize)){let(poll,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||bank.run(g,units,|effect|run(effect)).0);(poll,(heap.requested_bytes,heap.released_bytes))}
+fn demand_grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+fn fresh()->EffectBank{EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:1<<40,maximum_capacity_bytes:1<<40,maximum_release_bytes:1<<40,maximum_depth:1<<10},1<<50))}
+thread_local!{static BANK:RefCell<Option<EffectBank>>=const{RefCell::new(None)};}
+/// 🔥️ Builds the thread's finite Source stock outside any measured region.
+pub fn warm(){BANK.with(|bank|{bank.borrow_mut().get_or_insert_with(fresh);});}
+/// 🧵️ Runs one poll-shaped call under a real original action and returns its recorded reply with the work it performed.
+pub fn drive(grant:RetainedCloneGrant,units:u64,call:impl FnMut(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{drive_external(grant,units,&std::cell::Cell::new(0),call)}
+/// 🧱️ Drives like `drive` while the caller reports platform bytes freed outside the receipts (for example an OS lock backing).
+pub fn drive_external(grant:RetainedCloneGrant,units:u64,external:&std::cell::Cell<usize>,mut call:impl FnMut(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{
+ BANK.with(|cell|{
+  let mut slot=cell.borrow_mut();let bank=slot.get_or_insert_with(fresh);
+  let source=bank.source_witness().identity();let mut authority=OriginalEffectAuthority::new(Turn(source));let mut context=Frame{call:&mut call};
+  let(mut action,mut output)=(None,None);let before=*bank.wallet().original_work();let mut heap=(0usize,0usize);
+  let mut complete=false;
+  for _ in 0..4096{
+   let(poll,observed)=measure(bank,grant,units,&mut |effect|{let start=effect.performed_boundary();let ready=authority.drive(&mut context,effect,&mut action).unwrap();let work=effect.performed_since(start).unwrap();if ready{RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work})}else{RetainedWorkPoll::Pending{work}}});
+   heap.0+=observed.0;heap.1+=observed.1;
+   if matches!(poll,RetainedWorkPoll::Pending{..}){continue}
+   let progress=match action.as_ref().unwrap().recorded_reply().unwrap(){Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
+   assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes+external.get()));assert_ne!(bank.take_admitted(),Some(false));bank.post(progress,grant,(heap.0,heap.1-external.get()));complete=true;break
+  }
+  assert!(complete,"poll-shaped close exceeded its original bound");
+  let work=before-*bank.wallet().original_work();
+  let g=demand_grant(OriginalEffectAuthority::<Turn>::transfer_reply_demand().unwrap());
+  let(poll,observed)=measure(bank,g,1,&mut |effect|RetainedWorkPoll::Complete(authority.transfer_reply_into(&mut context,&mut action,&mut output,effect)));
+  let RetainedWorkPoll::Complete(turn)=poll else{panic!("reply transfer pending")};assert_ne!(bank.take_admitted(),Some(false));bank.post(turn.result.unwrap().unwrap(),g,observed);
+  let mut result=None;let d=RetirementDemand{copy_bytes:2*size_of::<Option<Result<RetainedCloneStep,OriginalRetirementFailure>>>(),depth:1,..Default::default()};let g=demand_grant(d);
+  let(poll,observed)=measure(bank,g,1,&mut |effect|{assert!(effect.performed(1).unwrap());result=output.take();RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work:1})});
+  let RetainedWorkPoll::Complete(_)=poll else{panic!("reply retirement pending")};assert_ne!(bank.take_admitted(),Some(false));bank.post(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()},g,observed);
+  assert!(authority.into_producer().is_ok());
+  RetainedWorkOutcome{result:result.unwrap(),work}
+ })
+}
+
+
+type AnyCall<'a,T,E>=dyn for<'r> FnMut(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,T,E>,bool)->Result<OriginalEffectReplyComplete<'r,T,E>,ValueError>+'a;
+struct AnyTurn<T,E>(OriginalSourceTurnIdentity,std::marker::PhantomData<fn()->(T,E)>);
+struct AnyFrame<'a,'b,T,E>{call:&'a mut AnyCall<'b,T,E>}
+impl<T:'static,E:'static> OriginalEffectProducer for AnyTurn<T,E>{
+ type Output=T;type Failure=E;type Context<'a,'b>=AnyFrame<'a,'b,T,E> where 'b:'a;
+ fn validate_context<'a,'b>(&self,_:&Self::Context<'a,'b>)->Result<(),ValueError>where 'b:'a{Ok(())}
+ fn source_turn<'a,'b>(&self,_:&Self::Context<'a,'b>)->Option<OriginalSourceTurnIdentity>where 'b:'a{Some(self.0)}
+ fn receive<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,T,E>)->Result<OriginalEffectReplyComplete<'r,T,E>,ValueError>where 'b:'a{(c.call)(effect,reply,false)}
+ fn recover<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,T,E>)->Result<OriginalEffectReplyComplete<'r,T,E>,ValueError>where 'b:'a{(c.call)(effect,reply,true)}
+}
+/// 🧵️ Runs one reply-shaped call under a real original action, re-entering it as recovery after every Pending, and returns its recorded reply with the work it performed.
+pub fn drive_reply<T:'static,E:'static>(grant:RetainedCloneGrant,units:u64,progress:impl Fn(&Result<T,E>)->RetainedCloneProgress,mut call:impl for<'r> FnMut(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,T,E>,bool)->Result<OriginalEffectReplyComplete<'r,T,E>,ValueError>)->RetainedWorkOutcome<T,E>{
+ BANK.with(|cell|{
+  let mut slot=cell.borrow_mut();let bank=slot.get_or_insert_with(fresh);
+  let source=bank.source_witness().identity();let mut authority=OriginalEffectAuthority::new(AnyTurn::<T,E>(source,std::marker::PhantomData));let mut context=AnyFrame{call:&mut call};
+  let(mut action,mut output)=(None,None);let before=*bank.wallet().original_work();let mut heap=(0usize,0usize);
+  let mut complete=false;
+  for _ in 0..4096{
+   let(poll,observed)=measure(bank,grant,units,&mut |effect|{let start=effect.performed_boundary();let ready=authority.drive(&mut context,effect,&mut action).unwrap();let work=effect.performed_since(start).unwrap();if ready{RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work})}else{RetainedWorkPoll::Pending{work}}});
+   heap.0+=observed.0;heap.1+=observed.1;
+   if matches!(poll,RetainedWorkPoll::Pending{..}){continue}
+   let progress=progress(&action.as_ref().unwrap().recorded_reply().unwrap());
+   assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));assert_ne!(bank.take_admitted(),Some(false));bank.post(progress,grant,heap);complete=true;break
+  }
+  assert!(complete,"reply-shaped call exceeded its original bound");
+  let work=before-*bank.wallet().original_work();
+  let g=demand_grant(OriginalEffectAuthority::<AnyTurn<T,E>>::transfer_reply_demand().unwrap());
+  let(poll,observed)=measure(bank,g,1,&mut |effect|RetainedWorkPoll::Complete(authority.transfer_reply_into(&mut context,&mut action,&mut output,effect)));
+  let RetainedWorkPoll::Complete(turn)=poll else{panic!("reply transfer pending")};assert_ne!(bank.take_admitted(),Some(false));bank.post(turn.result.unwrap().unwrap(),g,observed);
+  let mut result=None;let d=RetirementDemand{copy_bytes:2*size_of::<Option<Result<T,E>>>(),depth:1,..Default::default()};let g=demand_grant(d);
+  let(poll,observed)=measure(bank,g,1,&mut |effect|{assert!(effect.performed(1).unwrap());result=output.take();RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work:1})});
+  let RetainedWorkPoll::Complete(_)=poll else{panic!("reply retirement pending")};assert_ne!(bank.take_admitted(),Some(false));bank.post(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()},g,observed);
+  assert!(authority.into_producer().is_ok());
+  RetainedWorkOutcome{result:result.unwrap(),work}
+ })
+}
+
+}

@@ -13,7 +13,7 @@ impl StringCursor{
  pub(crate) fn test_copy_phase(&self)->bool{self.phase==1}
  #[cfg(test)]
  pub(crate) fn test_partial_bytes(&self)->Option<&[u8]>{self.bytes.as_deref()}
- fn selected_copy(source:&str,start:usize,body:usize,available:u64)->Result<usize,ValueError>{if start>source.len()||!source.is_char_boundary(start){return Err(ValueError::invariant("string original prefix is not a UTF8 boundary"))}let count=(source.len()-start).min(body).min(RETAINED_CLONE_BULK_PAGE_BYTES).min(usize::try_from(available).unwrap_or(usize::MAX));let mut end=start+count;while end>start&&!source.is_char_boundary(end){end-=1}Ok(end-start)}
+ fn selected_copy(source:&str,start:usize,body:usize,available:u64)->Result<usize,ValueError>{if start>source.len()||!source.is_char_boundary(start){return Err(ValueError::invariant("string original prefix is not a UTF8 boundary"))}let count=(source.len()-start).min(body).min(RETAINED_CLONE_BULK_PAGE_BYTES).min(usize::try_from(available).unwrap_or(usize::MAX));let mut end=start+count;while end>start&&!source.is_char_boundary(end){end-=1}if end==start&&start<source.len(){let width=source[start..].chars().next().map_or(0,char::len_utf8);if u64::try_from(width).is_ok_and(|width|width<=available){end=start+width}}Ok(end-start)}
  fn conversion_copy()->usize{size_of::<Option<Vec<u8>>>()+size_of::<String>()+size_of::<Option<String>>()+size_of::<u8>()}
  fn birth_copy()->usize{size_of::<Vec<u8>>()+size_of::<Option<Vec<u8>>>()+size_of::<u8>()}
 }

@@ -1,9 +1,15 @@
 //! 🧪️ Neutral cooperative operation laws with UTF-8 work and exact cancellation ownership.
 
-use super::*;
-use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetirement, arc_custody::SharedControlledRetirement};
+use semio_os_store_replay_operation::*;
+#[path="../⏱️effect/🦀️.rs"]
+mod effect;
+use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_os_store_one_item::ArtifactStoreOneItemGrant;
+use semio_os_spr::MutationApplyError;
+use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetirement, arc_custody::ArcLease};
 use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
-use crate::effect::{drive,settled,with_effect};
+use effect::{bank,drive,finish,settled,with_effect};
+use semio_framework_value_testing_admission::EffectBank;
 type Exit=semio_framework_value::RetirementPollExit;
 type Effect<'a,'b>=&'a mut semio_framework_value::RetainedAllocationEffect<'b>;
 type Poll=semio_framework_value::OriginalRetirementPoll;
@@ -19,13 +25,13 @@ struct TextInput {
 struct TextPreparation {
     last_work:u64,
     original:Option<Arc<TextInput>>,
-    input_close:Option<SharedControlledRetirement<TextInput>>,
+    input_close:Option<ControlledRetirement<ArcLease<TextInput>>>,
     pub base: Option<Arc<String>>,
     pub inverse: Option<String>,
     pub next: Option<String>,
     pub prepared: Option<ArtifactReplayPrepared<String, String>>,
     pub active: Option<ControlledRetirement<String>>,
-    shared: Option<SharedControlledRetirement<String>>,
+    shared: Option<ControlledRetirement<ArcLease<String>>>,
     inverse_list: Option<ControlledRetirement<semio_framework_value_persistent::list::PagedList<String, {usize::MAX}>>>,
     pub phase: u8,
     pub context: ArtifactReplayPreparationContext,
@@ -141,20 +147,20 @@ impl TextPreparation{
         let grant=effect.grant();let empty=RetainedCloneProgress::default();
         if !self.closing||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}
         let demand=self.close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}if demand.capacity_bytes!=0{receiving.charge(demand.capacity_bytes)?;}
-        if let Some(owner)=self.input_close.as_mut(){let step=Exit::resume(owner.step(effect))?;if owner.terminal_is_empty(){self.input_close=None;Exit::pay(effect,1)?;}return Ok(step);}
-        if let Some(owner)=self.active.as_mut(){let step=Exit::resume(owner.step(effect))?;if owner.terminal_is_empty(){self.active=None;Exit::pay(effect,1)?;}return Ok(step);}
-        if let Some(owner)=self.shared.as_mut(){let step=Exit::resume(owner.step(effect))?;if owner.terminal_is_empty(){self.shared=None;Exit::pay(effect,1)?;}return Ok(step);}
-        if let Some(owner)=self.inverse_list.as_mut(){let step=Exit::resume(owner.step(effect))?;if owner.terminal_is_empty(){self.inverse_list=None;Exit::pay(effect,1)?;}return Ok(step);}
+        if let Some(owner)=self.input_close.as_mut(){let step=Exit::resume(owner.step(effect.grant().maximum_copy_bytes,effect))?;if owner.terminal_is_empty(){self.input_close=None;Exit::pay(effect,1)?;}return Ok(step);}
+        if let Some(owner)=self.active.as_mut(){let step=Exit::resume(owner.step(effect.grant().maximum_copy_bytes,effect))?;if owner.terminal_is_empty(){self.active=None;Exit::pay(effect,1)?;}return Ok(step);}
+        if let Some(owner)=self.shared.as_mut(){let step=Exit::resume(owner.step(effect.grant().maximum_copy_bytes,effect))?;if owner.terminal_is_empty(){self.shared=None;Exit::pay(effect,1)?;}return Ok(step);}
+        if let Some(owner)=self.inverse_list.as_mut(){let step=Exit::resume(owner.step(effect.grant().maximum_copy_bytes,effect))?;if owner.terminal_is_empty(){self.inverse_list=None;Exit::pay(effect,1)?;}return Ok(step);}
         Exit::pay(effect,u128::from(self.prepared.is_some()||self.inverse.is_some()||self.next.is_some()||self.base.is_some()||self.original.is_some()))?;
         if let Some(prepared)=self.prepared.as_mut(){
-            if let Some(next)=prepared.next.take(){self.shared=Some(SharedControlledRetirement::lease(next));}
+            if let Some(next)=prepared.next.take(){self.shared=Some(ControlledRetirement::new(ArcLease::new(next)).unwrap_or_else(|(error,_)|panic!("fixture arc lease refused: {error}")));}
             else if let Ok(inverse)=&mut prepared.inverse {if !inverse.terminal_is_empty(){self.inverse_list=Some(ControlledRetirement::new(std::mem::take(inverse)).unwrap_or_else(|(error,_)|panic!("native fixture inverse refused: {error}")));}else{self.prepared=None;}}
             else{self.prepared=None;}
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));
         }
         if let Some(value)=self.inverse.take().or_else(||self.next.take()){self.active=Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("fixture text retirement refused: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-        if let Some(base)=self.base.take(){self.shared=Some(SharedControlledRetirement::lease(base));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-        if let Some(input)=self.original.take(){self.input_close=Some(SharedControlledRetirement::lease(input));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+        if let Some(base)=self.base.take(){self.shared=Some(ControlledRetirement::new(ArcLease::new(base)).unwrap_or_else(|(error,_)|panic!("fixture arc lease refused: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+        if let Some(input)=self.original.take(){self.input_close=Some(ControlledRetirement::new(ArcLease::new(input)).unwrap_or_else(|(error,_)|panic!("fixture arc lease refused: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
         Ok(RetainedCloneStep::Complete(empty))
     }
 
@@ -165,25 +171,26 @@ impl Drop for TextPreparation {
     fn drop(&mut self) { assert!(self.terminal_is_empty() || std::thread::panicking(), "fixture replay producer dropped live owners"); }
 }
 
-fn close_turn<P,M>(owner:&mut ArtifactReplayPreparationRetirement<P,M>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,loan:RetainedCloneGrant,grant:RetainedCloneGrant)->(Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>,u128,semio_framework_trace::HeapAllocationObservation){
-    let((poll,heap),_)=with_effect(grant,1<<20,&mut None,|effect|semio_framework_trace::observe_heap_allocations_on_this_thread(||control.with_retirement(loan,|receiving|Ok::<_,ValueError>(owner.close_step(effect,receiving)))));
+fn close_turn<P,M>(bank:&mut EffectBank,owner:&mut ArtifactReplayPreparationRetirement<P,M>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,loan:RetainedCloneGrant,grant:RetainedCloneGrant)->(Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>,u128,semio_framework_trace::HeapAllocationObservation){
+    let((poll,heap),_)=with_effect(bank,grant,1<<20,|effect|semio_framework_trace::observe_heap_allocations_on_this_thread(||control.with_retirement(loan,|receiving|Ok::<_,ValueError>(owner.close_step(effect,receiving)))));
     match poll{Ok(poll)=>{let turn=settled(poll);(turn.result,turn.work,heap)},Err(error)=>(Err(error.into()),0,heap)}
 }
-fn close(mut retirement:ArtifactReplayPreparationRetirement<String,TextInput>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>){
+fn close(bank:&mut EffectBank,mut retirement:ArtifactReplayPreparationRetirement<String,TextInput>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>){
     let mut last=None;
     for _ in 0..4096 {
         let d=retirement.next_demand(4096).unwrap();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
-        let step=close_turn(&mut retirement,control,grant,grant).0.expect("exact admitted fixture close");assert!(step.progress().fits(grant));
+        let step=close_turn(bank,&mut retirement,control,grant,grant).0.expect("exact admitted fixture close");assert!(step.progress().fits(grant));
         last=Some((grant,step));
         if retirement.terminal_is_empty(){return;}
     }
     panic!("fixture replay preparation never closed; last quoted grant and step {last:?}");
 }
-fn close_owned<T:RetireOwned>(value:T){let mut owner=ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("fixture native owner refused: {error}"));for _ in 0..4096{if owner.terminal_is_empty(){return;}let d=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let step=drive(grant,|effect|owner.step(effect)).unwrap();assert!(step.progress().fits(grant));}panic!("fixture owner did not close");}
+fn close_owned<T:RetireOwned>(bank:&mut EffectBank,value:T){let mut owner=ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("fixture native owner refused: {error}"));for _ in 0..4096{if owner.terminal_is_empty(){return;}let d=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let step=drive(bank,grant,|effect|owner.step(effect.grant().maximum_copy_bytes,effect)).unwrap();assert!(step.progress().fits(grant));}panic!("fixture owner did not close");}
 
 #[test]
 fn cooperative_history_operation_obeys_the_neutral_law() {
+ let mut bank=bank();
     let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut callback);control.install_retirement_recipient(&mut recipient).unwrap();
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral operation law");
     let context = ArtifactReplayPreparationContext { mode: ArtifactReplayPreparationMode::Report, operation_index: 0, generation: 7, base_revision: [9; 32] };
@@ -211,15 +218,15 @@ fn cooperative_history_operation_obeys_the_neutral_law() {
                 assert_eq!(inverse.first().map(|value| value.text.as_str()), case["expected"]["inverse"].as_str());
             }
             if let Some(next) = prepared.next.take() {
-                let mut owner=SharedControlledRetirement::lease(next);
-                while !owner.terminal_is_empty(){let d=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert!(drive(grant,|effect|owner.step(effect)).unwrap().progress().fits(grant));}
+                let mut owner=ControlledRetirement::new(ArcLease::new(next)).unwrap_or_else(|(error,_)|panic!("fixture arc lease refused: {error}"));
+                while !owner.terminal_is_empty(){let d=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert!(drive(&mut bank,grant,|effect|owner.step(effect.grant().maximum_copy_bytes,effect)).unwrap().progress().fits(grant));}
             }
             if let Ok(inverse) = prepared.inverse {
                 for value in inverse {
-                    close_owned(value.text);
+                    close_owned(&mut bank,value.text);
                 }
             }
-            close(task.into_retirement(),&mut control);
+            close(&mut bank,task.into_retirement(),&mut control);
             for cancel_at in law["cancelAt"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
                 let calls = Arc::new(AtomicUsize::new(0));
                 let cursor = Box::new(TextPreparation::new(base.clone(), context, calls.clone(),Arc::clone(&input)));
@@ -229,11 +236,12 @@ fn cooperative_history_operation_obeys_the_neutral_law() {
                 let count = calls.load(Ordering::SeqCst);
                 assert_eq!(task.step(7, [9; 32], grant.maximum_copy_bytes, grant,&mut control, &mut || false).unwrap(), ArtifactReplayPreparationStep::Blocked);
                 assert_eq!(calls.load(Ordering::SeqCst), count);
-                close(task.into_retirement(),&mut control);
+                close(&mut bank,task.into_retirement(),&mut control);
             }
         }
     }
     assert!(admit_replay_preparation_step(ArtifactReplayPreparationStep::Pending(RetainedCloneProgress { copied_items: 2, ..Default::default() }), ArtifactStoreOneItemGrant { maximum_items: 7, maximum_copy_bytes: 4096, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).is_err());
+ finish(bank);
 }
 
 struct EmptyPreparation { pub payload: [u8; 513], pub closing: bool }
@@ -256,6 +264,7 @@ impl ArtifactReplayPreparation<(), ()> for EmptyPreparation {
 
 #[test]
 fn cooperative_history_preparation_receipts_keep_each_physical_currency() {
+ let mut bank=bank();
     let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut callback);control.install_retirement_recipient(&mut recipient).unwrap();
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for row in law["turnReceipts"]["cases"].as_array().unwrap() {
@@ -281,11 +290,13 @@ fn cooperative_history_preparation_receipts_keep_each_physical_currency() {
     assert_eq!(step.progress().copied_bytes, 0);
     task.cancel();
     assert_eq!(task.demands(7,[9;32],4096,1).unwrap(),Default::default());
-    close(task.into_retirement(),&mut control);
+    close(&mut bank,task.into_retirement(),&mut control);
+ finish(bank);
 }
 
 #[test]
 fn cooperative_history_preparation_retirement_releases_the_actual_cursor_frame() {
+ let mut bank=bank();
     use semio_framework_trace::observe_heap_allocations_on_this_thread;
     let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut callback);control.install_retirement_recipient(&mut recipient).unwrap();
     let cursor = Box::new(EmptyPreparation { payload: [0; 513], closing: false });
@@ -298,18 +309,19 @@ fn cooperative_history_preparation_retirement_releases_the_actual_cursor_frame()
     assert_eq!(owner.next_depth_demand().unwrap(), 1);
     let full = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: bytes, maximum_depth: 1 };
     for short in [RetainedCloneGrant::default(), RetainedCloneGrant { maximum_release_bytes: bytes - 1, ..full }, RetainedCloneGrant { maximum_depth: 0, ..full }] {
-        let (step, _, heap) = close_turn(&mut owner, &mut control, full, short); let step = step.unwrap();
+        let (step, _, heap) = close_turn(&mut bank, &mut owner, &mut control, full, short); let step = step.unwrap();
         assert_eq!(step.progress(), Default::default());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(!owner.terminal_is_empty());
     }
-    let (step, _, heap) = close_turn(&mut owner, &mut control, full, full); let step = step.unwrap();
+    let (step, _, heap) = close_turn(&mut bank, &mut owner, &mut control, full, full); let step = step.unwrap();
     assert_eq!(heap.requested_bytes, 0);
     assert_eq!(heap.released_bytes, bytes);
     assert_eq!(step.progress().released_bytes, bytes);
     assert!(step.progress().fits(full) && owner.terminal_is_empty());
     let (_, heap) = observe_heap_allocations_on_this_thread(|| drop(owner));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+ finish(bank);
 }
 struct WorkPreparation{units:u64,close_units:u64,reject:bool,last_work:u64,closing:bool,closed:bool}
 impl WorkPreparation{fn perform(&mut self,units:u64){self.last_work=0;for unit in 0..units{std::hint::black_box(unit);self.last_work+=1;}}}
@@ -331,6 +343,7 @@ impl ArtifactReplayPreparation<(),()> for WorkPreparation{
 }
 #[test]
 fn replay_task_preserves_cpu_only_and_failed_child_work_before_result_unwrap(){
+ let mut bank=bank();
  let law:serde_json::Value=serde_json::from_str(include_str!("../../🧬️native/🧪️tests/🧫️fixtures/⛽️work.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){
   let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut callback);control.install_retirement_recipient(&mut recipient).unwrap();
@@ -342,10 +355,11 @@ fn replay_task_preserves_cpu_only_and_failed_child_work_before_result_unwrap(){
   let actual=match result{Err(_)=>"Error",Ok(ArtifactReplayPreparationStep::Blocked)=>"Blocked",Ok(ArtifactReplayPreparationStep::Pending(p))=>{assert_eq!(p,Default::default());"Pending"},Ok(_)=>panic!("CPU-only fixture cannot prepare")};assert_eq!(actual,row["expectedResult"].as_str().unwrap());
   assert_eq!(task.step(7,[9;32],0,g,&mut control,&mut||true).unwrap(),ArtifactReplayPreparationStep::Blocked);assert_eq!(task.last_turn_work(),0);
   let mut close=task.into_retirement();let grant=g.retained_grant();
-  let(denied,work,_)=close_turn(&mut close,&mut control,grant,RetainedCloneGrant{maximum_items:0,..grant});assert_eq!(denied.unwrap().progress(),Default::default());assert_eq!(work,0);
-  let(first,work,_)=close_turn(&mut close,&mut control,grant,grant);first.unwrap();assert_eq!(work,u128::from(law["closeUnits"].as_u64().unwrap()));assert!(!close.terminal_is_empty());
-  let(last,work,_)=close_turn(&mut close,&mut control,grant,grant);last.unwrap();assert_eq!(work,1);assert!(close.terminal_is_empty());
+  let(denied,work,_)=close_turn(&mut bank,&mut close,&mut control,grant,RetainedCloneGrant{maximum_items:0,..grant});assert_eq!(denied.unwrap().progress(),Default::default());assert_eq!(work,0);
+  let(first,work,_)=close_turn(&mut bank,&mut close,&mut control,grant,grant);first.unwrap();assert_eq!(work,u128::from(law["closeUnits"].as_u64().unwrap()));assert!(!close.terminal_is_empty());
+  let(last,work,_)=close_turn(&mut bank,&mut close,&mut control,grant,grant);last.unwrap();assert_eq!(work,1);assert!(close.terminal_is_empty());
  }
+ finish(bank);
 }
 
 #[test]

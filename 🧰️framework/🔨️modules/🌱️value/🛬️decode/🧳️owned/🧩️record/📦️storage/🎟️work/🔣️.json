@@ -38,16 +38,16 @@
       "const": 1
     },
     "takeWork": {
-      "const": 4
+      "const": 1
     },
     "releaseWork": {
-      "const": 2
+      "const": 1
     },
     "placeWork": {
-      "const": 3
+      "const": 1
     },
     "removeWork": {
-      "const": 3
+      "const": 1
     },
     "abiCases": {
       "const": [
@@ -56,7 +56,7 @@
           "valueBytes": 8,
           "optionBytes": 16,
           "fieldCopy": 28,
-          "takeCopy": 14,
+          "takeCopy": 29,
           "boxCopy": 15,
           "releaseCopy": 5
         },
@@ -65,7 +65,7 @@
           "valueBytes": 8,
           "optionBytes": 16,
           "fieldCopy": 32,
-          "takeCopy": 18,
+          "takeCopy": 33,
           "boxCopy": 27,
           "releaseCopy": 9
         }

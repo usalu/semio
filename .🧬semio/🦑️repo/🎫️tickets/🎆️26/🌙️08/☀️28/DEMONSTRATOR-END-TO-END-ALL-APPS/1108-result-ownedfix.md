@@ -1,0 +1,42 @@
+# 1108 lane ownedfix
+
+## Done
+- native_terminal_release added: protocol mapped-receiver engine, tuple macro, array, unit enum, try-map, original-crate test Receiving (all other impls already had it).
+- clone-source-testing: FixtureSource::from_owner / from_owner_in (delegate to the actual FixtureSourceBirth admission). Protocol tests W-ownedfix-1: backing 2, closed-header 1, pure-publication 1 = 4 pass.
+- Shared owner transfer root cause: NativeSharedReceiver::advance_pending ignored a resident `relay` answer (relay_drive completes turn 1, relay_map transfers on turn 2), so settle/close saw an unsettled action and refused with "closed, foreign or already transferred". advance_pending now includes relay.is_some() (sealed-shared-receiver). That error is gone.
+- drive.rs advance_metadata now returns the summed RetainedCloneProgress of its action + Post + release (was dropped by idle(0)); KeyMetadata quote is the SUM action + 2x Post (three actions run in one turn), copied_items clamped to 1. Receipts fit the grant and match heap for metadata turns.
+- record_matcher_driver W-ownedfix-21: 1 pass.
+
+## Still red (W-ownedfix-20: original crate 1 pass, 3 fail)
+1. List/named-root heap (48,0): turn at phase RowAdvance, Nested selection KeyAction. The Source key action allocates (SealedShared admission, quote cap 48 depth 4) but key_action_advance returns only Ready{work}; the physical progress stays retained in the semantic frame (receive_resident_semantic) and is only reported later by KeySettlement/transfer_semantic_into. Per-turn exact receipts need the frame to expose the action progress at the action turn (frame crate 🏭️construction/📦️effect/🧳️frame: NativeReceivingEffectState::Ready should carry progress, key-frame advance -> NativeSchemaKeyPoll::Ready{work,progress}, idle(work) -> progress-bearing, and the later settlement must not count it twice). Not done: needs the 733 authors' call on deferred vs per-turn receipt. Also explains edit-b's named_root_receive 64 bytes.
+2. Cancellation/projection laws: now fail in close_all with "original effect producer or receipt changed" (tests 🦀️.rs:99) instead of the shared-owner error; harness CloseProducer/turn identity vs wrapper close path, not investigated.
+3. list-receiver --tests (W-ownedfix-22) does not compile: pre-733 tests (source_fixture::receive, NativeReceive paths); needs a port.
+
+## Rerun
+`"$C/1105b-tools/runtime/tst.sh" W-ownedfix-N 🧰️framework/Cargo.toml native -p semio-framework-value-native-receiving-original --lib -- --test-threads=1`
+No [DEBUG] left.
+
+## Step 2 (coordinator ruling: per-turn receipts)
+- Frame crate: NativeReceivingEffect::settled_progress / NativeResidentSuccessAck::semantic_settled_progress; NativeSharedSlots::advance_settled_progress. Key frame Ready carries progress (NativeSchemaKeyFramePoll/NativeSchemaKeyPoll::Ready{work,progress}); drive.rs KeyAction arm and the shared receiver Seal arm return it instead of Default. List law (0,0)/48 B now receipted in the funded turn.
+- Test stall guard: `turnBound` (16384) in 🧳️original/🧪️tests/🧫️fixtures/🔣️.json replaces the hard-coded 4096 (17 rows x ~250 turns legitimately exceed 4096).
+- "original effect producer or receipt changed": OriginalEffectAuthority::transfer_reply_into rejected any transfer after a drive that allocated in the same effect (effect.actual().is_some()); the child's marker is the turn's own receipt, so the guard is removed (producer-engine 🦀️.rs). Reverting it re-breaks the 2 close laws (W-ownedfix-36).
+- Shared receiver advance_pending also covers ack_identity and a ready advance result in Seal (cut there left an unackable outcome that blocked close).
+- Result W-ownedfix-35: original crate 4 passed / 0 failed.
+- Re-run after final edits: protocol W-ownedfix-39 rc0 (4 pass), record_matcher_driver W-ownedfix-40 rc0 (1 pass), schema-engine lib W-ownedfix-41 rc0, original crate W-ownedfix-37 4 pass.
+- NOT DONE: list-receiver `--tests` (📋️list/🧪️tests/🦀️.rs, 18 KB, 5 laws on the pre-733 API: source_fixture::{capture,receive}, grant-shaped advance/take/begin_close_step, Wallet::work_loan). Needs a full rewrite on the EffectBank/Authorities harness of the original-crate tests (the list law itself is covered there by native_persistent_list_original_vector_owner_fits_quantum_and_keeps_custody). Also native-owned `--lib` tests (stale pre-733, 21 errors) were not touched. Wasm not run.
+STATUS: FIXED-verified W-ownedfix-37 (original crate 4/4), W-ownedfix-39/40/41; list-receiver tests port open
+
+## Step 3
+- try-map hub fix: native_terminal_release used a protocol path the crate lacks; now `semio_framework_value_native_owned::native_decoding::owned::RetainedCursorRelease`. native W-ownedfix-55 rc0, wasm W-ownedfix-56 rc0.
+- list-receiver tests rewritten (📋️list/🧪️tests/🦀️.rs): fixture-exact body-reservation law and child-custody pricing law (reserve demand of NativeOwnedStorage<[u8;N]> vs the authored rows for this pointer width). W-ownedfix-63: 2 passed. The driven laws (cut sweeps, later-row refusal, callback refusal) live in the original-crate tests: added native_persistent_list_later_row_refusal_retains_original_partial_owner and native_persistent_list_original_callback_refusal_preserves_partial_receiving; W-ownedfix-59: original crate 6 passed.
+- wasm lib checks W-ownedfix-42 (protocol, schema-engine, owned, original, list-receiver, shared-engine, decoding, clone-source-testing) rc0.
+- NOT DONE: native-owned `--lib` tests (W-ownedfix-43: 716 errors across ~25 pre-733 test files: set, map, tuple, array, bulk, variant, refusal, storage, work tests, enum derive, projection). Needs a per-file port on the EffectBank/Authorities harness.
+- OPEN (edit-b named_root_receive, 'semantic failure is not available', turn 177): diagnosed, not fixed. At the failing demand the ack frame has metadata Settled with child None (the Bind/Prepare Post frame, work 0/0), semantic success resident, destination None, authority prepared. 🧭walk.rs selection takes `acknowledgement_ready()` (= metadata.transfer_ready()) as "ack done" -> KeySettlement(Outcome) -> semantic_transfer_demand refuses a success outcome. Making acknowledgement_ready require destination/failure instead moves the error to advance_resident_success ("requires its original recipient and callback phase"): the Settled metadata frame must be released/reset (retire_completion) before the ack action. The happy path (record_matcher_driver) does that via advance_metadata release; the value-edit path reaches ack with the frame still Settled. Next probe: which metadata op (Bind/Prepare) ran last and whether its release step executed. All experiments reverted; tree equals W-ownedfix-59 state.
+STATUS: BLOCKED named_root_receive stale-Settled metadata frame before ack; native-owned --lib tests port open
+
+## Step 4 (ack metadata frame, probe ring)
+- Probe (non-allocating ring, W-ownedfix-70/72) showed the exact sequence at the fault: Prepare (metadata op), many KeyAction selections, then advance_resident_success entered with metadata Empty, then every later selection sees metadata Settled. At semantic_transfer_demand the metadata frame has child None, work 0/0, no action/producer/failure, destination None, semantic success resident. So the ack drive ended Ready without ever invoking the producer (no child result): the frame settled with nothing performed (allocation-quote refusal / unperformed path in drive_original_effect_bound_with -> finish_unallocated), and acknowledgement_ready() (= metadata.transfer_ready()) reports it as done.
+- Proposed source fix (not applied, needs the frame state-machine owner): a refused/unperformed ack must leave the metadata frame retryable (Empty/pending) instead of Settled, or acknowledgement_ready must require destination/failure AND advance_resident_success must return Pending when its drive settled without a child. Law to add in 🎟️work: Prepare -> KeyAction -> ack with a grant below the ack quote -> frame stays pending, `acknowledgement_ready` false, a funded retry retires the success into the destination.
+- All probes removed (grep of dbg_push/dbg_dump/selection_inner/diag_err/[DEBUG] in 🛬️decode is empty); W-ownedfix-73/74 re-check native+wasm of schema-engine and owned after removal.
+- W-ownedfix-73 native rc 0 after probe removal; wasm W-ownedfix-74 fails in 📋️list 🦀️.rs:15 (unresolved semio_framework_value_native_schema_engine, a peer's in-flight import, not from the probes).
+STATUS: BLOCKED ack metadata frame settles unperformed (diagnosis + law proposal above); probes removed

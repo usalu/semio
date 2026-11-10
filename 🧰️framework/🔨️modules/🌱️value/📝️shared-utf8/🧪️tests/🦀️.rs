@@ -1,10 +1,13 @@
-use super::*;
-use crate::{retirement::controlled::ControlledRetirement};
+use semio_framework_value_shared_utf8::*;
+use semio_framework_value_shared_utf8::retirement::{arc_custody::shared_retirement_allocation_bytes,controlled::ControlledRetirement};
 use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
+#[path="⏱️effect/🦀️.rs"]
+mod effect;
+use effect::*;
 
 #[test]
 fn shared_utf8_original_lease_close_preserves_actor_bytes_without_allocating_retirement_frames(){
- let law:serde_json::Value=serde_json::from_str(crate::text("📝️shared-utf8/♻️original-lease/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../♻️original-lease/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for text in law["values"].as_array().unwrap(){for capacity in law["capacities"].as_array().unwrap(){for aliases in law["aliases"].as_array().unwrap(){
   let mut original=String::with_capacity(capacity.as_u64().unwrap()as usize);original.push_str(text.as_str().unwrap());let pointer=original.as_ptr();
   let owner=SharedUtf8::from(original);let mut leases=Vec::new();for _ in 0..aliases.as_u64().unwrap(){leases.push(owner.clone());}leases.push(owner);
@@ -23,17 +26,17 @@ fn shared_utf8_original_lease_close_preserves_actor_bytes_without_allocating_ret
 
 #[test]
 fn shared_utf8_original_giant_actor_admission_and_all_lease_frontiers_pay_physical_ownership(){
- let law:serde_json::Value=serde_json::from_str(crate::text("📝️shared-utf8/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for value in law["values"].as_array().unwrap(){for repeats in law["repeats"].as_array().unwrap(){for aliases in 0..3{
   let(mut original,birth)=observe(||value.as_str().unwrap().repeat(repeats.as_u64().unwrap()as usize));let pointer=original.as_ptr();let capacity=original.capacity();
   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
-  for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_capacity_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,heap)=observe(||SharedUtf8::admit(original,denied));original=result.result.err().unwrap().1;assert_eq!(original.as_ptr(),pointer);assert_eq!(heap,(0,0));}
-  let(result,heap)=observe(||SharedUtf8::admit(original,grant));let(owner,receipt)=result.result.map_err(|(error,_)|error).unwrap();assert!(receipt.fits(grant));assert_eq!(receipt.copied_bytes,0);assert_eq!(owner.as_ptr(),pointer);assert_eq!(heap,(receipt.retained_capacity_bytes,0));let mut births=heap.0;let mut released=0;
+  for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_capacity_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,heap)=observe(||admit(original,denied));original=result.result.err().unwrap().1;assert_eq!(original.as_ptr(),pointer);assert_eq!(heap,(0,0));}
+  let(result,heap)=observe(||admit(original,grant));let(owner,receipt)=result.result.map_err(|(error,_)|error).unwrap();assert!(receipt.fits(grant));assert_eq!(receipt.copied_bytes,0);assert_eq!(owner.as_ptr(),pointer);assert_eq!(heap,(receipt.retained_capacity_bytes,0));let mut births=heap.0;let mut released=0;
   assert_eq!(serde_json::to_string(&owner).unwrap(),serde_json::to_string(&owner.as_str()).unwrap());let mut owners=Vec::new();
-  for _ in 0..aliases{let(result,heap)=observe(||owner.admit_clone(grant));let(lease,receipt)=result.result.unwrap();assert!(receipt.fits(grant));assert_eq!(heap,(0,0));assert_eq!(lease.as_ptr(),pointer);owners.push(lease);}
+  for _ in 0..aliases{let mut b=bank();let(result,heap)=run(&mut b,grant,|effect|observe(||owner.admit_clone(effect)));let(lease,receipt)=result.result.unwrap();assert!(receipt.fits(grant));assert_eq!(heap,(0,0));assert_eq!(lease.as_ptr(),pointer);owners.push(lease);}
   owners.push(owner);
   let close_policy=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
-  for owner in owners{assert_eq!(owner.as_ptr(),pointer);let mut cursor=ControlledRetirement::new(owner).unwrap_or_else(|_|panic!("original shared UTF8 retirement"));for _ in 0..100000{if cursor.terminal_is_empty(){break;}let(_,heap)=observe(||cursor.next_copy_byte_demand().unwrap());assert_eq!(heap,(0,0));let(step,heap)=observe(||cursor.step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));let(step,heap)=observe(||cursor.step(close_policy).unwrap());let receipt=step.progress();assert!(receipt.fits(close_policy));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.0;released+=heap.1;}assert!(cursor.terminal_is_empty());let(_,heap)=observe(||drop(cursor));assert_eq!(heap,(0,0));}
+  for owner in owners{assert_eq!(owner.as_ptr(),pointer);let mut cursor=ControlledRetirement::new(owner).unwrap_or_else(|_|panic!("original shared UTF8 retirement"));for _ in 0..100000{if cursor.terminal_is_empty(){break;}let(_,heap)=observe(||cursor.next_copy_byte_demand().unwrap());assert_eq!(heap,(0,0));let mut b=bank();let(step,heap)=run(&mut b,RetainedCloneGrant{maximum_items:0,..grant},|effect|observe(||settled(cursor.step(effect)).result.unwrap()));assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));let(step,heap)=run(&mut b,close_policy,|effect|observe(||settled(cursor.step(effect)).result.unwrap()));let receipt=step.progress();assert!(receipt.fits(close_policy));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.0;released+=heap.1;}assert!(cursor.terminal_is_empty());let(_,heap)=observe(||drop(cursor));assert_eq!(heap,(0,0));}
   assert_eq!(released,birth.0+births);assert!(released>=capacity);
  }}}
 }

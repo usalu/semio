@@ -30,6 +30,10 @@ struct TypedBatch<M: Send + 'static> {
     source_birth_bytes: usize,
     pub closing: bool,
 }
+impl<M: Send + 'static> TypedBatch<M> {
+    /// 📐️ Names every byte the typed frame birth copies: the resident vector slot plus the controlled retirement it constructs.
+    fn birth_copy_bytes(&self) -> usize { size_of::<Option<Vec<M>>>() + self.birth_bytes }
+}
 impl<M: Send + 'static> BatchOwner for TypedBatch<M> {
     fn as_any(&self) -> &dyn Any { self }
     fn as_any_mut(&mut self) -> &mut dyn Any { self }
@@ -50,7 +54,7 @@ impl<M: Send + 'static> BatchOwner for TypedBatch<M> {
         if let Some(retirement) = self.retirement.as_mut() {
             if !retirement.terminal_is_empty() {
                 let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-                let step=match retirement.step(&mut effect.nested(child)){RetainedWorkPoll::Pending{..}=>RetainedCloneStep::Progress(Default::default()),RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|failure|failure.into_value_error())?};
+                let step=match retirement.step(child.maximum_copy_bytes,&mut effect.nested(child)){RetainedWorkPoll::Pending{..}=>RetainedCloneStep::Progress(Default::default()),RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|failure|failure.into_value_error())?};
                 return semio_framework_value::retained_clone::admit_retained_clone_close(child, step, retirement.terminal_is_empty(), "owned batch child").map(|step| RetainedCloneStep::Progress(step.progress()));
             }
             let bytes = size_of_val(retirement.as_ref());
@@ -62,10 +66,10 @@ impl<M: Send + 'static> BatchOwner for TypedBatch<M> {
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
     fn terminal_is_empty(&self) -> bool { self.values.is_none() && self.retirement.is_none() }
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.retirement.as_ref().map_or(Ok(0), |retirement| retirement.next_copy_byte_demand()) }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { if self.values.is_some() { return Ok(self.birth_copy_bytes()); } self.retirement.as_ref().map_or(Ok(0), |retirement| retirement.next_copy_byte_demand()) }
     fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
-        if self.values.is_some() { return Ok(RetirementDemand { capacity_bytes: self.birth_bytes, depth: 2, ..Default::default() }); }
+        if self.values.is_some() { return Ok(RetirementDemand { copy_bytes: self.birth_copy_bytes(), capacity_bytes: self.birth_bytes, depth: 2, ..Default::default() }); }
         match self.retirement.as_ref() {
             Some(retirement) if retirement.terminal_is_empty() => Ok(RetirementDemand { release_bytes: size_of_val(retirement.as_ref()), depth: 1, ..Default::default() }),
             Some(retirement) => { let mut demand = retirement.demands(maximum_body_bytes)?; demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "owned batch depth overflow"))?; Ok(demand) },

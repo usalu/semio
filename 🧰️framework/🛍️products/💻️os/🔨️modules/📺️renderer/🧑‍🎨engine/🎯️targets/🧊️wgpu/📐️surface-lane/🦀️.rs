@@ -273,8 +273,8 @@ impl MountedSurfaceResizeLane {
         match session.has_original_cancel_alias_witness(witness) {
             Ok(true) => {
                 let demand = RetirementDemand { depth: 1, ..Default::default() };
-                semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-                    {let turn=session.return_original_cancel_alias_step(witness,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(|error| match error { semio_framework_job_worker::WorkerJobDemandError::Refused(error) => error, semio_framework_job_worker::WorkerJobDemandError::Contention(_) => ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "resize cancellation return is contended") }),work:turn.work}}
+                semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+                    {let turn=session.return_original_cancel_alias_step(witness,effect);semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(|error| match error { semio_framework_job_worker::WorkerJobDemandError::Refused(error) => error, semio_framework_job_worker::WorkerJobDemandError::Contention(_) => ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "resize cancellation return is contended") }),work:turn.work})}
                 })?;
                 return Ok(true);
             }

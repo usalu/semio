@@ -371,6 +371,7 @@ semio-framework-trace = { path = "../🧰️framework/🔨️modules/⏱️trace
 semio-framework-job = { path = "../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-tool-run = { path = "../🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust" }
 semio-framework-tool-run-entities = { path = "../🧰️framework/🔨️modules/⏯️tool-run/👥️entities/📦️packages/🦀️rust" }
+semio-framework-value-source-hold = { path = "../🧰️framework/🔨️modules/🌱️value/🔗️source-hold/📦️packages/🦀️rust" }
 semio-framework-tool-run-presentation = { path = "../🧰️framework/🔨️modules/⏯️tool-run/📊️progress/🪟️presentation/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { path = "../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }

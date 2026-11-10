@@ -20,7 +20,7 @@ impl<E:ArtifactEditor> EditorApp<E>{
 impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn owned_mutation_batch_birth_bytes() -> Option<usize> { E::owned_mutation_batch_birth_bytes() }
     fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<Self>)->Option<usize>{E::completion_retirement_birth_bytes(value)}
-    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<Self>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{E::admit_completion_retirement(value,grant)}
+    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<Self>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{E::admit_completion_retirement(value,effect)}
 
     fn admit_owned_mutation_batch(values: &mut Option<Vec<Self::Mutation>>, grant: RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, RetainedCloneProgress)>, ValueError> { E::admit_owned_mutation_batch(values, grant) }
 

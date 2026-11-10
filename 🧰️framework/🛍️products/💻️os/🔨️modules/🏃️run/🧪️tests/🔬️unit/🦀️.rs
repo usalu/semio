@@ -258,7 +258,7 @@ fn media_port(node_id: &str, spec_id: &str, direction: MediaPortDirection, kind_
         MediaPortDirection::In => "in",
         MediaPortDirection::Out => "out",
     };
-    WorkflowMediaPort { id: format!("{node_id}:{spec_id}:{direction_word}"), spec: MediaPortSpec { id: spec_id.into(), label: spec_id.into(), direction, media_type: fake_media_type(), kind_id: Some(kind_id.into()), required, multiplicity } }
+    WorkflowMediaPort { id: format!("{node_id}:{spec_id}:{direction_word}"), spec: MediaPortSpec { id: spec_id.into(), label: semio_ui_locale::LocalizedLabel::data(spec_id), direction, media_type: fake_media_type(), kind_id: Some(kind_id.into()), required, multiplicity } }
 }
 
 fn workflow_node(id: &str, outputs: Vec<WorkflowMediaPort>, inputs: Vec<WorkflowMediaPort>) -> WorkflowNode {

@@ -1,80 +1,174 @@
 use super::*;
+#[path="⏱️effect/🦀️.rs"]
+mod effect;
+use effect::{authority,bank,denials,edit_grant,measured,primitive,retire,take,turn};
+use std::marker::PhantomData;
 
-#[test]
-fn original_tool_run_entity_edit_provenance_preserves_earlier_introductions_and_original_custody(){
- use super::provenance::{ToolRunEntityProvenance,ToolRunEntityProvenanceEdit,ProvenanceMap};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧾️provenance/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
- for row in corpus["cases"].as_array().unwrap(){let keys:Vec<u128>=row["original"].as_array().unwrap().iter().map(|mark|((mark["end"].as_u64().unwrap()as u128)<<64)|mark["entity"].as_str().unwrap().parse::<u64>().unwrap()as u128).collect();let expected:Vec<u128>=row["expectedMarks"].as_array().unwrap().iter().map(|mark|((mark["end"].as_u64().unwrap()as u128)<<64)|mark["entity"].as_str().unwrap().parse::<u64>().unwrap()as u128).collect();let expected_entities:Vec<u64>=row["expectedEntities"].as_array().unwrap().iter().map(|entity|entity.as_str().unwrap().parse().unwrap()).collect();let append:Vec<u64>=row["append"].as_array().unwrap().iter().map(|entity|entity.as_str().unwrap().parse().unwrap()).collect();let retract=row["retractTo"].as_u64().map(|v|v as u32);let end=row["end"].as_u64().unwrap()as u32;
-  for order in [0,1]{for stop in std::iter::once(None).chain(corpus["interruptAfter"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){
-   let((marks,entities,append),original)=measured(||(keys.iter().map(|key|(*key,())).collect::<ProvenanceMap>(),keys.iter().map(|key|(*key as u64,())).collect::<EntityMap>(),append.clone()));
-   let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:ToolRunEntityProvenance::birth_bytes(),maximum_depth:1,..Default::default()};let(admitted,heap)=measured(||ToolRunEntityProvenance::admit(marks,entities,1,grant));let(root,receipt)=admitted.map_err(|(error,_,_)|error).unwrap();assert_eq!(heap,(receipt.retained_capacity_bytes,0));let(mut born,mut released)=(heap.0,0);let pointer=root.identity();let(captured,heap)=measured(||root.capture(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:ToolRunEntityProvenance::capture_copy_bytes(),maximum_depth:1,..Default::default()}).unwrap());assert_eq!(heap,(0,0));let(mut job,heap)=measured(||ToolRunEntityProvenanceEdit::new(captured.0,retract,end,append));assert_eq!(heap,(0,0));let mut turns=0;
-   while !job.complete()&&turns<stop.unwrap_or(50000){let quote=job.next_demands(0).unwrap();let grant=ToolRunEntityEditGrant{retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quote.copy_bytes,maximum_capacity_bytes:quote.capacity_bytes,maximum_release_bytes:quote.release_bytes,maximum_depth:quote.depth},comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:16},maximum_moved_items:17,maximum_moved_bytes:17*size_of::<(u128,())>(),maximum_capacity_bytes:job.edit_capacity_bound().unwrap()};for retirement in [Some(RetainedCloneGrant{maximum_items:0,..grant.retirement}),quote.copy_bytes.checked_sub(1).map(|v|RetainedCloneGrant{maximum_copy_bytes:v,..grant.retirement}),quote.capacity_bytes.checked_sub(1).map(|v|RetainedCloneGrant{maximum_capacity_bytes:v,..grant.retirement}),quote.release_bytes.checked_sub(1).map(|v|RetainedCloneGrant{maximum_release_bytes:v,..grant.retirement}),quote.depth.checked_sub(1).map(|v|RetainedCloneGrant{maximum_depth:v,..grant.retirement})].into_iter().flatten(){let(progress,heap)=measured(||job.advance(ToolRunEntityEditGrant{retirement,..grant}).unwrap());assert_eq!(progress,Default::default());assert_eq!(heap,(0,0));assert_eq!(quote,job.next_demands(0).unwrap());}let(progress,heap)=measured(||job.advance(grant).unwrap());assert!(progress.fits(grant));assert_eq!(heap,(progress.retirement.retained_capacity_bytes+progress.retained_capacity_bytes,progress.retirement.released_bytes));born+=heap.0;released+=heap.1;turns+=1;assert_eq!(root.identity(),pointer);}
-   let published=if stop.is_none(){assert!(job.complete());let quote=job.publication_demands();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quote.copy_bytes,maximum_capacity_bytes:quote.capacity_bytes,maximum_release_bytes:quote.release_bytes,maximum_depth:quote.depth};let(output,heap)=measured(||job.take_output(RetainedCloneGrant{maximum_capacity_bytes:0,..grant}).unwrap());assert!(output.is_none());assert_eq!(heap,(0,0));let(output,heap)=measured(||job.take_output(grant).unwrap());let(output,progress)=output.unwrap();assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;released+=heap.1;assert_eq!(output.revision(),2);assert_eq!(output.marks().iter().map(|(key,_)|*key).collect::<Vec<_>>(),expected);assert_eq!(output.entities().iter().map(|(key,_)|*key).collect::<Vec<_>>(),expected_entities);assert!(job.take_output(grant).unwrap().is_none());Some(output)}else{job.cancel();assert!(job.take_output(Default::default()).unwrap().is_none());None};
-   assert_eq!(root.marks().iter().map(|(key,_)|*key).collect::<Vec<_>>(),{let mut sorted=keys.clone();sorted.sort();sorted.dedup();sorted});
-   if order==0{let heap=retire(root);born+=heap.0;released+=heap.1;let heap=retire(job);born+=heap.0;released+=heap.1;}else{let heap=retire(job);born+=heap.0;released+=heap.1;assert_eq!(root.identity(),pointer);let heap=retire(root);born+=heap.0;released+=heap.1;}
-   if let Some(output)=published{let heap=retire(output);born+=heap.0;released+=heap.1;}assert_eq!(released,original.0-original.1+born);
-  }}
- }
-}
-
-fn measured<R>(work:impl FnOnce()->R)->(R,(usize,usize)){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(work);(result,(heap.requested_bytes,heap.released_bytes))}
-fn retire<T:RetireOwned>(original:T)->(usize,usize){let mut owner=ControlledRetirement::new(original).map_err(|(error,_)|error).unwrap();let(mut born,mut released)=(0,0);for _ in 0..50000{if owner.terminal_is_empty(){break;}let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=measured(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;}assert!(owner.terminal_is_empty());assert_eq!(measured(||drop(owner)).1,(0,0));(born,released)}
+const BODY:usize=64;
+fn ids(row:&serde_json::Value,field:&str)->Vec<u64>{row[field].as_array().unwrap().iter().map(|id|id.as_str().unwrap().parse().unwrap()).collect()}
+fn kind(row:&serde_json::Value)->ToolRunEntityEditKind{if row["kind"]=="append"{ToolRunEntityEditKind::Append}else{ToolRunEntityEditKind::Retract}}
+fn stops(corpus:&serde_json::Value)->Vec<Option<usize>>{std::iter::once(None).chain(corpus["interruptAfter"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))).collect()}
+fn birth_grant(capacity:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:capacity,maximum_release_bytes:1<<20,maximum_depth:8}}
+fn capture_grant(copy:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy+4096,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:8}}
 
 #[test]
 fn original_tool_run_entity_edit_preserves_every_workspace_until_funded_completion_or_cancel(){
  let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
- assert_eq!(corpus["deniedAxes"],serde_json::json!(["items","copy","capacity","release","depth"]));for row in corpus["cases"].as_array().unwrap(){
-  let input:Vec<u64>=row["initial"].as_array().unwrap().iter().map(|id|id.as_str().unwrap().parse().unwrap()).collect();let targets:Vec<u64>=row["targets"].as_array().unwrap().iter().map(|id|id.as_str().unwrap().parse().unwrap()).collect();let kind=if row["kind"]=="append"{ToolRunEntityEditKind::Append}else{ToolRunEntityEditKind::Retract};let expected:Vec<u64>=row["expected"].as_array().unwrap().iter().map(|id|id.as_str().unwrap().parse().unwrap()).collect();
-  for stop in std::iter::once(None).chain(corpus["interruptAfter"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){
-   let((map,targets),original)=measured(||(input.iter().map(|id|(*id,())).collect::<EntityMap>(),targets.clone()));let pointer=targets.as_ptr();let(mut job,heap)=measured(||ToolRunEntityEdit::new(map,targets,kind));assert_eq!(heap,(0,0));let(mut born,mut released)=(0,0);let mut turns=0;
-   while !job.complete()&&turns<stop.unwrap_or(50000){let demand=job.next_demands(0).unwrap();let grant=ToolRunEntityEditGrant{retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:8},maximum_moved_items:17,maximum_moved_bytes:17*size_of::<(u64,())>(),maximum_capacity_bytes:job.edit_capacity_bound().unwrap()};for retirement in [Some(RetainedCloneGrant{maximum_items:0,..grant.retirement}),grant.retirement.maximum_copy_bytes.checked_sub(1).map(|v|RetainedCloneGrant{maximum_copy_bytes:v,..grant.retirement}),grant.retirement.maximum_capacity_bytes.checked_sub(1).map(|v|RetainedCloneGrant{maximum_capacity_bytes:v,..grant.retirement}),grant.retirement.maximum_release_bytes.checked_sub(1).map(|v|RetainedCloneGrant{maximum_release_bytes:v,..grant.retirement}),grant.retirement.maximum_depth.checked_sub(1).map(|v|RetainedCloneGrant{maximum_depth:v,..grant.retirement})].into_iter().flatten(){let(progress,denied)=measured(||job.advance(ToolRunEntityEditGrant{retirement,..grant}).unwrap());assert_eq!(progress,Default::default());assert_eq!(denied,(0,0));}assert_eq!(job.targets_identity(),pointer as usize);let(progress,heap)=measured(||job.advance(grant).unwrap());assert!(progress.fits(grant));assert_eq!(heap,(progress.retirement.retained_capacity_bytes+progress.retained_capacity_bytes,progress.retirement.released_bytes));born+=heap.0;released+=heap.1;turns+=1;}
-   if stop.is_none(){assert!(job.complete());let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<EntityMap>(),maximum_depth:1,..Default::default()};let(output,heap)=measured(||job.take_output(RetainedCloneGrant{maximum_copy_bytes:0,..grant}).unwrap());assert!(output.is_none());assert_eq!(heap,(0,0));let(output,heap)=measured(||job.take_output(grant).unwrap());assert_eq!(heap,(0,0));let(output,receipt)=output.unwrap();assert!(receipt.fits(grant));assert_eq!(output.iter().map(|(key,_)|*key).collect::<Vec<_>>(),expected);let heap=retire(output);born+=heap.0;released+=heap.1;}else{job.cancel();assert!(job.take_output(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<EntityMap>(),maximum_depth:1,..Default::default()}).unwrap().is_none());}
-   let heap=retire(job);born+=heap.0;released+=heap.1;assert_eq!(released,original.0-original.1+born);
+ assert_eq!(corpus["deniedAxes"],serde_json::json!(["items","copy","capacity","release","depth"]));
+ for row in corpus["cases"].as_array().unwrap(){
+  let(input,targets,expected,kind)=(ids(row,"initial"),ids(row,"targets"),ids(row,"expected"),kind(row));
+  for stop in stops(&corpus){
+   let((map,targets),original)=measured(||(input.iter().map(|id|(*id,())).collect::<EntityMap>(),targets.clone()));let pointer=targets.as_ptr()as usize;
+   let mut bank=bank();let mut authority=authority::<ToolRunEntityEdit>();let(mut job,heap)=measured(||ToolRunEntityEdit::new(map,targets,kind));assert_eq!(heap,(0,0));
+   let(mut born,mut released)=(0,0);let mut turns=0;
+   while !job.complete()&&turns<stop.unwrap_or(50000){
+    let demand=job.next_demands(BODY).unwrap();let grant=edit_grant(demand,job.edit_capacity_bound().unwrap(),size_of::<(u64,())>(),8);
+    for retirement in denials(grant.retirement,demand){let observed=turn(&mut bank,&mut authority,&mut job,BODY,ToolRunEntityEditGrant{retirement,..grant});assert_eq!(observed.progress,Default::default());assert_eq!(observed.heap,(0,0));assert_eq!(observed.work,0);}
+    assert_eq!(job.targets_identity(),pointer);
+    let observed=turn(&mut bank,&mut authority,&mut job,BODY,grant);assert!(observed.progress.fits(grant.retirement));born+=observed.heap.0;released+=observed.heap.1;turns+=1;
+   }
+   if stop.is_none(){
+    assert!(job.complete());let mut taker=effect::taker();let mut output=None;let g=grant_of(ToolRunEntityEdit::<u64>::take_output_demand());
+    let denied=take(&mut bank,&mut taker,&mut job,&mut output,RetainedCloneGrant{maximum_copy_bytes:0,..g});assert_eq!(denied.progress,Default::default());assert!(output.is_none());
+    let observed=take(&mut bank,&mut taker,&mut job,&mut output,g);assert!(observed.progress.fits(g));assert_eq!(output.as_ref().unwrap().iter().map(|(key,_)|*key).collect::<Vec<_>>(),expected);
+    let heap=retire(&mut bank,output.take().unwrap());born+=heap.0;released+=heap.1;
+   }else{job.cancel();}
+   let heap=retire(&mut bank,job);born+=heap.0;released+=heap.1;assert_eq!(released,original.0-original.1+born);
   }
  }
 }
+fn grant_of(d:RetirementDemand)->RetainedCloneGrant{effect::grant(d)}
 
-fn version_publication_grant(job:&super::version::ToolRunEntityVersionEdit)->RetainedCloneGrant{let demand=job.publication_demands();RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
 #[test]
 fn original_tool_run_entity_edit_versions_preserve_original_aliases_and_publish_once(){
  use super::version::{ToolRunEntityVersion,ToolRunEntityVersionEdit};
  let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let law:serde_json::Value=serde_json::from_str(include_str!("../📸️version/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap(){
-  let input:Vec<u64>=row["initial"].as_array().unwrap().iter().map(|x|x.as_str().unwrap().parse().unwrap()).collect();let targets:Vec<u64>=row["targets"].as_array().unwrap().iter().map(|x|x.as_str().unwrap().parse().unwrap()).collect();let expected:Vec<u64>=row["expected"].as_array().unwrap().iter().map(|x|x.as_str().unwrap().parse().unwrap()).collect();let kind=if row["kind"]=="append"{ToolRunEntityEditKind::Append}else{ToolRunEntityEditKind::Retract};
-  for order in law["captureCloseOrders"].as_array().unwrap(){for stop in std::iter::once(None).chain(corpus["interruptAfter"].as_array().unwrap().iter().map(|x|Some(x.as_u64().unwrap()as usize))){
-   let((map,targets),original)=measured(||(input.iter().map(|key|(*key,())).collect::<EntityMap>(),targets.clone()));let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:ToolRunEntityVersion::birth_bytes(),maximum_depth:1,..Default::default()};let(admitted,heap)=measured(||ToolRunEntityVersion::admit(map,law["originalRevision"].as_u64().unwrap(),grant));let(primary,receipt)=admitted.unwrap_or_else(|_|panic!("original entity version admission"));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));let(mut born,mut released)=(heap.0,heap.1);let identity=primary.identity();
-   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:ToolRunEntityVersion::capture_copy_bytes(),maximum_depth:1,..Default::default()};let((captured,receipt),heap)=measured(||primary.capture(grant).unwrap());assert_eq!(heap,(0,0));assert!(receipt.fits(grant));let((candidate,receipt),heap)=measured(||primary.capture(grant).unwrap());assert_eq!(heap,(0,0));assert!(receipt.fits(grant));let(mut job,heap)=measured(||ToolRunEntityVersionEdit::new(candidate,targets,kind));assert_eq!(heap,(0,0));
-   let mut turns=0;while !job.complete()&&turns<stop.unwrap_or(100000){let demand=job.next_demands(0).unwrap();let grant=ToolRunEntityEditGrant{retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:8},maximum_moved_items:17,maximum_moved_bytes:17*size_of::<(u64,())>(),maximum_capacity_bytes:job.edit_capacity_bound().unwrap()};for retirement in [Some(RetainedCloneGrant{maximum_items:0,..grant.retirement}),grant.retirement.maximum_copy_bytes.checked_sub(1).map(|x|RetainedCloneGrant{maximum_copy_bytes:x,..grant.retirement}),grant.retirement.maximum_capacity_bytes.checked_sub(1).map(|x|RetainedCloneGrant{maximum_capacity_bytes:x,..grant.retirement}),grant.retirement.maximum_release_bytes.checked_sub(1).map(|x|RetainedCloneGrant{maximum_release_bytes:x,..grant.retirement}),grant.retirement.maximum_depth.checked_sub(1).map(|x|RetainedCloneGrant{maximum_depth:x,..grant.retirement})].into_iter().flatten(){let(result,heap)=measured(||job.advance(0,ToolRunEntityEditGrant{retirement,..grant}));assert_eq!(heap,(0,0));match result{Ok(progress)=>assert_eq!(progress,Default::default()),Err(error)=>assert!(matches!(error.kind,ValueRefusalKind::DepthLimit|ValueRefusalKind::OwnershipLimit|ValueRefusalKind::WorkLimit))};assert_eq!(job.next_demands(0).unwrap(),demand);}let(progress,heap)=measured(||job.advance(0,grant).unwrap());assert!(progress.fits(grant));assert_eq!(heap,(progress.retirement.retained_capacity_bytes+progress.retained_capacity_bytes,progress.retirement.released_bytes));born+=heap.0;released+=heap.1;turns+=1;}
+  let(input,targets,expected,kind)=(ids(row,"initial"),ids(row,"targets"),ids(row,"expected"),kind(row));
+  for order in law["captureCloseOrders"].as_array().unwrap(){for stop in stops(&corpus){
+   let((map,targets),original)=measured(||(input.iter().map(|key|(*key,())).collect::<EntityMap>(),targets.clone()));let mut bank=bank();
+   let(admitted,heap)=primitive(&mut bank,birth_grant(ToolRunEntityVersion::birth_bytes()),|effect|ToolRunEntityVersion::admit(map,law["originalRevision"].as_u64().unwrap(),effect).map_err(|(error,_)|error));let(primary,receipt)=admitted.unwrap();assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));let(mut born,mut released)=(heap.0,heap.1);let identity=primary.identity();
+   let copy=capture_grant(ToolRunEntityVersion::capture_copy_bytes());
+   let(captured,heap)=primitive(&mut bank,copy,|effect|primary.capture(effect));let(captured,receipt)=captured.unwrap();assert_eq!(heap,(0,0));assert!(receipt.fits(copy));
+   let(candidate,heap)=primitive(&mut bank,copy,|effect|primary.capture(effect));let(candidate,_)=candidate.unwrap();assert_eq!(heap,(0,0));
+   let mut job=ToolRunEntityVersionEdit::new(candidate,targets,kind);let mut authority=authority::<ToolRunEntityVersionEdit>();let mut turns=0;
+   while !job.complete()&&turns<stop.unwrap_or(100000){
+    let demand=job.next_demands(BODY).unwrap();let grant=edit_grant(demand,job.edit_capacity_bound().unwrap(),size_of::<(u64,())>(),8);
+    for retirement in denials(grant.retirement,demand){let observed=turn(&mut bank,&mut authority,&mut job,BODY,ToolRunEntityEditGrant{retirement,..grant});assert_eq!(observed.progress,Default::default());assert_eq!(observed.heap,(0,0));assert_eq!(job.next_demands(BODY).unwrap(),demand);}
+    let observed=turn(&mut bank,&mut authority,&mut job,BODY,grant);assert!(observed.progress.fits(grant.retirement));born+=observed.heap.0;released+=observed.heap.1;turns+=1;
+   }
    assert_eq!(primary.identity(),identity);assert_eq!(captured.identity(),identity);assert_eq!(captured.entities().iter().map(|(key,_)|*key).collect::<Vec<_>>(),input);
-   if stop.is_none(){assert!(job.complete());let grant=version_publication_grant(&job);let(result,heap)=measured(||job.take_output(RetainedCloneGrant{maximum_capacity_bytes:0,..grant}).unwrap());assert!(result.is_none());assert_eq!(heap,(0,0));let(result,heap)=measured(||job.take_output(grant).unwrap());let(published,receipt)=result.unwrap();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;released+=heap.1;assert_eq!(published.revision(),law["publishedRevision"].as_u64().unwrap());assert_eq!(published.entities().iter().map(|(key,_)|*key).collect::<Vec<_>>(),expected);assert!(job.take_output(grant).unwrap().is_none());let heap=retire(published);born+=heap.0;released+=heap.1;}else{job.cancel();let(result,heap)=measured(||job.take_output(version_publication_grant(&job)).unwrap());assert!(result.is_none());assert_eq!(heap,(0,0));}
-   let mut primary=Some(primary);let mut captured=Some(captured);let first=if order=="sourceFirst"{primary.take().unwrap()}else{captured.take().unwrap()};let heap=retire(first);born+=heap.0;released+=heap.1;let heap=retire(job);born+=heap.0;released+=heap.1;let last=primary.take().or_else(||captured.take()).unwrap();assert_eq!(last.identity(),identity);assert_eq!(last.entities().iter().map(|(key,_)|*key).collect::<Vec<_>>(),input);let heap=retire(last);born+=heap.0;released+=heap.1;assert_eq!(original.0-original.1+born,released);
+   if stop.is_none(){
+    assert!(job.complete());let demand=job.publication_demands();let publication=grant_of(demand);
+    let(result,heap)=primitive(&mut bank,RetainedCloneGrant{maximum_capacity_bytes:0,..publication},|effect|job.take_output(effect));assert!(result.unwrap().is_none());assert_eq!(heap,(0,0));
+    let(result,heap)=primitive(&mut bank,publication,|effect|job.take_output(effect));let(published,receipt)=result.unwrap().unwrap();assert!(receipt.fits(publication));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;released+=heap.1;
+    assert_eq!(published.revision(),law["publishedRevision"].as_u64().unwrap());assert_eq!(published.entities().iter().map(|(key,_)|*key).collect::<Vec<_>>(),expected);
+    let(again,_)=primitive(&mut bank,publication,|effect|job.take_output(effect));assert!(again.unwrap().is_none());let heap=retire(&mut bank,published);born+=heap.0;released+=heap.1;
+   }else{job.cancel();let(result,heap)=primitive(&mut bank,grant_of(job.publication_demands()),|effect|job.take_output(effect));assert!(result.unwrap().is_none());assert_eq!(heap,(0,0));}
+   let mut primary=Some(primary);let mut captured=Some(captured);let first=if order=="sourceFirst"{primary.take().unwrap()}else{captured.take().unwrap()};
+   let heap=retire(&mut bank,first);born+=heap.0;released+=heap.1;let heap=retire(&mut bank,job);born+=heap.0;released+=heap.1;
+   let last=primary.take().or_else(||captured.take()).unwrap();assert_eq!(last.identity(),identity);assert_eq!(last.entities().iter().map(|(key,_)|*key).collect::<Vec<_>>(),input);let heap=retire(&mut bank,last);born+=heap.0;released+=heap.1;
+   assert_eq!(original.0-original.1+born,released);
   }}
  }
 }
-                
 
-fn turn_grant(demand:RetirementDemand,bound:usize,entry:usize)->ToolRunEntityEditGrant{ToolRunEntityEditGrant{retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:16},maximum_moved_items:17,maximum_moved_bytes:17*entry,maximum_capacity_bytes:bound}}
+#[test]
+fn original_tool_run_entity_edit_provenance_preserves_earlier_introductions_and_original_custody(){
+ use super::provenance::{ToolRunEntityProvenance,ToolRunEntityProvenanceEdit,ProvenanceMap};
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧾️provenance/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let key=|mark:&serde_json::Value|((mark["end"].as_u64().unwrap()as u128)<<64)|mark["entity"].as_str().unwrap().parse::<u64>().unwrap()as u128;
+ for row in corpus["cases"].as_array().unwrap(){
+  let keys:Vec<u128>=row["original"].as_array().unwrap().iter().map(key).collect();let expected:Vec<u128>=row["expectedMarks"].as_array().unwrap().iter().map(key).collect();
+  let expected_entities=ids(row,"expectedEntities");let append=ids(row,"append");let retract=row["retractTo"].as_u64().map(|v|v as u32);let end=row["end"].as_u64().unwrap()as u32;
+  for stop in stops(&corpus){
+   let((marks,entities,append),original)=measured(||(keys.iter().map(|key|(*key,())).collect::<ProvenanceMap>(),keys.iter().map(|key|(*key as u64,())).collect::<EntityMap>(),append.clone()));let mut bank=bank();
+   let(admitted,heap)=primitive(&mut bank,birth_grant(ToolRunEntityProvenance::birth_bytes()),|effect|ToolRunEntityProvenance::admit(marks,entities,1,effect).map_err(|(error,_,_)|error));let(root,receipt)=admitted.unwrap();assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));let(mut born,mut released)=(heap.0,heap.1);let pointer=root.identity();
+   let(captured,heap)=primitive(&mut bank,capture_grant(ToolRunEntityProvenance::capture_copy_bytes()),|effect|root.capture(effect));let(captured,_)=captured.unwrap();assert_eq!(heap,(0,0));
+   let mut job=ToolRunEntityProvenanceEdit::new(captured,retract,end,append);let mut authority=authority::<ToolRunEntityProvenanceEdit>();let mut turns=0;
+   while !job.complete()&&turns<stop.unwrap_or(50000){
+    let quote=job.next_demands(BODY).unwrap();let grant=edit_grant(quote,job.edit_capacity_bound().unwrap(),size_of::<(u128,())>(),16);
+    for retirement in denials(grant.retirement,quote){let observed=turn(&mut bank,&mut authority,&mut job,BODY,ToolRunEntityEditGrant{retirement,..grant});assert_eq!(observed.progress,Default::default());assert_eq!(observed.heap,(0,0));assert_eq!(quote,job.next_demands(BODY).unwrap());}
+    let observed=turn(&mut bank,&mut authority,&mut job,BODY,grant);assert!(observed.progress.fits(grant.retirement));born+=observed.heap.0;released+=observed.heap.1;turns+=1;assert_eq!(root.identity(),pointer);
+   }
+   let published=if stop.is_none(){
+    assert!(job.complete());let demand=job.publication_demands();let publication=grant_of(demand);
+    let(output,heap)=primitive(&mut bank,RetainedCloneGrant{maximum_capacity_bytes:0,..publication},|effect|job.take_output(effect));assert!(output.unwrap().is_none());assert_eq!(heap,(0,0));
+    let(output,heap)=primitive(&mut bank,publication,|effect|job.take_output(effect));let(output,progress)=output.unwrap().unwrap();assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;released+=heap.1;
+    assert_eq!(output.revision(),2);assert_eq!(output.marks().iter().map(|(key,_)|*key).collect::<Vec<_>>(),expected);assert_eq!(output.entities().iter().map(|(key,_)|*key).collect::<Vec<_>>(),expected_entities);
+    let(again,_)=primitive(&mut bank,publication,|effect|job.take_output(effect));assert!(again.unwrap().is_none());Some(output)
+   }else{job.cancel();None};
+   assert_eq!(root.marks().iter().map(|(key,_)|*key).collect::<Vec<_>>(),{let mut sorted=keys.clone();sorted.sort();sorted.dedup();sorted});
+   let heap=retire(&mut bank,job);born+=heap.0;released+=heap.1;assert_eq!(root.identity(),pointer);let heap=retire(&mut bank,root);born+=heap.0;released+=heap.1;
+   if let Some(output)=published{let heap=retire(&mut bank,output);born+=heap.0;released+=heap.1;}
+   assert_eq!(released,original.0-original.1+born);
+  }
+ }
+}
+
 #[test]
 fn original_tool_run_entity_version_cancel_after_every_turn_completes_cleanup(){
  use super::version::{ToolRunEntityVersion,ToolRunEntityVersionEdit};
  for turns in 0..24{
-  let map:EntityMap=[1u64,2,3].iter().map(|id|(*id,())).collect();
-  let(primary,_)=ToolRunEntityVersion::admit(map,1,RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:ToolRunEntityVersion::birth_bytes(),maximum_depth:1,..Default::default()}).unwrap_or_else(|_|panic!("original entity version admission"));
-  let(captured,_)=primary.capture(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:ToolRunEntityVersion::capture_copy_bytes(),maximum_depth:1,..Default::default()}).unwrap();
-  let mut job=ToolRunEntityVersionEdit::new(captured,vec![4],ToolRunEntityEditKind::Append);
-  for _ in 0..turns{if job.complete(){break;}let demand=job.next_demands(0).unwrap();job.advance(0,turn_grant(demand,job.edit_capacity_bound().unwrap(),size_of::<(u64,())>())).unwrap();}
-  job.cancel();retire(job);retire(primary);
+  let mut bank=bank();let map:EntityMap=[1u64,2,3].iter().map(|id|(*id,())).collect();
+  let(primary,_)=primitive(&mut bank,birth_grant(ToolRunEntityVersion::birth_bytes()),|effect|ToolRunEntityVersion::admit(map,1,effect).map_err(|(error,_)|error)).0.unwrap();
+  let(captured,_)=primitive(&mut bank,capture_grant(ToolRunEntityVersion::capture_copy_bytes()),|effect|primary.capture(effect)).0.unwrap();
+  let mut job=ToolRunEntityVersionEdit::new(captured,vec![4],ToolRunEntityEditKind::Append);let mut authority=authority::<ToolRunEntityVersionEdit>();
+  for _ in 0..turns{if job.complete(){break;}let demand=job.next_demands(BODY).unwrap();{let bound=job.edit_capacity_bound().unwrap();turn(&mut bank,&mut authority,&mut job,BODY,edit_grant(demand,bound,size_of::<(u64,())>(),16))};}
+  job.cancel();retire(&mut bank,job);retire(&mut bank,primary);
  }
 }
+
 #[test]
 fn original_tool_run_entity_provenance_cancel_after_every_turn_completes_cleanup(){
  use super::provenance::{ToolRunEntityProvenance,ToolRunEntityProvenanceEdit,ProvenanceMap};
  for turns in 0..24{
-  let marks:ProvenanceMap=[(1u128,())].into_iter().collect();let entities:EntityMap=[(1u64,())].into_iter().collect();
-  let(root,_)=ToolRunEntityProvenance::admit(marks,entities,1,RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:ToolRunEntityProvenance::birth_bytes(),maximum_depth:1,..Default::default()}).unwrap_or_else(|_|panic!("original provenance admission"));
-  let(captured,_)=root.capture(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:ToolRunEntityProvenance::capture_copy_bytes(),maximum_depth:1,..Default::default()}).unwrap();
-  let mut job=ToolRunEntityProvenanceEdit::new(captured,None,1,vec![2]);
-  for _ in 0..turns{if job.complete(){break;}let demand=job.next_demands(0).unwrap();job.advance(turn_grant(demand,job.edit_capacity_bound().unwrap(),size_of::<(u128,())>())).unwrap();}
-  job.cancel();retire(job);retire(root);
+  let mut bank=bank();let marks:ProvenanceMap=[(1u128,())].into_iter().collect();let entities:EntityMap=[(1u64,())].into_iter().collect();
+  let(root,_)=primitive(&mut bank,birth_grant(ToolRunEntityProvenance::birth_bytes()),|effect|ToolRunEntityProvenance::admit(marks,entities,1,effect).map_err(|(error,_,_)|error)).0.unwrap();
+  let(captured,_)=primitive(&mut bank,capture_grant(ToolRunEntityProvenance::capture_copy_bytes()),|effect|root.capture(effect)).0.unwrap();
+  let mut job=ToolRunEntityProvenanceEdit::new(captured,None,1,vec![2]);let mut authority=authority::<ToolRunEntityProvenanceEdit>();
+  for _ in 0..turns{if job.complete(){break;}let demand=job.next_demands(BODY).unwrap();{let bound=job.edit_capacity_bound().unwrap();turn(&mut bank,&mut authority,&mut job,BODY,edit_grant(demand,bound,size_of::<(u128,())>(),16))};}
+  job.cancel();retire(&mut bank,job);retire(&mut bank,root);
  }
+}
+
+#[test]
+fn sealed_birth_is_funded_by_its_exact_quote(){
+ fn exact<T:RetireOwned+Send+Sync+'static>(value:T){
+  let mut bank=bank();let demand=SealedShared::<T>::source_admission_demand().unwrap();let units=SealedShared::<T>::source_admission_work_demand();
+  let(admitted,_)=primitive(&mut bank,effect::grant(demand),|effect|{let boundary=effect.performed_boundary();let(sealed,progress)=admit_sealed(value,effect).map_err(|(error,_)|error)?;assert_eq!(effect.performed_since(boundary).unwrap(),u128::from(units));Ok((sealed,progress))});
+  let(sealed,_)=admitted.unwrap();drop(retire(&mut bank,sealed));
+ }
+ exact(String::from("draw.command"));exact(vec![1u8,2,3]);exact(7u64);let _:PhantomData<u8>=PhantomData;
+}
+
+#[test]
+fn original_tool_run_entity_version_edit_cost_is_independent_of_the_cloned_size(){
+ use super::version::{ToolRunEntityVersion,ToolRunEntityVersionEdit};
+ use effect::Edited;
+ let mut costs=Vec::new();
+ for size in [16u64,2048]{
+  let mut bank=bank();let map:EntityMap=(0..size).map(|id|(id,())).collect();
+  let(primary,_)=primitive(&mut bank,birth_grant(ToolRunEntityVersion::birth_bytes()),|effect|ToolRunEntityVersion::admit(map,1,effect).map_err(|(error,_)|error)).0.unwrap();
+  let(captured,_)=primitive(&mut bank,capture_grant(ToolRunEntityVersion::capture_copy_bytes()),|effect|primary.capture(effect)).0.unwrap();
+  let mut job=ToolRunEntityVersionEdit::new(captured,vec![size+1,size+2],ToolRunEntityEditKind::Append);let mut authority=authority::<ToolRunEntityVersionEdit>();let(mut clone,mut edit)=(0u128,0u128);
+  while !job.complete(){let editing=job.editing();let demand=job.next_demands(BODY).unwrap();let observed={let bound=job.edit_capacity_bound().unwrap();turn(&mut bank,&mut authority,&mut job,BODY,edit_grant(demand,bound,size_of::<(u64,())>(),16))};if editing{edit+=observed.work}else{clone+=observed.work}}
+  costs.push((clone,edit));retire(&mut bank,job);retire(&mut bank,primary);
+ }
+ let[(small_clone,small_edit),(large_clone,large_edit)]=costs[..]else{unreachable!()};
+ assert!(large_clone>=8*small_clone,"the clone alone scales with the original");
+ assert!(large_edit<=4*small_edit,"the target edit must not scale with the original: {small_edit} -> {large_edit}");
+}
+
+#[test]
+fn original_controlled_retirement_closes_as_nested_child_for_every_owner_width() {
+    use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetirement};
+    fn nested<T: RetireOwned>(value: T) {
+        let child = ControlledRetirement::new(value).map_err(|(error, _)| error).unwrap();
+        let mut bank = bank();
+        retire(&mut bank, Some(child));
+    }
+    nested(vec![1u64, 2, 3]);
+    nested(vec![1u128 << 70, 2, 3]);
+    nested(vec![("a".to_owned(), 1u128), ("b".to_owned(), 2)]);
 }

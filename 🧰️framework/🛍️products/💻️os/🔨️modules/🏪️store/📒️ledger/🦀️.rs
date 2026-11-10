@@ -463,14 +463,14 @@ impl ArtifactStorePendingReportRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStorePendingReportRetirement {
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         let demand = self.demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "pending report retirement exceeds admitted depth").into()); }
         if grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_copy_bytes < demand.copy_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         let report = self.report.as_mut().expect("nonterminal report retains original");
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(original) = report.outbound.pop() {

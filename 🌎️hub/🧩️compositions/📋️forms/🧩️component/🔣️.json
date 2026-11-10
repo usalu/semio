@@ -7308,7 +7308,16 @@
           "ports": [
             {
               "id": "dictionary:out",
-              "label": "Dictionary",
+              "label": {
+                "native": {
+                  "en": "Dictionary",
+                  "de": "Wörterbuch"
+                },
+                "reuse": {
+                  "en": "Dictionary",
+                  "de": "Wörterbuch"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "data",

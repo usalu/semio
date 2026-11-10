@@ -8099,7 +8099,16 @@
           "ports": [
             {
               "id": "mesh:in",
-              "label": "Mesh",
+              "label": {
+                "native": {
+                  "en": "Mesh",
+                  "de": "Netz"
+                },
+                "reuse": {
+                  "en": "Mesh",
+                  "de": "Netz"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "threeD",
@@ -8110,7 +8119,16 @@
             },
             {
               "id": "mesh:out",
-              "label": "Mesh",
+              "label": {
+                "native": {
+                  "en": "Mesh",
+                  "de": "Netz"
+                },
+                "reuse": {
+                  "en": "Mesh",
+                  "de": "Netz"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "threeD",

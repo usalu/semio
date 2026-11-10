@@ -123,7 +123,7 @@ impl<A: ArtifactApp> CommandHistory<A> {
                 if owner.prepared(){owner.publish(&mut stores.store,cx)?;}else{owner.advance(&mut stores.store,&transaction.id,cx)?;}
                 return Ok(false)
             }
-            if stores.store.open_transaction().is_none(){let mut admitted=None;semio_framework_job::admit_original_construction(cx,&mut admitted,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:1,capacity_bytes:0,release_bytes:0,depth:1},|_|{*completed=true;semio_framework_value::RetainedWorkOutcome{result:Ok(((),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})),work:1}})?;return Ok(*completed)}
+            if stores.store.open_transaction().is_none(){let p=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()};if !cx.is_cancelled()&&!cx.should_yield()&&cx.fuel_remaining()>=1&&p.fits(cx.retained_grant()){cx.consume_retained(p)?;cx.consume_fuel(1);*completed=true;}return Ok(*completed)}
             semio_os_store_engine_replay::abort::OriginalStreamAbort::admit(&stores.store,&transaction.id,cx,pending,resident)?;
             return Ok(false)
         }

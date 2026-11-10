@@ -60,7 +60,7 @@ macro_rules! delegate{($self:ident,$cursor:ident=>$body:expr)=>{match $self{Reco
 impl semio_framework_value::retirement::RetirementCursor for RecordRetirementCursor{
     fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{delegate!(self,cursor=>cursor.next_computational_work(body))}
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{delegate!(self,cursor=>cursor.next_demand(body))}
-    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{delegate!(self,cursor=>cursor.close_step(effect))}
+    fn close_into<'reply>(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'reply,semio_framework_value::retirement::RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'reply,semio_framework_value::retirement::RetirementStep,semio_framework_value::OriginalRetirementFailure>,ValueError>{delegate!(self,cursor=>cursor.close_into(body,effect,reply))}
     fn terminal_is_empty(&self)->bool{delegate!(self,cursor=>cursor.terminal_is_empty())}
     fn next_depth_demand(&self)->Result<usize,ValueError>{delegate!(self,cursor=>cursor.next_depth_demand())}
     fn next_close_byte_demand(&self)->Option<usize>{delegate!(self,cursor=>cursor.next_close_byte_demand())}
@@ -89,7 +89,7 @@ impl RetainedRecordWriter {
         for _ in 0..maximum_units {control.checkpoint()?;if self.phase==3{return Ok(None)}if self.advance_unit(control)?{return Ok(self.emitter.output.take())}control.step()?;}Ok(None)
     }
     fn advance_unit(&mut self,control:&mut NativeEncodeControl<'_>)->Result<bool,ValueError>{
-        if let Some(retirement)=self.retiring.as_mut(){if retirement.terminal_is_empty(){self.retiring.take();}else{let copy=retirement.next_copy_byte_demand()?;let release=retirement.next_release_byte_demand()?;let capacity=retirement.next_capacity_byte_demand(if copy==0{release}else{copy})?;let depth=retirement.next_depth_demand()?;control.charge(capacity)?;let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};let work=retirement.next_computational_work(copy)?;match control.with_effect(grant,work,|_,effect|retirement.step(effect))?{Some(poll)=>match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>{turn.result.map_err(|failure|failure.primary().cloned().unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"record child retirement failed without a primary cause")))?;},semio_framework_value::RetainedWorkPoll::Pending{..}=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"record child retirement cannot resume a pending effect"))},None=>{}}}return Ok(false)}
+        if let Some(retirement)=self.retiring.as_mut(){if retirement.terminal_is_empty(){self.retiring.take();}else{let copy=retirement.next_copy_byte_demand()?;let release=retirement.next_release_byte_demand()?;let capacity=retirement.next_capacity_byte_demand(if copy==0{release}else{copy})?;let depth=retirement.next_depth_demand()?;control.charge(capacity)?;let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};let work=retirement.next_computational_work(copy)?;match control.with_effect(grant,work,|_,effect|retirement.step(copy,effect))?{Some(poll)=>match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>{turn.result.map_err(|failure|failure.primary().cloned().unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"record child retirement failed without a primary cause")))?;},semio_framework_value::RetainedWorkPoll::Pending{..}=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"record child retirement cannot resume a pending effect"))},None=>{}}}return Ok(false)}
         if self.nested.is_some(){let child=self.nested.as_mut().unwrap();child.advance_unit(control)?;if child.phase==3{self.finish_nested(control)?;}return Ok(false)}
         if self.phase==0{self.plan(control)?;return Ok(false)}
         if self.advance_record(control)?{
@@ -326,7 +326,7 @@ impl RetainedRecordWriter{
 impl semio_framework_value::retirement::RetirementCursor for RetainedRecordWriter{
     fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
     fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.position_demand()}
-    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+    fn close_into<'reply>(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'reply,semio_framework_value::retirement::RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'reply,semio_framework_value::retirement::RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{if effect.invocation().is_none(){return Err(semio_framework_value::ValueError::invariant("native retirement requires its original producer invocation"))}let step=(||->semio_framework_value::retirement::RetirementStep{
         use semio_framework_value::retirement::{RetirementStep,record_retirement_work};
         if self.terminal_is_empty(){return RetirementStep::Complete(0);}
         let grant=effect.grant();
@@ -344,7 +344,7 @@ impl semio_framework_value::retirement::RetirementCursor for RetainedRecordWrite
             RetirementStep::Advanced=>match record_retirement_work(effect,1){Ok(work)=>{self.retirement_position+=1;RetirementStep::Progress(Default::default(),work)},Err((error,work))=>RetirementStep::Failure(error.into(),work)},
             other=>{self.retirement_position+=1;other},
         }
-    }
+    })();Ok(match step{semio_framework_value::retirement::RetirementStep::Failure(error,_)=>reply.complete(Err(error)),step=>reply.complete(Ok(step))})}
     fn terminal_is_empty(&self)->bool{self.retirement_position==12}
     fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
     fn next_birth_bytes(&self,_:usize)->Option<usize>{self.position_demand().ok().map(|demand|demand.capacity_bytes)}

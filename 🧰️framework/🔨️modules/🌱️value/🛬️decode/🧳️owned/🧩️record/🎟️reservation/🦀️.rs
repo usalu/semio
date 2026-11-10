@@ -19,7 +19,7 @@ pub trait NativeSequenceReservation:Default+RetireOwned{
  fn resume_recovery(&mut self,control:&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>;
  fn close_demand(&self)->Result<RetirementDemand,ValueError>;
  fn close_work_demand(&self)->Result<u64,ValueError>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->OriginalRetirementOutcome;
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>;
  fn terminal_is_empty(&self)->bool;
 }
 impl NativeSequenceReservation for (){
@@ -29,7 +29,7 @@ impl NativeSequenceReservation for (){
  fn resume_recovery(&mut self,_:&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"empty reservation has no original callback").into()),work:0}}
  fn close_demand(&self)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
  fn close_work_demand(&self)->Result<u64,ValueError>{Ok(0)}
- fn close_step(&mut self,_:RetainedCloneGrant)->OriginalRetirementOutcome{RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+ fn close_step(&mut self,_:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>{RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
  fn terminal_is_empty(&self)->bool{true}
 }
 #[derive(RetireOwned)]
@@ -63,7 +63,7 @@ impl NativePagedReservation{
    })}
    else if let Some(paid)=*header{control.receive_allocation(demand,effect,false,quoted,|_,_|{let turn=storage.select_reservation_from_header(&paid,limit,maximum-4);let work=turn.work+1;match turn.result{Ok(selected)=>{*complete=selected.is_none();*selection=selected;*header=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(demand))),work:work+3}},Err(e)=>RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,e.reason)),work}}})}
    else{control.receive_allocation(demand,effect,false,quoted,|_,_|{let turn=storage.inspect_selection_header(maximum-3);let work=turn.work;match turn.result{Ok(Some(paid))=>{*header=Some(paid);*context=Some((index,limit));*complete=false;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(demand))),work:work+3}},Ok(None)=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work},Err(e)=>RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,e.reason)),work}}})};
-   work=turn.work;turn.result.map(RetainedCloneStep::Progress)
+work=turn.work;turn.result.map(RetainedCloneStep::Progress)
   })();RetainedWorkOutcome{result,work}
  }
 }
@@ -74,6 +74,6 @@ impl NativeSequenceReservation for NativePagedReservation{
  fn resume_recovery(&mut self,control:&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{control.finish_receiving(&mut self.effect)}
  fn close_demand(&self)->Result<RetirementDemand,ValueError>{if self.effect.phase()!=NativeReceivingEffectPhase::Empty{return Err(ValueError::invariant("sequence reservation retains its original callbacks"))}Ok(if self.terminal_is_empty(){Default::default()}else{Self::close_metadata_demand()})}
  fn close_work_demand(&self)->Result<u64,ValueError>{self.close_demand()?;Ok(if self.terminal_is_empty(){0}else{5})}
- fn close_step(&mut self,grant:RetainedCloneGrant)->OriginalRetirementOutcome{let result=(||{let d=self.close_demand()?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}self.header=None;self.selection=None;self.context=None;self.finished=false;self.complete=false;Ok(RetainedCloneStep::Complete(receipt(d)))})();let work=if matches!(&result,Ok(RetainedCloneStep::Complete(p))if *p!=Default::default()){5}else{0};RetainedWorkOutcome{result,work}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>{let result=(||{let d=self.close_demand()?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}self.header=None;self.selection=None;self.context=None;self.finished=false;self.complete=false;Ok(RetainedCloneStep::Complete(receipt(d)))})();let work=if matches!(&result,Ok(RetainedCloneStep::Complete(p))if *p!=Default::default()){5}else{0};RetainedWorkOutcome{result,work}}
  fn terminal_is_empty(&self)->bool{self.effect.phase()==NativeReceivingEffectPhase::Empty&&self.header.is_none()&&self.selection.is_none()&&self.context.is_none()&&!self.finished&&!self.complete}
 }

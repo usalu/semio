@@ -9,7 +9,8 @@ pub use protocol::{PagedCloneElement,RetainedCursorRelease};
 pub use engine::*;
 
 #[cfg(test)]
-pub mod retained_clone{pub use semio_framework_value_retained_clone::retained_clone::*;pub use semio_framework_value_clone_source_testing::{FixtureSource,FixtureSourceBirth,with_effect,settled};}
+pub mod retained_clone{pub use semio_framework_value_retained_clone::retained_clone::*;pub use semio_framework_value_clone_source_testing::{FixtureSource,FixtureSourceBirth};}
+#[cfg(test)] #[path="../../../../🧬️contract/🧪️tests/⏱️effect/🦀️.rs"] pub mod effect;
 #[cfg(test)] pub use semio_framework_value_derive::{RetainedClone,RetireOwned};
 #[cfg(test)] use semio_framework_value_retained_clone::retained_clone::{RetainedClone,RetainedCloneCursor};
 #[cfg(test)] pub(crate) use semio_framework_value_testing_allocator::observe_retirement_allocations;

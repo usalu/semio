@@ -1,13 +1,15 @@
 //! 📋️ Clones one actual native field while retaining its original captured Store issuer.
 use super::SnapshotRead;
 use semio_framework_value::{RetirementDemand,RetainedWorkOutcome,RetainedAllocationEffect,OriginalRetirementPoll,RetirementPollExit,OriginalRetirementFailure,ValueError,ValueRefusalKind,RetainedCloneProgress,RetainedCloneStep};
-use semio_framework_value::retained_clone::{OriginalEffectReply,RetainedClone,RetainedCloneOwner,RetainedCloneSource,RetainedCloneSourceAdmission,RetainedOwnedProjection};
+use semio_framework_value::retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete,RetainedClone,RetainedCloneOwner,RetainedCloneSource,RetainedCloneSourceAdmission,RetainedNativeFieldProjection,RetainedOwnedProjectionAdmission};
 use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
 use std::mem::ManuallyDrop;
-pub struct SnapshotReadFieldClone<T:RetireOwned+Sync,U:RetainedClone>{read:ManuallyDrop<Option<SnapshotRead<T>>>,admission:Option<RetainedCloneSourceAdmission<T,SnapshotRead<T>>>,source:Option<RetainedCloneSource<T,SnapshotRead<T>>>,projection:Option<RetainedOwnedProjection<U>>,cursor:ManuallyDrop<RetainedCloneOwner<U>>,output:ManuallyDrop<Option<U>>,read_close:Option<ControlledRetirement<SnapshotRead<T>>>,output_close:Option<ControlledRetirement<U>>,project:for<'a>fn(&'a T)->&'a U,discriminator:usize,revision:[u8;32],generation:u64,phase:u8,closing:bool,progress:RetainedCloneProgress,work:u128}
+/// 📋️ Clones one native field of a captured read; the projection stays an alias of the original captured source until closed.
+pub struct SnapshotReadFieldClone<T:RetireOwned+Sync,U:RetainedClone>{read:ManuallyDrop<Option<SnapshotRead<T>>>,admission:Option<RetainedCloneSourceAdmission<T,SnapshotRead<T>>>,source:Option<RetainedCloneSource<T,SnapshotRead<T>>>,projection:ManuallyDrop<RetainedOwnedProjectionAdmission<U>>,cursor:ManuallyDrop<RetainedCloneOwner<U>>,output:ManuallyDrop<Option<U>>,read_close:Option<ControlledRetirement<SnapshotRead<T>>>,output_close:Option<ControlledRetirement<U>>,witness:RetainedNativeFieldProjection<T,U>,revision:[u8;32],generation:u64,phase:u8,closing:bool,pending:bool,progress:RetainedCloneProgress,work:u128}
 fn pending_refused(exit:RetirementPollExit)->OriginalRetirementFailure{match exit{RetirementPollExit::Failed(error)=>error,RetirementPollExit::Pending(_)=>ValueError::literal(ValueRefusalKind::InvariantViolated,"original native field child left its producer reply pending inside advance").into()}}
 impl<T:RetireOwned+Sync,U:RetainedClone> SnapshotReadFieldClone<T,U>{
- pub fn new(read:SnapshotRead<T>,project:for<'a>fn(&'a T)->&'a U,discriminator:usize,revision:[u8;32],generation:u64)->Self{Self{read:ManuallyDrop::new(Some(read)),admission:None,source:None,projection:None,cursor:ManuallyDrop::new(Default::default()),output:ManuallyDrop::new(None),read_close:None,output_close:None,project,discriminator,revision,generation,phase:0,closing:false,progress:Default::default(),work:0}}
+ /// 🪪️ Creates the clone of one actual native field; the accessor invariant (bounded, callback-free, nonallocating, nonunwinding) is carried by the unsafely constructed witness.
+ pub fn new(read:SnapshotRead<T>,witness:RetainedNativeFieldProjection<T,U>,revision:[u8;32],generation:u64)->Self{Self{read:ManuallyDrop::new(Some(read)),admission:None,source:None,projection:ManuallyDrop::new(Default::default()),cursor:ManuallyDrop::new(Default::default()),output:ManuallyDrop::new(None),read_close:None,output_close:None,witness,revision,generation,phase:0,closing:false,pending:false,progress:Default::default(),work:0}}
  pub fn original(&self)->Option<&SnapshotRead<T>>{self.read.as_ref().or_else(||self.admission.as_ref().and_then(RetainedCloneSourceAdmission::original_authority)).or_else(||self.source.as_ref().and_then(RetainedCloneSource::original_authority))}
  pub fn validate_current(&self)->Result<(),ValueError>{if self.original().is_some_and(|read|read.commit_authority_matches(self.generation,self.revision)){Ok(())}else{Err(ValueError::literal(ValueRefusalKind::Canceled,"original native field read changed at its issuer"))}}
 
@@ -20,10 +22,11 @@ impl<T:RetireOwned+Sync,U:RetainedClone> SnapshotReadFieldClone<T,U>{
   let turn=self.advance(effect);let result=match turn.result{Ok(None)=>Ok(self.source.is_some()),Ok(Some(output))=>{self.restore_output(output);Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"source admission unexpectedly transferred its native field").into())},Err(error)=>Err(error)};
   RetainedWorkOutcome{result,work:turn.work}
  }
- pub fn project_original<V:?Sized+Sync>(&self,discriminator:usize,project:for<'a>fn(&'a T)->&'a V,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<(RetainedOwnedProjection<V>,RetainedCloneProgress)>{
-  if self.closing{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::Canceled,"original native source is closing")),work:0}}
-  if let Err(error)=self.validate_current(){return RetainedWorkOutcome{result:Err(error),work:0}}
-  match self.source.as_ref(){Some(source)=>source.project_owned(discriminator,project,effect),None=>RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original native source admission has not completed")),work:0}}
+ /// 📥️ Projects another native field of the original source into the caller's admission slot.
+ pub fn project_original<'reply,V:?Sized+Sync>(&self,witness:&RetainedNativeFieldProjection<T,V>,output:&mut RetainedOwnedProjectionAdmission<V>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{
+  if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original native source is closing"))}self.validate_current()?;
+  let source=self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original native source admission has not completed"))?;
+  witness.admit_into(source.try_borrow()?,output,effect,reply)
  }
 
  pub fn revision(&self)->[u8;32]{self.revision}
@@ -35,15 +38,19 @@ impl<T:RetireOwned+Sync,U:RetainedClone> SnapshotReadFieldClone<T,U>{
   if self.closing{return self.next_close_demands(copy)}self.validate_current()?;
   match self.phase{
    1=>{let admission=self.admission.as_ref().unwrap();if admission.phase()=="ready"{Ok(RetirementDemand{depth:1,..Default::default()})}else{admission.next_demand()}},
-   2=>Ok(RetainedOwnedProjection::<U>::constructor_demand()),
-   3=>self.cursor.advance_demands(self.projection.as_ref().unwrap().borrow()?,copy,maximum_work_units),
+   2=>self.witness.demand(self.source.as_ref().unwrap().try_borrow()?,&self.projection),
+   3=>self.cursor.advance_demands(self.projection.borrow()?,copy,maximum_work_units),
    4=>self.cursor.take_demand(),
    5=>self.cursor.selected_close_demand(copy),
-   6=>self.projection.as_ref().unwrap().next_close_demand(copy),
+   6=>self.projection.close_demand(copy),
    _=>Ok(RetirementDemand{depth:1,..Default::default()}),
   }
  }
  pub fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<U>,OriginalRetirementFailure>{self.progress=Default::default();self.work=0;let result=self.advance_original(effect).map_err(|error|{let original=error.retained_progress();if original!=Default::default(){self.progress=original}error.with_retained_progress(self.progress)});RetainedWorkOutcome{result,work:self.work}}
+ fn settle(&mut self,effect:&mut RetainedAllocationEffect<'_>,before:u128,slot:Option<Result<RetainedCloneStep,OriginalRetirementFailure>>)->Result<Option<RetainedCloneStep>,OriginalRetirementFailure>{
+  self.work=effect.performed_work().saturating_sub(before);self.progress=Default::default();self.pending=slot.is_none();
+  match slot{Some(Ok(step))=>{self.progress=step.progress();Ok(Some(step))},Some(Err(error))=>Err(error),None=>Ok(None)}
+ }
  fn advance_original(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<U>,OriginalRetirementFailure>{
   let grant=effect.grant();
   if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original native field clone is closing").into())}let demand=self.next_demands(grant.maximum_copy_bytes,effect.maximum_work_units())?;
@@ -51,12 +58,12 @@ impl<T:RetireOwned+Sync,U:RetainedClone> SnapshotReadFieldClone<T,U>{
   self.progress.copied_items=1;
   match self.phase{
    0=>{crate::pay_pure_work(effect,&mut self.work)?;let read=self.read.take().unwrap();match read.source_admission(){Ok(admission)=>{self.admission=Some(admission);self.phase=1},Err((error,read))=>{*self.read=Some(read);return Err(error.into())}}},
-   1=>{let admission=self.admission.as_mut().unwrap();let turn=if admission.phase()=="ready"{admission.take_output(&mut self.source,grant)}else{admission.advance(effect)};self.work=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();if admission.terminal_is_empty(){self.admission=None;self.phase=2}},
-   2=>{let project=self.project;let turn=self.source.as_ref().unwrap().project_owned(self.discriminator,project,effect);self.work=turn.work;self.progress=Default::default();let(projection,progress)=turn.result?;self.projection=Some(projection);self.progress=progress;self.phase=3},
-   3=>{let turn=self.cursor.advance(self.projection.as_ref().unwrap().borrow()?,grant.maximum_copy_bytes,effect.maximum_work_units(),effect);self.work=turn.work;self.progress=Default::default();let step=turn.result?;self.progress=step.progress();if matches!(step,RetainedCloneStep::Complete(_)){self.phase=4}},
-   4=>{let before=effect.performed_work();let mut slot=None;let mut output=None;{let reply=OriginalEffectReply::borrow(&mut slot)?;drop(self.cursor.take(&mut output,effect,reply)?);}self.work=effect.performed_work().saturating_sub(before);self.progress=Default::default();match slot.take(){Some(Ok(RetainedCloneStep::Complete(progress)))=>{*self.output=output.take();self.progress=progress;self.phase=5},Some(Ok(RetainedCloneStep::Progress(_)))|None=>{},Some(Err(error))=>return Err(error.into())}},
-   5=>{let turn=RetirementPollExit::settled(self.cursor.close_step(effect)).map_err(pending_refused)?;self.work=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();if self.cursor.terminal_is_empty(){self.phase=6}},
-   6=>{let projection=self.projection.as_mut().unwrap();let turn=RetirementPollExit::settled(projection.close_step(effect)).map_err(pending_refused)?;self.work=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();if projection.terminal_is_empty(){self.projection=None;self.phase=7}},
+   1=>{let admission=self.admission.as_mut().unwrap();let turn=if admission.phase()=="ready"{admission.take_output(&mut self.source,effect)}else{admission.advance(effect)};self.work=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();if admission.terminal_is_empty(){self.admission=None;self.phase=2}},
+   2=>{let before=effect.performed_work();let mut slot=None;{let reply=OriginalEffectReply::borrow(&mut slot)?;let source=self.source.as_ref().unwrap().try_borrow()?;drop(self.witness.admit_into(source,&mut self.projection,effect,reply)?);}self.work=effect.performed_work().saturating_sub(before);self.progress=Default::default();match slot.take(){Some(Ok(step))=>{if matches!(step,RetainedCloneStep::Complete(_)){self.progress=step.progress();self.phase=3}},None=>{},Some(Err(error))=>return Err(error.into())}},
+   3=>{let before=effect.performed_work();let mut slot=None;{let reply=OriginalEffectReply::borrow(&mut slot)?;let source=self.projection.borrow()?;let owner=&mut *self.cursor;drop(if self.pending{owner.recover_advance_into(source,grant.maximum_copy_bytes,effect.maximum_work_units(),effect,reply)?}else{owner.advance_into(source,grant.maximum_copy_bytes,effect.maximum_work_units(),effect,reply)?});}if let Some(step)=self.settle(effect,before,slot.take())?{if matches!(step,RetainedCloneStep::Complete(_)){self.phase=4}}},
+   4=>{let before=effect.performed_work();let mut slot=None;let mut output=None;{let reply=OriginalEffectReply::borrow(&mut slot)?;drop(if self.pending{self.cursor.recover_take(&mut output,effect,reply)?}else{self.cursor.take(&mut output,effect,reply)?});}self.work=effect.performed_work().saturating_sub(before);self.progress=Default::default();self.pending=slot.is_none();match slot.take(){Some(Ok(RetainedCloneStep::Complete(progress)))=>{*self.output=output.take();self.progress=progress;self.phase=5},Some(Ok(RetainedCloneStep::Progress(_)))|None=>{},Some(Err(error))=>return Err(error.into())}},
+   5=>{let before=effect.performed_work();let mut slot=None;{let reply=OriginalEffectReply::borrow(&mut slot)?;drop(if self.pending{self.cursor.recover_close_into(grant.maximum_copy_bytes,effect,reply)?}else{self.cursor.close_into(grant.maximum_copy_bytes,effect,reply)?});}self.settle(effect,before,slot.take())?;if self.cursor.terminal_is_empty(){self.phase=6}},
+   6=>{let turn=RetirementPollExit::settled(self.projection.close_step(grant.maximum_copy_bytes,effect)).map_err(pending_refused)?;self.work=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();if self.projection.terminal_is_empty(){self.phase=7}},
    7=>{crate::pay_pure_work(effect,&mut self.work)?;self.phase=8;return Ok(self.output.take())},
    _=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original native field output was transferred").into()),
   }Ok(None)
@@ -66,7 +73,7 @@ impl<T:RetireOwned+Sync,U:RetainedClone> SnapshotReadFieldClone<T,U>{
  pub fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if let Some(admission)=self.admission.as_ref(){return admission.next_return_demand()}
   if !self.cursor.terminal_is_empty(){return self.cursor.selected_close_demand(copy)}
-  if let Some(projection)=self.projection.as_ref(){return projection.next_close_demand(copy)}
+  if !self.projection.terminal_is_empty(){return self.projection.close_demand(copy)}
   if let Some(source)=self.source.as_ref(){return source.next_close_demand(copy)}
   if let Some(owner)=self.read_close.as_ref(){return owner.selected_demand(copy)}
   if let Some(owner)=self.output_close.as_ref(){return owner.selected_demand(copy)}
@@ -74,22 +81,22 @@ impl<T:RetireOwned+Sync,U:RetainedClone> SnapshotReadFieldClone<T,U>{
  }
  pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.progress=Default::default();self.work=0;let result=self.close_original(effect).map_err(|error|match error{RetirementPollExit::Failed(error)=>{let original=error.retained_progress();if original!=Default::default(){self.progress=original}RetirementPollExit::Failed(error.with_retained_progress(self.progress))},pending=>pending});let work=self.work;RetirementPollExit::finish(result,work)}
  fn close_original(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
-  let grant=effect.grant();
-  if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original native field close was not begun").into())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.next_close_demands(grant.maximum_copy_bytes)?;
+  let grant=effect.grant();let body=grant.maximum_copy_bytes;
+  if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original native field close was not begun").into())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.next_close_demands(body)?;
   if grant.maximum_items==0||effect.maximum_work_units()==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}
   if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,effect);self.work+=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();if let Some((read,()))=returned{*self.read=Some(read)}if admission.terminal_is_empty(){self.admission=None}return Ok(RetainedCloneStep::Progress(self.progress))}
-  if !self.cursor.terminal_is_empty(){let turn=RetirementPollExit::settled(self.cursor.close_step(effect))?;self.work+=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();return Ok(RetainedCloneStep::Progress(self.progress))}
-  if let Some(projection)=self.projection.as_mut(){let turn=RetirementPollExit::settled(projection.close_step(effect))?;self.work+=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();if projection.terminal_is_empty(){self.projection=None}return Ok(RetainedCloneStep::Progress(self.progress))}
-  if let Some(source)=self.source.as_mut(){let turn=RetirementPollExit::settled(source.close_step(effect))?;self.work+=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();if source.terminal_is_empty(){self.source=None}return Ok(RetainedCloneStep::Progress(self.progress))}
+  if !self.cursor.terminal_is_empty(){let before=effect.performed_work();let mut slot=None;{let reply=OriginalEffectReply::borrow(&mut slot)?;drop(if self.pending{self.cursor.recover_close_into(body,effect,reply)?}else{self.cursor.close_into(body,effect,reply)?});}self.settle(effect,before,slot.take())?;return Ok(RetainedCloneStep::Progress(self.progress))}
+  if !self.projection.terminal_is_empty(){let turn=RetirementPollExit::settled(self.projection.close_step(body,effect))?;self.work+=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();return Ok(RetainedCloneStep::Progress(self.progress))}
+  if let Some(source)=self.source.as_mut(){let turn=RetirementPollExit::settled(source.close_step(body,effect))?;self.work+=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();if source.terminal_is_empty(){self.source=None}return Ok(RetainedCloneStep::Progress(self.progress))}
   if let Some(read)=self.read.take(){crate::pay_pure_work(effect,&mut self.work)?;self.read_close=Some(ControlledRetirement::new(read).unwrap_or_else(|_|unreachable!("original captured read supports controlled retirement")));self.progress=RetainedCloneProgress{copied_items:1,..Default::default()};return Ok(RetainedCloneStep::Progress(self.progress))}
-  if let Some(owner)=self.read_close.as_mut(){let turn=RetirementPollExit::settled(owner.step(effect))?;self.work+=turn.work;self.progress=owner.step_progress();let step=turn.result?;if owner.terminal_is_empty(){self.read_close=None}return Ok(RetainedCloneStep::Progress(step.progress()))}
+  if let Some(owner)=self.read_close.as_mut(){let turn=RetirementPollExit::settled(owner.step(body,effect))?;self.work+=turn.work;self.progress=owner.step_progress();let step=turn.result?;if owner.terminal_is_empty(){self.read_close=None}return Ok(RetainedCloneStep::Progress(step.progress()))}
   if let Some(output)=self.output.take(){crate::pay_pure_work(effect,&mut self.work)?;self.output_close=Some(ControlledRetirement::new(output).unwrap_or_else(|_|unreachable!("original cloned field supports controlled retirement")));self.progress=RetainedCloneProgress{copied_items:1,..Default::default()};return Ok(RetainedCloneStep::Progress(self.progress))}
-  if let Some(owner)=self.output_close.as_mut(){let turn=RetirementPollExit::settled(owner.step(effect))?;self.work+=turn.work;self.progress=owner.step_progress();let step=turn.result?;if owner.terminal_is_empty(){self.output_close=None}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+  if let Some(owner)=self.output_close.as_mut(){let turn=RetirementPollExit::settled(owner.step(body,effect))?;self.work+=turn.work;self.progress=owner.step_progress();let step=turn.result?;if owner.terminal_is_empty(){self.output_close=None}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
   Ok(RetainedCloneStep::Complete(Default::default()))
  }
- pub fn terminal_is_empty(&self)->bool{self.closing&&self.read.is_none()&&self.admission.is_none()&&self.source.is_none()&&self.projection.is_none()&&self.cursor.terminal_is_empty()&&self.output.is_none()&&self.read_close.is_none()&&self.output_close.is_none()}
+ pub fn terminal_is_empty(&self)->bool{self.closing&&self.read.is_none()&&self.admission.is_none()&&self.source.is_none()&&self.projection.terminal_is_empty()&&self.cursor.terminal_is_empty()&&self.output.is_none()&&self.read_close.is_none()&&self.output_close.is_none()}
 }
-impl<T:RetireOwned+Sync,U:RetainedClone> Drop for SnapshotReadFieldClone<T,U>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native field clone retains its original captured read or output");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.read);ManuallyDrop::drop(&mut self.output);ManuallyDrop::drop(&mut self.cursor)}}}}
+impl<T:RetireOwned+Sync,U:RetainedClone> Drop for SnapshotReadFieldClone<T,U>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native field clone retains its original captured read or output");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.read);ManuallyDrop::drop(&mut self.output);ManuallyDrop::drop(&mut self.cursor);ManuallyDrop::drop(&mut self.projection)}}}}
 
 #[cfg(test)]
 mod laws{

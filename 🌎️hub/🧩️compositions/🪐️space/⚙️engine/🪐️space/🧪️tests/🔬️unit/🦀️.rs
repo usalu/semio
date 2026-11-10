@@ -95,7 +95,7 @@ use semio_plugin::{App, AppIo, HistoryView};
         let puzzle_ports = vec![
             MediaPortSpec {
                 id: "in-a".into(),
-                label: "In A".into(),
+                label: LocalizedLabel::data("In A"),
                 direction: MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
                 kind_id: Some("topology".into()),
@@ -104,7 +104,7 @@ use semio_plugin::{App, AppIo, HistoryView};
             },
             MediaPortSpec {
                 id: "out-a".into(),
-                label: "Out A".into(),
+                label: LocalizedLabel::data("Out A"),
                 direction: MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
                 kind_id: Some("topology".into()),
@@ -113,7 +113,7 @@ use semio_plugin::{App, AppIo, HistoryView};
             },
             MediaPortSpec {
                 id: "out-b".into(),
-                label: "Out B".into(),
+                label: LocalizedLabel::data("Out B"),
                 direction: MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
                 kind_id: Some("topology".into()),
@@ -125,7 +125,7 @@ use semio_plugin::{App, AppIo, HistoryView};
     
         let shooting_ports = vec![MediaPortSpec {
             id: "scene-in".into(),
-            label: "Scene".into(),
+            label: LocalizedLabel::data("Scene"),
             direction: MediaPortDirection::In,
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
             kind_id: Some("2d.shooting".into()),
@@ -158,7 +158,7 @@ use semio_plugin::{App, AppIo, HistoryView};
             MediaPortDirection::In => "in",
             MediaPortDirection::Out => "out",
         };
-        WorkflowMediaPort { id: format!("{node_id}:{spec_id}:{dir_word}"), spec: MediaPortSpec { id: spec_id.into(), label: spec_id.into(), direction, media_type, kind_id: Some(kind_id.into()), required: false, multiplicity: PortMultiplicity::One } }
+        WorkflowMediaPort { id: format!("{node_id}:{spec_id}:{dir_word}"), spec: MediaPortSpec { id: spec_id.into(), label: LocalizedLabel::data(spec_id), direction, media_type, kind_id: Some(kind_id.into()), required: false, multiplicity: PortMultiplicity::One } }
     }
 }
 

@@ -214,28 +214,28 @@ async fn artifact_store_snapshot_roots_and_final_envelope_transfer_in_exact_clos
     let phase = ArtifactStoreCursorDisposerPhase::RuntimeOwners(5);
     let demand = store.close_cursor_demands(phase, 7).unwrap();
     let grant = RetainedCloneGrant { maximum_copy_bytes: 7, maximum_release_bytes: 0, ..physical_test_close_grant() };
-    let (denied, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| store.close_cursor_admit(phase, RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant }));
+    let (denied, requested, released) = {let denied_grant=RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant };effect_tests::with_effect(denied_grant,effect_tests::CPU,|effect|semio_framework_trace_memory_testing::observe_backing(||store.close_cursor_admit(phase,denied_grant,effect))).0};
     assert!(denied.is_err());
     assert_eq!((requested, released), (0, 0));
     assert_eq!(store.live.tail_undo_cache.as_ref().unwrap().0.as_ptr(), original);
-    let (admitted, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| store.close_cursor_admit(phase, grant));
+    let (admitted, requested, released) = effect_tests::with_effect(grant,effect_tests::CPU,|effect|semio_framework_trace_memory_testing::observe_backing(||store.close_cursor_admit(phase,grant,effect))).0;
     let (tail_id, receipt) = admitted.unwrap();
     assert_eq!((requested, released), (receipt.retained_capacity_bytes, receipt.released_bytes));
     assert_eq!(receipt.retained_capacity_bytes, demand.capacity_bytes);
     drive_retirement_terminal(tail_id.expect("original tail id retires before snapshot"));
     assert_eq!(store.live.tail_undo_cache.as_ref().unwrap().0.capacity(), 0);
-    let (tail, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| store.close_cursor_admit(ArtifactStoreCursorDisposerPhase::TailSnapshot, grant));
+    let (tail, requested, released) = effect_tests::with_effect(grant,effect_tests::CPU,|effect|semio_framework_trace_memory_testing::observe_backing(||store.close_cursor_admit(ArtifactStoreCursorDisposerPhase::TailSnapshot,grant,effect))).0;
     assert!(tail.unwrap().0.is_none());
     assert_eq!((requested, released), (0, 0));
     for phase in [ArtifactStoreCursorDisposerPhase::CurrentSnapshot, ArtifactStoreCursorDisposerPhase::Envelope] {
         let demand = store.close_cursor_demands(phase, 7).unwrap();
         let grant = RetainedCloneGrant { maximum_copy_bytes: 7, maximum_release_bytes: 0, ..physical_test_close_grant() };
-        let (admitted, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| store.close_cursor_admit(phase, grant));
+        let (admitted, requested, released) = effect_tests::with_effect(grant,effect_tests::CPU,|effect|semio_framework_trace_memory_testing::observe_backing(||store.close_cursor_admit(phase,grant,effect))).0;
         let (owner, receipt) = admitted.unwrap();
         assert_eq!((requested, released), (receipt.retained_capacity_bytes, receipt.released_bytes));
         assert_eq!(receipt.retained_capacity_bytes, demand.capacity_bytes);
         drive_retirement_terminal(owner.expect("current and whole envelope transfer exactly once"));
-        assert!(store.close_cursor_admit(phase, grant).unwrap().0.is_none());
+        assert!(effect_tests::with_effect(grant,effect_tests::CPU,|effect|store.close_cursor_admit(phase,grant,effect)).0.unwrap().0.is_none());
     }
     assert!(store.live.current_detached && store.log.envelope_detached);
     close_test_store(&mut store);

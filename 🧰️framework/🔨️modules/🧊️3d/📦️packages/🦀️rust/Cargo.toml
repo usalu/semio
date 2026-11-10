@@ -23,6 +23,7 @@ semio-framework-3d-mesh-document = { path = "../../🥽️mesh/📄️document/�
 semio-framework-3d-mesh-contract = { path = "../../🥽️mesh/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-3d-mesh-clipping = { path = "../../🥽️mesh/🛠️modeling/✂️clipping/📦️packages/🦀️rust" }
 semio-framework-3d-brep-vector.workspace = true
+semio-framework-value-source-hold = { path = "../../../🌱️value/🔗️source-hold/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-mesh-engine.workspace = true
 # 🧬️ `#[derive(ToValue, FromValue)]`; types here target `#[value(crate = "::semio_framework_value")]`.

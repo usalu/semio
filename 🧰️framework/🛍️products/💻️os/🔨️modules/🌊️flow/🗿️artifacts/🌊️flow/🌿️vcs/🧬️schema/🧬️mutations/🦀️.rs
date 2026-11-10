@@ -1,6 +1,5 @@
 //! 🧬️ Transparent Flow direct-leaf dispatch and generic codec surfaces.
 use super::{FlowHostSnapshot, FlowDiff};
-use semio_framework_value::retirement::{deferred, deferred_birth_bytes_for, sequence, sequence_birth_bytes, RetireOwned, RetirementCursor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧩️Leaves
@@ -26,7 +25,7 @@ pub use change_layout::ChangeLayout;
 
 //#region 🧬️Aggregate
 /// 🔮️ First-party Flow mutation wire aggregate.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = FlowHostSnapshot, diff = FlowDiff, schema = "flow.host_snapshot", retire_cold = retire_flow_mutation, reference = FlowHostSnapshot, reference_diff = FlowDiff)]
@@ -86,28 +85,6 @@ impl crate::os_spr::OpBinary for FlowMutation {
         crate::os_dsl::variants_binary::decode_op(bytes)
     }
 }
+semio_os_kernel::original_ordinal_operation_receiving!(FlowMutation);
 //#endregion 🔤️Codecs
 
-//#region 🧹️OwnedRetirement
-macro_rules! owned_record {
-    ($type:ty {$($field:ident),+})=>{impl RetireOwned for $type {
-        fn retirement(self)->Box<dyn RetirementCursor> {let Self {$($field,)*..}=self;sequence(vec![$(deferred($field)),+])}
-        fn retirement_birth_bytes(&self)->Option<usize> {sequence_birth_bytes(&[$(deferred_birth_bytes_for(&self.$field)),+])}
-        fn controlled_retirement_supported()->bool {true}
-    }};
-}
-owned_record!(crate::AddWidget {widget});
-owned_record!(crate::RemoveWidget {id});
-owned_record!(crate::MoveWidget {id});
-owned_record!(crate::ChangeWidget {id,widget});
-owned_record!(crate::AddSynapse {synapse});
-owned_record!(crate::RemoveSynapse {id});
-owned_record!(crate::MoveSynapse {id});
-owned_record!(crate::ChangeSynapse {id,synapse});
-owned_record!(crate::ChangeLayout {entries});
-impl RetireOwned for crate::FlowMutation {
-    fn retirement(self)->Box<dyn RetirementCursor> {match self {Self::AddWidget(value)=>value.retirement(),Self::RemoveWidget(value)=>value.retirement(),Self::MoveWidget(value)=>value.retirement(),Self::ChangeWidget(value)=>value.retirement(),Self::AddSynapse(value)=>value.retirement(),Self::RemoveSynapse(value)=>value.retirement(),Self::MoveSynapse(value)=>value.retirement(),Self::ChangeSynapse(value)=>value.retirement(),Self::ChangeLayout(value)=>value.retirement()}}
-    fn retirement_birth_bytes(&self)->Option<usize> {match self {Self::AddWidget(value)=>value.retirement_birth_bytes(),Self::RemoveWidget(value)=>value.retirement_birth_bytes(),Self::MoveWidget(value)=>value.retirement_birth_bytes(),Self::ChangeWidget(value)=>value.retirement_birth_bytes(),Self::AddSynapse(value)=>value.retirement_birth_bytes(),Self::RemoveSynapse(value)=>value.retirement_birth_bytes(),Self::MoveSynapse(value)=>value.retirement_birth_bytes(),Self::ChangeSynapse(value)=>value.retirement_birth_bytes(),Self::ChangeLayout(value)=>value.retirement_birth_bytes()}}
-    fn controlled_retirement_supported()->bool {true}
-}
-//#endregion 🧹️OwnedRetirement

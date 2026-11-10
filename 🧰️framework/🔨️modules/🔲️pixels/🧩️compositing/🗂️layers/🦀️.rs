@@ -1,8 +1,8 @@
 //! 🗂️ Retained preparation of centered raster layers for the shared compositor.
 use super::*;
 use crate::retirement::MaskBytes;
-use semio_framework_value::{AuthoringWallet,RetainedCloneGrant};
-const CLOSE_WORK:u64=1<<20;
+use semio_framework_value::RetainedCloneGrant;
+use semio_framework_2d::retirement::EffectTurns;
 
 /// 🎭️ Effective coverage of an imported RGBA mask, shared by compositing and mask authoring.
 pub fn mask_coverage(pixel:[u8;4])->u8 {
@@ -217,16 +217,15 @@ impl RasterStackJob {
         let output=if !self.cancelled&&self.failed.is_none()&&self.phase=="complete"{self.output.take()}else{None};
         self.cancelled=true;(RasterStackRetirement::new(self),output)
     }
-    /// 🎁️ Returns the finished output after paying each retirement step from the caller's explicit authoring wallet.
-    pub fn into_result(self,wallet:&mut AuthoringWallet)->Result<RasterStackResult,PixelEditError> {
+    /// 🎁️ Returns the finished output after closing each retirement step inside an original effect the caller's host opens.
+    pub fn into_result(self,turns:&mut impl EffectTurns)->Result<RasterStackResult,PixelEditError> {
         let status=self.result().map(|_|());let(mut retired,output)=self.into_retirement();
-        let denied=|_|refused("Stack retirement refused its authoring wallet");
+        let denied=|_|refused("Stack retirement refused its quote");
         while !retired.terminal_is_empty() {
             let copy=retired.next_copy_byte_demand().map_err(denied)?;let release=retired.next_release_byte_demand().map_err(denied)?;
             let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retired.next_capacity_byte_demand(if copy>0{copy}else{release}).map_err(denied)?,maximum_release_bytes:release,maximum_depth:retired.next_depth_demand().map_err(denied)?};
-            let Some((turn,_))=wallet.run_settled(grant,CLOSE_WORK,|effect|retired.close_step(effect)).map_err(denied)? else {return Err(refused("Stack retirement exceeded its authoring wallet"));};
-            let work=turn.work;let step=turn.result.map_err(|_|refused("Stack retirement refused its physical grant"))?;
-            wallet.post(step.progress()).map_err(denied)?;
+            let semio_framework_value::RetainedWorkPoll::Complete(turn)=turns.turn(grant,|effect|retired.close_step(copy,effect)).map_err(denied)? else {return Err(refused("Stack retirement stayed pending"));};
+            let work=turn.work;turn.result.map_err(|_|refused("Stack retirement refused its physical grant"))?;
             if work==0 {return Err(refused("Stack retirement made no funded progress"));}
         }
         status?;output.ok_or(PixelEditError::Incomplete)

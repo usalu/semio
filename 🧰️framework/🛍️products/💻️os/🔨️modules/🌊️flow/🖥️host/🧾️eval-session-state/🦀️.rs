@@ -102,10 +102,10 @@ pub struct FlowEvalSessionState {
     pub(super) retiring_geometry_port: Option<semio_os_flow_geometry::GeometryPortRetirement>,
     pub geometry_port: Option<Box<dyn semio_os_flow_geometry::GeometryPort>>,
     pub(super) operator_registry: Option<neural::SharedRegistry>,
-    pub(super) neural_cache: Option<Arc<NeuralCache>>,
-    pub(super) previous_snapshot: Option<Arc<TreeSnapshot>>,
-    pub(super) previous_channels: Option<Arc<EvalChannels>>,
-    pub eval_json: Option<Arc<String>>,
+    pub(super) neural_cache: Option<SharedOwner<NeuralCache>>,
+    pub(super) previous_snapshot: Option<SharedOwner<TreeSnapshot>>,
+    pub(super) previous_channels: Option<SharedOwner<EvalChannels>>,
+    pub eval_json: Option<SharedOwner<String>>,
     /// 🖼️ The evaluation a preview PAINTS while this one is still running: the live walk's own
     /// answer, with every node the live walk has not answered YET filled in from the last CONVERGED
     /// evaluation of the same node. Identical to [`FlowEvalSessionState::eval_json`] the moment the
@@ -333,8 +333,10 @@ struct SessionResetFields {
 }
 
 
+#[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub(super) struct SessionResetSources {
-    eval: Option<Arc<String>>,
+    eval: Option<SharedOwner<String>>,
     pub(super) baseline:FlowBaselineLeases,
     pub fields: SessionResetFields,
 }
@@ -359,19 +361,6 @@ impl SessionResetSources {
         state.pending_tessellate_by_hash=pending;state.tessellate_handle_by_hash=tessellate_handles;
         state.tessellate_progress_by_hash=tessellation;state.eval_progress_by_hash=evaluation;state.extension_evaluate_fault=fault;if let Some(latches)=latches{state.window_tick_latches=latches;}
     }
-}
-
-impl RetireOwned for SessionResetSources {
-    fn retirement(self)->Box<dyn RetirementCursor>{
-        use semio_framework_value::retirement::{RetireOwned,deferred,sequence,arc_custody::SharedControlledRetirement};
-        let eval:Box<dyn RetirementCursor>=match self.eval{Some(value)=>Box::new(SharedControlledRetirement::lease(value)),None=>().retirement()};
-        sequence(vec![eval,deferred(self.baseline),deferred(self.fields)])
-    }
-    fn retirement_birth_bytes(&self)->Option<usize>{
-        use semio_framework_value::retirement::{deferred_birth_bytes_for,leaf_birth_bytes,sequence_birth_bytes,arc_custody::shared_retirement_birth_bytes};
-        sequence_birth_bytes(&[if self.eval.is_some(){shared_retirement_birth_bytes::<String>()}else{leaf_birth_bytes::<()>()},deferred_birth_bytes_for(&self.baseline),deferred_birth_bytes_for(&self.fields)])
-    }
-    fn controlled_retirement_supported()->bool{true}
 }
 
 #[derive(semio_framework_value::RetireOwned)]
@@ -400,6 +389,7 @@ pub(super) struct SessionPreviewRetention {
     pub(super) removed:Option<ControlledRetirement<SessionRetentionRow>>,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 pub(super) enum SessionCollectionOwner {
     TickSnapshot(FlowHostSnapshot),
     InvocationOrigins(Vec<FlowInvocationEntry>),
@@ -408,7 +398,7 @@ pub(super) enum SessionCollectionOwner {
     Cancellation(SessionPreviewCancellationSources),
     Reset(SessionResetSources),
     Baseline(FlowBaselineLeases),
-    SourceLease(Arc<String>),
+    SourceLease(SharedOwner<String>),
     Text(String),
     Handles(HistoryFoldIndex<String, ()>),
     Meshes(HistoryFoldIndex<String, MeshData>),
@@ -417,55 +407,17 @@ pub(super) enum SessionCollectionOwner {
     Latches(HistoryFoldIndex<u64, FlowEvalWindowTickLatch>),
     Tessellation(HistoryFoldIndex<u64, PreviewTessellateProgress>),
     Evaluation(HistoryFoldIndex<u64, PreviewEvalProgress>),
-    Snapshot(Arc<TreeSnapshot>),
-    Channels(Arc<EvalChannels>),
+    Snapshot(SharedOwner<TreeSnapshot>),
+    Channels(SharedOwner<EvalChannels>),
     Registry(neural::SharedRegistry),
-    Cache(Arc<NeuralCache>),
+    Cache(SharedOwner<NeuralCache>),
     Fault(ExtensionEvaluateFault),
 }
 
-impl RetireOwned for SessionCollectionOwner {
-    fn retirement(self)->Box<dyn RetirementCursor>{
-        use semio_framework_value::retirement::{RetireOwned,arc_custody::SharedControlledRetirement};
-        match self{
-            Self::TickSnapshot(value)=>value.retirement(),
-            Self::InvocationOrigins(value)=>value.retirement(),
-            Self::LivePublication(value)=>value.retirement(),
-            Self::Retention(value)=>value.retirement(),
-            Self::Cancellation(value)=>value.retirement(),
-            Self::Reset(value)=>value.retirement(),
-            Self::Baseline(value)=>value.retirement(),
-            Self::SourceLease(value)=>Box::new(SharedControlledRetirement::lease(value)),
-            Self::Snapshot(value)=>Box::new(SharedControlledRetirement::lease(value)),Self::Channels(value)=>Box::new(SharedControlledRetirement::lease(value)),
-            Self::Cache(value)=>Box::new(SharedControlledRetirement::lease(value)),
-            Self::Text(value)=>value.retirement(),Self::Handles(value)=>value.retirement(),Self::Meshes(value)=>value.retirement(),Self::Diagnostics(value)=>value.retirement(),Self::Pending(value)=>value.retirement(),
-            Self::Latches(value)=>value.retirement(),Self::Tessellation(value)=>value.retirement(),Self::Evaluation(value)=>value.retirement(),
-            Self::Registry(value)=>value.retirement(),Self::Fault(value)=>value.retirement(),
-        }
-    }
-    fn retirement_birth_bytes(&self)->Option<usize>{
-        use semio_framework_value::retirement::{RetireOwned,arc_custody::shared_retirement_birth_bytes};
-        match self{
-            Self::TickSnapshot(value)=>value.retirement_birth_bytes(),
-            Self::InvocationOrigins(value)=>value.retirement_birth_bytes(),
-            Self::LivePublication(value)=>value.retirement_birth_bytes(),
-            Self::Retention(value)=>value.retirement_birth_bytes(),
-            Self::Cancellation(value)=>value.retirement_birth_bytes(),
-            Self::Reset(value)=>value.retirement_birth_bytes(),
-            Self::Baseline(value)=>value.retirement_birth_bytes(),
-            Self::SourceLease(_)=>Some(shared_retirement_birth_bytes::<String>()),Self::Cache(_)=>Some(shared_retirement_birth_bytes::<NeuralCache>()),
-            Self::Snapshot(_)=>Some(shared_retirement_birth_bytes::<TreeSnapshot>()),Self::Channels(_)=>Some(shared_retirement_birth_bytes::<EvalChannels>()),
-            Self::Text(value)=>value.retirement_birth_bytes(),Self::Handles(value)=>value.retirement_birth_bytes(),Self::Meshes(value)=>value.retirement_birth_bytes(),Self::Diagnostics(value)=>value.retirement_birth_bytes(),Self::Pending(value)=>value.retirement_birth_bytes(),
-            Self::Latches(value)=>value.retirement_birth_bytes(),Self::Tessellation(value)=>value.retirement_birth_bytes(),Self::Evaluation(value)=>value.retirement_birth_bytes(),
-            Self::Registry(value)=>value.retirement_birth_bytes(),Self::Fault(value)=>value.retirement_birth_bytes(),
-        }
-    }
-    fn controlled_retirement_supported()->bool{true}
-}
-
 pub(super) fn retire_session_collection_cold(value:SessionCollectionOwner){
- let mut owner=ControlledRetirement::new(value).unwrap_or_else(|_|unreachable!("declared cold session source"));
- for _ in 0..FLOW_EVAL_SESSION_COLD_CLOSE_STEPS{if owner.terminal_is_empty(){return}let copy=4096.max(owner.next_copy_byte_demand().expect("cold session source copy"));let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).expect("cold session source capacity"),maximum_release_bytes:owner.next_release_byte_demand().expect("cold session source release"),maximum_depth:owner.next_depth_demand().expect("cold session source depth")};owner.step(grant).expect("cold session source close");}panic!("cold original session source did not terminate");
+ let mut owner=ControlledRetirement::retain(value);
+ for _ in 0..FLOW_EVAL_SESSION_COLD_CLOSE_STEPS{if owner.terminal_is_empty(){return}let copy=4096.max(owner.next_copy_byte_demand().expect("cold session source copy"));let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).expect("cold session source capacity"),maximum_release_bytes:owner.next_release_byte_demand().expect("cold session source release"),maximum_depth:owner.next_depth_demand().expect("cold session source depth")};let mut turn=semio_framework_job::OriginalRetirementPump::new().turn(1<<16,u64::MAX,||Some(0),grant).expect("cold session source turn");turn.with_effect(|effect|owner.step(copy,effect)).expect("cold session source effect");}
+ panic!("cold original session source did not terminate");
 }
 /// 🧊️ Closes an original diagnostic reply returned unchanged by source admission refusal.
 pub fn retire_invocation_reply_cold(source:String){retire_session_collection_cold(SessionCollectionOwner::Text(source));}
@@ -473,7 +425,6 @@ pub fn retire_invocation_reply_cold(source:String){retire_session_collection_col
 #[derive(Default)]
 pub(super) struct SessionRetirement {
     pub progress:RetainedCloneProgress,
-    pub work:u64,
     pub(super) root: Option<ControlledRetirement<SessionCollectionOwner>>,
     pub(super) owners: RetirementQueue,
 }
@@ -492,36 +443,38 @@ impl SessionRetirement {
         if grant.maximum_capacity_bytes<demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"session mutation requires its original retained frame capacity"))}
         Ok(())
     }
-    pub fn admit_original(&mut self,value:SessionCollectionOwner,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,(ValueError,SessionCollectionOwner)>{
-        if self.root.is_some(){return self.owners.admit_owned(value,grant)}
-        if grant.maximum_items==0{return semio_framework_value::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::WorkLimit,"session handoff requires an admitted item"),value)),work:0}}
-        if grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::DepthLimit,"session handoff requires admitted depth"),value)),work:0}}
-        let result=match ControlledRetirement::new(value){Ok(owner)=>{self.root=Some(owner);Ok(RetainedCloneProgress{copied_items:1,..Default::default()})},Err(error)=>Err(error)};semio_framework_value::RetainedWorkOutcome{result,work:1}
+    /// 🎟️ Admits one displaced collection into the session queue under the caller's effect; refusal or an unfunded quote leaves the owner with the caller.
+    pub fn admit(&mut self,original:&mut Option<SessionCollectionOwner>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneProgress>,ValueError>{
+        if self.root.is_some(){return self.owners.admit_owned(original,effect)}
+        let grant=effect.grant();
+        if grant.maximum_items==0{return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"session handoff requires an admitted item")),work:0}}
+        if grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"session handoff requires admitted depth")),work:0}}
+        let Some(value)=original.take()else{return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::invariant("session handoff owner is absent")),work:0}};
+        self.root=Some(ControlledRetirement::retain(value));
+        let work=match effect.performed(1){Ok(true)=>1,_=>0};
+        semio_framework_value::RetainedWorkOutcome{result:Ok(Some(RetainedCloneProgress{copied_items:1,..Default::default()})),work}
     }
-    pub fn admit(&mut self,value:SessionCollectionOwner,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,SessionCollectionOwner)>{self.admit_original(value,grant).result}
 
     pub(super) fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if let Some(owner)=self.root.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}
         Ok(RetirementDemand{copy_bytes:self.owners.next_copy_byte_demand()?,capacity_bytes:self.owners.next_capacity_byte_demand(copy)?,release_bytes:self.owners.next_release_byte_demand()?,depth:self.owners.next_depth_demand()?})
     }
     pub(super) fn step_progress(&self)->RetainedCloneProgress{self.progress}
-    pub(super) fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        self.progress=Default::default();self.work=0;
-        let Some(owner)=self.root.as_mut()else{let turn=self.owners.step(grant);self.work=turn.work;self.progress=self.owners.step_progress();return turn.result};
-        let result=owner.step(grant);self.progress=owner.step_progress();self.work=owner.last_turn_work();let step=result?;
-        let progress=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"Flow session original root")?.progress();
-        if owner.terminal_is_empty(){self.root=None;}
-        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+    pub(super) fn step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+        use semio_framework_value::{RetainedWorkOutcome,RetainedWorkPoll};
+        self.progress=Default::default();
+        let Some(owner)=self.root.as_mut()else{let poll=self.owners.step(body,effect);self.progress=self.owners.step_progress();return poll};
+        let grant=effect.grant();
+        let poll=owner.step(body,effect);self.progress=owner.step_progress();
+        let RetainedWorkPoll::Complete(turn)=poll else{return poll};
+        let empty=owner.terminal_is_empty();let work=turn.work;
+        let result=turn.result.and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,empty,"Flow session original root").map_err(Into::into));
+        if empty{self.root=None;}
+        let done=self.terminal_is_empty();
+        RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map(|step|if done{RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())}),work})
     }
 }
 
-/// 🔒️ Evaluation ownership stays guarded until every collection, domain, cache, and byte frontier is empty.
-/// 🧳️ Intake failure retains the exact typed original source or identifies its same-session custody.
-pub enum FlowSnapshotIntakeFailure<Original>{Original{failure:semio_framework_job::OriginalTurnFailure,source:Original},Retained{failure:semio_framework_job::OriginalTurnFailure}}
-
-pub struct FlowEvalSession {
-    pub(super) state: std::mem::ManuallyDrop<FlowEvalSessionState>,
-}
 impl std::ops::Deref for FlowEvalSession {
     type Target = FlowEvalSessionState;
     fn deref(&self) -> &Self::Target {
@@ -556,8 +509,8 @@ impl Drop for FlowEvalSession {
 pub(super) const FLOW_EVAL_SESSION_COLD_CLOSE_STEPS: usize = 1_000_000;
 
 impl FlowSourceBaseline for FlowEvalSession {
-    fn previous_snapshot(&self) -> Option<&Arc<TreeSnapshot>> { self.previous_snapshot.as_ref() }
-    fn previous_channels(&self) -> Option<&Arc<EvalChannels>> { self.previous_channels.as_ref() }
+    fn previous_snapshot(&self) -> Option<&SharedOwner<TreeSnapshot>> { self.previous_snapshot.as_ref() }
+    fn previous_channels(&self) -> Option<&SharedOwner<EvalChannels>> { self.previous_channels.as_ref() }
     fn baseline_geometry_pending(&self) -> bool { self.baseline_geometry_pending }
     fn preview_cancelled(&self) -> bool { self.preview_cancelled }
     fn pending_host(&self) -> Option<&FlowHost> { self.pending_host.as_ref() }

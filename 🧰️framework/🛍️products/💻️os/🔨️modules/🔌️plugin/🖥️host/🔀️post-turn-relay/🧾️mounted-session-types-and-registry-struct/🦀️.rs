@@ -95,7 +95,7 @@ impl<J: semio_framework_job::InteractiveJob + 'static> GuestRelayAdmission<J> {
             return Ok(W::Pending { progress: metadata(cx)?.progress() });
         }
         if let Some(retirement) = self.alias_return.as_mut() {
-            let turn = retirement.return_alias_step(cx.original_cancel_token(), grant);
+            let turn = cx.with_original_effect(grant, |cx, effect| retirement.return_alias_step(cx.original_cancel_token(), effect))?.map_or(RetainedWorkOutcome { result: Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())), work: 0 }, |(turn, _)| turn);
             let result = turn.result.map_err(|error| match error {
                 semio_framework_async::CancelTokenRetirementError::Refused(error) => error,
                 semio_framework_async::CancelTokenRetirementError::Blocked(_) => semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "relay admission cancellation alias remains blocked"),
@@ -134,7 +134,7 @@ pub(super) fn close_relay_session<J: semio_framework_job::InteractiveJob + 'stat
         Err(WorkerJobDemandError::Contention(_)) => Ok(W::Blocked),
         Ok(false) => session.close_step(cx),
         Ok(true) => {
-            let turn = session.return_original_cancel_alias_step(cx.original_cancel_token(), grant);
+            let turn = cx.with_original_effect(grant,|cx,effect|session.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn);
             let returned = matches!(&turn.result, Ok(Some(_)));
             let result = match turn.result {
                 Ok(Some(step)) => Ok(step),

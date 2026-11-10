@@ -106,7 +106,7 @@
           "items": 2,
           "value": 7,
           "copiedItems": 1,
-          "copyBytes": 0,
+          "copyBytes": 25,
           "workBeforeFailure": 1,
           "workLoanFromSameRemainingFuel": true,
           "noItemToCpuConversion": true,

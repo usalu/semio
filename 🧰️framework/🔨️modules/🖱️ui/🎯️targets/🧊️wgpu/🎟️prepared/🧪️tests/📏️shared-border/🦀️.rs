@@ -45,7 +45,7 @@ fn closing_shared_border_preparation_releases_in_progress_backing() {
     let grant = ui_contract::UI_WORKER_RETIREMENT_POLICY;
     for _ in 0..4_096 {
         let (outcome, receipt) = testing::observe_prepared_step(&mut job, OperationId(1), Generation(3), StepBudget::new(100, 10, grant), root_cancel_token(), testing::now_ms, &mut preview, grant);
-        assert!(receipt.fits(grant));
+        assert!(receipt.fits(testing::close_source::STOCK));
         assert!(matches!(outcome, None | Some(JobOutcomeKind::Yield)));
         if job.border_reserved_units > 0 { break; }
     }

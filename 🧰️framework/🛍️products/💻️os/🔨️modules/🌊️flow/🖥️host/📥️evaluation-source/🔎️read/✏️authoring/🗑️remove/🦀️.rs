@@ -62,11 +62,11 @@ impl RemoveWork{
  pub(super) fn restore_output(&mut self,result:Result<Vec<FlowMutation>,FlowCoreError>){assert_eq!(self.phase,12);match result{Ok(output)=>{self.fields.output=Some(output);self.phase=9},Err(error)=>{self.fields.error=Some(error);self.phase=11}}}
  pub(super) fn begin_close(&mut self){self.closing=true;if let Some(text)=self.text.as_mut(){text.begin_close()}}
  pub(super) fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if let Some(text)=self.text.as_ref(){return if text.terminal_is_empty(){Ok(fixed(size_of::<Option<FundedText>>()))}else{text.close_demands(copy)}}if !self.retirement.is_empty(){return self.retirement.demands(copy)}if self.fields.output.is_some(){return self.retirement.next_owner_demands::<Vec<FlowMutation>>(true,&None,copy)}if self.fields.id.is_some(){return self.retirement.next_owner_demands::<String>(true,&None,copy)}if self.fields.entries.is_some(){return self.retirement.next_owner_demands::<Vec<FlowLayoutEntry>>(true,&None,copy)}if self.fields.error.is_some(){return self.retirement.next_owner_demands::<FlowCoreError>(true,&None,copy)}Ok(Default::default())}
- pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub(super) fn close_step(&mut self,grant:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
   if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}
   if let Some(text)=self.text.as_mut(){if text.terminal_is_empty(){let d=fixed(size_of::<Option<FundedText>>());if !retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.text=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress(d))),work:1}}return text.close_step(grant)}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(grant)}
-  macro_rules! owner{($field:ident)=>{if self.fields.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.fields.$field,grant);return RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
+  if !self.retirement.is_empty(){return poll_outcome(self.retirement.step_granted(grant.maximum_copy_bytes,effect))}
+  macro_rules! owner{($field:ident)=>{if self.fields.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.fields.$field,effect);return RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
   owner!(output);owner!(id);owner!(entries);owner!(error);RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.text.is_none()&&self.retirement.is_empty()&&self.fields.output.is_none()&&self.fields.id.is_none()&&self.fields.entries.is_none()&&self.fields.error.is_none()}

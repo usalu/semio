@@ -504,7 +504,7 @@ pub(crate) mod bank{
  /// 🧰️ A generous finite wallet lends cleanup effects whose grants and quotes stay the caller's own.
  pub fn scratch()->EffectBank{bank(&serde_json::json!({"items":1u64<<40,"copyBytes":1u64<<40,"capacityBytes":1u64<<40,"releaseBytes":1u64<<40,"depth":1u64<<20,"fuel":1u64<<60}))}
  /// 🎯️ Drives one controlled retirement turn under its own quoted work and returns the genuine step.
- pub fn drive<T:semio_framework_value_retirement::retirement::RetireOwned>(bank:&mut EffectBank,owner:&mut semio_framework_value_retirement::retirement::controlled::ControlledRetirement<T>,grant:RetainedCloneGrant)->crate::RetainedCloneStep{let units=owner.next_computational_work(grant.maximum_copy_bytes).unwrap();let(turn,_)=once(bank,grant,units,|effect|owner.step(effect));turn.result.unwrap()}
+ pub fn drive<T:semio_framework_value_retirement::retirement::RetireOwned>(bank:&mut EffectBank,owner:&mut semio_framework_value_retirement::retirement::controlled::ControlledRetirement<T>,grant:RetainedCloneGrant)->crate::RetainedCloneStep{let units=owner.next_computational_work(grant.maximum_copy_bytes).unwrap();let(turn,_)=once(bank,grant,units,|effect|owner.step(grant.maximum_copy_bytes,effect));turn.result.unwrap()}
 
 }
 #[cfg(test)]#[path="♻️retirement/⏱️cursor-work/🧪️tests/🦀️.rs"]mod close_cursor_work_tests;

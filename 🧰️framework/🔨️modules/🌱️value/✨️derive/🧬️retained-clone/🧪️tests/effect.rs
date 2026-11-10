@@ -20,8 +20,8 @@ impl OriginalEffectProducer for Close{
  type Output=RetainedCloneStep;type Failure=value::OriginalRetirementFailure;type Context<'a,'b>=&'a mut ControlledRetirement<OriginalRecord> where 'b:'a;
  fn validate_context<'a,'b>(&self,_:&Self::Context<'a,'b>)->Result<(),ValueError>where 'b:'a{Ok(())}
  fn source_turn<'a,'b>(&self,_:&Self::Context<'a,'b>)->Option<OriginalSourceTurnIdentity>where 'b:'a{None}
- fn receive<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,Self::Failure>,ValueError>where 'b:'a{c.step_into(effect,reply)}
- fn recover<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,Self::Failure>,ValueError>where 'b:'a{c.recover_step_into(effect,reply)}
+ fn receive<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,Self::Failure>,ValueError>where 'b:'a{c.step_into(0,effect,reply)}
+ fn recover<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,Self::Failure>,ValueError>where 'b:'a{c.recover_step_into(0,effect,reply)}
 }
 #[test]
 fn actual_generated_controlled_record_uses_borrowed_effect_children(){

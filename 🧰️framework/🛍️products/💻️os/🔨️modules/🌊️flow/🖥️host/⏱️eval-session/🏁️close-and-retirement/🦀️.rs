@@ -58,20 +58,18 @@ impl FlowEvalSession {
     /// 🎟️ Quotes a new original retirement source handoff without allocating its queue or frame.
     pub fn next_retirement_admission_demands(&self)->Result<RetirementDemand,ValueError>{self.retirement.admission_demands()}
     pub fn next_retirement_reserve_capacity_byte_demand(&self)->Result<usize,ValueError>{self.retirement.owners.next_reserve_capacity_byte_demand()}
-    pub fn reserve_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.retirement.owners.reserve_step(grant).result}
+    pub fn reserve_retirement_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{self.retirement.owners.reserve_step(effect).result}
     pub fn next_retirement_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement.demands(0)?.copy_bytes)}
     pub fn next_retirement_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.retirement.demands(copy)?.capacity_bytes)}
     pub fn next_retirement_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement.demands(0)?.release_bytes)}
     pub fn next_retirement_depth_demand(&self)->Result<usize,ValueError>{Ok(self.retirement.demands(0)?.depth)}
     pub fn retirement_is_empty(&self)->bool{self.retirement.terminal_is_empty()}
-    pub fn retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.retirement_original_step(grant).result}
-    /// ♻️ Forwards the existing live retirement engine's real work independently of its result.
-    pub fn retirement_original_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{let result=self.retirement.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:self.retirement.work}}
+    /// ♻️ Forwards the existing live retirement engine's poll with its real work.
+    pub fn retirement_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{self.retirement.step(body,effect)}
 
-    /// 🧊️ [`Self::close_step`] outside any Job turn under one explicit authoring wallet whose stock is `grant`.
+    /// 🧊️ [`Self::close_step`] outside any Job turn inside a host-pump retirement turn funded by `grant`.
     pub fn close_step_cold(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,ValueError>{
-        let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);
-        match wallet.run(grant,64,|effect|self.close_step(effect))?{Some(done)=>done.output,None=>Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        match crate::cold_effect(grant,|effect|self.close_step(effect))?{Some(done)=>done,None=>Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
     }
 
     pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,ValueError>{
@@ -83,7 +81,7 @@ impl FlowEvalSession {
         let demand=self.close_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original Flow session close requires its actual cursor depth"))}
         if let Some(source)=self.state.pending_snapshot_copy.as_mut(){if source.terminal_is_empty(){if grant.maximum_release_bytes<demand.release_bytes{return Ok(Step::Pending{progress:empty})}self.state.pending_snapshot_copy=None;return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..empty}})}source.begin_close();let step=source.close_step(grant)?;return Ok(Step::Pending{progress:step.progress()})}
-        if let Some(source)=self.state.pending_tick_snapshot_retirement.as_mut(){let step=source.step(grant)?;if source.terminal_is_empty(){self.state.pending_tick_snapshot_retirement=None}return Ok(Step::Pending{progress:step.progress()})}
+        if let Some(source)=self.state.pending_tick_snapshot_retirement.as_mut(){let poll=source.step(grant.maximum_copy_bytes,effect);let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll else{return Ok(Step::Pending{progress:empty})};let step=turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;if source.terminal_is_empty(){self.state.pending_tick_snapshot_retirement=None}return Ok(Step::Pending{progress:step.progress()})}
         if let Some(source)=self.state.pending_tick_snapshot.take(){self.state.pending_tick_snapshot_retirement=Some(ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!()));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
         if self.state.pending_tick_snapshot_origin.take().is_some(){return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
         if let Some(host)=self.state.retiring_host.as_mut(){
@@ -98,7 +96,8 @@ impl FlowEvalSession {
             return match result{Ok(step)=>Ok(Step::Pending{progress:step.progress()}),Err(error)=>Err(error)}
         }
         if !self.retirement.terminal_is_empty(){
-            return match self.retirement.step(grant){Ok(step)=>if self.terminal_is_empty(){Ok(Step::Complete{progress:step.progress()})}else{Ok(Step::Pending{progress:step.progress()})},Err(error)=>Err(error)}
+            let semio_framework_value::RetainedWorkPoll::Complete(turn)=self.retirement.step(grant.maximum_copy_bytes,effect)else{return Ok(Step::Pending{progress:empty})};
+            return match turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error){Ok(step)=>if self.terminal_is_empty(){Ok(Step::Complete{progress:step.progress()})}else{Ok(Step::Pending{progress:step.progress()})},Err(error)=>Err(error)}
         }
         if let Some(port)=self.geometry_port.take(){self.retiring_geometry_port=Some(semio_os_flow_geometry::GeometryPortRetirement::new(port));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
         if let Some(source)=self.take_session_source(){
@@ -115,7 +114,7 @@ impl FlowEvalSession {
             if self.terminal_is_empty(){return}
             let copy=self.next_close_copy_byte_demand().expect("cold session original copy demand").max(4096);
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_close_capacity_byte_demand(copy).expect("cold session original capacity demand"),maximum_release_bytes:self.next_close_release_byte_demand().expect("cold session original release demand"),maximum_depth:self.next_close_depth_demand().expect("cold session original depth demand")};
-            self.close_step(grant).expect("cold session original owner refused");
+            crate::cold_effect(grant,|effect|self.close_step(effect)).expect("cold session original turn").expect("cold session original quote").expect("cold session original owner refused");
         }
         assert!(self.terminal_is_empty(),"cold session disposal did not reach original terminal ownership");
     }
@@ -125,11 +124,11 @@ impl FlowEvalSession {
 
 impl FlowEvalSession{
  /// 🧹️ Closes the genuine session source after its separate intake, host and geometry frontiers end.
- pub fn retire_source_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneStep,ValueError>{
-  use semio_framework_value::RetainedWorkOutcome as Turn;
+ pub fn retire_source_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<RetainedCloneStep,ValueError>{
+  use semio_framework_value::RetainedWorkOutcome as Turn;let grant=effect.grant();
   if !self.closing||self.state.pending_snapshot_copy.is_some()||self.state.pending_tick_snapshot.is_some()||self.state.pending_tick_snapshot_retirement.is_some()||self.state.pending_tick_snapshot_origin.is_some()||self.state.pending_host.is_some()||self.state.retiring_host.is_some()||self.state.geometry_port.is_some()||self.state.retiring_geometry_port.is_some(){return Turn{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original session source awaits its separately owned frontiers")),work:0}}
   let d=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return Turn{result:Err(error),work:0}};if grant.maximum_items==0||grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes||grant.maximum_depth<d.depth{return Turn{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  if !self.retirement.terminal_is_empty(){let result=self.retirement.step(grant);return Turn{result,work:self.retirement.work}}
+  if !self.retirement.terminal_is_empty(){return match self.retirement.step(grant.maximum_copy_bytes,effect){semio_framework_value::RetainedWorkPoll::Complete(turn)=>Turn{result:turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),work:turn.work},semio_framework_value::RetainedWorkPoll::Pending{work}=>Turn{result:Ok(RetainedCloneStep::Progress(Default::default())),work}}}
   if let Some(source)=self.take_session_source(){self.retirement.root=Some(ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!("original session source declares controlled retirement")));return Turn{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
   Turn{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}
  }

@@ -131,26 +131,12 @@ pub use diff::{FlowDelta, FlowDiff};
 pub type FlowEnvelope = ArtifactEnvelope<FlowHostSnapshot, FlowMutation>;
 pub type FlowStore = ArtifactStore<FlowHostSnapshot, FlowMutation>;
 
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub struct FlowSnapshotRetirementFactory;
-impl SnapshotRetirementFactory<FlowHostSnapshot> for FlowSnapshotRetirementFactory {
-    fn retirement_birth_bytes(&self,_:&Arc<FlowHostSnapshot>)->usize {semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<FlowHostSnapshot>()}
-    fn retire(&self,value:Arc<FlowHostSnapshot>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Arc<FlowHostSnapshot>)> {semio_framework_value::retirement::arc_custody::admit_shared_retirement(value,grant,true)}
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct FlowOwnedHostSnapshotRetirementFactory;
-impl ArtifactOwnedValueRetirementFactory<FlowHostSnapshot> for FlowOwnedHostSnapshotRetirementFactory {fn retire_owned_work_demand(&self,_:&FlowHostSnapshot)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
-    fn retirement_birth_bytes(&self,_:&FlowHostSnapshot)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<FlowHostSnapshot>()}
-    fn retire_owned(&self,value:FlowHostSnapshot,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,FlowHostSnapshot)> {let turn=semio_framework_value::retirement::admit_owned_retirement(value,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct FlowMutationRetirementFactory;
-impl ArtifactOwnedValueRetirementFactory<FlowMutation> for FlowMutationRetirementFactory {fn retire_owned_work_demand(&self,_:&FlowMutation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
-    fn retirement_birth_bytes(&self,_:&FlowMutation)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<FlowMutation>()}
-    fn retire_owned(&self,value:FlowMutation,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,FlowMutation)> {let turn=semio_framework_value::retirement::admit_owned_retirement(value,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
-}
+/// 🏭️ The shared Flow snapshot retires through the generic shared-value factory.
+pub type FlowSnapshotRetirementFactory=semio_framework_value::factory::SharedValueRetirementFactory<FlowHostSnapshot>;
+/// 🏭️ A resident Flow snapshot retires through the generic owned-value factory.
+type FlowOwnedHostSnapshotRetirementFactory=semio_framework_value::factory::OwnedValueRetirementFactory<FlowHostSnapshot>;
+/// 🏭️ A resident Flow mutation retires through the generic owned-value factory.
+type FlowMutationRetirementFactory=semio_framework_value::factory::OwnedValueRetirementFactory<FlowMutation>;
 
 impl MemberStoreProducer<FlowHostSnapshot,FlowMutation> for crate::io::binary::snapshot::FlowSnapshotPackProducer {
     /// 📦️ A flow document opens as an owned member by receiving its sealed Pack record natively into the persisted owner.
@@ -166,7 +152,7 @@ impl MemberStoreProducer<FlowHostSnapshot,FlowMutation> for crate::io::binary::s
     }
 
     fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<FlowHostSnapshot, FlowMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<FlowHostSnapshot, FlowMutation>> {
-        DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, FlowAuthoringFactory::birth_demand(), || (FlowSnapshotRetirementFactory, FlowOwnedHostSnapshotRetirementFactory, FlowMutationRetirementFactory, ArtifactStoreCursorDisposer::<FlowHostSnapshot, FlowMutation>::new(), Arc::new(FlowAuthoringFactory) as Arc<dyn ArtifactStoreOneItemPreparationFactory<FlowHostSnapshot, FlowMutation>>))
+        DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, FlowAuthoringFactory::birth_demand(), || (FlowSnapshotRetirementFactory::default(), FlowOwnedHostSnapshotRetirementFactory::default(), FlowMutationRetirementFactory::default(), ArtifactStoreCursorDisposer::<FlowHostSnapshot, FlowMutation>::new(), Arc::new(FlowAuthoringFactory) as Arc<dyn ArtifactStoreOneItemPreparationFactory<FlowHostSnapshot, FlowMutation>>))
     }
 }
 

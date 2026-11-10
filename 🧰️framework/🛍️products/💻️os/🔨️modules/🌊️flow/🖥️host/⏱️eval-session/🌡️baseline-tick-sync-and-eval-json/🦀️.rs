@@ -30,7 +30,8 @@ impl FlowEvalSession {
     /// the incremental fast path forever. It can never walk BACKWARDS, so it cannot cancel a
     /// pending [`FlowEvalSession::invalidate_for_flow_extension_registry`]
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn capture_baseline_from(&mut self,host:&FlowHost,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+    pub fn capture_baseline_from(&mut self,host:&FlowHost,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+        let grant=effect.grant();
         if !host.baseline_publication_terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original host baseline publication must complete before capture"))}
         if self.state.baseline_geometry_pending{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original geometry membership must finish before another baseline capture"))}
         if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original baseline capture requires an admitted item"))}
@@ -40,17 +41,17 @@ impl FlowEvalSession {
         let (snapshot,channels)=host.eval_baseline();
         let evaluated_generation = host.eval_baseline_registry_generation();
         let progress=if displaced{
-            let original=FlowBaselineLeases{snapshot:self.state.previous_snapshot.take(),channels:self.state.previous_channels.take(),current:None};
-            match self.state.retirement.admit(SessionCollectionOwner::Baseline(original),grant){
-                Ok(progress)=>progress,
-                Err((error,SessionCollectionOwner::Baseline(original)))=>{self.state.previous_snapshot=original.snapshot;self.state.previous_channels=original.channels;return Err(error)},
-                Err(_)=>unreachable!("original session baseline admission kind"),
+            let mut original=Some(SessionCollectionOwner::Baseline(FlowBaselineLeases{snapshot:self.state.previous_snapshot.take(),channels:self.state.previous_channels.take(),current:None}));
+            let turn=self.state.retirement.admit(&mut original,effect);
+            match turn.result{
+                Ok(Some(progress))=>progress,
+                result=>{let Some(SessionCollectionOwner::Baseline(original))=original else{unreachable!("original session baseline admission kind")};self.state.previous_snapshot=original.snapshot;self.state.previous_channels=original.channels;return result.map(|_|None)},
             }
         }else{RetainedCloneProgress{copied_items:1,..Default::default()}};
         if snapshot.is_some()&&evaluated_generation>self.state.flow_extension_generation{self.state.flow_extension_generation=evaluated_generation;}
         self.state.previous_snapshot=snapshot;self.state.previous_channels=channels;
         self.state.baseline_geometry_pending=self.state.previous_channels.is_some();
-        Ok(progress)
+        Ok(Some(progress))
     }
 
     /// 🌐️ Geometry claims remain pending until their original admitted roster operation finishes.
@@ -59,7 +60,7 @@ impl FlowEvalSession {
     /// 🧵️ Drives the genuine Work owned by the same retained tick Host with the full incoming wallet.
     pub fn tick_evaluation_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<FlowEvaluationStep,neural::OperatorWorkFailure>{
         self.state.tick_display_progress=Default::default();if cx.is_cancelled()||cx.should_yield(){return Ok(FlowEvaluationStep::Working)}let grant=cx.retained_grant();let demand=self.next_tick_evaluation_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(FlowEvaluationStep::Working)}
-        if self.state.tick_evaluation_ready!=0{let result=self.tick_display_step(grant);let progress=self.state.tick_display_progress;if progress!=Default::default()||result.is_err(){cx.consume_fuel(1)}return match result{Ok(step)=>{cx.consume_retained(progress).map_err(semio_framework_job::OriginalTurnFailure::from)?;Ok(step)},Err(error)=>Err(semio_framework_job::OriginalTurnFailure::debit_original(error.with_retained_progress(progress),cx).into())}}
+        if self.state.tick_evaluation_ready!=0{let Some((result,performed))=cx.with_original_effect(grant,|_,effect|self.tick_display_step(effect))?else{return Ok(FlowEvaluationStep::Working)};let progress=self.state.tick_display_progress;cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));return match result{Ok(step)=>{cx.consume_retained(progress).map_err(semio_framework_job::OriginalTurnFailure::from)?;Ok(step)},Err(error)=>Err(semio_framework_job::OriginalTurnFailure::debit_original(error.with_retained_progress(progress),cx).into())}}
         let host=self.state.pending_host.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation tick Host was not admitted"))?;
         let step=host.evaluate_step(cx);self.state.tick_display_progress=host.evaluation_step_progress();if matches!(step,Ok(FlowEvaluationStep::Complete)){self.state.tick_evaluation_ready=1;return Ok(FlowEvaluationStep::Working)}step
     }
@@ -70,15 +71,16 @@ impl FlowEvalSession {
         if !self.state.retirement.terminal_is_empty(){return self.state.retirement.demands(copy)}
         self.state.pending_tick_display.as_ref().map_or(Ok(RetirementDemand{depth:1,..Default::default()}),|owner|owner.demands(&host.last_eval_json,copy))
     }
-    fn tick_display_step(&mut self,grant:RetainedCloneGrant)->Result<FlowEvaluationStep,ValueError>{
-        if !self.state.retirement.terminal_is_empty(){let result=self.state.retirement.step(grant);self.state.tick_display_progress=self.state.retirement.step_progress();result?;return Ok(FlowEvaluationStep::Working)}
+    fn tick_display_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<FlowEvaluationStep,ValueError>{
+        let grant=effect.grant();
+        if !self.state.retirement.terminal_is_empty(){let poll=self.state.retirement.step(grant.maximum_copy_bytes,effect);self.state.tick_display_progress=self.state.retirement.step_progress();if let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll{turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;}return Ok(FlowEvaluationStep::Working)}
         if self.state.tick_evaluation_ready==2{self.state.tick_evaluation_ready=0;self.state.tick_display_progress=RetainedCloneProgress{copied_items:1,..Default::default()};return Ok(FlowEvaluationStep::Complete)}
         if self.state.pending_tick_display.as_ref().is_some_and(SessionLivePublication::published){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original session cursor handoff requires depth"))}let original=self.state.pending_tick_display.take().unwrap();self.state.retirement.root=Some(ControlledRetirement::new(SessionCollectionOwner::LivePublication(original)).unwrap_or_else(|_|unreachable!("original session publication declares full retirement")));self.state.tick_display_progress=RetainedCloneProgress{copied_items:1,..Default::default()};self.state.tick_evaluation_ready=2;return Ok(FlowEvaluationStep::Working)}
         if self.state.pending_tick_display.is_none(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original session display intake requires depth"))}let text=&self.state.pending_host.as_ref().unwrap().last_eval_json;self.state.pending_tick_display=Some(SessionLivePublication::new(text));self.state.tick_display_progress=RetainedCloneProgress{copied_items:1,..Default::default()};return Ok(FlowEvaluationStep::Working)}
-        if !self.state.pending_tick_display.as_ref().unwrap().ready(){let state=&mut *self.state;let host=state.pending_host.as_ref().unwrap();let result=state.pending_tick_display.as_mut().unwrap().step(&host.last_eval_json,grant);match result{Ok(progress)=>state.tick_display_progress=progress,Err(error)=>{state.tick_display_progress=error.retained_progress();return Err(error)}}return Ok(FlowEvaluationStep::Working)}
+        if !self.state.pending_tick_display.as_ref().unwrap().ready(){let state=&mut *self.state;let host=state.pending_host.as_ref().unwrap();let result=state.pending_tick_display.as_mut().unwrap().step(&host.last_eval_json,effect);match result{Ok(progress)=>state.tick_display_progress=progress,Err(error)=>{state.tick_display_progress=error.retained_progress();return Err(error)}}return Ok(FlowEvaluationStep::Working)}
         self.state.retirement.preflight(grant)?;
-        let shared=self.state.pending_tick_display.as_mut().unwrap().take_shared().unwrap();
-        match self.publish_eval_json(shared,grant){Ok(progress)=>self.state.tick_display_progress=progress,Err((error,shared))=>{self.state.pending_tick_display.as_mut().unwrap().restore_shared(shared);return Err(error)}}
+        let mut shared=self.state.pending_tick_display.as_mut().unwrap().take_shared();
+        match self.publish_eval_json(&mut shared,effect){Ok(Some(progress))=>self.state.tick_display_progress=progress,other=>{if let Some(shared)=shared{self.state.pending_tick_display.as_mut().unwrap().restore_shared(shared);}other?;return Ok(FlowEvaluationStep::Working)}}
         self.state.pending_tick_display.as_mut().unwrap().mark_published();Ok(FlowEvaluationStep::Working)
     }
 
@@ -103,13 +105,13 @@ impl FlowEvalSession {
     /// turn, which then shares that turn's single deadline (see [`flow_eval_tick_budget`]).
     pub fn tick_cold(&mut self, host: &mut FlowHost, turn_started_us: Option<u64>) -> bool {
         let remaining = host.evaluate_cold_step(flow_eval_tick_budget(turn_started_us),&|hash|!self.has_evaluation_progress(hash)).expect("cold evaluation diagnostics require completed publication");
-        while !host.baseline_publication_terminal_is_empty(){let demand=host.next_baseline_publication_demands(4096).expect("cold baseline demand");host.baseline_publication_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}).expect("cold baseline publication");}
+        while !host.baseline_publication_terminal_is_empty(){let demand=host.next_baseline_publication_demands(4096).expect("cold baseline demand");let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};crate::cold_effect(grant,|effect|host.baseline_publication_step(effect)).expect("cold baseline publication turn").expect("cold baseline publication quote").expect("cold baseline publication");}
         let state = &mut *self.state;
-        if let Some(previous) = state.eval_json.replace(Arc::new(host.last_eval_json.clone())) { retire_session_collection_cold(SessionCollectionOwner::SourceLease(previous)); }
+        if let Some(previous) = state.eval_json.replace(SharedOwner::from_cold(host.last_eval_json.clone())) { retire_session_collection_cold(SessionCollectionOwner::SourceLease(previous)); }
         self.status_json = build_flow_status_json(host, &remaining);
         if remaining.is_empty() {
-            while !self.state.retirement.terminal_is_empty(){let d=self.state.retirement.demands(4096).expect("cold session retirement demand");self.state.retirement.step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096.max(d.copy_bytes),maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}).expect("cold session retirement");}
-            self.capture_baseline_from(host,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1}).expect("cold session baseline admission");
+            while !self.state.retirement.terminal_is_empty(){let d=self.state.retirement.demands(4096).expect("cold session retirement demand");let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096.max(d.copy_bytes),maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let retirement=&mut self.state.retirement;crate::cold_effect(grant,|effect|retirement.step(grant.maximum_copy_bytes,effect)).expect("cold session retirement turn");}
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};crate::cold_effect(grant,|effect|self.capture_baseline_from(host,effect)).expect("cold session baseline turn").expect("cold session baseline quote").expect("cold session baseline admission");
         }
         self.repaint(host, remaining.is_empty());
         self.tick_scheduled = !remaining.is_empty();
@@ -137,10 +139,10 @@ impl FlowEvalSession {
     }
 
     /// 🔗️ Leases this primary immutable evaluation allocation without copying its text.
-    pub fn lease_eval_json(&self)->Option<Arc<String>> {self.eval_json.as_ref().map(Arc::clone)}
+    pub fn lease_eval_json(&self)->Option<SharedOwner<String>> {self.eval_json.as_ref().map(SharedOwner::alias)}
 
     /// 🔍️ Admits publication only while the current primary owner is the held source lease.
-    pub fn owns_eval_json(&self,source:&Arc<String>)->bool {self.eval_json.as_ref().is_some_and(|current|Arc::ptr_eq(current,source))}
+    pub fn owns_eval_json(&self,source:&SharedOwner<String>)->bool {self.eval_json.as_ref().is_some_and(|current|current.identity()==source.identity())}
 
     /// 🖼️ The evaluation a preview paints — see [`FlowEvalSessionState::painted_eval_json`]. This is
     /// what every publication carries; `eval_json` stays the live walk's own answer, because that is
@@ -184,16 +186,17 @@ impl FlowEvalSession {
     }
 
     /// 📤️ Advances the original live evaluation lease while preserving progress and preview owners.
-    pub fn publish_eval_json(&mut self,eval_json:Arc<String>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Arc<String>)>{
-        if self.state.eval_json.as_ref().is_some_and(|current|Arc::ptr_eq(current,&eval_json)){return Ok(Default::default())}
-        if let Err(error)=self.state.retirement.preflight(grant){return Err((error,eval_json))}
-        if let Some(original)=self.state.eval_json.take(){
-            match self.state.retirement.admit(SessionCollectionOwner::SourceLease(original),grant){
-                Ok(progress)=>{self.state.eval_json=Some(eval_json);Ok(progress)},
-                Err((error,SessionCollectionOwner::SourceLease(original)))=>{self.state.eval_json=Some(original);Err((error,eval_json))},
-                Err(_)=>unreachable!("original live evaluation lease returned a different source family"),
-            }
-        }else{self.state.eval_json=Some(eval_json);Ok(RetainedCloneProgress{copied_items:1,..Default::default()})}
+    pub fn publish_eval_json(&mut self,eval_json:&mut Option<SharedOwner<String>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+        let incoming=eval_json.as_ref().ok_or_else(||ValueError::invariant("original live evaluation lease is absent"))?;
+        if self.state.eval_json.as_ref().is_some_and(|current|current.identity()==incoming.identity()){drop(eval_json.take());return Ok(Some(Default::default()))}
+        self.state.retirement.preflight(effect.grant())?;
+        let Some(original)=self.state.eval_json.take()else{self.state.eval_json=eval_json.take();return Ok(Some(RetainedCloneProgress{copied_items:1,..Default::default()}))};
+        let mut displaced=Some(SessionCollectionOwner::SourceLease(original));
+        let turn=self.state.retirement.admit(&mut displaced,effect);
+        match turn.result{
+            Ok(Some(progress))=>{self.state.eval_json=eval_json.take();Ok(Some(progress))},
+            result=>{let Some(SessionCollectionOwner::SourceLease(original))=displaced else{unreachable!("original live evaluation lease returned a different source family")};self.state.eval_json=Some(original);result.map(|_|None)},
+        }
     }
 
     /// 🪙️ Borrows the pending Host publication demand without creating an evaluation owner.
@@ -209,31 +212,31 @@ impl FlowEvalSession {
     /// 🎟️ Advances only the exact pending original Host publication under the incoming grant.
     pub fn tick_publication_step_progress(&self)->RetainedCloneProgress{self.state.pending_host.as_ref().map_or(Default::default(),FlowHost::baseline_publication_step_progress)}
 
-    pub fn tick_publication_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn tick_publication_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
         let Some(host)=self.state.pending_host.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()))};
-        let step=host.baseline_publication_step(grant)?;
+        let step=host.baseline_publication_step(effect)?;
         semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,host.baseline_publication_terminal_is_empty(),"Flow original retained tick publication")
     }
 
     /// 🔗️ Captures the original retained tick's completed shared baseline, preserving refusal custody.
-    pub fn capture_tick_baseline_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-        let Some(host)=self.state.pending_host.take()else{return Ok(Default::default())};
-        let result=self.capture_baseline_from(&host,grant);self.state.pending_host=Some(host);result
+    pub fn capture_tick_baseline_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+        let Some(host)=self.state.pending_host.take()else{return Ok(Some(Default::default()))};
+        let result=self.capture_baseline_from(&host,effect);self.state.pending_host=Some(host);result
     }
 
     /// 🎟️ Publishes one preborn immutable evaluation after admitting the original reset owners.
-    pub fn set_eval_json(&mut self,eval_json:Arc<String>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Arc<String>)>{self.set_eval_json_original(eval_json,grant).result}
+    pub fn set_eval_json(&mut self,eval_json:&mut Option<SharedOwner<String>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{self.set_eval_json_original(eval_json,effect).result}
 
-    /// 📤️ Keeps the original reset admission's actual work and complete refused input custody.
-    pub fn set_eval_json_original(&mut self,eval_json:Arc<String>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,(ValueError,Arc<String>)>{
+    /// 📤️ Keeps the original reset admission's actual work; the input stays with the caller until admitted.
+    pub fn set_eval_json_original(&mut self,eval_json:&mut Option<SharedOwner<String>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneProgress>,ValueError>{
         use semio_framework_value::RetainedWorkOutcome;
-        if let Err(error)=self.state.retirement.preflight(grant){return RetainedWorkOutcome{result:Err((error,eval_json)),work:0}}
-        let original=SessionResetSources::take(&mut self.state,false);
-        let turn=self.state.retirement.admit_original(SessionCollectionOwner::Reset(original),grant);
+        if let Err(error)=self.state.retirement.preflight(effect.grant()){return RetainedWorkOutcome{result:Err(error),work:0}}
+        let mut original=Some(SessionCollectionOwner::Reset(SessionResetSources::take(&mut self.state,false)));
+        let turn=self.state.retirement.admit(&mut original,effect);
         let result=match turn.result{
-            Ok(progress)=>{self.state.eval_json=Some(eval_json);self.state.tick_scheduled=false;self.state.published_preview_mesh_digest=0;self.state.pending_host_cancelled=self.state.pending_host.is_some();Ok(progress)},
-            Err((error,SessionCollectionOwner::Reset(original)))=>{original.restore(&mut self.state);Err((error,eval_json))},
-            Err(_)=>unreachable!("original session reset returned a different source family"),
+            Ok(Some(progress))=>{self.state.eval_json=eval_json.take();self.state.tick_scheduled=false;self.state.published_preview_mesh_digest=0;self.state.pending_host_cancelled=self.state.pending_host.is_some();Ok(Some(progress))},
+            result=>{let Some(SessionCollectionOwner::Reset(original))=original else{unreachable!("original session reset returned a different source family")};original.restore(&mut self.state);result.map(|_|None)},
         };RetainedWorkOutcome{result,work:turn.work}
     }
 

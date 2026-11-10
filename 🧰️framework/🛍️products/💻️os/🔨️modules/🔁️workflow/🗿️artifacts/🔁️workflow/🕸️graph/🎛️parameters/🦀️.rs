@@ -269,7 +269,7 @@ pub fn sync_workflow_node_parameter_ports(node: &WorkflowNode, bindings: &[Workf
             id: workflow_parameter_port_id(&node.id, &binding.parameter_id),
             spec: MediaPortSpec {
                 id: format!("{WORKFLOW_PARAMETER_PORT_PREFIX}{}", binding.parameter_id),
-                label: "Parameter".into(),
+                label: semio_ui_locale::LocalizedLabel::native("Parameter", "Parameter"),
                 direction: MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
                 kind_id: Some("parameter.value".into()),

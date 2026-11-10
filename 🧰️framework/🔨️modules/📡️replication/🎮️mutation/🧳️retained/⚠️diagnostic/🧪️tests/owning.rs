@@ -5,9 +5,11 @@ use semio_framework_replication_mutation::MutationMessage;
 use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneStep}};
 use semio_framework_diagnostic::Severity;
 use std::mem::size_of;
-use semio_framework_trace_memory_testing as test_allocation;
-#[global_allocator]
-static REQUESTED_ALLOCATOR:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+pub use semio_framework_replication_retained::retained::{Done,Reply};
+#[path="../../🪡️field/🧪️tests/harness.rs"]
+mod harness;
+use harness::{Harness,Recorded,observe};
+use semio_framework_value::retained_clone::RetainedCloneSource;
 #[path="🦀️.rs"]
 mod tests;
 #[path="🔢️unsigned/🦀️.rs"]

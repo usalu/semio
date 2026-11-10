@@ -79,7 +79,7 @@ pub fn create_puzzle5d_app() -> semio_plugin::AppDefinition {
             .artifact_kind(crate::artifact_kind())
             .icon_id("puzzle")
             .terminology("reuse")
-            .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "5d"])
+            .terminology_document("reuse", [LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::data("puzzle"), LocalizedLabel::data("5d")])
             .mode_def(edit::definition())
             .default_mode_id(edit::PUZZLE5D_PLAY_MODE_EDIT)
             .window_kind_def(board2d::definition())

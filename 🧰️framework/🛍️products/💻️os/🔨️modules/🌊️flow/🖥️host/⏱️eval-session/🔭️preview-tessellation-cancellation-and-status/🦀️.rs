@@ -58,7 +58,8 @@ impl FlowEvalSession {
     }
 
     /// ⏱️ Hands off exact sources, resets one actual row, or advances the original geometry cancellation.
-    pub fn preview_cancellation_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn preview_cancellation_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
         self.state.preview_cancellation_progress=Default::default();
         let Some(cursor)=self.state.preview_cancellation_cursor else{return Ok(RetainedCloneStep::Complete(Default::default()))};
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
@@ -69,9 +70,12 @@ impl FlowEvalSession {
         match self.state.preview_cancellation_phase{
             0=>{
                 self.retirement.preflight(grant)?;
-                let original=SessionPreviewCancellationSources::take(&mut self.state);
-                match self.retirement.admit(SessionCollectionOwner::Cancellation(original),grant){Ok(receipt)=>progress=receipt,Err((error,SessionCollectionOwner::Cancellation(original)))=>{original.restore(&mut self.state);return Err(error)},Err(_)=>unreachable!("original cancellation source changed")}
-                self.state.preview_cancellation_phase=1;
+                let mut original=Some(SessionCollectionOwner::Cancellation(SessionPreviewCancellationSources::take(&mut self.state)));
+                let turn=self.retirement.admit(&mut original,effect);
+                match turn.result{
+                    Ok(Some(receipt))=>{progress=receipt;self.state.preview_cancellation_phase=1;},
+                    result=>{let Some(SessionCollectionOwner::Cancellation(original))=original else{unreachable!("original cancellation source changed")};original.restore(&mut self.state);result?;return Ok(RetainedCloneStep::Progress(Default::default()))},
+                }
             },
             1=>{
                 if cursor<self.state.tessellate_progress_by_hash.slot_count(){if let Some((_,row))=self.state.tessellate_progress_by_hash.slot_entry_mut(cursor){if row.phase!=PreviewTessellatePhase::Complete{row.phase=PreviewTessellatePhase::Cancelled;}}self.state.preview_cancellation_cursor=Some(cursor+1);}
@@ -89,7 +93,7 @@ impl FlowEvalSession {
                 semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,port.cancel_terminal_is_empty(),"Flow session original geometry cancellation")?;
                 if port.cancel_terminal_is_empty(){state.preview_cancellation_phase=5;}
             },
-            5=>{let result=self.retirement.step(grant);progress=self.retirement.step_progress();self.state.preview_cancellation_progress=progress;let step=result?;progress=step.progress();if self.retirement.terminal_is_empty(){self.state.preview_cancellation_cursor=None;}},
+            5=>{let poll=self.retirement.step(grant.maximum_copy_bytes,effect);progress=self.retirement.step_progress();self.state.preview_cancellation_progress=progress;let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll else{return Ok(RetainedCloneStep::Progress(Default::default()))};let step=turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;progress=step.progress();if self.retirement.terminal_is_empty(){self.state.preview_cancellation_cursor=None;}},
             _=>unreachable!("original preview cancellation phase"),
         }
         self.state.preview_cancellation_progress=progress;

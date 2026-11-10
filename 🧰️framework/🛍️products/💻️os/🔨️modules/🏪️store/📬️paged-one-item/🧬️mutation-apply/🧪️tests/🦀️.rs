@@ -10,9 +10,6 @@ use semio_os_spr as protocol;
 use paged::mutation_apply_preparation_factory;
 use paged::PagedOneItemEdit;
 
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
-
 use semio_os_spr::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcome, MutationOutcomeClass, OpBinary};
 use semio_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
 use semio_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest};
@@ -23,6 +20,12 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 use semio_framework_value::{FromValue, ToValue, ValueError, ValueRefusalKind};
 use serde_json::{json, Value};
+fn close_into_step(owner:&mut dyn semio_framework_value::ErasedSnapshotRetirement,body:usize,quoted:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retained_clone::RetainedCloneProgress{
+    use semio_framework_value::{OriginalRetirementFailure,RetainedAllocationEffect};
+    use semio_framework_value::retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete,RetainedCloneStep};
+    let answer=semio_framework_value_clone_source_testing::drive::drive_reply(quoted,1<<20,|answer:&Result<RetainedCloneStep,OriginalRetirementFailure>|match answer{Ok(step)=>step.progress(),Err(failure)=>failure.retained_progress()},|effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'_,RetainedCloneStep,OriginalRetirementFailure>,recover|->Result<OriginalEffectReplyComplete<'_,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{if recover{owner.recover_close_into(body,effect,reply)}else{owner.close_into(body,effect,reply)}});
+    answer.result.unwrap_or_else(|_|panic!("prepared original close refused")).progress()
+}
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::Arc;
 
@@ -186,7 +189,7 @@ impl<T: semio_framework_value::retirement::RetireOwned + Sync> OriginalSource<T>
             if self.0.terminal_is_empty() { return; }
             let demand = self.0.next_close_demand(4096).unwrap();
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            assert!(effect::settled(effect::with_effect(grant,effect::CPU,|effect|self.0.close_step(effect)).0).result.unwrap().progress().fits(grant));
+            assert!(effect::settled(effect::with_effect(grant,effect::CPU,|effect|self.0.close_step(grant.maximum_copy_bytes,effect)).0).result.unwrap().progress().fits(grant));
         }
         panic!("original test source did not physically close");
     }
@@ -300,7 +303,7 @@ fn prepare_with(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<Documen
     let begun = factory.begin(request, grant);
     let mut owner = match begun {
         Ok((owner, receipt)) => { assert!(receipt.fits(grant.retained_grant())); owner }
-        Err((error, request)) => { let ArtifactStoreOneItemPreparationRequest{base,mutation,authority,..}=request;drain_fixture(base);drain_fixture(mutation);drain_fixture(authority);drain_fixture(root);return if footprint.is_err() { Outcome::Refused(error) } else { std::panic::panic_any(Stall) }; }
+        Err((error, request)) => { let ArtifactStoreOneItemPreparationRequest{base,mutation,authority,..}=request;drain_fixture(base);drain_fixture(mutation);drain_root(authority);drain_root(root);return if footprint.is_err() { Outcome::Refused(error) } else { std::panic::panic_any(Stall) }; }
     };
     let mut receiver = Receiver::new(grant.retained_grant());
     let mut prepared = None;
@@ -311,7 +314,7 @@ fn prepare_with(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<Documen
         match receiver.run(grant.retained_grant(), |control| owner.advance(grant.maximum_copy_bytes, grant, control)) {
             Ok(ArtifactStoreOneItemPreparationStep::Prepared(_, progress)) => { assert!(progress.fits(grant.retained_grant())); retained += progress.retained_capacity_bytes; live += progress.retained_capacity_bytes; peak = peak.max(live); turns = turn + 1; assert_eq!(owner.prepared().unwrap().outcome_messages(), owner.outcome_messages(), "borrowed ready candidate must expose the same original diagnostics"); prepared = owner.take_prepared(); break; }
             Ok(ArtifactStoreOneItemPreparationStep::Progress(_, progress)) => { assert!(progress.fits(grant.retained_grant()), "receipt {progress:?} exceeds {grant:?}"); retained += progress.retained_capacity_bytes; live += progress.retained_capacity_bytes; peak = peak.max(live); live = live.saturating_sub(progress.released_bytes); idle = 0; }
-            Ok(ArtifactStoreOneItemPreparationStep::Blocked) => { idle += 1; if idle >= 64 { owner.cancel(); owner.begin_close(); close(&mut owner); drop(owner); receiver.finish(); drain_fixture(root);std::panic::panic_any(Stall); } }
+            Ok(ArtifactStoreOneItemPreparationStep::Blocked) => { idle += 1; if idle >= 64 { owner.cancel(); owner.begin_close(); close(&mut owner); drop(owner); receiver.finish(); drain_root(root);std::panic::panic_any(Stall); } }
             Err(error) => { refused = Some(error); break; }
         }
     }
@@ -324,7 +327,7 @@ fn prepare_with(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<Documen
                 if retirement.terminal_is_empty() { break; }
                 let copy = retirement.next_copy_byte_demand().unwrap();
                 let quoted = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: retirement.next_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: retirement.next_release_byte_demand().unwrap(), maximum_depth: retirement.next_depth_demand().unwrap() };
-                assert!(effect::settled(effect::with_effect(quoted,effect::CPU,|e|retirement.close_step(e)).0).result.unwrap().progress().fits(quoted));
+                assert!(close_into_step(&mut *retirement,quoted.maximum_copy_bytes,quoted).fits(quoted));
                 assert!(turn < 99_999, "prepared original owners must reach typed terminal closure");
             }
             assert!(retirement.terminal_is_empty());
@@ -337,7 +340,7 @@ fn prepare_with(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<Documen
     close(&mut owner);
     assert_eq!(observe(|| drop(owner)).1.requested_bytes, 0);
     receiver.finish();
-    drain_fixture(root);
+    drain_root(root);
     outcome
 }
 
@@ -432,13 +435,13 @@ fn config_apply_reaches_prepared_with_independent_scalar_owner(){
     let prepared=prepared.expect("scalar config prepared");assert_eq!(**prepared.post_snapshot(),expected);assert_eq!(prepared.edit().inverse.get(0).unwrap().value,base);assert_eq!(*root,base);
     let(mut ticket,receipt)=prepared.admit_retirement(mutations,snapshots,policy.retained_grant()).unwrap_or_else(|_|panic!("scalar config candidate retirement"));assert!(receipt.fits(policy.retained_grant()));
     for _ in 0..100000{
-        if ticket.terminal_is_empty(){break;}let copy=ticket.next_copy_byte_demand().unwrap();let quote=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:ticket.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:ticket.next_release_byte_demand().unwrap(),maximum_depth:ticket.next_depth_demand().unwrap()};assert!(effect::settled(effect::with_effect(quote,effect::CPU,|e|ticket.close_step(e)).0).result.unwrap().progress().fits(quote));
+        if ticket.terminal_is_empty(){break;}let copy=ticket.next_copy_byte_demand().unwrap();let quote=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:ticket.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:ticket.next_release_byte_demand().unwrap(),maximum_depth:ticket.next_depth_demand().unwrap()};assert!(close_into_step(&mut *ticket,quote.maximum_copy_bytes,quote).fits(quote));
     }
     assert!(ticket.terminal_is_empty());owner.begin_close();
     for _ in 0..100000{
         if owner.terminal_is_empty(){break;}let copy=owner.next_close_copy_byte_demand().unwrap();let quote=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_close_release_byte_demand().unwrap(),maximum_depth:owner.next_close_depth_demand().unwrap()};assert!(effect::settled(effect::with_effect(quote.retained_grant(),effect::CPU,|e|owner.close_step(e)).0).result.unwrap().progress().fits(quote.retained_grant()));
     }
-    assert!(owner.terminal_is_empty());assert_eq!(observe(||drop(owner)).1.requested_bytes,0);receiver.finish();drain_fixture(root);
+    assert!(owner.terminal_is_empty());assert_eq!(observe(||drop(owner)).1.requested_bytes,0);receiver.finish();drain_root(root);
 }
 /// 🚦️ Diagnostic admission preserves every original row and refuses a valid nonempty hostile diff before writes.
 
@@ -626,6 +629,23 @@ impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation
 
 mod quick {
 use super::*;
+/// 🔁️ Every pending original reply (decision, preflight, inverse) is recovered exactly once and yields the same typed outcome.
+#[test]
+fn mutation_apply_recovers_pending_original_replies_exactly_once() {
+    use retained_semantics::{RECOVERS,STALL,STALL_INVERSE,STALL_PREFLIGHT};
+    let policy = fixture();
+    let base = plain_document_json(&policy["base"]);
+    let factory = mutation_apply_preparation_factory::<Document, DocumentMutation>();
+    let build = || (document_from_plain(base.clone()), DocumentMutation::SetText { index: 1, text: "changed".into() });
+    let Outcome::Completed { post: expected_post, inverse: expected_inverse, turns: plain_turns, .. } = prepare_with(&factory, &build, grant(1 << 16, WIDE), None) else { panic!("plain run must complete") };
+    assert_eq!(RECOVERS.get(), 0);
+    STALL.set(true);STALL_INVERSE.set(true);STALL_PREFLIGHT.set(true);
+    let Outcome::Completed { post, inverse, turns, .. } = prepare_with(&factory, &build, grant(1 << 16, WIDE), None) else { panic!("stalled run must complete") };
+    assert_eq!((post, inverse), (expected_post, expected_inverse));
+    assert_eq!(RECOVERS.get(), 3);
+    assert!(!STALL.get() && !STALL_INVERSE.get() && !STALL_PREFLIGHT.get());
+    assert!(turns > plain_turns);
+}
 #[test]
 fn mutation_apply_prepares_structural_edits_with_ordered_inverse_rows() {
     let policy = fixture();

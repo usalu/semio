@@ -1,17 +1,37 @@
-struct ObservedAllocator;
-thread_local! { static RETIREMENT_ALLOCATION_EVENTS: std::cell::Cell<Option<(usize, usize)>> = const { std::cell::Cell::new(None) }; }
-fn retirement_allocation_event(requested: usize, released: usize) { let _ = RETIREMENT_ALLOCATION_EVENTS.try_with(|events| { if let Some((allocated, freed)) = events.get() { events.set(Some((allocated + requested, freed + released))); } }); }
-pub(crate) fn observe_retirement_allocations<T>(operation: impl FnOnce() -> T) -> (T, (usize, usize)) {
-    RETIREMENT_ALLOCATION_EVENTS.with(|events| { assert!(events.replace(Some((0, 0))).is_none()); });
-    let result = operation();
-    let events = RETIREMENT_ALLOCATION_EVENTS.with(|events| events.replace(None).unwrap());
-    (result, events)
+//! 🧪️ The mesh test binary's physical allocation observer and per-thread original effect bank.
+use semio_framework_value_testing_admission as admission;
+use semio_framework_value::{RetainedAllocationEffect,RetainedWorkOutcome,ValueError};
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use std::cell::RefCell;
+
+pub(crate) use semio_framework_value_testing_allocator::observe_retirement_allocations;
+
+thread_local!{static BANK:RefCell<Option<admission::EffectBank>>=const{RefCell::new(None)};}
+
+fn new_bank()->admission::EffectBank{admission::EffectBank::new(admission::BankWallet::from_profile(&serde_json::json!({"items":1u64<<30,"copyBytes":1u64<<40,"capacityBytes":1u64<<40,"releaseBytes":1u64<<40,"depth":1u64<<20,"fuel":1u64<<60})))}
+
+/// 🔥️ Builds this thread's original effect bank before a test observes allocations.
+pub(crate) fn warm(){BANK.with(|slot|{let mut slot=slot.borrow_mut();if slot.is_none(){*slot=Some(new_bank())}})}
+
+/// 🎟️ Lends one real original effect of `grant` to a single call.
+pub(crate) fn fx<R>(grant:RetainedCloneGrant,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->R{
+    BANK.with(|slot|{
+        let mut bank=slot.borrow_mut().take().unwrap_or_else(new_bank);
+        let mut result=None;
+        let _=bank.run(grant,1<<40,|effect|{result=Some(run(effect));let work=effect.performed_work();admission::RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work})});
+        bank.take_admitted();
+        *slot.borrow_mut()=Some(bank);
+        result.expect("effect call ran")
+    })
 }
-unsafe impl std::alloc::GlobalAlloc for ObservedAllocator {
-    unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8{let pointer=unsafe{std::alloc::GlobalAlloc::alloc(&semio_framework_trace::HeapWitness,layout)};if !pointer.is_null(){retirement_allocation_event(layout.size(),0);}pointer}
-    unsafe fn alloc_zeroed(&self,layout:std::alloc::Layout)->*mut u8{let pointer=unsafe{std::alloc::GlobalAlloc::alloc_zeroed(&semio_framework_trace::HeapWitness,layout)};if !pointer.is_null(){retirement_allocation_event(layout.size(),0);}pointer}
-    unsafe fn realloc(&self,pointer:*mut u8,layout:std::alloc::Layout,size:usize)->*mut u8{let grown=unsafe{std::alloc::GlobalAlloc::realloc(&semio_framework_trace::HeapWitness,pointer,layout,size)};if !grown.is_null(){retirement_allocation_event(size,layout.size());}grown}
-    unsafe fn dealloc(&self,pointer:*mut u8,layout:std::alloc::Layout){retirement_allocation_event(0,layout.size());unsafe{std::alloc::GlobalAlloc::dealloc(&semio_framework_trace::HeapWitness,pointer,layout)}}
+
+/// ♻️ Drives one reply-shaped action under a genuine producer authority, across pending turns.
+pub(crate) fn drive<F:Send+'static>(grant:RetainedCloneGrant,call:impl for<'r,'e,'a> FnMut(&'e mut RetainedAllocationEffect<'a>,admission::OriginalEffectReply<'r,semio_framework_value::retained_clone::RetainedCloneStep,F>,bool)->Result<admission::OriginalEffectReplyComplete<'r,semio_framework_value::retained_clone::RetainedCloneStep,F>,ValueError>)->admission::RetainedWorkPoll<semio_framework_value::retained_clone::RetainedCloneStep,F>{
+    BANK.with(|slot|{
+        let mut bank=slot.borrow_mut().take().unwrap_or_else(new_bank);
+        let(poll,_)=admission::driven(&mut bank,grant,1<<40,call);
+        bank.take_admitted();
+        *slot.borrow_mut()=Some(bank);
+        poll
+    })
 }
-#[global_allocator]
-static OBSERVED_ALLOCATOR:ObservedAllocator=ObservedAllocator;

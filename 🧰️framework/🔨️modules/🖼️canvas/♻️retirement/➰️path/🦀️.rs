@@ -40,7 +40,7 @@ impl CanvasPathRetirement {
 impl ErasedSnapshotRetirement for CanvasPathRetirement {
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:if !self.elements.is_empty(){size_of::<PathEl>()}else if self.elements.capacity()!=0{2*size_of::<Vec<PathEl>>()}else{0},release_bytes:if self.elements.is_empty(){self.elements.capacity().checked_mul(size_of::<PathEl>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Canvas path backing extent overflow"))?}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
 
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+    fn close_step(&mut self, body:usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
         let grant = effect.grant();
         let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
@@ -63,6 +63,10 @@ impl ErasedSnapshotRetirement for CanvasPathRetirement {
         semio_framework_value::RetainedWorkPoll::Complete(RetainedWorkOutcome { result: result.map_err(Into::into), work: work.into() })
     }
 
+    fn next_computational_work(&self, _body: usize) -> Result<u64, ValueError> {
+        if self.terminal_is_empty() { return Ok(0); }
+        Ok(1)
+    }
     fn terminal_is_empty(&self) -> bool { self.elements.is_empty() && self.elements.capacity() == 0 }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(if !self.elements.is_empty() { size_of::<PathEl>() } else if self.elements.capacity() != 0 { 2 * size_of::<Vec<PathEl>>() } else { 0 }) }
     fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(0) }

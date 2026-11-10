@@ -33,94 +33,10 @@ pub(crate) fn take_actions(input: &mut semio_ui_wgpu_input::InputState<ActionDes
     actions
 }
 
-pub(crate) fn mesh_oracle_from_buffers(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>) -> TerrainMeshOracleData {
-    TerrainMeshOracleData { positions, normals, indices, face_ids: Vec::new(), vertex_ids: Vec::new(), edge_positions: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), colors: Vec::new() }
-}
 
-pub(crate) fn publish_oracle_mesh(data: TerrainMeshOracleData) -> Mesh3dLease {
-    publish_oracle_mesh_at_revision(data, 0)
-}
+use semio_os_infinite_world_host::with_world_step_context;
+use semio_os_infinite_world_host::{allocate_oracle_mesh, mesh_oracle_from_buffers, publish_oracle_mesh, publish_oracle_mesh_at_revision};
 
-/// 🧊️ An oracle mesh stamped with a chosen interaction revision — what
-/// `publish_world3d_asset_mesh_lease` witnesses before it stores a decoded GLB under its url's id.
-pub(crate) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revision: u64) -> Mesh3dLease {
-    assert!(data.positions.len().is_multiple_of(3));
-    assert_eq!(data.normals.len(), data.positions.len());
-    assert!(data.edge_positions.len().is_multiple_of(6));
-    assert!(data.uvs.len().is_multiple_of(2));
-    assert!(data.colors.len().is_multiple_of(4));
-    static GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(10_000);
-    let schema = Mesh3dSchema {
-        vertices: (data.positions.len() / 3) as u32,
-        indices: data.indices.len() as u32,
-        face_ids: data.face_ids.len() as u32,
-        vertex_ids: data.vertex_ids.len() as u32,
-        edges: (data.edge_positions.len() / 6) as u32,
-        edge_ids: data.edge_ids.len() as u32,
-        uvs: (data.uvs.len() / 2) as u32,
-        colors: (data.colors.len() / 4) as u32,
-    surface_uvs:[0;4],tangents:0,};
-    let generation = GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_begin_capacity_byte_demand(),0,1);
-    let (token,progress)=mesh3d_begin(generation,revision,schema,grant).expect("oracle mesh claim");
-    assert!(progress.fits(grant));
-    allocate_oracle_mesh(token);
-    for value in data.positions.as_chunks::<3>().0 {
-        mesh3d_write_vec3(token, Mesh3dField::Positions, *value).unwrap();
-    }
-    for value in data.normals.as_chunks::<3>().0 {
-        mesh3d_write_vec3(token, Mesh3dField::Normals, *value).unwrap();
-    }
-    for value in data.indices {
-        mesh3d_write_u32(token, Mesh3dField::Indices, value).unwrap();
-    }
-    for value in data.face_ids {
-        mesh3d_write_u32(token, Mesh3dField::FaceIds, value).unwrap();
-    }
-    for value in data.vertex_ids {
-        mesh3d_write_u32(token, Mesh3dField::VertexIds, value).unwrap();
-    }
-    for value in data.edge_positions.as_chunks::<6>().0 {
-        mesh3d_write_edge(token, [value[..3].try_into().unwrap(), value[3..].try_into().unwrap()]).unwrap();
-    }
-    for value in data.edge_ids {
-        mesh3d_write_u32(token, Mesh3dField::EdgeIds, value).unwrap();
-    }
-    for value in data.uvs.as_chunks::<2>().0 {
-        ui_scene::math::mesh3d_write_vec2(token, Mesh3dField::Uvs, *value).unwrap();
-    }
-    for value in data.colors.as_chunks::<4>().0 {
-        ui_scene::math::mesh3d_write_vec4(token, Mesh3dField::Colors, *value).unwrap();
-    }
-    mesh3d_seal(token).expect("oracle mesh publication")
-}
-
-pub(crate) fn with_world_step_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
-    let mut sequence = 0;
-    let grant=world_original_fixture_grant();
-    let mut receipt=semio_framework_value::RetainedCloneProgress::default();
-    let mut context = semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(1),
-        semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(fuel, u64::MAX,grant),
-        semio_framework_job::root_cancel_token(),
-        semio_framework_job::default_now_us,
-        &mut sequence,
-        &mut receipt,
-    );
-    let result=step(&mut context);
-    assert!(context.retained_progress().fits(grant));
-    result
-}
-
-fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
-    loop {
-        let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
-        let step=mesh3d_allocate_step(token,grant).unwrap();
-        assert!(step.progress.fits(grant));
-        if step.complete{break}
-    }
-}
 
 fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
@@ -214,6 +130,7 @@ fn click(state: &mut World3dState, button: i16) {
 
 #[test]
 fn an_orbit_drag_journals_the_reference_sequence_and_moves_no_camera() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = journey_state();
     let before = state.camera.orbit.clone();
     drag(&mut state, 0, point("dragTo"));
@@ -224,6 +141,7 @@ fn an_orbit_drag_journals_the_reference_sequence_and_moves_no_camera() {
 
 #[test]
 fn a_pan_drag_journals_one_navigation_note_and_one_debounced_camera_report() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = journey_state();
     let before = state.camera.orbit.target;
     drag(&mut state, 1, point("panTo"));
@@ -235,6 +153,7 @@ fn a_pan_drag_journals_one_navigation_note_and_one_debounced_camera_report() {
 
 #[test]
 fn a_wheel_zoom_journals_exactly_the_reference_sequence() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = journey_state();
     let at = point("aim");
     let delta = fixture()["surface"]["wheelDelta"].as_f64().expect("wheel delta") as f32;
@@ -248,6 +167,7 @@ fn a_wheel_zoom_journals_exactly_the_reference_sequence() {
 
 #[test]
 fn a_pick_journals_one_selection_and_the_unconditional_camera_report() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = journey_state();
     let before = state.camera.orbit.clone();
     click(&mut state, 0);
@@ -258,6 +178,7 @@ fn a_pick_journals_one_selection_and_the_unconditional_camera_report() {
 
 #[test]
 fn a_right_click_journals_no_menu_verb_at_all() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = journey_state();
     click(&mut state, 2);
     let published = journal(&mut state);
@@ -279,6 +200,7 @@ fn a_right_click_journals_no_menu_verb_at_all() {
 /// selection of the same target is a duplicate, not parity, and the probe's verdict is set-based.
 #[test]
 fn a_non_primary_press_publishes_the_selection_react_publishes_for_any_button() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     for button in [1_i16, 2] {
         let mut state = journey_state();
         let at = point("aim");
@@ -303,6 +225,7 @@ fn a_non_primary_press_publishes_the_selection_react_publishes_for_any_button() 
 /// sends — `handleEmptyClick` returns early under `paintMode` for the same reason.
 #[test]
 fn a_non_primary_press_publishes_nothing_outside_the_select_lane() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     for (utility, granularity) in [("brush", "mesh"), ("select", "vertex"), ("surfaceBrush", "mesh")] {
         let mut state = journey_state();
         state.session.active_utility = utility.into();
@@ -330,6 +253,7 @@ fn a_non_primary_press_publishes_nothing_outside_the_select_lane() {
 /// `x`/`y` take the newest sample, which is the point React would have raycast.
 #[test]
 fn a_burst_of_pointer_moves_folds_onto_the_latest_without_moving_the_gesture() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut folded = journey_state();
     drag(&mut folded, 1, point("panTo"));
     let folded_depth = folded.authority.interaction_authority.as_ref().expect("authority").queue.len;
@@ -358,6 +282,7 @@ fn a_burst_of_pointer_moves_folds_onto_the_latest_without_moving_the_gesture() {
 /// gesture.
 #[test]
 fn a_fold_never_touches_the_front_or_crosses_a_gesture_boundary() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let modifiers = PointerModifiers::default();
     let mut state = journey_state();
     let at = point("aim");
@@ -386,6 +311,7 @@ fn a_fold_never_touches_the_front_or_crosses_a_gesture_boundary() {
 /// does, with a `zoom` in the report that actually moves.
 #[test]
 fn an_orthographic_pane_journals_the_same_sequences_with_a_live_zoom() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = journey_state();
     state.camera.orbit.projection = CameraProjection3d::Orthographic;
     state.camera.orbit.zoom = 40.0;
@@ -424,6 +350,7 @@ fn an_orthographic_pane_journals_the_same_sequences_with_a_live_zoom() {
 /// half: that the leave those two hand down is a hover clear and nothing more.
 #[test]
 fn a_chrome_owned_pointer_hands_the_world_lane_one_hover_clear_and_nothing_else() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = journey_state();
     let at = point("aim");
     let modifiers = PointerModifiers::default();
@@ -451,6 +378,7 @@ fn a_chrome_owned_pointer_hands_the_world_lane_one_hover_clear_and_nothing_else(
 /// `📓️w9c-behaviour-parity-run-2.md` §7b measured a stale aim doing to the whole page.
 #[test]
 fn a_leave_from_outside_the_pick_rect_clears_the_hover_without_faulting() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = journey_state();
     let at = point("aim");
     let modifiers = PointerModifiers::default();
@@ -479,6 +407,7 @@ fn a_leave_from_outside_the_pick_rect_clears_the_hover_without_faulting() {
 /// quarantine".
 #[test]
 fn a_draw_whose_mesh_has_not_landed_is_skipped_by_every_interaction_cursor() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = journey_state();
     let resident = journal_of_a_click(&mut journey_state());
     state.scene.draws.push(SceneDraw3d { mesh_key: "mesh:🧊️still-loading".into(), mesh_version: 7, instances: vec![Instance3d { component_source: None, id: "unlanded".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
@@ -511,6 +440,7 @@ fn journal_of_a_click(state: &mut World3dState) -> Vec<String> {
 /// `🗑️generated/w13c-parity-run-20`).
 #[test]
 fn a_frame_driven_hover_clear_is_owed_once_and_never_saturates_the_queue() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = journey_state();
     let at = point("aim");
     let modifiers = PointerModifiers::default();

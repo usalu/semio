@@ -51,9 +51,10 @@ impl EnergyCheckpointRejected {
         Ok(if self.terminal_is_empty() { RetirementDemand::default() } else { ENERGY_RUNG_DEMAND })
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
         if !self.packet.terminal_is_empty() {
-            return Ok(energy_turn(self.packet.close_step(grant))?.0);
+            return Ok(energy_turn(self.packet.close_step(effect))?.0);
         }
         if self.terminal_is_empty() {
             return Ok(energy_done());
@@ -329,15 +330,15 @@ impl EnergyRestoreJob {
             if packet.terminal_is_empty() {
                 self.replay_retiring = None;
             } else {
-                let step = packet.close_step(context.retained_grant());
-                energy_spend(context, step)?;
+                let demand = packet.retirement_demands().map_err(|_| EnergyWireRejection::Backing)?;
+                crate::retirement::energy_effect_step(context, demand, |effect| packet.close_step(effect)).map_err(|_| EnergyWireRejection::Backing)?;
             }
             return Ok(false);
         }
         if let Some(lease) = self.replay_checkpoint_lease.as_mut() {
             if !lease.packet().terminal_is_empty() {
-                let step = lease.packet_mut().close_step(context.retained_grant());
-                energy_spend(context, step)?;
+                let demand = lease.packet().retirement_demands().map_err(|_| EnergyWireRejection::Backing)?;
+                crate::retirement::energy_effect_step(context, demand, |effect| lease.packet_mut().close_step(effect)).map_err(|_| EnergyWireRejection::Backing)?;
                 return Ok(false);
             }
             let lease = self.replay_checkpoint_lease.take().expect("empty replay checkpoint lease remains owned");
@@ -486,12 +487,13 @@ impl EnergyRestoreJob {
             }
         }
         let demand=self.close_demands()?;
-        crate::retirement::energy_retained_step(cx,demand,|loan|self.close_owned_frontier(loan).map(|step|RetainedCloneStep::Progress(step.progress())))
+        crate::retirement::energy_effect_step(cx,demand,|effect|self.close_owned_frontier(effect).map(|step|RetainedCloneStep::Progress(step.progress())))
     }
 
-    fn close_owned_frontier(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    fn close_owned_frontier(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
         if let Some(packet) = self.replay_retiring.as_mut() {
-            let (step, _) = energy_turn(packet.close_step(grant))?;
+            let (step, _) = energy_turn(packet.close_step(effect))?;
             if packet.terminal_is_empty() {
                 self.replay_retiring = None;
             }
@@ -499,7 +501,7 @@ impl EnergyRestoreJob {
         }
         if let Some(lease) = self.replay_checkpoint_lease.as_mut() {
             if !lease.packet().terminal_is_empty() {
-                let (step, _) = energy_turn(lease.packet_mut().close_step(grant))?;
+                let (step, _) = energy_turn(lease.packet_mut().close_step(effect))?;
                 return Ok(step);
             }
             if !energy_grant_covers(grant, RetirementDemand { depth: 1, ..Default::default() }) {
@@ -516,7 +518,7 @@ impl EnergyRestoreJob {
             return Ok(energy_one());
         }
         if let Some(packet) = self.packet.as_mut() {
-            let (step, _) = energy_turn(packet.close_step(grant))?;
+            let (step, _) = energy_turn(packet.close_step(effect))?;
             if packet.terminal_is_empty() {
                 self.packet = None;
             }

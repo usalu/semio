@@ -35,9 +35,9 @@ impl ReachWork{
  }
  pub(super) fn begin_close(&mut self){self.closing=true}
  pub(super) fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty(){return self.retirement.demands(copy)}if self.fields.visited.capacity()!=0{return self.retirement.next_owner_demands::<Vec<u8>>(true,&None,copy)}if self.fields.stack.capacity()!=0{return self.retirement.next_owner_demands::<Vec<usize>>(true,&None,copy)}Ok(if self.binding.is_some()||self.origin.is_some(){fixed(size_of::<Self>())}else{Default::default()})}
- pub(super) fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
-  if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.retirement.is_empty(){return self.retirement.step_granted(g)}
-  macro_rules! vector{($field:ident)=>{if self.fields.$field.capacity()!=0{let mut owner=Some(std::mem::take(&mut self.fields.$field));let turn=self.retirement.begin_granted(&mut owner,g);if let Some(owner)=owner{self.fields.$field=owner}return RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
+ pub(super) fn close_step(&mut self,g:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
+  if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.retirement.is_empty(){return poll_outcome(self.retirement.step_granted(g.maximum_copy_bytes,effect))}
+  macro_rules! vector{($field:ident)=>{if self.fields.$field.capacity()!=0{let mut owner=Some(std::mem::take(&mut self.fields.$field));let turn=self.retirement.begin_granted(&mut owner,effect);if let Some(owner)=owner{self.fields.$field=owner}return RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
   vector!(visited);vector!(stack);if self.binding.is_some()||self.origin.is_some(){let d=fixed(size_of::<Self>());if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.binding=None;self.origin=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}}RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.fields.visited.capacity()==0&&self.fields.stack.capacity()==0&&self.retirement.is_empty()&&self.binding.is_none()&&self.origin.is_none()}

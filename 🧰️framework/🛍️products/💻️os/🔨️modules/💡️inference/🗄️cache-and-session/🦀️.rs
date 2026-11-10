@@ -22,12 +22,7 @@ impl<T:RetireOwned+Sync> InferenceOwnedValue for T {
 /// 🌱️ Keeps the erased original inline until its exact typed owner cursor is funded by the closing effect.
 pub(super) struct InferenceValueRetirement{original:std::mem::ManuallyDrop<Option<Box<dyn InferenceOwnedValue>>>}
 impl InferenceValueRetirement{
- fn demand(&self)->RetirementDemand{let Some(original)=self.original.as_ref()else{return Default::default()};let capacity_bytes=original.boxed_retirement_birth_bytes();RetirementDemand{copy_bytes:size_of::<Option<Box<dyn InferenceOwnedValue>>>()+capacity_bytes,capacity_bytes,depth:2,..Default::default()}}
-}
-impl RetirementCursor for InferenceValueRetirement{
- fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(self.original.is_some()))}
- fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(self.demand())}
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+ fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
   use semio_framework_value::retirement::RetirementStep;
   let Some(original)=self.original.take()else{return RetirementStep::Complete(0)};
   let grant=effect.grant();
@@ -36,6 +31,12 @@ impl RetirementCursor for InferenceValueRetirement{
   let(rest,turn)=original.admit_retirement(&mut child);*self.original=rest;
   match turn.result{Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress,turn.work),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)}
  }
+ fn demand(&self)->RetirementDemand{let Some(original)=self.original.as_ref()else{return Default::default()};let capacity_bytes=original.boxed_retirement_birth_bytes();RetirementDemand{copy_bytes:size_of::<Option<Box<dyn InferenceOwnedValue>>>()+capacity_bytes,capacity_bytes,depth:2,..Default::default()}}
+}
+impl RetirementCursor for InferenceValueRetirement{
+ semio_framework_value::native_retirement_reply!();
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(self.original.is_some()))}
+ fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(self.demand())}
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{self.original.as_ref().map_or(Some(0),|original|Some(original.boxed_retirement_birth_bytes()))}

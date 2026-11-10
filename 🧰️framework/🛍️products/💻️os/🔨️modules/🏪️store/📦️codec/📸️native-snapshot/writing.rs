@@ -163,6 +163,12 @@ impl OriginalPackWriting {
             Ok(RetirementDemand { copy_bytes: usize::from(self.wire.capacity() > 0) * size_of::<Vec<u8>>(), release_bytes: self.wire.capacity(), depth: usize::from(self.wire.capacity() > 0), ..Default::default() })
         }
     }
+    pub fn close_step(&mut self, _body: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetirementStep {
+        match self.close(effect) {
+            Ok(step) => RetirementStep::Progress(step.progress(), effect.performed_work()),
+            Err(e) => RetirementStep::Failure(e.into(), effect.performed_work()),
+        }
+    }
     pub fn close(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
         let grant = effect.grant();
         let demand = self.close_demand(grant.maximum_copy_bytes)?;
@@ -206,12 +212,7 @@ impl RetirementCursor for OriginalPackWriting {
     fn next_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         self.close_demand(body)
     }
-    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetirementStep {
-        match self.close(effect) {
-            Ok(step) => RetirementStep::Progress(step.progress(), effect.performed_work()),
-            Err(e) => RetirementStep::Failure(e.into(), effect.performed_work()),
-        }
-    }
+    semio_framework_value::native_retirement_reply!();
     fn terminal_is_empty(&self) -> bool {
         self.empty()
     }

@@ -226,7 +226,7 @@ pub fn norm_io(variant: &str, artifact_schema: &str) -> AppIo {
         ports: vec![
             MediaPortSpec {
                 id: "model:in".into(),
-                label: media_port_label(LocalizedLabel::native("Model", "Modell")),
+                label: LocalizedLabel::native("Model", "Modell"),
                 direction: MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
                 kind_id: None,
@@ -235,7 +235,7 @@ pub fn norm_io(variant: &str, artifact_schema: &str) -> AppIo {
             },
             MediaPortSpec {
                 id: "report:out".into(),
-                label: media_port_label(LocalizedLabel::native("Report", "Bericht")),
+                label: LocalizedLabel::native("Report", "Bericht"),
                 direction: MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
                 kind_id: Some(artifact_kind_id.clone()),

@@ -22,7 +22,7 @@ impl<P> ArtifactEnvelopeFreshSnapshotTarget<P> {
     }
 }
 
-impl<P: Send> ArtifactEnvelopeSnapshotFieldTarget<P> for ArtifactEnvelopeFreshSnapshotTarget<P> {
+impl<P: Send + Sync + 'static> ArtifactEnvelopeSnapshotFieldTarget<P> for ArtifactEnvelopeFreshSnapshotTarget<P> {
     fn reserve_snapshot(&mut self) -> Result<ArtifactEnvelopeFieldReservation, OwnedSchemaDecodeDiagnostic> {
         if self.reserved.is_some() || self.value.is_some() {
             return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.snapshot-reservation-duplicate", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
@@ -59,7 +59,7 @@ pub enum ArtifactEnvelopeFreshVcsActive<Mutation> {
 
 /// 🌱️ Concrete repository VCS authority for a paged envelope. It accepts one
 /// owner-supplied snapshot and four fixed-capacity, one-entry-at-a-time history arrays.
-pub struct ArtifactEnvelopeFreshVcsAuthority<P: Send + Sync + 'static, Mutation: Send + 'static> {
+pub struct ArtifactEnvelopeFreshVcsAuthority<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> {
     pub cursor: OwnedSchemaNestedRecordCursor,
     pub snapshot: Option<Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>>,
     pub snapshot_target: ArtifactEnvelopeFreshSnapshotTarget<P>,
@@ -81,7 +81,7 @@ pub struct ArtifactEnvelopeFreshVcsAuthority<P: Send + Sync + 'static, Mutation:
     pub terminal: bool,
 }
 
-impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
     pub fn try_new(
         snapshot: Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>,
         initial_snapshot_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
@@ -373,7 +373,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshVc
     }
 
     /// 📚️ Prices handing one original history ledger to its retained ledger cursor; an empty ledger is merely dropped.
-    fn ledger_demand<T: Send + 'static, F: semio_framework_value::FactoryPayloadRetirement>(ledger: &ArtifactHistoryLedger<T>) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    fn ledger_demand<T: Send + Sync + 'static, F: semio_framework_value::FactoryPayloadRetirement>(ledger: &ArtifactHistoryLedger<T>) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if ledger.terminal_is_empty() && ledger.backing_is_empty() {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
         }
@@ -381,7 +381,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshVc
     }
 
     /// 🤝️ Hands one original ledger to its retained cursor, or reports an empty ledger as one droppable item.
-    pub(super) fn hand_off_ledger<T: Send + 'static, F: ArtifactOwnedValueRetirementFactory<T> + semio_framework_value::FactoryPayloadRetirement>(ledger: &mut ArtifactHistoryLedger<T>, factory: F, slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub(super) fn hand_off_ledger<T: Send + Sync + 'static, F: ArtifactOwnedValueRetirementFactory<T> + semio_framework_value::FactoryPayloadRetirement>(ledger: &mut ArtifactHistoryLedger<T>, factory: F, slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if ledger.terminal_is_empty() && ledger.backing_is_empty() {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }

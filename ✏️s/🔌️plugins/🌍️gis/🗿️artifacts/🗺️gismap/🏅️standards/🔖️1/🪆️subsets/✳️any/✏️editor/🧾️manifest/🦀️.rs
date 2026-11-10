@@ -64,7 +64,7 @@ fn gis2d_feature_id_arg() -> ActionArgDef {
 pub fn create_gis2d_app() -> semio_plugin::AppDefinition {
     Editor::builder(crate::GISMAP_DIALECT).document(["semio", "gis", "2d"])
             .terminology("reuse")
-            .terminology_document("reuse", ["Entwerfen mit Bestand", "Verfolgen"])
+            .terminology_document("reuse", [LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::native("Trace", "Verfolgen")])
             .artifact_kind(artifact_kind())
             .media_input(gis2d_features_in_port())
             .media_output(gis2d_map_out_port())

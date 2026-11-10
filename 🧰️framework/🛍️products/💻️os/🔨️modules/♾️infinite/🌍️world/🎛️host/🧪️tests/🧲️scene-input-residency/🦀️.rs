@@ -64,6 +64,7 @@ fn one_pixel_png() -> Vec<u8> {
 
 #[test]
 fn pointer_relocate_and_catalogue_drop_honor_the_document_snap_boolean() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = fixture();
     let target = point(&fixture["snap"]["point"]);
     let factor = fixture["snap"]["factor"].as_f64().expect("factor");
@@ -100,6 +101,7 @@ fn pointer_relocate_and_catalogue_drop_honor_the_document_snap_boolean() {
 
 #[test]
 fn replacing_a_reference_cancels_its_claim_and_rejects_its_late_bytes() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = fixture();
     let a = fixture["referenceResidency"]["removedUrl"].as_str().expect("A");
     let b = fixture["referenceResidency"]["replacementUrl"].as_str().expect("B");
@@ -125,6 +127,7 @@ fn replacing_a_reference_cancels_its_claim_and_rejects_its_late_bytes() {
 
 #[test]
 fn more_than_256_distinct_reference_replacements_keep_one_resident_entry() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = fixture();
     let count = fixture["referenceResidency"]["distinctReplacementCount"].as_u64().expect("replacement count");
     let maximum = fixture["referenceResidency"]["maximumResidentUrls"].as_u64().expect("maximum resident URLs") as usize;

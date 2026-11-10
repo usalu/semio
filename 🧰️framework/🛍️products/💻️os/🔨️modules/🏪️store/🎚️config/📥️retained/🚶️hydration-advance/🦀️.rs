@@ -423,7 +423,7 @@ where
             }
             Phase::RetireHistory => {
                 if self.history.is_some() {
-                    match Self::admit_input(&mut self.history, grant) {
+                    let mut lease = self.history.take().map(semio_framework_value::retirement::arc_custody::ArcLease::new); let admitted = Self::admit_input(&mut lease, grant); *self.history = lease.and_then(|lease| lease.0); match admitted {
                         Ok(Some((owner, progress))) => { *self.active = Some(owner); self.last_retirement_progress = progress; }
                         Ok(None) => {}
                         Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),

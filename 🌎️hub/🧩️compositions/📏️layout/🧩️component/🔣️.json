@@ -5931,7 +5931,16 @@
           "ports": [
             {
               "id": "fields:in",
-              "label": "Fields",
+              "label": {
+                "native": {
+                  "en": "Fields",
+                  "de": "Felder"
+                },
+                "reuse": {
+                  "en": "Fields",
+                  "de": "Felder"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -5943,7 +5952,16 @@
             },
             {
               "id": "layout:out",
-              "label": "Layout",
+              "label": {
+                "native": {
+                  "en": "Layout",
+                  "de": "Layout"
+                },
+                "reuse": {
+                  "en": "Layout",
+                  "de": "Layout"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "twoD",

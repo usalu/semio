@@ -104,23 +104,42 @@ pub fn flow_neuron_kind_infos_json() -> String {
 /// 🧠️ The same operator catalogue as the id-keyed map a `FlowHost` actually indexes, built straight
 /// off the registry with no JSON in between, and SHARED: the map is a pure projection of the
 /// registry, so it is rebuilt exactly once per [`flow_extension_registry_generation`] and every host
-/// after that clones an `Arc`, not 108 kB of operator records.
-pub fn flow_neuron_kind_info_map() -> std::sync::Arc<protocol::causal::transition::HistoryFoldIndex<String, OperatorInfo>> {
-    static CACHE: std::sync::LazyLock<std::sync::Mutex<Option<(u64, std::sync::Arc<protocol::causal::transition::HistoryFoldIndex<String, OperatorInfo>>)>>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(None));
+/// after that issues a counted alias of one process-global cold original, not 108 kB of operator records;
+/// a superseded generation is retired through the owner-less retirement pump, so its original drains when the last alias retires.
+pub fn flow_neuron_kind_info_map() -> semio_framework_value_ordered::ordered::SharedOwner<protocol::causal::transition::HistoryFoldIndex<String, OperatorInfo>> {
+    type Infos = semio_framework_value_ordered::ordered::SharedOwner<protocol::causal::transition::HistoryFoldIndex<String, OperatorInfo>>;
+    static CACHE: std::sync::LazyLock<std::sync::Mutex<Option<(u64, Infos)>>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(None));
     let generation = flow_extension_registry_generation();
     let mut cache = CACHE.lock().expect("flow neuron kind info cache");
     if let Some((cached_generation, infos)) = cache.as_ref() {
         if *cached_generation == generation {
-            return infos.clone();
+            return infos.alias();
         }
     }
     let registry = flow_extension_registry();
-    let infos = std::sync::Arc::new(registry.operator_infos().map(|info| (info.id.clone(), info.clone())).collect());
-    *cache = Some((generation, std::sync::Arc::clone(&infos)));
-    infos
+    let infos = Infos::from_cold(registry.operator_infos().map(|info| (info.id.clone(), info.clone())).collect());
+    let alias = infos.alias();
+    if let Some((_, displaced)) = cache.replace((generation, infos)) {
+        retire_superseded_catalogue(displaced);
+    }
+    alias
 }
 
-
+/// ♻️ Closes the registry's own alias of a superseded generation in host-funded owner-less turns.
+fn retire_superseded_catalogue(infos: semio_framework_value_ordered::ordered::SharedOwner<protocol::causal::transition::HistoryFoldIndex<String, OperatorInfo>>) {
+    use semio_framework_value::{retirement::controlled::ControlledRetirement, RetainedCloneGrant};
+    let mut owner = ControlledRetirement::retain(infos);
+    for _ in 0..4096 {
+        if owner.terminal_is_empty() {
+            return;
+        }
+        let copy = 4096.max(owner.next_copy_byte_demand().expect("superseded catalogue copy"));
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).expect("superseded catalogue capacity"), maximum_release_bytes: owner.next_release_byte_demand().expect("superseded catalogue release"), maximum_depth: owner.next_depth_demand().expect("superseded catalogue depth") };
+        let mut turn = semio_framework_job::OriginalRetirementPump::new().turn(1 << 16, u64::MAX, || Some(0), grant).expect("superseded catalogue turn");
+        turn.with_effect(|effect| owner.step(copy, effect)).expect("superseded catalogue effect");
+    }
+    panic!("superseded flow catalogue did not terminate");
+}
 
 /// 📚️ Extension plus static widget sections for side palettes (spotlight merges static in the host).
 pub fn flow_palette_catalogue_sections() -> Vec<CatalogueSection> {

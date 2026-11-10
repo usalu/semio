@@ -16,6 +16,8 @@ impl<T:RetainedClone> RetainedCloneOwner<T>{
  pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{self.cursor.take_demand()}
  pub fn take<'reply>(&mut self,output:&mut Option<T>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{if self.closing{return Err(ValueError::invariant("clone owner is closing"))}self.cursor.take(output,effect,reply)}
  pub fn recover_take<'reply>(&mut self,output:&mut Option<T>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{self.cursor.recover_take(output,effect,reply)}
+ /// 🚦️ Reports that the defining typed cursor holds a complete output awaiting `take`.
+ pub fn output_ready(&self)->bool{!self.closing&&self.cursor.output_ready()}
  pub fn terminal_is_empty(&self)->bool{self.close_action.is_none()&&self.cursor.terminal_is_empty()}
  pub fn selected_close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.close_action.is_some_and(|(_,_,selected)|selected!=body){return Err(ValueError::invariant("clone owner close body changed"))}if !self.closing{return Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})}if !self.cursor.close_started(){return self.cursor.begin_close_demand()}self.cursor.close_demands(body)}
  /// ⛽️ Parent intent and child start are separate original actions, each admitting one-work loans.

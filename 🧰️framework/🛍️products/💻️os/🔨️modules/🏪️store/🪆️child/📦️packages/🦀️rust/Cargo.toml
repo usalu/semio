@@ -45,3 +45,6 @@ serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-value-retirement = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../../../../🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }

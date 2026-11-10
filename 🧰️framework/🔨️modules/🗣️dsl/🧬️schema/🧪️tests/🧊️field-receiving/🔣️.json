@@ -1,0 +1,125 @@
+{
+  "stock": {
+    "items": 1000000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 1000000
+  },
+  "body": 4096,
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    11,
+    17,
+    29,
+    47,
+    83
+  ],
+  "cases": [
+    {
+      "id": "set-empty",
+      "kind": "set",
+      "source": [],
+      "expected": []
+    },
+    {
+      "id": "set-sorted-unique",
+      "kind": "set",
+      "source": [
+        "pear",
+        "apple",
+        "apple",
+        "zebra",
+        "ångström",
+        "Apple"
+      ],
+      "expected": [
+        "Apple",
+        "apple",
+        "pear",
+        "zebra",
+        "ångström"
+      ]
+    },
+    {
+      "id": "map-sorted-keys",
+      "kind": "map",
+      "source": [
+        [
+          "b",
+          "two"
+        ],
+        [
+          "a",
+          "one"
+        ],
+        [
+          "c",
+          "three"
+        ]
+      ],
+      "expected": [
+        [
+          "a",
+          "one"
+        ],
+        [
+          "b",
+          "two"
+        ],
+        [
+          "c",
+          "three"
+        ]
+      ]
+    },
+    {
+      "id": "value-literal",
+      "kind": "value",
+      "source": {
+        "k": 1,
+        "nested": {
+          "x": true,
+          "y": "z"
+        },
+        "list": [
+          1,
+          2.5,
+          null
+        ]
+      },
+      "expected": {
+        "k": 1,
+        "list": [
+          1,
+          2.5,
+          null
+        ],
+        "nested": {
+          "x": true,
+          "y": "z"
+        }
+      }
+    },
+    {
+      "id": "block-record",
+      "kind": "block",
+      "source": {
+        "id": "node-ö",
+        "weight": 7
+      },
+      "expected": {
+        "id": "node-ö",
+        "weight": 7
+      }
+    }
+  ]
+}

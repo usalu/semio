@@ -11,6 +11,8 @@ impl OriginalWorkState{
  pub fn has_live_actions(&self)->bool{self.scope.as_ref().is_some_and(OriginalWorkScope::has_live_actions)}
  /// 🪪️ Checks that the single live action is the actual retained reservation.
  pub fn owns_only_action(&self,identity:OriginalWorkActionIdentity)->bool{self.scope.as_ref().is_some_and(|scope|scope.open==1)&&self.action_identity()==Some(identity)}
+ /// 🔁️ A reservation that outlived the turn which issued it keeps its issuer and quote and is re-bound to the current Source turn of that same issuer.
+ pub fn rebind_pending(&mut self,loan:&OriginalWorkLoan<'_>){let turn=loan.source_turn();let state=self;let (Some(scope),Some(action))=(state.scope.as_ref(),state.action.as_mut())else{return};if action.source_turn!=turn&&action.performed_issued.is_none()&&action.partial.is_none()&&loan.issued_reservation(scope,action){action.source_turn=turn}}
  pub fn begin_turn(&mut self){self.baseline=self.actual()}
  pub fn quote_pending(&self)->bool{self.quote_pending}
  pub fn actual(&self)->u128{self.scope.as_ref().map_or(0,OriginalWorkScope::actual_work)}
@@ -19,6 +21,8 @@ impl OriginalWorkState{
  pub fn action_identity(&self)->Option<OriginalWorkActionIdentity>{self.action.as_ref().map(OriginalWorkActionReservation::action_identity)}
  /// 📊️ Reads the exact claimed work for this same original action.
  pub fn performed_total_for_action(&self,identity:Option<OriginalWorkActionIdentity>)->Result<u128,ValueError>{if identity.is_none()||identity!=self.action_identity(){return Err(invalid())}let scope=self.scope.as_ref().ok_or_else(invalid)?;let action=self.action.as_ref().ok_or_else(invalid)?;if !action.live||action.identity.scope!=scope.identity||action.performed_issued.is_some(){return Err(invalid())}Ok(action.paid)}
+ /// 🧮️ Reads the work already paid before the current producer receipt, which stays valid while that receipt is issued.
+ pub fn paid_for_action(&self,identity:Option<OriginalWorkActionIdentity>)->Result<u128,ValueError>{if identity.is_none()||identity!=self.action_identity(){return Err(invalid())}let scope=self.scope.as_ref().ok_or_else(invalid)?;let action=self.action.as_ref().ok_or_else(invalid)?;if !action.live||action.identity.scope!=scope.identity{return Err(invalid())}Ok(action.paid)}
  /// 👁️ Reports whether this original action recorded a producer attempt.
  pub fn performed_seen_for_action(&self,identity:Option<OriginalWorkActionIdentity>)->Result<bool,ValueError>{self.performed_total_for_action(identity)?;Ok(self.action.as_ref().ok_or_else(invalid)?.partial_seen)}
  /// ⏳️ Reports the exact original action pending partial receipt.
@@ -73,6 +77,7 @@ impl<'turn,'source> OriginalWorkTurn<'turn,'source>{
  pub fn prepare(&mut self,amount:u64,action:&mut Option<OriginalWorkActionIdentity>)->Result<Option<bool>,ValueError>{self.original.prepare_for_action(amount,action)}
  /// 📊️ Reads claimed work from the same original action.
  pub fn performed_total_for_action(&self,identity:Option<OriginalWorkActionIdentity>)->Result<u128,ValueError>{self.original.state.performed_total_for_action(identity)}
+ pub fn paid_for_action(&self,identity:Option<OriginalWorkActionIdentity>)->Result<u128,ValueError>{self.original.state.paid_for_action(identity)}
  /// 👁️ Reports the same action original producer attempt.
  pub fn performed_seen_for_action(&self,identity:Option<OriginalWorkActionIdentity>)->Result<bool,ValueError>{self.original.state.performed_seen_for_action(identity)}
  /// ⏳️ Reports the same action pending partial receipt.

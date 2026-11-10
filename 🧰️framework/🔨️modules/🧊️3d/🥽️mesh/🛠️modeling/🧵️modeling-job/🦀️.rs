@@ -248,6 +248,6 @@ pub(super) fn modeling_step(job:&mut MeshModelingJob)->MeshResult<MeshModelingSt
 }
 
 pub(super) fn close_tessellation_handoff(owner:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<MeshTessellationJob>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,receipt:&mut RetainedCloneProgress)->MeshResult<bool> {
-    let Some(current)=owner.as_mut()else{return Ok(true)};let poll=current.step(effect);*receipt=current.step_progress();if let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll{turn.result.map_err(|failure|MeshKernelError::Retained(failure.into_value_error()))?;}
+    let Some(current)=owner.as_mut()else{return Ok(true)};let body=effect.grant().maximum_copy_bytes;let poll=current.step(body,effect);*receipt=current.step_progress();if let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll{turn.result.map_err(|failure|MeshKernelError::Retained(failure.into_value_error()))?;}
     if current.terminal_is_empty(){owner.take();Ok(true)}else{Ok(false)}
 }

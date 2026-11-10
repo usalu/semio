@@ -97,7 +97,7 @@ impl ToolRunTickNativeCursor{
   let cancelled=if backpressure&&frame.phase()==NativeReceivingEffectPhase::Granted{frame.cancel_unstarted(control)}else{Ok(())};
   self.frame=frame;cancelled?;
   match polled{
-   Ok(NativeReceivingEffectPoll::Complete(turn))=>turn.result.map_err(|failure|{let mut receiving=failure.receiving;receiving.allocation_refusal=failure.child;receiving.work_refusal=failure.work_refusal;receiving}),
+   Ok(NativeReceivingEffectPoll::Complete(turn))=>turn.result.map_err(|failure|{let mut receiving=failure.receiving;receiving.allocation_refusal=failure.child.or(receiving.allocation_refusal.take());receiving.primary=receiving.primary.take().or(failure.producer_refusal);receiving.work_refusal=receiving.work_refusal.take().or(failure.work_refusal);receiving}),
    Ok(NativeReceivingEffectPoll::Pending{work:0})=>Ok(RetainedCloneStep::Progress(Default::default())),
    Ok(NativeReceivingEffectPoll::Pending{..})=>Err(malformed("native Tick receiving effect stayed pending on a synchronous recipient").into()),
    Err(error)=>Err(error.into()),
@@ -185,7 +185,7 @@ impl ToolRunTickNativeCursor{
    match ControlledRetirement::new(owned){Ok(owner)=>self.retiring=Some(owner),Err((error,owned))=>{*self.owned=owned;return Err(error)}}
    self.closing=true;return Ok(RetainedCloneStep::Progress(moved))
   }
-  if let Some(owner)=&mut self.retiring{if !owner.terminal_is_empty(){return settled(owner.step(effect))}if !pure(effect)?{return idle()}self.retiring=None;return Ok(RetainedCloneStep::Progress(moved))}
+  if let Some(owner)=&mut self.retiring{if !owner.terminal_is_empty(){return settled(owner.step(effect.grant().maximum_copy_bytes,effect))}if !pure(effect)?{return idle()}self.retiring=None;return Ok(RetainedCloneStep::Progress(moved))}
   let Some(parser)=&mut self.parser else{return Err(malformed("native Tick close lost parser"))};
   if parser.terminal_is_empty(){if !pure(effect)?{return idle()}self.parser=None;self.closed=true;return Ok(RetainedCloneStep::Complete(moved))}
   parser.retire_record_storage(grant.maximum_copy_bytes,effect).map_err(pack_error)

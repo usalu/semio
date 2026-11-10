@@ -10,15 +10,15 @@ impl<T:RetireOwned> OriginalProtocolOwner<T> {
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.0.next_demand(body)}
     fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.0.next_computational_work(body)}
     fn requires_original_control(&self)->bool{ErasedSnapshotRetirement::requires_original_control(&self.0)}
-    fn close_controlled(&mut self,effect:&mut RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->OriginalRetirementPoll{let grant=effect.grant();let poll=ErasedSnapshotRetirement::close_step_controlled(&mut self.0,effect,control);admitted(poll,grant,self.0.terminal_is_empty())}
-    fn close_original(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let grant=effect.grant();let poll=ErasedSnapshotRetirement::close_original_step(&mut self.0,original,effect);admitted(poll,grant,self.0.terminal_is_empty())}
+    fn close_controlled(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->OriginalRetirementPoll{let grant=effect.grant();let poll=ErasedSnapshotRetirement::close_step_controlled(&mut self.0,body,effect,control);admitted(poll,grant,self.0.terminal_is_empty())}
+    fn close_original(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let grant=effect.grant();let poll=ErasedSnapshotRetirement::close_original_step(&mut self.0,original,body,effect);admitted(poll,grant,self.0.terminal_is_empty())}
     fn original(&self)->Option<&T> {self.0.original()}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.0.next_copy_byte_demand()}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.0.next_capacity_byte_demand(copy)}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.0.next_release_byte_demand()}
     fn next_depth_demand(&self)->Result<usize,ValueError>{self.0.next_depth_demand()}
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
-    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let grant=effect.grant();let poll=self.0.step(effect);admitted(poll,grant,self.0.terminal_is_empty())}
+    fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let grant=effect.grant();let poll=self.0.step(body,effect);admitted(poll,grant,self.0.terminal_is_empty())}
 }
 enum ProtocolOwner {Conflict(OriginalProtocolOwner<Conflict>),Envelope(OriginalProtocolOwner<MutationEnvelope>)}
 /// 🔒️ Inline native owner retains the original fatal conflict or causal envelope until exact cleanup.
@@ -29,11 +29,11 @@ impl ProtocolConflictRetirement {
 }
 impl ErasedSnapshotRetirement for ProtocolConflictRetirement {
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.next_demand(body),ProtocolOwner::Envelope(owner)=>owner.next_demand(body)}}
-    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{match &mut self.owner{ProtocolOwner::Conflict(owner)=>owner.close_step(effect),ProtocolOwner::Envelope(owner)=>owner.close_step(effect)}}
+    fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{match &mut self.owner{ProtocolOwner::Conflict(owner)=>owner.close_step(body,effect),ProtocolOwner::Envelope(owner)=>owner.close_step(body,effect)}}
     fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.next_computational_work(body),ProtocolOwner::Envelope(owner)=>owner.next_computational_work(body)}}
     fn requires_original_control(&self)->bool{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.requires_original_control(),ProtocolOwner::Envelope(owner)=>owner.requires_original_control()}}
-    fn close_step_controlled(&mut self,effect:&mut RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->OriginalRetirementPoll{match &mut self.owner{ProtocolOwner::Conflict(owner)=>owner.close_controlled(effect,control),ProtocolOwner::Envelope(owner)=>owner.close_controlled(effect,control)}}
-    fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{match &mut self.owner{ProtocolOwner::Conflict(owner)=>owner.close_original(original,effect),ProtocolOwner::Envelope(owner)=>owner.close_original(original,effect)}}
+    fn close_step_controlled(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->OriginalRetirementPoll{match &mut self.owner{ProtocolOwner::Conflict(owner)=>owner.close_controlled(body,effect,control),ProtocolOwner::Envelope(owner)=>owner.close_controlled(body,effect,control)}}
+    fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{match &mut self.owner{ProtocolOwner::Conflict(owner)=>owner.close_original(original,body,effect),ProtocolOwner::Envelope(owner)=>owner.close_original(original,body,effect)}}
     fn terminal_is_empty(&self)->bool{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.terminal_is_empty(),ProtocolOwner::Envelope(owner)=>owner.terminal_is_empty()}}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.next_copy_byte_demand(),ProtocolOwner::Envelope(owner)=>owner.next_copy_byte_demand()}}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.next_capacity_byte_demand(copy),ProtocolOwner::Envelope(owner)=>owner.next_capacity_byte_demand(copy)}}

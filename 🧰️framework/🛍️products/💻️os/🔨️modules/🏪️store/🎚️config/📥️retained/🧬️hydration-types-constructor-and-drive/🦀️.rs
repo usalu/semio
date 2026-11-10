@@ -205,7 +205,7 @@ where
 
     pub fn drive_active(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, ConfigStoreHydrationDiagnostic> {
         if self.active.is_none() { return Ok(None); }
-        match Self::authored(grant, |effect| semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, effect)) {
+        match Self::authored(grant, |effect| semio_os_store_read::artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)) {
             Ok(Some(turn)) => turn.result.map(|step| Some(step.progress())).map_err(|_| ConfigStoreHydrationDiagnostic::Initialization),
             Ok(None) => Ok(Some(Default::default())),
             Err(_) => Err(ConfigStoreHydrationDiagnostic::Initialization),
@@ -237,7 +237,7 @@ where
         if grant.maximum_items == 0 { return Ok((false, Default::default())); }
         if grant.maximum_depth < depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "config source depth refused")); }
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let Some(turn) = Self::authored(child, |effect| owner.close_step(effect))? else { return Ok((false, Default::default())); };
+        let Some(turn) = Self::authored(child, |effect| owner.close_step(child.maximum_copy_bytes, effect))? else { return Ok((false, Default::default())); };
         let step = turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;
         let terminal = owner.terminal_is_empty();
         semio_framework_value::retained_clone::admit_retained_clone_close(child, step, terminal, "config original source iterator")?;

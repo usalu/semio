@@ -3,14 +3,6 @@
 //#region 🔖️WorldInteractionVerbs
 //#region TerrainTests
 //#region GlbAssetTests
-fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
-    loop {
-        let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
-        let step=mesh3d_allocate_step(token,grant).unwrap();
-        assert!(step.progress.fits(grant));
-        if step.complete{break}
-    }
-}
 
 fn world_component_marquee_cursor_ids(state: &World3dState, points: &[[f32; 2]]) -> Vec<u32> {
     let mut gesture = WorldMarqueeGesture::new(state.session.interaction_revision, 7, points[0]);
@@ -138,7 +130,7 @@ fn publish_retained_draw_fixture(state: &mut World3dState, vector: &serde_json::
     let mesh = vector["mesh"].as_str().unwrap();
     let instances = vector["instances"].as_array().unwrap();
     let ids: Vec<_> = instances.iter().map(|instance| instance["id"].as_str().unwrap()).collect();
-    begin_world3d_draw_rebuild(&mut state.session, &mut state.retirement, &mut state.scene, WorldDrawRebuildDescriptor { generation: state.scene.draw_generation + 1, revision: state.session.interaction_revision, draw_count: 1, instance_count: instances.len() as u32, byte_count: draw_fixture_bytes(&[(mesh, &ids)]) })
+    { let descriptor = WorldDrawRebuildDescriptor { generation: state.scene.draw_generation + 1, revision: state.session.interaction_revision, draw_count: 1, instance_count: instances.len() as u32, byte_count: draw_fixture_bytes(&[(mesh, &ids)]) }; begin_world3d_draw_rebuild(&mut state.session, &mut state.retirement, &mut state.scene, descriptor) }
         .unwrap();
     world3d_draw_rebuild_admit_draw(&mut state.scene, mesh, vector["version"].as_u64().unwrap(), instances.len() as u16).unwrap();
     for instance in instances {
@@ -252,6 +244,7 @@ fn drain_brush_mesh_run(state: &mut World3dState) -> Vec<ActionDescriptor> {
 /// seven measured steps (`📓️w11a-prepared-world-mesh-missing.md` §6 family B).
 #[test]
 fn a_resident_mesh_announces_one_register_brush_mesh_per_window_with_reacts_args() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let _guard = BRUSH_MESH_TEST_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     reset_world3d_brush_mesh_registry();
     let fixture = brush_mesh_fixture();
@@ -290,6 +283,7 @@ fn a_resident_mesh_announces_one_register_brush_mesh_per_window_with_reacts_args
 /// `decode_brush_mesh_page_values` reassembles and its `brush_mesh_digest` hashes.
 #[test]
 fn a_brush_mesh_run_pages_positions_then_indices_under_the_announced_digest() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let _guard = BRUSH_MESH_TEST_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     reset_world3d_brush_mesh_registry();
     let oracle = brush_mesh_oracle();
@@ -324,6 +318,7 @@ fn a_brush_mesh_run_pages_positions_then_indices_under_the_announced_digest() {
 /// `brushMeshRevisions` (`🌐️World3dHost/🟦️.tsx`).
 #[test]
 fn a_guest_restart_or_a_reupload_request_makes_every_surface_announce_again() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let _guard = BRUSH_MESH_TEST_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     reset_world3d_brush_mesh_registry();
     let mut state = resident_brush_mesh_surface("puzzle3d-main-top");
@@ -351,6 +346,7 @@ fn a_guest_restart_or_a_reupload_request_makes_every_surface_announce_again() {
 /// `role-viewer` and `role-editor` journal on both panes.
 #[test]
 fn every_react_measured_trigger_announces_once_per_window_instance() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let _guard = BRUSH_MESH_TEST_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     reset_world3d_brush_mesh_registry();
     let fixture = brush_mesh_fixture();
@@ -377,6 +373,7 @@ fn every_react_measured_trigger_announces_once_per_window_instance() {
 
 #[test]
 fn world_environment_reaches_the_actual_scene_pass() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🌞️scene-lighting/🔣️.json")).unwrap();
     let shadow_fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🌑️scene-shadows/🔣️.json")).unwrap();
     let mut scene = scene_with_selection("{}");
@@ -393,7 +390,7 @@ fn world_environment_reaches_the_actual_scene_pass() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let bounds = Rect::new(0.0, 0.0, 128.0, 96.0);
     drive_scene_bridge(&mut state, &scene, bounds);
-    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut gpu = semio_os_infinite_world_host::prepared_world_build_context();
     let mut draw = semio_ui_draw_contract::DrawList::default();
     let mut atlas = semio_ui_text::FontAtlas::builtin();
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
@@ -441,11 +438,13 @@ fn world_environment_reaches_the_actual_scene_pass() {
     for (actual, expected) in texture_matrix.into_iter().zip(shadow_fixture["oracle"]["shadowMatrix"].as_array().unwrap()) {
         assert!((actual - expected.as_f64().unwrap() as f32).abs() < 2e-6, "shadow matrix drifted from Three: {actual} != {expected}");
     }
+    semio_os_infinite_world_host::retire_world_build_context(gpu);
     retire_bridged_surface(&mut state);
 }
 
 #[test]
 fn offscreen_light_visible_glb_is_retained_only_in_the_actual_shadow_channel() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🌑️scene-shadow-parity/🔣️.json")).unwrap();
     let mut scene = scene_with_selection("{}");
     let world = scene.world_3d.as_mut().expect("world fixture");
@@ -480,7 +479,7 @@ fn offscreen_light_visible_glb_is_retained_only_in_the_actual_shadow_channel() {
         })
         .expect("source draw admitted");
 
-    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut gpu = semio_os_infinite_world_host::prepared_world_build_context();
     let mut draw = semio_ui_draw_contract::DrawList::default();
     let mut atlas = semio_ui_text::FontAtlas::builtin();
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
@@ -514,11 +513,13 @@ fn offscreen_light_visible_glb_is_retained_only_in_the_actual_shadow_channel() {
     assert_eq!(pass.shadow.map_size, fixture["profiles"]["world"]["mapSize"].as_u64().unwrap() as u32);
     assert!(gpu.has_mesh_request("shadow-mesh", 7), "an offscreen-only caster participates in this frame's mesh upload ownership");
     assert!(state.scene.mesh_pool.contains(&"shadow-mesh".to_string()), "the offscreen-only caster participates in retained mesh ownership");
+    semio_os_infinite_world_host::retire_world_build_context(gpu);
     retire_bridged_surface(&mut state);
 }
 
 #[test]
 fn retained_draw_rebuild_preserves_prepared_material_colors_from_the_json_oracle() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🔣️draws.json")).unwrap();
     for vector in fixture["draws"].as_array().unwrap() {
         let mut state = World3dState::new("surface-1".into(), "controller-1".into());
@@ -549,6 +550,7 @@ fn retained_draw_rebuild_preserves_prepared_material_colors_from_the_json_oracle
 /// re-serialize every visible tile's mesh JSON per step.
 #[test]
 fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.terrain.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 9.7382, project_origin_lat: 52.3759, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
     apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain);
@@ -591,6 +593,7 @@ fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
 
 #[test]
 fn apply_terrain_style_if_changed_state_purges_stale_meshes_on_origin_change() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.terrain.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 0.0, project_origin_lat: 0.0, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
     assert!(apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain).is_empty(), "first application has nothing to purge");
@@ -606,6 +609,7 @@ fn apply_terrain_style_if_changed_state_purges_stale_meshes_on_origin_change() {
 //#region ContextMenuTests
 #[test]
 fn resolve_world_context_menu_target_prioritizes_vortex_over_object_over_reference() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.local_hover_id = Some("reference:site-plan.png".into());
     assert_eq!(resolve_world_context_menu_target(&state.selection), Some(("reference", "site-plan.png".to_string())));
@@ -620,6 +624,7 @@ fn resolve_world_context_menu_target_prioritizes_vortex_over_object_over_referen
 
 #[test]
 fn resolve_world_context_menu_target_is_none_without_any_hover() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let state = World3dState::new("surface-1".into(), "controller-1".into());
     assert_eq!(resolve_world_context_menu_target(&state.selection), None);
 }
@@ -633,6 +638,7 @@ fn resolve_world_context_menu_target_is_none_without_any_hover() {
 /// pointer-up (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
 #[test]
 fn right_click_publishes_no_menu_verb_and_still_reports_the_camera() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let inner = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
     state.session.bounds = inner;
@@ -646,6 +652,7 @@ fn right_click_publishes_no_menu_verb_and_still_reports_the_camera() {
 
 #[test]
 fn right_drag_reports_the_camera_like_every_other_release() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let inner = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
     state.session.bounds = inner;
@@ -661,6 +668,7 @@ fn right_drag_reports_the_camera_like_every_other_release() {
 /// plain `world`-domain item pick path (see `pick_select_action`'s final fallback branch).
 #[test]
 fn pick_select_emits_batched_interaction_select_for_plain_object_pick() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.scene.meshes.insert("mesh-1".into(), mesh);
@@ -685,6 +693,7 @@ fn pick_select_emits_batched_interaction_select_for_plain_object_pick() {
 
 #[test]
 fn marquee_select_emits_batched_interaction_select_with_rectangle_method() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.scene.meshes.insert("mesh-1".into(), topology_mesh());
     state.scene.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
@@ -700,6 +709,7 @@ fn marquee_select_emits_batched_interaction_select_with_rectangle_method() {
 /// 🖱️ Moving off the instance clears — empty `targets` is `next_hover`'s clear signal.
 #[test]
 fn pick_hover_emits_interaction_hover_and_clears_when_nothing_hit() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.scene.meshes.insert("mesh-1".into(), mesh);
@@ -726,6 +736,7 @@ fn pick_hover_emits_interaction_hover_and_clears_when_nothing_hit() {
 
 #[test]
 fn apply_world_action_preview_applies_interaction_select_and_hover_for_world_domain() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     apply_world_action_preview(
         &mut state.session, &mut state.selection, &mut state.gumball, &mut state.scene,
@@ -762,6 +773,7 @@ fn apply_world_action_preview_applies_interaction_select_and_hover_for_world_dom
 
 #[test]
 fn pick_select_emits_bare_id_into_bound_app_domain_when_window_binds_one() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.session.bound_domain_id = Some("cad".into());
     state.session.bound_domain_granularity_id = Some("object".into());
@@ -784,6 +796,7 @@ fn pick_select_emits_bare_id_into_bound_app_domain_when_window_binds_one() {
 
 #[test]
 fn pick_hover_emits_bare_id_into_bound_app_domain() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.session.bound_domain_id = Some("cad".into());
     state.session.bound_domain_granularity_id = Some("object".into());
@@ -805,6 +818,7 @@ fn pick_hover_emits_bare_id_into_bound_app_domain() {
 
 #[test]
 fn marquee_select_emits_bare_ids_into_bound_app_domain() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.session.bound_domain_id = Some("features".into());
     state.session.bound_domain_granularity_id = Some("pin".into());
@@ -824,6 +838,7 @@ fn marquee_select_emits_bare_ids_into_bound_app_domain() {
 /// its own app domain — otherwise the same click could ever light up two selection universes.
 #[test]
 fn apply_world_action_preview_respects_bound_app_domain_and_ignores_other_domains() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.session.bound_domain_id = Some("cad".into());
     state.session.bound_domain_granularity_id = Some("object".into());
@@ -846,6 +861,7 @@ fn apply_world_action_preview_respects_bound_app_domain_and_ignores_other_domain
 
 #[test]
 fn sync_world3d_state_captures_scene_bound_domain() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let scene = scene_with_selection_and_domain("{}", Some(("cad", "object")));
     sync_world3d_state(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });

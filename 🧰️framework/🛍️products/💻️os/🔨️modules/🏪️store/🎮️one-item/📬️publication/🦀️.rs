@@ -575,12 +575,12 @@ impl<P: Send + Sync, Mutation: Send + 'static> ArtifactStoreBatchItemAuthority<P
 pub struct ArtifactStoreWireRetirement { pub schema: Option<String>, pub bytes: Option<Vec<u8>> }
 
 impl ErasedSnapshotRetirement for ArtifactStoreWireRetirement {
-    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {release_bytes:self.schema.as_ref().map(|value|value.capacity()).or_else(||self.bytes.as_ref().map(|value|value.capacity())).unwrap_or(0),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
+    fn next_demand(&self, _body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {release_bytes:self.schema.as_ref().map(|value|value.capacity()).or_else(||self.bytes.as_ref().map(|value|value.capacity())).unwrap_or(0),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_capacity_byte_demand(&self, _body: usize) -> Result<usize, ValueError> { Ok(0) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.schema.as_ref().map(|value| value.capacity()).or_else(|| self.bytes.as_ref().map(|value| value.capacity())).unwrap_or(0)) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(!self.terminal_is_empty())) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -715,7 +715,7 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(retirement) = self.retirement.as_mut() {
-            if !retirement.terminal_is_empty() { let step = RetirementPollExit::resume(retirement.step(&mut effect.nested(child)))?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, retirement.terminal_is_empty(), "batch source typed retirement")?; return Ok(RetainedCloneStep::Progress(step.progress())); }
+            if !retirement.terminal_is_empty() { let step = RetirementPollExit::resume(retirement.step(child.maximum_copy_bytes,&mut effect.nested(child)))?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, retirement.terminal_is_empty(), "batch source typed retirement")?; return Ok(RetainedCloneStep::Progress(step.progress())); }
             self.retirement = None;
             self.issuer = None;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
@@ -729,7 +729,7 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
                 Err(error) => { self.inputs = inputs.unwrap_or_default(); Err(error.into()) },
             };
         }
-        if self.active_input.is_some() { let step = RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active_input, &mut effect.nested(child)))?; return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if self.active_input.is_some() { let step = RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active_input, child.maximum_copy_bytes, &mut effect.nested(child)))?; return Ok(RetainedCloneStep::Progress(step.progress())); }
         if !self.inputs.is_empty() {
             let mut input = self.inputs.pop_front();
             let poll = self.authority.as_ref().expect("original batch input authority").retire_input(&mut input, &mut effect.nested(child));
@@ -749,7 +749,7 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
         }
         if let Some(slot) = self.authority_close.iter_mut().find(|slot| slot.is_some()) {
             let authority = slot.as_mut().ok_or_else(|| ValueError::invariant("batch source authority slot absent"))?;
-            let step = RetirementPollExit::resume(authority.step(&mut effect.nested(child)))?;
+            let step = RetirementPollExit::resume(authority.step(child.maximum_copy_bytes, &mut effect.nested(child)))?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, authority.terminal_is_empty(), "batch source authority")?;
             if authority.terminal_is_empty() { *slot = None; }
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
@@ -778,6 +778,3 @@ pub use semio_os_store_one_item::ArtifactStoreOneItemPublicationPhase;
 
 pub use semio_os_store_one_item::ArtifactStoreOneItemAdvance;
 
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

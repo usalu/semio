@@ -76,6 +76,25 @@ pub fn numerical_close_original<J>(cx: &mut StepContext<'_>, owner: &mut J, dema
     Ok(if terminal(owner) { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
 }
 
+/// 🪙️ Runs one effect-shaped numerical close turn of `owner` inside the caller's own original effect: the turn only runs
+/// when that effect's grant covers the job's quote, its actual work is charged to the calling turn, and a terminal owner reports `Complete`.
+pub fn numerical_close_effect<J>(cx: &mut StepContext<'_>, owner: &mut J, demand: RetirementDemand, turn: impl FnOnce(&mut J, &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError>, terminal: impl FnOnce(&J) -> bool) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+    let step = close_original_effect_step(cx, demand, |effect| {
+        let result = turn(owner, effect).and_then(|step| match step {
+            InteractiveJobCloseStep::Complete { progress } => Ok(RetainedCloneStep::Complete(progress)),
+            InteractiveJobCloseStep::Pending { progress } => Ok(RetainedCloneStep::Progress(progress)),
+            InteractiveJobCloseStep::Blocked => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "numerical close owner refused its own retirement")),
+        });
+        let progressed = result.as_ref().is_ok_and(|step| matches!(step, RetainedCloneStep::Complete(_)) || step.progress() != RetainedCloneProgress::default());
+        let result = match result {
+            Ok(step) if progressed && effect.performed_work() == 0 => effect.performed(1).map(|_| step),
+            other => other,
+        };
+        RetainedWorkPoll::Complete(RetainedWorkOutcome { result: result.map_err(OriginalRetirementFailure::from), work: effect.performed_work() })
+    })?;
+    Ok(if terminal(owner) { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
+}
+
 /// 🪜️ Maps one tuple-shaped owner ladder rung onto the job close vocabulary; `None` once the ladder is exhausted.
 pub fn numerical_owner_turn(rung: Result<Option<(usize, usize)>, ()>) -> Option<InteractiveJobCloseStep> {
     match rung {
@@ -108,12 +127,21 @@ pub fn numerical_batch_step<J: InteractiveJob>(job: &mut J, context: &mut StepCo
         InteractiveJobStep::Outcome(outcome) => outcome,
         InteractiveJobStep::Continuation(failure) => return Err(failure),
     };
-    Ok(match outcome {
+    Ok(numerical_batch_end(outcome))
+}
+
+/// ▶️ Advances one native numerical batch through the job's plain step, for callers that hold no return claim.
+pub fn numerical_batch_plain<J: semio_s_fem_payload_turns::NumericalStep>(job: &mut J, context: &mut StepContext<'_>) -> Result<NumericalBatchEnd, OriginalTurnFailure> {
+    Ok(numerical_batch_end(job.step_plain(context)?))
+}
+
+fn numerical_batch_end(outcome: Option<JobOutcomeBorrow<'_>>) -> NumericalBatchEnd {
+    match outcome {
         None | Some(JobOutcomeBorrow::Yield { .. } | JobOutcomeBorrow::PreviewReady { .. } | JobOutcomeBorrow::CheckpointReady { .. }) => NumericalBatchEnd::Continue,
         Some(JobOutcomeBorrow::Complete { .. }) => NumericalBatchEnd::Complete,
         Some(JobOutcomeBorrow::Fault { .. }) => NumericalBatchEnd::Fault,
         Some(JobOutcomeBorrow::Cancelled { .. }) => NumericalBatchEnd::Cancelled,
-    })
+    }
 }
 
 /// 🧹️ Advances one native numerical close under the same original caller without renewing stock or cancellation.
@@ -132,13 +160,13 @@ pub fn numerical_child_close(step: InteractiveJobCloseStep, terminal: bool) -> I
     }
 }
 
-/// 🧯️ Closes one retained payload under a grant that covers its own quote.
-pub fn numerical_payload_close(payload: &mut RetainedJobPayload, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+/// 🧯️ Closes one retained payload inside an original effect whose grant covers its own quote.
+pub fn numerical_payload_close(payload: &mut RetainedJobPayload, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
     let demand = payload.retirement_demands()?;
-    if !numerical_grant_covers(grant, demand) {
+    if !numerical_grant_covers(effect.grant(), demand) {
         return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
     }
-    numerical_close_result(payload.close_step(grant).result)
+    numerical_close_result(payload.close_step(effect).result)
 }
 
 /// 🔁️ Advances past each decoded checkpoint page, then retires the whole payload from its last page down to the operation ledger from the calling step's own wallet; true once the payload is terminal-empty.
@@ -150,23 +178,18 @@ pub fn numerical_restore_close_due(payload: &mut RetainedJobPayload, context: &m
         return Ok(false);
     }
     let demand = payload.retirement_demands().map_err(|_| NumericalCheckpointFault::Admission)?;
-    let grant = context.retained_grant();
-    if !numerical_grant_covers(grant, demand) {
-        return Ok(false);
-    }
-    let turn = payload.close_step(grant);
-    receive_original_retained_work(context, turn).map_err(|_| NumericalCheckpointFault::Admission)?;
+    close_original_effect_step(context, demand, |effect| RetainedWorkPoll::Complete(payload.close_step(effect))).map_err(|_| NumericalCheckpointFault::Admission)?;
     Ok(payload.terminal_is_empty())
 }
 
 /// 🧯️ Closes a restore cursor's raw payload under a grant that covers its own quote; `None` once the payload is gone.
-pub fn numerical_restore_payload_close(slot: &mut Option<RetainedJobPayload>, grant: RetainedCloneGrant) -> Option<Result<InteractiveJobCloseStep, ValueError>> {
+pub fn numerical_restore_payload_close(slot: &mut Option<RetainedJobPayload>, effect: &mut RetainedAllocationEffect<'_>) -> Option<Result<InteractiveJobCloseStep, ValueError>> {
     let payload = slot.as_mut()?;
     if payload.terminal_is_empty() {
         *slot = None;
         return Some(Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }));
     }
-    Some(numerical_payload_close(payload, grant))
+    Some(numerical_payload_close(payload, effect))
 }
 
 /// 📏️ Quotes a restore cursor's raw payload frontier; `None` once only owner rungs remain.
@@ -210,11 +233,7 @@ impl NumericalOutcomeDesk {
             return Ok(());
         };
         let demand = payload.retirement_demands()?;
-        let grant = cx.retained_grant();
-        if numerical_grant_covers(grant, demand) {
-            let turn = payload.close_step(grant);
-            receive_original_retained_work(cx, turn).map_err(numerical_turn_error)?;
-        }
+        close_original_effect_step(cx, demand, |effect| RetainedWorkPoll::Complete(payload.close_step(effect))).map_err(numerical_turn_error)?;
         if payload.terminal_is_empty() {
             self.lent = None;
             self.delivered = false;
@@ -256,14 +275,14 @@ impl NumericalOutcomeDesk {
         self.lent.as_ref().map(RetainedJobPayload::retirement_demands)
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Option<Result<InteractiveJobCloseStep, ValueError>> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Option<Result<InteractiveJobCloseStep, ValueError>> {
         let payload = self.lent.as_mut()?;
         if payload.terminal_is_empty() {
             self.lent = None;
             self.delivered = false;
             return Some(Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }));
         }
-        let step = numerical_payload_close(payload, grant);
+        let step = numerical_payload_close(payload, effect);
         if payload.terminal_is_empty() {
             self.lent = None;
             self.delivered = false;
@@ -275,13 +294,17 @@ impl NumericalOutcomeDesk {
         self.lent.is_none() && self.pending.is_none()
     }
 
-    /// 🧹️ Pays back the lent payload through its own quoted grants; for owners that keep their job after completion.
-    pub fn retire_all(&mut self) {
+    /// 🧹️ Pays back the lent payload through the calling turn's own effect; for owners that keep their job after completion.
+    pub fn retire_all(&mut self, cx: &mut StepContext<'_>) {
         while let Some(demand) = self.retirement_demands() {
             let demand = demand.expect("a locally owned lent payload quotes its close demand");
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            let step = self.close_step(grant);
-            assert!(matches!(step, Some(Ok(InteractiveJobCloseStep::Pending { .. } | InteractiveJobCloseStep::Complete { .. }))), "a locally owned lent payload close has no external owner and no refusal");
+            let step = close_original_effect_step(cx, demand, |effect| match self.close_step(effect) {
+                Some(Ok(step)) => RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(step.progress())), work: effect.performed_work() }),
+                Some(Err(error)) => RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Err(error), work: effect.performed_work() }),
+                None => RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())), work: 0 }),
+            });
+            let step = step.expect("a locally owned lent payload close has no external owner and no refusal");
+            if step.progress() == RetainedCloneProgress::default() { break; }
         }
         self.pending = None;
     }

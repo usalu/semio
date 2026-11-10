@@ -4,9 +4,9 @@ use semio_framework_value_snapshot_projection::snapshot_projection::post::{Paged
 use semio_framework_value_snapshot_projection::snapshot_projection::SnapshotProjection;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_os_store_one_item_publication::{ArtifactStoreOneItemPreparationFactory,native_source::pay};
-use semio_os_spr::{RetainedMutation,RetainedMutationOwner,RetainedDiffOwner,RetainedMutationDecisionStep,RetainedDiffPreflightStep,RetainedMutationInverseStep,RetainedMutationCloseContext,retained_mutation_birth_demand,begin_retained_mutation,decide_retained_mutation,begin_retained_diff,preflight_retained_diff,inverse_retained_mutation,commit_retained_diff};
+use semio_os_spr::{RetainedMutation,RetainedMutationOwner,RetainedDiffOwner,RetainedMutationDecisionStep,RetainedDiffPreflightStep,RetainedMutationInverseStep,RetainedMutationCloseContext,retained_mutation_birth_demand,RetainedDiffAdmission,begin_retained_mutation,decide_retained_mutation_into,recover_decide_retained_mutation_into,begin_retained_diff,preflight_retained_diff_into,recover_preflight_retained_diff_into,inverse_retained_mutation_into,recover_inverse_retained_mutation_into,commit_retained_diff};
 use protocol::retained::retained_mutation_birth_work;
-use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind,RetainedCloneSource,RetainedCloneRef,native_decoding::{NativeDecodeControl,NativeReceivingEffectPoll,NativeReceivingEffectError},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,RetainedCloneSourceAdmission,admit_retained_clone_progress}};
+use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind,RetainedCloneSource,RetainedCloneRef,native_decoding::{NativeReceivingEffect,NativeDecodeControl,NativeReceivingEffectPoll,NativeReceivingEffectError},retained_clone::{OriginalEffectAction,OriginalEffectAuthority,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,OriginalSourceTurnIdentity,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,RetainedCloneSourceAdmission,admit_retained_clone_progress}};
 use semio_framework_value_factory::{ArtifactOwnedValueRetirementFactory,vector::FactoryVectorRetirement};
 use std::{mem::{size_of,ManuallyDrop},sync::Arc};
 use protocol::MutationMessageConcat;
@@ -24,6 +24,64 @@ fn framed<E:NativeReceivingEffectError>(last_work:&mut u64,poll:NativeReceivingE
   NativeReceivingEffectPoll::Complete(turn)=>{*last_work=last_work.saturating_add(u64::try_from(turn.work).unwrap_or(u64::MAX));turn.result.map(|step|step.progress()).map_err(primary)}
  }
 }
+/// 🛰️ Borrows exactly the owners and sources one original semantic action reads.
+enum Action<'t,S:SnapshotProjection,M:RetainedMutation<S>>{
+ Decide{owner:&'t mut RetainedMutationOwner<S,M>,mutation:RetainedCloneRef<'t,M>,before:RetainedCloneRef<'t,S>,slot:&'t mut Option<RetainedMutationDecisionStep<M::Diff>>},
+ Inverse{owner:&'t mut RetainedMutationOwner<S,M>,mutation:RetainedCloneRef<'t,M>,admission:RetainedDiffAdmission<'t,S,M::Diff>,slot:&'t mut Option<RetainedMutationInverseStep<M>>},
+ Preflight{plan:&'t mut RetainedDiffOwner<S,M::Diff>,diff:RetainedCloneRef<'t,M::Diff>,before:RetainedCloneRef<'t,S>,post:RetainedCloneRef<'t,S>,slot:&'t mut Option<RetainedDiffPreflightStep>},
+ CloseSemantics{owner:&'t mut RetainedMutationOwner<S,M>,context:RetainedMutationCloseContext<'t,M>},
+ ClosePlan{plan:&'t mut RetainedDiffOwner<S,M::Diff>},
+}
+/// 🛰️ Lends one turn's request to the resident producer; its results stay in the edit's own slots.
+pub struct Call<'t,'s,S:SnapshotProjection,M:RetainedMutation<S>>{body:usize,maximum:u64,control:Option<&'t mut NativeDecodeControl<'s>>,action:Action<'t,S,M>}
+/// 🏭️ Runs each pending-capable semantic child as an original action whose reply is recovered on later turns.
+pub struct ApplyProducer<S,M>(std::marker::PhantomData<fn()->(S,M)>);
+impl<S,M> Default for ApplyProducer<S,M>{fn default()->Self{Self(std::marker::PhantomData)}}
+fn recorded<'r,T>(result:Option<Result<T,OriginalRetirementFailure>>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>,keep:impl FnOnce(T)->RetainedCloneProgress)->OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>{
+ match result{None=>reply.pending(),Some(Ok(step))=>reply.complete(Ok(RetainedCloneStep::Progress(keep(step)))),Some(Err(failure))=>reply.complete(Err(failure))}
+}
+impl<S:SnapshotProjection,M:RetainedMutation<S>> ApplyProducer<S,M>{
+ fn run<'r>(call:&mut Call<'_,'_,S,M>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>,recover:bool)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{
+  let(body,maximum)=(call.body,call.maximum);let control=call.control.as_deref_mut();
+  match &mut call.action{
+   Action::Decide{owner,mutation,before,slot}=>{
+    let mut stash=None;let inner=OriginalEffectReply::borrow(&mut stash)?;
+    drop(if recover{recover_decide_retained_mutation_into(owner,*mutation,*before,body,maximum,effect,inner)}else{decide_retained_mutation_into(owner,*mutation,*before,body,maximum,effect,inner)}?);
+    Ok(recorded(stash.take(),reply,|step|{let progress=step.progress();if !matches!(&step,RetainedMutationDecisionStep::Progress(_)){**slot=Some(step);}progress}))
+   }
+   Action::Inverse{owner,mutation,admission,slot}=>{
+    let mut stash=None;let inner=OriginalEffectReply::borrow(&mut stash)?;
+    drop(if recover{recover_inverse_retained_mutation_into(owner,*mutation,admission,body,maximum,effect,inner)}else{inverse_retained_mutation_into(owner,*mutation,admission,body,maximum,effect,inner)}?);
+    Ok(recorded(stash.take(),reply,|step|{let progress=step.progress();if !matches!(&step,RetainedMutationInverseStep::Progress(_)){**slot=Some(step);}progress}))
+   }
+   Action::CloseSemantics{owner,context}=>{
+    let mut stash=None;let inner=OriginalEffectReply::borrow(&mut stash)?;
+    drop(if recover{owner.recover_close_into(*context,body,effect,inner)}else{owner.close_into(*context,body,effect,inner)}?);
+    Ok(recorded(stash.take(),reply,|step|step.progress()))
+   }
+   Action::ClosePlan{plan}=>{
+    let mut stash=None;let inner=OriginalEffectReply::borrow(&mut stash)?;
+    drop(if recover{plan.recover_close_into(body,effect,inner)}else{plan.close_into(body,effect,inner)}?);
+    Ok(recorded(stash.take(),reply,|step|step.progress()))
+   }
+   Action::Preflight{plan,diff,before,post,slot}=>{
+    let mut stash=None;let inner=OriginalEffectReply::borrow(&mut stash)?;
+    let control=control.ok_or_else(||fault("retained preflight requires its receiving control"))?;
+    drop(if recover{recover_preflight_retained_diff_into(plan,*diff,*before,*post,body,maximum,effect,control,inner)}else{preflight_retained_diff_into(plan,*diff,*before,*post,body,maximum,effect,control,inner)}?);
+    Ok(recorded(stash.take(),reply,|step|{let progress=match &step{RetainedDiffPreflightStep::Progress(p)|RetainedDiffPreflightStep::Admitted(p,_)|RetainedDiffPreflightStep::Refused(p,_)=>*p};if !matches!(&step,RetainedDiffPreflightStep::Progress(_)){**slot=Some(step);}progress}))
+   }
+  }
+ }
+}
+impl<S:SnapshotProjection,M:RetainedMutation<S>> OriginalEffectProducer for ApplyProducer<S,M>{
+ type Output=RetainedCloneStep;
+ type Failure=OriginalRetirementFailure;
+ type Context<'turn,'source>=Call<'turn,'source,S,M> where 'source:'turn;
+ fn validate_context<'turn,'source>(&self,_:&Self::Context<'turn,'source>)->Result<(),ValueError>where 'source:'turn{Ok(())}
+ fn source_turn<'turn,'source>(&self,_:&Self::Context<'turn,'source>)->Option<OriginalSourceTurnIdentity>where 'source:'turn{None}
+ fn receive<'r,'turn,'source>(&mut self,context:&mut Self::Context<'turn,'source>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,Self::Output,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,Self::Output,Self::Failure>,ValueError>where 'source:'turn{Self::run(context,effect,reply,false)}
+ fn recover<'r,'turn,'source>(&mut self,context:&mut Self::Context<'turn,'source>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,Self::Output,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,Self::Output,Self::Failure>,ValueError>where 'source:'turn{Self::run(context,effect,reply,true)}
+}
 #[derive(Clone,Copy,PartialEq,Eq,Debug)]
 pub enum Stage{Birth,Decide,Source,Plan,Preflight,Inverse,Commit,Join,Publish,Done}
 
@@ -35,6 +93,10 @@ pub struct MutationApplyEdit<S:SnapshotProjection,M:RetainedMutation<S>>{
  semantic_effect:semio_framework_value::native_decoding::NativeReceivingEffect<semio_framework_value::OriginalRetirementFailure>,
  decision_result:ManuallyDrop<Option<RetainedMutationDecisionStep<M::Diff>>>,
  inverse_result:ManuallyDrop<Option<RetainedMutationInverseStep<M>>>,
+ preflight_result:ManuallyDrop<Option<RetainedDiffPreflightStep>>,
+ authority:Option<OriginalEffectAuthority<ApplyProducer<S,M>>>,
+ pending_work:u64,
+ close_action:Option<OriginalEffectAction<RetainedCloneStep,OriginalRetirementFailure>>,
  diff:ManuallyDrop<Option<M::Diff>>,
  source:ManuallyDrop<Option<RetainedCloneSource<M::Diff>>>,
  admission:ManuallyDrop<Option<RetainedCloneSourceAdmission<M::Diff,M::Diff,()>>>,
@@ -48,10 +110,21 @@ pub struct MutationApplyEdit<S:SnapshotProjection,M:RetainedMutation<S>>{
  closing:bool,
  last_work:u64,
 }
-impl<S:SnapshotProjection,M:RetainedMutation<S>> Default for MutationApplyEdit<S,M>{fn default()->Self{Self{stage:Stage::Birth,semantics:ManuallyDrop::new(None),birth_effect:Default::default(),semantic_effect:Default::default(),decision_result:ManuallyDrop::new(None),inverse_result:ManuallyDrop::new(None),diff:ManuallyDrop::new(None),source:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),plan:ManuallyDrop::new(None),inverse:ManuallyDrop::new(None),inverse_close:None,messages:ManuallyDrop::new([None,None]),join:ManuallyDrop::new(None),retirement:Default::default(),refused:false,closing:false,last_work:0}}}
+impl<S:SnapshotProjection,M:RetainedMutation<S>> Default for MutationApplyEdit<S,M>{fn default()->Self{Self{stage:Stage::Birth,semantics:ManuallyDrop::new(None),birth_effect:Default::default(),semantic_effect:Default::default(),decision_result:ManuallyDrop::new(None),inverse_result:ManuallyDrop::new(None),preflight_result:ManuallyDrop::new(None),authority:Some(OriginalEffectAuthority::new(Default::default())),pending_work:0,close_action:None,diff:ManuallyDrop::new(None),source:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),plan:ManuallyDrop::new(None),inverse:ManuallyDrop::new(None),inverse_close:None,messages:ManuallyDrop::new([None,None]),join:ManuallyDrop::new(None),retirement:Default::default(),refused:false,closing:false,last_work:0}}}
 impl<S:SnapshotProjection,M:RetainedMutation<S>> MutationApplyEdit<S,M>{
  fn context(mutations:&Arc<dyn ArtifactOwnedValueRetirementFactory<M>>)->RetainedMutationCloseContext<'_,M>{RetainedMutationCloseContext{mutations}}
  fn parent_copy()->usize{size_of::<Stage>()}
+ fn handoff(&self)->bool{self.semantic_effect.phase()==semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty&&(self.stage==Stage::Decide&&self.decision_result.is_some()||self.stage==Stage::Inverse&&self.inverse_result.is_some()||self.stage==Stage::Preflight&&self.preflight_result.is_some())}
+ fn close_child(authority:&mut Option<OriginalEffectAuthority<ApplyProducer<S,M>>>,slot:&mut Option<OriginalEffectAction<RetainedCloneStep,OriginalRetirementFailure>>,effect:&mut RetainedAllocationEffect<'_>,body:usize,action:Action<'_,S,M>)->Result<RetainedCloneProgress,RetirementPollExit>{
+  let authority=authority.as_mut().ok_or_else(||fault("retained edit authority is absent"))?;
+  if !authority.drive(&mut Call{body,maximum:0,control:None,action},effect,slot)?{return Err(fault("retained child close left its reply pending").into())}
+  let mut output=None;slot.as_mut().ok_or_else(||fault("retained child close action is absent"))?.transfer_reply(&mut output)?;authority.finish(slot)?;
+  match output{Some(Ok(step))=>Ok(step.progress()),Some(Err(failure))=>Err(RetirementPollExit::Failed(failure)),None=>Err(fault("retained child close recorded no reply").into())}
+ }
+ fn drive(last_work:&mut u64,receiving:&mut NativeDecodeControl<'_>,frame:&mut NativeReceivingEffect<OriginalRetirementFailure>,authority:&mut OriginalEffectAuthority<ApplyProducer<S,M>>,demand:RetirementDemand,work:u64,body:usize,action:Action<'_,S,M>)->Result<RetainedCloneProgress,semio_framework_value::OriginalReceivingPrimary>{
+  let poll=receiving.receive_original_effect(demand,work,frame,authority,|control,effect,authority,slot|authority.drive(&mut Call{body,maximum:work,control:Some(control),action},effect,slot))?;
+  framed(last_work,poll,|failure|{let mut receiving=failure.receiving;receiving.retirement_failure=failure.child;receiving.work_refusal=failure.work_refusal;receiving})
+ }
  fn progress(grant:RetainedCloneGrant,mut progress:RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{if progress!=Default::default(){progress.copied_bytes=progress.copied_bytes.checked_add(Self::parent_copy()).ok_or_else(||fault("retained semantic receipt overflow"))?;}admit_retained_clone_progress(grant,progress,"original structural semantic parent")}
 }
 impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for MutationApplyEdit<S,M>{
@@ -62,7 +135,7 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for Mutat
  fn advance_demands(&self,before:RetainedCloneRef<'_,S>,mutation:RetainedCloneRef<'_,M>,post:PagedOneItemPostRead<'_,S>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
   if self.closing||self.stage==Stage::Done{return Err(fault("retained mutation edit is closed"));}
   let parent=Self::parent_copy();
-  let mut demand=match self.stage{
+  let mut demand=if self.handoff(){Default::default()}else if let Some(pending)=self.semantic_effect.pending_demand(){pending}else{match self.stage{
    Stage::Birth=>retained_mutation_birth_demand::<S,M>(),
    Stage::Decide=>self.semantics.as_ref().unwrap().decision_demand(mutation,before,body,maximum_work_units)?,
    Stage::Source=>self.admission.as_ref().ok_or_else(||fault("retained mutation diff admission is absent"))?.next_demand()?,
@@ -72,16 +145,14 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for Mutat
    Stage::Commit=>self.plan.as_ref().unwrap().commit_demand(self.source.as_ref().unwrap().try_borrow()?,before,post.get(),body)?,
    Stage::Join=>if let Some(join)=self.join.as_ref(){join.demand()?}else{MutationMessageConcat::<2>::constructor_demand()},
    Stage::Publish=>self.join.as_ref().unwrap().demand()?,Stage::Done=>unreachable!()
-  };demand.copy_bytes=demand.copy_bytes.checked_add(parent).ok_or_else(||fault("retained semantic header quote overflow"))?;demand.depth=demand.depth.checked_add(1).ok_or_else(||fault("retained semantic depth quote overflow"))?.max(2);Ok(demand)
+  }};demand.copy_bytes=demand.copy_bytes.checked_add(parent).ok_or_else(||fault("retained semantic header quote overflow"))?;demand.depth=demand.depth.checked_add(1).ok_or_else(||fault("retained semantic depth quote overflow"))?.max(2);Ok(demand)
  }
  fn advance(&mut self,before:RetainedCloneRef<'_,S>,mutation:RetainedCloneRef<'_,M>,post:PagedOneItemPost<'_,S>,body:usize,grant:RetainedCloneGrant,receiving:&mut NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<M>,semio_framework_value::OriginalReceivingPrimary>{
   self.last_work=0;
   if self.closing||self.stage==Stage::Done{return Err(fault("retained mutation edit is closed").into());}
   if grant.maximum_items==0||grant.maximum_copy_bytes<Self::parent_copy()||grant.maximum_depth<2{return Ok(PagedOneItemEditStep::Progress(Default::default()));}
-  if self.semantic_effect.phase()!=semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty{
-   let turn=receiving.finish_retirement_receiving(&mut self.semantic_effect);self.last_work=u64::try_from(turn.work).unwrap_or(u64::MAX);return Ok(PagedOneItemEditStep::Progress(Self::progress(grant,turn.result?)?));
-  }
-  let handoff=(self.stage==Stage::Decide&&self.decision_result.is_some())||(self.stage==Stage::Inverse&&self.inverse_result.is_some());
+  let recovering=self.semantic_effect.phase()!=semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty;
+  let handoff=self.handoff();
   let demand=if handoff{scalar(Self::parent_copy())}else{self.advance_demands(before,mutation,post.read(),body,EDIT_TURN_WORK)?};if !semio_os_spr::retained_mutation_demand_fits(demand,grant){return Ok(PagedOneItemEditStep::Progress(Default::default()));}
   let birth_handoff=self.stage==Stage::Birth&&self.semantics.is_some()&&self.birth_effect.phase()==semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty;
   let g=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-Self::parent_copy(),maximum_depth:grant.maximum_depth-1,..grant};
@@ -102,9 +173,10 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for Mutat
      if once(&mut self.last_work,receiving,g,1,|_,effect|perform(effect,1))?.transpose()?.is_none(){return Ok(PagedOneItemEditStep::Progress(Default::default()));}
      match self.decision_result.take().ok_or_else(||fault("retained decision handoff is absent"))?{RetainedMutationDecisionStep::Admitted(_,d,rows)=>{*self.admission=Some(RetainedCloneSource::admission_owned(d,()));self.messages[0]=Some(rows);self.stage=Stage::Source;},RetainedMutationDecisionStep::Refused(_,rows)=>{self.messages[0]=Some(rows);self.refused=true;self.stage=Stage::Join;},RetainedMutationDecisionStep::Progress(_)=>return Err(fault("retained decision handoff was not terminal").into())}RetainedCloneProgress::default()
     }else{
-     let owner=self.semantics.as_mut().ok_or_else(||fault("semantics is absent"))?;let d=owner.decision_demand(mutation,before,body,EDIT_TURN_WORK)?;let q=owner.decision_work_demand(mutation,before,body,EDIT_TURN_WORK)?;let slot=&mut self.decision_result;
-     let poll=receiving.receive_effect(d,q,&mut self.semantic_effect,|_,effect|{let maximum=effect.maximum_work_units();let turn=decide_retained_mutation(owner,mutation,before,body,maximum,effect);let work=turn.work;RetainedWorkOutcome{result:turn.result.map(|step|{let p=step.progress();if !matches!(&step,RetainedMutationDecisionStep::Progress(_)){**slot=Some(step);}RetainedCloneStep::Progress(p)}),work}})?;
-     framed(&mut self.last_work,poll,|failure|{let mut receiving=failure.receiving;receiving.retirement_failure=failure.child;receiving.work_refusal=failure.work_refusal;receiving})?
+     let owner=self.semantics.as_mut().ok_or_else(||fault("semantics is absent"))?;
+     let(d,q)=if recovering{(self.semantic_effect.pending_demand().ok_or_else(||fault("retained decision recovery lost its demand"))?,self.pending_work)}else{(owner.decision_demand(mutation,before,body,EDIT_TURN_WORK)?,owner.decision_work_demand(mutation,before,body,EDIT_TURN_WORK)?)};
+     self.pending_work=q;
+     Self::drive(&mut self.last_work,receiving,&mut self.semantic_effect,self.authority.as_mut().ok_or_else(||fault("retained edit authority is absent"))?,d,q,body,Action::Decide{owner,mutation,before,slot:&mut self.decision_result})?
     }
    }
    Stage::Source=>{
@@ -115,7 +187,7 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for Mutat
      step?.progress()
     }else{
      let mut output=None;
-     let Some(step)=once(&mut self.last_work,receiving,g,1,|_,effect|{let turn=admission.take_output(&mut output,g);pay(effect,turn.work).and_then(|()|turn.result)})?else{return Ok(PagedOneItemEditStep::Progress(Default::default()));};
+     let Some(step)=once(&mut self.last_work,receiving,g,1,|_,effect|{admission.take_output(&mut output,effect).result})?else{return Ok(PagedOneItemEditStep::Progress(Default::default()));};
      let step=step?;
      if let Some(source)=output{*self.source=Some(source);self.admission.take();self.stage=Stage::Plan;}
      step.progress()
@@ -126,21 +198,25 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for Mutat
     let Some((o,p))=begun?else{return Ok(PagedOneItemEditStep::Progress(Default::default()));};*self.plan=Some(o);self.stage=Stage::Preflight;p
    }
    Stage::Preflight=>{
-    let plan=self.plan.as_mut().unwrap();let diff=self.source.as_ref().unwrap().try_borrow()?;let original=post.original()?;
-    let quote=plan.preflight_work_demand(diff,before,original,body,EDIT_TURN_WORK)?;
-    let Some(result)=once(&mut self.last_work,receiving,g,quote,|control,effect|{let maximum=effect.maximum_work_units();preflight_retained_diff(plan,diff,before,original,body,maximum,effect,control).result})?else{return Ok(PagedOneItemEditStep::Progress(Default::default()));};
-    let result=result?;let p=result.progress();
-    match result{RetainedDiffPreflightStep::Progress(_)=>{},RetainedDiffPreflightStep::Admitted(_,rows)=>{self.messages[1]=Some(rows);self.stage=Stage::Inverse;},RetainedDiffPreflightStep::Refused(_,rows)=>{self.messages[1]=Some(rows);self.refused=true;self.stage=Stage::Join;}}
-    p
+    if handoff{
+     if once(&mut self.last_work,receiving,g,1,|_,effect|perform(effect,1))?.transpose()?.is_none(){return Ok(PagedOneItemEditStep::Progress(Default::default()));}
+     match self.preflight_result.take().ok_or_else(||fault("retained preflight handoff is absent"))?{RetainedDiffPreflightStep::Admitted(_,rows)=>{self.messages[1]=Some(rows);self.stage=Stage::Inverse;},RetainedDiffPreflightStep::Refused(_,rows)=>{self.messages[1]=Some(rows);self.refused=true;self.stage=Stage::Join;},RetainedDiffPreflightStep::Progress(_)=>return Err(fault("retained preflight handoff was not terminal").into())}RetainedCloneProgress::default()
+    }else{
+     let plan=self.plan.as_mut().unwrap();let diff=self.source.as_ref().unwrap().try_borrow()?;let original=post.original()?;
+     let(d,q)=if recovering{(self.semantic_effect.pending_demand().ok_or_else(||fault("retained preflight recovery lost its demand"))?,self.pending_work)}else{(plan.preflight_demand(diff,before,original,body,EDIT_TURN_WORK)?,plan.preflight_work_demand(diff,before,original,body,EDIT_TURN_WORK)?)};
+     self.pending_work=q;
+     Self::drive(&mut self.last_work,receiving,&mut self.semantic_effect,self.authority.as_mut().ok_or_else(||fault("retained edit authority is absent"))?,d,q,body,Action::Preflight{plan,diff,before,post:original,slot:&mut self.preflight_result})?
+    }
    }
    Stage::Inverse=>{
     if handoff{
      if once(&mut self.last_work,receiving,g,1,|_,effect|perform(effect,1))?.transpose()?.is_none(){return Ok(PagedOneItemEditStep::Progress(Default::default()));}
      match self.inverse_result.take().ok_or_else(||fault("retained inverse handoff is absent"))?{RetainedMutationInverseStep::Ready(_,rows)=>{*self.inverse=Some(rows);self.stage=Stage::Commit;},RetainedMutationInverseStep::Progress(_)=>return Err(fault("retained inverse handoff was not terminal").into())}RetainedCloneProgress::default()
     }else{
-     let a=self.plan.as_ref().unwrap().inverse_admission(self.source.as_ref().unwrap().try_borrow()?,before)?;let owner=self.semantics.as_mut().ok_or_else(||fault("semantics is absent"))?;let d=owner.inverse_demand(mutation,&a,body,EDIT_TURN_WORK)?;let q=owner.inverse_work_demand(mutation,&a,body,EDIT_TURN_WORK)?;let slot=&mut self.inverse_result;
-     let poll=receiving.receive_effect(d,q,&mut self.semantic_effect,|_,effect|{let maximum=effect.maximum_work_units();let turn=inverse_retained_mutation(owner,mutation,&a,body,maximum,effect);let work=turn.work;RetainedWorkOutcome{result:turn.result.map(|step|{let p=step.progress();if !matches!(&step,RetainedMutationInverseStep::Progress(_)){**slot=Some(step);}RetainedCloneStep::Progress(p)}),work}})?;
-     framed(&mut self.last_work,poll,|failure|{let mut receiving=failure.receiving;receiving.retirement_failure=failure.child;receiving.work_refusal=failure.work_refusal;receiving})?
+     let admission=self.plan.as_ref().unwrap().inverse_admission(self.source.as_ref().unwrap().try_borrow()?,before)?;let owner=self.semantics.as_mut().ok_or_else(||fault("semantics is absent"))?;
+     let(d,q)=if recovering{(self.semantic_effect.pending_demand().ok_or_else(||fault("retained inverse recovery lost its demand"))?,self.pending_work)}else{(owner.inverse_demand(mutation,&admission,body,EDIT_TURN_WORK)?,owner.inverse_work_demand(mutation,&admission,body,EDIT_TURN_WORK)?)};
+     self.pending_work=q;
+     Self::drive(&mut self.last_work,receiving,&mut self.semantic_effect,self.authority.as_mut().ok_or_else(||fault("retained edit authority is absent"))?,d,q,body,Action::Inverse{owner,mutation,admission,slot:&mut self.inverse_result})?
     }
    }
    Stage::Commit=>{
@@ -196,6 +272,7 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for Mutat
   self.close_demands(mutations,body)?;
   if self.terminal_is_empty(){return Ok(0)}
   if self.decision_result.is_some(){return u64::try_from(size_of::<Option<RetainedMutationDecisionStep<M::Diff>>>().checked_mul(2).ok_or_else(||fault("retained outcome close extent overflow"))?).ok().and_then(|n|n.checked_add(1)).ok_or_else(||fault("retained outcome close work overflow"))}
+  if self.preflight_result.is_some(){return u64::try_from(size_of::<Option<RetainedDiffPreflightStep>>().checked_mul(2).ok_or_else(||fault("retained outcome close extent overflow"))?).ok().and_then(|n|n.checked_add(1)).ok_or_else(||fault("retained outcome close work overflow"))}
   if self.inverse_result.is_some(){return u64::try_from(size_of::<Option<RetainedMutationInverseStep<M>>>().checked_mul(2).ok_or_else(||fault("retained outcome close extent overflow"))?).ok().and_then(|n|n.checked_add(1)).ok_or_else(||fault("retained outcome close work overflow"))}
   if let Some(owner)=self.semantics.as_ref(){return if owner.terminal_is_empty(){Ok(1)}else{owner.close_work_demand(Self::context(mutations),body)}}
   if let Some(owner)=self.plan.as_ref(){return if owner.terminal_is_empty(){Ok(1)}else{owner.close_work_demand(body)}}
@@ -228,6 +305,7 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> MutationApplyEdit<S,M>{
   if self.birth_effect.phase()!=semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty||self.semantic_effect.phase()!=semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original receiving frame requires its original recovery loan"));}
   if self.decision_result.is_some(){return Ok(scalar(size_of::<Option<RetainedMutationDecisionStep<M::Diff>>>().saturating_mul(2)));}
   if self.inverse_result.is_some(){return Ok(scalar(size_of::<Option<RetainedMutationInverseStep<M>>>().saturating_mul(2)));}
+  if self.preflight_result.is_some(){return Ok(scalar(size_of::<Option<RetainedDiffPreflightStep>>().saturating_mul(2)));}
   if let Some(o)=self.semantics.as_ref(){return if o.terminal_is_empty(){Ok(scalar(size_of::<Option<RetainedMutationOwner<S,M>>>()))}else{o.close_demand(Self::context(mutations),body)};}
   if let Some(o)=self.plan.as_ref(){return if o.terminal_is_empty(){Ok(scalar(size_of::<Option<RetainedDiffOwner<S,M::Diff>>>()))}else{o.close_demand(body)};}
   if let Some(a)=self.admission.as_ref(){return if a.phase()=="ready"{a.next_demand()}else{a.next_return_demand()};}
@@ -253,16 +331,21 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> MutationApplyEdit<S,M>{
    if let RetainedMutationInverseStep::Ready(_,rows)=self.inverse_result.take().ok_or_else(||fault("retained inverse close lost its result"))?{*self.inverse=Some(rows)}
    return Ok(moved())
   }
-  if let Some(o)=self.semantics.as_mut(){if o.terminal_is_empty(){drop(self.semantics.take());return Ok(moved());}let step=RetirementPollExit::resume(o.close_step(Self::context(mutations),&mut effect.nested(grant)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-  if let Some(o)=self.plan.as_mut(){if o.terminal_is_empty(){drop(self.plan.take());return Ok(moved());}let step=RetirementPollExit::resume(o.close_step(&mut effect.nested(grant)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if self.preflight_result.is_some(){
+   if self.messages[1].is_some(){return Err(fault("retained preflight close slot is occupied").into())}
+   match self.preflight_result.take().ok_or_else(||fault("retained preflight close lost its result"))?{RetainedDiffPreflightStep::Progress(_)=>{},RetainedDiffPreflightStep::Admitted(_,rows)|RetainedDiffPreflightStep::Refused(_,rows)=>self.messages[1]=Some(rows)}
+   return Ok(moved())
+  }
+  if let Some(o)=self.semantics.as_mut(){if o.terminal_is_empty(){drop(self.semantics.take());return Ok(moved());}let step=Self::close_child(&mut self.authority,&mut self.close_action,effect,grant.maximum_copy_bytes,Action::CloseSemantics{owner:o,context:Self::context(mutations)})?;return Ok(RetainedCloneStep::Progress(step));}
+  if let Some(o)=self.plan.as_mut(){if o.terminal_is_empty(){drop(self.plan.take());return Ok(moved());}let step=Self::close_child(&mut self.authority,&mut self.close_action,effect,grant.maximum_copy_bytes,Action::ClosePlan{plan:o})?;return Ok(RetainedCloneStep::Progress(step));}
   if let Some(a)=self.admission.as_mut(){
-   if a.phase()=="ready"{let mut output=None;let turn=a.take_output(&mut output,grant);RetirementPollExit::pay(effect,turn.work)?;let step=turn.result?;if let Some(source)=output{*self.source=Some(source);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}
+   if a.phase()=="ready"{let mut output=None;let step=a.take_output(&mut output,&mut effect.nested(grant)).result?;if let Some(source)=output{*self.source=Some(source);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}
    let mut back=None;let step=a.return_inputs(&mut back,&mut effect.nested(grant)).result?;if let Some((diff,()))=back{*self.diff=Some(diff);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));
   }
-  if let Some(o)=self.source.as_mut(){if o.terminal_is_empty(){drop(self.source.take());return Ok(moved());}let step=RetirementPollExit::resume(o.close_step(&mut effect.nested(grant)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-  if !self.retirement.is_empty(){let step=RetirementPollExit::resume(self.retirement.step_granted(&mut effect.nested(grant)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if let Some(o)=self.source.as_mut(){if o.terminal_is_empty(){drop(self.source.take());return Ok(moved());}let step=RetirementPollExit::resume(o.close_step(grant.maximum_copy_bytes,&mut effect.nested(grant)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if !self.retirement.is_empty(){let step=RetirementPollExit::resume(self.retirement.step_granted(grant.maximum_copy_bytes,&mut effect.nested(grant)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
   if let Some(s)=self.retirement.begin_granted(&mut self.diff,&mut effect.nested(grant)).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}
-  if let Some(o)=self.inverse_close.as_mut(){if o.terminal_is_empty(){self.inverse_close=None;return Ok(moved());}let step=RetirementPollExit::resume(o.close_step(mutations,&mut effect.nested(grant)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if let Some(o)=self.inverse_close.as_mut(){if o.terminal_is_empty(){self.inverse_close=None;return Ok(moved());}let step=RetirementPollExit::resume(o.close_step(mutations,grant.maximum_copy_bytes,&mut effect.nested(grant)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
   if self.inverse.is_some(){
    let step=match FactoryVectorRetirement::admit(&mut self.inverse,&mut self.inverse_close,&mut effect.nested(grant)){RetainedWorkPoll::Pending{work}=>return Err(RetirementPollExit::Pending(work)),RetainedWorkPoll::Complete(turn)=>turn.result?};
    return Ok(RetainedCloneStep::Progress(step.progress()));
@@ -271,9 +354,9 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> MutationApplyEdit<S,M>{
   if self.messages.iter().any(Option::is_some){let batches=std::array::from_fn(|i|self.messages[i].take().unwrap_or_default());return match MutationMessageConcat::admit(batches,grant){Ok((mut o,p))=>{o.begin_close();*self.join=Some(o);Ok(RetainedCloneStep::Progress(p))},Err((e,batches))=>{for(i,b)in batches.into_iter().enumerate(){self.messages[i]=Some(b);}Err(e.into())}};}
   Ok(RetainedCloneStep::Complete(Default::default()))
  }
- fn owner_terminal_is_empty(&self)->bool{self.birth_effect.phase()==semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty&&self.semantic_effect.phase()==semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty&&self.decision_result.is_none()&&self.inverse_result.is_none()&&self.semantics.is_none()&&self.plan.is_none()&&self.source.is_none()&&self.admission.is_none()&&self.diff.is_none()&&self.inverse.is_none()&&self.inverse_close.is_none()&&self.join.is_none()&&self.messages.iter().all(Option::is_none)&&self.retirement.is_empty()}
+ fn owner_terminal_is_empty(&self)->bool{self.birth_effect.phase()==semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty&&self.semantic_effect.phase()==semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty&&self.decision_result.is_none()&&self.inverse_result.is_none()&&self.preflight_result.is_none()&&self.close_action.is_none()&&self.semantics.is_none()&&self.plan.is_none()&&self.source.is_none()&&self.admission.is_none()&&self.diff.is_none()&&self.inverse.is_none()&&self.inverse_close.is_none()&&self.join.is_none()&&self.messages.iter().all(Option::is_none)&&self.retirement.is_empty()}
 }
-impl<S:SnapshotProjection,M:RetainedMutation<S>> Drop for MutationApplyEdit<S,M>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"retained mutation edit requires complete original ownership closure");if empty{unsafe{ManuallyDrop::drop(&mut self.decision_result);ManuallyDrop::drop(&mut self.inverse_result);ManuallyDrop::drop(&mut self.admission);ManuallyDrop::drop(&mut self.semantics);ManuallyDrop::drop(&mut self.diff);ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.plan);ManuallyDrop::drop(&mut self.inverse);ManuallyDrop::drop(&mut self.messages);ManuallyDrop::drop(&mut self.join);}}}}
+impl<S:SnapshotProjection,M:RetainedMutation<S>> Drop for MutationApplyEdit<S,M>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"retained mutation edit requires complete original ownership closure");if let Some(authority)=self.authority.take(){drop(authority.into_producer());}if empty{unsafe{ManuallyDrop::drop(&mut self.decision_result);ManuallyDrop::drop(&mut self.inverse_result);ManuallyDrop::drop(&mut self.preflight_result);ManuallyDrop::drop(&mut self.admission);ManuallyDrop::drop(&mut self.semantics);ManuallyDrop::drop(&mut self.diff);ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.plan);ManuallyDrop::drop(&mut self.inverse);ManuallyDrop::drop(&mut self.messages);ManuallyDrop::drop(&mut self.join);}}}}
 /// 🏭️ Every mounted mutation family supplies required retained semantics and a typed central apply plan.
 pub fn mutation_apply_preparation_factory<S,M>()->Arc<dyn ArtifactStoreOneItemPreparationFactory<S,M>>where S:SnapshotProjection<Output=S>,M:RetainedMutation<S>+ArtifactCanonicalJsonTree{Arc::new(PagedOneItemPreparationFactory::<S,M,MutationApplyEdit<S,M>>::default())}
 

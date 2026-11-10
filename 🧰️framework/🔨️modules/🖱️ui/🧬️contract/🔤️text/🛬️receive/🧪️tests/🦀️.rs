@@ -5,25 +5,28 @@ use semio_framework_value::{ValueError,retirement::RetirementCursor};
 use semio_framework_value::{DslValue,NativeDecodeControl,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome};
 use semio_framework_value::native_decoding::{NativeReceive,NativeReceiver};
 use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
-fn run(text:&str,accepted:bool,cut:Option<usize>,profile:&serde_json::Value){
- let stock=&profile["stock"];let mut bank=RetainedCloneGrant{maximum_items:stock["items"].as_u64().unwrap()as usize,maximum_copy_bytes:stock["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:stock["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:stock["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:stock["depth"].as_u64().unwrap()as usize};let mut fuel=stock["fuel"].as_u64().unwrap();
- let(mut source,_,_)=semio_framework_value::testing::admit_owned_source(DslValue::String(text.into()),());let identity=std::ptr::from_ref(source.borrow().get());let mut receiver=<UiText as NativeReceive<DslValue>>::receiver();let mut allow=|_|true;let mut control=NativeDecodeControl::new_retained(&mut allow);let mut output=None;let mut refused=false;
- let post=|p:RetainedCloneProgress,work:u64,heap:(usize,usize),bank:&mut RetainedCloneGrant,fuel:&mut u64|{assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));assert!(p.fits(*bank));bank.maximum_items-=p.copied_items;bank.maximum_copy_bytes-=p.copied_bytes;bank.maximum_capacity_bytes-=p.retained_capacity_bytes;bank.maximum_release_bytes-=p.released_bytes;*fuel=fuel.checked_sub(work).expect("text fixture finite CPU authority");};
- for at in 0..profile["maximumTurns"].as_u64().unwrap()as usize{
-  if cut==Some(at){break}let g=RetainedCloneGrant{maximum_items:1,..bank};let denied=RetainedCloneGrant{maximum_items:0,..g};let(turn,heap)=observe(||receiver.advance(source.borrow(),&mut control,1,denied));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));
-  let(turn,heap)=observe(||receiver.advance(source.borrow(),&mut control,1,g));let p=turn.result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());post(p,turn.work,heap,&mut bank,&mut fuel);if turn.result.is_err(){assert!(!accepted);refused=true;break}assert_eq!(std::ptr::from_ref(source.borrow().get()),identity);if receiver.output_ready(){let(turn,heap)=observe(||receiver.take(g));let(value,p)=turn.result.unwrap().expect("funded text handoff");post(p,turn.work,heap,&mut bank,&mut fuel);assert_eq!(value.as_str(),text);assert_eq!(serde_json::to_value(&value).unwrap(),serde_json::json!(text));output=Some(value);break}
- }
- if cut.is_none(){assert_eq!(refused,!accepted);assert_eq!(output.is_some(),accepted)}receiver.begin_close();for _ in 0..10000{if receiver.terminal_is_empty(){break}let g=RetainedCloneGrant{maximum_items:1,..bank};let(turn,heap)=observe(||receiver.close_step(g));post(turn.result.unwrap().progress(),turn.work,heap,&mut bank,&mut fuel);}assert!(receiver.terminal_is_empty());drop(output);
- for _ in 0..10000{if source.terminal_is_empty(){break}let g=RetainedCloneGrant{maximum_items:1,..bank};let(turn,heap)=observe(||source.close_step(g));post(turn.result.unwrap().progress(),turn.work,heap,&mut bank,&mut fuel);}assert!(source.terminal_is_empty());assert!(fuel>0);
+#[path="../../../../../🌱️value/🧪️testing/📥️admission/receiver-driver.rs"]mod driver;
+fn run(text:&str,accepted:bool,cut:Option<usize>,_profile:&serde_json::Value){
+ let mut bank=driver::bank();let(source,_,_)=semio_framework_value::testing::admit_owned_source(DslValue::String(text.into()),());
+ let received=driver::lifecycle(<UiText as NativeReceive<DslValue>>::receiver(),source,&mut bank,1,cut.map(|n|n as u64),|value:&UiText|{assert_eq!(value.as_str(),text);assert_eq!(serde_json::to_value(value).unwrap(),serde_json::json!(text));});
+ match cut{None=>{assert_eq!(received.is_ok(),accepted,"{received:?}");if accepted{assert_eq!(received,Ok(true));}},Some(_)=>assert!(matches!(received,Ok(false)|Err(_)),"a cancelled receive publishes nothing: {received:?}")}
 }
 #[test]
 fn native_ui_text_receiving_preserves_denied_and_cancelled_prefixes(){let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧱️foundation/🔣️.json")).unwrap();let profile:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).unwrap();for row in corpus["texts"].as_array().unwrap(){let text=row["unit"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap()as usize);let accepted=row["valid"].as_bool().unwrap();assert_eq!(serde_json::from_value::<UiText>(serde_json::json!(text)).is_ok(),accepted);run(&text,accepted,None,&profile);for cut in profile["cancelPrefixes"].as_array().unwrap(){run(&text,accepted,Some(cut.as_u64().unwrap()as usize),&profile);}}}
 
-struct OriginalTextWork(u64);
-impl semio_framework_value::native_decoding::NativeDecodeWorkRecipient for OriginalTextWork{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=self.0;limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
 #[test]
-fn text_retirement_quotes_actual_work_before_original_caller_effects(){
+fn text_retirement_charges_its_quoted_work_to_the_calling_effect(){
+ use semio_framework_value::retained_clone::OriginalEffectReply;
+ use semio_framework_value::RetainedWorkPoll;
+ use semio_framework_value::retirement::RetirementStep;
+ use semio_framework_value_testing_admission::{EffectBank,Wallet};
  let law:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).unwrap();
- for limit in [0,1]{let mut cursor=TextRetirement(Some(UiText::default()));let mut allow=|_|true;let mut caller=NativeDecodeControl::new_retained(&mut allow);let mut original=OriginalTextWork(limit);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:1};
- caller.with_work_recipient(&mut original,|same|->Result<(),ValueError>{let quote=cursor.next_computational_work(1)?;assert_eq!(quote,law["retirementWork"]["occupied"].as_u64().unwrap());let(admission,heap)=observe(||same.prepare_work(quote));assert_eq!(heap,(0,0));let admitted=admission?;if limit==0{assert!(!admitted);assert!(!cursor.terminal_is_empty());assert_eq!(same.actual_work(),0);return Ok(())}assert!(admitted);let(step,heap)=observe(||cursor.close_step(grant));let actual=step.work();same.commit_work(actual)?;assert_eq!(actual,quote);assert_eq!(heap,(0,0));assert!(cursor.terminal_is_empty());assert_eq!(cursor.next_computational_work(1)?,law["retirementWork"]["empty"].as_u64().unwrap());Ok(())}).unwrap();}
+ for limit in [0u64,1]{
+  let mut cursor=TextRetirement(Some(UiText::default()));let quote=cursor.next_computational_work(1).unwrap();assert_eq!(quote,law["retirementWork"]["occupied"].as_u64().unwrap());
+  let stock=RetainedCloneGrant{maximum_items:4,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<16,maximum_release_bytes:1<<16,maximum_depth:4};let mut bank=EffectBank::new(Wallet::new(stock,8));let grant=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..stock};let mut answer=None;
+  let((poll,_),heap)=observe(||bank.run(grant,limit,|effect|{let mut stash=None;{let reply=OriginalEffectReply::borrow(&mut stash).unwrap();drop(cursor.close_into(1,effect,reply).unwrap());}answer=stash.take();RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work:effect.performed_work()})}));
+  let RetainedWorkPoll::Complete(turn)=poll else{panic!("text retirement settles in its own action")};assert_ne!(bank.take_admitted(),Some(false));
+  if limit==0{assert_eq!(turn.work,0);assert!(matches!(answer,Some(Ok(RetirementStep::BudgetExhausted))));assert!(!cursor.terminal_is_empty());continue}
+  assert_eq!(turn.work,u128::from(quote));assert!(matches!(answer,Some(Ok(RetirementStep::Complete(_)))));assert!(cursor.terminal_is_empty());assert_eq!(cursor.next_computational_work(1).unwrap(),law["retirementWork"]["empty"].as_u64().unwrap());assert_eq!(heap,(0,0));
+ }
 }

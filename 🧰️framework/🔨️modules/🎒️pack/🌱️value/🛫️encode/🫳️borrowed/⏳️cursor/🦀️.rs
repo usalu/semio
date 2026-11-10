@@ -604,9 +604,12 @@ impl Drop for BorrowedProjectedPackCursor {
 struct PhysicalBorrowedPack{expression:RetainedExpressionCursor,symbols:PagedList<Symbol,SYMBOL_LIMIT>,frames:PagedList<Frame,64>,chunks:PagedList<ChunkLocator,{isize::MAX as usize}>}
 
 #[doc(hidden)]pub struct OriginalProjectedPackRetirement(std::mem::ManuallyDrop<BorrowedProjectedPackCursor>);
+impl OriginalProjectedPackRetirement{
+    fn close_step(&mut self,_body:usize,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep as S;let turn=self.0.close(effect);let work=effect.performed_work();match turn{Err(failure)=>S::Failure(failure.reason.into(),work),Ok(step) if step.complete&&step.progress==Default::default()=>S::Complete(work),Ok(step)=>S::Progress(step.progress,work)}}
+}
 impl semio_framework_value::retirement::RetirementCursor for OriginalProjectedPackRetirement{
     fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.0.retirement_demands()}
-    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep as S;let turn=self.0.close(effect);let work=effect.performed_work();match turn{Err(failure)=>S::Failure(failure.reason.into(),work),Ok(step) if step.complete&&step.progress==Default::default()=>S::Complete(work),Ok(step)=>S::Progress(step.progress,work)}}
+    semio_framework_value::native_retirement_reply!();
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands()?.copy_bytes)}
     fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_byte_demand().ok()}

@@ -2,9 +2,9 @@
 use super::*;
 use semio_framework_pixels::{compositing::{layers::{RasterStackContent,RasterStackInput,RasterStackJob,RasterStackLayer,RasterStackMask,RasterStackResult,RasterStackTransform},CompositeBlend},editing::PixelProgress,RasterImage as PixelImage};
 use std::collections::BTreeMap;
-use semio_framework_value::{work::RetainedWorkLedger,AuthoringWallet,RetainedCloneGrant};
+use semio_framework_value::{work::RetainedWorkLedger,RetainedCloneGrant};
 
-const WALLET_WORK:u128=1_000_000_000;
+const TURN_WORK:u64=1_000_000_000;
 
 const STOCK:RetainedCloneGrant=RetainedCloneGrant {maximum_items:1<<22,maximum_copy_bytes:1<<28,maximum_capacity_bytes:1<<25,maximum_release_bytes:1<<26,maximum_depth:256};
 
@@ -101,7 +101,7 @@ impl RetainedComposite {
             let job=self.job.as_mut().ok_or_else(||String::from("Compositing lost its job"))?;let progress=job.advance(budget,&mut RetainedWorkLedger::new(STOCK),&mut None).map_err(|e|e.to_string())?;
             if !progress.done&&job.last_turn_work()==0{return Err("Compositing made no progress under its ledger".into());}
             if progress.done{
-                let output=self.job.take().ok_or_else(||String::from("Compositing lost its job"))?.into_result(&mut AuthoringWallet::new(STOCK,WALLET_WORK)).map_err(|e|e.to_string())?;
+                let output=self.job.take().ok_or_else(||String::from("Compositing lost its job"))?.into_result(&mut semio_framework_pixels::BlockingTurns::new(TURN_WORK)).map_err(|e|e.to_string())?;
                 self.image=(!output.empty).then(||Arc::new(image_from_rgba(output.image.width,output.image.height,output.image.pixels.clone())));
                 self.output=Some(output);self.pending=false;
             }

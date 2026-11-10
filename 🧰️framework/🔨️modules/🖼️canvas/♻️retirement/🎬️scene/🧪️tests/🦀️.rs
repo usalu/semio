@@ -3,6 +3,11 @@ static ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::H
 use semio_framework_canvas_scene::{Scene,CanvasSceneRetirement,BezPath,Stroke,FillRule,Affine,Color,RasterImage};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observed;
+fn close_scene(close:&mut CanvasSceneRetirement,scene:&mut Scene,body:usize,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
+ funding::settled(funding::with_effect(grant,funding::WORK,&mut None,|effect|close.close_step(scene,body,effect))).result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)
+}
+#[path = "../../../../◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs"]
+mod funding;
 fn law()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 #[test]
 fn original_fixed_pages_birth_release_and_terminal_drop_use_exact_physical_receipts(){
@@ -23,9 +28,9 @@ fn original_first_party_scene_preserves_unfunded_children_and_exact_paid_release
   let image=RasterImage::rgba8(1,1,std::sync::Arc::new(vec![255,0,0,255]));scene.draw_image(&image,Affine::IDENTITY);
   (scene,CanvasSceneRetirement::default())
  });assert_eq!(scene.command_len(),3);let mut born=heap.requested_bytes;let mut released=heap.released_bytes;
- for turn in 0..100000{if close.terminal_is_empty(&scene){break}let demand=close.next_demands(&scene,grant.maximum_copy_bytes).unwrap();
+ for turn in 0..100000{if close.terminal_is_empty(&scene){break}let body=grant.maximum_copy_bytes;let demand=close.next_demands(&scene,body).unwrap();
   let mut denied=vec![RetainedCloneGrant{maximum_items:0,..grant}];if demand.capacity_bytes!=0{denied.push(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant})}if demand.release_bytes!=0{denied.push(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant})}if demand.copy_bytes!=0{denied.push(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant})}
-  for grant in denied{let(step,heap)=observed(||close.close_step(&mut scene,grant).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
-  let(step,heap)=observed(||close.close_step(&mut scene,grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes),"physical receipt turn {turn}");born+=heap.requested_bytes;released+=heap.released_bytes;assert!(turn<99999);
+  for grant in denied{let(step,heap)=observed(||close_scene(&mut close,&mut scene,body,grant).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+  let(step,heap)=observed(||close_scene(&mut close,&mut scene,body,grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes),"physical receipt turn {turn}");born+=heap.requested_bytes;released+=heap.released_bytes;assert!(turn<99999);
  }assert!(close.terminal_is_empty(&scene));assert_eq!(born,released);let(_,heap)=observed(||{drop(close);drop(scene)});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }

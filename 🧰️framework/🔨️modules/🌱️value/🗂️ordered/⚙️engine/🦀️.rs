@@ -46,7 +46,7 @@ impl<V> UpdateState<V> {
         if self.pending_entry.is_some()||self.pending_node.is_some()||self.plan.is_some()||!matches!(self.phase,Phase::Search)||self.ordering.is_some(){return None}
         self.current.as_ref().zip(self.key.as_ref()).map(|(node,key)|key.len().min(node.entry.key.len()).saturating_sub(self.offset).saturating_mul(2).saturating_sub(usize::from(self.left_byte.is_some())))
     }
-    fn native_reads(&self,body:usize)->usize{self.native_compare_remaining().unwrap_or(0).min(body).min(64)}
+    fn native_reads(&self,body:usize)->usize{let remaining=self.native_compare_remaining().unwrap_or(0);let fixed=self.native_copy_demand(0).unwrap_or(usize::MAX);remaining.min(64).min(body.saturating_sub(fixed)).max(remaining.min(1))}
     fn native_aliases(&self)->usize{
         if self.pending_entry.is_some()||self.pending_node.is_some()||self.plan.is_some(){return 0}
         match self.phase{
@@ -200,7 +200,7 @@ if state.entry_input.is_some(){return 2*size_of::<Option<Entry<V>>>()}if state.n
         if state.entry_input.is_some(){return Ok(SharedOwner::<Entry<V>>::source_admission_work_demand())}
         if state.node_input.is_some(){return Ok(SharedOwner::<Node<V>>::source_admission_work_demand())}
         if state.node_output.is_some()||state.pending_entry.is_some()||state.pending_node.is_some(){return Ok(1)}
-        let reads=if state.plan.is_none()&&matches!(state.phase,Phase::Search)&&state.ordering.is_none(){state.current.as_ref().zip(state.key.as_ref()).map_or(0,|(node,key)|key.len().min(node.entry.key.len()).saturating_sub(state.offset).saturating_mul(2).saturating_sub(usize::from(state.left_byte.is_some())).min(body).min(64))}else{0};
+        let reads=state.native_reads(body);
         Ok(1+3*state.native_aliases()as u64+reads as u64)
     }
     /// 🎟️ Advances only the defining closed native AVL primitive on its caller's actual effect.

@@ -292,7 +292,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedHistoryEnt
             if terminal { drop(slot.take()); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if self.retirement.is_some() { return artifact_envelope_close_resume_with(artifact_retirement_box_close_step(&mut self.retirement, effect), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure)).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.retirement.is_some() { return artifact_envelope_close_resume_with(artifact_retirement_box_close_step(&mut self.retirement,effect.grant().maximum_copy_bytes,effect), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if self.value.is_some() {
             let factory = self.retirement_factory.as_ref().ok_or_else(||diagnostic.with_native(semio_framework_value::ValueError::invariant("edit value factory is absent")))?;
             let (owner, progress) = artifact_envelope_close_resume_with(artifact_envelope_factory_retire(factory.as_ref(), &mut *self.value, &mut effect.nested(child)), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure))?;
@@ -314,7 +314,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedHistoryEnt
                 Err((error, values)) => { *self.forwards = Some(values); return Err((diagnostic.with_native(error)).into()); }
             }
         }
-        if let Some(owner)=self.actor_close.as_mut(){if owner.terminal_is_empty(){self.actor_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}let step=artifact_envelope_close_resume_with(owner.step(&mut effect.nested(child)),|failure| artifact_envelope_failure_diagnostic(diagnostic,&failure))?;admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original decoded actor lease").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if let Some(owner)=self.actor_close.as_mut(){if owner.terminal_is_empty(){self.actor_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}let step=artifact_envelope_close_resume_with(owner.step(child.maximum_copy_bytes,&mut effect.nested(child)),|failure| artifact_envelope_failure_diagnostic(diagnostic,&failure))?;admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original decoded actor lease").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
         if let Some(original)=self.actor.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>self.actor_close=Some(owner),Err((error,original))=>{*self.actor=Some(original);return Err((diagnostic.with_native(error)).into());}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}
         while self.close_string < self.strings.len() {
             let index = self.close_string;
@@ -330,7 +330,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedHistoryEnt
         }
         if let Some(slot) = self.factories_close.iter_mut().find(|slot| slot.is_some()) {
             let owner = slot.as_mut().expect("observed original edit factory");
-            let step = artifact_envelope_close_resume_with(owner.step(&mut effect.nested(child)), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure))?;
+            let step = artifact_envelope_close_resume_with(owner.step(child.maximum_copy_bytes,&mut effect.nested(child)), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure))?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original edit factory").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
             if terminal { drop(slot.take()); }

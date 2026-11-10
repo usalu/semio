@@ -29,21 +29,33 @@ impl FlowPreviewTessellationWriter{
  pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{self.retirement.as_ref().map_or(Ok(RetirementDemand{depth:usize::from(self.sources.is_some()),..Default::default()}),|owner|FlowEvaluationSource::demand(owner,copy))}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.progress=Default::default();if !self.closing{return Err(refusal("original tessellation request close was not requested"))}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if !admitted(self.next_close_demands(grant.maximum_copy_bytes)?,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}if let Some(owner)=self.retirement.as_mut(){let result=owner.step(grant);self.progress=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.retirement=None}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}self.retirement=Some(ControlledRetirement::new(self.sources.take().unwrap()).unwrap_or_else(|_|unreachable!()));self.progress=RetainedCloneProgress{copied_items:1,..Default::default()};Ok(RetainedCloneStep::Progress(self.progress))}
+ pub fn next_close_work(&self,body:usize)->Result<u64,ValueError>{if let Some(owner)=self.retirement.as_ref(){return owner.next_computational_work(body)}Ok(u64::from(self.sources.is_some()))}
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+  self.progress=Default::default();let grant=effect.grant();
+  let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+   if !self.closing{return Err(refusal("original tessellation request close was not requested").into())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if !admitted(self.next_close_demands(grant.maximum_copy_bytes)?,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
+   if let Some(owner)=self.retirement.as_mut(){let result=RetirementPollExit::resume(owner.step(body,effect));self.progress=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.retirement=None}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+   if !effect.performed(1)?{return Err(refusal("original tessellation request handoff exceeds its work ceiling").into())}
+   let sources=self.sources.take().ok_or_else(||refusal("original tessellation request sources absent"))?;self.retirement=Some(ControlledRetirement::retain(sources));self.progress=RetainedCloneProgress{copied_items:1,..Default::default()};Ok(RetainedCloneStep::Progress(self.progress))
+  })();
+  settle_close(effect,result,&mut self.progress)
+ }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.sources.is_none()&&self.retirement.is_none()}
 }
 impl Drop for FlowPreviewTessellationWriter{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original tessellation writer requires complete explicit custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.sources)}}}}
 
-struct WriterRetirement(FlowPreviewTessellationWriter);
+/// 🧹️ Owns a closing tessellation request writer as its retirement cursor.
+pub struct WriterRetirement(FlowPreviewTessellationWriter);
 impl RetirementCursor for WriterRetirement{
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step)if step.progress()!=Default::default()=>RetirementStep::Progress(step.progress(),1),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete(0),Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error,0)}}
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.next_close_demands(body)}
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.0.next_close_work(body)}
+ fn close_into<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:CloseReply<'reply>)->Result<CloseComplete<'reply>,ValueError>{close_reply(self.0.close_step(body,effect),effect,reply)}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.0.retirement.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
- fn next_selected_work_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.0.next_close_demands(copy)?.copy_bytes)}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}
  fn allows_admitted_narrow_work(&self)->bool{true}
  fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.0.next_close_demands(copy).ok().map(|d|d.capacity_bytes)}
  fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_demands(0).ok().map(|d|d.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.depth)}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
-impl RetireOwned for FlowPreviewTessellationWriter{fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(WriterRetirement(self))}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<WriterRetirement>())}fn controlled_retirement_supported()->bool{true}}
+impl RetireOwned for FlowPreviewTessellationWriter{type RetirementCursor=WriterRetirement;fn retirement_seed(mut self)->WriterRetirement{self.begin_close();WriterRetirement(self)}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<WriterRetirement>())}fn controlled_retirement_supported()->bool{true}}

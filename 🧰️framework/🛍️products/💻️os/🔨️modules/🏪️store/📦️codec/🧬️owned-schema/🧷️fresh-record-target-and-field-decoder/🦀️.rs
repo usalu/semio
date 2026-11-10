@@ -4,21 +4,21 @@ use super::*;
 
 pub struct ArtifactEnvelopeFreshRecordTarget<P, Mutation>
 where
-    P: Send,
-    Mutation: Send,
+    P: Send + Sync + 'static,
+    Mutation: Send + Sync + 'static,
 {
     pub next_generation: u64,
     pub reserved: Option<ArtifactEnvelopeFieldReservation>,
     pub vcs: Option<ArtifactVcs<AdmittedArtifactGenesis<P>, Mutation>>,
 }
 
-impl<P: Send, Mutation: Send> ArtifactEnvelopeFreshRecordTarget<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactEnvelopeFreshRecordTarget<P, Mutation> {
     pub(super) fn new() -> Self {
         Self { next_generation: 0, reserved: None, vcs: None }
     }
 }
 
-impl<P: Send + Sync, Mutation: Send> ArtifactEnvelopeDecodedRecordTarget<P, Mutation> for ArtifactEnvelopeFreshRecordTarget<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactEnvelopeDecodedRecordTarget<P, Mutation> for ArtifactEnvelopeFreshRecordTarget<P, Mutation> {
     fn reserve_field(&mut self, field_id: u16) -> Result<ArtifactEnvelopeFieldReservation, OwnedSchemaDecodeDiagnostic> {
         if field_id != ARTIFACT_ENVELOPE_VCS_FIELD || self.reserved.is_some() || self.vcs.is_some() {
             return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.fresh-field-reservation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
@@ -63,7 +63,7 @@ pub enum ArtifactEnvelopeFreshRecordActive<P, Mutation> {
 
 /// 📋️ Concrete 12-field catalog consumer for one fresh document envelope. All optional
 /// fields must be absent or null; history/edit/conflict collections must be exact empty arrays.
-pub struct ArtifactEnvelopeFreshFieldDecoder<P: Send + Sync + 'static, Mutation: Send + 'static> {
+pub struct ArtifactEnvelopeFreshFieldDecoder<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> {
     pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
     pub initial_snapshot_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
@@ -81,7 +81,7 @@ pub struct ArtifactEnvelopeFreshFieldDecoder<P: Send + Sync + 'static, Mutation:
     pub terminal: bool,
 }
 
-impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
     pub fn new(
         replacement: Option<semio_framework_job::ReplacementIdentity>,
         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
@@ -214,7 +214,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFi
     }
 }
 
-impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P, Mutation> for ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactEnvelopeFieldDecoder<P, Mutation> for ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
     fn accept_field_token(&mut self, field_id: u16, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
         if self.active.is_none() {
             self.begin_field(field_id, token)?;
@@ -432,7 +432,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDe
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.active_retirement.is_some() {
-            return artifact_envelope_close_resume_with(artifact_retirement_box_close_step(&mut self.active_retirement, effect), |failure| artifact_envelope_failure_diagnostic(Self::diagnostic("vcs", "artifact-envelope.target-retirement"), &failure)).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return artifact_envelope_close_resume_with(artifact_retirement_box_close_step(&mut self.active_retirement,effect.grant().maximum_copy_bytes,effect), |failure| artifact_envelope_failure_diagnostic(Self::diagnostic("vcs", "artifact-envelope.target-retirement"), &failure)).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(vcs) = self.target.vcs.take() {
             let (snapshots, mutations) = (self.initial_snapshot_factory.clone(), self.mutation_factory.clone());
@@ -462,7 +462,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDe
     }
 }
 
-impl<P: Send + Sync + 'static, Mutation: Send + 'static> Drop for ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> Drop for ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.owners_terminal_empty()), "fresh envelope field decoder reached Drop before its completed record or rejected owners reached terminal empty");
     }

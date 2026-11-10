@@ -4,7 +4,7 @@ use semio_framework_value_native_owned::native_decoding::owned::tree::{NativeVal
 use semio_framework_value::retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete};
 use semio_framework_value::RetainedAllocationEffect;
 use semio_framework_value::{Number, ValueError, ValueRefusalKind};
-use semio_framework_value_native_owned::native_decoding::owned::NativeRecordKey;
+use semio_framework_value_native_owned::native_decoding::owned::{NativeRecordKey,NativeSchemaKeySource,NativeSourceKeyReply,NativeSourceKeyReplyComplete,NativeSourceKeyValue};
 fn scalar<S:NativeValueSource+?Sized>(source:&S,query:NativeScalarQuery)->Result<NativeSourceScalar,ValueError>{match query{
  NativeScalarQuery::Kind=>Ok(NativeSourceScalar::Kind(source.tree_kind())),NativeScalarQuery::Null=>Ok(NativeSourceScalar::Null(source.is_null())),NativeScalarQuery::Boolean=>source.boolean().map(NativeSourceScalar::Boolean),NativeScalarQuery::Number=>source.number().map(NativeSourceScalar::Number),NativeScalarQuery::EnumOrdinal=>source.enum_ordinal().map(NativeSourceScalar::EnumOrdinal),NativeScalarQuery::RecordLength=>source.record_len().map(NativeSourceScalar::Length),NativeScalarQuery::SequenceLength=>source.sequence_len().map(NativeSourceScalar::Length),
 }}
@@ -16,11 +16,32 @@ macro_rules! scalar_methods{()=>{
  }
  fn recover_scalar<'reply>(&self,_:NativeScalarQuery,_:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,NativeSourceScalar,ValueError>)->Result<OriginalEffectReplyComplete<'reply,NativeSourceScalar,ValueError>,ValueError>{Ok(reply.pending())}
 };}
+macro_rules! schema_key_methods{($read:expr)=>{
+ fn query_schema_key<'reply,'source>(&'source self,query:NativeSchemaKeySource,effect:&mut RetainedAllocationEffect<'_>,reply:NativeSourceKeyReply<'reply,'source>)->Result<NativeSourceKeyReplyComplete<'reply>,ValueError>{
+  if let Some(inner)=($read)(self){return inner.query_schema_key(query,effect,reply)}
+  if effect.remaining_work_units()?<1{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"schema key query lacks original Work"))}
+  if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"schema key query exceeded original Work"))))}
+  Ok(reply.complete(schema_key(self,query)))
+ }
+};}
+fn schema_key<S:NativeValueSource+?Sized>(source:&S,query:NativeSchemaKeySource)->Result<NativeSourceKeyValue<'_>,ValueError>{
+ use NativeSchemaKeySource as Q;
+ match query{
+  Q::Text=>source.text().map(|text|NativeSourceKeyValue::Name(text)),
+  Q::EnumOrdinal=>source.enum_ordinal().map(NativeSourceKeyValue::Ordinal),
+  Q::VariantTag=>source.variant_tag().map(NativeSourceKeyValue::Name).ok_or_else(invalid),
+  Q::Record(index)=>match source.record_key(index)?{NativeRecordKey::Name(name)=>Ok(NativeSourceKeyValue::Name(name)),NativeRecordKey::Ordinal(id)=>Ok(NativeSourceKeyValue::Ordinal(u32::from(id)))},
+  Q::RecordName(index)=>source.record_name(index).map(NativeSourceKeyValue::Name),
+  Q::RecordText(index)=>source.record_child(index)?.text().map(|text|NativeSourceKeyValue::Name(text)),
+ }
+}
+fn no_inner(_:&RecordValue)->Option<&dyn NativeValueSource>{None}
+fn literal_inner(value:&FieldValue)->Option<&dyn NativeValueSource>{match unblocked(value){FieldValue::Value(inner)=>Some(inner),_=>None}}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"native text record member has a different original type or rank")}
 
 
 impl NativeValueSource for RecordValue{
- scalar_methods!();
+ scalar_methods!();schema_key_methods!(no_inner);
  fn as_source(&self)->&dyn NativeValueSource{self}
  fn tree_kind(&self)->Option<NativeTreeKind>{Some(NativeTreeKind::Object)}
  fn record_len(&self)->Result<usize,ValueError>{Ok(self.fields.len())}
@@ -29,7 +50,7 @@ impl NativeValueSource for RecordValue{
 }
 fn unblocked(value:&FieldValue)->&FieldValue{if let FieldValue::Block(inner)=value{inner}else{value}}
 impl NativeValueSource for FieldValue{
- scalar_methods!();
+ scalar_methods!();schema_key_methods!(literal_inner);
  fn as_source(&self)->&dyn NativeValueSource{self}
  fn tree_kind(&self)->Option<NativeTreeKind>{if self.is_null(){return Some(NativeTreeKind::Null)}match unblocked(self){Self::Bool(_)=>Some(NativeTreeKind::Bool),Self::Int(_)|Self::UInt(_)|Self::Float(_)=>Some(NativeTreeKind::Number),Self::Text(_)=>Some(NativeTreeKind::Text),Self::List(_)|Self::Tuple(_)|Self::Statements(_)|Self::Bytes64(_)=>Some(NativeTreeKind::Array),Self::Record(_)|Self::Map(_)=>Some(NativeTreeKind::Object),Self::Value(value)=>value.tree_kind(),_=>None}}
  fn is_null(&self)->bool{matches!(unblocked(self),Self::Statements(values)if values.is_empty())||matches!(unblocked(self),Self::Absent)||matches!(unblocked(self),Self::Value(value)if value.is_null())}

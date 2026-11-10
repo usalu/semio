@@ -16,7 +16,7 @@ impl ArtifactStoreRevisionAccumulatorRetirement {
 
 impl ErasedSnapshotRetirement for ArtifactStoreRevisionAccumulatorRetirement {
         fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owner.next_demand(body) }
-    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { self.owner.step(effect) }
+    fn close_step(&mut self,_body:usize,effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { self.owner.step(effect.grant().maximum_copy_bytes,effect) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_copy_byte_demand() }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.owner.next_capacity_byte_demand(copy) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_release_byte_demand() }
@@ -36,7 +36,7 @@ impl ArtifactStoreCursorRetirement {
 
 impl ErasedSnapshotRetirement for ArtifactStoreCursorRetirement {
         fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owner.next_demand(body) }
-    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { self.owner.step(effect) }
+    fn close_step(&mut self,_body:usize,effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { self.owner.step(effect.grant().maximum_copy_bytes,effect) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_copy_byte_demand() }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.owner.next_capacity_byte_demand(copy) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_release_byte_demand() }
@@ -62,7 +62,7 @@ impl ArtifactStoreMutationDagRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreMutationDagRetirement {
-    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, RetirementPollExit> {
+    fn close_step(&mut self,_body:usize,effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, RetirementPollExit> {
         let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();
@@ -125,20 +125,20 @@ pub struct ArtifactStoreHistoryLedgerRetirement<T> {
     pub ledger: std::mem::ManuallyDrop<Option<ArtifactHistoryLedger<T>>>,
     pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     pub pending: std::mem::ManuallyDrop<Option<T>>,
-    pub visibility: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<semio_os_vcs::ArtifactGroupVisibility>>>,
+    pub read_returned: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>,
+    pub read_recover: bool,
     pub factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>,
     pub closing_factory: std::mem::ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
 }
 
 impl<T: Send + 'static> ArtifactStoreHistoryLedgerRetirement<T> {
     pub fn new(ledger: ArtifactHistoryLedger<T>, factory: Arc<dyn ArtifactOwnedValueRetirementFactory<T>>) -> Self {
-        Self { ledger: std::mem::ManuallyDrop::new(Some(ledger)), active: std::mem::ManuallyDrop::new(None), pending: std::mem::ManuallyDrop::new(None), visibility: std::mem::ManuallyDrop::new(None), factory: std::mem::ManuallyDrop::new(Some(factory)), closing_factory: std::mem::ManuallyDrop::new(None) }
+        Self { ledger: std::mem::ManuallyDrop::new(Some(ledger)), active: std::mem::ManuallyDrop::new(None), pending: std::mem::ManuallyDrop::new(None), read_returned: std::mem::ManuallyDrop::new(None), read_recover: false, factory: std::mem::ManuallyDrop::new(Some(factory)), closing_factory: std::mem::ManuallyDrop::new(None) }
     }
     pub fn demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(closing) = self.closing_factory.as_ref() { return closing.demands(copy); }
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, copy); }
         if let Some(owner)=self.closing_factory.as_ref(){if owner.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::FactoryAuthority>>(),depth:1,..Default::default()});}let mut demand=owner.demands(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history factory authority depth overflow"))?;return Ok(demand);}
-        if self.visibility.is_some() { return retirement_owner_demands(&self.visibility, copy); }
         if let Some(ledger) = self.ledger.as_ref() {
             if let Some(demand)=ledger.abandoned_directory_demand(){return Ok(demand)}
                         if let Some(key)=ledger.next_retained_read_key(){let overhead=size_of::<semio_framework_value::FactoryAuthority>()+size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>();let mut demand=ledger.retained_read_return_demands(key,copy.saturating_sub(overhead))?;demand.copy_bytes=demand.copy_bytes.checked_add(overhead).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"history read return metadata extent overflow"))?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history read return owner depth overflow"))?;return Ok(demand);}
@@ -154,8 +154,8 @@ if let Some(value) = self.pending.as_ref().or_else(|| ledger.last()) { return Ok
     }
 }
 
-impl<T: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreHistoryLedgerRetirement<T> {
-    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, RetirementPollExit> {
+impl<T: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactStoreHistoryLedgerRetirement<T> {
+    fn close_step(&mut self,_body:usize,effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, RetirementPollExit> {
         let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_progress};
         let empty = RetainedCloneProgress::default();
@@ -166,17 +166,16 @@ impl<T: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreHistoryLedgerR
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let grant = RetainedCloneGrant { maximum_items: 1, ..grant };
         if let Some(closing) = self.closing_factory.as_mut() {
-            let step = RetirementPollExit::resume(closing.step(effect))?;
+            let step = RetirementPollExit::resume(closing.step(effect.grant().maximum_copy_bytes,effect))?;
             if closing.terminal_is_empty() { self.closing_factory.take(); }
             let progress = step.progress();
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) });
         }
-        if self.active.is_some() { return RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, effect)); }
-        if let Some(owner)=self.closing_factory.as_mut(){if owner.terminal_is_empty(){self.closing_factory.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=RetirementPollExit::resume(owner.step(&mut effect.nested(child)))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history ledger factory authority")?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if self.visibility.is_some() { return RetirementPollExit::resume(retirement_owner_close(&mut self.visibility, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)); }
+        if let Some(owner)=self.closing_factory.as_mut(){if owner.terminal_is_empty(){self.closing_factory.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=RetirementPollExit::resume(owner.step(child.maximum_copy_bytes,&mut effect.nested(child)))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history ledger factory authority")?;return Ok(RetainedCloneStep::Progress(step.progress()));}
         if let Some(ledger) = self.ledger.as_mut() {
             if ledger.abandoned_directory_demand().is_some(){let turn=ledger.recover_abandoned_directory(grant);RetirementPollExit::pay(effect,u128::from(turn.work))?;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(RetirementPollExit::from);}
-                        if let Some(key)=ledger.next_retained_read_key(){let overhead=size_of::<semio_framework_value::FactoryAuthority>()+size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-overhead,maximum_depth:grant.maximum_depth-1,..grant};let mut returned=None;let turn=ledger.return_retained_read(key,&mut returned,&mut effect.nested(child));if let Some(factory)=returned{let factory:Arc<dyn semio_framework_value::FactoryRetirement>=factory;*self.closing_factory=Some(semio_framework_value::FactoryAuthority::new(factory));}let step=match turn.result{Ok(step)=>step,Err(error)if error.kind==semio_framework_value::ValueRefusalKind::WorkLimit&&error.retained_progress()==empty=>return Ok(RetainedCloneStep::Progress(empty)),Err(error)=>return Err(error.into())};let mut progress=step.progress();if progress==empty{return Ok(RetainedCloneStep::Progress(empty));}progress.copied_items=1;progress.copied_bytes=progress.copied_bytes.checked_add(overhead).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history original read return receipt overflow"))?;admit_retained_clone_progress(grant,progress,"history original read source return")?;return Ok(RetainedCloneStep::Progress(progress));}
+                        if let Some(key)=ledger.next_retained_read_key(){let overhead=size_of::<semio_framework_value::FactoryAuthority>()+size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-overhead,maximum_depth:grant.maximum_depth-1,..grant};let recover=self.read_recover;let mut slot=None;let called={let reply=semio_framework_value::retained_clone::OriginalEffectReply::borrow(&mut slot)?;let mut nested=effect.nested(child);if recover{ledger.recover_return_retained_read_into(key,&mut self.read_returned,&mut nested,reply)}else{ledger.return_retained_read_into(key,&mut self.read_returned,&mut nested,reply)}.map(drop)};if let Err(error)=called{if error.kind==semio_framework_value::ValueRefusalKind::WorkLimit&&error.retained_progress()==empty{return Ok(RetainedCloneStep::Progress(empty))}return Err(error.into())}let Some(answer)=slot.take() else{self.read_recover=true;return Err(RetirementPollExit::Pending(0))};self.read_recover=false;if let Some(factory)=self.read_returned.take(){let factory:Arc<dyn semio_framework_value::FactoryRetirement>=factory;*self.closing_factory=Some(semio_framework_value::FactoryAuthority::new(factory));}let step=match answer{Ok(step)=>step,Err(failure)=>{let error=failure.into_value_error();if error.kind==semio_framework_value::ValueRefusalKind::WorkLimit&&error.retained_progress()==empty{return Ok(RetainedCloneStep::Progress(empty))}return Err(error.into())}};let mut progress=step.progress();if progress==empty{return Ok(RetainedCloneStep::Progress(empty));}progress.copied_items=1;progress.copied_bytes=progress.copied_bytes.checked_add(overhead).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history original read return receipt overflow"))?;admit_retained_clone_progress(grant,progress,"history original read source return")?;return Ok(RetainedCloneStep::Progress(progress));}
 
 if self.pending.is_none() { *self.pending = ledger.pop(); }
             if self.pending.is_some() {
@@ -190,7 +189,7 @@ if self.pending.is_none() { *self.pending = ledger.pop(); }
             }
             if ledger.retained_terminal_slot_count() != 0 {
                 let (visibility, progress) = ledger.retire_terminal_slot(grant)?;
-                *self.visibility = visibility.map(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease);
+                if let Some(view) = visibility { *self.closing_factory = Some(semio_framework_value::FactoryAuthority::new(view)); }
                 return Ok(RetainedCloneStep::Progress(progress));
             }
             if !ledger.backing_is_empty() { return ledger.release_empty_page(grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(RetirementPollExit::from); }
@@ -204,7 +203,7 @@ if self.pending.is_none() { *self.pending = ledger.pop(); }
         }
         Ok(RetainedCloneStep::Complete(empty))
     })(); RetirementPollExit::settle(effect, result) }
-    fn terminal_is_empty(&self) -> bool { self.ledger.is_none() && self.active.is_none() && self.pending.is_none() && self.visibility.is_none() && self.factory.is_none() && self.closing_factory.is_none() }
+    fn terminal_is_empty(&self) -> bool { self.ledger.is_none() && self.active.is_none() && self.pending.is_none() && self.read_returned.is_none() && !self.read_recover && self.factory.is_none() && self.closing_factory.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.demands(copy)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
@@ -214,9 +213,9 @@ if self.pending.is_none() { *self.pending = ledger.pop(); }
 
 impl<T> Drop for ArtifactStoreHistoryLedgerRetirement<T> {
     fn drop(&mut self) {
-        let empty = self.ledger.is_none() && self.active.is_none() && self.pending.is_none() && self.visibility.is_none() && self.factory.is_none() && self.closing_factory.is_none();
+        let empty = self.ledger.is_none() && self.active.is_none() && self.pending.is_none() && self.read_returned.is_none() && !self.read_recover && self.factory.is_none() && self.closing_factory.is_none();
         assert!(std::thread::panicking() || empty, "original history ledger retains its payloads, visibility, native backing and factory until exact terminal");
-        if empty { unsafe { std::mem::ManuallyDrop::drop(&mut self.ledger); std::mem::ManuallyDrop::drop(&mut self.active); std::mem::ManuallyDrop::drop(&mut self.pending); std::mem::ManuallyDrop::drop(&mut self.visibility); std::mem::ManuallyDrop::drop(&mut self.factory); std::mem::ManuallyDrop::drop(&mut self.closing_factory); } }
+        if empty { unsafe { std::mem::ManuallyDrop::drop(&mut self.ledger); std::mem::ManuallyDrop::drop(&mut self.active); std::mem::ManuallyDrop::drop(&mut self.pending); std::mem::ManuallyDrop::drop(&mut self.read_returned); std::mem::ManuallyDrop::drop(&mut self.factory); std::mem::ManuallyDrop::drop(&mut self.closing_factory); } }
     }
 }
 
@@ -251,11 +250,11 @@ impl ArtifactOwnedValueRetirementFactory<Alternative> for ArtifactStoreAlternati
     fn recover_retire_owned<'reply>(&self, _: &mut Option<Alternative>, _: &mut RetainedAllocationEffect<'_>, reply: FactoryProducerReply<'reply, dyn ErasedSnapshotRetirement, OriginalRetirementFailure>) -> FactoryProducerReplyComplete<'reply, OriginalRetirementFailure> { reply.pending() }
 }
 
-pub fn artifact_history_ledger_birth<T: Send + 'static, F: semio_framework_value::FactoryPayloadRetirement>() -> Result<usize, ValueError> {
+pub fn artifact_history_ledger_birth<T: Send + Sync + 'static, F: semio_framework_value::FactoryPayloadRetirement>() -> Result<usize, ValueError> {
     size_of::<ArtifactStoreHistoryLedgerRetirement<T>>().checked_add(semio_framework_value::factory_arc_birth_bytes::<F>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history owner constructor extent overflow"))
 }
 
-pub fn artifact_history_ledger_handoff<T: Send + 'static, F: ArtifactOwnedValueRetirementFactory<T> + semio_framework_value::FactoryPayloadRetirement>(ledger: &mut ArtifactHistoryLedger<T>, factory: F, slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+pub fn artifact_history_ledger_handoff<T: Send + Sync + Sync + 'static, F: ArtifactOwnedValueRetirementFactory<T> + semio_framework_value::FactoryPayloadRetirement>(ledger: &mut ArtifactHistoryLedger<T>, factory: F, slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
     let capacity = artifact_history_ledger_birth::<T, F>()?;
     if grant.maximum_items == 0 || grant.maximum_capacity_bytes < capacity { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -271,7 +270,7 @@ impl<P, Mutation> ArtifactStoreVcsRetirement<P, Mutation> {
     }
 }
 
-impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactStoreVcsRetirement<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactStoreVcsRetirement<P, Mutation> {
     pub fn demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, copy); }
         let Some(vcs) = self.vcs.as_ref() else {
@@ -291,8 +290,8 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactStoreVcsRetirem
     }
 }
 
-impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreVcsRetirement<P, Mutation> {
-    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, RetirementPollExit> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactStoreVcsRetirement<P, Mutation> {
+    fn close_step(&mut self,_body:usize,effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, RetirementPollExit> {
         let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();
@@ -302,14 +301,14 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedSnapshotRetiremen
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "VCS retirement exceeds admitted original depth").into()); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let grant = RetainedCloneGrant { maximum_items: 1, ..grant };
-        if self.active.is_some() { return RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, effect)); }
+        if self.active.is_some() { return RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)); }
         if self.vcs.is_none() {
             if self.initial_snapshot_factory.is_some() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = self.initial_snapshot_factory.take().unwrap(); self.closing_factories[0] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty })); }
             if self.mutation_factory.is_some() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = self.mutation_factory.take().unwrap(); self.closing_factories[1] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty })); }
             let slot = self.closing_factories.iter_mut().find(|slot| slot.is_some()).unwrap();
             let factory = slot.as_mut().unwrap();
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = RetirementPollExit::resume(factory.step(&mut effect.nested(child)))?;
+            let step = RetirementPollExit::resume(factory.step(child.maximum_copy_bytes,&mut effect.nested(child)))?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original VCS factory capability")?;
             if factory.terminal_is_empty() { drop(slot.take()); }
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
@@ -362,12 +361,12 @@ impl<P, Mutation> Drop for ArtifactStoreVcsRetirement<P, Mutation> {
 }
 
 /// 📏️ Quotes the exact cursor frame [`retire_document_envelope`] births before any original field or factory transfers.
-pub fn retire_document_envelope_birth_bytes<P: Send + Sync + 'static, Mutation: Send + 'static>() -> usize {
+pub fn retire_document_envelope_birth_bytes<P: Send + Sync + 'static, Mutation: Send + Sync + 'static>() -> usize {
     size_of::<ArtifactStoreEnvelopeRetirement<P, Mutation>>()
 }
 
 /// ♻️ Admits whole detached document custody before any original field or factory transfers.
-pub fn retire_document_envelope<P: Send + Sync + 'static, Mutation: Send + 'static>(
+pub fn retire_document_envelope<P: Send + Sync + 'static, Mutation: Send + Sync + 'static>(
     envelope: ArtifactEnvelope<P, Mutation>,
     initial_snapshot_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,

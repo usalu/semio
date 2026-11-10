@@ -1,18 +1,19 @@
 //! 📊️ Clones schema-bounded original progress one leaf at a time under caller ownership grants.
 use super::{ToolRunProgress,ToolRunCounter,ToolRunStep,ToolRunStepArg,ToolRunStepRing,TOOL_RUN_COUNTERS_MAX,TOOL_RUN_STEP_RING_CAPACITY,TOOL_RUN_STEP_ARGS_MAX};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource},retirement::RetireOwned};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{OriginalSourceProjection,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress},retirement::RetireOwned};
+use semio_framework_tool_run_entities::source_hold::SourceHold;
 use std::mem::{ManuallyDrop,size_of};
 
 #[derive(semio_framework_value::RetireOwned)]
 #[doc(hidden)]
-pub struct State<A:RetireOwned+Sync>{source:Option<RetainedCloneSource<ToolRunProgress,A>>,counters:Vec<ToolRunCounter>,steps:Vec<ToolRunStep>,step:Option<ToolRunStep>,output:Option<ToolRunProgress>,index:usize,arg:usize,phase:u8,cancelled:bool}
-pub struct ToolRunProgressClone<A:RetireOwned+Sync=ToolRunProgress>{state:ManuallyDrop<State<A>>,transferred:bool}
-impl<A:RetireOwned+Sync> ToolRunProgressClone<A>{
- pub fn new(source:RetainedCloneSource<ToolRunProgress,A>)->Self{Self{state:ManuallyDrop::new(State{source:Some(source),counters:Vec::new(),steps:Vec::new(),step:None,output:None,index:0,arg:0,phase:0,cancelled:false}),transferred:false}}
- pub fn original(&self)->&ToolRunProgress{self.state.source.as_ref().unwrap().borrow().get()}
+pub struct State<A:OriginalSourceProjection<ToolRunProgress>+Send>{source:Option<SourceHold<ToolRunProgress,A>>,counters:Vec<ToolRunCounter>,steps:Vec<ToolRunStep>,step:Option<ToolRunStep>,output:Option<ToolRunProgress>,index:usize,arg:usize,phase:u8,cancelled:bool}
+pub struct ToolRunProgressClone<A:OriginalSourceProjection<ToolRunProgress>+Send=ToolRunProgress>{state:ManuallyDrop<State<A>>,transferred:bool}
+impl<A:OriginalSourceProjection<ToolRunProgress>+Send> ToolRunProgressClone<A>{
+ pub fn new(source:SourceHold<ToolRunProgress,A>)->Self{Self{state:ManuallyDrop::new(State{source:Some(source),counters:Vec::new(),steps:Vec::new(),step:None,output:None,index:0,arg:0,phase:0,cancelled:false}),transferred:false}}
+ pub fn original(&self)->Result<&ToolRunProgress,ValueError>{Ok(self.state.source.as_ref().ok_or_else(||ValueError::invariant("progress clone source is absent"))?.original()?.get())}
  pub fn complete(&self)->bool{self.state.phase==6&&!self.state.cancelled}
  pub fn cancel(&mut self){self.state.cancelled=true;}
- pub fn next_demands(&self)->Result<RetirementDemand,ValueError>{let state=&*self.state;if state.cancelled||state.phase>=6{return Ok(Default::default());}let source=self.original();if source.counters.len()>TOOL_RUN_COUNTERS_MAX||source.steps.len()>TOOL_RUN_STEP_RING_CAPACITY{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original progress exceeds its schema-bounded leaves"));}Ok(match state.phase{
+ pub fn next_demands(&self)->Result<RetirementDemand,ValueError>{let state=&*self.state;if state.cancelled||state.phase>=6{return Ok(Default::default());}let source=self.original()?;if source.counters.len()>TOOL_RUN_COUNTERS_MAX||source.steps.len()>TOOL_RUN_STEP_RING_CAPACITY{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original progress exceeds its schema-bounded leaves"));}Ok(match state.phase{
   0=>RetirementDemand{capacity_bytes:source.counters.len()*size_of::<ToolRunCounter>(),depth:1,..Default::default()},
   1=>RetirementDemand{copy_bytes:if state.index<source.counters.len(){size_of::<ToolRunCounter>()}else{0},depth:1,..Default::default()},
   2=>RetirementDemand{capacity_bytes:source.steps.len()*size_of::<ToolRunStep>(),depth:1,..Default::default()},
@@ -23,7 +24,7 @@ impl<A:RetireOwned+Sync> ToolRunProgressClone<A>{
  })}
  pub fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
   let grant=effect.grant();if self.state.cancelled||self.state.phase>=6||grant.maximum_items==0{return Ok(Default::default());}let quote=self.next_demands()?;if grant.maximum_copy_bytes<quote.copy_bytes||grant.maximum_capacity_bytes<quote.capacity_bytes||grant.maximum_release_bytes<quote.release_bytes||grant.maximum_depth<quote.depth{return Ok(Default::default());}
-  let state=&mut *self.state;let source=state.source.as_ref().unwrap().borrow().get();let mut receipt=RetainedCloneProgress{copied_items:1,..Default::default()};if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"progress clone work is not funded"));}match state.phase{
+  let state=&mut *self.state;let source=state.source.as_ref().ok_or_else(||ValueError::invariant("progress clone source is absent"))?.original()?.get();let mut receipt=RetainedCloneProgress{copied_items:1,..Default::default()};if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"progress clone work is not funded"));}match state.phase{
    0=>{state.counters=crate::component::reserve_vec::<ToolRunCounter>(source.counters.len(),effect)?;receipt.retained_capacity_bytes=state.counters.capacity()*size_of::<ToolRunCounter>();state.phase=1;},
    1=>{if state.index==source.counters.len(){state.index=0;state.phase=2;}else{state.counters.push(source.counters[state.index]);state.index+=1;receipt.copied_bytes=size_of::<ToolRunCounter>();}},
    2=>{state.steps=crate::component::reserve_vec::<ToolRunStep>(source.steps.len(),effect)?;receipt.retained_capacity_bytes=state.steps.capacity()*size_of::<ToolRunStep>();state.phase=3;},
@@ -35,5 +36,5 @@ impl<A:RetireOwned+Sync> ToolRunProgressClone<A>{
  }
  pub fn take_output(&mut self,grant:RetainedCloneGrant)->Result<Option<(ToolRunProgress,RetainedCloneProgress)>,ValueError>{if !self.complete()||grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<ToolRunProgress>()||grant.maximum_depth==0{return Ok(None);}let output=self.state.output.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"completed progress clone lost its private output"))?;self.state.phase=7;Ok(Some((output,RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ToolRunProgress>(),..Default::default()})))}
 }
-impl<A:RetireOwned+Sync> RetireOwned for ToolRunProgressClone<A>{type RetirementCursor=<State<A> as RetireOwned>::RetirementCursor;fn retirement_seed(mut self)->Self::RetirementCursor{self.transferred=true;unsafe{ManuallyDrop::take(&mut self.state)}.retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{self.state.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}fn retirement_element_copy_bytes()->usize{size_of::<Self>()}}
-impl<A:RetireOwned+Sync> Drop for ToolRunProgressClone<A>{fn drop(&mut self){if !self.transferred&&!std::thread::panicking(){panic!("original progress clone requires controlled retirement")}}}
+impl<A:OriginalSourceProjection<ToolRunProgress>+Send> RetireOwned for ToolRunProgressClone<A>{type RetirementCursor=<State<A> as RetireOwned>::RetirementCursor;fn retirement_seed(mut self)->Self::RetirementCursor{self.transferred=true;unsafe{ManuallyDrop::take(&mut self.state)}.retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{self.state.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}fn retirement_element_copy_bytes()->usize{size_of::<Self>()}}
+impl<A:OriginalSourceProjection<ToolRunProgress>+Send> Drop for ToolRunProgressClone<A>{fn drop(&mut self){if !self.transferred&&!std::thread::panicking(){panic!("original progress clone requires controlled retirement")}}}

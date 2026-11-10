@@ -13,7 +13,7 @@ pub fn presentation_io() -> AppIo {
         artifact_media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Presentation, form: semio_plugin::MediaForm::Deck },
         ports: vec![semio_plugin::MediaPortSpec {
             id: "frames:in".into(),
-            label: "Frames".into(),
+            label: semio_plugin::LocalizedLabel::native("Frames", "Einzelbilder"),
             direction: semio_plugin::MediaPortDirection::In,
             media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::TwoD, form: semio_plugin::MediaForm::Raster },
             kind_id: Some("2d.image".into()),

@@ -2,9 +2,6 @@
 
 use super::*;
 
-/// ⛽️ Work one ABI-budgeted host close step may spend inside its own explicit authoring wallet.
-const FLOW_DOMAIN_HOST_CLOSE_STEP_WORK:u64=64;
-
 impl FlowDomain for FlowDomainAdapter {
     fn bind_session(&mut self, session: semio_framework_abi::AbiHandle) {
         self.vcs = Some(FlowRetainedVcs::new(semio_framework_artifact_flow_flow::artifact::FlowHostSnapshot::default(), session.generation(), 0, 0));
@@ -64,7 +61,7 @@ impl FlowDomain for FlowDomainAdapter {
         let child=AbiWorkBudget{retained:RetainedCloneGrant{maximum_depth:budget.retained.maximum_depth-1,..budget.retained},..budget};
         if let Some(frame)=self.frame_retirement.as_mut(){
             if frame.terminal_is_empty(){self.frame_retirement=None;return Ok(RetainedCloneStep::Progress(inline))}
-            let step=frame.step(child.retained).map_err(flow_close_value_failure)?;
+            let step=match semio_os_flow_host_core::cold_effect(child.retained,|effect|frame.step(child.retained.maximum_copy_bytes,effect)).map_err(flow_close_value_failure)?{Some(poll)=>semio_os_flow_host_core::poll_close_step(poll).map_err(flow_close_value_failure)?,None=>RetainedCloneStep::Progress(Default::default())};
             let step=admit_retained_clone_close(child.retained,step,frame.terminal_is_empty(),"original Flow domain frame").map_err(flow_close_value_failure)?;
             return Ok(RetainedCloneStep::Progress(step.progress()))
         }
@@ -78,8 +75,7 @@ impl FlowDomain for FlowDomainAdapter {
             FlowDomainHost::Open(_)=>Err(flow_close_failure(AbiErrorCode::Busy)),
             FlowDomainHost::Closing(host)=>{
                 if host.terminal_is_empty(){self.host=FlowDomainHost::Closed;return Ok(RetainedCloneStep::Complete(inline))}
-                let mut wallet=semio_framework_value::AuthoringWallet::new(child.retained,u128::from(FLOW_DOMAIN_HOST_CLOSE_STEP_WORK));
-                let step=match wallet.run(child.retained,FLOW_DOMAIN_HOST_CLOSE_STEP_WORK,|effect|host.close_step(effect)).map_err(flow_close_value_failure)?{Some(done)=>done.output.map_err(flow_close_value_failure)?,None=>RetainedCloneStep::Progress(Default::default())};
+                let step=match semio_os_flow_host_core::cold_effect(child.retained,|effect|host.close_step(effect)).map_err(flow_close_value_failure)?{Some(done)=>done.map_err(flow_close_value_failure)?,None=>RetainedCloneStep::Progress(Default::default())};
                 let step=admit_retained_clone_close(child.retained,step,host.terminal_is_empty(),"original Flow domain host").map_err(flow_close_value_failure)?;
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }

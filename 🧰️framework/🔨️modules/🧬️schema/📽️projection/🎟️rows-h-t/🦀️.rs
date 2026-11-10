@@ -287,7 +287,11 @@ export type MediaPortDirection = "in" | "out";"####,
             typescript: r####"/**
  * 🔌️ A single port an app exposes on the workflow — `kind_id` optionally pins it to one `ArtifactKindSpec.id` when the port is more specific than its `media_type` alone conveys.
  */
-export type MediaPortSpec = { id: string, label: string, direction: MediaPortDirection, mediaType: MediaType, kindId?: string, required: boolean, multiplicity: PortMultiplicity, };"####,
+export type MediaPortSpec = { id: string,
+/**
+ * 🗣️ The port's own name, resolved per locale and terminology — see `LocalizedLabel`.
+ */
+label: unknown, direction: MediaPortDirection, mediaType: MediaType, kindId?: string, required: boolean, multiplicity: PortMultiplicity, };"####,
         },
         SchemaMetadata {
             name: "MediaType",

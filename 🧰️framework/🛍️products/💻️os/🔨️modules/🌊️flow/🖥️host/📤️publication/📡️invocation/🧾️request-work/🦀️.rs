@@ -93,10 +93,10 @@ impl FlowInvocationRequestWork{
   if let Some(owner)=self.retirement.as_ref(){return owner.selected_demand(copy)}
   Ok(RetirementDemand{depth:usize::from(self.fields.is_some()),..Default::default()})
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn close_step(&mut self,grant:RetainedCloneGrant,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
   self.progress=Default::default();self.work=0;if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original invocation request close was not begun"))}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if let Some(owner)=self.retirement.as_mut(){let result=owner.step(grant);self.progress=owner.step_progress();self.work=owner.last_turn_work();let step=result?;if owner.terminal_is_empty(){self.retirement=None}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+  if let Some(owner)=self.retirement.as_mut(){let poll=owner.step(grant.maximum_copy_bytes,effect);self.progress=owner.step_progress();let step=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>{self.work=u64::try_from(turn.work).unwrap_or(u64::MAX);turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?},semio_framework_value::RetainedWorkPoll::Pending{work}=>{self.work=u64::try_from(work).unwrap_or(u64::MAX);return Ok(RetainedCloneStep::Progress(Default::default()))}};if owner.terminal_is_empty(){self.retirement=None}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
   self.retirement=Some(ControlledRetirement::new(self.fields.take().unwrap()).unwrap_or_else(|_|unreachable!("invocation request fields support controlled retirement")));self.work=1;self.progress=RetainedCloneProgress{copied_items:1,..Default::default()};Ok(RetainedCloneStep::Progress(self.progress))
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.fields.is_none()&&self.retirement.is_none()}

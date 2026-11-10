@@ -1,6 +1,6 @@
 //! ⏱️ Only the active original native direction observes a physical IO phase.
 use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedWorkOutcome, retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
-use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,OriginalConstructionAction};
 #[path="🧾️failure/🦀️.rs"]
 mod failure;
 pub use failure::{NativeSnapshotFailure,NativeSnapshotFailureParts,NativeSnapshotCause,NativeSnapshotAllocationFailure,NativeSnapshotWork,native_snapshot_turn};
@@ -12,15 +12,15 @@ mod backing;
 pub use snapshot::{NativeSnapshotEncodeOwner,NativeSnapshotEncodeSettlement};
 /// 🎫️ Holds an original physical quote and one reserved native action until the caller posts its effect.
 #[must_use]
-pub struct NativeSnapshotDecodeEffectQuote<'a,'control>{grant:RetainedCloneGrant,body:&'a mut NativeSnapshotBodyWallet,native:&'a mut NativeDecodeControl<'control>}
+pub struct NativeSnapshotDecodeEffectQuote<'a,'control>{action:Option<OriginalConstructionAction>,body:&'a mut NativeSnapshotBodyWallet,native:&'a mut NativeDecodeControl<'control>}
 impl<'a,'control> NativeSnapshotDecodeEffectQuote<'a,'control>{
  /// 🛬️ Quotes the original decoder construction recipient and reserves one action before mutation.
  pub fn decode(body:&'a mut NativeSnapshotBodyWallet,native:&'a mut NativeDecodeControl<'control>,demand:RetainedCloneGrant)->Result<Self,NativeSnapshotFailure>{
-  native.checkpoint()?;let grant=body.admit_constructed(native,demand)?;if !native.prepare_work(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot effect requires original decoder work").into())}Ok(Self{grant,body,native})
+  native.checkpoint()?;let NativeSnapshotConstruction{mut action,..}=body.admit_constructed(native,demand)?;let prepared=native.prepare_work(1);match prepared{Ok(true)=>Ok(Self{action,body,native}),Ok(false)=>{native.cancel_constructed_action(&mut action)?;Err(ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot effect requires original decoder work").into())},Err(error)=>{native.cancel_constructed_action(&mut action)?;Err(error.into())}}
  }
  /// 🧾️ Posts the actual effect after mutation, retaining the operation, work and physical refusals.
- pub fn post_decode(self,progress:RetainedCloneProgress,operation:Result<(),ValueError>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
-  let body=self.body;let native=self.native;let work=native.commit_work(1);let local=body.record_progress(progress);let receipt=if progress==RetainedCloneProgress::default(){Ok(())}else{native.submit_constructed_progress(self.grant,progress)};effect_outcome(operation,work,local,receipt,body.progress)
+ pub fn post_decode(mut self,progress:RetainedCloneProgress,operation:Result<(),ValueError>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
+  let body=self.body;let native=self.native;let work=native.commit_work(1);let local=body.record_progress(progress);let receipt=native.settle_constructed_progress(&mut self.action,progress);effect_outcome(operation,work,local,receipt,body.progress)
  }
  pub fn run_native(self,progress:&mut NativeSnapshotEffectProgress,unwind_failure:&mut Option<NativeSnapshotFailure>,effect:&mut impl FnMut(&mut NativeDecodeControl<'_>,&mut bool,&mut RetainedCloneProgress)->Result<(),ValueError>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
   if progress.state.performed||progress.state.physical!=RetainedCloneProgress::default()||progress.state.attempted_work.is_some()||progress.state.settlement.is_some()||unwind_failure.is_some(){let primary=ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot effect requires empty retained marker and failure slots");let result=match self.cancel_decode(){Ok(())=>NativeSnapshotFailure::from(primary),Err(work)=>NativeSnapshotFailure::primary_with_work(primary,work)};return RetainedWorkOutcome{work:0,result:Err(result)}}
@@ -31,7 +31,7 @@ impl<'a,'control> NativeSnapshotDecodeEffectQuote<'a,'control>{
   }
  }
  /// ↩️ Cancels an unused decoder action without posting a physical effect.
- pub fn cancel_decode(self)->Result<(),ValueError>{self.native.cancel_work()}
+ pub fn cancel_decode(mut self)->Result<(),ValueError>{let released=self.native.cancel_constructed_action(&mut self.action);let work=self.native.cancel_work();released.and(work)}
 
 }
 /// 🎟️ Holds one original decoder work reservation for a caller-retained effect.
@@ -122,6 +122,22 @@ run_snapshot_effect!(NativeSnapshotDecodeEffectQuote,post_decode,cancel_decode);
 fn effect_outcome(operation:Result<(),ValueError>,work:Result<(),ValueError>,local:Result<(),ValueError>,receipt:Result<(),ValueError>,progress:RetainedCloneProgress)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
  let cause=operation.err().map(NativeSnapshotCause::Value);let work_refusal=work.err();let settlement_refusal=local.err();let receipt_refusal=receipt.err();let result=if cause.is_none()&&work_refusal.is_none()&&settlement_refusal.is_none()&&receipt_refusal.is_none(){Ok(())}else{Err(NativeSnapshotFailure::from_effect_parts(cause,work_refusal,settlement_refusal,receipt_refusal,progress))};RetainedWorkOutcome{result,work:1}
 }
+/// 🎫️ Holds one granted original construction action until its actual span is posted or cancelled.
+#[must_use]
+pub struct NativeSnapshotConstruction{grant:RetainedCloneGrant,action:Option<OriginalConstructionAction>}
+impl NativeSnapshotConstruction{
+ /// 🔭️ Reads the grant the original recipient deposited in this action.
+ pub fn grant(&self)->RetainedCloneGrant{self.grant}
+}
+/// 🏭️ Opens one original construction action and returns it holding the recipient's grant.
+fn hold_construction(native:&mut NativeDecodeControl<'_>,demand:semio_framework_value::RetirementDemand)->Result<(RetainedCloneGrant,Option<OriginalConstructionAction>),ValueError>{
+ let mut action=None;
+ match native.construction_grant(demand,&mut action)?{
+  Some(Ok(grant))=>Ok((grant,action)),
+  Some(Err(refusal))=>{native.finish_constructed_action(&mut action)?;Err(refusal)},
+  None=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original construction reply is pending")),
+ }
+}
 /// 📸️ Debits actual producer spans from one admitted receiving frame's original authority.
 pub struct NativeSnapshotBodyWallet{grant:RetainedCloneGrant,progress:RetainedCloneProgress}
 impl NativeSnapshotBodyWallet{
@@ -134,16 +150,16 @@ impl NativeSnapshotBodyWallet{
  /// 🔐️ Records actual performed effects before refusing exceeded original authority.
  pub fn record_progress(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{let admitted=self.progress.fits(self.grant)&&progress.fits(self.remaining_grant());self.progress=self.progress.checked_add(progress).map_err(|error|error.with_retained_progress(progress))?;if !admitted{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot producer receipt exceeds original grant").with_retained_progress(progress))}Ok(())}
  /// 🎟️ Quotes both the local body and the same original decoder recipient before an effect.
- pub fn admit_constructed(&self,native:&mut NativeDecodeControl<'_>,requested:RetainedCloneGrant)->Result<RetainedCloneGrant,NativeSnapshotFailure>{
+ pub fn admit_constructed(&self,native:&mut NativeDecodeControl<'_>,requested:RetainedCloneGrant)->Result<NativeSnapshotConstruction,NativeSnapshotFailure>{
   self.admit_frontier(requested)?;
   let demand=semio_framework_value::RetirementDemand{copy_bytes:requested.maximum_copy_bytes,capacity_bytes:requested.maximum_capacity_bytes,release_bytes:requested.maximum_release_bytes,depth:requested.maximum_depth};
-  let grant=native.construction_grant(demand)?;
-  if grant.maximum_items<requested.maximum_items||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot body exceeds original recipient quote").into())}Ok(grant)
+  let (grant,mut action)=hold_construction(native,demand)?;
+  if grant.maximum_items<requested.maximum_items||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){native.cancel_constructed_action(&mut action)?;return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot body exceeds original recipient quote").into())}Ok(NativeSnapshotConstruction{grant,action})
  }
- /// 🧾️ Posts actual body effects through the already quoted original decoder recipient.
- pub fn record_constructed_progress(&mut self,native:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),NativeSnapshotFailure>{self.finish_constructed(native,grant,progress,None)}
- fn finish_constructed(&mut self,native:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant,progress:RetainedCloneProgress,primary:Option<ValueError>)->Result<(),NativeSnapshotFailure>{
-  let local=self.record_progress(progress);let submitted=if progress==RetainedCloneProgress::default(){Ok(())}else{native.submit_constructed_progress(grant,progress)};
+ /// 🧾️ Posts actual body effects through the already quoted original decoder action.
+ pub fn record_constructed_progress(&mut self,native:&mut NativeDecodeControl<'_>,construction:NativeSnapshotConstruction,progress:RetainedCloneProgress)->Result<(),NativeSnapshotFailure>{self.finish_constructed(native,construction,progress,None)}
+ fn finish_constructed(&mut self,native:&mut NativeDecodeControl<'_>,construction:NativeSnapshotConstruction,progress:RetainedCloneProgress,primary:Option<ValueError>)->Result<(),NativeSnapshotFailure>{
+  let NativeSnapshotConstruction{mut action,..}=construction;let local=self.record_progress(progress);let submitted=native.settle_constructed_progress(&mut action,progress);
   let mut failure=primary.map(NativeSnapshotFailure::from);
   if let Err(error)=local{failure=Some(match failure{Some(primary)=>primary.with_context_refusal(error),None=>NativeSnapshotFailure::context(error)});}
   if let Err(error)=submitted{failure=Some(match failure{Some(primary)=>primary.with_receipt_refusal(error),None=>NativeSnapshotFailure::receipt(error)});}
@@ -152,16 +168,16 @@ impl NativeSnapshotBodyWallet{
  /// 🧵️ Retains every copied prefix and submits the exact physical receipt even on refusal.
  pub fn copy_text_receiving(&mut self,native:&mut NativeDecodeControl<'_>,text:&str,output:&mut String,depth:usize)->Result<(),NativeSnapshotFailure>{
   if !output.is_empty()||output.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot text receiving slot must be empty").into())}
-  let grant=self.admit_constructed(native,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:text.len(),maximum_capacity_bytes:text.len(),maximum_depth:depth,..Default::default()})?;
+  let construction=self.admit_constructed(native,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:text.len(),maximum_capacity_bytes:text.len(),maximum_depth:depth,..Default::default()})?;
   let result=native.copy_text_into(text,output);let progress=RetainedCloneProgress{copied_items:usize::from(result.is_ok()||output.capacity()>0),copied_bytes:output.len(),retained_capacity_bytes:output.capacity(),released_bytes:0};
-  self.finish_constructed(native,grant,progress,result.err())
+  self.finish_constructed(native,construction,progress,result.err())
  }
  /// 🪑️ Retains actual vector backing and submits its exact birth to the original recipient.
  pub fn allocate_vec_receiving<T>(&mut self,native:&mut NativeDecodeControl<'_>,count:usize,output:&mut Vec<T>,depth:usize)->Result<(),NativeSnapshotFailure>{
   if !output.is_empty()||output.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot vector receiving slot must be empty").into())}
   let bytes=count.checked_mul(size_of::<T>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot producer vector extent overflow"))?;
-  let grant=self.admit_constructed(native,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<Vec<T>>(),maximum_capacity_bytes:bytes,maximum_depth:depth,..Default::default()})?;
-  match native.allocate_vec(count){Ok(value)=>{*output=value;self.finish_constructed(native,grant,RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Vec<T>>(),retained_capacity_bytes:output.capacity()*size_of::<T>(),released_bytes:0},None)},Err(error)=>Err(error.into())}
+  let construction=self.admit_constructed(native,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<Vec<T>>(),maximum_capacity_bytes:bytes,maximum_depth:depth,..Default::default()})?;
+  match native.allocate_vec(count){Ok(value)=>{*output=value;self.finish_constructed(native,construction,RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Vec<T>>(),retained_capacity_bytes:output.capacity()*size_of::<T>(),released_bytes:0},None)},Err(error)=>{let mut action=construction.action;native.cancel_constructed_action(&mut action)?;Err(error.into())}}
  }
  /// 🧵️ Copies into the original encoded destination and posts its exact retained prefix.
  pub fn copy_text_encoded(&mut self,native:&mut NativeEncodeControl<'_>,text:&str,output:&mut String,marker:&mut NativeSnapshotEffectProgress,unwind:&mut Option<NativeSnapshotFailure>,allocation:&mut NativeSnapshotEncodeAllocation,depth:usize)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
@@ -216,10 +232,10 @@ impl<'owner,'control> NativeSnapshotDecodeOwner<'owner,'control>{
  pub fn progress(&self)->RetainedCloneProgress{self.progress}
  pub fn record_progress(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{let admitted=self.progress.fits(self.grant)&&progress.fits(self.remaining_grant());self.progress=self.progress.checked_add(progress).map_err(|error|error.with_retained_progress(progress))?;if !admitted{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot decoding receipt exceeds original grant").with_retained_progress(progress))}Ok(())}
  /// 🎟️ Quotes the actual original recipient and remaining local wallet before a decoder effect.
- pub fn admit_constructed(&mut self,demand:RetainedCloneGrant)->Result<RetainedCloneGrant,NativeSnapshotFailure>{let wallet=NativeSnapshotBodyWallet{grant:self.grant,progress:self.progress};wallet.admit_constructed(self.native,demand)}
+ pub fn admit_constructed(&mut self,demand:RetainedCloneGrant)->Result<NativeSnapshotConstruction,NativeSnapshotFailure>{let wallet=NativeSnapshotBodyWallet{grant:self.grant,progress:self.progress};wallet.admit_constructed(self.native,demand)}
  /// 🧾️ Publishes one actual local effect under the same previously quoted recipient grant.
- pub fn record_constructed_progress(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),NativeSnapshotFailure>{
-  let local=self.record_progress(progress);let submitted=self.native.submit_constructed_progress(grant,progress);
+ pub fn record_constructed_progress(&mut self,construction:NativeSnapshotConstruction,progress:RetainedCloneProgress)->Result<(),NativeSnapshotFailure>{
+  let NativeSnapshotConstruction{mut action,..}=construction;let local=self.record_progress(progress);let submitted=self.native.settle_constructed_progress(&mut action,progress);
   match(local,submitted){(Ok(()),Ok(()))=>Ok(()),(Err(error),Ok(()))=>Err(NativeSnapshotFailure::context(error)),(Ok(()),Err(error))=>Err(NativeSnapshotFailure::receipt(error)),(Err(primary),Err(receipt))=>Err(NativeSnapshotFailure::context(primary).with_receipt_refusal(receipt))}
  }
  /// 🧾️ Runs one bounded original effect while retaining its progress in the caller's own frame.

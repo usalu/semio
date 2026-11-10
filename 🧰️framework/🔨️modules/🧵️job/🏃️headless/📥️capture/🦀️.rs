@@ -108,14 +108,14 @@ impl PayloadCapture {
         semio_framework_job::close_original_granted_step(cx, |grant| {
             let demand = self.retirement_demands();
             if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_release_bytes < demand.release_bytes {
-                return RetainedWorkOutcome { result: Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 };
+                return RetainedWorkOutcome::<_,ValueError> { result: Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 };
             }
             self.closing = true;
             self.complete = false;
             if let Some(bytes) = self.bytes.take() {
                 let released_bytes = bytes.capacity();
                 drop(bytes);
-                return RetainedWorkOutcome { result: Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } }), work: 1 };
+                return RetainedWorkOutcome::<_,ValueError> { result: Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } }), work: 1 };
             }
             self.source = None;
             self.page = 0;

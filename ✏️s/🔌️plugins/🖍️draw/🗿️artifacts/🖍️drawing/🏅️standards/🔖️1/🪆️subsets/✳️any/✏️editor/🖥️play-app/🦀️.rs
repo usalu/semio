@@ -51,7 +51,7 @@ impl Default for DrawingPlayApp {
 
 impl ArtifactEditor for DrawingPlayApp {
     fn completion_retirement_birth_bytes(value:&semio_plugin::ArtifactToolCompletionValue<semio_plugin::EditorApp<Self>>)->Option<usize>{completion::birth(value)}
-    fn admit_completion_retirement(value:&mut Option<semio_plugin::ArtifactToolCompletionValue<semio_plugin::EditorApp<Self>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress)>>{completion::admit(value,grant)}
+    fn admit_completion_retirement(value:&mut Option<semio_plugin::ArtifactToolCompletionValue<semio_plugin::EditorApp<Self>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress)>>{completion::admit(value,effect)}
     /// 📢️ The localized notices of the retained gesture owner's refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         drawing_fault_notices()

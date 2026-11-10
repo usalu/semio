@@ -11,10 +11,12 @@ struct Unsupported{original:ManuallyDrop<Effect>}
 impl RetirementCursor for Unsupported{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original effect has no exact completion retirement facet"))}
 
- fn close_step(&mut self,_effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original effect has no exact completion retirement facet").into(),0)}
+ fn next_computational_work(&self,_body:usize)->Result<u64,semio_framework_value::ValueError>{Ok(0)}
+ semio_framework_value::native_retirement_reply!();
  fn terminal_is_empty(&self)->bool{false}
  fn next_birth_bytes(&self,_copy:usize)->Option<usize>{None}
 }
+impl Unsupported{fn close_step(&mut self,_body:usize,_effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original effect has no exact completion retirement facet").into(),0)}}
 impl Drop for Unsupported{fn drop(&mut self){assert!(std::thread::panicking(),"unsupported original host effect lost retained custody");}}
 impl RetireOwned for CompletionEffect{
  type RetirementCursor=Box<dyn RetirementCursor>;

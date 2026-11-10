@@ -1,7 +1,7 @@
 //! 🗂️ Original Collection receiving retains every partial entity and boxed native body.
 use semio_os_kernel::sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving,SqliteSnapshotEncodeReceiving};
 use super::{CollectionSnapshot,CollectionFolder,CollectionEntry,ArtifactBody,store};
-use store::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,artifact::receiving::{Port,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,identity_position,validate_schema_sql,check_database}}};
+use store::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,identity_position,validate_schema_sql,check_database}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::mem::size_of;
 type Result<T>=std::result::Result<T,ValueError>;
@@ -12,14 +12,12 @@ fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"Col
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"Collection semantic extent overflow"))}
 fn empty()->CollectionSnapshot{CollectionSnapshot{schema:String::new(),name:String::new(),folders:Vec::new(),entries:Vec::new()}}
 #[derive(semio_framework_value::RetireOwned)]
-struct Frame{projection:Projection,snapshot:CollectionSnapshot,ids:[Vec<usize>;5],ordered:[Vec<usize>;2],pending_body:Option<Box<ArtifactBody>>,status:Option<Result<()>>}
-impl Frame{fn new()->Self{Self{projection:Projection::new(),snapshot:empty(),ids:std::array::from_fn(|_|Vec::new()),ordered:std::array::from_fn(|_|Vec::new()),pending_body:None,status:None}}}
+struct Frame{projection:Projection,snapshot:CollectionSnapshot,ids:[Vec<usize>;5],ordered:[Vec<usize>;2],pending_body:Option<Box<ArtifactBody>>,result:Option<Result<()>>}
+impl Frame{fn new()->Self{Self{projection:Projection::new(),snapshot:empty(),ids:std::array::from_fn(|_|Vec::new()),ordered:std::array::from_fn(|_|Vec::new()),pending_body:None}}}
 fn definition(index:usize)->&'static str{SQL.split(';').map(str::trim).filter(|text|!text.is_empty()).nth(index).unwrap()}
 fn table(database:&SqliteDatabase,index:usize)->Result<&SqliteTable>{database.tables.iter().find(|table|table.name.eq_ignore_ascii_case(TABLES[index].0)).ok_or_else(invalid)}
 fn text(row:&SqliteRow,column:usize)->Result<&str>{match row.values.get(column){Some(SqliteValue::Text(value))=>Ok(value),_=>Err(invalid())}}
 fn optional(row:&SqliteRow,column:usize)->Result<Option<&str>>{match row.values.get(column){Some(SqliteValue::Null)=>Ok(None),Some(SqliteValue::Text(value))=>Ok(Some(value)),_=>Err(invalid())}}
-fn equal(left:&str,right:&str,port:&mut Paid<'_,'_,'_>)->Result<()>{port.work(2,0)?;if left.len()!=right.len(){return Err(invalid())}port.control.checkpoint(port.phase(),0,left.len())?;for(index,(a,b))in left.as_bytes().chunks(256).zip(right.as_bytes().chunks(256)).enumerate(){port.work(2,0)?;if a!=b{return Err(invalid())}port.control.checkpoint(port.phase(),index*256+a.len(),left.len())?}Ok(())}
-fn equal_optional(left:Option<&str>,right:Option<&str>,port:&mut Paid<'_,'_,'_>)->Result<()>{match(left,right){(Some(a),Some(b))=>equal(a,b,port),(None,None)=>port.work(2,0),_=>Err(invalid())}}
 fn copy(value:&str,output:&mut String,port:&mut Paid<'_,'_,'_>,depth:usize)->Result<()>{port.control.admit_reconstruction_bytes(value.len())?;port.text(value,output,depth)}
 fn copy_optional(value:Option<&str>,output:&mut Option<String>,port:&mut Paid<'_,'_,'_>,depth:usize)->Result<()>{port.work(depth,size_of::<Option<String>>())?;if let Some(value)=value{*output=Some(String::new());copy(value,output.as_mut().unwrap(),port,depth)?}Ok(())}
 fn optional_cell(frame:&mut Projection,value:Option<&str>,port:&mut Paid<'_,'_,'_>)->Result<()>{match value{Some(value)=>text_cell(frame,value,port),None=>cell(frame,Scalar::Null,port)}}
@@ -41,23 +39,42 @@ fn project(source:&CollectionSnapshot,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)
 fn body<'a>(entry:&SqliteRow,database:&'a SqliteDatabase,frame:&Frame,port:&mut Paid<'_,'_,'_>)->Result<(&'a SqliteRow,bool)>{
  let documents=&table(database,3)?.rows;let blobs=&table(database,4)?.rows;let document=identity_position(documents,&frame.ids[3],entry.rowid,port)?;let blob=identity_position(blobs,&frame.ids[4],entry.rowid,port)?;port.work(3,0)?;match(text(entry,7)?,document,blob){("document",Some(index),None)=>Ok((&documents[index],true)),("blob",None,Some(index))=>Ok((&blobs[index],false)),_=>Err(invalid())}
 }
-fn body_equal(source:&ArtifactBody,row:&SqliteRow,document:bool,port:&mut Paid<'_,'_,'_>)->Result<()>{match(source,document){(ArtifactBody::Document{schema,document_id},true)=>{equal(schema,text(row,1)?,port)?;equal(document_id,text(row,2)?,port)},(ArtifactBody::Blob{blob},false)=>{if blob.size!=super::word(row,2)?{return Err(invalid())}equal(&blob.hash,text(row,1)?,port)?;equal(&blob.media_type,text(row,4)?,port)},_=>Err(invalid())}}
-fn read(database:&SqliteDatabase,frame:&mut Frame,source:Option<&CollectionSnapshot>,port:&mut Paid<'_,'_,'_>)->Result<()>{
+fn read(database:&SqliteDatabase,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Result<()>{
  validate_schema_sql(database,SQL,port)?;check_database(database,port)?;let documents=&table(database,0)?.rows;port.work(2,0)?;if documents.len()!=1{return Err(invalid())}let root=&documents[0];indexes(database,frame,root.rowid,port)?;let folders=&table(database,1)?.rows;let entries=&table(database,2)?.rows;if add(table(database,3)?.rows.len(),table(database,4)?.rows.len())?!=entries.len(){return Err(invalid())}
- if let Some(source)=source{if source.folders.len()!=folders.len()||source.entries.len()!=entries.len(){return Err(invalid())}equal(&source.schema,text(root,1)?,port)?;equal(&source.name,text(root,2)?,port)?}else{copy(text(root,1)?,&mut frame.snapshot.schema,port,2)?;copy(text(root,2)?,&mut frame.snapshot.name,port,2)?;port.vector(folders.len(),&mut frame.snapshot.folders,2)?;port.vector(entries.len(),&mut frame.snapshot.entries,2)?}
- for index in 0..frame.ordered[0].len(){let row=&folders[frame.ordered[0][index]];if let Some(source)=source{let value=&source.folders[index];equal(&value.id,text(row,3)?,port)?;equal_optional(value.parent_id.as_deref(),optional(row,4)?,port)?;equal(&value.name,text(row,5)?,port)?}else{port.work(3,size_of::<CollectionFolder>())?;frame.snapshot.folders.push(CollectionFolder{id:String::new(),parent_id:None,name:String::new()});let output=frame.snapshot.folders.last_mut().unwrap();copy(text(row,3)?,&mut output.id,port,3)?;copy_optional(optional(row,4)?,&mut output.parent_id,port,3)?;copy(text(row,5)?,&mut output.name,port,3)?}port.control.checkpoint(port.phase(),index+1,folders.len())?}
+ {copy(text(root,1)?,&mut frame.snapshot.schema,port,2)?;copy(text(root,2)?,&mut frame.snapshot.name,port,2)?;port.vector(folders.len(),&mut frame.snapshot.folders,2)?;port.vector(entries.len(),&mut frame.snapshot.entries,2)?}
+ for index in 0..frame.ordered[0].len(){let row=&folders[frame.ordered[0][index]];{port.work(3,size_of::<CollectionFolder>())?;frame.snapshot.folders.push(CollectionFolder{id:String::new(),parent_id:None,name:String::new()});let output=frame.snapshot.folders.last_mut().unwrap();copy(text(row,3)?,&mut output.id,port,3)?;copy_optional(optional(row,4)?,&mut output.parent_id,port,3)?;copy(text(row,5)?,&mut output.name,port,3)?}port.control.checkpoint(port.phase(),index+1,folders.len())?}
  for index in 0..frame.ordered[1].len(){let row=&entries[frame.ordered[1][index]];let(body,document)=body(row,database,frame,port)?;
-  if let Some(source)=source{let value=&source.entries[index];equal(&value.id,text(row,3)?,port)?;equal_optional(value.folder_id.as_deref(),optional(row,4)?,port)?;equal(&value.name,text(row,5)?,port)?;equal(&value.kind_id,text(row,6)?,port)?;body_equal(value.body.as_ref(),body,document,port)?}else{
+  {
    port.boxed(&mut frame.pending_body,||if document{ArtifactBody::Document{schema:String::new(),document_id:String::new()}}else{ArtifactBody::Blob{blob:store::BlobRef{hash:String::new(),size:0,media_type:String::new()}}},3)?;port.work(3,size_of::<CollectionEntry>())?;frame.snapshot.entries.push(CollectionEntry{id:String::new(),folder_id:None,name:String::new(),kind_id:String::new(),body:frame.pending_body.take().unwrap()});let output=frame.snapshot.entries.last_mut().unwrap();copy(text(row,3)?,&mut output.id,port,3)?;copy_optional(optional(row,4)?,&mut output.folder_id,port,3)?;copy(text(row,5)?,&mut output.name,port,3)?;copy(text(row,6)?,&mut output.kind_id,port,3)?;
    match output.body.as_mut(){ArtifactBody::Document{schema,document_id}=>{copy(text(body,1)?,schema,port,4)?;copy(text(body,2)?,document_id,port,4)?},ArtifactBody::Blob{blob}=>{port.work(4,size_of::<u64>())?;blob.size=super::word(body,2)?;copy(text(body,1)?,&mut blob.hash,port,4)?;copy(text(body,4)?,&mut blob.media_type,port,4)?}}
   }port.control.checkpoint(port.phase(),index+1,entries.len())?
  }Ok(())
 }
-impl store::sqlite_snapshot::receiving::NativeSqliteReceivingFrame for Frame{fn receiving_status(&mut self)->&mut Option<Result<()>>{&mut self.status}}
-pub(super)fn project_receiving(source:&CollectionSnapshot,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<SqliteDatabase,semio_os_kernel::NativeSnapshotFailure>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|project(source,frame,port),|frame|Ok(std::mem::replace(&mut frame.projection.database,SqliteDatabase{tables:Vec::new()})))}
-pub(super)fn reconstruct_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<CollectionSnapshot,semio_os_kernel::NativeSnapshotFailure>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,None,port),|frame|Ok(std::mem::replace(&mut frame.snapshot,empty())))}
-pub(super)fn validate_decoding(source:&CollectionSnapshot,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->std::result::Result<(),semio_os_kernel::NativeSnapshotFailure>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,Some(source),port),|_|Ok(())).result}
-pub(super)fn validate_encoding(source:&CollectionSnapshot,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->std::result::Result<(),semio_os_kernel::NativeSnapshotFailure>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,Some(source),port),|_|Ok(())).result}
+macro_rules! receive{
+ ($name:ident,$owner:ident,$progress:path,$direction:ident,$phase:ident,$output:ty,$operation:expr,$publish:expr)=>{
+ pub(super)fn $name(source:Option<&CollectionSnapshot>,database:Option<&SqliteDatabase>,control:&mut SqliteSnapshotControl<'_>,owner:&mut $owner<'_,'_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<$output>>)->store::os_store::serialization::SnapshotReceivingOutcome{
+  use store::sqlite_snapshot::SqliteStageFailure as Stage;
+  use semio_framework_value::RetainedWorkOutcome;
+  type Inner=Stage<$output,store::NativeSnapshotFailure>;
+  let before=owner.native().owned_bytes();let Some(maximum)=before.checked_add(control.allocation_remaining_bytes())else{return RetainedWorkOutcome{result:Err(Stage::NotStarted(ValueError::literal(ValueRefusalKind::OwnershipLimit,"collection receiving original SQL ceiling overflow"))),work:0}};
+  let settlement=store::space_history::io::sqlite::snapshot::settlement::TypedFileSettlement::new(control,before,SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
+  let turn=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Frame,std::result::Result<$output,Inner>,store::NativeSnapshotFailure>(output,&mut |slot,published,_marker,_unwind,native,body|{
+   let before_work=settlement.control.borrow().performed_work();
+   let result=(||->std::result::Result<(),store::NativeSnapshotFailure>{
+    let mut control=settlement.control.borrow_mut();let mut port=Paid{control:&mut **control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<$output>())?;frame.result=Some(($operation)(source,database,frame,&mut port));let owned=port.owned();drop(port);drop(control);
+    let operation=frame.result.take().unwrap().and_then(|()|($publish)(frame)).map_err(store::NativeSnapshotFailure::from);
+    *published=Some(match settlement.finish_body(owned){Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
+    Ok(())
+   })();
+   RetainedWorkOutcome{result,work:u128::from(settlement.control.borrow().performed_work().checked_sub(before_work).expect("original SQL producer work is monotone"))}
+  }));
+  let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal,receipt:None}),None=>turn.result.map_err(Stage::Operation)};
+  RetainedWorkOutcome{result,work:turn.work}
+ }
+ };
+}
+receive!(project_receiving,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,SqliteDatabase,|source:Option<&CollectionSnapshot>,_:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|project(source.unwrap(),frame,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.projection.database,SqliteDatabase{tables:Vec::new()})));
+receive!(reconstruct_receiving,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot,CollectionSnapshot,|_:Option<&CollectionSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|read(database.unwrap(),frame,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.snapshot,empty())));
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

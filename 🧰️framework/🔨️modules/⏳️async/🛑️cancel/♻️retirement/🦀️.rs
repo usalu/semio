@@ -28,7 +28,7 @@ impl CancelTokenRetirement{
     pub fn return_alias_work_demand(&self)->Result<u64,ValueError>{Ok(self.alias_return_work())}
     pub fn return_alias_step(&mut self,witness:&CancelToken,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,CancelTokenRetirementError>{let grant=effect.grant();
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
-        let work=u128::from(self.alias_return_work());let demand=RetirementDemand{depth:1,..Default::default()};
+        let work=self.alias_return_work();let demand=RetirementDemand{depth:1,..Default::default()};
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
         let remaining=match effect.remaining_work_units(){Ok(remaining)=>remaining,Err(error)=>return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(error)),work:0}};if remaining<work{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}match effect.performed(work){Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::WorkLimit,"cancellation alias return exceeded its Work grant"))),work:u128::from(work)},Err(error)=>return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(error)),work:0}}
         let work=u128::from(work);let matches=self.current.as_ref().is_some_and(|original|Arc::ptr_eq(&original.0,&witness.0));
@@ -77,7 +77,17 @@ impl RetirementCursor for CancelTokenRetirementCursor{
     fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(self.0.retirement_work_demand())}
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.0.retirement_demands()}
 
-    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+    fn close_into<'r>(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Ok(reply.complete(Ok(self.close_sync(effect))))}
+    fn recover_close_into<'r>(&mut self,_body:usize,_:&mut semio_framework_value::RetainedAllocationEffect<'_>,_:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::invariant("synchronous close has no unrecorded callback"))}
+    fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands()?.depth)}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands()?.copy_bytes)}
+    fn next_close_byte_demand(&self)->Option<usize>{self.0.retirement_demands().ok().map(|demand|demand.release_bytes)}
+    fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl CancelTokenRetirementCursor{
+ fn close_sync(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
         match effect.remaining_work_units(){Ok(work)if work>=self.0.retirement_work_demand()=>{},Ok(_)=>return RetirementStep::BudgetExhausted,Err(error)=>return RetirementStep::Failure(error.into(),0)}let turn=self.0.close_step(effect);
         match turn.result{
             Ok(step)=>{let progress=step.progress();if progress!=RetainedCloneProgress::default()||turn.work!=0{RetirementStep::Progress(progress,turn.work)}else if self.0.terminal_is_empty(){RetirementStep::Complete(turn.work)}else{RetirementStep::BudgetExhausted}}
@@ -85,12 +95,6 @@ impl RetirementCursor for CancelTokenRetirementCursor{
             Err(CancelTokenRetirementError::Refused(error))=>RetirementStep::Failure(error.into(),turn.work),
         }
     }
-    fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
-    fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands()?.depth)}
-    fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands()?.copy_bytes)}
-    fn next_close_byte_demand(&self)->Option<usize>{self.0.retirement_demands().ok().map(|demand|demand.release_bytes)}
-    fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
-    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 
 #[cfg(test)]

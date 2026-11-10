@@ -5165,7 +5165,16 @@
           "ports": [
             {
               "id": "result:out",
-              "label": "Result",
+              "label": {
+                "native": {
+                  "en": "Result",
+                  "de": "Ergebnis"
+                },
+                "reuse": {
+                  "en": "Result",
+                  "de": "Ergebnis"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "data",

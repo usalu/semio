@@ -93,7 +93,7 @@ impl RegistryRetirement {
         if self.final_root.is_some() {return Ok(1);}
         self.registry.as_ref().map_or(Ok(0),|value|value.next_computational_work(body))
     }
-    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
+    pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
         let grant=effect.grant();let empty=RetainedCloneProgress::default();
         let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
             if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
@@ -122,7 +122,7 @@ impl RegistryRetirement {
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));
             }
             let Some(value)=self.registry.as_mut() else {return Err(ValueError::invariant("registry payload absent").into());};
-            let step=RetirementPollExit::resume(value.step(effect))?;
+            let step=RetirementPollExit::resume(value.step(body,effect))?;
             let progress=admit_retained_clone_close(grant,step,value.terminal_is_empty(),"original registry fields")?.progress();
             if value.terminal_is_empty(){self.registry=None;}
             Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
@@ -144,7 +144,7 @@ impl RegistryLeaseRetirement {
     pub fn terminal_is_empty(&self)->bool {self.source.is_none()}
     /// ⛽️ Quotes the one lease handoff.
     pub fn next_computational_work(&self,_:usize)->Result<u64,ValueError> {Ok(u64::from(self.source.is_some()))}
-    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
+    pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
         let grant=effect.grant();let empty=RetainedCloneProgress::default();
         let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
             let Some(source)=self.source.as_ref() else {return Ok(RetainedCloneStep::Complete(empty));};

@@ -101,15 +101,6 @@ pub fn chrome(en: &str, de: &str, locale: Locale) -> String {
     LocalizedLabel::native(en, de).resolve(Terminology::Native, locale).to_string()
 }
 
-/// 🏷️ `MediaPortSpec.label` is a plain `String` — pack both native terms from a [`LocalizedLabel`].
-pub fn media_port_label(label: LocalizedLabel) -> String {
-    format!(
-        "{} / {}",
-        label.resolve(Terminology::Native, Locale::En),
-        label.resolve(Terminology::Native, Locale::De),
-    )
-}
-
 /// ✅️ Localized status chip text.
 pub fn status_label(status: CheckStatus, locale: Locale) -> String {
     match status {

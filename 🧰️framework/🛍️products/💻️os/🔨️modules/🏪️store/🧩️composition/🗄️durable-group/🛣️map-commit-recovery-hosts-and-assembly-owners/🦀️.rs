@@ -3,7 +3,7 @@
 use super::*;
 
 /// 🧷️ Store-owned fixed-three coordinator retaining all candidates through journal resolution.
-pub struct DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+pub struct DurableOwnedThreeStoreCommitV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> {
     pub(super) parent: Option<DurableStoreBoundOutcomeV1<ParentP, ParentMutation>>,
     pub(super) drawing: Option<DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>>,
     pub value: Option<DurableStoreBoundOutcomeV1<ValueP, ValueMutation>>,
@@ -25,7 +25,7 @@ pub struct DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, Dra
 
 /// 🗺️ Retained Map publication owner. The three Stores, coordinator, and exclusive journal sink
 /// cross the request boundary together and can leave it only through one terminal handoff.
-pub(super) struct DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+pub(super) struct DurableOwnedMapCommitOperationV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -43,7 +43,7 @@ where
 
 /// 🏠️ Fixed host slot for one retained Map publication. The mounted operation is never exposed
 /// to a request owner and cannot be replaced before its exact terminal handoff.
-pub struct DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+pub struct DurableOwnedMapCommitHostV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -56,7 +56,7 @@ where
 }
 
 /// 🧳 Exact live owners returned after one retained Map publication reaches terminal emptiness.
-pub struct DurableOwnedMapCommitOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+pub struct DurableOwnedMapCommitOwnersV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -73,7 +73,7 @@ where
 
 /// 🛡️ One-shot exact-three-Store authority consumed together with a DB-owned committed witness.
 #[must_use = "the exact three Store owners must transfer into recovery or remain retained"]
-pub struct DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+pub struct DurableOwnedMapRecoveryAdmissionV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -88,7 +88,7 @@ where
 }
 
 /// ♻️ Exact three Store owners returned by committed recovery after terminal publication or an idempotent post-frontier match.
-pub struct DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+pub struct DurableOwnedMapRecoveryOwnersV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -103,7 +103,7 @@ where
 }
 
 /// 🚧 Committed recovery rejection preserves every Store owner for corrected retry or close.
-pub struct DurableOwnedMapRecoveryRejectedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+pub struct DurableOwnedMapRecoveryRejectedV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -118,7 +118,7 @@ where
     pub value: ArtifactStore<ValueP, ValueMutation>,
 }
 
-pub struct DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+pub struct DurableOwnedMapRecoveryOperationV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -134,7 +134,7 @@ where
 }
 
 /// 🧭 Retained committed-recovery host; no journal sink exists because its opaque DB witness already proves the transaction committed.
-pub struct DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+pub struct DurableOwnedMapRecoveryHostV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -161,7 +161,7 @@ where
     AlreadyApplied(DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + Send + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -196,7 +196,7 @@ where
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> Drop for DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -211,7 +211,7 @@ where
 }
 
 /// 🧳 Exact owners returned after a pre-journal rejection or cancellation reaches terminal emptiness.
-pub struct DurableOwnedThreeStoreMapAssemblyOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+pub struct DurableOwnedThreeStoreMapAssemblyOwnersV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -231,7 +231,7 @@ where
 }
 
 /// 🏗️ Store-owned fixed-three admission and preparation owner. It never publishes an individual member.
-pub struct DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+pub struct DurableOwnedThreeStoreMapAssemblyV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,

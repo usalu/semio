@@ -91,18 +91,46 @@ impl From<LabelText> for String {
 /// (the wire shape below is explicitly kept in sync with that type by the owned schema metadata).
 #[derive(Clone, Debug, PartialEq)]
 pub struct LocalizedLabel {
-    cells: [[Cow<'static, str>; Locale::COUNT]; Terminology::COUNT],
+    cells: [LabelRow; Terminology::COUNT],
 }
 
 #[path = "♻️retirement/🦀️.rs"]
 mod retirement;
+
+/// 🧱️ One terminology row of a label: the locale cells, a named type so the row is its own canonical JSON object.
+#[derive(Clone, Debug, PartialEq)]
+struct LabelRow([Cow<'static, str>; Locale::COUNT]);
+
+impl std::ops::Deref for LabelRow { type Target = [Cow<'static, str>; Locale::COUNT]; fn deref(&self) -> &Self::Target { &self.0 } }
+impl std::ops::DerefMut for LabelRow { fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 } }
+impl<'a> IntoIterator for &'a LabelRow { type Item = &'a Cow<'static, str>; type IntoIter = std::slice::Iter<'a, Cow<'static, str>>; fn into_iter(self) -> Self::IntoIter { self.0.iter() } }
+impl<'a> IntoIterator for &'a mut LabelRow { type Item = &'a mut Cow<'static, str>; type IntoIter = std::slice::IterMut<'a, Cow<'static, str>>; fn into_iter(self) -> Self::IntoIter { self.0.iter_mut() } }
+
+/// 🔤️ Canonical JSON object keys are emitted in ascending key order, whatever order the axes are declared in.
+fn ascending<T: Copy, const N: usize>(all: [T; N], key: impl Fn(&T) -> &'static str, ordinal: usize) -> Result<T, ValueError> {
+    let mut sorted = all;
+    sorted.sort_by_key(|item| key(item));
+    sorted.get(ordinal).copied().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "canonical label ordinal is absent"))
+}
+
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for LabelRow {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> { Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(Locale::COUNT)) }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, ValueError> { Ok(&self.0[ascending(Locale::ALL, |l| l.as_str(), ordinal)?.index()]) }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, ValueError> { Ok(ascending(Locale::ALL, |l| l.as_str(), ordinal)?.as_str().into()) }
+}
+
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for LocalizedLabel {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> { Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(Terminology::COUNT)) }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, ValueError> { Ok(&self.cells[ascending(Terminology::ALL, |t| t.as_str(), ordinal)?.index()]) }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, ValueError> { Ok(ascending(Terminology::ALL, |t| t.as_str(), ordinal)?.as_str().into()) }
+}
 
 impl LocalizedLabel {
     /// 🏭️ Builds the full matrix from a resolver called once per (terminology, locale) cell.
     pub fn from_fn(mut resolve: impl FnMut(Terminology, Locale) -> String) -> Self {
         let cells = std::array::from_fn(|ti| {
             let terminology = Terminology::ALL[ti];
-            std::array::from_fn(|li| Cow::Owned(resolve(terminology, Locale::ALL[li])))
+            LabelRow(std::array::from_fn(|li| Cow::Owned(resolve(terminology, Locale::ALL[li]))))
         });
         Self { cells }
     }
@@ -228,7 +256,7 @@ impl<'de> Deserialize<'de> for LocalizedLabel {
                     rows[index] = Some(map.next_value()?);
                 }
                 if rows.iter().any(Option::is_none) { return Err(serde::de::Error::custom("missing terminology")); }
-                Ok(LocalizedLabel { cells: rows.map(|row| row.expect("complete terminology matrix").0.map(Cow::Owned)) })
+                Ok(LocalizedLabel { cells: rows.map(|row| LabelRow(row.expect("complete terminology matrix").0.map(Cow::Owned))) })
             }
         }
         deserializer.deserialize_map(MatrixVisitor)
@@ -276,14 +304,14 @@ impl ToValue for LocalizedLabel {
 impl FromValue for LocalizedLabel {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let cells = label_cells(&value)?;
-        Ok(Self { cells: cells.map(|row| row.map(|text| Cow::Owned(text.to_string()))) })
+        Ok(Self { cells: cells.map(|row| LabelRow(row.map(|text| Cow::Owned(text.to_string())))) })
     }
     fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         control.checkpoint()?;
         control.scoped_depth(64, |control| control.scoped_stage(|control| {
             control.begin_stage(Terminology::COUNT * Locale::COUNT)?;
             let input = label_cells(value)?;
-            let mut cells = std::array::from_fn(|_| std::array::from_fn(|_| Cow::Borrowed("")));
+            let mut cells: [LabelRow; Terminology::COUNT] = std::array::from_fn(|_| LabelRow(std::array::from_fn(|_| Cow::Borrowed(""))));
             for terminology in Terminology::ALL {
                 control.scoped_depth(64, |control| {
                     for locale in Locale::ALL {

@@ -121,16 +121,16 @@ pub(super) struct ArtifactHistorySlot<T> {
     previous: Option<u32>,
     pub(super) next: Option<u32>,
     free_next: Option<u32>,
-    value: Option<T>,
+    original: semio_framework_value_original_slot::RetainedOriginalSlot<T>,
     replacement: Option<Box<semio_framework_value::RetainedPublicationRoot<T>>>,
-    read: Option<Box<dyn semio_framework_value_original_slot::RetainedOriginalReadOwner<T>>>,
     read_previous:Option<u32>,
     read_next:Option<u32>,
 }
 
 impl<T> ArtifactHistorySlot<T> {
-    fn get(&self)->Option<&T>{self.replacement.as_deref().map(|root|&**root).or_else(||self.value.as_ref()).or_else(||self.read.as_ref().map(|read|read.get()))}
-    fn is_occupied(&self)->bool{self.value.is_some()||self.read.is_some()||self.replacement.is_some()}
+    fn get(&self)->Option<&T>{self.replacement.as_deref().map(|root|&**root).or_else(||(!self.original.is_empty()).then(||self.original.get()))}
+    fn is_occupied(&self)->bool{!self.original.is_empty()||self.replacement.is_some()}
+    fn take_original(&mut self)->Option<T>{if self.original.has_read(){return None}std::mem::replace(&mut self.original,semio_framework_value_original_slot::RetainedOriginalSlot::vacant()).try_into_original().ok()}
 }
 
 pub(super) struct ArtifactHistorySlotPage<T> {
@@ -397,10 +397,10 @@ impl<T> ArtifactHistoryLedger<T> {
             slot.previous = previous;
             slot.next = None;
             slot.free_next = None;
-            slot.value = Some(value);
+            slot.original = semio_framework_value_original_slot::RetainedOriginalSlot::new(value);
         } else if index == self.initialized && (index as usize) < self.allocated_slots() {
             let offset = index as usize;
-            self.slot_page_mut(offset / artifact_history_page_slots::<T>()).slots[offset % artifact_history_page_slots::<T>()].write(ArtifactHistorySlot { generation, visibility: None, previous, next: None, free_next: None, value: Some(value), replacement:None, read: None, read_previous:None, read_next:None });
+            self.slot_page_mut(offset / artifact_history_page_slots::<T>()).slots[offset % artifact_history_page_slots::<T>()].write(ArtifactHistorySlot { generation, visibility: None, previous, next: None, free_next: None, original: semio_framework_value_original_slot::RetainedOriginalSlot::new(value), replacement:None, read_previous:None, read_next:None });
             self.initialized += 1;
         } else {
             return Err((reservation, value));
@@ -483,7 +483,7 @@ impl<T> ArtifactHistoryLedger<T> {
             slot.previous = None;
             slot.next = None;
             slot.free_next = free_head;
-            slot.value.take().expect("aborted group slot retains its exact entry owner")
+            slot.take_original().expect("aborted group slot retains its exact entry owner")
         };
         self.free_head = Some(index);
         let group = self.group.as_mut().expect("validated aborted group remains owned");
@@ -544,7 +544,7 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     /// 🪃️ Quotes one exact original unlink before a publisher changes any companion roots.
-    pub fn removal_demands(&self,key:ArtifactHistoryKey)->Result<semio_framework_value::RetirementDemand,ValueError>{if self.directory_reads!=0||self.reservation.is_some()||self.group.is_some()||self.replacement_count!=0||key.index>=self.initialized{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history removal requires its settled original generation"))}let slot=self.slot(key.index);if slot.generation!=key.generation||slot.value.is_none()||slot.read.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history removal requires its unborrowed original row"))}Ok(semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<T>()+12*size_of::<usize>(),depth:1,..Default::default()})}
+    pub fn removal_demands(&self,key:ArtifactHistoryKey)->Result<semio_framework_value::RetirementDemand,ValueError>{if self.directory_reads!=0||self.reservation.is_some()||self.group.is_some()||self.replacement_count!=0||key.index>=self.initialized{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history removal requires its settled original generation"))}let slot=self.slot(key.index);if slot.generation!=key.generation||slot.original.is_empty()||slot.original.has_read(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history removal requires its unborrowed original row"))}Ok(semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<T>()+12*size_of::<usize>(),depth:1,..Default::default()})}
 
     pub fn remove_key(&mut self, key: ArtifactHistoryKey) -> Result<T, ArtifactHistoryKey> {
         if self.directory_reads!=0 || self.reservation.is_some() || self.group.is_some() || self.replacement_count!=0 {
@@ -554,7 +554,7 @@ impl<T> ArtifactHistoryLedger<T> {
             return Err(key);
         }
         let slot = self.slot(key.index);
-        if slot.generation != key.generation || slot.value.is_none() || slot.read.is_some() {
+        if slot.generation != key.generation || slot.original.is_empty() || slot.original.has_read() {
             return Err(key);
         }
         self.forget_seek();
@@ -576,7 +576,7 @@ impl<T> ArtifactHistoryLedger<T> {
             slot.previous = None;
             slot.next = None;
             slot.free_next = free_head;
-            slot.value.take().expect("validated history slot retains its exact owner")
+            slot.take_original().expect("validated history slot retains its exact owner")
         };
         self.free_head = Some(key.index);
         self.len -= 1;
@@ -597,7 +597,7 @@ impl<T> ArtifactHistoryLedger<T> {
         while let Some(index) = cursor {
             let slot = self.slot(index);
             if slot.get().is_some_and(&mut remove) {
-                if slot.read.is_some(){return Err(ArtifactHistoryReservationFault::Busy);}
+                if slot.original.has_read(){return Err(ArtifactHistoryReservationFault::Busy);}
                 keys.push(ArtifactHistoryKey { index, generation: slot.generation });
             }
             cursor = slot.next;
@@ -624,7 +624,7 @@ impl<T> ArtifactHistoryLedger<T> {
             return None;
         }
         let index = self.tail?;
-        self.slot_mut(index).value.as_mut()
+        self.slot_mut(index).original.get_mut_unissued()
     }
 
     /// 🎯️ The entry at `position` of the visible order — O(1) amortized when reads walk forward (see `seek`).
@@ -654,8 +654,8 @@ impl<T> ArtifactHistoryLedger<T> {
     pub fn get_key_mut(&mut self, key: ArtifactHistoryKey) -> Option<&mut T> {
         if self.directory_reads!=0 || self.group.is_some() || self.replacement_count!=0 || key.index >= self.initialized { return None; }
         let slot = self.slot_mut(key.index);
-        if slot.generation != key.generation || slot.visibility.as_ref().is_some_and(|visibility| !visibility.committed()) || slot.read.is_some() { return None; }
-        slot.value.as_mut()
+        if slot.generation != key.generation || slot.visibility.as_ref().is_some_and(|visibility| !visibility.committed()) || slot.original.has_read() { return None; }
+        slot.original.get_mut_unissued()
     }
 
     /// 🧢️ Captures the exact generation of the visible entry at `position`.
@@ -668,7 +668,7 @@ impl<T> ArtifactHistoryLedger<T> {
         assert!(self.group.is_none(), "mutable history access requires its staged group to be adopted or aborted");
         if self.directory_reads!=0||self.replacement_count!=0{return None}
         let index = self.seek_slot(position)?;
-        self.slot_mut(index).value.as_mut()
+        self.slot_mut(index).original.get_mut_unissued()
     }
 
     /// 🔎️ The first visible entry `found` accepts, searched from the last entry a read reached onward and then from the
@@ -977,7 +977,7 @@ impl<'a, T> Iterator for ArtifactHistoryIterMut<'a, T> {
         let slot = unsafe { (*self.ledger).slot_mut(index) };
         self.front = slot.next;
         self.remaining -= 1;
-        slot.value.as_mut().map(|value| unsafe { &mut *(value as *mut T) })
+        slot.original.get_mut_unissued().map(|value| unsafe { &mut *(value as *mut T) })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -994,7 +994,7 @@ impl<T> DoubleEndedIterator for ArtifactHistoryIterMut<'_, T> {
         let slot = unsafe { (*self.ledger).slot_mut(index) };
         self.back = slot.previous;
         self.remaining -= 1;
-        slot.value.as_mut().map(|value| unsafe { &mut *(value as *mut T) })
+        slot.original.get_mut_unissued().map(|value| unsafe { &mut *(value as *mut T) })
     }
 }
 

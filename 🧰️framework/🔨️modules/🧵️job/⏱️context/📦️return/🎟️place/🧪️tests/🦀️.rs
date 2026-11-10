@@ -2,8 +2,6 @@
 use semio_framework_job_context::*;
 use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-#[global_allocator]
-static PLACE_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn clock()->Option<u64>{Some(0)}
 fn retire_source(mut caller:OriginalJobFixtureCaller,stock:RetainedCloneGrant,extra:usize)->usize{let expected=caller.born_bytes()+extra;let mut released=0;for _ in 0..64{if caller.terminal_is_empty(){break}released+=caller.retire_step(stock).unwrap().progress().released_bytes}assert!(caller.terminal_is_empty());assert_eq!(released,expected);caller.cumulative_receipt().copied_bytes}
 #[test]

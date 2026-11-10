@@ -4,7 +4,7 @@ use semio_framework_value::ErasedSnapshotRetirement;
 use crate::test_retirement::{native_turn,NativeWorkWallet};
 fn base_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:usize::MAX,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:64}}
 fn effected<T>(control:&mut NativeDecodeControl<'_>,wallet:&mut NativeWorkWallet,grant:RetainedCloneGrant,quote:usize,run:impl FnOnce(&mut NativeDecodeControl<'_>,&mut semio_framework_value::RetainedAllocationEffect<'_>)->T)->T{let demand=semio_framework_value::RetirementDemand{copy_bytes:grant.maximum_copy_bytes,capacity_bytes:quote,release_bytes:grant.maximum_release_bytes,depth:grant.maximum_depth};native_turn::<_,semio_framework_value::ValueError>(control,wallet,|native|if quote==0{native.with_effect(base_grant(),64,|native,effect|run(native,&mut effect.nested(grant)))}else{native.with_allocated_effect(demand,64,|native,effect|run(native,&mut effect.nested(grant)))}).unwrap().expect("Deflate test work quote was not admitted")}
-fn observe<T>(f:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(f)}
+fn observe<T>(f:impl FnOnce()->T)->(T,usize,usize){semio_os_history_testing_retirement::observe_backing(f)}
 fn receipt(owner:&mut RetainedHistoryDeflateDecode,g:RetainedCloneGrant,b:usize,r:usize)->usize{let(issued,p)=owner.take_receipt().unwrap();assert_eq!(issued,g);assert!(p.fits(g));assert_eq!((p.retained_capacity_bytes,p.released_bytes),(b,r));p.copied_bytes}
 #[derive(Clone,Copy)]
 struct OriginalPages<'a>{pages:&'a[&'a[u8]],page_bytes:usize,identity:OriginalWireSourceIdentity}

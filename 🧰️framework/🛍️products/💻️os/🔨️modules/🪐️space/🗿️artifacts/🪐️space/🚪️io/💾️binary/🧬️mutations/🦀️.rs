@@ -10,3 +10,6 @@ impl protocol::OpBinary for SpaceMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+
+semio_os_kernel::original_ordinal_operation_receiving!(SpaceMutation);
+semio_os_kernel::artifact_persisted_binary_operation!(SpaceMutation);

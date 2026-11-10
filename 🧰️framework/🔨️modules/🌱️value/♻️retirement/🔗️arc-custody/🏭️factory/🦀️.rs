@@ -7,6 +7,9 @@ type Reply<'a>=OriginalEffectReply<'a,RetainedCloneStep,crate::OriginalRetiremen
 type Complete<'a>=OriginalEffectReplyComplete<'a,RetainedCloneStep,crate::OriginalRetirementFailure>;
 fn invalid()->ValueError{ValueError::invariant("captured shared original changed its Work or destination")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
+#[path="🌳️root/🦀️.rs"]
+pub mod root;
+pub use root::ArcRootRetirement;
 /// 🧳️ The issued alias, elected original and installed payload issuer remain resident.
 pub struct FactorySharedRetirement<T:Send+Sync+'static>{alias:ManuallyDrop<Option<SharedOriginalStorage<T>>>,elected:ManuallyDrop<Option<SharedOriginal<T>>>,owned:crate::owned::FactoryOwnedRetirement<T>,work:Option<OriginalWorkBindingIdentity>}
 impl<T:Send+Sync+'static> FactorySharedRetirement<T>{

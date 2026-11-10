@@ -11,7 +11,7 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
     const SCHEMA: &'static str;
     const MAXIMUM_PUBLICATION_BYTES: usize;
     type State: semio_framework_value::retained_clone::RetainedClone + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ConfigRecord + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_dsl_record::DslField + semio_framework_value::retirement::RetireOwned + 'static;
-    type Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<Self::State> + protocol::ColdMutation<Self::State> + store::ArtifactCanonicalJsonTree + PartialEq + Send + Sync + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + 'static;
+    type Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<Self::State> + protocol::ColdMutation<Self::State> + store::ArtifactCanonicalJsonTree + PartialEq + Send + Sync + protocol::OpText + protocol::OpBinary + protocol::OpBinaryReceiving + semio_framework_value::retirement::RetireOwned + 'static;
 
     type Edit: store::snapshot_clone_preparation::RetainedCloneEdit<Self::State,Self::Mutation> + semio_framework_value::FactoryPayloadRetirement;
     const MAXIMUM_PREPARATION_DEPTH: usize;

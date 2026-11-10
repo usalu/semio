@@ -39,8 +39,8 @@ impl Ui {
         if let Some(refusal) = window.layout_retirement_refusal {
             if !matches!(refusal.stage, "Layout.Admission" | "Layout.CloseAdmission") { return UiLayoutStep::Refused { window_id, lane, refusal }; }
             if !window.layout_admission.terminal_is_empty() {
-                let step = window.layout_admission.close_step(cx.retained_grant(), Some(cx.original_cancel_token()));
-                match consume_layout_retirement(cx, step) {
+                let grant = cx.retained_grant();
+                match close_layout_admission(cx, &mut window.layout_admission, grant, true) {
                     Ok(_) => {
                         self.enqueue_layout(window_id.as_ref());
                         return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.CloseAdmission", nodes: 1, glyphs: 0 };
@@ -94,8 +94,8 @@ impl Ui {
             }
             if window.layout_closing {
                 let witness=cx.original_cancel_token();
-                let alias=match session.has_original_cancel_alias_witness(witness){Ok(true)=>session.return_original_cancel_alias_step(witness,cx.retained_grant()),Ok(false)=>semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}};
-                cx.consume_fuel(alias.work);
+                let alias=match session.has_original_cancel_alias_witness(witness){Ok(true)=>match cx.with_original_effect(cx.retained_grant(),|cx,effect|session.return_original_cancel_alias_step(cx.original_cancel_token(),effect)){Ok(Some((turn,_)))=>turn,Ok(None)=>semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)),work:0}},Ok(false)=>semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}};
+                cx.consume_work(alias.work);
                 match alias.result {
                     Ok(Some(step)) => {
                         let progress = step.progress();
@@ -212,8 +212,8 @@ impl Ui {
                     return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.CloseAdmission", nodes: 1, glyphs: 0 };
                 }
                 if !window.layout_admission.terminal_is_empty() {
-                    let step = window.layout_admission.close_step(cx.retained_grant(), Some(cx.original_cancel_token()));
-                    if let Err(error) = consume_layout_retirement(cx, step) {
+                    let grant = cx.retained_grant();
+                    if let Err(error) = close_layout_admission(cx, &mut window.layout_admission, grant, true) {
                         let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseAdmission", kind: error.kind, progress: error.retained_progress() };
                         window.layout_retirement_refusal = Some(refusal);
                         return UiLayoutStep::Refused { window_id, lane, refusal };

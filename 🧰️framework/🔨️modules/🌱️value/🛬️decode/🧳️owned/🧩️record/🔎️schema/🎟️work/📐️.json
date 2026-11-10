@@ -12,12 +12,19 @@
     {
       "key": "alpha",
       "kind": "field",
-      "field": 0
+      "field": 0,
+      "turns": 157
     },
     {
       "key": "beta",
       "kind": "field",
       "field": 1
+    },
+    {
+      "key": "alpha",
+      "kind": "field",
+      "field": 0,
+      "starvedAck": true
     },
     {
       "key": "dup",
@@ -58,7 +65,59 @@
       "ordinal": 7,
       "kind": "field",
       "field": 3
+    },
+    {
+      "key": "alpha",
+      "kind": "refused",
+      "field": null,
+      "message": "original key refusal"
+    },
+    {
+      "key": "alpha",
+      "kind": "cut",
+      "field": null,
+      "turns": 157
     }
   ],
-  "maximumComparedBytesPerTurn": 64
+  "maximumComparedBytesPerTurn": 64,
+  "visits": {
+    "matched": [
+      "KeyBirth",
+      "KeyStart",
+      "KeyMetadata(Bind)",
+      "KeyAction",
+      "KeySettlement",
+      "KeySettlement outcome resident",
+      "KeyMetadata(Prepare)",
+      "KeyAcknowledgement",
+      "KeyMetadata(Rearm)",
+      "KeyMetadata(CloseMetadata)"
+    ],
+    "refused": [
+      "KeyBirth",
+      "KeyStart",
+      "KeyMetadata(Bind)",
+      "KeyAction",
+      "KeyError"
+    ],
+    "cut": [
+      "KeyBirth",
+      "KeyStart",
+      "KeyMetadata(Bind)",
+      "KeyAction",
+      "KeyMetadata(Prepare)",
+      "KeyAcknowledgement"
+    ]
+  },
+  "forbidden": {
+    "matched": [
+      "close metadata"
+    ],
+    "refused": [
+      "close metadata"
+    ],
+    "cut": [
+      "close metadata"
+    ]
+  }
 }

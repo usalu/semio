@@ -14,7 +14,7 @@ pub(super) fn close<T: RetireOwned>(value: &mut Option<T>, owner: &mut Option<Co
     let empty = RetainedCloneProgress::default();
     if grant.maximum_items == 0 { return Ok(Some(RetainedCloneStep::Progress(empty))); }
     if let Some(cursor) = owner.as_mut() {
-        let step = RetirementPollExit::resume(cursor.step(effect))?;
+        let step = RetirementPollExit::resume(cursor.step(grant.maximum_copy_bytes,effect))?;
         if cursor.terminal_is_empty() { *owner = None; }
         return Ok(Some(RetainedCloneStep::Progress(step.progress())));
     }

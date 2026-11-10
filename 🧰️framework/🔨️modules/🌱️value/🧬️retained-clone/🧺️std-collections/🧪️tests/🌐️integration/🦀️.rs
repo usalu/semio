@@ -24,9 +24,9 @@ impl<M:NativeCollectionClone> Producer<M>{
   let mut scope=reply.scope(&mut self.selected,key)?;let child=scope.borrow()?;match c.op{
    Op::Advance=>{let maximum=c.maximum;if recover{self.cursor.recover_advance_into(c.source,c.body,maximum,effect,child)?;}else{self.cursor.advance_into(c.source,c.body,maximum,effect,child)?;}},
    Op::Start=>{if recover{self.cursor.recover_begin_close_into(effect,child)?;}else{self.cursor.begin_close_into(effect,child)?;}},
-   Op::Close=>{if recover{self.cursor.recover_close_into(effect,child)?;}else{self.cursor.close_into(effect,child)?;}},
+   Op::Close=>{if recover{self.cursor.recover_close_into(c.body,effect,child)?;}else{self.cursor.close_into(c.body,effect,child)?;}},
    Op::Retire=>{assert!(effect.performed(1)?);let original=self.output.take().expect("original cloned output");*self.retirement=Some(ControlledRetirement::retain(original));child.complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:retire_demand::<M>().copy_bytes,..Default::default()})));},
-   Op::Drain=>{let owner=self.retirement.as_mut().unwrap();if recover{owner.recover_step_into(effect,child)?;}else{owner.step_into(effect,child)?;}},
+   Op::Drain=>{let owner=self.retirement.as_mut().unwrap();if recover{owner.recover_step_into(c.body,effect,child)?;}else{owner.step_into(c.body,effect,child)?;}},
    Op::Clear=>{let owner=self.retirement.as_ref().unwrap();let evidence=owner.native_header_release().expect("actual empty controlled header");evidence.demand(owner)?;assert!(effect.performed(1)?);self.retirement.take();child.complete(Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<ControlledRetirement<M>>>(),..Default::default()})));},
    Op::Take=>unreachable!()
   }Ok(scope.forwarded())

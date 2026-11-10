@@ -27,6 +27,12 @@ use ui_styling::metrics::tool_run;
 #[path = "⏯️tool-run-trace/🦀️.rs"]
 pub mod tool_run_trace;
 
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧰️testkit/🦀️.rs"]
+mod testkit;
+#[cfg(any(test, feature = "testkit"))]
+pub use testkit::*;
+
 #[path = "🎒️prepared-resources/🦀️.rs"]
 mod prepared_resources;
 pub use prepared_resources::*;

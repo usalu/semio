@@ -168,15 +168,15 @@ impl CanvasSceneRetirement{
         if shape.is_some_and(|shape|matches!(shape,RecordedShape::BezPath(path)if path.retirement_backing_bytes()!=0)){return Ok(crate::CanvasPathRetirement::birth_demand())}
         Ok(RetirementDemand{copy_bytes:if scene.0.is_empty(){0}else{size_of::<SceneCommand>()},release_bytes:if scene.0.is_empty(){scene.retirement_backing_bytes()}else{0},depth:usize::from(!self.terminal_is_empty(scene)),..Default::default()})
     }
-    pub fn close_step(&mut self,scene:&mut Scene,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+    pub fn close_step(&mut self,scene:&mut Scene,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
         let grant=effect.grant();let mut delegated=None;
         let result=(||->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
         use semio_framework_value::{ErasedSnapshotRetirement,RetainedCloneStep as Step,RetainedCloneProgress as Progress};
         let empty=Progress::default();if self.terminal_is_empty(scene){return Ok(Step::Complete(empty))}
         let demand=self.next_demands(scene,grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(Step::Progress(empty))}
-        if let Some(active)=self.active.as_mut(){if active.terminal_is_empty(){drop(self.active.take());let bytes=std::mem::take(&mut self.active_bytes);return Ok(Step::Progress(Progress{copied_items:1,released_bytes:bytes,..empty}))}delegated=Some(active.close_step(effect));return Ok(Step::Progress(empty))}
-        if let Some(image)=self.image.as_mut(){let poll=image.step(effect);if image.terminal_is_empty(){self.image=None}delegated=Some(poll.map(|step|Step::Progress(step.progress())));return Ok(Step::Progress(empty))}
+        if let Some(active)=self.active.as_mut(){if active.terminal_is_empty(){drop(self.active.take());let bytes=std::mem::take(&mut self.active_bytes);return Ok(Step::Progress(Progress{copied_items:1,released_bytes:bytes,..empty}))}delegated=Some(active.close_step(body,effect));return Ok(Step::Progress(empty))}
+        if let Some(image)=self.image.as_mut(){let poll=image.step(body,effect);if image.terminal_is_empty(){self.image=None}delegated=Some(poll.map(|step|Step::Progress(step.progress())));return Ok(Step::Progress(empty))}
         if let Some(SceneCommand::Stroke{stroke,..})=scene.0.last_mut(){if stroke.dash_capacity()!=0{let original=std::mem::replace(stroke,Stroke::new(0.0));let (owner,progress)=crate::CanvasStrokeRetirement::admit(original,grant).map_err(|(error,original)|{*stroke=original;error})?;self.active_bytes=size_of::<crate::CanvasStrokeRetirement>();self.active=Some(owner);return Ok(Step::Progress(progress))}}
         let shape=match scene.0.last_mut(){Some(SceneCommand::Fill{shape,..}|SceneCommand::Stroke{shape,..})=>Some(shape),Some(SceneCommand::PushLayer{clip,..}|SceneCommand::PushClipLayer{clip,..})=>Some(clip),_=>None};
         if let Some(RecordedShape::BezPath(path))=shape{if path.retirement_backing_bytes()!=0{let original=std::mem::take(path);let(owner,progress)=crate::CanvasPathRetirement::admit(original,grant).map_err(|(error,original)|{*path=original;error})?;self.active_bytes=size_of::<crate::CanvasPathRetirement>();self.active=Some(owner);return Ok(Step::Progress(progress))}}

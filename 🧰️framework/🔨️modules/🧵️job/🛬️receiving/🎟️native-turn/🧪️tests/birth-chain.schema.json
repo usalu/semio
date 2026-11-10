@@ -1,0 +1,40 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "needed",
+  "spent",
+  "refresh",
+  "cuts"
+ ],
+ "properties": {
+  "needed": {
+   "type": "integer"
+  },
+  "spent": {
+   "type": "integer"
+  },
+  "refresh": {
+   "type": "integer"
+  },
+  "cuts": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "fuel",
+     "born"
+    ],
+    "properties": {
+     "fuel": {
+      "type": "integer"
+     },
+     "born": {
+      "type": "boolean"
+     }
+    }
+   }
+  }
+ }
+}

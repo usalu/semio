@@ -157,7 +157,7 @@ pub async fn generation2d_io() -> semio_plugin::AppIo {
     .with_ports(vec![
         semio_plugin::MediaPortSpec {
             id: "params:in".into(),
-            label: "Parameters".into(),
+            label: LocalizedLabel::native("Parameters", "Parameter"),
             direction: semio_plugin::MediaPortDirection::In,
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: None,
@@ -166,7 +166,7 @@ pub async fn generation2d_io() -> semio_plugin::AppIo {
         },
         semio_plugin::MediaPortSpec {
             id: "drawing:out".into(),
-            label: "Drawing".into(),
+            label: LocalizedLabel::native("Drawing", "Zeichnung"),
             direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
             kind_id: Some("2d.drawing".into()),

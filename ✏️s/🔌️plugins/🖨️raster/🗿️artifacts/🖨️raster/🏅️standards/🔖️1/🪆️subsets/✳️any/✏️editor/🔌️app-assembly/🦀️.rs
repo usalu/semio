@@ -56,7 +56,7 @@ pub fn raster_io() -> semio_framework::AppIo {
 pub fn raster_image_in_port() -> semio_framework::MediaPortSpec {
     semio_framework::MediaPortSpec {
         id: "image:in".into(),
-        label: "Image".into(),
+        label: LocalizedLabel::native("Image", "Bild"),
         direction: semio_framework::MediaPortDirection::In,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
         kind_id: None,
@@ -72,7 +72,7 @@ pub fn raster_image_in_port() -> semio_framework::MediaPortSpec {
 pub fn raster_image_out_port() -> semio_framework::MediaPortSpec {
     semio_framework::MediaPortSpec {
         id: "image:out".into(),
-        label: "Image".into(),
+        label: LocalizedLabel::native("Image", "Bild"),
         direction: semio_framework::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
         kind_id: Some("2d.image".into()),

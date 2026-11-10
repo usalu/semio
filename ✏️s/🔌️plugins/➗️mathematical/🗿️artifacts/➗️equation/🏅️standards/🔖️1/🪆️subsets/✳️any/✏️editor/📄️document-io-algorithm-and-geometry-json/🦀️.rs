@@ -29,7 +29,7 @@ pub fn equation_io() -> semio_plugin::AppIo {
         artifact_media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
         ports: vec![semio_plugin::MediaPortSpec {
             id: "result:out".into(),
-            label: "Result".into(),
+            label: semio_plugin::LocalizedLabel::native("Result", "Ergebnis"),
             direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: Some("computation.equation".into()),

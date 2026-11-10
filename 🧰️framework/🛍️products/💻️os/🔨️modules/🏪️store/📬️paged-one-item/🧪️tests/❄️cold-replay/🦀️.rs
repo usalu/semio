@@ -31,7 +31,7 @@ fn replay_outcome_with(factory: paged::ColdMutationApplyFactory<PlainDocument, D
     let mut input = None;
     for _ in 0..64 {
         if source.ready() { source.take(&mut input, retained(source.demands(4096).unwrap())).unwrap(); break; }
-        {let grant=retained(source.demands(4096).unwrap());effect::with_effect(grant,effect::CPU,|e|source.advance(e)).0.result.unwrap();}
+        {let grant=retained(source.demands(4096).unwrap());effect::with_effect(grant,effect::CPU,|e|source.advance(e)).0.unwrap();}
     }
     let registry = SnapshotReadRegistryHandle::new();
     let lease = registry.try_issue(Arc::clone(&base)).unwrap_or_else(|_| panic!("replay registry admission"));
@@ -75,10 +75,10 @@ fn replay_outcome_with(factory: paged::ColdMutationApplyFactory<PlainDocument, D
     for _ in 0..10_000 {
         if source.terminal_is_empty() { break; }
         let grant = retained(source.close_demand(4096).unwrap());
-        effect::settled(effect::with_effect(grant, effect::CPU, |effect| source.close_step(effect)).0).result.unwrap();
+        effect::with_effect(grant, effect::CPU, |effect| source.close_step(effect)).0.unwrap();
     }
     assert!(source.terminal_is_empty());
-    drain_fixture(base);
+    drain_root(base);
     (next, inverse, messages, copied)
 }
 
@@ -86,7 +86,7 @@ fn replay(base: &PlainDocument, edits: &[DocumentMutation]) -> PlainDocument {
     let mut current = Arc::new(base.clone());
     for (index, edit) in edits.iter().enumerate() { current = replay_step(current, edit.clone(), index as u32).0; }
     let post = (*current).clone();
-    drain_fixture(current);
+    drain_root(current);
     post
 }
 
@@ -133,7 +133,7 @@ fn cold_replay_inverse_rows_restore_every_pre_state() {
         assert_eq!(restored, before, "inverse rows of edit {index} restore its pre-state");
         current = next;
     }
-    drain_fixture(current);
+    drain_root(current);
 }
 
 fn snapshot_priced_at_four_kib(_: &PlainDocument) -> usize { 4096 }
@@ -147,8 +147,8 @@ fn cold_replay_meters_the_base_snapshot_clone_as_the_bounded_path_does() {
     let bounded = replay_step_with(paged::ColdMutationApplyFactory::bounded(bounds), Arc::new(plain_document_json(&law["base"])), edit, 0);
     assert_eq!(pairs_of(&unbounded.0), pairs_of(&bounded.0), "metering never changes the replayed snapshot");
     assert!(bounded.2 >= unbounded.2 + 4096 - std::mem::size_of::<PlainDocument>(), "the base clone is charged at its measured size: {} vs {}", bounded.2, unbounded.2);
-    drain_fixture(unbounded.0);
-    drain_fixture(bounded.0);
+    drain_root(unbounded.0);
+    drain_root(bounded.0);
 }
 
 /// 🚦️ Metadata-free preview preserves native diagnostic admission before applying or inverting a candidate.
@@ -179,7 +179,7 @@ fn cold_replay_private_semantics_preserve_diagnostics_and_refuse_before_apply() 
                 expected["nodes"][0]["text"] = Value::String("diagnostic applied".into());
                 assert_eq!(actual, expected);
                 assert_eq!(inverse, vec![DocumentMutation::SetText { index: 0, text: original.nodes[0].text.clone() }]);
-                drain_fixture(post);
+                drain_root(post);
             } else { assert!(inverse.is_empty()); }
             drain_fixture(inverse);
             let mut ledger = protocol::MutationMessageLedgerRetirement::new(String::new(), messages);

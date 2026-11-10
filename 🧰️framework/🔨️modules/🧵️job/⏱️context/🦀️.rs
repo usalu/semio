@@ -22,7 +22,7 @@ pub use original_job_continuation::source as original_return_source;
 pub use semio_framework_job_failure::{OriginalSourceCloseFailure,project_original_source_close_failure,key_original_source_close_failure,OriginalFailureContext,OriginalWorkFailure,OriginalTurnFailure,OriginalTurnPrimary,OriginalReceivingPrimary,OriginalRetirementReceivingPrimary,OriginalClosureFailure,OriginalDomainFailure,OriginalDomainPrimary,OriginalDomainReservation,OriginalDomainProjection,OriginalDomainView,admit_original_domain_failure,original_domain_failure_demand,project_original_turn_failure,key_original_turn_failure,project_original_value_error,key_original_value_error,project_original_fault,key_original_fault,project_original_retirement_failure,key_original_retirement_failure,project_original_retirement_receiving,key_original_retirement_receiving,project_original_receiving_primary,key_original_receiving_primary};
 #[path="../♻️retirement/🎟️context/🦀️.rs"]
 mod original_close_context;
-pub use original_close_context::{close_original_quoted_retained_step,receive_original_retained_work,receive_original_receiving_work,close_original_granted_step,close_original_nested_step,close_original_retained_step,close_original_retained_turn,close_original_effect_step};
+pub use original_close_context::{close_original_quoted_retained_step,receive_original_retained_work,receive_original_receiving_work,close_original_granted_step,close_original_nested_step,close_original_retained_step,close_original_retained_turn,close_original_effect_step,close_original_retained_effect_step};
 
 #[cfg(test)]
 use std::time::Instant;
@@ -30,7 +30,7 @@ use std::time::Instant;
 use semio_framework_trace::TraceEvent;
 #[cfg(test)] use semio_framework_trace::{record_operation_started};
 
-pub use semio_framework_async::{CancelToken,OriginalCancelRootAdmission,OriginalCancelRootIdentity};
+pub use semio_framework_async::{CancelToken,CancelTokenRetirement,CancelTokenRetirementError,OriginalCancelRootAdmission,OriginalCancelRootIdentity};
 pub use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
 pub use semio_framework_trace::{Generation, InteractiveStage, OperationId, allocate_operation_id, allocate_operation_id_in_slot, interactive_step_contract_violated, runtime_diagnostics_enabled, set_runtime_diagnostics, INTERACTIVE_STEP_CEILING_US, RUNTIME_DIAGNOSTICS_ENV, SUSTAINED_OVERRUN_QUARANTINE_STEPS};
 
@@ -42,7 +42,7 @@ pub use semio_framework_job_payload::{Checkpoint,CommitCandidate,InteractiveJobC
 pub use semio_framework_job_clock::ClockStride;
 pub use semio_framework_job_clock::{OriginalClockAction,OriginalClockAuthority,OriginalClockDeadline,OriginalClockObservation,OriginalClockDecisionFrame,OriginalClockDecisionStatus,OriginalClockProducer,OriginalClockReply,OriginalClockReplyComplete,OriginalSystemClockContext};
 #[cfg(any(not(target_arch="wasm32"),target_env="p2"))]
-pub use semio_framework_job_clock::OriginalSystemClock;
+pub use semio_framework_job_clock::{OriginalSystemClock};
 
 //#region 🕰️Clock
 
@@ -79,10 +79,7 @@ impl std::ops::Deref for StepCancelReference<'_>{type Target=CancelToken;fn dere
 mod owned_source;
 /// 🧿️ Names the actual borrowed roots of one live caller context without lending or renewing them.
 pub struct OriginalCallerSource<'source>{pub ledger:&'source Arc<JobPayloadOperationLedger>,pub cancel:&'source CancelToken,pub operation:OperationId,pub generation:Generation,pub clock:fn()->Option<u64>,pub deadline:u64}
-pub use owned_source::{OriginalCallerCloseReturn,source_loan_transfer_demand,OriginalCallerSourceAdmission,OriginalSourceCloseContext,OriginalSourceCloseProducer,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn,ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRecipientClosed,OriginalNativeRetiredWitness};
-#[path="📸️capture/🦀️.rs"]
-mod original_caller_capture;
-pub use original_caller_capture::{OriginalCallerCapture,CapturedOriginalCaller,OriginalCallerIssuer,OriginalCallerTurn};
+pub use owned_source::{OriginalReturnBirthState,OriginalCallerCloseReturn,source_loan_transfer_demand,OriginalCallerSourceAdmission,OriginalSourceCloseContext,OriginalSourceCloseProducer,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn,ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRecipientClosed,OriginalNativeRetiredWitness};
 #[path="🛬️owned/🦀️.rs"]
 mod original_job_decoder;
 pub use original_job_decoder::{OriginalJobDecodeOwner,OriginalCreditedOutput};
@@ -180,6 +177,28 @@ impl JobPayloadStep for StepContext<'_> {
     fn consume_retained(&mut self, progress: RetainedCloneProgress) -> Result<(), ValueError> { StepContext::consume_retained(self, progress) }
 }
 
+
+/// 🪝️ Lends one synchronous effect call to its producer as the action context.
+struct OriginalInvocationCall<'call>(Option<&'call mut dyn FnMut(&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)>);
+struct OriginalInvocationProducer{source:Option<OriginalSourceTurnIdentity>}
+impl semio_framework_value_control_contract::OriginalEffectProducer for OriginalInvocationProducer{
+    type Output=();type Failure=ValueError;
+    type Context<'turn,'source>=OriginalInvocationCall<'turn> where 'source:'turn;
+    fn validate_context<'turn,'source>(&self,_:&OriginalInvocationCall<'turn>)->Result<(),ValueError> where 'source:'turn{Ok(())}
+    fn source_turn<'turn,'source>(&self,_:&OriginalInvocationCall<'turn>)->Option<OriginalSourceTurnIdentity> where 'source:'turn{self.source}
+    fn receive<'r,'turn,'source>(&mut self,context:&mut OriginalInvocationCall<'turn>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,(),ValueError>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,(),ValueError>,ValueError> where 'source:'turn{(context.0.take().ok_or_else(||ValueError::invariant("original effect call already spent"))?)(effect);Ok(reply.complete(Ok(())))}
+    fn recover<'r,'turn,'source>(&mut self,_:&mut OriginalInvocationCall<'turn>,_:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,_:semio_framework_value_control_contract::OriginalEffectReply<'r,(),ValueError>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,(),ValueError>,ValueError> where 'source:'turn{Err(ValueError::invariant("synchronous effect call has no pending action"))}
+}
+impl OriginalInvocationCall<'_>{
+    /// 🪝️ Runs the call as an original producer action so retirement owners find their invocation.
+    fn drive(source:Option<OriginalSourceTurnIdentity>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,call:&mut dyn FnMut(&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>))->Result<(),ValueError>{
+        use semio_framework_value_control_contract::OriginalEffectAuthority;
+        let mut context=OriginalInvocationCall(Some(call));let mut authority=OriginalEffectAuthority::new(OriginalInvocationProducer{source});let mut action=None;
+        if !authority.drive(&mut context,effect,&mut action)?{return Err(ValueError::invariant("synchronous effect call stayed pending"))}
+        let mut answer=None;if !action.as_mut().ok_or_else(||ValueError::invariant("effect action absent"))?.transfer_reply(&mut answer)?{return Err(ValueError::invariant("effect reply is unsettled"))}
+        authority.finish(&mut action)?;answer.ok_or_else(||ValueError::invariant("effect reply absent"))??;authority.into_producer().map(|_|()).map_err(|_|ValueError::invariant("effect producer is still pending"))
+    }
+}
 impl<'a> StepContext<'a> {
     pub fn admit_original_core_wire_delivery(&mut self)->Result<bool,OriginalTurnFailure>{original_job_continuation::source::admit_original_core_wire_delivery(self)}
     pub fn admit_original_return_table(&mut self)->Result<bool,OriginalTurnFailure>{original_job_continuation::source::admit_original_return_table(self)}
@@ -187,10 +206,15 @@ impl<'a> StepContext<'a> {
     pub fn publish_original_escrow(&mut self,header:usize,expose:impl for<'loan> FnOnce(&'loan [u8])->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{original_job_continuation::source::publish_original_escrow(self,header,expose)}
     pub fn native_receiving_identity(&self)->Option<(semio_framework_value_native_owned::NativeAllocationIdentity,u64)>{self.original_decoder.as_deref().and_then(|owner|owner.receiving_identity())}
     pub fn with_original_decoder(mut self,original:&'a mut OriginalJobDecodeOwner)->Self{self.original_decoder=Some(original);self}
-    /// 🫴️ Loans original cancellation, clock, independent remaining credits and the exact shared construction receipt.
+    /// 🫴️ Loans original cancellation, clock, independent remaining credits and the exact shared construction receipt; with no quote its scope claims at most half of the turn so a held scope never starves the turn that drives it.
     pub fn with_native_receiving(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{
         self.receiving.open(self.retained_grant()).map_err(OriginalTurnFailure::from)?;
-        let mut operation=Some(operation);self.original_receiving_outcome(out,semio_framework_job_receiving::OriginalReceivingOperation::Receive(&mut |native,grant|operation.take().unwrap()(native,grant)))
+        let mut operation=Some(operation);self.original_receiving_outcome(out,None,semio_framework_job_receiving::OriginalReceivingOperation::Receive(&mut |native,grant|operation.take().unwrap()(native,grant)))
+    }
+    /// 🎯️ Like [`Self::with_native_receiving`], but its receiving scope claims exactly the quoted grant and work plus its own control, so the held scope credit never takes the rest of the turn or Source stock.
+    pub fn with_native_receiving_quoted(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,quote:(RetainedCloneGrant,u64),operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{
+        self.receiving.open(self.retained_grant()).map_err(OriginalTurnFailure::from)?;
+        let mut operation=Some(operation);self.original_receiving_outcome(out,Some(quote),semio_framework_job_receiving::OriginalReceivingOperation::Receive(&mut |native,grant|operation.take().unwrap()(native,grant)))
     }
     /// 🛫️ Loans and commits this original Job caller’s work to the supplied encoder without replacing its physical owner.
     pub fn with_native_encoder_work<T,E:From<ValueError>>(&mut self,native:&mut semio_framework_value::NativeEncodeControl<'_>,operation:impl FnOnce(&mut semio_framework_value::NativeEncodeControl<'_>)->Result<T,E>)->Result<T,E>{
@@ -265,18 +289,21 @@ impl<'a> StepContext<'a> {
     pub(crate) fn record_original_source_retained(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{if let Some(budget)=self.return_budget.as_mut(){budget.get_mut().record_retained(progress)?;}Ok(())}
     pub fn retained_progress(&self)->RetainedCloneProgress{*self.retained_progress}
     /// 🪙️ Runs one closure inside one actual original effect over a performed-work receipt settled against this turn's own fuel; `None` means the Work quote was not admitted and nothing ran.
-    pub fn with_original_effect<R>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&mut Self,&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->R)->Result<Option<(R,u128)>,ValueError>{
+    pub fn with_original_effect<R>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&mut Self,&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->R)->Result<Option<(R,u128)>,ValueError>{self.with_original_effect_at(None,grant,run)}
+    /// 🪙️ Runs one closure inside one original effect whose Work carries this resident Source's own turn.
+    pub fn with_original_source_effect<R>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&mut Self,&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->R)->Result<Option<(R,u128)>,ValueError>{let turn=self.original_source_turn_identity().ok_or_else(||ValueError::invariant("original Source turn is absent"))?;self.with_original_effect_at(Some(turn),grant,run)}
+    fn with_original_effect_at<R>(&mut self,source:Option<OriginalSourceTurnIdentity>,grant:RetainedCloneGrant,run:impl FnOnce(&mut Self,&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->R)->Result<Option<(R,u128)>,ValueError>{
         use semio_framework_value_control_contract::{OriginalWork,OriginalWorkAuthority,OriginalWorkSink,RetainedAllocationEffect};
         let maximum=self.fuel_remaining;let fuel=self.fuel_remaining;let retirement=self.original_retirement;let deadline=self.deadline_us;let now=self.now_us;
         let mut ready=move||retirement||now().is_some_and(|value|value<deadline);
         let mut authority=OriginalWorkAuthority::new(semio_framework_job_receiving::OriginalJobWorkDriver);
-        let result=authority.with_loan(&mut semio_framework_job_receiving::OriginalJobWorkRecipient::new(&fuel,&mut ready),|loan|{
+        let result=authority.with_loan(&mut semio_framework_job_receiving::OriginalJobWorkRecipient::new(&fuel,&mut ready).with_source(source),|loan|{
             let mut loan=loan.reborrow();let mut work=OriginalWork::empty();work.recipient=Some(&mut loan);let mut action=None;let mut proof=None;
             if work.prepare_for_action(maximum,&mut action)?!=Some(true){if action.is_some(){work.cancel_for_action(&mut action)?}return Ok(None)}
             let mut exchange=||->Result<Option<(R,u128)>,ValueError>{
             let absent=||ValueError::invariant("original effect receipt absent");
             let mut receipt=None;work.issue_performed_for_action(action,&mut receipt)?;let mut actual=None;
-            let output={let sink=receipt.as_mut().ok_or_else(absent)?;let mut effect=RetainedAllocationEffect::new(grant,maximum,&mut actual,sink);run(&mut *self,&mut effect)};
+            let output={let sink=receipt.as_mut().ok_or_else(absent)?;let mut effect=RetainedAllocationEffect::new(grant,maximum,&mut actual,sink);let mut run=Some(run);let mut output=None;{let mut call=|effect:&mut RetainedAllocationEffect<'_>|{if let Some(run)=run.take(){output=Some(run(&mut *self,effect))}};OriginalInvocationCall::drive(source,&mut effect,&mut call)?;}output.ok_or_else(||ValueError::invariant("original effect call did not run"))?};
             let performed=OriginalWorkSink::observed_work(receipt.as_ref().ok_or_else(absent)?);work.claim_performed_for_action(action,&mut receipt)?;
             if performed==0{work.cancel_for_action(&mut action)?}else{
                 let mut partial=None;if !work.settle_partial_for_action_into(action,&mut partial)?{return Err(ValueError::invariant("original effect partial receipt is pending"))}
@@ -332,6 +359,8 @@ impl<'a> StepContext<'a> {
     pub fn original_absolute_deadline_us(&self)->u64{self.original_absolute_deadline}
 
     pub fn original_total_retained_grant(&self)->RetainedCloneGrant{let current=retained_delta(*self.retained_progress,self.reserved_return_progress);let remaining=retained_min(retained_remaining(self.original_total_retained,retained_delta(current,self.original_total_retained_start)),retained_remaining(self.issued_ceiling.0,current));self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(remaining,|budget|retained_min(remaining,budget.get().remaining().map_or(RetainedCloneGrant::default(),|remaining|remaining.0)))}
+    /// 🏛️ The Source's own remaining total, independent of this turn's issued ceiling, so a narrow turn is never mistaken for a permanent misfit.
+    pub fn original_source_total_grant(&self)->RetainedCloneGrant{let current=retained_delta(*self.retained_progress,self.reserved_return_progress);let remaining=retained_remaining(self.original_total_retained,retained_delta(current,self.original_total_retained_start));self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(remaining,|budget|retained_min(remaining,budget.get().remaining().map_or(RetainedCloneGrant::default(),|remaining|remaining.0)))}
 
     pub fn bind_original_clock_binding(&mut self,binding:u64)->Result<(),ValueError>{self.original_source_parent()?.validate_borrowed_context(self).map_err(|_|ValueError::invariant("original clock binding requires its genuine source context"))?;if binding==0||self.original_clock_binding.is_some_and(|original|original!=binding){return Err(ValueError::invariant("original source clock authority cannot be absent or rebound"))}self.original_clock_binding=Some(binding);Ok(())}
 
@@ -511,6 +540,8 @@ pub mod testkit {
     pub fn retained_grant_mut<'a>(cx:&'a mut StepContext<'_>)->&'a mut RetainedCloneGrant{&mut cx.retained}
     pub fn retained_progress_mut<'a>(cx:&'a mut StepContext<'_>)->&'a mut RetainedCloneProgress{cx.retained_progress}
     pub fn return_budget_snapshot(cx:&StepContext<'_>)->original_return_source::OriginalReturnBudgetSnapshot{cx.return_budget.as_ref().expect("actual original source budget").get().snapshot()}
+    pub fn request_return_publisher(cx:&mut StepContext<'_>){if let Some(budget)=cx.return_budget.as_mut(){budget.get_mut().publisher_requested=true}}
+    pub fn return_table_present(cx:&StepContext<'_>)->bool{cx.return_budget.as_ref().is_some_and(|budget|budget.get().table().is_some())}
     pub fn return_budget_is_bound(cx:&StepContext<'_>)->bool{cx.return_budget.as_ref().is_some_and(|budget|budget.get().is_bound())}
     pub fn original_total_retained_start(cx:&StepContext<'_>)->RetainedCloneProgress{cx.original_total_retained_start}
     pub fn return_source_is_borrowed(parent:&OriginalCallerSourceParent)->Result<bool,ValueError>{Ok(parent.return_source()?.try_borrow().is_none())}
@@ -530,7 +561,7 @@ pub mod testkit {
     pub fn payload_ledger(operation:OperationId,generation:Generation)->Arc<JobPayloadOperationLedger>{Arc::new(JobPayloadOperationLedger::new(operation,generation))}
     pub fn payload_ledger_terminal_is_empty(ledger:&JobPayloadOperationLedger)->bool{ledger.terminal_is_empty()}
     pub fn ledger_demands(ledger:&Option<Arc<JobPayloadOperationLedger>>)->RetirementDemand{semio_framework_job_payload::ledger_demands(ledger)}
-    pub fn close_ledger(ledger:&mut Option<Arc<JobPayloadOperationLedger>>,grant:RetainedCloneGrant)->semio_framework_value_retained_clone::RetainedWorkOutcome{semio_framework_job_payload::close_ledger(ledger,grant)}
+    pub fn close_ledger(ledger:&mut Option<Arc<JobPayloadOperationLedger>>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->semio_framework_value_retained_clone::RetainedWorkOutcome{semio_framework_job_payload::close_ledger(ledger,effect)}
 }
 //#endregion 🧪️Tests
 
@@ -553,3 +584,46 @@ pub use original_job_continuation::source::{prepare_original_header_guard,qualif
 pub use original_job_continuation::source::{OriginalHeaderExposurePermit,prepare_original_header_exposure,observe_original_header_exposure,cancel_original_header_exposure};
 
 pub use semio_framework_job_return_escrow_publication::OriginalEscrowHeaderLoanCell;
+
+/// 🏛️ The actor host's retirement pump is the only issuer of owner-less retirement turns.
+#[derive(Clone,Copy,Debug,Default)]
+pub struct OriginalRetirementPump;
+impl OriginalRetirementPump{
+    /// 🆕️ Names the host pump that funds owner-less retirement turns.
+    pub fn new()->Self{Self}
+    /// 🎬️ Issues one host-funded turn carrying its own Source dispatch token.
+    pub fn turn(&self,fuel:u64,deadline_us:u64,now_us:fn()->Option<u64>,grant:RetainedCloneGrant)->Result<OriginalRetirementTurn,ValueError>{OriginalRetirementTurn::new(fuel,deadline_us,now_us,grant)}
+}
+/// 🪙️ One host-funded owner-less close turn: its performed work is charged against the host budget and carries the pump's own Source turn.
+pub struct OriginalRetirementTurn{fuel:u64,deadline_us:u64,now_us:fn()->Option<u64>,grant:RetainedCloneGrant,turn:OriginalSourceTurn}
+impl OriginalRetirementTurn{
+    fn new(fuel:u64,deadline_us:u64,now_us:fn()->Option<u64>,grant:RetainedCloneGrant)->Result<Self,ValueError>{let turn=OriginalSourceTurnIssuer::new().issue().map_err(|_|ValueError::invariant("original retirement turn identity exhausted"))?;Ok(Self{fuel,deadline_us,now_us,grant,turn})}
+    /// 🧾️ Reads the Source turn this retirement turn charges.
+    pub fn source_turn(&self)->OriginalSourceTurnIdentity{self.turn.identity()}
+    /// 🪙️ Runs one closure inside one original effect over a performed-work receipt settled against this turn's budget; `None` means the Work quote was not admitted and nothing ran.
+    pub fn with_effect<R>(&mut self,run:impl FnOnce(&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->R)->Result<Option<(R,u128)>,ValueError>{
+        use semio_framework_value_control_contract::{OriginalWork,OriginalWorkAuthority,OriginalWorkSink,RetainedAllocationEffect};
+        let maximum=self.fuel;let fuel=self.fuel;let deadline=self.deadline_us;let now=self.now_us;let grant=self.grant;let source=Some(self.turn.identity());let retirement=false;
+    let mut ready=move||retirement||now().is_some_and(|value|value<deadline);
+    let mut authority=OriginalWorkAuthority::new(semio_framework_job_receiving::OriginalJobWorkDriver);
+    let result=authority.with_loan(&mut semio_framework_job_receiving::OriginalJobWorkRecipient::new(&fuel,&mut ready).with_source(source),|loan|{
+        let mut loan=loan.reborrow();let mut work=OriginalWork::empty();work.recipient=Some(&mut loan);let mut action=None;let mut proof=None;
+        if work.prepare_for_action(maximum,&mut action)?!=Some(true){if action.is_some(){work.cancel_for_action(&mut action)?}return Ok(None)}
+        let mut exchange=||->Result<Option<(R,u128)>,ValueError>{
+        let absent=||ValueError::invariant("original effect receipt absent");
+        let mut receipt=None;work.issue_performed_for_action(action,&mut receipt)?;let mut actual=None;
+        let output={let sink=receipt.as_mut().ok_or_else(absent)?;let mut effect=RetainedAllocationEffect::new(grant,maximum,&mut actual,sink);let mut run=Some(run);let mut output=None;{let mut call=|effect:&mut RetainedAllocationEffect<'_>|{if let Some(run)=run.take(){output=Some(run(effect))}};OriginalInvocationCall::drive(source,&mut effect,&mut call)?;}output.ok_or_else(||ValueError::invariant("original effect call did not run"))?};
+        let performed=OriginalWorkSink::observed_work(receipt.as_ref().ok_or_else(absent)?);work.claim_performed_for_action(action,&mut receipt)?;
+        if performed==0{work.cancel_for_action(&mut action)?}else{
+            let mut partial=None;if !work.settle_partial_for_action_into(action,&mut partial)?{return Err(ValueError::invariant("original effect partial receipt is pending"))}
+            let partial=partial.take().ok_or_else(||ValueError::invariant("original effect partial outcome absent"))?;if partial.total()!=performed||partial.source_refusal().is_some(){return Err(ValueError::invariant("original effect partial outcome differs from its performed work"))}
+            let accepted=work.commit_for_action(performed,action,&mut proof)?;work.finish_for_action(&mut proof,&mut action)?;if !accepted{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original effect performed more work than its ceiling"))}
+        }
+            Ok(Some((output,performed)))
+        };
+        match exchange(){Ok(done)=>Ok(done),Err(error)=>{if action.is_some(){let _=work.cancel_for_action(&mut action);}Err(error)}}
+    })??;
+    if authority.has_live_actions(){return Err(ValueError::invariant("original effect left a live work action"))}
+    Ok(result)
+    }
+}

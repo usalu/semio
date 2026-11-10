@@ -28,7 +28,7 @@ impl AppBuilder {
             if !(self.terminologies.iter().any(|id| id == terminology_id)) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} declares terminology_document for undeclared terminology {}", self.id, terminology_id)));
             }
-            if !(!document.is_empty() && document.iter().all(|segment| !segment.trim().is_empty())) {
+            if !(!document.is_empty() && document.iter().all(|segment| !segment.has_blank_cell())) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} terminology_document for {} must contain non-empty segments", self.id, terminology_id)));
             }
         }

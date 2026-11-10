@@ -1,8 +1,6 @@
 //! 🧪️ Public production Actor checkout and receiving laws retain actual results on every refusal.
 use semio_framework_actor::*;
 use semio_framework_value::RetainedCloneProgress;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}
 fn law()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
 fn original()->RetainedTurnInput{let policy:serde_json::Value=serde_json::from_str(include_str!("../../../📃️policy/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();serde_json::from_value(policy["input"].clone()).unwrap()}

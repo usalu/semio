@@ -29,6 +29,7 @@ where A:OriginalArtifactAppBirth,M:ReferenceSpaceMember+MemberFactory+'static,D:
   if self.peer.is_some(){let d=fixed::<(Arc<PeerPresenceRoot>,PeerPresenceRootRetirement)>();close_original_retained_step(cx,d,|_|{let result=(||{self.peer_close=Some(PeerPresenceRootRetirement::new(self.peer.take().unwrap()));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;return Ok(false)}
   if !close_value(&mut self.scope,&mut self.scope_close,cx)?||!close_issuer(&mut self.fields,&mut self.fields_close,cx)?||!close_issuer(&mut self.records,&mut self.records_close,cx)?{return Ok(false)}
   if let Some(catalog)=self.catalog.as_mut(){if catalog.terminal_is_empty(){clear(&mut self.catalog,cx,0)?;}else{let d=catalog.close_demands(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,d,|g|{let result=(||catalog.close_step(g))();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;}return Ok(false)}
+  if !self.birth.terminal_is_empty(){self.birth.close_step(cx)?;return Ok(false)}
   Ok(self.sources_empty())
  })}
 }

@@ -30,6 +30,8 @@ pub use controlled_decoding::{parse_exact_controlled,parse_expr_text_controlled}
 pub use semio_framework_dsl_record_emission::*;
 
 pub use semio_framework_dsl_record_model::*;
+#[path = "🧊️field/🦀️.rs"]
+mod native_field;
 
 #[path = "🧭️cursor-and-expressions/🦀️.rs"]
 mod cursor_and_expressions;

@@ -215,7 +215,7 @@ pub fn gis2d_io() -> AppIo {
 pub fn gis2d_features_in_port() -> semio_plugin::MediaPortSpec {
     semio_plugin::MediaPortSpec {
         id: "features:in".into(),
-        label: "Features".into(),
+        label: semio_plugin::LocalizedLabel::native("Features", "Objekte"),
         direction: semio_plugin::MediaPortDirection::In,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: None,
@@ -230,7 +230,7 @@ pub fn gis2d_features_in_port() -> semio_plugin::MediaPortSpec {
 pub fn gis2d_map_out_port() -> semio_plugin::MediaPortSpec {
     semio_plugin::MediaPortSpec {
         id: "map:out".into(),
-        label: "Map".into(),
+        label: semio_plugin::LocalizedLabel::native("Map", "Karte"),
         direction: semio_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: Some(crate::GISMAP_DIALECT.artifact_kind.into()),

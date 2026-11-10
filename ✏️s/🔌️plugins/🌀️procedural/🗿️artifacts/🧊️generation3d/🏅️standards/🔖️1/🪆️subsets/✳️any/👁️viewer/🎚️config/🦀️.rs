@@ -47,18 +47,9 @@ impl semio_framework_value_native_owned::native_decoding::owned::NativeDefaultVa
     fn default_demand() -> semio_framework_value::RetirementDemand {
         semio_framework_value::RetirementDemand { copy_bytes: 2 * std::mem::size_of::<Self>(), depth: 1, ..Default::default() }
     }
-    fn admit_default(output: &mut Option<Self>, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
-        if output.is_some() {
-            return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())), work: 0 };
-        }
-        let demand = <Self as semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue>::default_demand();
-        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
-            return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())), work: 0 };
-        }
-        *output = Some(Self::default());
-        let progress = semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() };
-        semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_value::RetainedCloneStep::Complete(progress)), work: 1 }
-    }
+    fn default_work_demand()->Result<u64,::semio_framework_value::ValueError>{Ok(1)}
+fn admit_default<'reply>(output:&mut Option<Self>,effect:&mut ::semio_framework_value::RetainedAllocationEffect<'_>,reply: ::semio_framework_value_native_owned::native_decoding::OriginalEffectReply<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>)->Result<::semio_framework_value_native_owned::native_decoding::OriginalEffectReplyComplete<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>,::semio_framework_value::ValueError>{::semio_framework_value_native_owned::native_decoding::owned::native_admit_default(output,<Self as ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue>::default_demand(),||Self::default(),effect,reply)}
+fn recover_default<'reply>(_:&mut Option<Self>,_:&mut ::semio_framework_value::RetainedAllocationEffect<'_>,reply: ::semio_framework_value_native_owned::native_decoding::OriginalEffectReply<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>)->Result<::semio_framework_value_native_owned::native_decoding::OriginalEffectReplyComplete<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>,::semio_framework_value::ValueError>{Ok(reply.pending())}
 }
 
 impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for Generation3dViewCamera {

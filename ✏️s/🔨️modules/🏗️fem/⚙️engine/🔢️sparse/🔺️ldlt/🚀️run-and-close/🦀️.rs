@@ -128,16 +128,17 @@ impl LdltJob {
         Ok(self.close_frontier()?.unwrap_or_else(|| self.rung_demand()))
     }
 
-    fn close_turn(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    fn close_turn(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
         let frontier = self.close_frontier()?;
         if !numerical_close_gate(grant, frontier) {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
-        let step = if let Some(step) = self.desk.close_step(grant) {
+        let step = if let Some(step) = self.desk.close_step(effect) {
             step?
-        } else if let Some(step) = numerical_writer_close(&mut self.checkpoint_writer, grant) {
+        } else if let Some(step) = numerical_writer_close(&mut self.checkpoint_writer, effect) {
             step?
-        } else if let Some(step) = numerical_writer_close(&mut self.output_writer, grant) {
+        } else if let Some(step) = numerical_writer_close(&mut self.output_writer, effect) {
             step?
         } else {
             numerical_ladder_turn(self.close_retained_step(grant.maximum_release_bytes))
@@ -162,7 +163,7 @@ impl InteractiveJob for LdltJob {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
         }
         let demand = self.close_demand()?;
-        numerical_close_original(cx, self, demand, Self::close_turn, Self::terminal_is_empty)
+        numerical_close_effect(cx, self, demand, Self::close_turn, Self::terminal_is_empty)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.copy_bytes) }

@@ -55,7 +55,7 @@ pub struct TransferTask<P, M> {
     pub transfer: fn(M) -> P,
 }
 
-impl<P, M> crate::ephemeral_preparation::ArtifactEphemeralPreparationTask<P, M> for TransferTask<P, M> {
+impl<P: 'static, M: 'static> crate::ephemeral_preparation::ArtifactEphemeralPreparationTask<P, M> for TransferTask<P, M> {
     fn advance(&mut self, _: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<crate::ephemeral_preparation::ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError> {
         let capacity=semio_framework_value::shared_retirement_allocation_bytes::<P>();
         let copy=size_of::<P>()+size_of::<M>();
@@ -69,9 +69,9 @@ impl<P, M> crate::ephemeral_preparation::ArtifactEphemeralPreparationTask<P, M> 
     }
     fn begin_close(&mut self) {}
  }
-impl<P, M> semio_framework_value::ErasedSnapshotRetirement for TransferTask<P, M> {
+impl<P: 'static, M: 'static> semio_framework_value::ErasedSnapshotRetirement for TransferTask<P, M> {
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { semio_framework_value::RetirementPollExit::settle(effect, Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))) }
+    fn close_step(&mut self,_body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { semio_framework_value::RetirementPollExit::settle(effect, Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))) }
     fn terminal_is_empty(&self) -> bool { true }
     fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
     fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }

@@ -4,7 +4,7 @@ use super::*;
 
 /// 🪪️ Durable authority captured once at public command admission and copied into every
 /// plugin continuation record.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub struct AppOperationContext {
     pub app_instance_id: u32,
     pub parent_document_id: String,
@@ -16,12 +16,6 @@ pub struct AppOperationContext {
     /// store's hybrid logical clock ticked for the admission (`VcsArtifactApp::authoring_seed`). Every id a
     /// command mints is scoped by it, so two writers — or two sessions of one — never mint the same id at one base.
     pub authoring_seed: String,
-}
-
-impl semio_framework_value::retirement::RetireOwned for AppOperationContext {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let Self{parent_document_id,authoring_seed,..}=self;semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(parent_document_id),semio_framework_value::retirement::deferred(authoring_seed)])}
-    fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.parent_document_id),semio_framework_value::retirement::deferred_birth_bytes_for(&self.authoring_seed)])}
-    fn controlled_retirement_supported()->bool{true}
 }
 
 /// 🎨️ Fixed authority for one live renderer-observed document revision. Unlike a command

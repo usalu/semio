@@ -36,7 +36,7 @@ fn fixture_caller(ctx:&OperationContext,receipt:&mut OriginalComputeRecipient,de
 
 fn return_fixture_alias(caller:&mut ComputeOriginalCaller,receipt:&mut OriginalComputeRecipient,cancel:semio_framework_async::CancelToken){
     let mut retirement=semio_framework_async::CancelTokenRetirement::from_token(cancel);
-    caller.turn_retiring(receipt,|cx|{let turn=retirement.return_alias_step(cx.original_cancel_token(),cx.retained_grant());let result=turn.result.map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixture alias remains blocked"));semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})}).unwrap();
+    caller.turn_retiring(receipt,|cx|{let grant=cx.retained_grant();let turn=cx.with_original_effect(grant,|cx,effect|retirement.return_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0},|(turn,_)|turn);let result=turn.result.map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixture alias remains blocked"));semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})}).unwrap();
     assert!(retirement.terminal_is_empty());
 }
 

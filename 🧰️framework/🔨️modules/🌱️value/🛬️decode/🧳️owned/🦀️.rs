@@ -1,16 +1,17 @@
 //! 🧳️ Native receiving constructs retained owners from genuine original input under explicit physical grants.
 //! 🗒️ See [ownership and unsafe contracts](README.md).
 use crate::{RetainedWorkOutcome,OriginalReceivingPrimary,NativeDecodeControl,RetirementDemand,ValueError,retirement::RetireOwned,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
+pub use semio_framework_value_control_contract::{OriginalSourceTurn,OriginalSourceTurnIssuer,OriginalSourceTurnWitness};
 pub use semio_framework_value_native_shared_field::NativeIntrinsicSharedField;
 pub use semio_framework_value_native_schema_engine::record;
-pub use record::{NativeRecordKey,NativeRecordField,NativeSourceKeyValue,NativeSchemaLeaf,NativeSchemaFields,NativeSchemaKeyPoll,NativeSchemaKeyMetadata,NativeSchemaMatchSelection,NativeSchemaKeySource,NativeRecordSchema,NativeFieldMatch,NativeRecordMatcher,NativeRecordStorage};
+pub use record::{NativeRecordKey,NativeRecordField,NativeSourceKeyReply,NativeSourceKeyReplyComplete,NativeSourceKeyValue,NativeSchemaLeaf,NativeSchemaFields,NativeSchemaKeyPoll,NativeSchemaKeyMetadata,NativeSchemaMatchSelection,NativeSchemaKeySource,NativeRecordSchema,NativeFieldMatch,NativeRecordMatcher,NativeRecordStorage};
 #[path="📋️list-impl/🦀️.rs"]mod list_impl;
 pub use semio_framework_value_native_list_receiver::{NativeListSource,NativePersistentListReceiver};
 
 #[path="🔗️sealed-shared-impl/🦀️.rs"]mod shared_impl;
 #[doc(hidden)]pub use shared_impl::NativeReceiverSeedFor;
 pub use semio_framework_value_native_shared_engine::{NativeSharedReceiver,NativeSharedRoot};
-pub use semio_framework_value_native_default::{NativeDefault,NativeDefaultCursor,NativeDefaultValue,NativeDefaultValueCursor,NativeDefaultSlot,NativeArrayDefaultCursor,NativePairDefaultCursor};
+pub use semio_framework_value_native_default::{native_admit_default,NativeDefault,NativeDefaultCursor,NativeDefaultValue,NativeDefaultValueCursor,NativeDefaultSlot,NativeArrayDefaultCursor,NativePairDefaultCursor};
 
 #[path="🌳️value/🦀️.rs"]pub mod tree;
 pub use tree::NativeReceiveSlot;
@@ -19,6 +20,7 @@ pub use tree::NativeReceiveSlot;
 
 use semio_framework_value_native_receiver_protocol::receiving_child_body_budget;
 pub use semio_framework_value_native_receiver_protocol::receiving_capacity;
+pub use semio_framework_value_native_receiver_protocol::RetainedCursorRelease;
 
 pub trait NativeReceive<I:?Sized>:RetireOwned+Sized{
  type Receiver:NativeReceiver<I,Self>;
@@ -42,7 +44,7 @@ pub unsafe trait NativeRecordFields{
  fn native_schema_fields()->NativeSchemaFields{unsafe{NativeSchemaFields::native(Self::native_schema_field)}}
 }
 
-pub use semio_framework_value_native_receiver_protocol::{NativeAdvanceSelection,NativeReceiver};
+pub use semio_framework_value_native_receiver_protocol::{NativeAdvanceSelection,NativeReceiver,native_receiver_close_start,native_close_settle,native_relay,native_close_begun,native_close_denied,native_reply_poll};
 pub use crate::native_decoding::construction::NativeRecoveryLoan;
 pub use semio_framework_value_native_receiving_contract::{NativeClosePermit,native_work_limit,work_sum,selected_native_work};
 
@@ -57,9 +59,7 @@ pub use mapped::{NativeReceiveMap,NativeMappedReceiver,NativeReceiveTryMap,Nativ
 
 
 
-pub use semio_framework_value_native_receiver_protocol::{native_receiver_backing_demands,close_native_receiver_backing};
 
-#[cfg(test)]#[path="♻️header/🎟️work/🧪️tests/🦀️.rs"]mod header_retirement_tests;
 
 pub use semio_framework_value_native_receiver_protocol::{native_output_demand,native_output_take,native_record_pure_take};
 pub use semio_framework_value_native_receiver_protocol::{NativeReceivingChild,NativeLocalAuthority,NativeLocalProducer,NativeLocalOperation,native_poll_local,native_receive_local};

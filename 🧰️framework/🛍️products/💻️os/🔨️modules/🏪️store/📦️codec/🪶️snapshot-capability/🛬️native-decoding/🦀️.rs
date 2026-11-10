@@ -1,7 +1,7 @@
 //! 🛬️ Controlled physical record decoding for explicitly declared snapshot owners.
 use semio_framework_dsl_record::{ParseOptions,RecordSpec,RecordSpecProducer,RecordValue};
 use semio_framework_io_sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SqliteStageFailure as Stage,ValueError,ValueRefusalKind};
-use semio_framework_io_control::{NativeSnapshotDecodeOwner,NativeSnapshotFailure,NativeSnapshotWork,native_snapshot_turn};
+use semio_framework_io_control::{NativeSnapshotConstruction,NativeSnapshotDecodeOwner,NativeSnapshotFailure,NativeSnapshotWork,native_snapshot_turn};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome};
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeDecodeProgress};
 use semio_framework_diagnostic::Limits;
@@ -12,11 +12,11 @@ type Frame<T>=(Option<RecordSpec>,Option<(RecordValue,Option<pack::record::Decod
 #[derive(Clone,Copy)]
 enum Framing<'a>{Envelope(&'a str),Prefix(&'a [u8])}
 
-fn admit(owner:&mut NativeSnapshotDecodeOwner<'_,'_>,bytes:usize,work:&mut NativeSnapshotWork)->Result<RetainedCloneGrant,NativeSnapshotFailure>{
+fn admit(owner:&mut NativeSnapshotDecodeOwner<'_,'_>,bytes:usize,work:&mut NativeSnapshotWork)->Result<NativeSnapshotConstruction,NativeSnapshotFailure>{
  let grant=owner.admit_constructed(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:1,..Default::default()})?;
  work.admit(owner.native())?;Ok(grant)
 }
-fn receipt(owner:&mut NativeSnapshotDecodeOwner<'_,'_>,grant:RetainedCloneGrant,bytes:usize)->Result<(),NativeSnapshotFailure>{
+fn receipt(owner:&mut NativeSnapshotDecodeOwner<'_,'_>,grant:NativeSnapshotConstruction,bytes:usize)->Result<(),NativeSnapshotFailure>{
  owner.record_constructed_progress(grant,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})
 }
 

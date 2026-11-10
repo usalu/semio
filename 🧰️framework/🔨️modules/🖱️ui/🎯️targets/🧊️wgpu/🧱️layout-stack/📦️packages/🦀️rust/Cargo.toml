@@ -34,6 +34,7 @@ ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️ru
 ui_styling = { path = "../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 
 [dev-dependencies]
+semio-framework-value-testing-admission = { path = "../../../../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 semio-ui-text = { path = "../../../../../🔤️typography/📦️packages/🦀️rust", features = ["testkit"] }

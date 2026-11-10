@@ -18,7 +18,7 @@
         "id": "n1:out:out",
         "spec": {
           "id": "out",
-          "label": "Out",
+          "label": { "native": { "de": "Aus", "en": "Out" }, "reuse": { "de": "Aus", "en": "Out" } },
           "direction": "out",
           "mediaType": {
             "class": "data",

@@ -753,7 +753,7 @@ pub fn cad_io() -> semio_plugin::AppIo {
         ports: vec![
             semio_plugin::MediaPortSpec {
                 id: "geometry:in".into(),
-                label: "Geometry".into(),
+                label: LocalizedLabel::native("Geometry", "Geometrie"),
                 direction: semio_plugin::MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
                 kind_id: None,
@@ -762,7 +762,7 @@ pub fn cad_io() -> semio_plugin::AppIo {
             },
             semio_plugin::MediaPortSpec {
                 id: "brep:out".into(),
-                label: "Brep".into(),
+                label: LocalizedLabel::native("Brep", "B-Rep"),
                 direction: semio_plugin::MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
                 kind_id: Some("3d.cad".into()),

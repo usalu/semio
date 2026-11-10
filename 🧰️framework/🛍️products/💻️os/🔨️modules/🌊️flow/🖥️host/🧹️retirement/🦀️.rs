@@ -1,13 +1,5 @@
 //! 🏠️ Exact original Host payload custody follows physical geometry and store closure.
 use super::*;
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,arc_custody::SharedControlledRetirement};
-
-struct HostShared<T:RetireOwned+Sync>(Arc<T>);
-impl<T:RetireOwned+Sync> RetireOwned for HostShared<T>{
- fn retirement(self)->Box<dyn RetirementCursor>{Box::new(SharedControlledRetirement::lease(self.0))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<SharedControlledRetirement<T>>())}
- fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
-}
 
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
@@ -15,14 +7,14 @@ pub(super) struct FlowHostPayload {
  operator_registry:Option<neural::SharedRegistry>,
  pub host_snapshot:FlowHostSnapshot,
  pub dag:DagHost,
- pub current_channels:Option<HostShared<EvalChannels>>,
+ pub current_channels:Option<SharedOwner<EvalChannels>>,
  export_payloads:HistoryFoldIndex<String, Dictionary>,
  pub last_eval_json:String,
  pub host_catalogue_json:String,
- pub kind_infos:HostShared<HistoryFoldIndex<String, OperatorInfo>>,
- neural_cache:HostShared<NeuralCache>,
- previous_snapshot:Option<HostShared<TreeSnapshot>>,
- previous_channels:Option<HostShared<EvalChannels>>,
+ pub kind_infos:SharedOwner<HistoryFoldIndex<String, OperatorInfo>>,
+ neural_cache:SharedOwner<NeuralCache>,
+ previous_snapshot:Option<SharedOwner<TreeSnapshot>>,
+ previous_channels:Option<SharedOwner<EvalChannels>>,
  pending_baseline_publication:Option<FlowBaselinePublication>,
  baseline_retirement:Option<ControlledRetirement<FlowPublicationDisplaced>>,
  baseline_publication_progress:RetainedCloneProgress,
@@ -103,14 +95,14 @@ impl FlowHostPayload {
    operator_registry:operator_registry,
    host_snapshot:host_snapshot,
    dag:dag,
-   current_channels:current_channels.map(HostShared),
+   current_channels:current_channels,
    export_payloads:export_payloads,
    last_eval_json:last_eval_json,
    host_catalogue_json:host_catalogue_json,
-   kind_infos:HostShared(kind_infos),
-   neural_cache:HostShared(neural_cache),
-   previous_snapshot:previous_snapshot.map(HostShared),
-   previous_channels:previous_channels.map(HostShared),
+   kind_infos:kind_infos,
+   neural_cache:neural_cache,
+   previous_snapshot:previous_snapshot,
+   previous_channels:previous_channels,
    pending_baseline_publication:pending_baseline_publication,
    baseline_retirement:baseline_retirement,
    baseline_publication_progress:baseline_publication_progress,

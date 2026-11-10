@@ -505,7 +505,7 @@ fn numerical_page_ldlt_checkpoint_restores_matrix_across_original_pages() {
 
 fn empty_paged_backing<T>(count: usize) -> PagedList<T, SPARSE_INDEX_SPACE> {
     let mut owner = PagedList::empty();
-    while owner.capacity() < count { owner.reserve_capacity_one(count, SPARSE_PAGE_BYTES).expect("original fixture backing"); }
+    while owner.capacity() < count { semio_s_fem_test_support::granted(TEST_GRANT, |effect| owner.reserve_capacity_one(count, effect)).result.expect("original fixture backing"); }
     owner
 }
 

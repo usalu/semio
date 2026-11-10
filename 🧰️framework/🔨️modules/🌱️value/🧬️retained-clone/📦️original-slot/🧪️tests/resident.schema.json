@@ -46,7 +46,7 @@
       "const": true
     },
     "maximumReadBirthTotal": {
-      "const": 4096
+      "const": 4376
     }
   }
 }

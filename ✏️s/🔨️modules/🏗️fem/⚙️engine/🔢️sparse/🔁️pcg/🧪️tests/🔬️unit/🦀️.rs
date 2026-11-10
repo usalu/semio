@@ -22,7 +22,8 @@ use semio_s_fem_test_support::OriginalNumericalFixture;
 #[test]
 fn mathematical_pcg_and_original_native_job_share_neutral_outcomes() {
     use semio_s_fem_test_support::OriginalNumericalFixture;
-    use semio_framework_job::{admit_original_construction, OriginalConstructionDemand};
+    use semio_framework_job::{admit_original_construction, OriginalConstructionAdmission, OriginalConstructionDemand, OriginalConstructionStatus};
+    use semio_framework_job_payload::RetainedWorkOutcome;
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/❄️cold/🔣️.json")).unwrap();
     for (index, sample) in corpus["cases"].as_array().unwrap().iter().enumerate() {
         let values = |key: &str| VecD::from_vec(sample[key].as_array().unwrap().iter().map(|value| value.as_f64().unwrap()).collect());
@@ -46,15 +47,23 @@ fn mathematical_pcg_and_original_native_job_share_neutral_outcomes() {
         let mut candidate = None;
         let capacity = 5 * n * size_of::<f64>();
         let demand = OriginalConstructionDemand { items: 1, copy_bytes: size_of::<PcgJob>(), capacity_bytes: capacity, release_bytes: 0, depth: 1 };
-        assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| admit_original_construction(cx, &mut candidate, demand, |_| {
-            let (a, b, x) = inputs.take().unwrap();
-            let job = PcgJob::new(operation, a, b, x, tolerance, maximum, 4);
-            Ok((job, RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<PcgJob>(), retained_capacity_bytes: capacity, ..Default::default() }))
-        })).expect("actual original PCG construction"));
+        let mut admission = OriginalConstructionAdmission::default();
+        for _ in 0..32 {
+            let status = original.turn(TEST_GRANT, 1, u64::MAX, |cx| admit_original_construction(cx, &mut candidate, &mut admission, demand, 1, |_, actual| {
+                let (a, b, x) = inputs.take().unwrap();
+                let job = PcgJob::new(operation, a, b, x, tolerance, maximum, 4);
+                *actual = Some(capacity);
+                RetainedWorkOutcome { result: Ok((job, RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<PcgJob>(), retained_capacity_bytes: capacity, ..Default::default() })), work: 1 }
+            })).expect("actual original PCG construction");
+            if status == OriginalConstructionStatus::Ready { break; }
+            assert_eq!(status, OriginalConstructionStatus::Pending);
+        }
+        assert!(candidate.is_some());
+        for _ in 0..10_000 { if admission.terminal_is_empty() { break; } original.turn(TEST_GRANT, 1, u64::MAX, |cx| cx.with_original_retirement(|cx| { admission.close_step(cx)?; Ok(()) })).expect("PCG construction control close"); }
         let mut job = candidate.unwrap();
         let mut complete = false;
         for _ in 0..200_000 {
-            let end = original.turn(TEST_GRANT, 4, u64::MAX, |cx| semio_s_fem_sparse::numerical_batch_step(&mut job, cx)).expect("same original PCG turn");
+            let end = original.turn(TEST_GRANT, 4, u64::MAX, |cx| semio_s_fem_sparse::numerical_batch_plain(&mut job, cx)).expect("same original PCG turn");
             match end { semio_s_fem_sparse::NumericalBatchEnd::Complete => { complete = true; break; }, semio_s_fem_sparse::NumericalBatchEnd::Continue => {}, other => panic!("unexpected PCG outcome: {other:?}") }
         }
         assert!(complete);

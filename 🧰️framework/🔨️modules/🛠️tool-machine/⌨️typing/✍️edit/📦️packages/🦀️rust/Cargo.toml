@@ -26,3 +26,4 @@ semio-framework-tool-machine = { path = "../../../../📦️packages/🦀️rust
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-value-testing-effect-bank = { path = "../../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }

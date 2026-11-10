@@ -324,7 +324,7 @@ pub fn paint_stroke_in_place(image: &mut RasterImage, operation: &PixelOperation
 /// `floodSelection` (shared corpus section `floodSelections`).
 #[derive(semio_framework_value::RetireOwned)]
 pub struct PixelFloodSelectionJob {
-    source:Option<std::sync::Arc<RasterImage>>,
+    source:Option<crate::retirement::RasterLease>,
     width:usize,
     count:usize,
     seed:usize,
@@ -353,7 +353,7 @@ impl PixelFloodSelectionJob {
     pub fn last_work_units(&self)->usize{self.work_units}
     pub fn storage_capacity_bytes(&self) -> usize { self.mask.capacity() + self.seen.capacity() + self.queue.capacity() * size_of::<u32>() }
     pub fn initialized_bytes(&self) -> usize { self.mask.len() + self.seen.len() + self.queue.len() * size_of::<u32>() }
-    pub fn into_storage(self) -> PixelFloodStorage { PixelFloodStorage { source: self.source, mask: self.mask, seen: self.seen, queue: self.queue } }
+    pub fn into_storage(self) -> PixelFloodStorage { PixelFloodStorage { source: self.source.map(|lease|lease.0), mask: self.mask, seen: self.seen, queue: self.queue } }
     pub fn queue_reservation_bytes(&self) -> usize { self.count * size_of::<u32>() }
     pub fn reserve_queue(&mut self) -> Result<usize, PixelEditError> {
         if self.head != 0 || !self.queue.is_empty() { return Err(PixelEditError::Invalid("Flood queue reservation must precede computation")); }
@@ -363,7 +363,7 @@ impl PixelFloodSelectionJob {
     pub fn new(source:std::sync::Arc<RasterImage>,x:u32,y:u32,tolerance:u8)->Result<Self,PixelEditError>{
         validate_image(&source)?;if x>=source.width||y>=source.height{return Err(PixelEditError::Invalid("Invalid flood selection seed or tolerance"));}
         let seed=(y*source.width+x) as usize;let target=source.pixels[seed*4..seed*4+4].try_into().map_err(|_|PixelEditError::Invalid("Invalid flood source"))?;
-        let mut job=Self::uniform(source.width,source.height,[0;4],x,y,tolerance)?;job.target=target;job.source=Some(source);Ok(job)
+        let mut job=Self::uniform(source.width,source.height,[0;4],x,y,tolerance)?;job.target=target;job.source=Some(crate::retirement::RasterLease(source));Ok(job)
     }
     pub fn uniform(width:u32,height:u32,color:[u8;4],x:u32,y:u32,tolerance:u8)->Result<Self,PixelEditError>{
         let count=validate_extent(width,height)?;if x>=width||y>=height{return Err(PixelEditError::Invalid("Invalid flood selection seed or tolerance"));}

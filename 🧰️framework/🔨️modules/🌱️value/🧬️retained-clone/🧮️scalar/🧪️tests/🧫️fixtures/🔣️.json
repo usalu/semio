@@ -4,7 +4,7 @@
     "0",
     "18446744073709551615"
   ],
-  "payloadBytes": 8,
+  "payloadBytes": 16,
   "depth": 1,
   "normalItems": 1,
   "copyGrants": [
@@ -137,8 +137,8 @@
   },
   "advanceWork": {
     "deniedCpu": 0,
-    "bindingCpu": 3,
-    "payloadCpu": 1,
+    "bindingCpu": 4,
+    "payloadCpu": 6,
     "cachedCpu": 0
   }
 }

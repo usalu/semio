@@ -197,7 +197,8 @@ pub enum PortMultiplicity {
 #[value(rename_all = "camelCase")]
 pub struct MediaPortSpec {
     pub id: String,
-    pub label: String,
+    /// 🗣️ The port's own name, resolved per locale and terminology — see `LocalizedLabel`.
+    pub label: LocalizedLabel,
     pub direction: MediaPortDirection,
     pub media_type: MediaType,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -274,12 +275,12 @@ pub struct AppIo {
 impl AppIo {
     /// 🔐️ The implicit `"artifact:in"` port every app accepts, keyed by `self.artifact_media_type`.
     pub async fn artifact_in_port(&self) -> MediaPortSpec {
-        MediaPortSpec { id: "artifact:in".into(), label: "Artifact".into(), direction: MediaPortDirection::In, media_type: self.artifact_media_type, kind_id: None, required: true, multiplicity: PortMultiplicity::One }
+        MediaPortSpec { id: "artifact:in".into(), label: LocalizedLabel::native("Artifact", "Artefakt"), direction: MediaPortDirection::In, media_type: self.artifact_media_type, kind_id: None, required: true, multiplicity: PortMultiplicity::One }
     }
 
     /// 🏺️ The implicit `"artifact:out"` port every app produces — see `artifact_in_port`.
     pub async fn artifact_out_port(&self) -> MediaPortSpec {
-        MediaPortSpec { id: "artifact:out".into(), label: "Artifact".into(), direction: MediaPortDirection::Out, media_type: self.artifact_media_type, kind_id: None, required: true, multiplicity: PortMultiplicity::One }
+        MediaPortSpec { id: "artifact:out".into(), label: LocalizedLabel::native("Artifact", "Artefakt"), direction: MediaPortDirection::Out, media_type: self.artifact_media_type, kind_id: None, required: true, multiplicity: PortMultiplicity::One }
     }
 
     /// 📇️ The full port list, in stable order: the implicit artifact ports first, followed by every app-specific port declared in `self.ports`.

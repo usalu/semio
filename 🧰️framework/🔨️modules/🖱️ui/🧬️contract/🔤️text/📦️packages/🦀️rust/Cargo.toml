@@ -23,6 +23,7 @@ semio-framework-value = { path = "../../../../../🌱️value/📦️packages/�
 serde.workspace = true
 
 [dev-dependencies]
+semio-framework-value-testing-admission = { path = "../../../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 serde_json.workspace = true
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

@@ -116,7 +116,7 @@ impl ToolRunMemberFolded{
 
 /// 🔁️ Folds a member run's ops onto its overlay within the turn wall budget: a rebase restarts from the member head.
 #[doc(hidden)]
-pub struct ToolRunMemberFold<'a, 'b> {
+pub struct ToolRunMemberFold<'a, 'b, 'e> {
     pub owners: &'a mut Option<Box<dyn ToolRunMemberOwners>>,
     pub ops: &'a [Vec<u8>],
     pub shown: usize,
@@ -124,6 +124,7 @@ pub struct ToolRunMemberFold<'a, 'b> {
     pub deadline_us: u64,
     pub grant: RetainedCloneGrant,
     pub receiving: &'a mut semio_framework_value::NativeDecodeControl<'b>,
+    pub effect: &'a mut semio_framework_value::RetainedAllocationEffect<'e>,
 }
 
 /// 🚫️ Why one member fold step stopped: a native value refusal that keeps the retained progress it already paid for, or a
@@ -140,7 +141,7 @@ impl From<Fault> for ToolRunMemberFoldRefusal {
     }
 }
 
-impl store::MemberStoreVisitor for ToolRunMemberFold<'_,'_> {
+impl store::MemberStoreVisitor for ToolRunMemberFold<'_,'_,'_> {
     type Output = Result<ToolRunMemberFolded, ToolRunMemberFoldRefusal>;
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
@@ -163,7 +164,7 @@ impl store::MemberStoreVisitor for ToolRunMemberFold<'_,'_> {
             if let Some(source)=state.operation_source.as_mut(){source.begin_close();let step=source.close_step(self.grant).map_err(ToolRunMemberFoldRefusal::Native)?;if source.terminal_is_empty(){state.operation_source=None;}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
         }
         if state.operation_retirement.is_some(){let step=semio_framework_value::close_factory_ticket(&mut state.operation_retirement,self.grant).result.map_err(ToolRunMemberFoldRefusal::Native)?;return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
-        if state.operation.is_some()&&(state.operation_consumed||state.rebase_pending){let p=store.retire_owned_mutation(&mut state.operation,self.grant).map_err(ToolRunMemberFoldRefusal::Native)?.map_or(idle,|(owner,p)|{state.operation_retirement=Some(owner);p});return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:p,conflicts:0,read:None});}
+        if state.operation.is_some()&&(state.operation_consumed||state.rebase_pending){let p=store.retire_owned_mutation(&mut state.operation,self.effect).map_err(ToolRunMemberFoldRefusal::Native)?.map_or(idle,|(owner,p)|{state.operation_retirement=Some(owner);p});return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:p,conflicts:0,read:None});}
         let mut shown=self.shown;
         if state.rebase_pending{
             let copy=3*size_of::<Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>>();if !tool_grant_funds(self.grant,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()}){return Ok(ToolRunMemberFolded{shown,pending:true,progress:idle,conflicts:0,read:None});}
@@ -280,16 +281,17 @@ impl<M> Drop for ToolRunMemberEmissionState<M>{
 }
 
 #[doc(hidden)]
-pub struct ToolRunMemberEmit<'a>{
+pub struct ToolRunMemberEmit<'a,'e>{
     pub slot:&'a str,
     pub child_id:&'a str,
     pub ops:&'a [Vec<u8>],
     pub emit:&'a mut Option<ChildEmit>,
     pub owner:&'a mut Option<Box<dyn ToolRunMemberEmissionOwner>>,
     pub grant:RetainedCloneGrant,
+    pub effect:&'a mut semio_framework_value::RetainedAllocationEffect<'e>,
 }
 
-impl store::MemberStoreVisitor for ToolRunMemberEmit<'_>{
+impl store::MemberStoreVisitor for ToolRunMemberEmit<'_,'_>{
     type Output=Result<(bool,RetainedCloneProgress),Fault>;
     fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
     where
@@ -306,7 +308,7 @@ impl store::MemberStoreVisitor for ToolRunMemberEmit<'_>{
         let typed=self.owner.as_mut().unwrap().as_any_mut().downcast_mut::<ToolRunMemberEmissionState<Mu>>().ok_or_else(||plugin_sdk_fault("member emission owns another exact mutation type"))?;
         if let Some(refusal)=typed.refusal.as_ref(){return Err(refusal.to_fault());}
         if typed.current.is_some(){
-            if let Some((retirement,progress))=store.retire_owned_mutation(&mut typed.current,self.grant).map_err(FaultFrom::into_fault)?{*typed.retirement=Some(retirement);return Ok((false,progress));}
+            if let Some((retirement,progress))=store.retire_owned_mutation(&mut typed.current,self.effect).map_err(FaultFrom::into_fault)?{*typed.retirement=Some(retirement);return Ok((false,progress));}
             return Ok((false,Default::default()));
         }
         if !typed.is_empty(){return Ok((false,typed.close_step(self.grant)?.progress()));}
@@ -316,9 +318,9 @@ impl store::MemberStoreVisitor for ToolRunMemberEmit<'_>{
 }
 
 #[doc(hidden)]
-pub struct ToolRunMemberEmissionRetire<'a>{pub owner:&'a mut(dyn ToolRunMemberEmissionOwner+'static),pub grant:RetainedCloneGrant}
+pub struct ToolRunMemberEmissionRetire<'a,'e>{pub owner:&'a mut(dyn ToolRunMemberEmissionOwner+'static),pub grant:RetainedCloneGrant,pub effect:&'a mut semio_framework_value::RetainedAllocationEffect<'e>}
 
-impl store::MemberStoreVisitor for ToolRunMemberEmissionRetire<'_>{
+impl store::MemberStoreVisitor for ToolRunMemberEmissionRetire<'_,'_>{
     type Output=Result<RetainedCloneStep,Fault>;
     fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
     where
@@ -328,7 +330,7 @@ impl store::MemberStoreVisitor for ToolRunMemberEmissionRetire<'_>{
         if self.grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         let typed=self.owner.as_any_mut().downcast_mut::<ToolRunMemberEmissionState<Mu>>().ok_or_else(||plugin_sdk_fault("member retirement owns another exact mutation type"))?;
         if typed.current.is_some(){
-            return Ok(RetainedCloneStep::Progress(match store.retire_owned_mutation(&mut typed.current,self.grant).map_err(FaultFrom::into_fault)?{Some((retirement,progress))=>{*typed.retirement=Some(retirement);progress},None=>Default::default()}));
+            return Ok(RetainedCloneStep::Progress(match store.retire_owned_mutation(&mut typed.current,self.effect).map_err(FaultFrom::into_fault)?{Some((retirement,progress))=>{*typed.retirement=Some(retirement);progress},None=>Default::default()}));
         }
         typed.close_step(self.grant)
     }
@@ -370,7 +372,7 @@ impl store::MemberStoreVisitor for ToolRunMemberRetire<'_,'_>{
             if let Some(source)=state.operation_source.as_mut(){source.begin_close();let step=source.close_step(self.grant).map_err(ValueError::into_fault)?;if source.terminal_is_empty(){state.operation_source=None;}return Ok((None,step.progress()));}
         }
         if state.operation_retirement.is_some(){return semio_framework_value::close_factory_ticket(&mut state.operation_retirement,self.grant).result.map(|step|(None,step.progress())).map_err(ValueError::into_fault);}
-        if state.operation.is_some()&&(self.everything||state.operation_consumed){return Ok(store.retire_owned_mutation(&mut state.operation,self.grant).map_err(ValueError::into_fault)?.map_or((None,Default::default()),|(frame,p)|(Some(frame),p)));}
+        if state.operation.is_some()&&(self.everything||state.operation_consumed){return Ok(store.retire_owned_mutation(&mut state.operation,self.effect).map_err(ValueError::into_fault)?.map_or((None,Default::default()),|(frame,p)|(Some(frame),p)));}
         if state.pending_alias.is_some(){return Ok(store.retire_snapshot_alias(&mut state.pending_alias,self.effect).map_err(FaultFrom::into_fault)?.map_or((None,Default::default()),|(owner,progress)|(Some(owner),progress)));}
         let copy=2*size_of::<Option<Arc<P>>>();
         if self.grant.maximum_copy_bytes<copy||self.grant.maximum_depth==0{return Ok((None,Default::default()));}

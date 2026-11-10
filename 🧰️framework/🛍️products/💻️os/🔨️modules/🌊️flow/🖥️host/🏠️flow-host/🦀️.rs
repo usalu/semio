@@ -15,31 +15,25 @@ impl FlowWheelPlan {
     }
 }
 
-pub struct FlowPublicationShared<T:RetireOwned+Sync>(pub Arc<T>);
-impl<T:RetireOwned+Sync> RetireOwned for FlowPublicationShared<T> {
-    fn retirement(self)->Box<dyn RetirementCursor>{Box::new(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.0))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<T>())}
-    fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
-}
-
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct FlowBaselinePublication {
     pub(super) revision:u64,
     pub display:Option<FlowDisplayCursor>,
     pub snapshot:Option<TreeSnapshot>,
     pub channels:Option<EvalChannels>,
-    pub(super) shared_snapshot:Option<FlowPublicationShared<TreeSnapshot>>,
-    pub(super) shared_channels:Option<FlowPublicationShared<EvalChannels>>,
+    pub(super) shared_snapshot:Option<SharedOwner<TreeSnapshot>>,
+    pub(super) shared_channels:Option<SharedOwner<EvalChannels>>,
     pub(super) generation:u64,
     pub(super) converged:bool,
     pub(super) pending:Vec<neural::PendingExtensionEval>,
     pub(super) remaining:Vec<String>,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct FlowBaselineLeases {
-    pub snapshot:Option<Arc<TreeSnapshot>>,
-    pub channels:Option<Arc<EvalChannels>>,
-    pub current:Option<Arc<EvalChannels>>,
+    pub snapshot:Option<SharedOwner<TreeSnapshot>>,
+    pub channels:Option<SharedOwner<EvalChannels>>,
+    pub current:Option<SharedOwner<EvalChannels>>,
 }
 
 #[derive(semio_framework_value::RetireOwned)]
@@ -54,28 +48,13 @@ pub(super) struct FlowPublicationDisplaced {
     pub(super) leases:FlowBaselineLeases,
 }
 
-impl RetireOwned for FlowBaselineLeases {
-    fn retirement(self)->Box<dyn RetirementCursor>{
-        use semio_framework_value::retirement::{RetireOwned,sequence,arc_custody::SharedControlledRetirement};
-        let snapshot:Box<dyn RetirementCursor>=match self.snapshot{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
-        let channels:Box<dyn RetirementCursor>=match self.channels{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
-        let current:Box<dyn RetirementCursor>=match self.current{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
-        sequence(vec![snapshot,channels,current])
-    }
-    fn retirement_birth_bytes(&self)->Option<usize>{
-        use semio_framework_value::retirement::{sequence_birth_bytes,leaf_birth_bytes,arc_custody::shared_retirement_birth_bytes};
-        sequence_birth_bytes(&[if self.snapshot.is_some(){shared_retirement_birth_bytes::<TreeSnapshot>()}else{leaf_birth_bytes::<()>()},if self.channels.is_some(){shared_retirement_birth_bytes::<EvalChannels>()}else{leaf_birth_bytes::<()>()},if self.current.is_some(){shared_retirement_birth_bytes::<EvalChannels>()}else{leaf_birth_bytes::<()>()}])
-    }
-    fn controlled_retirement_supported()->bool{true}
-}
-
 /// 🏠️ Retained flow host: host_snapshot, dag scene, evaluation cache.
 pub struct FlowHost {
     pub geometry_port: Option<Box<dyn semio_os_flow_geometry::GeometryPort>>,
     pub operator_registry: Option<neural::SharedRegistry>,
     pub host_snapshot: FlowHostSnapshot,
     pub dag: DagHost,
-    pub current_channels: Option<Arc<EvalChannels>>,
+    pub current_channels: Option<SharedOwner<EvalChannels>>,
     pub(super) export_payloads: HistoryFoldIndex<String, Dictionary>,
     pub last_eval_json: String,
     pub host_catalogue_json: String,
@@ -83,10 +62,10 @@ pub struct FlowHost {
     /// projection of the extension registry, ~108 kB of it, and an evaluation tick that rebuilt its
     /// own copy paid 11-26 ms per tick for a map nobody had changed
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub kind_infos: Arc<HistoryFoldIndex<String, OperatorInfo>>,
-    pub neural_cache: Arc<NeuralCache>,
-    pub previous_snapshot: Option<Arc<TreeSnapshot>>,
-    pub previous_channels: Option<Arc<EvalChannels>>,
+    pub kind_infos: SharedOwner<HistoryFoldIndex<String, OperatorInfo>>,
+    pub neural_cache: SharedOwner<NeuralCache>,
+    pub previous_snapshot: Option<SharedOwner<TreeSnapshot>>,
+    pub previous_channels: Option<SharedOwner<EvalChannels>>,
     pub(super) pending_baseline_publication:Option<FlowBaselinePublication>,
     pub(super) baseline_retirement:Option<ControlledRetirement<FlowPublicationDisplaced>>,
     pub(super) baseline_publication_progress:RetainedCloneProgress,

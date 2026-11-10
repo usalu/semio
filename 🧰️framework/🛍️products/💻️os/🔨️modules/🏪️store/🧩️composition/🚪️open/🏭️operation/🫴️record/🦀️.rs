@@ -15,7 +15,20 @@ enum Phase{Frame,Envelope,Parse,TakeRecord,IssueOriginal,Receive,TakeSnapshot,Cl
 pub struct OriginalRecordMemberSnapshotOpen<S:NativeReceive<RecordValue>>{
  request:ManuallyDrop<Option<MemberOpenRequest>>,parser:ManuallyDrop<Option<RetainedRecordReceiving>>,record:ManuallyDrop<Option<RecordValue>>,source:ManuallyDrop<Option<RetainedCloneSource<RecordValue>>>,admission:ManuallyDrop<Option<RetainedCloneSourceAdmission<RecordValue,RecordValue,()>>>,receiving:ManuallyDrop<Option<NativeReceivingOriginal<RecordValue,S>>>,snapshot:ManuallyDrop<Option<S>>,snapshot_close:Option<ControlledRetirement<S>>,record_close:Option<ControlledRetirement<RecordValue>>,phase:Phase,envelope_offset:usize,payload_start:Option<usize>,last:RetainedCloneProgress,diagnostic:Option<MemberOpenDiagnostic>,closing:bool,terminal:bool,turns:u64,receive_request:Option<(usize,u64)>,
 }
-fn flat(error:semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary)->ValueError{let progress=error.progress;error.primary.or(error.quote_refusal).or(error.allocation_refusal).unwrap_or_else(invalid).with_retained_progress(progress)}
+fn flat<E:semio_framework_value_native_owned::native_decoding::NativeReceivingEffectError>(error:E)->ValueError{let progress=error.receiving_progress();error.cause().cloned().unwrap_or_else(invalid).with_retained_progress(progress)}
+/// ♻️ Pays the receiver close start once, then closes it through its reply-shaped retirement cursor.
+fn receiver_close<S:NativeReceive<RecordValue>>(receiver:&mut NativeReceivingOriginal<RecordValue,S>,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+ use semio_framework_value::{retained_clone::OriginalEffectReply,retirement::{RetirementCursor,RetirementStep},RetainedWorkOutcome,RetainedWorkPoll};
+ let mut slot=None;
+ let ran=if !receiver.is_closing(){OriginalEffectReply::borrow(&mut slot).and_then(|reply|receiver.begin_close_into(effect,reply).map(drop)).map(|()|None)}else{let mut stepped=None;OriginalEffectReply::borrow(&mut stepped).and_then(|reply|RetirementCursor::close_into(receiver,body,effect,reply).map(drop)).map(|()|stepped.take())};
+ let work=effect.performed_work();
+ match(ran,slot.take()){
+  (Err(error),_)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work}),
+  (Ok(_),Some(settled))=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:settled,work}),
+  (Ok(Some(settled)),None)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:settled.and_then(|step|match step{RetirementStep::Progress(progress,_)=>Ok(RetainedCloneStep::Progress(progress)),RetirementStep::Failure(failure,_)=>Err(failure),RetirementStep::Complete(_)|RetirementStep::Pending(_)|RetirementStep::BudgetExhausted|RetirementStep::Advanced=>Ok(RetainedCloneStep::Progress(Default::default())),_=>Err(invalid().into())}),work}),
+  (Ok(None),None)=>RetainedWorkPoll::Pending{work},
+ }
+}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original member snapshot opening custody changed")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn progress(copy_bytes:usize)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,..Default::default()}}
@@ -87,7 +100,7 @@ impl<S:NativeReceive<RecordValue>+BorrowedDslRecord+pack::snapshot::ArtifactDsl+
  }
  fn receive_step(&mut self,cx:&mut StepContext<'_>,child:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   let(body,units)=self.receive_request.unwrap_or((child.maximum_copy_bytes,cx.fuel_remaining()));let receiver=&mut self.receiving;
-  let Some(Some(poll))=received(cx,|native|receiver.as_mut().map(|receiver|receiver.advance(native,body,units,child)))? else{return Ok(Default::default())};
+  let Some(Some(poll))=received(cx,|native|receiver.as_mut().map(|receiver|match native.source_witness(){Ok(witness)=>receiver.advance(native,witness,body,units,child),Err(error)=>semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0})}))? else{return Ok(Default::default())};
   let turn=match poll{semio_framework_value::RetainedWorkPoll::Pending{work}=>{self.receive_request=Some((body,units));cx.consume_fuel(spent(work));return Ok(Default::default())},semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn};
   self.receive_request=None;cx.consume_fuel(spent(turn.work));let p=turn.result.map_err(flat)?.progress();
   if self.receiving.as_ref().is_some_and(|r|r.output_ready()){self.phase=Phase::TakeSnapshot;}Ok(p)
@@ -97,7 +110,7 @@ impl<S:NativeReceive<RecordValue>+BorrowedDslRecord+pack::snapshot::ArtifactDsl+
   let Some((poll,performed))=cx.with_original_effect(child,|_,effect|receiving.take(&mut output,effect))? else{return Ok(Default::default())};
   let turn=match poll{semio_framework_value::RetainedWorkPoll::Pending{work}=>{cx.consume_fuel(spent(work.max(performed)));return Ok(Default::default())},semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn};
   cx.consume_fuel(spent(turn.work.max(performed)));let p=turn.result.map_err(flat)?.progress();
-  *self.snapshot=Some(output.ok_or_else(invalid)?);self.receiving.as_mut().ok_or_else(invalid)?.begin_close();self.phase=Phase::CloseReceiving;Ok(p)
+  *self.snapshot=Some(output.ok_or_else(invalid)?);self.phase=Phase::CloseReceiving;Ok(p)
  }
 
  fn advance_original(&mut self,cx:&mut StepContext<'_>,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
@@ -114,11 +127,11 @@ impl<S:NativeReceive<RecordValue>+BorrowedDslRecord+pack::snapshot::ArtifactDsl+
     else{self.parse_step(cx,child)?}
    },
    Phase::TakeRecord=>{let p=self.parser.as_mut().ok_or_else(invalid)?.take_into(&mut self.record,child).result?;if let Some(record)=self.record.take(){*self.admission=Some(RetainedCloneSource::admission_owned(record,()));self.phase=Phase::IssueOriginal;}p},
-   Phase::IssueOriginal=>{let admission=self.admission.as_mut().ok_or_else(invalid)?;if admission.phase()!="ready"{match funded(cx,child,|effect|admission.advance(effect))?{Some(turn)=>turn?.progress(),None=>Default::default()}}else{let mut output=None;let step=admission.take_output(&mut output,child).result?;if let Some(source)=output{*self.receiving=Some(NativeReceivingOriginal::new(source));self.admission.take();self.phase=Phase::Receive;}step.progress()}},
+   Phase::IssueOriginal=>{let admission=self.admission.as_mut().ok_or_else(invalid)?;if admission.phase()!="ready"{match funded(cx,child,|effect|admission.advance(effect))?{Some(turn)=>turn?.progress(),None=>Default::default()}}else{let mut output=None;let step=funded(cx,child,|effect|admission.take_output(&mut output,effect))?;let step=match step{Some(turn)=>turn?,None=>return Ok(Default::default())};if let Some(source)=output{*self.receiving=Some(NativeReceivingOriginal::new(source));self.admission.take();self.phase=Phase::Receive;}step.progress()}},
    Phase::Receive=>self.receive_step(cx,child)?,
    Phase::TakeSnapshot=>self.take_step(cx,child)?,
-   Phase::CloseReceiving=>{let receiving=self.receiving.as_mut().ok_or_else(invalid)?;let p=closed(cx,child,|effect|receiving.close_step(effect))?;if self.receiving.as_ref().is_some_and(|r|r.terminal_is_empty()){self.phase=Phase::CloseParser;}p},
-   Phase::CloseParser=>{let parser=self.parser.as_mut().ok_or_else(invalid)?;let p=closed(cx,child,|effect|parser.close_step(effect))?;if self.parser.as_ref().is_some_and(|r|r.terminal_is_empty()){self.phase=Phase::Ready;}p},Phase::Ready=>Default::default(),
+   Phase::CloseReceiving=>{let receiving=self.receiving.as_mut().ok_or_else(invalid)?;let p=closed(cx,child,|effect|receiver_close(receiving,child.maximum_copy_bytes,effect))?;if self.receiving.as_ref().is_some_and(|r|r.terminal_is_empty()){self.phase=Phase::CloseParser;}p},
+   Phase::CloseParser=>{let parser=self.parser.as_mut().ok_or_else(invalid)?;let p=closed(cx,child,|effect|parser.close_step(child.maximum_copy_bytes,effect))?;if self.parser.as_ref().is_some_and(|r|r.terminal_is_empty()){self.phase=Phase::Ready;}p},Phase::Ready=>Default::default(),
   })})();match result{Ok(mut p)=>{p.copied_bytes=p.copied_bytes.checked_add(metadata).ok_or_else(invalid)?;Ok(p)},Err(error)=>{let mut p=error.retained_progress();p.copied_items=p.copied_items.max(1);p.copied_bytes=p.copied_bytes.saturating_add(metadata);Err(error.with_retained_progress(p))}}
  }
 }
@@ -151,17 +164,17 @@ impl<S:NativeReceive<RecordValue>+Send> ErasedSnapshotRetirement for OriginalRec
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(0)?.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(0)?.depth)}
  fn terminal_is_empty(&self)->bool{self.terminal&&self.request.is_none()&&self.parser.is_none()&&self.record.is_none()&&self.source.is_none()&&self.admission.is_none()&&self.receiving.is_none()&&self.snapshot.is_none()&&self.record_close.is_none()&&self.snapshot_close.is_none()}
- fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let g = effect.grant();
+ fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let g = effect.grant();
   if self.terminal{return Ok(RetainedCloneStep::Complete(Default::default()))}
   let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if !self.closing{if let Some(r)=self.receiving.as_mut(){r.begin_close();}self.closing=true;return Ok(RetainedCloneStep::Progress(progress(d.copy_bytes)))}
-  if let Some(a)=self.admission.as_mut(){if a.phase()=="ready"{let mut output=None;let step=a.take_output(&mut output,g).result?;if let Some(source)=output{*self.source=Some(source);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()))}let mut back=None;let step=a.return_inputs(&mut back,&mut effect.nested(g)).result?;if let Some((record,()))=back{*self.record=Some(record);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()))}
-  if let Some(r)=self.receiving.as_mut(){if !r.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(r.close_step(&mut effect.nested(g))).map_err(Into::into)}self.receiving.take();}
-  else if let Some(s)=self.source.as_mut(){if !s.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(s.close_step(&mut effect.nested(g))).map_err(Into::into)}self.source.take();}
-  else if let Some(c)=self.record_close.as_mut(){if !c.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(c.step(&mut effect.nested(g)))}self.record_close.take();}
+  if !self.closing{self.closing=true;return Ok(RetainedCloneStep::Progress(progress(d.copy_bytes)))}
+  if let Some(a)=self.admission.as_mut(){if a.phase()=="ready"{let mut output=None;let step=a.take_output(&mut output,&mut effect.nested(g)).result?;if let Some(source)=output{*self.source=Some(source);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()))}let mut back=None;let step=a.return_inputs(&mut back,&mut effect.nested(g)).result?;if let Some((record,()))=back{*self.record=Some(record);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()))}
+  if let Some(r)=self.receiving.as_mut(){if !r.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(receiver_close(r,g.maximum_copy_bytes,&mut effect.nested(g))).map_err(Into::into)}self.receiving.take();}
+  else if let Some(s)=self.source.as_mut(){if !s.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(s.close_step(g.maximum_copy_bytes,&mut effect.nested(g))).map_err(Into::into)}self.source.take();}
+  else if let Some(c)=self.record_close.as_mut(){if !c.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(c.step(g.maximum_copy_bytes,&mut effect.nested(g)))}self.record_close.take();}
   else if let Some(record)=self.record.take(){match ControlledRetirement::new(record){Ok(c)=>self.record_close=Some(c),Err((error,r))=>{*self.record=Some(r);return Err(error.into())}}}
-  else if let Some(p)=self.parser.as_mut(){if !p.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(p.close_step(&mut effect.nested(g))).map_err(Into::into)}self.parser.take();}
-  else if let Some(c)=self.snapshot_close.as_mut(){if !c.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(c.step(&mut effect.nested(g)))}self.snapshot_close.take();}
+  else if let Some(p)=self.parser.as_mut(){if !p.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(p.close_step(g.maximum_copy_bytes,&mut effect.nested(g))).map_err(Into::into)}self.parser.take();}
+  else if let Some(c)=self.snapshot_close.as_mut(){if !c.terminal_is_empty(){return semio_framework_value::RetirementPollExit::resume(c.step(g.maximum_copy_bytes,&mut effect.nested(g)))}self.snapshot_close.take();}
   else if let Some(snapshot)=self.snapshot.take(){match ControlledRetirement::new(snapshot){Ok(c)=>self.snapshot_close=Some(c),Err((error,s))=>{*self.snapshot=Some(s);return Err(error.into())}}}
   else if let Some(r)=self.request.as_mut(){if !r.terminal_is_empty(){return Ok(r.close_step(g)?)}self.request.take();}
   else{self.terminal=true;}

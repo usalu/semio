@@ -134,7 +134,7 @@ impl ArtifactEditMessageLedgerRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRetirement {
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+    fn close_step(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
         let grant = effect.grant();
         let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
         let empty = RetainedCloneProgress::default();
@@ -576,7 +576,7 @@ impl ArtifactEditMessageLedgerRejected {
 }
 
 impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRejected {
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = self.inner.close_step(effect.grant()).map_err(semio_framework_value::RetirementPollExit::from); semio_framework_value::RetirementPollExit::settle(effect, result) }
+    fn close_step(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = self.inner.close_step(effect.grant()).map_err(semio_framework_value::RetirementPollExit::from); semio_framework_value::RetirementPollExit::settle(effect, result) }
     fn terminal_is_empty(&self) -> bool { self.inner.terminal_is_empty() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.inner.next_copy_byte_demand() }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { self.inner.next_capacity_byte_demand(body) }

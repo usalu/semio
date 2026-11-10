@@ -25,6 +25,8 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_pack_json_retained_schema::testing::{OWNED_SCHEMA_TEST_FIELDS, owned_schema_test_cursor, drive_owned_schema, schema_test_close_grant};
 use semio_framework_value::testing::physical_test_close_grant;
 
+#[path = "../../📬️paged-one-item/🧪️tests/⏱️effect/🦀️.rs"]
+mod effect_tests;
 #[path = "🔬️unit/🦀️.rs"]
 mod store_unit_tests;
 #[path = "../🧬️retained-clone/🦀️.rs"]

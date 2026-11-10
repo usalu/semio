@@ -43,7 +43,7 @@ impl CompletedInput{
   if self.grammar.is_none(){if !metadata(cx)?{return Ok(None)}let(_,cursor)=JsonSourceCursor::<_,DslValue>::new(source,JsonMemberPolicy::Reject,JsonReadLimits{maximum_bytes:MAXIMUM as u64,maximum_allocation_bytes:MAXIMUM,maximum_depth:128,maximum_items:MAXIMUM as u64})?.into_grammar();*self.grammar=Some(cursor);return Ok(None)}
   let grammar=self.grammar.as_mut().unwrap();let native=&mut*self.native;
   let Some(outcome)=native.receive_step(cx,|control,grant|{let result=grammar.step_source(&source,1,control,grant,false);let progress=grammar.normal_step_progress();OriginalNativeDecodeIssued::<_,ValueError>{value:Ok(result),grant,progress,work:u64::from(progress.copied_items!=0)}})?else{return Ok(None)};
-  if let Some(failure)=outcome.receiving_refusal{return Err(failure)}
+  if let Some(ticket)=outcome.receiving_refusal{return Err(native.take_receiving_refusal(ticket))}
   match outcome.value?{Ok(value)=>Ok(value),Err(error)=>{*self.issue=Some(DecodeFailure::Json(error,outcome.progress));self.phase=250;Ok(None)}}
  }
  fn close_grammar(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{

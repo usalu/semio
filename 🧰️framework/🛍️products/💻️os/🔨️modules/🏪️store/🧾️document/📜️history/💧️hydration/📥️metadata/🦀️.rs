@@ -45,7 +45,7 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
    if let Err((reason,value))=work.vec_push(&mut edit.mutation_meta,value){*self.original_meta.value=Some(value);return Err(invalid(reason))}
    self.operation_index+=1;Ok(())
   })();
-  let progress=work.receipt();let receipt=cx.consume_retained(progress);cx.consume_fuel(work.actual_work()+u64::from(progress.copied_bytes!=0));
+  let progress=work.receipt();let receipt=cx.consume_retained(progress);cx.consume_fuel(u64::try_from(work.actual_work()).unwrap_or(u64::MAX)+u64::from(progress.copied_bytes!=0));
   match result{Err(error)=>{let mut cause=semio_framework_job::OriginalTurnFailure::from(error);cause.effects=progress;cause.receipt_refusal=receipt.err();Err(cause)},Ok(())=>receipt.map_err(Into::into)}
  }
 }
@@ -80,7 +80,7 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
    if !append_declared_text(&mut work,meta.label.as_mut().unwrap(),&[descriptor.display_name],usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX))?{return Ok(())}
    if work.copy_bytes(std::mem::size_of::<usize>()){self.semantic_index+=1}Ok(())
   })();
-  let progress=work.receipt();let receipt=cx.consume_retained(progress);cx.consume_fuel(work.actual_work()+u64::from(progress.copied_bytes!=0));
+  let progress=work.receipt();let receipt=cx.consume_retained(progress);cx.consume_fuel(u64::try_from(work.actual_work()).unwrap_or(u64::MAX)+u64::from(progress.copied_bytes!=0));
   if let Err(error)=result{let mut cause=semio_framework_job::OriginalTurnFailure::from(error);cause.effects=progress;cause.receipt_refusal=receipt.err();return Err(cause)}receipt?;Ok(false)
  }
 }

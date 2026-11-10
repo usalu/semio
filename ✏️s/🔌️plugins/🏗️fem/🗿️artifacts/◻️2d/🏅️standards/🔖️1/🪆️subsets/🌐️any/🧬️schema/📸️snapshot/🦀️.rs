@@ -21,7 +21,7 @@ pub use retiring::Fem2dSnapshotRetiring;
 pub use identity_index::{FemIdentityIndex,FemIdentityKind,FemIdentitySource};
 //#region 🔖️Snapshot
 /// 📸️ Persisted fem2d document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Debug, Default, PartialEq, ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem2d")]

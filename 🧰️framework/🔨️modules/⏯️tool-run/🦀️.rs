@@ -38,15 +38,16 @@ pub(crate) fn record_work(effect:&mut semio_framework_value::retained_clone::Ret
     if effect.performed(work)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"tool run work is not funded"))}
 }
 
-/// 🏷️ Admits one sealed original under its quoted work; a refused quote hands the value back, surplus beyond the quote is debited, and a refused surplus rolls the fresh admission back to its value.
+/// 🏷️ Admits one sealed original from its caller slot under the original effect; an unfunded or refused admission hands the value back.
 pub(crate) fn admit_sealed<T:semio_framework_value::retirement::RetireOwned+Send+Sync+'static>(value:T,effect:&mut semio_framework_value::retained_clone::RetainedAllocationEffect<'_>)->Result<(semio_framework_value::shared_issuance::SealedShared<T>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,T)>{
-    use semio_framework_value::shared_issuance::{SealedShared,SharedIssuer};
-    let quote=u128::from(SealedShared::<T>::birth_work_demand());
-    if let Err(error)=record_work(effect,quote){return Err((error,value));}
-    let turn=SealedShared::admit(value,SharedIssuer::owned(),effect.grant(),effect.actual());
-    let surplus=turn.work.saturating_sub(quote);
-    if surplus>0{if let Err(error)=record_work(effect,surplus){return Err((error,match turn.result{Err((_,value))=>value,Ok((sealed,_))=>semio_framework_value::shared_issuance::cold_take_exclusive(sealed)}));}}
-    turn.result
+    use semio_framework_value::{ValueError,ValueRefusalKind,shared_issuance::{SealedShared,SharedIssuer}};
+    let mut input=Some(value);let mut output=None;
+    let turn=SealedShared::admit_from(&mut input,SharedIssuer::owned(),&mut output,effect);
+    match(turn.result,output){
+        (Ok(step),Some(sealed))=>Ok((sealed,step.progress())),
+        (Ok(_),None)=>Err((ValueError::literal(ValueRefusalKind::WorkLimit,"tool run sealed admission is not funded"),input.take().expect("unfunded sealed admission retains its input"))),
+        (Err(error),output)=>{drop(output);Err((error,input.take().expect("refused sealed admission retains its input")))}
+    }
 }
 
 /// 🏁️ Settles one finished retirement poll into its physical receipt; a refused or suspended close is a fault of the owner.

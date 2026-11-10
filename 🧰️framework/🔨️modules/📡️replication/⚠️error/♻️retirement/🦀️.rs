@@ -64,7 +64,7 @@ pub struct ProtocolErrorRetirement{cause:std::mem::ManuallyDrop<Option<ProtocolE
 impl semio_framework_value::retirement::RetirementCursor for ProtocolErrorRetirement{
  fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(self.cause.is_some()))}
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{protocol_error_retirement_demand(&self.cause)}
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+ fn close_into<'reply>(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'reply,semio_framework_value::retirement::RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'reply,semio_framework_value::retirement::RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{if effect.invocation().is_none(){return Err(semio_framework_value::ValueError::invariant("native retirement requires its original producer invocation"))}let step=(||->semio_framework_value::retirement::RetirementStep{
   use semio_framework_value::retirement::{RetirementStep,record_retirement_work};
   let grant=effect.grant();
   if self.cause.is_none(){return RetirementStep::Complete(0)}
@@ -74,7 +74,7 @@ impl semio_framework_value::retirement::RetirementCursor for ProtocolErrorRetire
    Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(0),
    Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>match record_retirement_work(effect,1){Ok(work)=>RetirementStep::Progress(progress,work),Err((error,work))=>RetirementStep::Failure(error.with_retained_progress(progress).into(),work)},
   }
- }
+ })();Ok(match step{semio_framework_value::retirement::RetirementStep::Failure(error,_)=>reply.complete(Err(error)),step=>reply.complete(Ok(step))})}
  fn terminal_is_empty(&self)->bool{self.cause.is_none()}
  fn next_close_byte_demand(&self)->Option<usize>{protocol_error_retirement_demand(&self.cause).ok().map(|demand|demand.release_bytes)}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}

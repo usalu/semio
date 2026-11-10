@@ -69,7 +69,7 @@ impl<'operation,'callback,S:JsonReadSource+Copy,V:JsonParsedValue> JsonReadOpera
     pub fn close_step(&mut self,turn:RetainedCloneGrant,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
         self.retirement_step=Default::default();
         let admitted=intersect(normal_remaining(self.policy.retirement,self.retirement)?,turn);
-        let result=if self.closing.is_some(){settled(semio_framework_value::close_factory_ticket(&mut self.closing,&mut effect.nested(admitted)))}else if let Some(cursor)=self.cursor.take(){
+        let result=if self.closing.is_some(){settled(semio_framework_value::close_factory_ticket(&mut self.closing,admitted.maximum_copy_bytes,&mut effect.nested(admitted)))}else if let Some(cursor)=self.cursor.take(){
             let result=cursor.into_retirement(&mut effect.nested(admitted)).result;
             match result{
                 Ok((owner,receipt))=>{*self.closing=Some(owner);self.close_started=true;Ok(RetainedCloneStep::Progress(receipt))},

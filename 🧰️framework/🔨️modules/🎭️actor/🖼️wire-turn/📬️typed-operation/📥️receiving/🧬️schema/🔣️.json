@@ -19,8 +19,8 @@
     },
     "originalHost": {
       "const": {
-        "maximumItems": 1,
-        "maximumCopyBytes": 4096,
+        "maximumItems": 2,
+        "maximumCopyBytes": 16384,
         "maximumCapacityBytes": 65536,
         "maximumReleaseBytes": 262144,
         "maximumDepth": 64

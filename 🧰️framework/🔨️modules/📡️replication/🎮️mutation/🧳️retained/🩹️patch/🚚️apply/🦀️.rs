@@ -1,8 +1,7 @@
 //! 🚚️ Central sparse application stages genuine authored fields and exchanges one owned header per funded turn.
 use super::{RetainedRowPatch,RetainedRowPatchFields,RetainedPatchSource};
-use super::super::retained_mutation_demand_fits;
+use super::super::{Done,Flight,Reply,conclude,retained_mutation_demand_fits,};
 use super::super::super::ApplyCapability;
-use semio_framework_replication_retained_field::{settle,settle_exit};
 use semio_framework_value::{OriginalRetirementFailure,OriginalRetirementOutcome,OriginalRetirementPoll,RetainedAllocationEffect,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose}};
 use std::mem::{ManuallyDrop,size_of};
 
@@ -15,13 +14,13 @@ fn receipt(mut progress:RetainedCloneProgress)->Result<RetainedCloneProgress,Val
 
 /// 🧳️ The original source aliases and displaced patch fields survive staging, exchange and partial cancellation.
 pub struct RetainedRowPatchApply<R,P:RetainedRowPatch<R>>{
- fields:ManuallyDrop<Option<Box<P::Fields>>>,patch:ManuallyDrop<Option<P>>,retirement:RetainedCloneClose,
+ fields:ManuallyDrop<Option<Box<P::Fields>>>,patch:ManuallyDrop<Option<P>>,retirement:RetainedCloneClose,flight:Flight,
  phase:u8,index:usize,closing:bool,row:std::marker::PhantomData<fn()->R>,
 }
 impl<R,P:RetainedRowPatch<R>> Default for RetainedRowPatchApply<R,P>{fn default()->Self{Self::new()}}
 impl<R,P:RetainedRowPatch<R>> RetainedRowPatchApply<R,P>{
  /// 🌱️ Empty construction captures no payload, projection or dynamic child.
- pub fn new()->Self{Self{fields:ManuallyDrop::new(None),patch:ManuallyDrop::new(None),retirement:Default::default(),phase:0,index:0,closing:false,row:std::marker::PhantomData}}
+ pub fn new()->Self{Self{fields:ManuallyDrop::new(None),patch:ManuallyDrop::new(None),retirement:Default::default(),flight:Default::default(),phase:0,index:0,closing:false,row:std::marker::PhantomData}}
  /// 📏️ Every source capture, original field copy and fixed transfer has a separate quote.
  pub fn stage_demand(&self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
   if self.closing{return Err(invalid());}
@@ -36,17 +35,21 @@ impl<R,P:RetainedRowPatch<R>> RetainedRowPatchApply<R,P>{
  /// 🪡️ Copies only schema-declared authored sparse fields from their genuine immutable event source.
  /// ⛽️ Quotes the selected original sparse-field stage work.
  pub fn stage_work_demand(&self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.stage_demand(patch,row,body,maximum_work_units)?;if maximum_work_units==0{return Ok(0)}let work=match self.phase{0=>P::Fields::new_work_demand()?.checked_add(1).ok_or_else(invalid)?,2=>1,1=>return self.fields.as_ref().ok_or_else(invalid)?.advance_work_demand(patch,row,body,maximum_work_units),_=>return Err(invalid())};Ok(if work<=maximum_work_units{work}else{0})}
- pub fn stage(&mut self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementOutcome{let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedCloneStep,OriginalRetirementFailure>=(||{
-  let selected=self.stage_work_demand(patch,row,body,maximum_work_units)?;if selected==0{return Ok(RetainedCloneStep::Progress(Default::default()))}let demand=self.stage_demand(patch,row,body,maximum_work_units)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
+ pub fn stage_into<'r>(&mut self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Done<'r>,ValueError>{self.stage_reply(patch,row,body,maximum_work_units,effect,reply,false)}
+ /// 🔁️ Recovers the same pending sparse-field stage action.
+ pub fn recover_stage_into<'r>(&mut self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Done<'r>,ValueError>{self.stage_reply(patch,row,body,maximum_work_units,effect,reply,true)}
+ fn stage_reply<'r>(&mut self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+  if !recover&&!self.flight.idle(){return Err(ValueError::invariant("sparse stage requires recovery").into())}
+  let selected=self.stage_work_demand(patch,row,body,maximum_work_units)?;if !recover&&selected==0{return Ok(RetainedCloneStep::Progress(Default::default()))}let demand=self.stage_demand(patch,row,body,maximum_work_units)?;if !recover&&!retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:if self.phase==0{demand.capacity_bytes}else{0},..Default::default()};
   match self.phase{
    0=>{let(fields,actual)=P::Fields::new(RetainedPatchSource::Authored);work=u128::from(actual)+1;*self.fields=Some(Box::new(fields));self.phase=1;if work>u128::from(selected){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"sparse owner birth exceeded its work quote").with_retained_progress(progress).into())}},
-   1=>{let turn=self.fields.as_mut().ok_or_else(invalid)?.advance(patch,row,body,maximum_work_units,&mut effect.nested(child(grant)));work+=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(META);error.with_retained_progress(p)})?;progress=receipt(step.progress())?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=2;}},
+   1=>{let before=work;let result=retained_routed!(self.flight,effect,recover,1,body,maximum_work_units,None,work,|r| self.fields.as_mut().ok_or_else(invalid)?.advance_reply(patch,row,body,maximum_work_units,&mut effect.nested(child(grant)),r,false),self.fields.as_mut().ok_or_else(invalid)?.advance_reply(patch,row,body,maximum_work_units,&mut effect.nested(child(grant)),r,true));let step=result.map_err(|error|if work==before{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(META);error.with_retained_progress(p)})?;progress=receipt(step.progress())?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=2;}},
    2=>{work+=1;let(value,child)=self.fields.as_mut().ok_or_else(invalid)?.take(RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Option<P>>()-META,..grant})?;*self.patch=value;progress=child;progress.copied_bytes+=size_of::<Option<P>>()+META;self.phase=3;return Ok(RetainedCloneStep::Complete(progress));},
    _=>return Err(invalid().into()),
   }
   Ok(RetainedCloneStep::Progress(progress))
-  })();settle(effect,base,result,work)
+ })();conclude(effect,base,result,work,|step|step.progress(),reply)
  }
  /// 🛂️ A staged cursor is ready only after the complete original authored-field transfer.
  pub fn staged(&self)->bool{self.phase>=3&&!self.closing}
@@ -84,15 +87,46 @@ impl<R,P:RetainedRowPatch<R>> RetainedRowPatchApply<R,P>{
  /// 🪜️ Each returned child and physical backing release is paid before its original owner disappears.
  /// ⛽️ Quotes the selected sparse-field or displaced-patch close work.
  pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_demand(body)?;if let Some(fields)=self.fields.as_ref(){return if fields.terminal_is_empty(){Ok(1)}else if !fields.close_started(){Ok(fields.begin_close_work_demand())}else{fields.close_work_demand(body.saturating_sub(META))}}self.retirement.next_owner_work::<P>(self.patch.is_some(),&None,body.saturating_sub(META))}
- pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
-  let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if let Some(fields)=self.fields.as_mut(){if !fields.terminal_is_empty(){if !fields.close_started(){let turn=fields.begin_close_paid(effect);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?))}let turn=RetirementPollExit::settled(fields.close_step(&mut effect.nested(child(grant))))?;work+=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(META);error.with_retained_progress(p)})?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}work+=1;drop(self.fields.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
-  if !self.retirement.is_empty(){let turn=RetirementPollExit::settled(self.retirement.step_granted(&mut effect.nested(child(grant))))?;work+=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(META);error.with_retained_progress(p)})?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}
-  if self.patch.is_some(){let turn=self.retirement.begin_granted(&mut self.patch,&mut effect.nested(child(grant)));work+=turn.work;if let Some(step)=turn.result?{return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}}
-  Ok(RetainedCloneStep::Complete(Default::default()))
-  })();settle_exit(effect,base,result,work)
- }
+ /// 👶️ Reports that the selected child Birth must run on the original controller first.
+ pub fn requires_original_birth(&self)->bool{if !self.closing||!self.flight.idle(){return false}if let Some(f)=self.fields.as_ref(){return !f.terminal_is_empty()&&f.close_started()&&f.requires_original_birth()}!self.retirement.is_empty()&&self.retirement.requires_original_birth()}
+ /// 🪪️ Reports that the selected child close needs the original controller loan.
+ pub fn requires_original_control(&self)->bool{if let Some(loaned)=self.flight.loaned(){return loaned}if let Some(f)=self.fields.as_ref(){return !f.terminal_is_empty()&&f.close_started()&&f.requires_original_control()}!self.retirement.is_empty()&&self.retirement.requires_original_control()}
+ /// 👶️ Continues the selected child Birth on the original controller.
+ pub fn close_original_birth_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{if let Some(f)=self.fields.as_mut(){return f.close_original_birth_step(original,grant)}self.retirement.step_original_birth(original,grant)}
+ pub fn close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Done<'r>,ValueError>{self.close_reply(None,body,effect,reply,false)}
+ pub fn recover_close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Done<'r>,ValueError>{self.close_reply(None,body,effect,reply,true)}
+ pub fn close_original_into<'r>(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Done<'r>,ValueError>{self.close_reply(Some(original),body,effect,reply,false)}
+ pub fn recover_close_original_into<'r>(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Done<'r>,ValueError>{self.close_reply(Some(original),body,effect,reply,true)}
+ /// 🪜️ Each returned child and physical backing release is paid before its original owner disappears.
+ pub fn close_reply<'r>(&mut self,mut original:Option<&mut semio_framework_value::OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+  let mut route:u8=0;
+  if recover{route=self.flight.route().ok_or_else(||ValueError::invariant("sparse apply close has no original action"))?;}else{
+   if !self.flight.idle(){return Err(ValueError::invariant("sparse apply close requires recovery").into())}
+   let demand=self.close_demand(body)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
+   if self.requires_original_birth(){return Err(ValueError::invariant("sparse apply Birth must settle before effect").into())}
+   if self.requires_original_control()&&original.is_none(){return Err(ValueError::invariant("sparse apply close requires original controller").into())}
+   if let Some(fields)=self.fields.as_mut(){if !fields.terminal_is_empty(){if !fields.close_started(){let turn=fields.begin_close_paid(effect);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?))}route=if fields.requires_original_control(){2}else{1};}else{work+=1;drop(self.fields.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}}
+   else if !self.retirement.is_empty(){route=if self.retirement.requires_original_control(){4}else{3};}
+   else{if self.patch.is_some(){let turn=self.retirement.begin_granted(&mut self.patch,&mut effect.nested(child(grant)));work+=turn.work;if let Some(step)=turn.result?{return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}}return Ok(RetainedCloneStep::Complete(Default::default()))}
+  }
+  let nested=body.saturating_sub(META);let loan=if matches!(route,2|4){original.as_deref_mut()}else{None};let before=work;
+  let missing=||ValueError::invariant("sparse apply original controller missing");
+  let step=retained_routed!(self.flight,effect,recover,route,body,0,loan,work,|r| match route{
+   1=>self.fields.as_mut().ok_or_else(invalid)?.close_reply(None,nested,&mut effect.nested(child(grant)),r,false),
+   2=>self.fields.as_mut().ok_or_else(invalid)?.close_reply(original.as_deref_mut(),nested,&mut effect.nested(child(grant)),r,false),
+   3=>self.retirement.step_into(nested,&mut effect.nested(child(grant)),r),
+   4=>self.retirement.step_original_into(original.as_deref_mut().ok_or_else(missing)?,nested,&mut effect.nested(child(grant)),r),
+   _=>Err(invalid())},
+   match route{
+   1=>self.fields.as_mut().ok_or_else(invalid)?.close_reply(None,nested,&mut effect.nested(child(grant)),r,true),
+   2=>self.fields.as_mut().ok_or_else(invalid)?.close_reply(original.as_deref_mut(),nested,&mut effect.nested(child(grant)),r,true),
+   3=>self.retirement.recover_step_into(nested,&mut effect.nested(child(grant)),r),
+   4=>self.retirement.recover_step_original_into(original.as_deref_mut().ok_or_else(missing)?,nested,&mut effect.nested(child(grant)),r),
+   _=>Err(invalid())});
+  let step=step.map_err(|error|if work==before{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(META);error.with_retained_progress(p)})?;
+  Ok(RetainedCloneStep::Progress(receipt(step.progress())?))
+ })();conclude(effect,base,result,work,|step|step.progress(),reply)}
  /// 🫙️ All genuine source aliases and displaced payload allocations have returned.
- pub fn terminal_is_empty(&self)->bool{self.fields.is_none()&&self.patch.is_none()&&self.retirement.is_empty()}
+ pub fn terminal_is_empty(&self)->bool{self.fields.is_none()&&self.patch.is_none()&&self.retirement.is_empty()&&self.flight.idle()}
 }
 impl<R,P:RetainedRowPatch<R>> Drop for RetainedRowPatchApply<R,P>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"sparse central apply requires original funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.fields);ManuallyDrop::drop(&mut self.patch);}}}}

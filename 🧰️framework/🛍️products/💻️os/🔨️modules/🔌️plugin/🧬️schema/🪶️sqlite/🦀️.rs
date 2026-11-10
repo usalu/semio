@@ -129,7 +129,10 @@ pub struct SnapshotRetirement { pub ticket:u64, pub owned_bytes:u64, pub refusal
 semio_framework_value::artifact_retire_leaf!(SnapshotDemands,SnapshotRetirement);
 /// ♻️ Carries the actual step receipt without an owned transport envelope.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, ToValue, FromValue)]
-pub struct SnapshotCloseInput {pub ticket:u64,pub native:SnapshotGrant}
+pub struct SnapshotCloseInput {pub ticket:u64,pub native:SnapshotGrant,#[serde(default)] pub budget:Option<SnapshotCloseBudget>}
+/// ⏱️ The host call's own budget that funds the owner-less close turn: fuel, absolute deadline and clock binding; component calls carry it in their `actor-context-budget` instead.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, ToValue, FromValue)]
+pub struct SnapshotCloseBudget {pub fuel:u64,pub deadline_us:u64,pub clock_binding:u64}
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, ToValue, FromValue)]
 pub struct SnapshotCloseReceipt {pub retirement:SnapshotRetirement,pub progress:SnapshotProgress,pub refusal:u32}
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, ToValue, FromValue)]

@@ -596,9 +596,9 @@ pub fn begin_world_placeholder_mesh(session_state: &mut WorldSessionState, autho
     }
 }
 
-pub fn step_world_placeholder_mesh(session_state: &mut WorldSessionState, interaction_state: &mut WorldInteractionState, authority_state: &mut WorldAuthorityState, scene_state: &mut WorldSceneState) {
+pub fn step_world_placeholder_mesh(session_state: &mut WorldSessionState, interaction_state: &mut WorldInteractionState, authority_state: &mut WorldAuthorityState, scene_state: &mut WorldSceneState, effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) {
     let Some(mut cursor) = scene_state.placeholder_build.take() else { return };
-    match cursor.step() {
+    match cursor.step(effect) {
         WorldPlaceholderMeshStep::Pending => scene_state.placeholder_build = Some(cursor),
         WorldPlaceholderMeshStep::Ready(key,lease,appearance) => {if let Some(appearance)=appearance {let asset=World3dMeshAsset{mesh:lease,appearance};if let Err(rejected)=publish_world3d_inline_asset(session_state, interaction_state, scene_state,key,asset){cursor.owner=WorldPlaceholderOwner::Ready(rejected.value.mesh);cursor.appearance=Some(rejected.value.appearance);cursor.faulted=true;scene_state.placeholder_build=Some(cursor);mark_world_dynamic_fault(session_state, authority_state, scene_state,rejected.fault);}}else{store_mesh(session_state, interaction_state, authority_state, scene_state,key,lease)}},
         WorldPlaceholderMeshStep::Fault => mark_world_dynamic_fault(session_state, authority_state, scene_state, WorldDynamicFault::Closing),

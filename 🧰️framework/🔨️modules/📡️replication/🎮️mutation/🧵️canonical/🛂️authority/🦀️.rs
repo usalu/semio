@@ -83,8 +83,8 @@ impl<M:Send+Sync+'static> ArtifactCanonicalEditAuthorityCursor<M>{
     }
     progress.copied_bytes=demand.copy_bytes.max(compared*2);
    }
-  }else if let Some(owner)=self.edit.as_mut(){if owner.terminal_is_empty(){self.edit=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;let turn=RetirementPollExit::settled(owner.close_step(&mut effect.nested(child)))?;self.last_work=turn.work;progress=turn.result?.progress();}}
-  else if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){self.authority=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;let turn=RetirementPollExit::settled(owner.close_step(&mut effect.nested(child)))?;self.last_work=turn.work;progress=turn.result?.progress();}}
+  }else if let Some(owner)=self.edit.as_mut(){if owner.terminal_is_empty(){self.edit=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;let turn=RetirementPollExit::settled(owner.close_step(effect.grant().maximum_copy_bytes,&mut effect.nested(child)))?;self.last_work=turn.work;progress=turn.result?.progress();}}
+  else if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){self.authority=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;let turn=RetirementPollExit::settled(owner.close_step(effect.grant().maximum_copy_bytes,&mut effect.nested(child)))?;self.last_work=turn.work;progress=turn.result?.progress();}}
   Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
  
   })();let work=self.last_work;settle_exit(effect,base,result,work)

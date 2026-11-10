@@ -5,19 +5,23 @@ pub struct VacantVec<T:Send+'static>(pub Vec<T>);
 pub struct VacantDeque<T:Send+'static>(pub VecDeque<T>);
 impl<T:Send+'static> VacantVec<T>{pub fn original_birth(value:&Vec<T>)->Option<usize>{value.is_empty().then_some(size_of::<Cursor<Self>>())}}
 impl<T:Send+'static> VacantDeque<T>{pub fn original_birth(value:&VecDeque<T>)->Option<usize>{value.is_empty().then_some(size_of::<Cursor<Self>>())}}
-trait Vacant:Send+'static{fn empty(&self)->bool;fn bytes(&self)->Option<usize>;}
+#[doc(hidden)]
+pub trait Vacant:Send+'static{fn empty(&self)->bool;fn bytes(&self)->Option<usize>;}
 impl<T:Send+'static> Vacant for VacantVec<T>{fn empty(&self)->bool{self.0.is_empty()}fn bytes(&self)->Option<usize>{self.0.capacity().checked_mul(size_of::<T>())}}
 impl<T:Send+'static> Vacant for VacantDeque<T>{fn empty(&self)->bool{self.0.is_empty()}fn bytes(&self)->Option<usize>{self.0.capacity().checked_mul(size_of::<T>())}}
-struct Cursor<V:Vacant>{original:ManuallyDrop<Option<V>>}
+#[doc(hidden)]
+pub struct Cursor<V:Vacant>{original:ManuallyDrop<Option<V>>}
 impl<V:Vacant> RetirementCursor for Cursor<V>{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;let Some(original)=self.original.as_ref()else{return Ok(Default::default())};if !original.empty(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"opaque collection retains live payloads"))}let release_bytes=original.bytes().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"opaque collection release overflow"))?;Ok(semio_framework_value::RetirementDemand{release_bytes,depth:1,..Default::default()})}
 
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();let Some(original)=self.original.as_ref()else{return RetirementStep::Complete(0);};if !original.empty(){return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"opaque collection still retains original live payloads").into(),0);}let Some(bytes)=original.bytes()else{return RetirementStep::BudgetExhausted;};if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(self.original.take());RetirementStep::Bytes(bytes)}
+ fn next_computational_work(&self,_body:usize)->Result<u64,semio_framework_value::ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
+ semio_framework_value::native_retirement_reply!();
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_close_byte_demand(&self)->Option<usize>{self.original.as_ref().map_or(Some(0),|value|if value.empty(){value.bytes()}else{None})}
  fn next_birth_bytes(&self,_copy:usize)->Option<usize>{Some(0)}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
+impl<V:Vacant> Cursor<V>{ pub fn close_step(&mut self,_body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();let Some(original)=self.original.as_ref()else{return RetirementStep::Complete(0);};if !original.empty(){return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"opaque collection still retains original live payloads").into(),0);}let Some(bytes)=original.bytes()else{return RetirementStep::BudgetExhausted;};if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}let work=match semio_framework_value::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};drop(self.original.take());RetirementStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()},work)}}
 impl<V:Vacant> Drop for Cursor<V>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"vacant opaque backing reached Drop before actual release");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.original);}}}}
 macro_rules! vacant{($type:ident)=>{impl<T:Send+'static> RetireOwned for $type<T>{type RetirementCursor=Cursor<Self>;fn retirement_seed(self)->Self::RetirementCursor{Cursor{original:ManuallyDrop::new(Some(self))}}fn retirement_birth_bytes(&self)->Option<usize>{self.empty().then_some(std::mem::size_of::<Cursor<Self>>())}fn controlled_retirement_supported()->bool{true}}};}
 vacant!(VacantVec);vacant!(VacantDeque);

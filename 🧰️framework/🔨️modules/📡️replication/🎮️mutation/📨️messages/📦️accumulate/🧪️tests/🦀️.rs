@@ -3,8 +3,8 @@ use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 
-fn observed(step: impl FnOnce() -> Result<RetainedCloneProgress, ValueError>, grant: RetainedCloneGrant) -> RetainedCloneProgress {
-    let (result, heap) = observe_heap_allocations_on_this_thread(step);
+fn observed(step: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError>, grant: RetainedCloneGrant) -> RetainedCloneProgress {
+    let (result, heap) = observe_heap_allocations_on_this_thread(|| semio_framework_value::AuthoringWallet::new(grant, 1 << 16).run(grant, 1 << 16, step).unwrap().unwrap().output);
     let progress = result.unwrap();
     assert!(progress.fits(grant));
     assert!(progress.copied_bytes + progress.retained_capacity_bytes <= 4096);
@@ -21,12 +21,12 @@ fn drain(cursor: &mut OperationMessageDrain, ledger: &mut ReplayMessageAccumulat
         assert!(copy + capacity <= 4096);
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: 64 };
         let paused = RetainedCloneGrant { maximum_depth: 0, ..grant };
-        assert_eq!(observed(|| cursor.step(ledger, paused), paused), RetainedCloneProgress::default());
-        assert_eq!(observed(|| cursor.step(ledger, RetainedCloneGrant::default()), RetainedCloneGrant::default()), RetainedCloneProgress::default());
+        assert_eq!(observed(|e| cursor.step(ledger, e), paused), RetainedCloneProgress::default());
+        assert_eq!(observed(|e| cursor.step(ledger, e), RetainedCloneGrant::default()), RetainedCloneProgress::default());
         for short in [RetainedCloneGrant { maximum_copy_bytes: copy.saturating_sub(1), ..grant }, RetainedCloneGrant { maximum_capacity_bytes: capacity.saturating_sub(1), ..grant }, RetainedCloneGrant { maximum_release_bytes: release.saturating_sub(1), ..grant }] {
-            if short != grant { assert_eq!(observed(|| cursor.step(ledger, short), short), RetainedCloneProgress::default()); }
+            if short != grant { assert_eq!(observed(|e| cursor.step(ledger, e), short), RetainedCloneProgress::default()); }
         }
-        observed(|| cursor.step(ledger, grant), grant);
+        observed(|e| cursor.step(ledger, e), grant);
     }
     limit
 }
@@ -38,10 +38,10 @@ fn close(ledger: &mut ReplayMessageAccumulator) {
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: 0, maximum_release_bytes: release, maximum_depth: 64 };
         let paused = RetainedCloneGrant { maximum_depth: 0, ..grant };
-        assert_eq!(observed(|| ledger.close_step(paused), paused), RetainedCloneProgress::default());assert_eq!(ledger.last_close_work(),0);
-        assert_eq!(observed(|| ledger.close_step(RetainedCloneGrant::default()), RetainedCloneGrant::default()), RetainedCloneProgress::default());assert_eq!(ledger.last_close_work(),0);
-        if release > 0 { let short = RetainedCloneGrant { maximum_release_bytes: release - 1, ..grant }; assert_eq!(observed(|| ledger.close_step(short), short), RetainedCloneProgress::default()); }
-        assert_eq!(ledger.next_close_work_demand(),1);observed(|| ledger.close_step(grant), grant);assert_eq!(ledger.last_close_work(),1);
+        assert_eq!(observed(|e| ledger.close_step(e), paused), RetainedCloneProgress::default());assert_eq!(ledger.last_close_work(),0);
+        assert_eq!(observed(|e| ledger.close_step(e), RetainedCloneGrant::default()), RetainedCloneProgress::default());assert_eq!(ledger.last_close_work(),0);
+        if release > 0 { let short = RetainedCloneGrant { maximum_release_bytes: release - 1, ..grant }; assert_eq!(observed(|e| ledger.close_step(e), short), RetainedCloneProgress::default()); }
+        assert_eq!(ledger.next_close_work_demand(),1);observed(|e| ledger.close_step(e), grant);assert_eq!(ledger.last_close_work(),1);
     }
     panic!("original diagnostic owner did not reach terminal");
 }
@@ -69,9 +69,11 @@ fn replay_message_accumulator_native_original_rows_paid_vec_scaffold_and_partial
         if cancel_at.is_some() && !cursor.is_finished() {
             let ((outcome, mut pending), heap) = observe_heap_allocations_on_this_thread(|| cursor.into_parts());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            let mut spins = 0;
             while pending.is_some() {
-                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: if ledger.rows.has_reserved_slot() { size_of::<MutationMessage>() } else { 0 }, maximum_capacity_bytes: ledger.next_capacity_byte_demand().unwrap(), maximum_release_bytes: 0, maximum_depth: 64 };
-                observed(|| ledger.append(&mut pending, grant), grant);
+                spins += 1; assert!(spins < 4096, "append stalled");
+                let d = ledger.append_demands().unwrap(); let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: d.copy_bytes, maximum_capacity_bytes: d.capacity_bytes, maximum_release_bytes: d.release_bytes, maximum_depth: d.depth };
+                observed(|e| ledger.append(&mut pending, e), grant);
             }
             let (next, heap) = observe_heap_allocations_on_this_thread(|| OperationMessageDrain::new(outcome));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));

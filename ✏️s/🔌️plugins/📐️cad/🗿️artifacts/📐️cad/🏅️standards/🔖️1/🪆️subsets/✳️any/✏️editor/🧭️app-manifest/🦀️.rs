@@ -57,7 +57,7 @@ pub fn create_cad_app() -> semio_plugin::AppDefinition {
             .artifact_kind(artifact_kind())
             .icon_id("box")
             .terminology("reuse")
-            .terminology_document("reuse", ["Entwerfen mit Bestand", "Koordinator"])
+            .terminology_document("reuse", [LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::native("Coordinator", "Koordinator")])
             .mode_def(edit::definition())
             .default_mode_id(edit::CAD_PLAY_MODE_EDIT)
             .window_kind_def(shape::definition())

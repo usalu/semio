@@ -19,7 +19,7 @@ fn workflow_media_port_spec_controlled<C:semio_framework_dsl_record::NativeSchem
     control.scoped_stage(|control|{control.begin_stage(9)?;let mut fields=control.allocate_vec::<semio_framework_dsl_record::FieldSpec>(9)?;
         let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(0,"id",shape,control)?);control.step()?;
         let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(1,"port_id",shape,control)?);control.step()?;
-        let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(2,"label",shape,control)?);control.step()?;
+        let shape=workflow_label_shape_controlled(control)?;fields.push(semio_framework_dsl_record::producer::field(2,"label",shape,control)?);control.step()?;
         let shape=workflow_enum_shape_controlled(MEDIA_DIRECTION_LABELS,control)?;fields.push(semio_framework_dsl_record::producer::field(3,"direction",shape,control)?);control.step()?;
         let shape=workflow_enum_shape_controlled(MEDIA_CLASS_LABELS,control)?;fields.push(semio_framework_dsl_record::producer::field(4,"class",shape,control)?);control.step()?;
         let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(semio_framework_dsl_record::producer::field(5,"form",shape,control)?);control.step()?;
@@ -39,7 +39,7 @@ fn workflow_media_port_spec() -> semio_framework_dsl_record::RecordSpec {
         vec![
             semio_framework_dsl_record::FieldSpec::new(0, "id", semio_framework_dsl_record::Shape::Text),
             semio_framework_dsl_record::FieldSpec::new(1, "port_id", semio_framework_dsl_record::Shape::Text),
-            semio_framework_dsl_record::FieldSpec::new(2, "label", semio_framework_dsl_record::Shape::Text),
+            semio_framework_dsl_record::FieldSpec::new(2, "label", workflow_label_shape()),
             semio_framework_dsl_record::FieldSpec::new(3, "direction", semio_framework_dsl_record::Shape::Enum(media_port_direction_variants())),
             semio_framework_dsl_record::FieldSpec::new(4, "class", semio_framework_dsl_record::Shape::Enum(media_class_variants())),
             semio_framework_dsl_record::FieldSpec::new(5, "form", semio_framework_dsl_record::Shape::Enum(media_form_variants())),
@@ -54,7 +54,7 @@ pub fn workflow_media_port_to_record(port: &WorkflowMediaPort) -> semio_framewor
     let mut record = semio_framework_dsl_record::RecordValue::default();
     record.fields.insert(0, semio_framework_dsl_record::FieldValue::Text(port.id.clone()));
     record.fields.insert(1, semio_framework_dsl_record::FieldValue::Text(port.spec.id.clone()));
-    record.fields.insert(2, semio_framework_dsl_record::FieldValue::Text(port.spec.label.clone()));
+    record.fields.insert(2, workflow_label_to_value(&port.spec.label));
     record.fields.insert(3, semio_framework_dsl_record::FieldValue::Enum(media_port_direction_ordinal(port.spec.direction)));
     record.fields.insert(4, semio_framework_dsl_record::FieldValue::Enum(media_class_ordinal(port.spec.media_type.class)));
     record.fields.insert(5, semio_framework_dsl_record::FieldValue::Enum(media_form_ordinal(port.spec.media_type.form)));
@@ -76,10 +76,7 @@ pub fn workflow_media_port_from_record(record: &semio_framework_dsl_record::Reco
         Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
         other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected port_id, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
-    let label = match record.get(2) {
-        Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
-        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected label, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
-    };
+    let label = workflow_label_from_value(record.get(2).unwrap_or(&semio_framework_dsl_record::FieldValue::Absent)).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message,semio_framework_diagnostic::TextSpan::at(1,1)))?;
     let direction = match record.get(3) {
         Some(semio_framework_dsl_record::FieldValue::Enum(ordinal)) => media_port_direction_from_ordinal(*ordinal).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?,
         other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected direction, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),

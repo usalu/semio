@@ -164,7 +164,7 @@ impl<J:InteractiveJob+Send+'static> HeadlessState<J> {
                 semio_framework_job::close_original_granted_step(cx,|_|{
                     let alias=unbound_cancel.take().expect("original headless cancellation alias");
                     *params=Some(BatchJobParams {operation:operation.operation,generation:operation.generation,cancel:alias,config:BatchDriveConfig {retained:HEADLESS_GRANT,site:site.site,stage:site.stage,fuel_per_step:site.fuel_per_step,step_budget_us:site.step_budget_us},now_us});
-                    RetainedWorkOutcome {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}
+                    RetainedWorkOutcome::<_,ValueError> {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}
                 })?;
                 Ok(())
             });
@@ -253,13 +253,13 @@ impl<J:InteractiveJob+Send+'static> HeadlessState<J> {
             if !admission.terminal_is_empty() { admission.close_step(cx)?;return Ok(()); }
             if let Some(owner)=session.as_mut() {
                 if owner.terminal_is_empty() {
-                    semio_framework_job::close_original_granted_step(cx,|_|{*session=None;RetainedWorkOutcome {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}})?;
+                    semio_framework_job::close_original_granted_step(cx,|_|{*session=None;RetainedWorkOutcome::<_,ValueError> {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}})?;
                     return Ok(());
                 }
                 owner.begin_close();
                 let witness=owner.has_original_cancel_alias_witness(cx.original_cancel_token()).map_err(|error|match error {WorkerJobDemandError::Refused(error)=>OriginalTurnFailure::from(error),WorkerJobDemandError::Contention(_)=>ValueError::literal(ValueRefusalKind::WorkLimit,"headless worker close is contended").into()})?;
                 if witness {
-                    let turn=owner.return_original_cancel_alias_step(cx.original_cancel_token(),cx.retained_grant());
+                    let turn=cx.with_original_effect(cx.retained_grant(),|cx,effect|owner.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn);
                     let result=match turn.result {Ok(Some(step))=>Ok(step),Ok(None)|Err(WorkerJobDemandError::Contention(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(WorkerJobDemandError::Refused(error))=>Err(error)};
                     semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome {result,work:turn.work})?;
                 } else { owner.close_step(cx)?; }
@@ -267,25 +267,25 @@ impl<J:InteractiveJob+Send+'static> HeadlessState<J> {
             }
             if let Some(owner)=job.as_mut() {
                 if owner.terminal_is_empty() {
-                    semio_framework_job::close_original_granted_step(cx,|_|{*job=None;RetainedWorkOutcome {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}})?;
+                    semio_framework_job::close_original_granted_step(cx,|_|{*job=None;RetainedWorkOutcome::<_,ValueError> {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}})?;
                 } else if !*job_closing {
-                    semio_framework_job::close_original_granted_step(cx,|_|{owner.begin_close();*job_closing=true;RetainedWorkOutcome {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}})?;
+                    semio_framework_job::close_original_granted_step(cx,|_|{owner.begin_close();*job_closing=true;RetainedWorkOutcome::<_,ValueError> {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}})?;
                 } else { owner.close_step(cx)?; }
                 return Ok(());
             }
             if params.is_some() {
-                semio_framework_job::close_original_granted_step(cx,|_|{let params=params.take().expect("original headless parameters");*cancel_return=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));RetainedWorkOutcome {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}})?;
+                semio_framework_job::close_original_granted_step(cx,|_|{let params=params.take().expect("original headless parameters");*cancel_return=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));RetainedWorkOutcome::<_,ValueError> {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}})?;
                 return Ok(());
             }
             if unbound_cancel.is_some() {
-                semio_framework_job::close_original_granted_step(cx,|_|{*cancel_return=Some(semio_framework_async::CancelTokenRetirement::from_token(unbound_cancel.take().expect("unadmitted original cancellation alias")));RetainedWorkOutcome {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}})?;
+                semio_framework_job::close_original_granted_step(cx,|_|{*cancel_return=Some(semio_framework_async::CancelTokenRetirement::from_token(unbound_cancel.take().expect("unadmitted original cancellation alias")));RetainedWorkOutcome::<_,ValueError> {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}})?;
                 return Ok(());
             }
             if let Some(owner)=cancel_return.as_mut() {
                 if owner.terminal_is_empty() {
-                    semio_framework_job::close_original_granted_step(cx,|_|{*cancel_return=None;RetainedWorkOutcome {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}})?;
+                    semio_framework_job::close_original_granted_step(cx,|_|{*cancel_return=None;RetainedWorkOutcome::<_,ValueError> {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}})?;
                 } else {
-                    let turn=owner.return_alias_step(cx.original_cancel_token(),cx.retained_grant());
+                    let turn=cx.with_original_effect(cx.retained_grant(),|cx,effect|owner.return_alias_step(cx.original_cancel_token(),effect))?.map_or(RetainedWorkOutcome {result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},|(turn,_)|turn);
                     let result=match turn.result {Ok(step)=>Ok(step),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)};
                     semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome {result,work:turn.work})?;
                 }
@@ -293,7 +293,7 @@ impl<J:InteractiveJob+Send+'static> HeadlessState<J> {
             Ok(())
         })
     }
-    fn close_failure_step(&mut self)->Result<bool,ValueError> {
+    fn close_failure_step(&mut self)->Result<bool,OriginalTurnFailure> {
         let Some(caller)=self.caller.as_mut() else { return Ok(false); };
         let grant=caller.retirement_grant();
         if grant.maximum_items==0||grant.maximum_depth==0||caller.fuel_remaining()==0 { return Ok(false); }
@@ -303,11 +303,9 @@ impl<J:InteractiveJob+Send+'static> HeadlessState<J> {
                 caller.pay(RetainedCloneProgress {copied_items:1,..Default::default()},1)?;
                 return Ok(true);
             }
-            let result=cursor.step(grant);let work=cursor.last_turn_work();
-            match result {
-                Ok(step)=>{let progress=step.progress();caller.pay(progress,work)?;Ok(progress!=RetainedCloneProgress::default()||work!=0)}
-                Err(error)=>{caller.pay(error.retained_progress(),work)?;Err(error)}
-            }
+            let before=caller.fuel_remaining();
+            let step=caller.step_cursor(cursor)?;
+            Ok(step.progress()!=RetainedCloneProgress::default()||caller.fuel_remaining()!=before)
         } else if let Some(slot)=self.failures.iter_mut().find(|slot|slot.is_some()) {
             self.failure_cursor=Some(ControlledRetirement::retain(slot.take().expect("retained original failure")));
             caller.pay(RetainedCloneProgress {copied_items:1,..Default::default()},1)?;
@@ -321,7 +319,7 @@ impl<J:InteractiveJob+Send+'static> HeadlessState<J> {
         let before=self.caller.as_ref().expect("original headless caller").receipt();
         let fuel=self.caller.as_ref().expect("original headless caller").fuel_remaining();
         let business=self.job.is_some()||self.params.is_some()||!self.admission.terminal_is_empty()||self.session.is_some()||self.cancel_return.is_some()||self.unbound_cancel.is_some();
-        let result=if self.failures.iter().any(Option::is_some)||self.failure_cursor.is_some() {self.close_failure_step().map(|_|()).map_err(Into::into)} else if business {self.close_business_step()} else {self.caller.as_mut().expect("original headless caller").close_step().map(|_|()).map_err(Into::into)};
+        let result=if self.failures.iter().any(Option::is_some)||self.failure_cursor.is_some() {self.close_failure_step().map(|_|())} else if business {self.close_business_step()} else {self.caller.as_mut().expect("original headless caller").close_step().map(|_|()).map_err(Into::into)};
         if let Err(failure)=result {self.remember(failure);return HeadlessCloseStep::Refused;}
         let caller=self.caller.as_ref().expect("original headless caller");
         let after=caller.receipt();

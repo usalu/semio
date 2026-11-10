@@ -280,9 +280,9 @@ impl TessellationJob {
         let output=self.take_mesh();let mut owner=self.detach_retirement();let mut wallet=semio_framework_value::AuthoringWallet::new(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1<<30,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:1<<10},1_000_000_000_000);
         let mut stall=0;
         while !owner.terminal_is_empty() {
-            let demand={let first=owner.next_demand(0).expect("original tessellation selected demand");owner.next_demand(first.copy_bytes).expect("original tessellation selected demand")};
+            let(body,demand)={let first=owner.next_demand(0).expect("original tessellation selected demand");(first.copy_bytes,owner.next_demand(first.copy_bytes).expect("original tessellation selected demand"))};
             let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-            let Some((turn,_))=wallet.run_settled(grant,1<<20,|effect|owner.step(effect)).expect("original cold tessellation retirement")else{panic!("original cold tessellation retirement quote refused")};let step=turn.result.expect("original cold tessellation retirement step");wallet.post(step.progress()).expect("original cold tessellation retirement stock");
+            let Some((turn,_))=wallet.run_settled(grant,1<<20,|effect|owner.step(body,effect)).expect("original cold tessellation retirement")else{panic!("original cold tessellation retirement quote refused")};let step=turn.result.expect("original cold tessellation retirement step");wallet.post(step.progress()).expect("original cold tessellation retirement stock");
             if step.progress()==Default::default(){stall+=1;assert!(stall<64,"cold tessellation retirement stalled without progress: grant={grant:?}");}else{stall=0;}
         }
         output

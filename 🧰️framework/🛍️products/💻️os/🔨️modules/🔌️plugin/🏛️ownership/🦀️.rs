@@ -214,7 +214,7 @@ pub fn plugin_typed_owner_original<T: semio_framework_value::retirement::RetireO
         *active = None;
         return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
     }
-    let step = Exit::resume(owner.step(effect))?;
+    let step = Exit::resume(owner.step(grant.maximum_copy_bytes, effect))?;
     semio_framework_value::retained_clone::admit_retained_clone_progress(grant, step.progress(), "typed owner retirement")?;
     Ok(RetainedCloneStep::Progress(step.progress()))
  })();Exit::settle(effect,result)

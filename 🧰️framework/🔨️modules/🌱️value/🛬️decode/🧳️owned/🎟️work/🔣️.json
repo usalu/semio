@@ -33,10 +33,10 @@
       "const": 0
     },
     "bindingWork": {
-      "const": 6
+      "const": 3
     },
     "readWork": {
-      "const": 2
+      "const": 1
     },
     "invalidReadWork": {
       "const": 1
@@ -54,7 +54,7 @@
       ]
     },
     "sourceAdmissionWork": {
-      "const": 12
+      "const": 37
     },
     "construction": {
       "const": "optional-u64-placement"

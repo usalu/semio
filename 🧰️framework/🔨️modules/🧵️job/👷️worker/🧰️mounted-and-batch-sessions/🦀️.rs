@@ -109,9 +109,9 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
     }
 
     /// ✖️ Preserves checkout ownership while forwarding the caller's borrowed original cancellation root.
-    pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>{
+    pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>{
         if self.checked_out.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0};}
-        self.session.return_original_cancel_alias_step(witness,grant)
+        self.session.return_original_cancel_alias_step(witness,effect)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -245,7 +245,7 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
     /// ❌️ Preserves checkout custody before inspecting the original borrowed cancellation witness.
     pub fn has_original_cancel_alias_witness(&self,witness:&CancelToken)->Result<bool,WorkerJobDemandError>{if self.checked_out.is_some(){return Ok(false)}self.session.has_original_cancel_alias_witness(witness)}
     /// 🪜️ Returns the original alias through its sole session after checkout custody has returned.
-    pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>{if self.checked_out.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0}}self.session.return_original_cancel_alias_step(witness,grant)}
+    pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>{if self.checked_out.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0}}self.session.return_original_cancel_alias_step(witness,effect)}
 
     pub fn terminal_is_empty(&self) -> bool {
         self.checked_out.is_none() && self.session.terminal_is_empty()

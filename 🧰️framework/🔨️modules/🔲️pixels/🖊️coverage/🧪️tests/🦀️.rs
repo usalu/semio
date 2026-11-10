@@ -43,7 +43,7 @@ fn malformed_input_and_grants_are_rejected() {
 
 fn reject_owned_input(input:CoverageInput){let mut wallet=physical_wallet();let mut job=CoverageJob::new(input);let mut failed=false;for _ in 0..100_000{if funded_turn(&mut wallet,1,|work,alloc|job.advance(1,work,alloc)).is_err(){failed=true;break}}assert!(failed);assert!(job.result().is_err());funded_close_owned(job,&mut wallet);}
 fn close_demand(owner:&CoverageRetirement)->semio_framework_value::RetirementDemand{let copy_bytes=owner.next_copy_byte_demand().unwrap();let release_bytes=owner.next_release_byte_demand().unwrap();semio_framework_value::RetirementDemand{copy_bytes,capacity_bytes:owner.next_capacity_byte_demand(if copy_bytes>0{copy_bytes}else{release_bytes}).unwrap(),release_bytes,depth:owner.next_depth_demand().unwrap()}}
-fn close_turn(owner:&mut CoverageRetirement,_wallet:&mut Wallet)->semio_framework_value::RetainedCloneStep{let grant=test_wallet::quoted(4096,|body|owner.next_demand(body).unwrap());let(step,heap)=turned(grant,|effect|owner.close_step(effect));let p=step.progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));step}
+fn close_turn(owner:&mut CoverageRetirement,_wallet:&mut Wallet)->semio_framework_value::RetainedCloneStep{let grant=test_wallet::quoted(4096,|body|owner.next_demand(body).unwrap());let(step,heap)=turned(grant,|effect|owner.close_step(4096,effect));let p=step.progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));step}
 
 #[test]
 fn coverage_retirement_transfers_actual_masks_and_drains_private_sweep_owners() {
@@ -64,7 +64,7 @@ fn coverage_retirement_transfers_actual_masks_and_drains_private_sweep_owners() 
         if stop=="cancelled"||published||row["cancelBeforeTransfer"].as_bool().unwrap_or(false) {job.cancel();assert_eq!(job.mask.coverage.as_ptr(),mask);assert_eq!(job.input.contours.len(),owned_contours);}
         let has_output=row["output"].as_bool().unwrap();let (mut retired,output)=job.into_retirement();assert_eq!(output.is_some(),has_output);
         if let Some(output)=&output {assert_eq!(output.coverage.as_ptr(),mask);assert_eq!(output.coverage,expected);}
-        let(zero,heap)=turned(Default::default(),|effect|retired.close_step(effect));assert_eq!(zero.progress(),Default::default());assert_eq!(heap,(0,0));
+        let(zero,heap)=turned(Default::default(),|effect|retired.close_step(4096,effect));assert_eq!(zero.progress(),Default::default());assert_eq!(heap,(0,0));
         let mut work=0;
         for _ in 0..300_000 {
             if retired.terminal_is_empty(){break}let owners=retired.owner.original().map_or(0,|job|job.input.contours.len());let before=work;
@@ -72,7 +72,7 @@ fn coverage_retirement_transfers_actual_masks_and_drains_private_sweep_owners() 
             assert!(work>=before&&work-before<=grant as u64);let remaining=retired.owner.original().map_or(0,|job|job.input.contours.len());assert!(remaining<=owners);
         }
         assert!(work>0);assert!(retired.terminal_is_empty());assert!(retired.owner.original().is_none());
-        let(stable,heap)=turned(Default::default(),|effect|retired.close_step(effect));assert!(matches!(stable,semio_framework_value::RetainedCloneStep::Complete(_)));assert_eq!(stable.progress(),Default::default());assert_eq!(heap,(0,0));
+        let(stable,heap)=turned(Default::default(),|effect|retired.close_step(4096,effect));assert!(matches!(stable,semio_framework_value::RetainedCloneStep::Complete(_)));assert_eq!(stable.progress(),Default::default());assert_eq!(heap,(0,0));
         funded_close_owned(retired,&mut wallet);if let Some(output)=output{funded_close_owned(output,&mut wallet);}
     }}
 }

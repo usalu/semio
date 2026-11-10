@@ -111,12 +111,12 @@ pub(crate) fn close_turn(
     Ok(effect_turn(receiving, grant, |effect| run(effect).map_err(DurableOwnedGroupDecisionError::Retirement))?.unwrap_or_default())
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> std::fmt::Debug for DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> std::fmt::Debug for DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.debug_struct("DurableOwnedThreeStorePreparedV1").field("binding_step", &self.binding_step).finish_non_exhaustive() }
 }
 
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> std::fmt::Debug for DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> std::fmt::Debug for DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.debug_struct("DurableOwnedThreeStoreBoundV1").field("decision_sha256", &self.decision.decision_sha256).finish_non_exhaustive() }
 }
 

@@ -72,7 +72,7 @@ impl<T: RetireOwned + 'static> WorkClosing<T> {
             if self.retirement.is_empty(){
                 let turn=self.retirement.begin_granted(&mut self.staged,effect);
                 semio_framework_value::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))).map_err(Into::into),work:turn.work})
-            }else{self.retirement.step_granted(effect)}
+            }else{self.retirement.step_granted(effect.grant().maximum_copy_bytes,effect)}
         })?;
         Ok(if self.is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
     }
@@ -165,20 +165,16 @@ impl JobOutbox {
         self.publication.advance_from_source(kind, &self.source, cx)
     }
 
-    pub fn retire_step(&mut self, cx: &mut StepContext<'_>) -> Result<(), ValueError> {
+    pub fn retire_step(&mut self, cx: &mut StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
         self.retiring = true;
-        let turn = self.publication.close_step(cx.retained_grant());
-        cx.consume_fuel(turn.work);
-        match turn.result? {
-            RetainedCloneStep::Progress(progress) => cx.consume_retained(progress),
-            RetainedCloneStep::Complete(progress) => {
-                cx.consume_retained(progress)?;
-                self.kind = None;
-                self.retiring = false;
-                self.source = Vec::new();
-                Ok(())
-            }
+        let demand = self.publication.retirement_demands()?;
+        semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(self.publication.close_step(effect)))?;
+        if self.publication.terminal_is_empty() {
+            self.kind = None;
+            self.retiring = false;
+            self.source = Vec::new();
         }
+        Ok(())
     }
 
     /// 🎫️ Settles a turn: control outcomes are lent at once, payload outcomes stage their bytes for the next paid turns.
@@ -213,13 +209,13 @@ impl JobOutbox {
     }
 
     /// ♻️ Closes the lent publication first, then the staged commit pages, then clears the staging flags.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         if self.terminal_is_empty() {
             return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())), work: 0 };
         }
         if self.kind.is_some() || !self.publication.terminal_is_empty() {
             self.retiring = true;
-            let step = self.publication.close_step(grant);
+            let step = self.publication.close_step(effect);
             if step.result.is_ok() && self.publication.terminal_is_empty() {
                 self.kind = None;
                 self.retiring = false;
@@ -230,7 +226,7 @@ impl JobOutbox {
             return step;
         }
         if !self.commit.terminal_is_empty() {
-            let step = self.commit.close_step_granted(grant);
+            let step = self.commit.close_step(effect);
             if step.result.is_ok() && self.commit.terminal_is_empty() {
                 self.commit_cursor = 0;
                 self.committing = false;
@@ -263,7 +259,7 @@ impl JobOutbox {
 pub fn job_close_step<T: RetireOwned + 'static>(outbox: &mut JobOutbox, owners: &mut WorkClosing<T>, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
     if !outbox.terminal_is_empty() {
         let demand = outbox.retirement_demands()?;
-        return semio_framework_job::close_original_retained_step(cx, demand, |grant| outbox.close_step(grant));
+        return semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(outbox.close_step(effect)));
     }
     owners.close_step(cx)
 }
@@ -277,6 +273,8 @@ pub fn job_close_demands<T: RetireOwned + 'static>(outbox: &JobOutbox, owners: &
 }
 
 //#region 🌐️BrowserCaller
+/// ⛽️ Source fuel every pump turn of a browser caller may spend.
+const BROWSER_CALLER_FUEL: u64 = 1 << 40;
 /// 🌐️ The original caller of a browser handle: the page's JavaScript is the outermost caller, so the handle owns one cancellation root, one payload authority and one source parent, lends a fresh scheduled context per exported call and pays their terminal retirement itself.
 pub struct BrowserCaller {
     parent: std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceParent>>,
@@ -284,16 +282,100 @@ pub struct BrowserCaller {
     turn_grant: RetainedCloneGrant,
 }
 
+/// 🎬️ The browser handle is the host: every owner-less birth and close runs inside one pump-issued Source turn.
+fn pump<R>(grant: RetainedCloneGrant, run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> Result<Option<(R, u128)>, ValueError> {
+    semio_framework_job::OriginalRetirementPump::new().turn(BROWSER_CALLER_FUEL, u64::MAX, semio_framework_job::default_now_us, grant).and_then(|mut turn| turn.with_effect(run))
+}
+
+/// 🧹️ Retires the staged roots one pump turn at a time.
+fn retire_roots(mut authority: Option<semio_framework_job_payload::JobPayloadAuthority>, cancel: Option<semio_framework_job::CancelToken>, grant: RetainedCloneGrant) {
+    let mut cancel = cancel.map(semio_framework_job::CancelTokenRetirement::from_token);
+    let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
+    for _ in 0..64 {
+        if let Some(owner) = authority.as_mut().filter(|owner| !owner.terminal_is_empty()) {
+            let _ = pump(grant, |effect| owner.close_step(effect));
+            continue;
+        }
+        if let Some(owner) = cancel.as_mut().filter(|owner| !owner.terminal_is_empty()) {
+            let _ = pump(grant, |effect| owner.close_step(effect));
+            continue;
+        }
+        break;
+    }
+}
+
+/// 🚫️ A refused birth closes every staged owner in later pump turns: published backing becomes a parent that closes, assembled roots return their inputs, and the inputs retire.
+fn cancel_birth(mut admission: semio_framework_job::OriginalCallerSourceAdmission, mut authority: Option<semio_framework_job_payload::JobPayloadAuthority>, mut cancel: Option<semio_framework_job::CancelToken>, mut parent: Option<semio_framework_job::OriginalCallerSourceParent>, stock: RetainedCloneGrant) {
+    let grant = RetainedCloneGrant { maximum_items: stock.maximum_items.min(1), ..stock };
+    for _ in 0..4096 {
+        if admission.has_backing() {
+            let _ = pump(grant, |effect| admission.publish(&mut parent, effect));
+            continue;
+        }
+        if admission.has_roots() {
+            let _ = pump(grant, |effect| admission.return_inputs(&mut authority, &mut cancel, effect));
+            continue;
+        }
+        if let Some(owner) = parent.as_mut().filter(|owner| !owner.terminal_is_empty()) {
+            let _ = pump(grant, |effect| owner.close_step(effect));
+            continue;
+        }
+        break;
+    }
+    drop(parent.take());
+    retire_roots(authority, cancel, stock);
+}
+
 impl BrowserCaller {
     /// 🚪️ Admits the roots from `turn_grant`, the same physical authority every later call is scheduled under.
     pub fn admit(turn_grant: RetainedCloneGrant) -> Result<Self, ValueError> {
         let refused = |kind, message: &'static str| ValueError::literal(kind, message);
-        let (cancel, root) = semio_framework_job::CancelToken::admit_root(turn_grant).result?.ok_or_else(|| refused(semio_framework_value::ValueRefusalKind::OwnershipLimit, "browser caller cancellation root is not funded"))?;
-        let (authority, ledger) = semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), Self::remaining(turn_grant, root)?).result?.ok_or_else(|| refused(semio_framework_value::ValueRefusalKind::OwnershipLimit, "browser caller payload authority is not funded"))?;
-        let (parent, _) = semio_framework_job::OriginalCallerSourceParent::admit(authority, cancel, Self::remaining(turn_grant, root.checked_add(ledger)?)?).result.map_err(|(error, authority, cancel)| {
-            std::mem::forget((authority, cancel));
-            error
-        })?;
+        let unfunded = || refused(semio_framework_value::ValueRefusalKind::OwnershipLimit, "browser caller roots are not funded");
+        let (cancel, receipt) = semio_framework_job::CancelToken::admit_root(turn_grant).result?.ok_or_else(unfunded)?;
+        let mut spent = RetainedCloneProgress::default().checked_add(receipt)?;
+        let mut actual = None;
+        let admitted = semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), Self::remaining(turn_grant, spent)?, &mut actual).result;
+        let (authority, receipt) = match admitted {
+            Ok(Some(born)) => born,
+            Ok(None) => {
+                retire_roots(None, Some(cancel), turn_grant);
+                return Err(unfunded());
+            }
+            Err(error) => {
+                retire_roots(None, Some(cancel), turn_grant);
+                return Err(error);
+            }
+        };
+        spent = spent.checked_add(receipt)?;
+        let (mut authority, mut cancel, mut admission, mut parent) = (Some(authority), Some(cancel), semio_framework_job::OriginalCallerSourceAdmission::new(), None);
+        for _ in 0..4096 {
+            if parent.is_some() {
+                break;
+            }
+            let stage = if admission.has_backing() { 2 } else if admission.has_roots() { 1 } else { 0 };
+            let grant = RetainedCloneGrant { maximum_items: 1, ..Self::remaining(turn_grant, spent)? };
+            let ran = pump(grant, |effect| match stage {
+                0 => admission.prepare(&mut authority, &mut cancel, effect),
+                1 => admission.admit_backing(effect),
+                _ => admission.publish(&mut parent, effect),
+            });
+            let step = match ran {
+                Ok(Some((turn, _))) => turn.result,
+                Ok(None) => break,
+                Err(error) => Err(error),
+            };
+            match step {
+                Ok(step) => spent = spent.checked_add(step.progress())?,
+                Err(error) => {
+                    cancel_birth(admission, authority.take(), cancel.take(), parent.take(), turn_grant);
+                    return Err(error);
+                }
+            }
+        }
+        let Some(parent) = parent else {
+            cancel_birth(admission, authority.take(), cancel.take(), None, turn_grant);
+            return Err(unfunded());
+        };
         Ok(Self { parent: std::mem::ManuallyDrop::new(Some(parent)), sequence: 0, turn_grant })
     }
 
@@ -320,7 +402,10 @@ impl BrowserCaller {
         let Some(parent) = self.parent.as_mut() else { return Ok(true) };
         if !parent.terminal_is_empty() {
             let demand = parent.retirement_demands()?;
-            parent.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }).result?;
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            if let Some((semio_framework_value::RetainedWorkPoll::Complete(turn), _)) = pump(grant, |effect| parent.close_step(effect))? {
+                turn.result.map_err(|failure| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "browser caller parent close refused").with_retained_progress(failure.retained_progress()))?;
+            }
         }
         if !parent.terminal_is_empty() {
             return Ok(false);

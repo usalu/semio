@@ -1,7 +1,8 @@
 //! 🌳️ Funded projection of an original borrowed tree into the execution owner.
+use semio_os_kernel_neural_engine_model::retirement::{close_reply,CloseReply,CloseComplete};
 use crate::{Tree,Neuron,Synapse,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkPoll,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind};
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement};
 use std::mem::{ManuallyDrop,size_of};
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
@@ -32,7 +33,7 @@ impl BudgetedTreeCopy{
    4=>{if source.neurons[self.node].tree.is_some(){owners.child=Some(Box::new(Self::new()));self.progress.retained_capacity_bytes=size_of::<Self>();self.phase=5;}else{self.phase=9;}},
    5=>{let child=owners.child.as_mut().unwrap();let result=child.step(source.neurons[self.node].tree.as_deref().unwrap(),&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}));self.progress=child.step_progress();if let Some(tree)=result?{owners.nested=Some(tree);self.phase=6;}},
    6=>{owners.neuron.as_mut().unwrap().tree=Some(Box::new(owners.nested.take().unwrap()));self.progress.retained_capacity_bytes=size_of::<Tree>();owners.child.as_mut().unwrap().begin_close();self.phase=7;},
-   7=>{let child=owners.child.as_mut().unwrap();if child.terminal_is_empty(){if grant.maximum_release_bytes<size_of::<Self>(){self.progress=Default::default();return Ok(None)}drop(owners.child.take());self.progress.released_bytes=size_of::<Self>();self.phase=9;}else{let poll=child.close_step(&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}));self.progress=child.step_progress();match poll{RetainedWorkPoll::Pending{..}=>return Ok(None),RetainedWorkPoll::Complete(turn)=>{turn.result.map_err(|failure|failure.into_value_error())?;}}}},
+   7=>{let child=owners.child.as_mut().unwrap();if child.terminal_is_empty(){if grant.maximum_release_bytes<size_of::<Self>(){self.progress=Default::default();return Ok(None)}drop(owners.child.take());self.progress.released_bytes=size_of::<Self>();self.phase=9;}else{let poll=child.close_step(grant.maximum_copy_bytes,&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}));self.progress=child.step_progress();match poll{RetainedWorkPoll::Pending{..}=>return Ok(None),RetainedWorkPoll::Complete(turn)=>{turn.result.map_err(|failure|failure.into_value_error())?;}}}},
    9=>{owners.output.as_mut().unwrap().neurons.push(owners.neuron.take().unwrap());self.node+=1;self.phase=1;},
    10=>{let output=owners.output.as_mut().unwrap();if output.synapses.capacity()<source.synapses.len(){output.synapses.try_reserve_exact(source.synapses.len()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original synapse vector allocation refused"))?;self.progress.retained_capacity_bytes=output.synapses.capacity()*size_of::<Synapse>();}self.phase=11;},
    11=>{if source.synapses.get(self.edge).is_some(){owners.synapse=Some(Synapse{id:String::new(),from:String::new(),to:String::new(),from_port:String::new(),to_port:String::new()});self.phase=12;}else{self.phase=18;}},
@@ -47,11 +48,11 @@ impl BudgetedTreeCopy{
  /// 🧹️ Hands off the exact typed projection fields before advancing their original closure.
  /// ⛽️ Quotes the selected retirement child step or the one field handoff.
  pub fn next_close_work(&self,body:usize)->Result<u64,ValueError>{if let Some(owner)=self.retirement.as_ref(){return owner.next_computational_work(body)}Ok(u64::from(self.owners.is_some()))}
- pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   self.progress=Default::default();let grant=effect.grant();
   let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
    if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tree projection close was not requested").into())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-   if let Some(owner)=self.retirement.as_mut(){let result=RetirementPollExit::resume(owner.step(effect));self.progress=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.retirement=None;}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+   if let Some(owner)=self.retirement.as_mut(){let result=RetirementPollExit::resume(owner.step(body,effect));self.progress=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.retirement=None;}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
    if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original projection handoff requires admitted depth").into())}
    if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original projection handoff exceeds its work ceiling").into())}
    let owners=self.owners.take().ok_or_else(||ValueError::invariant("original projection owners absent"))?;self.retirement=Some(ControlledRetirement::retain(owners));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
@@ -67,7 +68,7 @@ pub struct CopyRetirement(BudgetedTreeCopy);
 impl RetirementCursor for CopyRetirement{
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.next_close_demands(body) }
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.0.next_close_work(body)}
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{semio_framework_value::retirement::erased_cursor_turn(self.0.close_step(effect))}
+ fn close_into<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:CloseReply<'reply>)->Result<CloseComplete<'reply>,ValueError>{close_reply(self.0.close_step(body,effect),effect,reply)}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}
  fn allows_admitted_narrow_work(&self)->bool{true}

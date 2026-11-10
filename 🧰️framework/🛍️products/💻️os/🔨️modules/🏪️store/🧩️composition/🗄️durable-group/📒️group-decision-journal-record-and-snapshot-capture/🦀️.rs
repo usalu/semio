@@ -3,7 +3,7 @@
 use super::*;
 use super::map_assembly_recovery_completion::recover_decision_store_owned;
 
-pub struct DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+pub struct DurableOwnedThreeStorePreparedV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> {
     pub parent: DurableStorePreparedOwnerV1<ParentP, ParentMutation>,
     pub drawing: DurableStorePreparedOwnerV1<DrawingP, DrawingMutation>,
     pub value: DurableStorePreparedOwnerV1<ValueP, ValueMutation>,
@@ -21,7 +21,7 @@ pub struct DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, D
     pub(super) decision_encoding: planning::DurablePackOutputV1,
 }
 
-pub struct DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+pub struct DurableOwnedThreeStoreBoundV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> {
     pub decision: Box<DurableOwnedThreeMemberDecisionV1>,
     pub parent: DurableStoreBoundOutcomeV1<ParentP, ParentMutation>,
     pub drawing: DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>,
@@ -30,7 +30,7 @@ pub struct DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, Draw
 }
 
 #[expect(clippy::large_enum_variant, reason = "Recovery hands back all three exact preadmitted store outcomes without allocating at the ownership transition.")]
-pub enum DurableOwnedThreeStoreRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+pub enum DurableOwnedThreeStoreRecoveryV1<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> {
     Apply(DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
     AlreadyApplied,
 }
@@ -105,7 +105,7 @@ impl DurableOwnedGroupJournalRecordV1 {
 
     /// 🧬️ Re-admits the complete decision and verifies all three typed bound outcomes before
     /// exposing immutable edit projections; no publication seal or binding authority escapes.
-    pub fn verify_fixed_three_edits<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(&self) -> Result<DurableOwnedGroupVerifiedThreeEditsV1<ParentMutation, DrawingMutation, ValueMutation>, DurableOwnedGroupDecisionError>
+    pub fn verify_fixed_three_edits<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>(&self) -> Result<DurableOwnedGroupVerifiedThreeEditsV1<ParentMutation, DrawingMutation, ValueMutation>, DurableOwnedGroupDecisionError>
     where
         ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
         ParentMutation: ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<ParentP> + StoreMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -129,7 +129,7 @@ impl DurableOwnedGroupJournalRecordV1 {
     }
 
     /// ♻️ Reconstructs only Store-private sealed owners from one committed decision and the exact three retained live Stores.
-    pub(super) fn begin_store_owned_recovery<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+    pub(super) fn begin_store_owned_recovery<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>(
         &self,
         receipt: DurableOwnedGroupJournalReceiptV1,
         parent: ArtifactStore<ParentP, ParentMutation>,
@@ -196,7 +196,7 @@ where
     Ok((Arc::clone(&*store.live.current), store.cursor.generation, store.cursor.content_revision))
 }
 
-pub fn capture_store_owned_three_snapshot<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+pub fn capture_store_owned_three_snapshot<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>(
     parent_store: &ArtifactStore<ParentP, ParentMutation>,
     drawing_store: &ArtifactStore<DrawingP, DrawingMutation>,
     value_store: &ArtifactStore<ValueP, ValueMutation>,
@@ -224,11 +224,11 @@ where
     Ok(DurableOwnedThreeStoreSnapshotV1 { parent: parent.0, drawing: drawing.0, value: value.0, generations: [parent.1, drawing.1, value.1], revisions: [parent.2, drawing.2, value.2] })
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
     pub fn originals_empty(&self) -> bool { self.parent.originals_empty() && self.drawing.originals_empty() && self.value.originals_empty() }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Send + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -244,8 +244,8 @@ where
         if !self.parent.originals_empty() { effect_turn(receiving,grant,|effect|retire_binding_member(&mut self.parent, &mut parent.parts(), effect))?;self.retirement_progress=self.parent.retirement_progress(); return Ok(false); }
         if !self.drawing.originals_empty() { effect_turn(receiving,grant,|effect|retire_binding_member(&mut self.drawing, &mut drawing.parts(), effect))?;self.retirement_progress=self.drawing.retirement_progress(); return Ok(false); }
         if !self.value.originals_empty() { effect_turn(receiving,grant,|effect|retire_binding_member(&mut self.value, &mut value.parts(), effect))?;self.retirement_progress=self.value.retirement_progress(); return Ok(false); }
-        if let Some(owner)=self.decision_retirement.as_mut(){self.retirement_progress=close_turn(receiving,grant,|effect|Ok(semio_os_store_read::settle_close_poll(owner.step(effect))?.progress()))?;if owner.terminal_is_empty(){self.decision_retirement=None;}return Ok(false);}
-        if let Some(owner)=self.decision_pack_retirement.as_mut(){self.retirement_progress=close_turn(receiving,grant,|effect|Ok(semio_os_store_read::settle_close_poll(owner.step(effect))?.progress()))?;if owner.terminal_is_empty(){self.decision_pack_retirement=None;}return Ok(false);}
+        if let Some(owner)=self.decision_retirement.as_mut(){self.retirement_progress=close_turn(receiving,grant,|effect|Ok(semio_os_store_read::settle_close_poll(owner.step(effect.grant().maximum_copy_bytes,effect))?.progress()))?;if owner.terminal_is_empty(){self.decision_retirement=None;}return Ok(false);}
+        if let Some(owner)=self.decision_pack_retirement.as_mut(){self.retirement_progress=close_turn(receiving,grant,|effect|Ok(semio_os_store_read::settle_close_poll(owner.step(effect.grant().maximum_copy_bytes,effect))?.progress()))?;if owner.terminal_is_empty(){self.decision_pack_retirement=None;}return Ok(false);}
         let copy=size_of::<Box<DurableOwnedThreeMemberDecisionV1>>()+size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<Box<DurableOwnedThreeMemberDecisionV1>>>()+size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>()+size_of::<DurablePlanningOutputV1>();
         if self.decision.is_some()||self.decision_pack.is_some(){if !grant.permits_one()||grant.maximum_copy_bytes<copy{return Ok(false);}if let Some(decision)=self.decision.take(){self.decision_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(decision).map_err(|(reason,_)|DurableOwnedGroupDecisionError::Retirement(reason))?);}else if let Some(pack)=self.decision_pack.take(){self.decision_pack_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(DurablePlanningOutputV1::Pack(pack)).map_err(|(reason,_)|DurableOwnedGroupDecisionError::Retirement(reason))?);}self.retirement_progress=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()};return Ok(false);}
         Ok(true)

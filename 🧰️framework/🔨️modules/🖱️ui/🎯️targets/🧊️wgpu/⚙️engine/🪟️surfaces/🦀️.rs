@@ -33,7 +33,7 @@ pub use window_and_tooltips::{
 #[path = "🧯️candidate-baseline-close-and-layout-worker/🦀️.rs"]
 mod candidate_baseline_close_and_layout_worker;
 pub use candidate_baseline_close_and_layout_worker::{
-    close_layout_worker_session, consume_layout_retirement, retire_surface_scene,
+    close_layout_admission, close_layout_worker_session, retire_surface_scene,
     LayoutWorkerAdmission, UiCandidateBaseline, UiCandidateBaselineStep, UiSurfaceClosePhase,
     UiSurfaceCloseStep, UiWorkerRetirementRefusal,
 };

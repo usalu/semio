@@ -15,7 +15,7 @@ pub fn close_original_quoted_retained_step<E:Into<crate::OriginalTurnPrimary>>(c
   return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})
  }
  if cx.fuel_remaining()<work&&!cx.fuel_turn_untouched(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
- let turn=advance(RetainedCloneGrant{maximum_items:1,..remaining});let excess=turn.work>u128::from(work);
+ let turn=advance(remaining);let excess=turn.work>u128::from(work);
  let result=fold_original_close(cx,RetainedWorkOutcome{result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}).map_err(Into::into),work:turn.work});
  if !excess{return result}let refusal=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original close exceeded its admitted work quote");
  Err(match result{Ok(step)=>OriginalTurnFailure{effects:step.progress(),primary:refusal().into(),receipt_refusal:None,context_refusal:None,work_refusal:None},Err(mut failure)=>{failure.work_refusal=Some(refusal());failure}})
@@ -42,22 +42,27 @@ fn close_original_admission(cx:&mut StepContext<'_>,demand:RetirementDemand)->Re
   if !semio_framework_value::retained_clone::retained_clone_grant_admits(cx.original_total_retained_grant(),demand){return Err(OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::WorkLimit,"original close demand exceeds the whole grant of its turn and can never fit")))}
   return Ok(None)
  }
- Ok(Some(RetainedCloneGrant{maximum_items:1,..remaining}))
+ Ok(Some(remaining))
 }
 pub fn close_original_retained_turn(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,crate::OriginalTurnPrimary>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
  let Some(grant)=close_original_admission(cx,demand)?else{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})};
  let turn=advance(grant);fold_original_close(cx,RetainedWorkOutcome{result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}),work:turn.work})
 }
-/// 🪙️ An effect-shaped close runs inside the context's own performed-work effect and settles the converted poll once.
-pub fn close_original_effect_step(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->semio_framework_value_control_contract::RetainedWorkPoll<RetainedCloneStep,semio_framework_value_control_contract::OriginalRetirementFailure>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+/// 🪙️ An effect-shaped close runs inside the context's own performed-work effect with every item the turn admits and settles the converted poll once.
+pub fn close_original_effect_step<E:Into<crate::OriginalTurnPrimary>>(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->semio_framework_value_control_contract::RetainedWorkPoll<RetainedCloneStep,E>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
  use semio_framework_value_control_contract::RetainedWorkPoll;
  let Some(grant)=close_original_admission(cx,demand)?else{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})};
  let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|advance(effect))?else{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})};
  let turn=match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};
  let overrun=performed>turn.work;
- let result=fold_original_close(cx,RetainedWorkOutcome{result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}).map_err(crate::OriginalTurnPrimary::from),work:turn.work});
+ let result=fold_original_close(cx,RetainedWorkOutcome{result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}).map_err(|error|-> crate::OriginalTurnPrimary {error.into()}),work:turn.work});
  if !overrun{return result}let refusal=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original effect close performed more work than it settled");
  Err(match result{Ok(step)=>OriginalTurnFailure{effects:step.progress(),primary:refusal().into(),receipt_refusal:None,context_refusal:None,work_refusal:None},Err(mut failure)=>{failure.work_refusal=Some(refusal());failure}})
+}
+
+/// 🪙️ A synchronous effect-shaped close settles its performed work as its own complete poll.
+pub fn close_original_retained_effect_step<E:Into<semio_framework_value_retained_clone::OriginalRetirementFailure>>(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,E>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+ close_original_effect_step(cx,demand,|effect|{let result=advance(effect).map_err(Into::into);semio_framework_value_control_contract::RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()})})
 }
 
 /// 🎫️ A grant-shaped close returns its full actual CPU witness, including denial and failure.

@@ -36,9 +36,43 @@ semio-framework-value-retained-clone = { path = "../../../../🧬️retained-clo
 semio-framework-value-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-shared-issuance = { path = "../../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 
+[features]
+testkit = []
+
 [dev-dependencies]
+semio-framework-value-edit = { path = ".", features = ["testkit"] }
+semio-framework-value = { path = "../../../../📦️packages/🦀️rust" }
 semio-framework-value-native-receiving-original = { path = "../../../../🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-value-clone-source-testing = { path = "../../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
+
+[[test]]
+name = "indexed_edit"
+path = "../../🧪️tests/indexed.rs"
+
+[[test]]
+name = "indexed_commit"
+path = "../../🚚️commit/🧪️tests/commit.rs"
+
+[[test]]
+name = "named_edit"
+path = "../../🔑️named/🧪️tests/named.rs"
+
+[[test]]
+name = "named_index"
+path = "../../🔑️named/📇️index/🧪️tests/index.rs"
+
+[[test]]
+name = "named_transfer"
+path = "../../🔑️named/📇️index/♻️transfer/🧪️tests/transfer.rs"
+
+[[test]]
+name = "named_root_receive"
+path = "../../🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "named_ranked"
+path = "../../🔑️named/🧳️ranked/🧪️tests/ranked.rs"

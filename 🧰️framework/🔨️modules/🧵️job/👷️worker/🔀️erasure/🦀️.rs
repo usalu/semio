@@ -22,7 +22,7 @@ pub trait OriginalPreviewSession:preview_session_sealed::Sealed+JobThreadTransfe
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>;
  fn retirement_demands(&self,maximum_copy_bytes:usize)->Result<RetirementDemand,WorkerJobDemandError>;
  fn has_original_cancel_alias_witness(&self,witness:&CancelToken)->Result<bool,WorkerJobDemandError>;
- fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>;
+ fn return_original_cancel_alias_step(&self,witness:&CancelToken,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>;
  fn terminal_is_empty(&self)->bool;
 }
 impl<J:InteractiveJob+'static> OriginalPreviewSession for BatchJobSession<J>{
@@ -38,7 +38,7 @@ impl<J:InteractiveJob+'static> OriginalPreviewSession for BatchJobSession<J>{
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{BatchJobSession::close_step(self,cx)}
  fn retirement_demands(&self,maximum_copy_bytes:usize)->Result<RetirementDemand,WorkerJobDemandError>{BatchJobSession::retirement_demands(self,maximum_copy_bytes)}
  fn has_original_cancel_alias_witness(&self,witness:&CancelToken)->Result<bool,WorkerJobDemandError>{self.has_original_cancel_alias_witness(witness)}
- fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>{self.return_original_cancel_alias_step(witness,grant)}
+ fn return_original_cancel_alias_step(&self,witness:&CancelToken,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>{self.return_original_cancel_alias_step(witness,effect)}
  fn terminal_is_empty(&self)->bool{BatchJobSession::terminal_is_empty(self)}
 }
 
@@ -103,7 +103,7 @@ impl ErasedBatchJobSession{
  pub fn begin_close(&mut self){if let Some(session)=self.session.as_mut(){session.begin_close()}}
  pub fn retirement_demands(&self,maximum_copy_bytes:usize)->Result<RetirementDemand,WorkerJobDemandError>{match self.session.as_ref(){Some(session)if !session.terminal_is_empty()=>session.retirement_demands(maximum_copy_bytes),Some(_)=>Ok(RetirementDemand{release_bytes:self.allocated_bytes,depth:1,..Default::default()}),None=>Ok(Default::default())}}
  pub fn has_original_cancel_alias_witness(&self,witness:&CancelToken)->Result<bool,WorkerJobDemandError>{self.session.as_ref().map_or(Ok(false),|session|session.has_original_cancel_alias_witness(witness))}
- pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>{self.session.as_ref().map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|session|session.return_original_cancel_alias_step(witness,grant))}
+ pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>{self.session.as_ref().map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|session|session.return_original_cancel_alias_step(witness,effect))}
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
   let Some(session)=self.session.as_mut()else{return Ok(WorkerJobCloseStep::Complete{progress:Default::default()})};
   if !session.terminal_is_empty(){return Ok(match session.close_step(cx)?{WorkerJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},step=>step})}
@@ -129,7 +129,7 @@ impl OriginalPreviewSession for ErasedBatchJobSession{
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{ErasedBatchJobSession::close_step(self,cx)}
  fn retirement_demands(&self,maximum_copy_bytes:usize)->Result<RetirementDemand,WorkerJobDemandError>{ErasedBatchJobSession::retirement_demands(self,maximum_copy_bytes)}
  fn has_original_cancel_alias_witness(&self,witness:&CancelToken)->Result<bool,WorkerJobDemandError>{ErasedBatchJobSession::has_original_cancel_alias_witness(self,witness)}
- fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>{ErasedBatchJobSession::return_original_cancel_alias_step(self,witness,grant)}
+ fn return_original_cancel_alias_step(&self,witness:&CancelToken,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>{ErasedBatchJobSession::return_original_cancel_alias_step(self,witness,effect)}
  fn terminal_is_empty(&self)->bool{ErasedBatchJobSession::terminal_is_empty(self)}
 }
 

@@ -52,11 +52,7 @@ impl<T:Eq+Send+Sync+'static> Eq for SealedShared<T>{}
 
 /// 🟢️ Retains one real empty shared backing until funded publication or cancellation.
 pub struct SealedSharedBirth<T:Send+Sync+'static>{issuance:u64,storage:SharedOriginalBirth<T>}
-/// 📤️ A current item/depth grant permits one allocation-free sealed publication.
-pub struct SealedSharedPublication<'a,T:Send+Sync+'static>{issuance:u64,storage:retirement::arc_custody::original::SharedOriginalPublication<'a,T>}
-impl<T:Send+Sync+'static> SealedSharedPublication<'_,T>{pub fn commit(self,value:T,issuer:SharedIssuer<T>)->RetainedWorkOutcome<(SealedShared<T>,RetainedCloneProgress)>{let turn=self.storage.commit(value);RetainedWorkOutcome{result:turn.result.map(|(source,p)|(SealedShared{source:ManuallyDrop::new(Some(source)),issuer,issuance:self.issuance},p)),work:turn.work}}}
 impl<T:Send+Sync+'static> SealedSharedBirth<T>{
- pub fn publication(&mut self,grant:RetainedCloneGrant)->Result<Option<SealedSharedPublication<'_,T>>,ValueError>{let issuance=self.issuance;self.storage.publication(grant).map(|p|p.map(|storage|SealedSharedPublication{issuance,storage}))}
  pub const fn publication_work_demand()->u64{SharedOriginalBirth::<T>::publication_work_demand()}
  pub fn publication_demand()->RetirementDemand{let mut demand=SharedOriginalBirth::<T>::publication_demand();demand.copy_bytes+=size_of::<SealedShared<T>>()+size_of::<Option<SealedShared<T>>>();demand}
  pub fn publish(&mut self,input:&mut Option<T>,issuer:SharedIssuer<T>,output:&mut Option<SealedShared<T>>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
@@ -87,7 +83,7 @@ impl<T:Send+Sync+'static> SealedShared<T>{
  pub fn birth_bytes()->usize{SharedOriginalStorage::<T>::allocation_bytes()}
  pub fn admission_demand()->Result<RetirementDemand,ValueError>{SharedOriginalStorage::<T>::value_admission_demand()}
  pub const fn birth_work_demand()->u64{1+Self::prepare_birth_work_demand()}
- pub const fn duplicate_alias_work_demand()->u64{SharedOriginalStorage::<T>::duplicate_work_demand()}
+ pub const fn duplicate_alias_work_demand()->u64{SharedOriginalStorage::<T>::DUPLICATE_WORK}
  pub fn source_admission_demand()->Result<RetirementDemand,ValueError>{let mut demand=SharedOriginalStorage::<T>::source_admission_demand()?;demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<Self>()+size_of::<Option<Self>>()+size_of::<u64>()).ok_or_else(||ValueError::invariant("sealed source admission copy overflow"))?;Ok(demand)}
  pub const fn source_admission_work_demand()->u64{1+SharedOriginalStorage::<T>::source_admission_work_demand()}
  pub fn prepare_birth_demand()->Result<RetirementDemand,ValueError>{let mut demand=SharedOriginalStorage::<T>::prepare_birth_demand()?;demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<SealedSharedBirth<T>>()+size_of::<Option<SealedSharedBirth<T>>>()+size_of::<u64>()).ok_or_else(||ValueError::invariant("sealed empty birth copy overflow"))?;Ok(demand)}
@@ -103,10 +99,9 @@ impl<T:Send+Sync+'static> SealedShared<T>{
 
  /// ⛽️ Borrows the actual original storage alias work before duplication.
  pub fn try_duplicate(&self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<(Self,RetainedCloneProgress)>{
-  let Some(source)=self.source.as_ref()else{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"sealed source has already transferred")),work:0}};let grant=effect.grant();let copy=Self::duplicate_copy_bytes();
+  if self.source.is_none(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"sealed source has already transferred")),work:0}}let grant=effect.grant();let copy=Self::duplicate_copy_bytes();
   if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||effect.maximum_work_units()<1{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed alias handoff is not funded")),work:0}}
-  let before=effect.performed_work();if let Err((error,work))=retirement::record_retirement_work(effect,SharedOriginalStorage::<T>::duplicate_work_demand()){return RetainedWorkOutcome{result:Err(error),work}}
-  let turn=source.duplicate(grant);RetainedWorkOutcome{result:turn.result.map(|source|(Self{source:ManuallyDrop::new(Some(source)),issuer:self.issuer,issuance:self.issuance},RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})),work:effect.performed_work()-before}
+  let mut output=None;let turn=self.duplicate_into(&mut output,effect);RetainedWorkOutcome{result:turn.result.and_then(|step|output.take().map(|source|(source,step.progress())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed alias handoff is not funded"))),work:turn.work}
  }
  pub fn duplicate_work_demand(&self)->Result<u64,ValueError>{self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"sealed source has already transferred"))?.duplicate_work_demand()}
  pub const DUPLICATE_WORK:u64=SharedOriginalStorage::<T>::DUPLICATE_WORK;

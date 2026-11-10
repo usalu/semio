@@ -11,7 +11,7 @@
   "value": true,
   "deniedWork": 0,
   "takeWork": 1,
-  "copyBytes": 0,
+  "copyBytes": 3,
   "cachedWork": 0,
   "sequence": [
     true,

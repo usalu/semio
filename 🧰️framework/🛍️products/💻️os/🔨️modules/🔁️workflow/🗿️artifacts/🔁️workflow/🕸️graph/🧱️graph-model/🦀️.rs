@@ -74,7 +74,7 @@ pub fn workflow_media_port(node_id: &str, spec: &MediaPortSpec) -> WorkflowMedia
 }
 
 /// 🧩️ Builds a workflow node shell from a manifest app definition so every app is instantiable as a node.
-pub async fn workflow_node_for_app(app: &AppDefinition, plugin_id: &str, node_id: &str, position: &WorkflowPosition) -> WorkflowNode {
+pub async fn workflow_node_for_app(app: &AppDefinition, plugin_id: &str, node_id: &str, position: &WorkflowPosition, label: &str) -> WorkflowNode {
     let all_ports = app.io.all_ports().await;
     let inputs: Vec<WorkflowMediaPort> = all_ports.iter().filter(|spec| spec.direction == MediaPortDirection::In).map(|spec| workflow_media_port(node_id, spec)).collect();
     let outputs: Vec<WorkflowMediaPort> = all_ports.iter().filter(|spec| spec.direction == MediaPortDirection::Out).map(|spec| workflow_media_port(node_id, spec)).collect();
@@ -85,7 +85,7 @@ pub async fn workflow_node_for_app(app: &AppDefinition, plugin_id: &str, node_id
         id: node_id.into(),
         plugin_id: plugin_id.into(),
         app_id: app.id.clone(),
-        label: app.label.resolve(Terminology::Native, Locale::En).to_string(),
+        label: label.to_string(),
         yields,
         artifact_ref: format!("artifacts/{node_id}"),
         config_ref: format!("config/{node_id}"),

@@ -80,7 +80,7 @@
     "returnStart": {
       "const": {
         "work": 1,
-        "copyBytes": 0,
+        "copyBytes": 1,
         "capacityBytes": 0,
         "releaseBytes": 0,
         "depth": 1

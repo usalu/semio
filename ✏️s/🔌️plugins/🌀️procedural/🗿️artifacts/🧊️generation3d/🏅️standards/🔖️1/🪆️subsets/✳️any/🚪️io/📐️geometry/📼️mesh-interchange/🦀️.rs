@@ -166,7 +166,7 @@ fn import_obj(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     from_source(kind, move || {
         let text = inputs.text("data")?.to_string();
         let mut cursor = ObjSourceCursor::new();
-        Ok(Box::new(move |fuel: usize| cursor.step(&text, fuel.saturating_mul(BATCH * 16)).map_err(import_fault)) as Parse)
+        Ok(Box::new(move |fuel: usize, _: &mut StepContext<'_>| cursor.step(&text, fuel.saturating_mul(BATCH * 16)).map_err(import_fault)) as Parse)
     })
 }
 

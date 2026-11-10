@@ -3,7 +3,7 @@ use crate::test_retirement::{close_original,native_turn,NativeWorkWallet};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 #[derive(Clone,Copy)]struct OriginalPages<'a>{pages:&'a[&'a[u8]],page_bytes:usize,identity:OriginalWireSourceIdentity}
 impl RetainedWireByteSource for OriginalPages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{self.identity}fn byte_at(&self,index:usize)->Option<u8>{if index>=self.identity.extent{return None}self.pages.get(index/self.page_bytes)?.get(index%self.page_bytes).copied()}}
-fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(operation)}
+fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_os_history_testing_retirement::observe_backing(operation)}
 fn receipt(owner:&mut RetainedHistorySourceDecode,g:RetainedCloneGrant,born:usize,released:usize){let(issued,p)=owner.take_receipt().unwrap();assert_eq!(issued,g);assert!(p.fits(g));assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));}
 fn hex(value:&str)->Vec<u8>{value.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 fn id(body:&mut Vec<u8>,value:&str){body.push(0);protocol::codec::write_varint_u64(body,value.len()as u64);body.extend_from_slice(value.as_bytes());}
@@ -16,7 +16,7 @@ fn source_turn<T>(control:&mut NativeDecodeControl<'_>,work:&mut SourceWork,gran
  let turn=|native:&mut NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>|{let start=effect.performed_work();let output=run(native,&mut effect.nested(grant));(output,effect.performed_work()-start)};let maximum=RetainedHistorySourceDecode::work_demand(base_grant());
  let result=native_turn(control,&mut work.wallet,|native|if quote==0{native.with_effect(base_grant(),maximum,turn)}else{native.with_allocated_effect(semio_framework_value::RetirementDemand{copy_bytes:usize::MAX,capacity_bytes:quote,release_bytes:usize::MAX,depth:64},maximum,turn)}).unwrap().expect("History test work quote was not admitted");
  let(result,performed)=result;
- let spent=control.actual_work()-before;assert_eq!(performed,spent,"History outcome omitted actual native effects");
+ let spent=control.actual_work()-before;assert_eq!(performed+if performed>0{u128::from(semio_framework_value::ORIGINAL_INVOCATION_WORK)}else{0},spent,"History outcome omitted actual native effects");
  assert!(spent<=4096,"History call exceeded its authored work quantum");
  work.reported=work.reported.checked_add(spent).unwrap();assert!(work.reported<=1_000_000,"History trial exhausted its authored work stock");Turn{work:spent,result}
 }

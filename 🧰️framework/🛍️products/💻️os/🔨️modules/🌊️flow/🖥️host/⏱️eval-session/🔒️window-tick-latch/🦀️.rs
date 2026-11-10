@@ -174,14 +174,14 @@ impl FlowEvalSession {
     /// chain was chasing have just been swept (a registry replacement, a fresh document), so the
     /// invocations it parked can no longer resume anything and their windows must be free to be
     /// armed again from scratch.
-    pub fn clear_window_tick_latches(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
-        if self.state.window_tick_latches.terminal_is_empty(){return Ok(Default::default())}
-        self.state.retirement.preflight(grant)?;
-        let source=SessionCollectionOwner::Latches(std::mem::take(&mut self.state.window_tick_latches));
-        match self.state.retirement.admit(source,grant){
-            Ok(progress)=>Ok(progress),
-            Err((error,SessionCollectionOwner::Latches(original)))=>{self.state.window_tick_latches=original;Err(error)},
-            Err(_)=>unreachable!("session original latch admission kind"),
+    pub fn clear_window_tick_latches(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError> {
+        if self.state.window_tick_latches.terminal_is_empty(){return Ok(Some(Default::default()))}
+        self.state.retirement.preflight(effect.grant())?;
+        let mut source=Some(SessionCollectionOwner::Latches(std::mem::take(&mut self.state.window_tick_latches)));
+        let turn=self.state.retirement.admit(&mut source,effect);
+        match turn.result{
+            Ok(Some(progress))=>Ok(Some(progress)),
+            result=>{let Some(SessionCollectionOwner::Latches(original))=source else{unreachable!("session original latch admission kind")};self.state.window_tick_latches=original;result.map(|_|None)},
         }
     }
 }

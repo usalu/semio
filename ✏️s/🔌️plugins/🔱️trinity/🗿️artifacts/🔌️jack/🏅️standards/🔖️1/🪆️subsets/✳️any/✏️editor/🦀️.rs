@@ -208,7 +208,7 @@ pub fn jack_io() -> semio_plugin::AppIo {
         artifact_media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
         ports: vec![semio_plugin::MediaPortSpec {
             id: "graph:out".into(),
-            label: "Graph".into(),
+            label: LocalizedLabel::native("Graph", "Graph"),
             direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
             kind_id: Some("graph.trinity".into()),

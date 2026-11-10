@@ -21,14 +21,16 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["dep:semio-framework-value-testing-admission"]
 
 [dependencies]
 semio-ui-scene-mesh = { path = "../../../../../../🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
 semio-ui-raster-owner = { path = "../../../../../../🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust", optional = true }
 
 [dev-dependencies]
+semio-framework-value-testing-admission = { path = "../../../../../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../⏱️trace/📦️packages/🦀️rust" }
 serde_json = "1.0.140"

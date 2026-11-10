@@ -131,12 +131,13 @@ impl EnergyWirePacket {
     }
 
     /// 🎟️ Releases one payload frontier only when the caller's grant covers its quote.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         let demand = self.payload.retirement_demands()?;
         if !energy_grant_covers(grant, demand) {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
-        self.payload.close_step(grant).result
+        self.payload.close_step(effect).result
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -314,7 +315,8 @@ impl EnergyWireQueue {
         self.slots[self.head].as_ref().map(EnergyWirePacket::retirement_demands)
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<InteractiveJobCloseStep>, ValueError> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<InteractiveJobCloseStep>, ValueError> {
+        let grant = effect.grant();
         self.recover_lost();
         if self.in_flight.is_some() {
             return Ok(Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }));
@@ -327,7 +329,7 @@ impl EnergyWireQueue {
             return Ok(Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }));
         }
         let Some(packet) = self.slots[self.head].as_mut() else { return Ok(None) };
-        let (step, done) = energy_turn(packet.close_step(grant))?;
+        let (step, done) = energy_turn(packet.close_step(effect))?;
         if done {
             self.slots[self.head] = None;
             self.head = (self.head + 1) % ENERGY_WIRE_QUEUE_SLOTS;

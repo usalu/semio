@@ -137,9 +137,9 @@ fn image_decode_phases_record_honest_work(){
 fn jpeg_source(jpeg:&serde_json::Value)->ImageDecodeInput<'static>{let data:&'static str=Box::leak(format!("data:image/jpeg;base64,{}",jpeg["cases"][0]["base64"].as_str().unwrap()).into_boxed_str());ImageDecodeInput{mime:"image/jpeg",data,max_source_bytes:268439552,max_bytes:67108864,max_pixels:16777216,max_chunks:65536}}
 #[test]
 fn stalled_blocking_close_releases_its_owner_and_refuses_with_a_typed_error(){
- let(result,(requested,released))=observed(||retire_funded(vec![7u8;4096],|grant|RetainedCloneGrant{maximum_items:0,..grant}));
+ let(result,(requested,released))=observed(||retire_funded(vec![7u8;4096],|grant|RetainedCloneGrant{maximum_items:0,..grant},&mut semio_framework_pixels::BlockingTurns::new(1<<40)));
  assert_eq!(result,Err(ImageDecodeError::Invalid("Decode job close stalled")));assert!(requested>0);assert_eq!(requested,released,"a stalled close leaked its owner");
- assert_eq!(retire_funded(vec![7u8;4096],|grant|grant),Ok(()));
+ assert_eq!(retire_funded(vec![7u8;4096],|grant|grant,&mut semio_framework_pixels::BlockingTurns::new(1<<40)),Ok(()));
 }
 #[derive(semio_framework_value::RetireOwned)]
 struct NestedOwners{first:Vec<u8>,second:Vec<Vec<u8>>,third:(Vec<u8>,Vec<u8>)}
@@ -147,7 +147,7 @@ struct NestedOwners{first:Vec<u8>,second:Vec<Vec<u8>>,third:(Vec<u8>,Vec<u8>)}
 fn stalled_close_of_nested_record_owners_releases_every_level_without_panicking(){
  for healthy in [0usize,1,2,3,5]{
   let turns=std::cell::Cell::new(0usize);
-  let(result,(requested,released))=observed(||retire_funded(NestedOwners{first:vec![1;64],second:vec![vec![2;32],vec![3;16]],third:(vec![4;8],vec![5;8])},|grant|{let turn=turns.get();turns.set(turn+1);if turn<healthy{grant}else{RetainedCloneGrant{maximum_items:0,..grant}}}));
+  let(result,(requested,released))=observed(||retire_funded(NestedOwners{first:vec![1;64],second:vec![vec![2;32],vec![3;16]],third:(vec![4;8],vec![5;8])},|grant|{let turn=turns.get();turns.set(turn+1);if turn<healthy{grant}else{RetainedCloneGrant{maximum_items:0,..grant}}},&mut semio_framework_pixels::BlockingTurns::new(1<<40)));
   assert_eq!(result,Err(ImageDecodeError::Invalid("Decode job close stalled")),"healthy turns {healthy}");assert_eq!(requested,released,"healthy turns {healthy} leaked");
  }
 }

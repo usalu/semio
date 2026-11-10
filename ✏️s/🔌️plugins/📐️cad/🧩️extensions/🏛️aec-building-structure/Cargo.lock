@@ -373,6 +373,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-2d-booleans",
  "semio-framework-2d-engine",
+ "semio-framework-2d-retire",
  "semio-framework-value",
 ]
 
@@ -491,6 +492,7 @@ dependencies = [
  "semio-framework-actor-retained-turn",
  "semio-framework-async",
  "semio-framework-job",
+ "semio-framework-job-native-turn",
  "semio-framework-job-payload",
  "semio-framework-value",
  "serde",
@@ -593,6 +595,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-retirement",
  "serde",
  "serde_json",
 ]
@@ -683,6 +686,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-native-receiving-original",
  "semio-framework-value-native-storage",
  "semio-framework-value-ordered",
  "semio-framework-value-paged-text",
@@ -714,6 +718,7 @@ name = "semio-framework-dsl-token"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -862,16 +867,28 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
+ "semio-framework-job-capture",
  "semio-framework-job-context",
  "semio-framework-job-native-encoding",
+ "semio-framework-job-native-turn",
  "semio-framework-job-park",
  "semio-framework-job-payload",
+ "semio-framework-job-return",
  "semio-framework-job-testing-caller",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-retained-clone",
  "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-job-capture"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-job-context",
+ "semio-framework-value-retained-clone",
 ]
 
 [[package]]
@@ -907,7 +924,9 @@ dependencies = [
  "semio-framework-value-call",
  "semio-framework-value-control-contract",
  "semio-framework-value-derive",
+ "semio-framework-value-native-outcome",
  "semio-framework-value-native-owned",
+ "semio-framework-value-native-receiving-frame",
  "semio-framework-value-retained-clone",
  "semio-framework-value-shared-issuance",
 ]
@@ -916,6 +935,7 @@ dependencies = [
 name = "semio-framework-job-failure"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-io-control",
@@ -955,6 +975,19 @@ dependencies = [
  "semio-framework-job-receiving",
  "semio-framework-value",
  "semio-framework-value-control-contract",
+]
+
+[[package]]
+name = "semio-framework-job-native-turn"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-context",
+ "semio-framework-job-return-budget",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-decode-handoff",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-native-outcome",
+ "semio-framework-value-native-receiving-frame",
 ]
 
 [[package]]
@@ -1032,6 +1065,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-job-return"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-clock",
+ "semio-framework-job-context",
+ "semio-framework-job-failure",
+ "semio-framework-job-payload",
+ "semio-framework-value-retained-clone",
+]
+
+[[package]]
 name = "semio-framework-job-return-book"
 version = "0.1.0"
 dependencies = [
@@ -1047,6 +1091,9 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-job-payload",
  "semio-framework-job-return-escrow-publication",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-outcome",
+ "semio-framework-value-native-receiving-frame",
  "semio-framework-value-retained-clone",
 ]
 
@@ -1055,6 +1102,7 @@ name = "semio-framework-job-return-escrow-publication"
 version = "0.1.0"
 dependencies = [
  "semio-framework-job-payload",
+ "semio-framework-value-control-contract",
  "semio-framework-value-retained-clone",
 ]
 
@@ -1064,8 +1112,14 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-job-context",
+ "semio-framework-job-native-turn",
+ "semio-framework-job-payload",
  "semio-framework-trace",
+ "semio-framework-value-control-contract",
  "semio-framework-value-retained-clone",
+ "semio-framework-value-testing-allocator",
+ "semio-framework-value-testing-effect-bank",
+ "serde_json",
 ]
 
 [[package]]
@@ -1180,6 +1234,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
  "semio-ui-contract",
  "serde",
 ]
@@ -1872,6 +1927,7 @@ name = "semio-framework-replication-history"
 version = "0.1.0"
 dependencies = [
  "semio-framework-hash",
+ "semio-framework-job-context",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
  "semio-framework-replication-causal",
@@ -1985,8 +2041,16 @@ name = "semio-framework-replication-retained-field"
 version = "0.1.0"
 dependencies = [
  "semio-framework-mutation-diff",
+ "semio-framework-replication-retained-field-preparation",
  "semio-framework-value",
  "semio-framework-value-persistent",
+]
+
+[[package]]
+name = "semio-framework-replication-retained-field-preparation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-retained-clone",
 ]
 
 [[package]]
@@ -2113,6 +2177,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-pack",
  "semio-framework-replication",
+ "semio-framework-tool-run-entities",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
@@ -2138,6 +2203,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value",
  "semio-framework-value-shared-issuance",
+ "semio-framework-value-source-hold",
 ]
 
 [[package]]
@@ -2195,12 +2261,16 @@ dependencies = [
  "semio-framework-value-native-encoding",
  "semio-framework-value-native-owned",
  "semio-framework-value-original-slot",
+ "semio-framework-value-paged",
  "semio-framework-value-persistent",
  "semio-framework-value-read",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retained-map",
+ "semio-framework-value-retained-map-edit",
  "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
  "semio-framework-value-shared-issuance",
+ "semio-framework-value-shared-utf8",
  "semio-framework-value-snapshot-projection",
  "semio-framework-value-sort",
  "serde",
@@ -2222,12 +2292,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-value-clone-selection"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+]
+
+[[package]]
 name = "semio-framework-value-clone-source"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-clone-source-lease",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-clone-engine",
+ "semio-framework-value-receiving",
+ "semio-framework-value-retirement",
+ "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-value-clone-source-lease"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-retirement",
- "semio-framework-value-shared-issuance",
 ]
 
 [[package]]
@@ -2235,6 +2323,7 @@ name = "semio-framework-value-control-contract"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-physical",
+ "semio-framework-value-control-reply",
  "semio-framework-value-source-turn",
  "serde",
 ]
@@ -2245,6 +2334,13 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value-source-turn",
  "serde",
+]
+
+[[package]]
+name = "semio-framework-value-control-reply"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-physical",
 ]
 
 [[package]]
@@ -2279,6 +2375,7 @@ dependencies = [
  "semio-framework-value-persistent",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
  "semio-framework-value-shared-issuance",
  "semio-framework-value-sort",
 ]
@@ -2290,17 +2387,23 @@ dependencies = [
  "semio-framework-value-clone-source",
  "semio-framework-value-control-contract",
  "semio-framework-value-intrinsic",
+ "semio-framework-value-native-clone-engine",
+ "semio-framework-value-native-slice-equality",
+ "semio-framework-value-native-storage",
  "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
 ]
 
 [[package]]
 name = "semio-framework-value-factory"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-value-clone-source",
  "semio-framework-value-control-contract",
  "semio-framework-value-derive",
  "semio-framework-value-receiving",
  "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
 ]
 
 [[package]]
@@ -2311,11 +2414,66 @@ dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-encoding",
+ "semio-framework-value-native-slice-equality",
  "semio-framework-value-paged-list",
  "semio-framework-value-retirement",
  "semio-framework-value-shared-issuance",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-value-native-array-backing"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+]
+
+[[package]]
+name = "semio-framework-value-native-bounded-ordering"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-clone-source",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-clone-engine",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-native-clone-backing"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-cursor-backing",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-native-clone-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-array-backing",
+ "semio-framework-value-native-dynamic-clone",
+]
+
+[[package]]
+name = "semio-framework-value-native-cursor-backing"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-clone-engine",
+ "semio-framework-value-native-storage",
+ "semio-framework-value-retirement-contract",
+]
+
+[[package]]
+name = "semio-framework-value-native-decode-handoff"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-decoding",
 ]
 
 [[package]]
@@ -2327,8 +2485,10 @@ dependencies = [
  "semio-framework-value-native-encoding",
  "semio-framework-value-native-number",
  "semio-framework-value-native-outcome",
+ "semio-framework-value-native-receiving-frame",
  "semio-framework-value-receiving",
  "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
  "semio-framework-value-shared-issuance",
 ]
 
@@ -2347,6 +2507,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-value-native-dynamic-clone"
+version = "0.1.0"
+
+[[package]]
 name = "semio-framework-value-native-encoding"
 version = "0.1.0"
 dependencies = [
@@ -2355,12 +2519,38 @@ dependencies = [
  "semio-framework-value-native-outcome",
  "semio-framework-value-receiving",
  "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
+]
+
+[[package]]
+name = "semio-framework-value-native-list-receiver"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-intrinsic",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-native-receiver-protocol",
+ "semio-framework-value-native-schema-engine",
+ "semio-framework-value-native-shared-engine",
+ "semio-framework-value-native-storage",
+ "semio-framework-value-persistent",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+ "semio-framework-value-shared-issuance",
 ]
 
 [[package]]
 name = "semio-framework-value-native-number"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-value-control-contract",
+]
+
+[[package]]
+name = "semio-framework-value-native-ordered-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-allocation-return",
  "semio-framework-value-control-contract",
 ]
 
@@ -2382,8 +2572,12 @@ dependencies = [
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-default",
+ "semio-framework-value-native-list-receiver",
  "semio-framework-value-native-receiver-protocol",
+ "semio-framework-value-native-receiving-contract",
+ "semio-framework-value-native-reservation",
  "semio-framework-value-native-schema-engine",
+ "semio-framework-value-native-shared-engine",
  "semio-framework-value-native-shared-field",
  "semio-framework-value-native-shared-slots",
  "semio-framework-value-native-storage",
@@ -2400,6 +2594,7 @@ name = "semio-framework-value-native-receiver-protocol"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
+ "semio-framework-value-native-clone-engine",
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-storage",
  "semio-framework-value-retained-clone",
@@ -2413,6 +2608,15 @@ dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-native-decoding",
  "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-native-receiving-frame"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-outcome",
  "semio-framework-value-retirement",
 ]
 
@@ -2431,17 +2635,51 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-value-native-reservation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-native-receiving-contract",
+ "semio-framework-value-native-schema-engine",
+ "semio-framework-value-native-source",
+ "semio-framework-value-paged-list",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
 name = "semio-framework-value-native-schema-engine"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
+ "semio-framework-value-derive",
  "semio-framework-value-intrinsic",
+ "semio-framework-value-native-clone-backing",
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-receiver-protocol",
+ "semio-framework-value-native-receiving-contract",
  "semio-framework-value-native-storage",
+ "semio-framework-value-paged-list",
  "semio-framework-value-persistent",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-native-shared-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-native-receiver-protocol",
+ "semio-framework-value-native-shared-field",
+ "semio-framework-value-native-shared-slots",
+ "semio-framework-value-native-storage",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+ "semio-framework-value-shared-issuance",
 ]
 
 [[package]]
@@ -2450,9 +2688,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-native-decoding",
- "semio-framework-value-native-receiving-contract",
+ "semio-framework-value-native-receiver-protocol",
  "semio-framework-value-native-shared-slots",
- "semio-framework-value-native-source",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "semio-framework-value-shared-issuance",
@@ -2462,11 +2699,28 @@ dependencies = [
 name = "semio-framework-value-native-shared-slots"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-value-allocation-return",
+ "semio-framework-value-clone-source",
  "semio-framework-value-control-contract",
  "semio-framework-value-native-decoding",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-value-native-slice-equality"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+]
+
+[[package]]
+name = "semio-framework-value-native-sorted"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-retirement",
 ]
 
 [[package]]
@@ -2505,8 +2759,10 @@ dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-decoding",
+ "semio-framework-value-native-ordered-engine",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
  "serde",
 ]
 
@@ -2526,6 +2782,7 @@ dependencies = [
  "semio-framework-value-factory",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
 ]
 
 [[package]]
@@ -2534,6 +2791,28 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
+]
+
+[[package]]
+name = "semio-framework-value-paged"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-derive",
+ "semio-framework-value-factory",
+ "semio-framework-value-intrinsic",
+ "semio-framework-value-native-encoding",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-original-slot",
+ "semio-framework-value-persistent",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retained-map",
+ "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
+ "semio-framework-value-shared-utf8",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -2542,6 +2821,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value-clone-source",
  "semio-framework-value-control-contract",
+ "semio-framework-value-native-clone-engine",
  "semio-framework-value-paged-list",
  "semio-framework-value-retirement",
 ]
@@ -2552,6 +2832,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value-allocation-return",
  "semio-framework-value-control-contract",
+ "semio-framework-value-retirement-contract",
  "serde",
 ]
 
@@ -2581,6 +2862,7 @@ dependencies = [
  "semio-framework-value-retained-clone",
  "semio-framework-value-retained-work",
  "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
  "semio-framework-value-shared-issuance",
  "semio-framework-value-snapshot-projection",
 ]
@@ -2591,8 +2873,10 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-factory",
+ "semio-framework-value-native-array-backing",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
 ]
 
 [[package]]
@@ -2617,9 +2901,13 @@ dependencies = [
 name = "semio-framework-value-retained-clone"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-value-clone-selection",
  "semio-framework-value-clone-source",
  "semio-framework-value-control-contract",
  "semio-framework-value-intrinsic",
+ "semio-framework-value-native-clone-engine",
+ "semio-framework-value-native-cursor-backing",
+ "semio-framework-value-native-sorted",
  "semio-framework-value-paged-clone",
  "semio-framework-value-paged-list",
  "semio-framework-value-retirement",
@@ -2633,7 +2921,22 @@ dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-derive",
  "semio-framework-value-intrinsic",
+ "semio-framework-value-native-bounded-ordering",
+ "semio-framework-value-native-clone-backing",
  "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-value-retained-map-edit"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-bounded-ordering",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retained-map",
  "semio-framework-value-retirement",
  "serde",
 ]
@@ -2678,6 +2981,7 @@ dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-paged-list",
  "semio-framework-value-retirement",
+ "semio-framework-value-retirement-contract",
 ]
 
 [[package]]
@@ -2699,10 +3003,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-value-shared-utf8"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-intrinsic",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+ "serde",
+]
+
+[[package]]
 name = "semio-framework-value-snapshot-projection"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
+ "semio-framework-value-native-array-backing",
+ "semio-framework-value-native-clone-backing",
+ "semio-framework-value-native-storage",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "semio-framework-value-shared-issuance",
@@ -2722,8 +3040,31 @@ name = "semio-framework-value-sort"
 version = "0.1.0"
 
 [[package]]
+name = "semio-framework-value-source-hold"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-value-source-turn"
 version = "0.1.0"
+
+[[package]]
+name = "semio-framework-value-testing-allocator"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-trace",
+ "semio-framework-trace-memory-testing",
+]
+
+[[package]]
+name = "semio-framework-value-testing-effect-bank"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "serde_json",
+]
 
 [[package]]
 name = "semio-os-channel"
@@ -3490,6 +3831,7 @@ dependencies = [
  "semio-os-store-one-item",
  "semio-os-store-one-item-batch",
  "semio-os-store-one-item-publication",
+ "semio-os-store-read",
  "semio-os-store-space-schema",
  "semio-os-store-text-io",
  "semio-os-vcs",
@@ -4237,6 +4579,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-factory",
  "semio-framework-value-native-owned",
+ "semio-framework-value-original-vector",
  "semio-framework-value-persistent",
  "semio-framework-value-snapshot-projection",
  "semio-framework-value-snapshot-read",
@@ -4270,6 +4613,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-original-vector",
  "semio-framework-value-persistent",
  "semio-framework-value-snapshot-read",
  "semio-os-spr",
@@ -4588,6 +4932,7 @@ dependencies = [
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-panel",
  "semio-plugin-time-travel-turns",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-tool-run-turns",
  "semio-plugin-window-config",
@@ -4615,6 +4960,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
+ "semio-framework-kernel-identity",
  "semio-framework-schema-composition",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -5171,6 +5517,7 @@ dependencies = [
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-panel",
  "semio-plugin-time-travel-turns",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-tool-run-turns",
  "semio-plugin-window-config",
@@ -5247,6 +5594,7 @@ dependencies = [
  "semio-plugin-retained-command",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-turns",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-window-kits",
  "semio-ui-contract",
@@ -5270,6 +5618,7 @@ dependencies = [
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
  "semio-plugin-time-travel",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-window-kits",
 ]
@@ -5313,6 +5662,7 @@ dependencies = [
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
  "semio-plugin-time-travel",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-window-config",
  "semio-plugin-window-transient",
@@ -5378,6 +5728,7 @@ dependencies = [
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
  "semio-plugin-time-travel",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-ui-contract",
 ]
@@ -5444,6 +5795,7 @@ dependencies = [
  "semio-plugin-peer",
  "semio-plugin-reactor-app",
  "semio-plugin-time-travel",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-window-config",
  "semio-plugin-window-kits",
@@ -5487,6 +5839,7 @@ dependencies = [
  "semio-plugin-retained-command",
  "semio-plugin-scrub-host",
  "semio-plugin-time-travel",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-typing-edit",
  "semio-plugin-window-config",
@@ -5533,6 +5886,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-turns",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-tool-run-turns",
  "semio-plugin-window-config",
@@ -5571,6 +5925,7 @@ dependencies = [
  "semio-plugin-retained-command",
  "semio-plugin-scrub-host",
  "semio-plugin-time-travel",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-typing-edit",
  "semio-plugin-window-config",
@@ -5611,6 +5966,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-retained-command",
  "semio-plugin-time-travel",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-window-config",
  "semio-plugin-window-config-mutation",
@@ -5673,6 +6029,7 @@ dependencies = [
  "semio-plugin-retained-command",
  "semio-plugin-scrub-host",
  "semio-plugin-time-travel",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-window-config",
  "semio-plugin-window-config-mutation",
@@ -5693,7 +6050,9 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-command",
+ "semio-os-dsl",
  "semio-os-kernel",
+ "semio-os-pack",
  "semio-plugin-ownership",
  "semio-ui-contract",
  "semio-ui-locale",
@@ -5732,6 +6091,7 @@ dependencies = [
  "semio-plugin-decl-views",
  "semio-plugin-host-configuration",
  "semio-plugin-interaction",
+ "semio-plugin-job-child-vcs",
  "semio-plugin-job-receiving",
  "semio-plugin-operation",
  "semio-plugin-ownership",
@@ -5743,6 +6103,17 @@ dependencies = [
  "semio-ui-locale",
  "semio-ui-scene",
  "serde_json",
+]
+
+[[package]]
+name = "semio-plugin-job-child-vcs"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin-job-receiving",
 ]
 
 [[package]]
@@ -6393,6 +6764,7 @@ dependencies = [
  "semio-framework-tool-machine",
  "semio-framework-value",
  "semio-plugin-ownership",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
 ]
 
@@ -6431,12 +6803,18 @@ dependencies = [
 name = "semio-plugin-testing-caller"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-job",
  "semio-framework-job-payload",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-native-receiving-original",
+ "semio-plugin-decl-app",
+ "semio-plugin-decl-emission",
+ "semio-plugin-decl-tool-contract",
+ "semio-plugin-ownership",
+ "semio-plugin-retained-command",
  "serde",
  "serde_json",
 ]
@@ -6594,10 +6972,33 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-panel",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-window-config",
  "semio-ui-contract",
  "semio-ui-locale",
+]
+
+[[package]]
+name = "semio-plugin-tool-machine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-job",
+ "semio-framework-tool-machine",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-original-aliases",
+ "semio-os-kernel",
+ "semio-plugin-decl-app",
+ "semio-plugin-decl-emission",
+ "semio-plugin-decl-views",
+ "semio-plugin-ownership",
+ "semio-plugin-tool-run-operations",
+ "semio-plugin-window-config",
+ "semio-plugin-window-config-original",
+ "semio-ui-contract",
+ "serde_json",
 ]
 
 [[package]]
@@ -6685,6 +7086,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-panel",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-window-config",
  "semio-ui-contract",
@@ -6704,6 +7106,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
+ "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
 ]
 
@@ -6736,6 +7139,7 @@ name = "semio-plugin-window-config-mutation"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value",
+ "semio-framework-value-retirement",
  "semio-framework-value-retirement-queue",
 ]
 
@@ -7002,6 +7406,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-job",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
  "semio-ui-contract-budget",
  "semio-ui-contract-identity",
@@ -7041,6 +7446,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
+ "semio-framework-value-retirement",
  "serde",
 ]
 

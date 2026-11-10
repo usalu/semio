@@ -385,7 +385,7 @@ impl RendererAssetDecodeSession {
     }
     pub fn cancel(&self) { self.cancelled.store(true, Ordering::Release); }
     pub fn pump_one(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-        use semio_framework_job::{InteractiveJob, JobOutcomeKind, close_original_retained_step};
+        use semio_framework_job::{InteractiveJob, JobOutcomeKind, close_original_retained_step, close_original_effect_step};
         use semio_framework_value::{RetirementDemand, RetainedCloneStep, ValueError, ValueRefusalKind};
         self.closing |= self.cancelled.load(Ordering::Acquire) || cx.is_cancelled();
         if self.source.as_ref().is_some_and(RefusedWorkerSource::terminal_is_empty) { RefusedWorkerSource::retire_empty(&mut self.source,cx)?; return Ok(true); }
@@ -411,7 +411,7 @@ impl RendererAssetDecodeSession {
             let witness = cx.borrowed_original_cancel_token()?;
             match session.has_original_cancel_alias_witness(witness) {
                 Ok(true) => {
-                    close_original_retained_step(cx, RetirementDemand { depth: 1, ..Default::default() }, |grant| {let turn=session.return_original_cancel_alias_step(witness,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(|error| match error { semio_framework_job_worker::WorkerJobDemandError::Refused(error) => error, semio_framework_job_worker::WorkerJobDemandError::Contention(_) => ValueError::literal(ValueRefusalKind::WorkLimit, "decoder cancellation return is contended") }),work:turn.work}})?;
+                    close_original_effect_step(cx, RetirementDemand { depth: 1, ..Default::default() }, |effect| {let turn=session.return_original_cancel_alias_step(witness,effect);semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(|error| match error { semio_framework_job_worker::WorkerJobDemandError::Refused(error) => error, semio_framework_job_worker::WorkerJobDemandError::Contention(_) => ValueError::literal(ValueRefusalKind::WorkLimit, "decoder cancellation return is contended") }),work:turn.work})})?;
                     return Ok(true);
                 }
                 Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => return Ok(false),

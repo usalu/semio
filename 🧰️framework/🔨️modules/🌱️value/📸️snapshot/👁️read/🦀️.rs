@@ -1,7 +1,6 @@
 //! 👁️ Original generation leases, immutable reads and bounded return/retirement custody.
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, OriginalRetirementFailure, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, SnapshotRetirementFactory, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
 use std::{marker::PhantomData, mem::{size_of, size_of_val}, sync::Arc};
 #[path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🔒️registry/🦀️.rs"]
 pub mod snapshot_read_registry_handle;
@@ -609,7 +608,7 @@ impl<T: ?Sized> SnapshotRead<T> {
         T: Sized + semio_framework_value::retirement::RetireOwned + Sync,
     {
         if self.owner.is_none() { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "snapshot read source requires its captured root"), self)); }
-        Ok(semio_framework_value::retained_clone::RetainedCloneSource::admission_borrowed(self, |read: &Self| read.get()))
+        Ok(semio_framework_value::retained_clone::RetainedCloneSource::admission_borrowed(self))
     }
 
     /// 🧹 Returns this lease to its exact registry while the registry retains the snapshot
@@ -631,6 +630,15 @@ impl<T: ?Sized> SnapshotRead<T> {
         }
         Some(witness)
     }
+}
+
+impl<T: semio_framework_value::retirement::RetireOwned + Sync + 'static> semio_framework_value::retained_clone::OriginalSourceProjection<T> for SnapshotRead<T> {
+    fn projection_work_demand(&self) -> Result<u64, ValueError> { Ok(1) }
+    fn project_source<'reply, 'source>(&'source self, effect: &mut RetainedAllocationEffect<'_>, reply: semio_framework_value::retained_clone::OriginalProjectionReply<'reply, 'source, T>) -> Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'reply, std::ptr::NonNull<T>, ValueError>, ValueError> {
+        if !effect.performed(1)? { return Ok(reply.complete(Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "snapshot read projection exceeded its original work")))); }
+        Ok(reply.complete(Ok(self.get())))
+    }
+    fn recover_source_projection<'reply, 'source>(&'source self, _: &mut RetainedAllocationEffect<'_>, reply: semio_framework_value::retained_clone::OriginalProjectionReply<'reply, 'source, T>) -> Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'reply, std::ptr::NonNull<T>, ValueError>, ValueError> { Ok(reply.pending()) }
 }
 
 impl<T: Send + Sync + 'static> SnapshotRead<T> {
@@ -738,7 +746,7 @@ impl ErasedSnapshotRead {
         let mut original = Some(typed);
         let mut alias = Some(Arc::clone(factory));
         let mut output = None;
-        let turn = settle_inline_poll(ReturnedSnapshotReadRetirement::admit_original(&mut original, &mut alias, &mut output, effect), "read admission left its producer reply pending");
+        let turn = settle_inline_poll(ArcRootRetirement::admit_original(&mut original, &mut alias, &mut output, effect), "read admission left its producer reply pending");
         drop(alias);
         if let Some(original) = original.take() { self.owner = Some(original); }
         let progress = match turn.result {
@@ -795,43 +803,8 @@ impl<T: ?Sized> std::ops::Deref for SnapshotReadRef<'_, T> {
 }
 
 
-pub fn artifact_retirement_box_demands(owner: &Box<dyn ErasedSnapshotRetirement>, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
-    if owner.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }); }
-    let mut demand = owner.next_demand(maximum_body_bytes)?;
-    demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement depth overflow"))?;
-    Ok(demand)
-}
 
-pub fn artifact_retirement_box_depth(owner: &Box<dyn ErasedSnapshotRetirement>) -> Result<usize, ValueError> {
-    if owner.terminal_is_empty() { return Ok(1); }
-    owner.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement depth overflow"))
-}
 
-pub fn artifact_retirement_box_close_step(slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
-    use semio_framework_value::retained_clone::admit_retained_clone_close;
-    let grant = effect.grant();
-    let empty = RetainedCloneProgress::default();
-    let done = |result: Result<RetainedCloneStep, OriginalRetirementFailure>, work: u128| RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work });
-    let Some(owner) = slot.as_mut() else { return done(Ok(RetainedCloneStep::Complete(empty)), 0); };
-    if grant.maximum_items == 0 || effect.maximum_work_units() == 0 { return done(Ok(RetainedCloneStep::Progress(empty)), 0); }
-    let depth = match artifact_retirement_box_depth(owner) { Ok(depth) => depth, Err(error) => return done(Err(error.into()), 0) };
-    if grant.maximum_depth < depth { return done(Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement exceeds admitted depth").into()), 0); }
-    if owner.terminal_is_empty() {
-        let extent = size_of_val(owner.as_ref());
-        if grant.maximum_release_bytes < extent { return done(Ok(RetainedCloneStep::Progress(empty)), 0); }
-        let mut work = 0;
-        if let Err(error) = pay_pure_work(effect, &mut work) { return done(Err(error.into()), work); }
-        drop(slot.take());
-        return done(Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..empty })), work);
-    }
-    let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-    let turn = match owner.close_step(&mut effect.nested(child_grant)) { RetainedWorkPoll::Pending { work } => return RetainedWorkPoll::Pending { work }, RetainedWorkPoll::Complete(turn) => turn };
-    let step = match turn.result { Ok(step) => step, Err(error) => return done(Err(error), turn.work) };
-    match admit_retained_clone_close(child_grant, step, owner.terminal_is_empty(), "boxed retirement child") {
-        Ok(step) => done(Ok(RetainedCloneStep::Progress(step.progress())), turn.work),
-        Err(error) => done(Err(error.into()), turn.work),
-    }
-}
 
 pub fn artifact_retirement_owned_birth_demands<T: semio_framework_value::retirement::RetireOwned>(pending: &Option<T>) -> Result<semio_framework_value::RetirementDemand, ValueError> {
     if pending.is_none() { return Ok(Default::default()); }
@@ -869,7 +842,7 @@ pub fn artifact_retirement_admit_owned<T: semio_framework_value::retirement::Ret
 pub fn artifact_retirement_shared_lease_birth_demands<T: semio_framework_value::retirement::RetireOwned + Sync>(pending: &Option<Arc<T>>) -> Result<semio_framework_value::RetirementDemand, ValueError> {
     if pending.is_none() { return Ok(Default::default()); }
     if !T::controlled_retirement_supported() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "shared lease has no controlled owner authority")); }
-    Ok(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<T>(), depth: 2, ..Default::default() })
+    Ok(semio_framework_value::RetirementDemand { capacity_bytes: retained_read_retirement::arc_lease_birth_bytes::<T>(), depth: 2, ..Default::default() })
 }
 
 pub fn artifact_retirement_admit_shared_lease<T: semio_framework_value::retirement::RetireOwned + Sync>(pending: &mut Option<Arc<T>>, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
@@ -884,9 +857,9 @@ pub fn artifact_retirement_admit_shared_lease<T: semio_framework_value::retireme
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "lease birth exceeds admitted parent depth")); }
         if grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let turn = semio_framework_value::retirement::arc_custody::admit_shared_retirement(pending, &mut effect.nested(child), true);
+        let turn = retained_read_retirement::admit_arc_lease(pending, &mut effect.nested(child));
         work += turn.work;
-        match turn.result? {
+        match turn.result.map_err(failure_value_error)? {
             Some((owner, progress)) => { *active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }
             None => Ok(RetainedCloneStep::Progress(empty)),
         }
@@ -915,12 +888,12 @@ pub fn advance_returned_snapshot_read<P: Send + Sync + 'static>(
 ) -> OriginalRetirementPoll {
     let done = |result: Result<RetainedCloneStep, OriginalRetirementFailure>| RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: 0 });
     if effect.grant().maximum_items == 0 { return done(Ok(RetainedCloneStep::Progress(Default::default()))); }
-    if active.is_some() { return artifact_retirement_box_close_step(active, effect); }
+    if active.is_some() { return artifact_retirement_box_close_step(active, effect.grant().maximum_copy_bytes, effect); }
     if !registry.has_returned() { return done(Ok(RetainedCloneStep::Complete(Default::default()))); }
     RetainedWorkPoll::Complete(admit_returned_root::<P>(registry, active, effect, |root, effect| {
         let mut alias = Some(Arc::clone(factory));
         let mut output = None;
-        let turn = settle_inline_poll(ReturnedSnapshotReadRetirement::admit_original(root, &mut alias, &mut output, effect), "returned read admission left its producer reply pending");
+        let turn = settle_inline_poll(ArcRootRetirement::admit_original(root, &mut alias, &mut output, effect), "returned read admission left its producer reply pending");
         drop(alias);
         RetainedWorkOutcome { result: turn.result.map(|step| output.take().map(|owner| (owner, step.progress()))).map_err(Into::into), work: turn.work }
     }))
@@ -929,29 +902,27 @@ pub fn advance_returned_snapshot_read<P: Send + Sync + 'static>(
 pub fn advance_returned_snapshot_read_root<P: Send + Sync + 'static>(
     registry: &SnapshotReadLeaseRegistry,
     active: &mut Option<Box<dyn ErasedSnapshotRetirement>>,
-    factory: &dyn SnapshotRetirementFactory<P>,
+    factory: &Arc<dyn SnapshotRetirementFactory<P>>,
     effect: &mut RetainedAllocationEffect<'_>,
 ) -> OriginalRetirementPoll {
     let done = |result: Result<RetainedCloneStep, OriginalRetirementFailure>| RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: 0 });
     if effect.grant().maximum_items == 0 { return done(Ok(RetainedCloneStep::Progress(Default::default()))); }
-    if active.is_some() { return artifact_retirement_box_close_step(active, effect); }
+    if active.is_some() { return artifact_retirement_box_close_step(active, effect.grant().maximum_copy_bytes, effect); }
     if !registry.has_returned() { return done(Ok(RetainedCloneStep::Complete(Default::default()))); }
     RetainedWorkPoll::Complete(admit_returned_root::<P>(registry, active, effect, |root, effect| {
-        let (mut output, mut reply, mut attempted) = (None, None, None);
-        let before = effect.performed_work();
-        let borrowed = semio_framework_value::factory::FactoryProducerReply::borrow(&mut output, &mut reply, &mut attempted);
-        let reply_failure = match borrowed { Ok(borrowed) => { let _ = factory.retire(root, effect, borrowed); None } Err(error) => Some(error) };
-        let work = effect.performed_work().saturating_sub(before);
-        match (reply_failure, reply.take()) {
-            (Some(error), _) => RetainedWorkOutcome { result: Err(error.into()), work },
-            (None, Some(turn)) => RetainedWorkOutcome { result: turn.result.map(|progress| output.take().map(|owner| (owner, progress))), work: turn.work },
-            (None, None) => RetainedWorkOutcome { result: Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned read root retirement left its producer reply pending").into()), work },
-        }
+        let mut alias = Some(Arc::clone(factory));
+        let mut output = None;
+        let turn = settle_inline_poll(ArcRootRetirement::admit_snapshot(root, &mut alias, &mut output, effect), "returned read admission left its producer reply pending");
+        drop(alias);
+        RetainedWorkOutcome { result: turn.result.map(|step| output.take().map(|owner| (owner, step.progress()))).map_err(Into::into), work: turn.work }
     }))
 }
 
 #[path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🦀️.rs"]
 pub mod retained_read_retirement;
+pub use semio_framework_value::factory::shared::root::{box_demands as artifact_retirement_box_demands, box_depth as artifact_retirement_box_depth, box_close_step as artifact_retirement_box_close_step};
+pub use retained_read_retirement::{admit_arc_lease, arc_lease_birth_bytes};
+use semio_framework_value::factory::ArcRootRetirement;
 #[path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🦀️.rs"]
 pub mod retained_read_return_retirement;
 #[path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🪞️projection/🦀️.rs"]

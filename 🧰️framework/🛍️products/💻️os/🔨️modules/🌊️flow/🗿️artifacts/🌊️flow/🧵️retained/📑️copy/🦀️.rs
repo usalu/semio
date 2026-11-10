@@ -13,7 +13,12 @@ use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{Retaine
 use crate::{FlowHostComponents, FlowHostSnapshot, neural, FlowChannelRef, FlowGui, FlowNodeGui, FlowPreviewGui, NodeChrome, SynapseSpec, Widget, WidgetLayout};
 use std::any::Any;
 use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission};
+use semio_framework_value::{FactoryAuthority,FactoryRetirement,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,factory_retire_snapshot,retirement::arc_custody::original::SharedOriginalStorage};
 use crate::os_store::snapshot_read::SnapshotRead;
+
+#[path="🧭️projection/🦀️.rs"]
+mod projection;
+use projection::StagedProjection;
 use semio_framework_value::retirement::RetireOwned;
 use std::collections::LinkedList;
 use std::sync::Arc;
@@ -378,6 +383,26 @@ fn account(stalled:&mut usize,grant:RetainedCloneGrant,step:RetainedCloneStep,te
     Ok(step)
 }
 
+fn settled(result:Result<RetainedCloneStep,ValueError>)->OriginalRetirementPoll{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map_err(Into::into),work:0})}
+/// ⛽️ One local owner move settles one unit of its original work.
+fn local(effect:&mut RetainedAllocationEffect<'_>,progress:RetainedCloneProgress)->OriginalRetirementPoll{
+    match effect.performed(1){
+        Ok(true)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work:1}),
+        Ok(false)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"selected Flow copy close exceeded its original work").into()),work:1}),
+        Err(error)=>settled(Err(error)),
+    }
+}
+/// 🛑️ Accounts one nested close poll and lets a pending turn keep its state.
+fn accounted(stalled:&mut usize,grant:RetainedCloneGrant,poll:OriginalRetirementPoll,terminal:bool,owner:&str,normalize:bool)->OriginalRetirementPoll{
+    match poll{
+        RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},
+        RetainedWorkPoll::Complete(turn)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{
+            result:turn.result.and_then(|step|account(stalled,grant,step,terminal,owner).map_err(Into::into)).map(|step|if normalize&&matches!(step,RetainedCloneStep::Complete(_)){RetainedCloneStep::Progress(step.progress())}else{step}),
+            work:turn.work,
+        }),
+    }
+}
+
 /// 🎟️ The owning domain admits contiguous uninitialized reservations separately from copied byte work.
 #[derive(Debug)]
 pub struct FlowCopyAllocations {
@@ -407,12 +432,11 @@ struct CopyState<R: RetireOwned + Send + Sync + 'static, T: Copy> {
     result: Option<T>,
     retirement: Retirement,
     active_root_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
-    factory_close:Option<Box<dyn semio_framework_value::FactoryRetirementTicket>>,
-    source: Option<Arc<R>>,
+    source: Option<SharedOriginalStorage<R>>,
     source_lease: Option<RetainedCloneSource<T,SnapshotRead<R>>>,
     source_generation: Option<u64>,
     root_retirement: Option<Arc<dyn SnapshotRetirementFactory<R>>>,
-    factory_source:Option<Arc<dyn semio_framework_value::FactoryRetirement>>,
+    factory:Option<FactoryAuthority>,
     allocation: FlowCopyAllocations,
     progress: RetainedCloneProgress,
     origin: Option<(u64,u64)>,
@@ -429,13 +453,13 @@ struct CopyState<R: RetireOwned + Send + Sync + 'static, T: Copy> {
 struct CopyCursor<R: RetireOwned + Send + Sync + 'static, T: Copy> { owned: ManuallyDrop<CopyState<R, T>> }
 
 impl<R: RetireOwned + Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
-    fn new(source: Arc<R>, index: usize, project: for<'a> fn(&'a R, usize) -> Option<&'a T>, root_retirement: Arc<dyn SnapshotRetirementFactory<R>>,revision:[u8;32]) -> Self {
-        Self { owned: ManuallyDrop::new(CopyState { tasks: LinkedList::new(), result: None, retirement: Retirement::default(), active_root_retirement: None,factory_close:None, source: Some(source),source_lease:None,source_generation:None, root_retirement: Some(root_retirement),factory_source:None, allocation:FlowCopyAllocations::new(), progress:Default::default(),origin:None,revision, project, index, started: false, finished: false, failed: false, closing: false, stalled_steps: 0 }) }
+    fn new(source: SharedOriginalStorage<R>, index: usize, project: for<'a> fn(&'a R, usize) -> Option<&'a T>, root_retirement: Arc<dyn SnapshotRetirementFactory<R>>,revision:[u8;32]) -> Self {
+        Self { owned: ManuallyDrop::new(CopyState { tasks: LinkedList::new(), result: None, retirement: Retirement::default(), active_root_retirement: None, source: Some(source),source_lease:None,source_generation:None, root_retirement: Some(root_retirement),factory:None, allocation:FlowCopyAllocations::new(), progress:Default::default(),origin:None,revision, project, index, started: false, finished: false, failed: false, closing: false, stalled_steps: 0 }) }
     }
     fn next_normal_demands(&self,maximum_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError> {
         let state=&*self.owned;
         if state.closing||state.failed||state.finished{return Ok(Default::default())}
-        let admission=if !state.started{if let Some(source)=state.source_lease.as_ref(){child::<T>(source.try_borrow()?.get())}else{let source=state.source.as_ref().expect("selected copy root");(state.project)(source,state.index).map_or(TaskAdmission{capacity:T::task_bytes()+task_link_bytes(),..Default::default()},child::<T>)}}else{state.tasks.front().expect("selected copy task").next_admission(maximum_bytes)};
+        let admission=if !state.started{if let Some(source)=state.source_lease.as_ref(){child::<T>(source.try_borrow()?.get())}else{let source=state.source.as_ref().expect("selected copy root");(state.project)(source.get(),state.index).map_or(TaskAdmission{capacity:T::task_bytes()+task_link_bytes(),..Default::default()},child::<T>)}}else{state.tasks.front().expect("selected copy task").next_admission(maximum_bytes)};
         let completed=admission.result>0;
         let parent_capacity=if completed{{let mut parents=state.tasks.iter();parents.next();parents.next().map_or(0,|parent|parent.accept_capacity())}}else{0};
         Ok(semio_framework_value::RetirementDemand{copy_bytes:admission.copy,capacity_bytes:admission.capacity.checked_add(parent_capacity).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Flow copy capacity overflows"))?,release_bytes:if completed{size_of_val(state.tasks.front().unwrap().as_ref())+task_link_bytes()+admission.result}else{0},depth:1})
@@ -449,7 +473,7 @@ impl<R: RetireOwned + Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
         if !state.started {
             let pointer=if let Some(source)=state.source_lease.as_ref(){source.try_borrow()?.get()as*const T}else{
                 let source=state.source.as_ref().expect("selected copy root");
-                let Some(selected)=(state.project)(source,state.index)else{state.failed=true;return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"selected Flow copy projection is absent"))};selected as*const T
+                let Some(selected)=(state.project)(source.get(),state.index)else{state.failed=true;return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"selected Flow copy projection is absent"))};selected as*const T
             };
             state.tasks.push_front(T::task(Rooted{pointer}));
             state.started=true;
@@ -472,51 +496,53 @@ impl<R: RetireOwned + Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
     fn begin_close(&mut self) { self.owned.closing = true; }
     fn terminal_is_empty(&self) -> bool {
         let state = &*self.owned;
-        state.closing && state.tasks.is_empty() && state.result.is_none() && state.retirement.terminal_is_empty() && state.active_root_retirement.is_none() && state.factory_close.is_none() && state.source.is_none() && state.source_lease.is_none() && state.root_retirement.is_none() && state.factory_source.is_none()
+        state.closing && state.tasks.is_empty() && state.result.is_none() && state.retirement.terminal_is_empty() && state.active_root_retirement.is_none() && state.factory.is_none() && state.source.is_none() && state.source_lease.is_none() && state.root_retirement.is_none()
     }
-    fn close_owner(&self)->Option<&dyn ErasedSnapshotRetirement>{self.owned.active_root_retirement.as_deref().or_else(||self.owned.factory_close.as_deref().map(|owner|owner as &dyn ErasedSnapshotRetirement))}
-    fn next_copy_byte_demand(&self)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){return state.retirement.next_copy_byte_demand()}if let Some(owner)=self.close_owner(){return owner.next_copy_byte_demand()}if state.tasks.is_empty()&&state.result.is_none(){if let Some(source)=state.source_lease.as_ref(){return Ok(source.next_close_demand(0)?.copy_bytes)}}Ok(state.factory_source.as_ref().map_or(0,|factory|factory.factory_retirement_copy_byte_demand()))}
-    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){return state.retirement.next_capacity_byte_demand(copy);}if let Some(owner)=self.close_owner(){return owner.next_capacity_byte_demand(copy);}if state.tasks.is_empty()&&state.result.is_none(){if let Some(source)=state.source_lease.as_ref(){return Ok(source.next_close_demand(copy)?.capacity_bytes)}}Ok(if state.tasks.is_empty()&&state.result.is_none(){if let Some(factory)=state.factory_source.as_ref(){factory.factory_retirement_birth_bytes()}else{state.root_retirement.as_ref().map_or(0,|factory|state.source.as_ref().map_or(0,|source|factory.retirement_birth_bytes(source)))}}else{0})}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){return state.retirement.next_release_byte_demand()}if let Some(task)=state.tasks.front(){return Ok(size_of_val(task.as_ref())+task_link_bytes()+task.retire_release())}if state.result.is_none(){if let Some(source)=state.source_lease.as_ref(){return Ok(source.next_close_demand(0)?.release_bytes)}}self.close_owner().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(size_of_val(owner))}else{owner.next_release_byte_demand()})}
-    fn next_depth_demand(&self)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){return state.retirement.next_depth_demand()}if state.tasks.is_empty()&&state.result.is_none(){if let Some(source)=state.source_lease.as_ref(){return Ok(source.next_close_demand(0)?.depth)}}self.close_owner().map_or(Ok(state.factory_source.as_ref().map_or(usize::from(!self.terminal_is_empty()),|factory|factory.factory_retirement_depth_demand())),|owner|owner.next_depth_demand())}
-    fn next_close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
+    fn next_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let state=&*self.owned;
-        if !state.retirement.terminal_is_empty(){return state.retirement.selected_demand(body)}
-        if let Some(task)=state.tasks.front(){return Ok(semio_framework_value::RetirementDemand{release_bytes:size_of_val(task.as_ref())+task_link_bytes()+task.retire_release(),depth:1,..Default::default()})}
-        if state.result.is_some(){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+        if !state.retirement.terminal_is_empty(){return state.retirement.demands(body)}
+        if let Some(task)=state.tasks.front(){return Ok(RetirementDemand{release_bytes:size_of_val(task.as_ref())+task_link_bytes()+task.retire_release(),depth:1,..Default::default()})}
+        if state.result.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         if let Some(source)=state.source_lease.as_ref(){return source.next_close_demand(body)}
-        if let Some(owner)=self.close_owner(){if owner.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{release_bytes:size_of_val(owner),depth:1,..Default::default()})}return owner.next_demand(body)}
-        Ok(semio_framework_value::RetirementDemand{copy_bytes:self.next_copy_byte_demand()?,capacity_bytes:self.next_capacity_byte_demand(body)?,release_bytes:self.next_release_byte_demand()?,depth:self.next_depth_demand()?})
+        if let Some(owner)=state.active_root_retirement.as_deref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of_val(owner),depth:1,..Default::default()})}else{owner.next_demand(body)}}
+        if let Some(root)=state.source.as_ref(){return state.root_retirement.as_ref().ok_or_else(||ValueError::invariant("selected copy retirement factory is absent"))?.retire_demands(root)}
+        if let Some(factory)=state.factory.as_ref(){return if factory.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{factory.demands(body)}}
+        Ok(RetirementDemand{depth:usize::from(!self.terminal_is_empty()),..Default::default()})
     }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        let empty=RetainedCloneProgress::default();
-        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
-        if !self.owned.closing||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
-        let d=self.next_close_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth<d.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"Flow copy close requires admitted depth"));}
-        if grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
+    fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
+        let grant=effect.grant();let empty=RetainedCloneProgress::default();
+        if self.terminal_is_empty(){return settled(Ok(RetainedCloneStep::Complete(empty)))}
+        if !self.owned.closing||grant.maximum_items==0{return settled(Ok(RetainedCloneStep::Progress(empty)))}
+        let d=match self.next_close_demands(body){Ok(d)=>d,Err(error)=>return settled(Err(error))};
+        if grant.maximum_depth<d.depth{return settled(Err(ValueError::literal(ValueRefusalKind::DepthLimit,"Flow copy close requires admitted depth")))}
+        if grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes{return settled(Ok(RetainedCloneStep::Progress(empty)))}
         let state=&mut*self.owned;
-        if !state.retirement.terminal_is_empty(){let step=state.retirement.step(grant).result?;return account(&mut state.stalled_steps,grant,step,state.retirement.terminal_is_empty(),"selected Flow copy frontier");}
-        if let Some(task)=state.tasks.pop_front(){let bytes=size_of_val(task.as_ref())+task_link_bytes()+task.retire_release();task.retire(&mut state.retirement);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..empty}));}
-        else if let Some(result)=state.result.take(){result.retire(&mut state.retirement);}
-        else if let Some(source)=state.source_lease.as_mut(){let step=source.close_step(grant).result?;if source.terminal_is_empty(){state.source_lease=None}return Ok(RetainedCloneStep::Progress(step.progress()));}
-        else if let Some(active)=state.active_root_retirement.as_mut(){
-            if active.terminal_is_empty(){let bytes=size_of_val(active.as_ref());state.active_root_retirement=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));}
-            let step=active.close_step(grant).result?;let terminal=active.terminal_is_empty();
-            let step=account(&mut state.stalled_steps,grant,step,terminal,"selected Flow root retirement")?;
-            if matches!(step,RetainedCloneStep::Complete(_)){return Ok(RetainedCloneStep::Progress(step.progress()));}
-            return Ok(step);
+        if !state.retirement.terminal_is_empty(){let poll=state.retirement.step(body,effect);let terminal=state.retirement.terminal_is_empty();return accounted(&mut state.stalled_steps,grant,poll,terminal,"selected Flow copy frontier",false)}
+        if let Some(task)=state.tasks.pop_front(){let bytes=size_of_val(task.as_ref())+task_link_bytes()+task.retire_release();task.retire(&mut state.retirement);return local(effect,RetainedCloneProgress{copied_items:1,released_bytes:bytes,..empty})}
+        if let Some(result)=state.result.take(){result.retire(&mut state.retirement);state.stalled_steps=0;return local(effect,RetainedCloneProgress{copied_items:1,..empty})}
+        if let Some(source)=state.source_lease.as_mut(){
+            let poll=source.close_step(body,effect);let terminal=source.terminal_is_empty();if terminal{state.source_lease=None}
+            return accounted(&mut state.stalled_steps,grant,poll,terminal,"selected Flow source lease",true)
         }
-        else if let Some(root)=state.source.take(){match state.root_retirement.as_ref().ok_or_else(||ValueError::invariant("selected copy retirement factory is absent"))?.retire(root,grant).result{Ok((owner,progress))=>{state.active_root_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow root retirement birth")?;return Ok(RetainedCloneStep::Progress(progress));},Err((error,root))=>{state.source=Some(root);return Err(error);}}}
-        else if let Some(active)=state.factory_close.as_mut(){
-            if active.terminal_is_empty(){let bytes=size_of_val(active.as_ref());state.factory_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));}
-            let step=active.close_step(grant).result?;let terminal=active.terminal_is_empty();let step=account(&mut state.stalled_steps,grant,step,terminal,"selected Flow factory retirement")?;return Ok(if matches!(step,RetainedCloneStep::Complete(_)){RetainedCloneStep::Progress(step.progress())}else{step});
+        if let Some(active)=state.active_root_retirement.as_mut(){
+            if active.terminal_is_empty(){let bytes=size_of_val(active.as_ref());state.active_root_retirement=None;return local(effect,RetainedCloneProgress{copied_items:1,released_bytes:bytes,..empty})}
+            let poll=active.close_step(body,effect);let terminal=active.terminal_is_empty();
+            return accounted(&mut state.stalled_steps,grant,poll,terminal,"selected Flow root retirement",true)
         }
-        else if let Some(factory)=state.root_retirement.take(){state.factory_source=Some(factory);}
-        else if let Some(factory)=state.factory_source.take(){match factory.preborn_factory_retirement(grant).result{Ok((owner,progress))=>{state.factory_close=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow factory retirement birth")?;return Ok(RetainedCloneStep::Progress(progress));},Err(rejected)=>{state.factory_source=rejected.original;state.factory_close=rejected.ticket;return Err(rejected.error.with_retained_progress(rejected.progress));}}}
-        else{return Ok(RetainedCloneStep::Complete(empty));}
-        state.stalled_steps=0;
-        Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}))
+        if state.source.is_some(){
+            let Some(factory)=state.root_retirement.as_deref()else{return settled(Err(ValueError::invariant("selected copy retirement factory is absent")))};
+            return match factory_retire_snapshot(factory,&mut state.source,effect){
+                RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},
+                RetainedWorkPoll::Complete(turn)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.and_then(|(owner,progress)|{state.active_root_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow root retirement birth").map(RetainedCloneStep::Progress).map_err(Into::into)}),work:turn.work}),
+            }
+        }
+        if let Some(factory)=state.factory.as_mut(){
+            if factory.terminal_is_empty(){state.factory=None;return local(effect,RetainedCloneProgress{copied_items:1,..empty})}
+            let poll=factory.step(body,effect);let terminal=factory.terminal_is_empty();
+            return accounted(&mut state.stalled_steps,grant,poll,terminal,"selected Flow factory retirement",true)
+        }
+        if let Some(factory)=state.root_retirement.take(){let factory:Arc<dyn FactoryRetirement>=factory;state.factory=Some(FactoryAuthority::new(factory));return local(effect,RetainedCloneProgress{copied_items:1,..empty})}
+        settled(Ok(RetainedCloneStep::Complete(empty)))
     }
 
 }
@@ -536,7 +562,7 @@ macro_rules! selected_cursor {
         #[must_use = "selected Flow copy must transfer its result and close to terminal-empty"]
         pub struct $name<R: RetireOwned + Send + Sync + 'static> { cursor: CopyCursor<R, $value> }
         impl<R: RetireOwned + Send + Sync + 'static> $name<R> {
-            pub fn new(root: Arc<R>, index: usize, project: for<'a> fn(&'a R, usize) -> Option<&'a $value>, retirement: Arc<dyn SnapshotRetirementFactory<R>>,revision:[u8;32]) -> Self {
+            pub fn new(root: SharedOriginalStorage<R>, index: usize, project: for<'a> fn(&'a R, usize) -> Option<&'a $value>, retirement: Arc<dyn SnapshotRetirementFactory<R>>,revision:[u8;32]) -> Self {
                 Self { cursor: CopyCursor::new(root, index, project, retirement,revision) }
             }
             pub fn allocations(&self) -> &FlowCopyAllocations { &self.cursor.owned.allocation }
@@ -556,11 +582,7 @@ macro_rules! selected_cursor {
             pub fn take(&mut self) -> Option<$value> { self.cursor.take() }
             pub fn begin_close(&mut self) { self.cursor.begin_close(); }
             pub fn next_close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.cursor.next_close_demands(body)}
-            pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {self.cursor.close_step(grant)}
-            pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.cursor.next_copy_byte_demand()}
-            pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.cursor.next_capacity_byte_demand(copy)}
-            pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {self.cursor.next_release_byte_demand()}
-            pub fn next_depth_demand(&self)->Result<usize,ValueError> {self.cursor.next_depth_demand()}
+            pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {self.cursor.close_step(body,effect)}
             pub fn terminal_is_empty(&self) -> bool { self.cursor.terminal_is_empty() }
         }
     };
@@ -568,54 +590,73 @@ macro_rules! selected_cursor {
 selected_cursor!(FlowWidgetCopy, Widget);
 selected_cursor!(FlowSynapseCopy, SynapseSpec);
 selected_cursor!(FlowHostSnapshotCopy, FlowHostSnapshot);
-/// 🧬️ The Store state selects its one stable Flow snapshot projection, so staged source admission needs no captured function.
-pub trait FlowSnapshotProjection:RetireOwned+Sync+'static{fn project_snapshot(&self)->&FlowHostSnapshot;}
-impl FlowSnapshotProjection for FlowHostSnapshot{fn project_snapshot(&self)->&FlowHostSnapshot{self}}
 /// 🧳️ Failed intake preserves the unadmitted original read, its partial staged admission or its admitted copy owner.
-pub enum FlowSnapshotCopyIntakeSource<R:FlowSnapshotProjection>{Read(SnapshotRead<R>),Admission(RetainedCloneSourceAdmission<FlowHostSnapshot,SnapshotRead<R>>),Copy(FlowHostSnapshotCopy<R>)}
-impl<R:FlowSnapshotProjection> FlowHostSnapshotCopy<R>{
-    /// 📥️ Admits the exact original typed Store read and stable projection before any snapshot task is created.
-    pub fn from_read(read:SnapshotRead<R>,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self,(semio_framework_job::OriginalTurnFailure,FlowSnapshotCopyIntakeSource<R>)>{
-        let grant=cx.retained_grant();let demand=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<R>>::borrowed_constructor_demand::<SnapshotRead<R>>();
+pub enum FlowSnapshotCopyIntakeSource{Read(SnapshotRead<FlowHostSnapshot>),Admission(Box<FlowSnapshotAdmission>),Copy(FlowHostSnapshotCopy<FlowHostSnapshot>)}
+/// 🧭️ The resident staged admission of the exact original Store read and its unsettled projection action.
+pub struct FlowSnapshotAdmission{admission:RetainedCloneSourceAdmission<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>,projection:StagedProjection<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>}
+impl FlowSnapshotAdmission{
+    fn step(&mut self,output:&mut Option<RetainedCloneSource<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>>,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
+        let Self{admission,projection}=self;
+        if let Some(stage)=projection.stage(admission)?{return projection.advance(admission,stage,effect)}
+        if admission.phase()=="projectionFailure"{if let Some(error)=projection.refusal(admission,effect)?{return Err(error)}return Ok(Default::default())}
+        if admission.phase()=="ready"{return Ok(admission.take_output(output,effect).result?.progress())}
+        Ok(admission.advance(effect).result?.progress())
+    }
+}
+impl FlowHostSnapshotCopy<FlowHostSnapshot>{
+    /// 📥️ Admits the exact original typed Store read before any snapshot task is created.
+    pub fn from_read(read:SnapshotRead<FlowHostSnapshot>,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self,(semio_framework_job::OriginalTurnFailure,FlowSnapshotCopyIntakeSource)>{
+        let grant=cx.retained_grant();let demand=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>::borrowed_constructor_demand::<SnapshotRead<FlowHostSnapshot>>();
         if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_depth<demand.depth{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"Flow snapshot read intake awaits original admission").into(),FlowSnapshotCopyIntakeSource::Read(read)))}
         if !read.commit_authority_matches(source_generation,revision){cx.consume_fuel(1);return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"Flow snapshot read original revision changed").into(),FlowSnapshotCopyIntakeSource::Read(read)))}
         cx.consume_fuel(1);
-        let mut admission=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<R>>::admission_borrowed(read,|read|read.get().project_snapshot());let mut output=None;
+        match read.source_admission(){
+            Ok(admission)=>Self::resume(Box::new(FlowSnapshotAdmission{admission,projection:StagedProjection::default()}),revision,source_generation,cx),
+            Err((error,read))=>Err((semio_framework_job::OriginalTurnFailure::debit_original(error,cx),FlowSnapshotCopyIntakeSource::Read(read))),
+        }
+    }
+    /// 🔁️ Resumes the preserved staged admission under the next turn's effect; denied or pending turns keep it.
+    pub fn resume(mut staged:Box<FlowSnapshotAdmission>,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self,(semio_framework_job::OriginalTurnFailure,FlowSnapshotCopyIntakeSource)>{
+        let mut output=None;
         loop{
-            if cx.is_cancelled()||cx.should_yield(){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"Flow snapshot read intake awaits original admission").into(),FlowSnapshotCopyIntakeSource::Admission(admission)))}
+            let waiting=||ValueError::literal(ValueRefusalKind::WorkLimit,"Flow snapshot read intake awaits original admission");
+            if cx.is_cancelled()||cx.should_yield(){return Err((waiting().into(),FlowSnapshotCopyIntakeSource::Admission(staged)))}
             let grant=RetainedCloneGrant{maximum_items:1,..cx.retained_grant()};
-            let ready=admission.phase()=="ready";
-            let turn=if ready{admission.take_output(&mut output,grant)}else{admission.advance(grant)};
-            cx.consume_fuel(turn.work);
-            let progress=match turn.result{Ok(step)=>step.progress(),Err(error)=>return Err((semio_framework_job::OriginalTurnFailure::debit_original(error,cx),FlowSnapshotCopyIntakeSource::Admission(admission)))};
-            let Some(source)=output.take()else{
-                if progress==RetainedCloneProgress::default(){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"Flow snapshot read intake awaits original admission").into(),FlowSnapshotCopyIntakeSource::Admission(admission)))}
-                if let Err(error)=cx.consume_retained(progress){return Err((error.into(),FlowSnapshotCopyIntakeSource::Admission(admission)))}
-                continue
+            let (result,performed)=match cx.with_original_effect(grant,|_,effect|staged.step(&mut output,effect)){
+                Ok(Some(done))=>done,
+                Ok(None)=>return Err((waiting().into(),FlowSnapshotCopyIntakeSource::Admission(staged))),
+                Err(error)=>return Err((semio_framework_job::OriginalTurnFailure::debit_original(error,cx),FlowSnapshotCopyIntakeSource::Admission(staged))),
             };
-            let cursor=CopyCursor{owned:ManuallyDrop::new(CopyState{tasks:LinkedList::new(),result:None,retirement:Retirement::default(),active_root_retirement:None,factory_close:None,source:None,source_lease:Some(source),source_generation:Some(source_generation),root_retirement:None,factory_source:None,allocation:FlowCopyAllocations::new(),progress:Default::default(),origin:Some((cx.operation().0,cx.generation().0)),revision,project:|_,_|None,index:0,started:false,finished:false,failed:false,closing:false,stalled_steps:0})};let copy=Self{cursor};
-            return match cx.consume_retained(progress){Ok(())=>Ok(copy),Err(error)=>Err((error.into(),FlowSnapshotCopyIntakeSource::Copy(copy)))}
+            let progress_zero=result.as_ref().is_ok_and(|progress|*progress==RetainedCloneProgress::default());
+            let copy=output.take().map(|source|Self{cursor:CopyCursor{owned:ManuallyDrop::new(CopyState{tasks:LinkedList::new(),result:None,retirement:Retirement::default(),active_root_retirement:None,factory:None,source:None,source_lease:Some(source),source_generation:Some(source_generation),root_retirement:None,allocation:FlowCopyAllocations::new(),progress:Default::default(),origin:Some((cx.operation().0,cx.generation().0)),revision,project:|_,_|None,index:0,started:false,finished:false,failed:false,closing:false,stalled_steps:0})}});
+            let received=semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome{result:result.map(RetainedCloneStep::Progress),work:performed});
+            match(copy,received){
+                (Some(copy),Ok(_))=>return Ok(copy),
+                (Some(copy),Err(failure))=>return Err((failure,FlowSnapshotCopyIntakeSource::Copy(copy))),
+                (None,Err(failure))=>return Err((failure,FlowSnapshotCopyIntakeSource::Admission(staged))),
+                (None,Ok(_))=>if progress_zero{return Err((waiting().into(),FlowSnapshotCopyIntakeSource::Admission(staged)))},
+            }
         }
     }
 }
-/// 🏭️ The concrete Flow copy producer selects the Store state's one snapshot projection.
-pub struct FlowSnapshotIntakeProducer<R:FlowSnapshotProjection>(std::marker::PhantomData<fn()->R>);
-impl<R:FlowSnapshotProjection> FlowSnapshotIntakeProducer<R>{pub fn new()->Self{Self(std::marker::PhantomData)}}
-impl<R:FlowSnapshotProjection> semio_framework_job::OriginalSnapshotIntakeProducer<FlowHostSnapshot,SnapshotRead<R>> for FlowSnapshotIntakeProducer<R>{
- type Intake=FlowHostSnapshotCopy<R>;
- type Rejected=FlowSnapshotCopyIntakeSource<R>;
- fn source_demands(&self)->Result<semio_framework_value::RetirementDemand,ValueError>{let demand=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<R>>::borrowed_constructor_demand::<SnapshotRead<R>>();Ok(semio_framework_value::RetirementDemand{capacity_bytes:demand.capacity_bytes,depth:demand.depth,..Default::default()})}
- fn preserve_source(&self,source:SnapshotRead<R>)->Self::Rejected{FlowSnapshotCopyIntakeSource::Read(source)}
- fn admit(&self,source:SnapshotRead<R>,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self::Intake,(semio_framework_job::OriginalTurnFailure,Self::Rejected)>{FlowHostSnapshotCopy::from_read(source,revision,source_generation,cx)}
+/// 🏭️ The concrete Flow copy producer admits the Store read's one stable snapshot.
+#[derive(Default)]
+pub struct FlowSnapshotIntakeProducer;
+impl semio_framework_job::OriginalSnapshotIntakeProducer<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>> for FlowSnapshotIntakeProducer{
+ type Intake=FlowHostSnapshotCopy<FlowHostSnapshot>;
+ type Rejected=FlowSnapshotCopyIntakeSource;
+ fn source_demands(&self)->Result<RetirementDemand,ValueError>{let demand=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<FlowHostSnapshot>>::borrowed_constructor_demand::<SnapshotRead<FlowHostSnapshot>>();Ok(RetirementDemand{capacity_bytes:demand.capacity_bytes,depth:demand.depth,..Default::default()})}
+ fn preserve_source(&self,source:SnapshotRead<FlowHostSnapshot>)->Self::Rejected{FlowSnapshotCopyIntakeSource::Read(source)}
+ fn admit(&self,source:SnapshotRead<FlowHostSnapshot>,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self::Intake,(semio_framework_job::OriginalTurnFailure,Self::Rejected)>{FlowHostSnapshotCopy::from_read(source,revision,source_generation,cx)}
 }
 impl<R:RetireOwned+Sync> semio_framework_job::OriginalSnapshotIntake<FlowHostSnapshot> for FlowHostSnapshotCopy<R>{
-    fn next_normal_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.next_normal_demands(body)}
+    fn next_normal_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.next_normal_demands(body)}
     fn advance(&mut self,revision:[u8;32],cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<usize>,semio_framework_job::OriginalTurnFailure>{self.advance(revision,cx)}
     fn complete(&self)->bool{self.complete()}
     fn take(&mut self)->Option<FlowHostSnapshot>{self.take()}
     fn begin_close(&mut self){self.begin_close()}
-    fn next_close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if self.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{release_bytes:size_of::<Self>(),depth:1,..Default::default()})}else{self.next_close_demands(body)}}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_step(grant)}
+    fn next_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<Self>(),depth:1,..Default::default()})}else{self.next_close_demands(body)}}
+    fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.close_step(body,effect)}
     fn terminal_is_empty(&self)->bool{self.terminal_is_empty()}
 }
 //#endregion 🗿️SelectedCopyCursor

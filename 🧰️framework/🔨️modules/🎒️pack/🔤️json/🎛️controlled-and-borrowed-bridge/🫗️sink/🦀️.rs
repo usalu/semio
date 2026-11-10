@@ -100,7 +100,7 @@ impl JsonBorrowedSinkCursor{
   if !fits(d,grant){return done(Ok(RetainedCloneStep::Progress(Default::default())),0)}
   if let Some(owner)=self.closing.as_mut(){
    if owner.terminal_is_empty(){if let Err(error)=pay(effect){return done(Err(error),1)}self.closing=None;self.phase=6;return done(Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),1)}
-   return owner.step(effect)
+   return owner.step(grant.maximum_copy_bytes,effect)
   }
   if let Err(error)=pay(effect){return done(Err(error),1)}
   self.closing=Some(ControlledRetirement::retain((std::mem::take(&mut*self.frames),std::mem::take(&mut*self.path))));self.phase=5;

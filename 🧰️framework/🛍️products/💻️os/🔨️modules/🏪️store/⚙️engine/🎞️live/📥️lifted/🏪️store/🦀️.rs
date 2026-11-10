@@ -16,7 +16,7 @@ use semio_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactDerivedReplay, 
 use semio_os_store_read::{ArtifactStoreCursorDisposerPhase, ArtifactStoreEnvelopeRetirement, ArtifactStoreMutationDagRetirement, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement, HistoryReadPlan, SnapshotReadLeaseRefusal};
 use semio_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement;
 use semio_os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
-use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_value::factory::ArcRootRetirement as ReturnedSnapshotReadRetirement;
 use semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 use semio_os_vcs::io::binary::entity_identity::mint_edit_id;
 use semio_os_vcs::VcsError;

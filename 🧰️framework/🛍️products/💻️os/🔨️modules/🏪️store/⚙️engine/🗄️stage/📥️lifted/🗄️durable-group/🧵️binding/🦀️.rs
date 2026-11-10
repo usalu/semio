@@ -7,7 +7,7 @@ fn settled(poll:OriginalRetirementPoll)->Result<RetainedCloneProgress,semio_fram
 
 fn permits(grant:RetainedCloneGrant,copy:usize,capacity:usize,release:usize)->bool{grant.maximum_items!=0&&grant.maximum_depth!=0&&grant.maximum_copy_bytes>=copy&&grant.maximum_capacity_bytes>=capacity&&grant.maximum_release_bytes>=release}
 
-impl<P,M> DurableStorePreparedOwnerV1<P,M>{
+impl<P:Send+Sync+'static,M> DurableStorePreparedOwnerV1<P,M>{
     pub fn prepared(&self)->Option<&ArtifactStoreOneItemPrepared<P,M>>{self.prepared.as_ref()}
     pub fn unbound_ready(&self)->bool{self.unbound.is_some()}
     pub fn plan_ready(&self)->bool{self.plan.is_some()}
@@ -45,7 +45,7 @@ impl<P,M> DurableStorePreparedOwnerV1<P,M>{
 }
 
 #[cfg(feature="deflate")]
-impl<P,M> DurableStorePreparedOwnerV1<P,M>
+impl<P:Send+Sync+'static,M> DurableStorePreparedOwnerV1<P,M>
 where P:ArtifactPack+pack::snapshot::ArtifactDsl+semio_framework_dsl_record::BorrowedDslRecord+semio_framework_dsl_record::native_encoding::FieldProjectionSource,
       M:ArtifactCanonicalJsonTree,
 {
@@ -59,8 +59,8 @@ where P:ArtifactPack+pack::snapshot::ArtifactDsl+semio_framework_dsl_record::Bor
 }
 
 #[cfg(feature="deflate")]
-impl<P,M> DurableStorePreparedOwnerV1<P,M>
-where P:Clone+ValueToValue+ValueFromValue,M:Clone+StoreMutation<P>+ArtifactCanonicalJsonTree+ValueToValue+ValueFromValue+semio_os_spr::ColdMutation<P>+semio_os_spr::OpBinary+semio_os_spr::OpText,
+impl<P:Send+Sync+'static,M> DurableStorePreparedOwnerV1<P,M>
+where P:Send+Sync+'static+Clone+ValueToValue+ValueFromValue,M:Clone+StoreMutation<P>+ArtifactCanonicalJsonTree+ValueToValue+ValueFromValue+semio_os_spr::ColdMutation<P>+semio_os_spr::OpBinary+semio_os_spr::OpText,
 {
     pub fn advance_bound(&mut self,store:&StorePartsRef<'_,P,M>,group:&str,grant:RetainedCloneGrant,native:&mut NativeEncodeControl<'_>)->Result<Option<RetainedCloneProgress>,DurableOwnedGroupDecisionError>{
         if self.plan.is_some(){return Ok(Some(Default::default()));}
@@ -72,7 +72,7 @@ where P:Clone+ValueToValue+ValueFromValue,M:Clone+StoreMutation<P>+ArtifactCanon
     }
 }
 
-impl<P,M> DurableStorePreparedOwnerV1<P,M>{
+impl<P:Send+Sync+'static,M> DurableStorePreparedOwnerV1<P,M>{
     pub fn transfer_bound(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,DurableOwnedGroupDecisionError>{
         let mut group=[0u8;64];
         let identity=self.plan.as_ref().and_then(|plan|plan.group_id.as_deref()).ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
@@ -82,8 +82,8 @@ impl<P,M> DurableStorePreparedOwnerV1<P,M>{
     }
 }
 
-pub fn prepare_staged_diagnostics<P,M>(store:&mut StoreParts<'_,P,M>,effect:&mut RetainedAllocationEffect<'_>)->Result<(bool,RetainedCloneProgress),DurableOwnedGroupDecisionError>
-where P:Clone+ValueToValue+ValueFromValue,M:Clone+StoreMutation<P>+ValueToValue+ValueFromValue+semio_os_spr::ColdMutation<P>+semio_os_spr::OpBinary+semio_os_spr::OpText,
+pub fn prepare_staged_diagnostics<P:Send+Sync+'static,M>(store:&mut StoreParts<'_,P,M>,effect:&mut RetainedAllocationEffect<'_>)->Result<(bool,RetainedCloneProgress),DurableOwnedGroupDecisionError>
+where P:Send+Sync+'static+Clone+ValueToValue+ValueFromValue,M:Clone+StoreMutation<P>+ValueToValue+ValueFromValue+semio_os_spr::ColdMutation<P>+semio_os_spr::OpBinary+semio_os_spr::OpText,
 {
     let root=store.wire.durable_group_root.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
     if root.diagnostics.row_count()==0||root.diagnostics.prepared(){return Ok((true,Default::default()));}
@@ -108,12 +108,12 @@ impl<P:Send+Sync+'static,M:Send+'static> DurableStorePreparedOwnerV1<P,M>{
         }
         if let Some(owner)=self.previous_authority.as_mut(){
             if owner.terminal_is_empty(){let copy=size_of::<canonical_edit::ArtifactStoreOneItemAuthorityRetirement>();if permits(grant,copy,0,0){self.previous_authority=None;self.retirement_progress=RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()};}}
-            else{let demand=owner.next_demand(grant.maximum_copy_bytes).map_err(error)?;if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=settled(owner.close_step(effect)).map_err(error)?;}}
+            else{let demand=owner.next_demand(grant.maximum_copy_bytes).map_err(error)?;if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=settled(owner.close_step(effect.grant().maximum_copy_bytes,effect)).map_err(error)?;}}
             return Ok((false,self.retirement_progress));
         }
         if let Some(owner)=self.discarded_pack.as_mut(){
             if owner.terminal_is_empty(){let copy=size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>();if permits(grant,copy,0,0){self.discarded_pack=None;self.retirement_progress=RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()};}}
-            else{let demand=owner.next_demand(grant.maximum_copy_bytes).map_err(error)?;if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=settled(owner.step(effect)).map_err(error)?;}}
+            else{let demand=owner.next_demand(grant.maximum_copy_bytes).map_err(error)?;if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=settled(owner.step(effect.grant().maximum_copy_bytes,effect)).map_err(error)?;}}
             return Ok((false,self.retirement_progress));
         }
         Ok((true,Default::default()))
@@ -127,12 +127,12 @@ impl<P:Send+Sync+'static,M:Send+'static> DurableStorePreparedOwnerV1<P,M>{
         if !empty||receipt!=Default::default(){return Ok(false);}
         if let Some(owner)=self.original_retirement.as_mut(){
             if owner.terminal_is_empty(){let release=size_of::<ArtifactStorePreparedRetirement<P,M>>();if permits(grant,size_of::<Option<Box<ArtifactStorePreparedRetirement<P,M>>>>(),0,release){self.original_retirement=None;self.retirement_progress=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<Box<ArtifactStorePreparedRetirement<P,M>>>>(),released_bytes:release,..Default::default()};}}
-            else{let demand=owner.next_demand(grant.maximum_copy_bytes).map_err(error)?;if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=settled(owner.close_step(effect)).map_err(error)?;}}
+            else{let demand=owner.next_demand(grant.maximum_copy_bytes).map_err(error)?;if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=settled(owner.close_step(effect.grant().maximum_copy_bytes,effect)).map_err(error)?;}}
             return Ok(false);
         }
         if let Some(owner)=self.issuer_retirement.as_mut(){
             let demand=owner.demands(grant.maximum_copy_bytes).map_err(error)?;
-            if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=settled(owner.step(effect)).map_err(error)?;if owner.terminal_is_empty(){self.issuer_retirement=None;}}
+            if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=settled(owner.step(effect.grant().maximum_copy_bytes,effect)).map_err(error)?;if owner.terminal_is_empty(){self.issuer_retirement=None;}}
             return Ok(false);
         }
         let copy=size_of::<Self>()+size_of::<DurablePlanningOutputV1>()+size_of::<canonical_edit::ArtifactStoreOneItemAuthorityRetirement>();

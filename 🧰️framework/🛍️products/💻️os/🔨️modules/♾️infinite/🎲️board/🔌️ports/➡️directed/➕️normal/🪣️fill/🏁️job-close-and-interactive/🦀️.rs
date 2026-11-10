@@ -5,8 +5,8 @@ use super::*;
 // #region board_host
 //#region 🪣️Fill
 impl BoardFillJob {
-    fn close_granted(&mut self,grant:semio_framework_value::RetainedCloneGrant,work:&mut u64)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
-        let maximum_items=grant.maximum_items;
+    fn close_granted(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,work:&mut u128)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
+        let grant=effect.grant();let maximum_items=grant.maximum_items;
         let maximum_bytes=grant.maximum_release_bytes;
         if grant.maximum_depth==0 {return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
         self.closing = true;
@@ -27,7 +27,7 @@ impl BoardFillJob {
                 self.commit_writer = None;
                 return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::RetainedCloneProgress {copied_items:1,..Default::default()} });
             }
-            let turn = writer.close_step_granted(grant);
+            let turn = writer.close_step(effect);
             *work = turn.work;
             if writer.terminal_is_empty() {self.commit_writer = None;}
             return turn.result.map(|step|semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()});
@@ -38,7 +38,7 @@ impl BoardFillJob {
                     *slot = None;
                     return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::RetainedCloneProgress {copied_items:1,..Default::default()} });
                 }
-                let turn = payload.close_step(grant);
+                let turn = payload.close_step(effect);
                 *work = turn.work;
                 return turn.result.map(|step|semio_framework_job::InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
@@ -176,7 +176,7 @@ impl semio_framework_job::InteractiveJob for BoardFillJob {
 if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
         let demand=(||->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:self.next_close_copy_byte_demand()?,capacity_bytes:self.next_close_capacity_byte_demand(cx.retained_grant().maximum_copy_bytes)?,release_bytes:self.next_close_release_byte_demand()?,depth:self.next_close_depth_demand()?})})().map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
         let mut blocked=false;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let mut work=1;let result=self.close_granted(grant,&mut work).map(|step|match step{semio_framework_job::InteractiveJobCloseStep::Pending{progress}=>semio_framework_value::RetainedCloneStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>semio_framework_value::RetainedCloneStep::Complete(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>{blocked=true;semio_framework_value::RetainedCloneStep::Progress(Default::default())}});semio_framework_value::RetainedWorkOutcome{result,work}})?;
+        let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{let mut work=1u128;let result=self.close_granted(effect,&mut work).map(|step|match step{semio_framework_job::InteractiveJobCloseStep::Pending{progress}=>semio_framework_value::RetainedCloneStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>semio_framework_value::RetainedCloneStep::Complete(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>{blocked=true;semio_framework_value::RetainedCloneStep::Progress(Default::default())}});semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:result.map_err(semio_framework_value::OriginalRetirementFailure::from),work})})?;
         if blocked{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
         if self.terminal_is_empty(){Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()})}else{Ok(step)}
     }

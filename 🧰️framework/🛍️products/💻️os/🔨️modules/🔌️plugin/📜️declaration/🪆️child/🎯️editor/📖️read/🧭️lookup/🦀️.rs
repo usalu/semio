@@ -56,5 +56,21 @@ impl OriginalChildMemberLookup{
 impl Drop for OriginalChildMemberLookup{fn drop(&mut self){assert!(self.terminal_is_empty(),"original member lookup requires terminal closure")}}
 
 struct LookupRetirement{cursor:Option<OriginalChildMemberLookup>}
-impl semio_framework_value::retirement::RetireOwned for OriginalChildMemberLookup{fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(LookupRetirement{cursor:Some(self)})}fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<LookupRetirement>())}fn controlled_retirement_supported()->bool{true}}
-impl semio_framework_value::retirement::RetirementCursor for LookupRetirement{fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{let Some(cursor)=self.cursor.as_ref()else{return Ok(Default::default())};let d=cursor.close_demand();Ok(RetirementDemand{copy_bytes:d.copy_bytes.checked_add(2*std::mem::size_of::<Self>()).ok_or_else(||refusal("original member lookup retirement copy extent overflow"))?,depth:d.depth.checked_add(1).ok_or_else(||refusal("original member lookup retirement depth overflow"))?,..d})}fn close_step(&mut self,g:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;let d=match self.next_demand(g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetirementStep::Failure(error,0)};if self.cursor.is_none(){return RetirementStep::Complete(0)}if !retained_clone_grant_admits(g,d){return RetirementStep::BudgetExhausted}let own=2*std::mem::size_of::<Self>();let cursor=self.cursor.as_mut().unwrap();cursor.begin_close();match cursor.close_step(RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-own,maximum_depth:g.maximum_depth-1,..g}){Ok(mut p)=>{if cursor.terminal_is_empty(){self.cursor=None}p.copied_items=p.copied_items.max(1);p.copied_bytes+=own;RetirementStep::Progress(p,1)},Err(error)=>{let mut p=error.retained_progress();p.copied_items=p.copied_items.max(1);p.copied_bytes+=own;RetirementStep::Failure(error.with_retained_progress(p),cursor.last_turn_work())}}}fn terminal_is_empty(&self)->bool{self.cursor.is_none()}fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}}
+impl semio_framework_value::retirement::RetireOwned for OriginalChildMemberLookup{type RetirementCursor=LookupRetirement;fn retirement_seed(self)->LookupRetirement{LookupRetirement{cursor:Some(self)}}fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<LookupRetirement>())}fn controlled_retirement_supported()->bool{true}}
+impl semio_framework_value::retirement::RetirementCursor for LookupRetirement{
+ semio_framework_value::native_retirement_reply!();
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(self.cursor.is_some()))}
+ fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{let Some(cursor)=self.cursor.as_ref()else{return Ok(Default::default())};let d=cursor.close_demand();Ok(RetirementDemand{copy_bytes:d.copy_bytes.checked_add(2*std::mem::size_of::<Self>()).ok_or_else(||refusal("original member lookup retirement copy extent overflow"))?,depth:d.depth.checked_add(1).ok_or_else(||refusal("original member lookup retirement depth overflow"))?,..d})}
+ fn terminal_is_empty(&self)->bool{self.cursor.is_none()}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+}
+impl LookupRetirement{
+ fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+  use semio_framework_value::retirement::{RetirementStep,RetirementCursor as _};
+  let g=effect.grant();let d=match self.next_demand(body){Ok(d)=>d,Err(error)=>return RetirementStep::Failure(error.into(),0)};
+  if self.cursor.is_none(){return RetirementStep::Complete(0)}if !retained_clone_grant_admits(g,d){return RetirementStep::BudgetExhausted}
+  let work=match semio_framework_value::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};
+  let own=2*std::mem::size_of::<Self>();let cursor=self.cursor.as_mut().unwrap();cursor.begin_close();
+  match cursor.close_step(RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-own,maximum_depth:g.maximum_depth-1,..g}){Ok(mut p)=>{if cursor.terminal_is_empty(){self.cursor=None}p.copied_items=p.copied_items.max(1);p.copied_bytes+=own;RetirementStep::Progress(p,work)},Err(error)=>{let mut p=error.retained_progress();p.copied_items=p.copied_items.max(1);p.copied_bytes+=own;RetirementStep::Failure(error.with_retained_progress(p).into(),work)}}
+ }
+}

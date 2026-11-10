@@ -177,7 +177,7 @@ fn create_generation3d_app_part_1(builder: semio_plugin::app::EditorBuilder) -> 
                 .artifact_kind(artifact_kind())
                 .icon_id("workflow")
                 .terminology("reuse")
-                .terminology_document("reuse", ["Entwerfen mit Bestand", "Generator"])
+                .terminology_document("reuse", [LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::native("Generator", "Generator")])
                 .mode_def(edit::definition())
                 .mode_def(generate::definition())
                 .default_mode_id(edit::GENERATION_3D_PLAY_MODE_EDIT)

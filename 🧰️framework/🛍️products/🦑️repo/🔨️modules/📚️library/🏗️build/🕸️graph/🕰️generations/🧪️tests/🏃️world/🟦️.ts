@@ -38,8 +38,10 @@ type Owner={name:string;root:string;config:string;package?:string;uses:string[];
 async function readOwners(dir:string):Promise<{owners:Owner[];rows:GenerationRowV1[]}>{
  const files:string[]=[],dirs:string[]=[];await walk(dir,"pkg",files,dirs);
  const owners:Owner[]=[],rows:GenerationRowV1[]=[];
- for(const file of files.filter(file=>basename(file)==="project.json")){
-  const text=await readFile(join(dir,file),"utf8"),json=JSON.parse(text);rows.push({kind:"field",path:file,fact:{name:json.name,package:json.package??null}});
+ const configs=await Promise.all(files.filter(file=>["project.json","module.json"].includes(basename(file))).map(async file=>({file,json:JSON.parse(await readFile(join(dir,file),"utf8"))}))),chosen=new Map<string,typeof configs[number]>();
+ for(const row of configs){const held=chosen.get(dirname(row.file));if(!held||row.json.primary===true)chosen.set(dirname(row.file),row);}
+ for(const{file,json}of chosen.values()){
+  rows.push({kind:"field",path:file,fact:{name:json.name,package:json.package??null}});
   owners.push({name:json.name,root:dirname(file),config:file,...(json.package?{package:json.package}:{}),...(json.broken?{broken:true}:{}),uses:json.uses??[]});
  }
  return{owners:owners.sort((a,b)=>a.name<b.name?-1:1),rows};
@@ -124,9 +126,9 @@ export function createMembership(dir:string,counter?:{walks:number}){
   const capturedAt=Date.now(),files:string[]=[],dirs:string[]=[],directories:[string,number,number][]=[],members:[string,number][]=[];
   await walk(dir,"pkg",files,dirs);
   for(const path of dirs){const status=await lstat(join(dir,path));directories.push([path,status.mtimeMs,status.ino]);}
-  for(const path of files)if(path.endsWith("/project.json")||path.endsWith("/Cargo.toml")||path.endsWith(".ts")){const status=await lstat(join(dir,path));members.push([path,status.mode]);}
+  for(const path of files)if(path.endsWith("/project.json")||path.endsWith("/module.json")||path.endsWith("/Cargo.toml")||path.endsWith(".ts")){const status=await lstat(join(dir,path));members.push([path,status.mode]);}
   const frontier=createFrontierV1({directories,members,capturedAt}),digest=sha(canonicalJsonV1(frontier.members));
-  const changes=previous?diffFrontiersV1(previous.frontier,frontier).map(change=>({...change,...(change.path.endsWith("/project.json")?{config:true}:{}),...(change.path.endsWith("/Cargo.toml")?{pending:true}:{})})):[];
+  const changes=previous?diffFrontiersV1(previous.frontier,frontier).map(change=>({...change,...(change.path.endsWith("/project.json")||change.path.endsWith("/module.json")?{config:true}:{}),...(change.path.endsWith("/Cargo.toml")?{pending:true}:{})})):[];
   return{digest,frontier,changes};
  };
 }

@@ -1,7 +1,7 @@
 //! 🧪️ Real tagged FEM payloads and tuple variants preserve source leases through every native frontier.
 #[path="../../../../♻️retirement/🧪️tests/⏱️work/🦀️.rs"]mod close_work_policy;
 use semio_framework_test_fixtures::fixture_text;
-use crate::{NativeDecodeControl,DslValue,RetirementDemand,ValueError,retained_clone::{RetainedCloneSource,RetainedCloneGrant,RetainedCloneProgress},native_decoding::{NativeReceive,NativeReceiver},retirement::{RetireOwned,controlled::ControlledRetirement},shared_issuance::SealedShared};
+use crate::{DslValue,native_decoding::{NativeReceive,NativeReceiver},retirement::RetireOwned,shared_issuance::SealedShared};
 #[derive(crate::RetireOwned,crate::NativeReceive,crate::ToValue)]
 #[value(crate="crate",rename_all="camelCase")]
 struct Node{id:SealedShared<String>,x:f64,y:f64}
@@ -54,15 +54,23 @@ enum OracleExternal{Pair(String,f64),Node(OracleNode)}
 #[serde(tag="kind",content="payload",rename_all="camelCase",deny_unknown_fields)]
 enum OracleAdjacent{Pair(String,f64)}
 fn oracle<T:serde::de::DeserializeOwned+serde::Serialize>(row:&serde_json::Value){match serde_json::from_value::<T>(row["input"].clone()){Ok(value)=>{assert!(row["accepted"].as_bool().unwrap());assert_eq!(serde_json::to_value(value).unwrap(),row["input"]);},Err(_)=>assert!(!row["accepted"].as_bool().unwrap())}}
-use super::fields::{Bank,source};
-use crate::source_fixture::receive;
+use crate::driver;
 fn observe<R>(operation:impl FnOnce()->R)->(R,(usize,usize)){crate::observe_retirement_allocations(operation)}
-fn grant(bank:&Bank)->RetainedCloneGrant{let mut g=bank.grant();g.maximum_copy_bytes=g.maximum_copy_bytes.min(4096);g.maximum_capacity_bytes=g.maximum_capacity_bytes.min(65536);g}
-fn drain<T:RetireOwned>(value:T,bank:&mut Bank){let mut close=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("enum typed issuer"));let mut work=close_work_policy::Work::new();while !close.terminal_is_empty(){let d=close.next_demand(4096).unwrap();assert!(d.copy_bytes<=4096,"selected close quote exceeds its authored body");let g=grant(bank);let(result,heap)=observe(||close.step(g));let actual=close.last_turn_work();let p=result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));assert!(p.fits(g));bank.step(crate::RetainedWorkOutcome{result,work:actual}).unwrap();work.observe(p==Default::default()&&!close.terminal_is_empty()&&close.next_demand(4096).unwrap()==d);}}
-fn run<T:NativeReceive<DslValue>+Observed>(row:&serde_json::Value,cuts:&[serde_json::Value]){
- for cut in cuts{let mut bank=Bank::new();let original=source(DslValue::from(&row["input"]),&mut bank);let foreign=source(DslValue::from(&row["input"]),&mut bank);let identity=std::ptr::from_ref(original.borrow().get());let mut receiver=T::receiver();let mut callback=|_|true;let mut control=NativeDecodeControl::new(16777216,&mut callback);let mut refused=false;let mut ready=false;
-  for turn in 0..2048{if turn==cut.as_u64().unwrap()as usize{break}if receiver.output_ready(){ready=true;break}let d=match receiver.demands(original.borrow(),4096){Ok(d)=>d,Err(_)=>{assert!(!row["accepted"].as_bool().unwrap());refused=true;break}};assert!(d.copy_bytes<=4096&&d.capacity_bytes<=65536);let g=grant(&bank);if turn>0&&row["family"]!="transparent"{assert!(receiver.demands(foreign.borrow(),4096).is_err())}for axis in 0..5{let mut denied=g;match axis{0=>denied.maximum_items=0,1 if d.copy_bytes>0=>denied.maximum_copy_bytes=d.copy_bytes-1,2 if d.capacity_bytes>0=>denied.maximum_capacity_bytes=d.capacity_bytes-1,3 if d.release_bytes>0=>denied.maximum_release_bytes=d.release_bytes-1,4 if d.depth>0=>denied.maximum_depth=d.depth-1,_=>continue}let(result,heap)=observe(||receive(&mut control,denied,bank.work_loan(1),|control|receiver.advance(original.borrow(),control,4096,denied)));assert_eq!(result.work,0);assert_eq!(result.result.unwrap().progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));}let(result,heap)=observe(||receive(&mut control,g,bank.work_loan(1),|control|receiver.advance(original.borrow(),control,4096,g)));let p=result.result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));match bank.normal(result){Ok(_)=>{},Err(_)=>{assert!(!row["accepted"].as_bool().unwrap());refused=true;break}}assert_eq!(std::ptr::from_ref(original.borrow().get()),identity);}
-  ready|=receiver.output_ready();if ready{assert!(row["accepted"].as_bool().unwrap());let g=grant(&bank);let result=receiver.take(g);let p=result.result.as_ref().unwrap().as_ref().map(|(_,p)|*p).unwrap_or_default();bank.post(p,result.work);let(output,_)=result.result.unwrap().unwrap();assert!(p.fits(g));assert_eq!(output.observed(),row["input"]);drain(output,&mut bank);}receiver.begin_close();let mut work=close_work_policy::Work::new();while !receiver.terminal_is_empty(){let d=receiver.close_demands(4096).unwrap();assert!(d.copy_bytes<=4096,"selected close quote exceeds its authored body");let g=grant(&bank);let(result,heap)=observe(||receiver.close_step(g));let p=result.result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));assert!(p.fits(g));bank.step(result).unwrap();work.observe(p==Default::default()&&!receiver.terminal_is_empty()&&receiver.close_demands(4096).unwrap()==d);}assert_eq!(observe(||drop(receiver)).1,(0,0));assert_eq!(serde_json::Value::from(original.borrow().get()),row["input"]);drain(original,&mut bank);drain(foreign,&mut bank);if cut.as_u64()==Some(1024){assert!(ready||refused)}
+fn run<T:NativeReceive<DslValue>+Observed+RetireOwned>(row:&serde_json::Value,cuts:&[serde_json::Value])where <T as NativeReceive<DslValue>>::Receiver:NativeReceiver<DslValue,T>{
+ let accepted=row["accepted"].as_bool().unwrap();let grant:serde_json::Value=serde_json::from_str::<serde_json::Value>(fixture_text!("../../../../✨️derive/🛬️receive/🔀️enum/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()["originalGrant"].clone();
+ for cut in cuts{
+  let cut=cut.as_u64().unwrap();let mut bank=driver::bank();let original=driver::admit(&mut bank,DslValue::from(&row["input"]));let foreign=driver::admit(&mut bank,DslValue::from(&row["input"]));let identity=std::ptr::from_ref(original.borrow().get());let mut receiver=T::receiver();let mut refused=false;let mut ready=false;let mut history=Vec::new();
+  for turn in 0..32768u64{
+   if turn==cut{break}if receiver.output_ready(){ready=true;break}
+   match receiver.demands(original.borrow(),4096,1<<20){Ok(d)=>{assert!(d.copy_bytes as u64<=grant["copy"].as_u64().unwrap()&&d.capacity_bytes as u64<=grant["capacity"].as_u64().unwrap(),"{} turn {turn} quotes {d:?} after {:?}",row["name"],history);history.push(d);if history.len()>6{history.remove(0);}},Err(_)=>{assert!(!accepted);refused=true;break}}
+   if turn>0&&row["family"]!="transparent"{assert!(receiver.demands(foreign.borrow(),4096,1<<20).is_err())}
+   if driver::receive_cut(&mut receiver,original.borrow(),&mut bank,4096,Some(1)).is_err(){assert!(!accepted);refused=true;break}
+   assert_eq!(std::ptr::from_ref(original.borrow().get()),identity);
+  }
+  ready|=receiver.output_ready();
+  if ready{assert!(accepted);let output=driver::receive_cut(&mut receiver,original.borrow(),&mut bank,4096,None).unwrap().expect("uncut receive publishes");assert_eq!(output.observed(),row["input"]);driver::retire(output,&mut bank);}
+  driver::close(&mut receiver,&mut bank,4096);assert!(receiver.terminal_is_empty());assert_eq!(observe(||drop(receiver)).1,(0,0));assert_eq!(serde_json::Value::from(original.borrow().get()),row["input"]);driver::close_source(original,&mut bank);driver::close_source(foreign,&mut bank);
+  if Some(&serde_json::json!(cut))==cuts.last(){assert!(ready||refused)}
  }
 }
 #[test]
@@ -75,8 +83,7 @@ enum UnitAndStruct{Owner,Contributed{id:SealedShared<String>}}
 fn unit_and_struct_variants_derive_a_closable_receiver(){
  let mut receiver=<UnitAndStruct as NativeReceive<DslValue>>::receiver();
  assert!(!receiver.output_ready());
- receiver.begin_close();
- assert!(receiver.close_demands(4096).is_ok());
+ let mut bank=crate::driver::bank();crate::driver::close(&mut receiver,&mut bank,4096);assert!(receiver.terminal_is_empty());
 }
 
 #[test]

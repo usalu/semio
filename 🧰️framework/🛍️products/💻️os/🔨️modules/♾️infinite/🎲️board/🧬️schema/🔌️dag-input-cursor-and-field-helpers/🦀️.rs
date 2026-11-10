@@ -19,7 +19,7 @@ impl DagInputCursor{
     pub fn facts(&self)->Option<&DagInputFacts>{if self.complete{self.facts.as_ref()}else{None}}
     pub fn take_facts(&mut self)->Option<DagInputFacts>{if self.complete{self.facts.take()}else{None}}
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.progress}
-    pub fn normal_step_demands(&self,source:&str)->Result<semio_framework_value::RetirementDemand,ValueError>{
+    pub fn normal_step_demands(&self,source:&str,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
         if self.raw.is_none(){return self.grammar.normal_step_demands(source).map_err(|error|error.into_value_error())}
         let raw=self.raw.as_ref().unwrap();if self.phase==0{match self.kind{DagInputKind::Progress=>closed(raw,&["active","stale"] )?,DagInputKind::Selection=>closed(raw,&["nodes","edges","handles"] )?,_=>{}}}let mut demand=semio_framework_value::RetirementDemand{depth:1,..Default::default()};
         let vector=|value:&DslValue,size:usize|->Result<usize,ValueError>{value.as_array().ok_or_else(refuse)?.len().checked_mul(size).ok_or_else(refuse)};
@@ -27,18 +27,17 @@ impl DagInputCursor{
             DagInputFacts::Selection(_)if self.phase==1=>vector(raw.get(["nodes","edges","handles"][self.field]).ok_or_else(refuse)?,size_of::<String>())?,
             DagInputFacts::Statuses(_)if self.field<raw.as_object().ok_or_else(refuse)?.len()=>{let row=&raw.as_object().unwrap()[self.field].1;if self.phase==1&&row.as_object().ok_or_else(refuse)?.len()>2{return Err(refuse())}match self.phase{
                 1 if row.get("status").and_then(DslValue::as_str)==Some("blocked")=>vector(row.get("ports").ok_or_else(refuse)?,size_of::<String>())?,
-                3=>SharedOwner::<String>::allocation_bytes(),4=>SharedOwner::<DagNodeEvaluationStatus>::allocation_bytes(),
-                6=>{let update=self.pending_update.as_ref().unwrap();demand.copy_bytes=update.next_copy_byte_demand();demand.depth=update.next_depth_demand();update.next_capacity_byte_demand()?},_=>0}},_=>0}};Ok(demand)
+                3|4|6=>{let quoted=match self.phase{3=>SharedOwner::<String>::source_admission_demand()?,4=>SharedOwner::<DagNodeEvaluationStatus>::source_admission_demand()?,_=>self.pending_update.as_ref().unwrap().native_demands(body)?};demand.copy_bytes=quoted.copy_bytes;demand.release_bytes=quoted.release_bytes;demand.depth=quoted.depth.max(demand.depth);quoted.capacity_bytes},_=>0}},_=>0}};Ok(demand)
     }
     pub fn step(&mut self,source:&str,maximum_units:usize,control:&mut NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,ValueError>{
         let grant=effect.grant();self.progress=Default::default();if maximum_units==0||grant.maximum_items==0{return Ok(false)}control.checkpoint()?;if self.pending_retired.is_some(){return Ok(false)}if self.complete{return Ok(true)}
-        let demand=self.normal_step_demands(source)?;if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{return Ok(false)}
+        let demand=self.normal_step_demands(source,grant.maximum_copy_bytes)?;if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{return Ok(false)}
         control.admit_turn_capacity(grant.maximum_capacity_bytes)?;
         if self.raw.is_some(){let before=control.owned_bytes();self.project_one(control,effect)?;self.progress.copied_items=1;self.progress.retained_capacity_bytes=control.owned_bytes()-before;control.step()?;return Ok(self.complete)}
         let result=self.grammar.step(source,1,control,effect).map_err(|error|error.into_value_error());self.progress=self.grammar.normal_step_progress();self.raw=result?;Ok(false)
     }
     fn project_one(&mut self,control:&mut NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(),ValueError>{
-        let grant=effect.grant();let raw=self.raw.as_mut().ok_or_else(refuse)?;let admitting=matches!(self.facts,Some(DagInputFacts::Statuses(_)))&&matches!(self.phase,3|4);if !admitting&&!effect.performed(1)?{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original DAG input transition exceeded its work"))}
+        let grant=effect.grant();let raw=self.raw.as_mut().ok_or_else(refuse)?;let admitting=matches!(self.facts,Some(DagInputFacts::Statuses(_)))&&matches!(self.phase,3|4|6);if !admitting&&!effect.performed(1)?{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original DAG input transition exceeded its work"))}
         if self.phase==0{
             self.facts=Some(match self.kind{
                 DagInputKind::Progress=>{closed(raw,&["active","stale"])?;let active=raw.get("active").ok_or_else(refuse)?;if !active.is_null(){identifier(active)?;}let stale=control.allocate_vec(array(field(raw,"stale")?)?.len())?;let active=match field(raw,"active")?{DslValue::Null=>None,value=>Some(take_text(value,false)?)};DagInputFacts::Progress(DagComputingProgress{active,stale})},
@@ -70,14 +69,21 @@ impl DagInputCursor{
                 }else if self.phase==2{
                     let ports=array(field(row,"ports")?)?;if self.index==ports.len(){self.phase=3;}else{let DagNodeEvaluationStatus::Blocked{ports:output}=self.pending_status.as_mut().unwrap()else{unreachable!()};output.push(take_text(&mut ports[self.index],true)?);self.index+=1;}
                 }else if self.phase==3{
-                    let bytes=SharedOwner::<String>::allocation_bytes();control.charge(bytes)?;let value=std::mem::take(id);
-                    let turn=SharedOwner::admit(value,grant,effect.actual());let work=turn.work;let outcome=turn.result;if !effect.performed(u64::try_from(work).unwrap_or(u64::MAX))?{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original DAG input admission exceeded its work"))}match outcome{Ok((owner,_))=>self.pending_key=Some(owner),Err((error,value))=>{*id=value;return Err(error)}}self.phase=4;
+                    if effect.remaining_work_units()?<SharedOwner::<String>::source_admission_work_demand(){return Ok(())}
+                    control.charge(SharedOwner::<String>::allocation_bytes())?;let mut source=Some(std::mem::take(id));
+                    let turn=SharedOwner::admit_from(&mut source,&mut self.pending_key,effect);if let Some(value)=source{*id=value}
+                    turn.result?;if self.pending_key.is_some(){self.phase=4}
                 }else if self.phase==4{
-                    let bytes=SharedOwner::<DagNodeEvaluationStatus>::allocation_bytes();control.charge(bytes)?;let value=self.pending_status.take().unwrap();
-                    let turn=SharedOwner::admit(value,grant,effect.actual());let work=turn.work;let outcome=turn.result;if !effect.performed(u64::try_from(work).unwrap_or(u64::MAX))?{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original DAG input admission exceeded its work"))}match outcome{Ok((owner,_))=>self.pending_value=Some(owner),Err((error,value))=>{self.pending_status=Some(value);return Err(error)}}self.phase=5;
+                    if effect.remaining_work_units()?<SharedOwner::<DagNodeEvaluationStatus>::source_admission_work_demand(){return Ok(())}
+                    control.charge(SharedOwner::<DagNodeEvaluationStatus>::allocation_bytes())?;
+                    let turn=SharedOwner::admit_from(&mut self.pending_status,&mut self.pending_value,effect);
+                    turn.result?;if self.pending_value.is_some(){self.phase=5}
                 }else if self.phase==5{self.pending_update=Some(facts.begin_set_shared(self.pending_key.take().unwrap(),self.pending_value.take().unwrap()));self.phase=6;}
                 else if self.phase==6{
-                    let cursor=self.pending_update.as_mut().ok_or_else(||ValueError::invariant("pending_update absent"))?;self.progress=match cursor.advance_insert_controlled(grant,control).result.map_err(|error|error.primary.or(error.quote_refusal).or(error.allocation_refusal).unwrap_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original native construction refused")))?{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};if cursor.is_complete(){self.phase=7;}
+                    let cursor=self.pending_update.as_mut().ok_or_else(||ValueError::invariant("pending_update absent"))?;let body=grant.maximum_copy_bytes;
+                    if effect.remaining_work_units()?<cursor.native_work_demand(body)?{return Ok(())}
+                    control.charge(cursor.native_demands(body)?.capacity_bytes)?;
+                    self.progress=match cursor.advance_native(body,effect).result?{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};if cursor.is_complete(){self.phase=7;}
                 }else{
                     let mut cursor=self.pending_update.take().unwrap();let next=cursor.take_result().expect("completed admitted ordered status root");let previous=std::mem::replace(facts,next);self.pending_retired=Some((previous,cursor));self.field+=1;self.phase=1;
                 }

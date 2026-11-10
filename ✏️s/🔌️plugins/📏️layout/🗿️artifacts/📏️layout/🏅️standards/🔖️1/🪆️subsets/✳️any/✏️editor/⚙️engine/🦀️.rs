@@ -26,7 +26,7 @@ pub fn layout_io() -> semio_plugin::AppIo {
         ports: vec![
             semio_plugin::MediaPortSpec {
                 id: "fields:in".into(),
-                label: "Fields".into(),
+                label: semio_plugin::LocalizedLabel::native("Fields", "Felder"),
                 direction: semio_plugin::MediaPortDirection::In,
                 media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Data, form: semio_plugin::MediaForm::Value },
                 kind_id: Some("form.dictionary".into()),
@@ -35,7 +35,7 @@ pub fn layout_io() -> semio_plugin::AppIo {
             },
             semio_plugin::MediaPortSpec {
                 id: "layout:out".into(),
-                label: "Layout".into(),
+                label: semio_plugin::LocalizedLabel::native("Layout", "Layout"),
                 direction: semio_plugin::MediaPortDirection::Out,
                 media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::TwoD, form: semio_plugin::MediaForm::Vector },
                 kind_id: Some("2d.layout".into()),

@@ -43,7 +43,7 @@ fn completed_json_projection_frame_reuses_inline_authority_without_transient_adm
             RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 3, maximum_capacity_bytes: 0, maximum_release_bytes: demand, maximum_depth: 1 },
             RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 3, maximum_capacity_bytes: 0, maximum_release_bytes: demand - 1, maximum_depth: 1 },
         ] {
-            let (step, born, physical) = crate::observe_backing(|| crate::fx(grant, |e| owner.close_step(e)));
+            let (step, born, physical) = crate::observe_backing(|| crate::fx(grant, |e| owner.close_step(grant.maximum_copy_bytes, e)));
             assert!(matches!(step, RetirementStep::BudgetExhausted));
             assert_eq!((born, physical), (0, 0));
             assert_eq!(owner.phase, phase);
@@ -90,11 +90,11 @@ fn retire_json_with_independent_grants<T: semio_framework_value::retirement::Ret
             maximum_depth: owner.next_depth_demand().unwrap(),
         };
         assert!(grant.maximum_depth <= law["maximumDepth"].as_u64().unwrap() as usize);
-        assert_eq!(crate::fp(RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 }, |e| owner.step(e)).result.unwrap().progress(), Default::default());
+        assert_eq!(crate::retire_step(&mut owner, RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 }, 0).unwrap().progress(), Default::default());
         assert_eq!(owner.next_capacity_byte_demand(3).unwrap(), grant.maximum_capacity_bytes);
         assert_eq!(owner.next_release_byte_demand().unwrap(), grant.maximum_release_bytes);
         assert_eq!(owner.next_depth_demand().unwrap(), grant.maximum_depth);
-        match crate::fp(grant, |e| owner.step(e)).result.unwrap() {
+        match crate::retire_step(&mut owner, grant, grant.maximum_copy_bytes).unwrap() {
             RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => {
                 assert!(progress.copied_items <= grant.maximum_items && progress.copied_bytes <= grant.maximum_copy_bytes);
                 assert!(progress.retained_capacity_bytes <= grant.maximum_capacity_bytes && progress.released_bytes <= grant.maximum_release_bytes);

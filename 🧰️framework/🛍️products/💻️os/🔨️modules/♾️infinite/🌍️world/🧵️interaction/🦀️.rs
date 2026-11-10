@@ -80,13 +80,41 @@ pub fn declare_scene_mesh_source(session_state: &mut WorldSessionState, authorit
 }
 
 /// 🧊️ Drains up to `budget` authority writes of the in-flight mesh publication.
-pub fn step_world_placeholder_mesh_batch(session_state: &mut WorldSessionState, interaction_state: &mut WorldInteractionState, authority_state: &mut WorldAuthorityState, scene_state: &mut WorldSceneState, budget: u32) {
+pub fn step_world_placeholder_mesh_batch(session_state: &mut WorldSessionState, interaction_state: &mut WorldInteractionState, authority_state: &mut WorldAuthorityState, scene_state: &mut WorldSceneState, budget: u32, effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) {
     for _ in 0..budget {
         if scene_state.placeholder_build.is_none() {
             return;
         }
-        step_world_placeholder_mesh(session_state, interaction_state, authority_state, scene_state);
+        step_world_placeholder_mesh(session_state, interaction_state, authority_state, scene_state, effect);
+        if effect.actual().is_some() {
+            return;
+        }
     }
+}
+
+pub use semio_os_infinite_world_model::{WORLD_PLACEHOLDER_PUMP_FUEL, WORLD_PLACEHOLDER_PUMP_GRANT};
+
+/// 🧾️ Whether the pump grant admits the cursor's next source-retirement quote.
+pub fn world_placeholder_pump_admits(cursor: &WorldPlaceholderMeshCursor) -> bool {
+    cursor.source_retirement_grant(WORLD_PLACEHOLDER_PUMP_QUOTE_COPY).is_ok_and(|quote| semio_framework_value::retained_clone::retained_clone_grant_admits(WORLD_PLACEHOLDER_PUMP_GRANT, semio_framework_value::RetirementDemand { copy_bytes: quote.maximum_copy_bytes, capacity_bytes: quote.maximum_capacity_bytes, release_bytes: quote.maximum_release_bytes, depth: quote.maximum_depth }))
+}
+
+const WORLD_PLACEHOLDER_PUMP_QUOTE_COPY: usize = 4096;
+
+/// 🏛️ Steps the in-flight mesh publication of a render frame under one host-funded owner-less turn; a grant that cannot admit the cursor's quote faults the dynamic build instead of stalling it.
+pub fn pump_world_placeholder_mesh(session_state: &mut WorldSessionState, interaction_state: &mut WorldInteractionState, authority_state: &mut WorldAuthorityState, scene_state: &mut WorldSceneState) {
+    let Some(cursor) = scene_state.placeholder_build.as_ref() else {
+        return;
+    };
+    if !world_placeholder_pump_admits(cursor) {
+        mark_world_dynamic_fault(session_state, authority_state, scene_state, WorldDynamicFault::Closing);
+        return;
+    }
+    let _ = semio_framework_job::OriginalRetirementPump::new().turn(WORLD_PLACEHOLDER_PUMP_FUEL, u64::MAX, world_pump_clock, WORLD_PLACEHOLDER_PUMP_GRANT).and_then(|mut turn| turn.with_effect(|effect| step_world_placeholder_mesh(session_state, interaction_state, authority_state, scene_state, effect)));
+}
+
+fn world_pump_clock() -> Option<u64> {
+    Some(0)
 }
 
 pub fn apply_decoded_reference_image(session_state: &mut WorldSessionState, authority_state: &mut WorldAuthorityState, scene_state: &mut WorldSceneState, assets_state: &mut WorldAssetsState, url: &str, decoded: DecodedReferenceImage) -> bool {

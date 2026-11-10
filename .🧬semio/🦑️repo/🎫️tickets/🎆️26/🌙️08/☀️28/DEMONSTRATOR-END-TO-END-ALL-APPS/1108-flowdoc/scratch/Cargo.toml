@@ -1,0 +1,27 @@
+cargo-features = ["trim-paths"]
+
+[workspace]
+
+[package]
+name = "flowdoc-scratch"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-job = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-value = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-replication = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
+neural_engine = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
+semio-framework-pack-json = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework = { path = "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-value-source-hold = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️source-hold/📦️packages/🦀️rust" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[features]
+protocol-laws = []

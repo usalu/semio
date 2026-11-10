@@ -1,10 +1,9 @@
 #!/bin/bash
 # usage: slot.sh <label> <command...>  — FIFO fleet cargo slots: W- labels first, then arrival order; K normal slots (slots.k), W- may use K+3
-# Hang guard: a cargo test binary (.../deps/<name>-<16 hex>) below this slot that adds no byte to the slot log for SLOT_HANG_SECS (default 1200; x3 when the log is not a regular file) is logged and killed (TERM, then KILL). Only that binary: never cargo, rustc or wrappers.
-hang_guard() { local lim=${SLOT_HANG_SECS:-1200} tick=${SLOT_HANG_TICK:-30} cur= prev= sz= last= t0=0 now
- [ -f /dev/fd/1 ] || lim=$((lim*3))
+# Hang guard: a cargo test binary (.../deps/ or .../out/<name>-<16 hex>) below this slot that adds no byte to the slot log for SLOT_HANG_SECS (default 180) is logged and killed (TERM, then KILL). Only that binary: never cargo, rustc or wrappers.
+hang_guard() { local lim=${SLOT_HANG_SECS:-180} tick=${SLOT_HANG_TICK:-30} cur= prev= sz= last= t0=0 now
  while sleep "$tick" >/dev/null 2>&1; do
-  cur=$(ps -axo pid=,ppid=,args= | awk -v r="$$" '{p[$1]=$2;a[$1]=$3} END{for(i in a){n=i;d=0;while(n!=""&&n!=0&&n!=1&&d++<64){if(n==r){if(match(a[i],/-[0-9a-f]+$/)&&RLENGTH==17&&a[i]~/\/deps\//)print i;break};n=p[n]}}}' | sort -n | tr '\n' ' ')
+  cur=$(ps -axo pid=,ppid=,args= | awk -v r="$$" '{p[$1]=$2;a[$1]=$3} END{for(i in a){n=i;d=0;while(n!=""&&n!=0&&n!=1&&d++<64){if(n==r){if(match(a[i],/-[0-9a-f]+$/)&&RLENGTH==17&&a[i]~/\/(deps|out)\//)print i;break};n=p[n]}}}' | sort -n | tr '\n' ' ')
   sz=$(stat -L -f %z /dev/fd/1 2>/dev/null); now=$SECONDS
   if [ -z "$cur" ] || [ "$cur" != "$prev" ] || [ "$sz" != "$last" ]; then prev=$cur; last=$sz; t0=$now; continue; fi
   if [ $((now-t0)) -ge "$lim" ]; then

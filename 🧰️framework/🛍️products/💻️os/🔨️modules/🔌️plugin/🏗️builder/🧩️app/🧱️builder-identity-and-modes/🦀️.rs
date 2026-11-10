@@ -84,8 +84,8 @@ impl AppBuilder {
 
     /// 🗺️ Replaces the full document path (product + app segments) while terminology `id` is active;
     /// `id` must also be declared via `terminology` — validated in `build_definition`.
-    pub async fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
-        self.terminology_breadcrumbs.insert(id.into(), document.into_iter().map(Into::into).collect());
+    pub async fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = LocalizedLabel>) -> Self {
+        self.terminology_breadcrumbs.insert(id.into(), document.into_iter().collect());
         self
     }
 

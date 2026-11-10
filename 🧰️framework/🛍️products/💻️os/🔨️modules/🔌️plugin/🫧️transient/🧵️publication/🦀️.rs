@@ -5,6 +5,7 @@ use crate::bounded_ownership::PluginLifecycleStep;
 use crate::{protocol, store};
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::retirement::arc_custody::original::{SharedOriginal, SharedOriginalStorage};
 use std::sync::{Arc, Weak};
 
 fn paged_copy(retained_bytes: &mut usize, grant: RetainedCloneGrant) -> Option<RetainedCloneProgress> {
@@ -119,7 +120,7 @@ where
 
     /// 🎒️ Pages its byte accounting on the copy axis instead of demanding the whole root in one grant — the closing
     /// half of the same deadlock `advance` documents above.
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {let result=(||->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {let result=(||->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{
         let grant = effect.grant();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
@@ -158,42 +159,66 @@ where
     }
 }
 
-struct BoundedTransientRootRetirement<P> {
-    root: Option<Arc<P>>,
+struct BoundedTransientRootRetirement<P: Send + Sync + 'static> {
+    root: Option<SharedOriginalStorage<P>>,
+    elected: Option<SharedOriginal<P>>,
     retained_bytes: usize,
 }
 
-impl<P> BoundedTransientRootRetirement<P> {
+impl<P: Send + Sync + 'static> BoundedTransientRootRetirement<P> {
     fn demand(&self) -> RetirementDemand {
+        let fixed = |demand: Result<RetirementDemand, ValueError>| demand.map_or(RetirementDemand { depth: 1, ..Default::default() }, |demand| RetirementDemand { depth: demand.depth.max(1), ..demand });
+        if let Some(root) = self.root.as_ref() { return fixed(root.retire_into_demand()); }
+        if let Some(elected) = self.elected.as_ref() { return fixed(elected.take_value_demand()); }
         RetirementDemand { copy_bytes: usize::from(self.retained_bytes != 0), depth: usize::from(!self.terminal_is_empty()), ..Default::default() }
     }
 
+    fn work(&self) -> u64 {
+        if self.root.is_some() { 4 } else { u64::from(!self.terminal_is_empty()) }
+    }
+
     pub fn terminal_is_empty(&self) -> bool {
-        self.root.is_none() && self.retained_bytes == 0
+        self.root.is_none() && self.elected.is_none() && self.retained_bytes == 0
     }
 }
 
 impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedTransientRootRetirement<P> {
- fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(self.demand())}
+    fn next_demand(&self, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { Ok(self.demand()) }
+
+    fn next_computational_work(&self, _body: usize) -> Result<u64, ValueError> { Ok(self.work()) }
 
     /// 🎒️ Pages its byte accounting on the copy axis: a displaced transient root larger than one grant (lowpoly's mesh
     /// workspace) otherwise never retires, and every later publication blocks behind it.
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
         let grant = effect.grant();
         let result = (|| -> Result<RetainedCloneStep, ValueError> {
-        if self.terminal_is_empty() {
-            return Ok(RetainedCloneStep::Complete(Default::default()));
-        }
-        let demand = self.demand();
-        depth_refusal(grant, demand, "transient root retirement exceeds admitted depth")?;
-        if yields(grant, demand) {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
-        }
-        if let Some(progress) = paged_copy(&mut self.retained_bytes, grant) {
-            return Ok(RetainedCloneStep::Progress(progress));
-        }
-        drop(self.root.take());
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+            if self.terminal_is_empty() {
+                return Ok(RetainedCloneStep::Complete(Default::default()));
+            }
+            let demand = self.demand();
+            depth_refusal(grant, demand, "transient root retirement exceeds admitted depth")?;
+            if yields(grant, demand) || effect.remaining_work_units()? < self.work() {
+                return Ok(RetainedCloneStep::Progress(Default::default()));
+            }
+            if let Some(root) = self.root.as_mut() {
+                let mut slot = None;
+                drop(root.retire_into::<ValueError>(&mut self.elected, effect, semio_framework_value::retained_clone::OriginalEffectReply::borrow(&mut slot)?)?);
+                let step = slot.take().ok_or_else(|| ValueError::invariant("transient root alias retirement left its reply pending"))??;
+                if root.terminal_is_empty() { self.root = None; }
+                return Ok(RetainedCloneStep::Progress(step.progress()));
+            }
+            if let Some(mut elected) = self.elected.take() {
+                if !effect.performed(1)? { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "transient root election exceeds its work ceiling")); }
+                match elected.take_value() {
+                    Some(value) => drop(value),
+                    None => { self.elected = Some(elected); return Err(ValueError::invariant("transient root payload retains a physical alias")); }
+                }
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+            }
+            if let Some(progress) = paged_copy(&mut self.retained_bytes, grant) {
+                return Ok(RetainedCloneStep::Progress(progress));
+            }
+            Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
         })();
         let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())));
         semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work })
@@ -212,7 +237,7 @@ impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedTransi
     }
 
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> {
-        Ok(0)
+        Ok(self.demand().release_bytes)
     }
 
     fn next_depth_demand(&self) -> Result<usize, ValueError> {
@@ -233,17 +258,17 @@ impl<P> store::SnapshotRetirementFactory<P> for BoundedTransientRootRetirementFa
 where
     P: pack::snapshot::ArtifactDsl + Send + Sync + 'static,
 {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { size_of::<BoundedTransientRootRetirement<P>>() }
+    fn retirement_birth_bytes(&self, _snapshot: &SharedOriginalStorage<P>) -> usize { size_of::<BoundedTransientRootRetirement<P>>() }
 
-    fn retire_demands(&self, _snapshot: &Arc<P>) -> Result<RetirementDemand, ValueError> { Ok(RetirementDemand { capacity_bytes: size_of::<BoundedTransientRootRetirement<P>>(), depth: 1, ..Default::default() }) }
+    fn retire_demands(&self, _snapshot: &SharedOriginalStorage<P>) -> Result<RetirementDemand, ValueError> { Ok(RetirementDemand { capacity_bytes: size_of::<BoundedTransientRootRetirement<P>>(), depth: 1, ..Default::default() }) }
 
-    fn retire_work_demand(&self, _snapshot: &Arc<P>) -> Result<u64, ValueError> { Ok(1) }
+    fn retire_work_demand(&self, _snapshot: &SharedOriginalStorage<P>) -> Result<u64, ValueError> { Ok(1) }
 
-    fn retire<'reply>(&self, snapshot: &mut Option<Arc<P>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, mut reply: semio_framework_value::FactoryProducerReply<'reply, dyn store::ErasedSnapshotRetirement, semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply, semio_framework_value::OriginalRetirementFailure> {
+    fn retire<'reply>(&self, snapshot: &mut Option<SharedOriginalStorage<P>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, mut reply: semio_framework_value::FactoryProducerReply<'reply, dyn store::ErasedSnapshotRetirement, semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply, semio_framework_value::OriginalRetirementFailure> {
         let Some(original) = snapshot.take() else { return reply.pending() };
         let grant = effect.grant();
         let mut worked = false;
-        let result = (|| -> Result<RetainedCloneProgress, (ValueError, Arc<P>)> {
+        let result = (|| -> Result<RetainedCloneProgress, (ValueError, SharedOriginalStorage<P>)> {
             let progress = match (RetainedCloneBirthDemand { capacity_bytes: size_of::<BoundedTransientRootRetirement<P>>(), depth: 1 }).admit(grant) {
                 Ok(progress) => progress,
                 Err(error) => return Err((error, original)),
@@ -253,8 +278,8 @@ where
                 _ => { worked = true; return Err((ValueError::literal(ValueRefusalKind::WorkLimit, "transient root retirement exceeds its work ceiling"), original)) }
             }
             worked = true;
-            let retained_bytes = pack::snapshot::ArtifactDsl::print_dsl(original.as_ref()).len();
-            reply.publish(Box::new(BoundedTransientRootRetirement { root: Some(original), retained_bytes }));
+            let retained_bytes = pack::snapshot::ArtifactDsl::print_dsl(original.get()).len();
+            reply.publish(Box::new(BoundedTransientRootRetirement { root: Some(original), elected: None, retained_bytes }));
             Ok(progress)
         })();
         match result {
@@ -263,7 +288,7 @@ where
         }
     }
 
-    fn recover_retire<'reply>(&self, _snapshot: &mut Option<Arc<P>>, _effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::FactoryProducerReply<'reply, dyn store::ErasedSnapshotRetirement, semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply, semio_framework_value::OriginalRetirementFailure> { reply.pending() }
+    fn recover_retire<'reply>(&self, _snapshot: &mut Option<SharedOriginalStorage<P>>, _effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::FactoryProducerReply<'reply, dyn store::ErasedSnapshotRetirement, semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply, semio_framework_value::OriginalRetirementFailure> { reply.pending() }
 }
 
 struct BoundedTransientStoreDisposer<P, M> {
@@ -271,11 +296,12 @@ struct BoundedTransientStoreDisposer<P, M> {
     retained_bytes: usize,
     terminal_root: Option<Weak<P>>,
     terminal_generation: u64,
+    root_factory: Option<Arc<dyn store::SnapshotRetirementFactory<P>>>,
 }
 
 impl<P, M> Default for BoundedTransientStoreDisposer<P, M> {
     fn default() -> Self {
-        Self { retired: None, retained_bytes: 0, terminal_root: None, terminal_generation: 0 }
+        Self { retired: None, retained_bytes: 0, terminal_root: None, terminal_generation: 0, root_factory: None }
     }
 }
 
@@ -320,7 +346,7 @@ where
         }
         if let Some(retired) = self.retired.as_mut().filter(|retired| !retired.returned_reads_terminal_is_empty()) {
             if retired.live_read_holds_registry() { return Ok(PluginLifecycleStep::Blocked { reason: "displaced transient store awaits the live tracked snapshot read that holds its registry" }); }
-            let step = match retired.maintenance_returned_reads_step_root(&BoundedTransientRootRetirementFactory::<P>::default(), effect) { semio_framework_value::RetainedWorkPoll::Pending { .. } => return Ok(PluginLifecycleStep::Progress(Default::default())), semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(|failure| Fault::from(failure.into_value_error().into_message()))? };
+            let step = match retired.maintenance_returned_reads_step_root(self.root_factory.get_or_insert_with(|| -> Arc<dyn store::SnapshotRetirementFactory<P>> { Arc::new(BoundedTransientRootRetirementFactory::<P>::default()) }), effect) { semio_framework_value::RetainedWorkPoll::Pending { .. } => return Ok(PluginLifecycleStep::Progress(Default::default())), semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(|failure| Fault::from(failure.into_value_error().into_message()))? };
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         self.retired = None;
@@ -334,7 +360,7 @@ where
         }
         let Some(retired) = self.retired.as_ref() else { return Ok(Default::default()) };
         if self.retained_bytes == 0 && !retired.returned_reads_terminal_is_empty() {
-            let mut demand = retired.maintenance_returned_reads_demands_root(&BoundedTransientRootRetirementFactory::<P>::default(), body)?;
+            let mut demand = retired.maintenance_returned_reads_demands_root(body)?;
             demand.depth = demand.depth.max(1);
             return Ok(demand);
         }
@@ -394,7 +420,7 @@ where P: Send + Sync + 'static, M: protocol::Mutation<P> + Send + 'static {
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            let step = crate::bounded_ownership::plugin_settle_value(retirement.close_step(effect)).map_err(|error| Fault::from(error.into_message()))?;
+            let step = crate::bounded_ownership::plugin_settle_value(retirement.close_step(grant.maximum_copy_bytes, effect)).map_err(|error| Fault::from(error.into_message()))?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, retirement.terminal_is_empty(), "original transient store retirement").map_err(|error| Fault::from(error.into_message()))?;
             if retirement.terminal_is_empty() { self.retirement = None; }
             return Ok(PluginLifecycleStep::Progress(step.progress()));
@@ -405,7 +431,7 @@ where P: Send + Sync + 'static, M: protocol::Mutation<P> + Send + 'static {
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
         let factory = self.factory_close.as_mut().expect("original transient issuer close remains");
-        let step = crate::bounded_ownership::plugin_settle_value(factory.step(effect)).map_err(|error| Fault::from(error.into_message()))?;
+        let step = crate::bounded_ownership::plugin_settle_value(factory.step(grant.maximum_copy_bytes, effect)).map_err(|error| Fault::from(error.into_message()))?;
         let step = semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, factory.terminal_is_empty(), "original transient disposer issuer").map_err(|error| Fault::from(error.into_message()))?;
         if factory.terminal_is_empty() { self.factory_close = None; }
         Ok(PluginLifecycleStep::retained(step, self.terminal_is_empty(owner)))

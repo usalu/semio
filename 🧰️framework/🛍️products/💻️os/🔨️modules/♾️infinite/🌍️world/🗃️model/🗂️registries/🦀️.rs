@@ -4,6 +4,12 @@ use super::*;
 
 //#region World3dState
 /// 🎟️ Funds one original World mesh turn with independent ownership currencies.
+/// 🏛️ The grant of one host-funded render-frame pump turn: it must admit the largest source-retirement quote of a placeholder cursor.
+pub const WORLD_PLACEHOLDER_PUMP_GRANT: semio_framework_value::RetainedCloneGrant = semio_framework_value::RetainedCloneGrant { maximum_items: 4096, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 256 };
+
+/// 🏛️ The fuel of one host-funded render-frame pump turn.
+pub const WORLD_PLACEHOLDER_PUMP_FUEL: u64 = 64;
+
 pub fn world_mesh_ownership_grant(copy: usize, capacity: usize, release: usize, depth: usize) -> semio_framework_value::retained_clone::RetainedCloneGrant {
     semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: depth }
 }

@@ -60,7 +60,7 @@ impl TypeTextWork{
  }
  pub(super) fn begin_close(&mut self){self.closing=true}
  pub(super) fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty(){return self.retirement.demands(copy)}self.retirement.next_owner_demands::<String>(self.output.is_some(),&None,copy)}
- pub(super) fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.retirement.is_empty(){return self.retirement.step_granted(g)}let turn=self.retirement.begin_granted(&mut self.output,g);RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Complete(Default::default()))),work:turn.work}}
+ pub(super) fn close_step(&mut self,g:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.retirement.is_empty(){return poll_outcome(self.retirement.step_granted(g.maximum_copy_bytes,effect))}let turn=self.retirement.begin_granted(&mut self.output,effect);RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Complete(Default::default()))),work:turn.work}}
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for TypeTextWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original port diagnostic text requires terminal closure")}}

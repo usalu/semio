@@ -12,7 +12,7 @@ impl RemovedEntity {
         active!(vertices,edges,coedges,loops,faces,shells,solids,curves3,curves2,surfaces);None
     }
     fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>,receipt:&mut RetainedCloneProgress)->OriginalRetirementPoll{
-        macro_rules! close {($($field:ident),+)=>{$(if let Some(owner)=&mut self.$field{let poll=owner.step(effect);*receipt=owner.step_progress();if matches!(&poll,RetainedWorkPoll::Complete(turn) if turn.result.is_ok())&&owner.terminal_is_empty(){self.$field=None;}return poll;})+};}
+        macro_rules! close {($($field:ident),+)=>{$(if let Some(owner)=&mut self.$field{let poll=owner.step(effect.grant().maximum_copy_bytes,effect);*receipt=owner.step_progress();if matches!(&poll,RetainedWorkPoll::Complete(turn) if turn.result.is_ok())&&owner.terminal_is_empty(){self.$field=None;}return poll;})+};}
         close!(vertices,edges,coedges,loops,faces,shells,solids,curves3,curves2,surfaces);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})
     }
 }
@@ -52,7 +52,7 @@ impl BodyCompactionJob {
     }
     /// 🎟️ Advances physical closure without borrowing or sweeping any further source slot.
     pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
-        self.receipt.0=Default::default();self.cancelled=true;if self.removed.owner().is_some(){return self.removed.close_step(effect,&mut self.receipt.0);}let poll=self.keep.step(effect);self.receipt.0=self.keep.step_progress();poll
+        self.receipt.0=Default::default();self.cancelled=true;if self.removed.owner().is_some(){return self.removed.close_step(effect,&mut self.receipt.0);}let poll=self.keep.step(effect.grant().maximum_copy_bytes,effect);self.receipt.0=self.keep.step_progress();poll
     }
     /// ⏱️ Keeps source generations and all physically removed ownership at the same admitted boundary.
     pub fn step(&mut self,body:&mut Body,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
@@ -62,7 +62,7 @@ impl BodyCompactionJob {
         let done=|result:Result<RetainedCloneStep,ValueError>,effect:&RetainedAllocationEffect<'_>|RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map_err(OriginalRetirementFailure::from),work:effect.performed_work()});
         if self.terminal_is_empty(){return done(Ok(RetainedCloneStep::Complete(Default::default())),effect);}
         if self.removed.owner().is_some(){return self.removed.close_step(effect,&mut self.receipt.0);}
-        if self.cancelled||self.store==10{let poll=self.keep.step(effect);self.receipt.0=self.keep.step_progress();return poll;}
+        if self.cancelled||self.store==10{let poll=self.keep.step(effect.grant().maximum_copy_bytes,effect);self.receipt.0=self.keep.step_progress();return poll;}
         let grant=effect.grant();
         let demand=match self.demand(body,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return done(Err(error),effect)};
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return done(Ok(RetainedCloneStep::Progress(Default::default())),effect);}

@@ -6,6 +6,10 @@ extern crate semio_os_kernel as store;
 #[path = "🪢️bridge/🦀️.rs"]
 pub mod wit_bridge;
 
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+#[path = "🎟️event-lift/🦀️.rs"]
+pub mod event_lift;
+
 #[doc(hidden)]
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]

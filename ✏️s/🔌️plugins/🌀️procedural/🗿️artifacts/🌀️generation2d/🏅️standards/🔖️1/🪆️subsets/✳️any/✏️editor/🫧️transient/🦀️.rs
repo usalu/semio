@@ -4,7 +4,7 @@ extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::SnapshotProjection)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -14,13 +14,6 @@ extern crate semio_os_kernel as store;
 pub struct Generation2dTransient {
     #[dsl(block)]
     pub generation_preview_text: Option<String>,
-}
-
-impl semio_framework_value_snapshot_projection::SnapshotProjection for Generation2dTransient {
-    type Output = Self;
-    type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
-    fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
-    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress)> { Self::Projection::begin(grant) }
 }
 
 impl pack::snapshot::ArtifactDsl for Generation2dTransient {

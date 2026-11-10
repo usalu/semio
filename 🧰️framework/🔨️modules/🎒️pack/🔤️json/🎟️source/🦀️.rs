@@ -46,7 +46,7 @@ impl SourceJsonEncoder{
   if let Some(cursor)=self.cursor.as_mut(){
    if !cursor.terminal_is_empty(){
     if cursor.original().is_some_and(|cursor|cursor.retained_capacity_bytes().is_ok_and(|bytes|bytes==0)){let bytes=size_of::<Option<JsonBorrowedWriteCursor>>();if cx.retirement_should_yield()||!admit(cx,bytes)?{require_remaining(cx,bytes,1)?;return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);drop(cursor.take_original());return Ok(false)}
-    let grant=cx.retained_grant();let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|cursor.step(effect))?else{return Ok(false)};
+    let grant=cx.retained_grant();let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|cursor.step(grant.maximum_copy_bytes,effect))?else{return Ok(false)};
     let Ok(turn)=RetirementPollExit::settled(poll)else{return Err(refused("Source JSON cleanup left its producer reply pending").into())};
     let overrun=performed>turn.work;let settled=semio_framework_job::receive_original_retained_work(cx,turn).map(|_|());
     if overrun{let refusal=refused("Source JSON cleanup performed more work than it settled");return Err(match settled{Ok(())=>refusal.into(),Err(mut failure)=>{failure.work_refusal=Some(refusal);failure}})}

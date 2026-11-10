@@ -6,7 +6,7 @@ use semio_os_spr::Mutation;
 
 /// 🎟️ Every replay branch uses this same original catalog producer under its existing caller grant.
 pub trait DocumentStoreOwnerProducer<P,M>:'static
-where P:ToValue,M:ToValue+FromValue+Mutation<P>,
+where P:ToValue+Send+Sync+'static,M:ToValue+FromValue+Mutation<P>,
 {
  fn source_demands()->Result<RetirementDemand,ValueError>;
  fn admit_sources(grant:RetainedCloneGrant)->Result<(DocumentStoreOwners<P,M>,RetainedCloneProgress),DocumentStoreOwnersAdmissionError<P,M>>;
@@ -15,7 +15,7 @@ where P:ToValue,M:ToValue+FromValue+Mutation<P>,
 /// 🗃️ The authored generic native source constructor retains its existing bounded factories and disposer.
 pub struct BoundedDocumentStoreOwnerProducer;
 impl<P,M> DocumentStoreOwnerProducer<P,M> for BoundedDocumentStoreOwnerProducer
-where P:ToValue+semio_framework_value::retirement::RetireOwned+Sync,
+where P:ToValue+Send+Sync+'static+semio_framework_value::retirement::RetireOwned+Sync,
 M:ToValue+FromValue+Mutation<P>+semio_os_spr::OpBinary+semio_os_spr::OpText+semio_framework_value::retirement::RetireOwned+semio_framework_pack_json::ArtifactCanonicalJsonTree+Send+Sync+'static,
 {
  fn source_demands()->Result<RetirementDemand,ValueError>{super::bounded_artifact_store_owners_source_demands::<P,M>()}

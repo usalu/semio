@@ -11,10 +11,10 @@ pub(super) fn advance_returned_local<P: Send + Sync + 'static>(
     effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
 ) -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
     if effect.grant().maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-    if active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(active, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
+    if active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(active,effect.grant().maximum_copy_bytes,effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
     if !registry.has_returned() { return Ok(RetainedCloneStep::Complete(Default::default())); }
     let factory = factory.ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence returned read lacks its original factory"))?;
-    semio_framework_value::RetirementPollExit::resume(semio_framework_value_snapshot_read::advance_returned_snapshot_read_root(registry, active, factory.as_ref(), effect))
+    semio_framework_value::RetirementPollExit::resume(semio_framework_value_snapshot_read::advance_returned_snapshot_read_root(registry, active, factory, effect))
 }
 
 pub struct PresenceStoreRetirement<P> {
@@ -38,11 +38,11 @@ impl<P: Send + Sync + 'static> PresenceStoreRetirement<P> {
         if let Some(active) = self.active_returned.as_ref() { return nested(artifact_retirement_box_demands(active, body)?); }
         if let Some(reads) = self.reads.as_ref().filter(|reads| reads.has_returned()) {
             let factory = self.local_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned presence read lacks its original factory"))?;
-            return nested(reads.returned_admission_demands::<P>(|root| RetirementDemand { capacity_bytes: factory.retirement_birth_bytes(root), depth: 1, ..Default::default() }).map_err(SnapshotReadLeaseRefusal::into_value_error)?);
+            return nested(reads.returned_admission_demands::<P>(|_root| semio_framework_value::factory::ArcRootRetirement::<P>::admission_demand()).map_err(SnapshotReadLeaseRefusal::into_value_error)?);
         }
         if let Some(active) = self.active_local.as_ref() { return nested(artifact_retirement_box_demands(active, body)?); }
         if let Some(active) = self.active_peers.as_ref() { return nested(active.retirement_demands(body)?); }
-        if let Some(local) = self.local.as_ref().or(self.terminal_local.as_ref()) { return Ok(RetirementDemand { capacity_bytes: self.local_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence local owner lacks its original factory"))?.retirement_birth_bytes(local), depth: 2, ..Default::default() }); }
+        if let Some(local) = self.local.as_ref().or(self.terminal_local.as_ref()) { self.local_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence local owner lacks its original factory"))?; let _ = local; let mut demand = semio_framework_value::factory::ArcRootRetirement::<P>::admission_demand(); demand.depth += 1; return Ok(demand); }
         if self.base_root.is_some() || self.peers.is_some() { return Ok(RetirementDemand { copy_bytes: 0, depth: 1, ..Default::default() }); }
         if self.reads.is_some() { return snapshot_registry_alias_demands(&self.reads); }
         if self.local_factory.is_some() || self.peer_factory.is_some() { return Ok(RetirementDemand { copy_bytes: 0, depth: 1, ..Default::default() }); }
@@ -60,7 +60,7 @@ impl<P: Send + Sync + 'static> PresenceStoreRetirement<P> {
         if let Some(reads) = self.reads.as_ref() {
             if self.active_returned.is_some() || reads.has_returned() { return advance_returned_local(reads, &mut self.active_returned, self.local_factory.as_ref(), &mut effect.nested(child)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         }
-        if self.active_local.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active_local, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active_local.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active_local, child.maximum_copy_bytes, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(active) = self.active_peers.as_mut() {
             let step = active.close_step(&mut effect.nested(child))?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, active.terminal_is_empty(), "presence peer roster")?;
@@ -70,8 +70,9 @@ impl<P: Send + Sync + 'static> PresenceStoreRetirement<P> {
         let slot = if self.local.is_some() { &mut self.local } else { &mut self.terminal_local };
         if slot.is_some() {
             let factory = self.local_factory.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("original local factory is absent"))?;
-            let (owner, receipt) = semio_framework_value::RetirementPollExit::resume(semio_framework_value::factory_retire_snapshot(&**factory, &mut **slot, &mut effect.nested(child)))?;
-            *self.active_local = Some(owner);
+            let (mut alias, mut output) = (Some(Arc::clone(factory)), None);
+            let receipt = semio_framework_value::RetirementPollExit::resume(semio_framework_value::factory::ArcRootRetirement::admit_snapshot(&mut **slot, &mut alias, &mut output, &mut effect.nested(child)))?.progress();
+            *self.active_local = Some(output.ok_or_else(|| ValueError::invariant("presence local constructor published no owner"))?);
             if !receipt.fits(child) || receipt.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence local constructor changed its receipt").into()); }
             return Ok(RetainedCloneStep::Progress(receipt));
         }
@@ -81,7 +82,7 @@ impl<P: Send + Sync + 'static> PresenceStoreRetirement<P> {
         if let Some(reads) = self.reads.as_ref() { if !SnapshotReadLeaseRegistry::terminal_is_empty(reads) { return Ok(RetainedCloneStep::Progress(Default::default())); } return semio_framework_value::RetirementPollExit::resume(snapshot_registry_alias_close_step(&mut self.reads, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(factory) = self.local_factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close[0] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
         if let Some(factory) = self.peer_factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close[1] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
-        if let Some(slot) = self.factory_close.iter_mut().find(|slot| slot.is_some()) { let Some(factory)=slot.as_mut() else { return Err(semio_framework_value::ValueError::invariant("original factory close slot is absent").into()); }; let step = semio_framework_value::RetirementPollExit::resume(factory.step(&mut effect.nested(child)))?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "presence store factory")?; if factory.terminal_is_empty() { *slot = None; } return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }); }
+        if let Some(slot) = self.factory_close.iter_mut().find(|slot| slot.is_some()) { let Some(factory)=slot.as_mut() else { return Err(semio_framework_value::ValueError::invariant("original factory close slot is absent").into()); }; let step = semio_framework_value::RetirementPollExit::resume(factory.step(child.maximum_copy_bytes, &mut effect.nested(child)))?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "presence store factory")?; if factory.terminal_is_empty() { *slot = None; } return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }); }
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
 }
@@ -97,7 +98,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresenceStoreRetirem
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = PresenceStoreRetirement::close_step(self, effect); semio_framework_value::RetirementPollExit::settle(effect, result) }
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = PresenceStoreRetirement::close_step(self, effect); semio_framework_value::RetirementPollExit::settle(effect, result) }
     fn terminal_is_empty(&self) -> bool { PresenceStoreRetirement::terminal_is_empty(self) }
 }
 impl<P: Send + Sync + 'static> PresencePeersCommit<P> {

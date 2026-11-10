@@ -120,7 +120,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     }
 
     pub fn navbar_center_width(&self, atlas: &mut FontAtlas, theme: &Theme) -> f32 {
-        let title = self.docs.session.as_ref().map_or_else(|| SHELL_NAVBAR_SESSIONLESS_TITLE.to_string(), |session| shell_navbar_title(&session.app, &self.prefs.terminology_id));
+        let title = self.docs.session.as_ref().map_or_else(|| SHELL_NAVBAR_SESSIONLESS_TITLE.to_string(), |session| shell_navbar_title(&session.app, &self.prefs.terminology_id, self.prefs.active_locale()));
         let logo = theme.gap_standard * SHELL_NAVBAR_LOGO_UI_SPACING;
         let mut logo_title = logo + theme.gap_standard + atlas.measure_text(&title, theme.font_size_body).0 + theme.padding_standard * 2.0;
         if let Some(role) = self.docs.session.as_ref().map(|session| session.app.role) {

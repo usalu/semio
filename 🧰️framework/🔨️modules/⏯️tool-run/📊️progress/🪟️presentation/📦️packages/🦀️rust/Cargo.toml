@@ -31,4 +31,4 @@ semio-framework-tool-run-entities = { path = "../../../../👥️entities/📦�
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
-semio-framework-value-clone-source-testing = { path = "../../../../../🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }

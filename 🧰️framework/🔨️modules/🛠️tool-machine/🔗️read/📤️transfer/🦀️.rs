@@ -3,17 +3,22 @@ use super::*;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress};
 use std::mem::size_of;
 
+type OriginalReadReply<'r>=semio_framework_value::retained_clone::OriginalEffectReply<'r,semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>;
+type OriginalReadDone<'r>=semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>;
+
 /// 🔗️ Lends an actual resident tool-state source while its immutable native reader remains issued.
 pub trait OriginalToolLedgerSource{
  type State:Send+Sync+'static;
  fn original_revision(&self)->u64;
  fn original_next(&self,after:Option<&str>)->Option<(&semio_framework_value::SharedUtf8,RetainedOriginalSlotKey)>;
  fn original_live(&self,window:&str,key:RetainedOriginalSlotKey)->Result<bool,ValueError>;
- fn original_read_demands(&self,window:&str,key:RetainedOriginalSlotKey)->Result<RetirementDemand,ValueError>;
- fn original_read_advance(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementOutcome;
+ fn original_read_demands(&self,window:&str,key:RetainedOriginalSlotKey,body:usize)->Result<RetirementDemand,ValueError>;
+ fn original_read_advance_into<'r>(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:OriginalReadReply<'r>)->Result<OriginalReadDone<'r>,ValueError>;
+ fn recover_original_read_advance_into<'r>(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:OriginalReadReply<'r>)->Result<OriginalReadDone<'r>,ValueError>;
  fn original_read(&self,window:&str,key:RetainedOriginalSlotKey)->Result<semio_framework_value::RetainedCloneRef<'_,Self::State>,ValueError>;
  fn original_return_demands(&self,window:&str,key:RetainedOriginalSlotKey,body:usize)->Result<RetirementDemand,ValueError>;
- fn original_return(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementOutcome;
+ fn original_return_into<'r>(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:OriginalReadReply<'r>)->Result<OriginalReadDone<'r>,ValueError>;
+ fn recover_original_return_into<'r>(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:OriginalReadReply<'r>)->Result<OriginalReadDone<'r>,ValueError>;
 }
 
 macro_rules! original_transfer{($ledger:ident,$state:ident,$slot:ident,$slot_mut:ident,$busy:expr)=>{
@@ -22,11 +27,31 @@ macro_rules! original_transfer{($ledger:ident,$state:ident,$slot:ident,$slot_mut
   fn original_revision(&self)->u64{self.source_revision}
   fn original_next(&self,after:Option<&str>)->Option<(&semio_framework_value::SharedUtf8,RetainedOriginalSlotKey)>{self.next_retained_window(after)}
   fn original_live(&self,window:&str,key:RetainedOriginalSlotKey)->Result<bool,ValueError>{let slot=self.$slot(window).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original resident tool address absent"))?;if slot.key()!=key{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original resident tool key changed"))}Ok(!slot.is_empty())}
-  fn original_read_demands(&self,window:&str,key:RetainedOriginalSlotKey)->Result<RetirementDemand,ValueError>{self.retained_read_demands(window,key)}
-  fn original_read_advance(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementOutcome{self.advance_retained_read(window,key,factory,effect)}
+  fn original_read_demands(&self,window:&str,key:RetainedOriginalSlotKey,body:usize)->Result<RetirementDemand,ValueError>{self.retained_read_demands(window,key,body)}
+  fn original_read_advance_into<'r>(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:OriginalReadReply<'r>)->Result<OriginalReadDone<'r>,ValueError>{self.advance_retained_read_into(window,key,factory,effect,reply)}
+  fn recover_original_read_advance_into<'r>(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:OriginalReadReply<'r>)->Result<OriginalReadDone<'r>,ValueError>{self.recover_advance_retained_read_into(window,key,factory,effect,reply)}
   fn original_read(&self,window:&str,key:RetainedOriginalSlotKey)->Result<semio_framework_value::RetainedCloneRef<'_,Self::State>,ValueError>{self.retained_read(window,key)}
   fn original_return_demands(&self,window:&str,key:RetainedOriginalSlotKey,body:usize)->Result<RetirementDemand,ValueError>{self.retained_read_return_demands(window,key,body)}
-  fn original_return(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementOutcome{self.return_retained_read(window,key,factory,effect)}
+  fn original_return_into<'r>(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:OriginalReadReply<'r>)->Result<OriginalReadDone<'r>,ValueError>{self.return_retained_read_into(window,key,factory,effect,reply)}
+  fn recover_original_return_into<'r>(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:OriginalReadReply<'r>)->Result<OriginalReadDone<'r>,ValueError>{self.recover_return_retained_read_into(window,key,factory,effect,reply)}
+ }
+ impl<M:Send+Sync+'static> $ledger<M>{
+  fn resident_slot(&self,window:&str)->Result<&RetainedOriginalSlot<$state<M>>,ValueError>{self.$slot(window).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original resident tool address absent"))}
+  fn resident_slot_mut(&mut self,window:&str)->Result<&mut RetainedOriginalSlot<$state<M>>,ValueError>{self.$slot_mut(window).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original resident tool address absent"))}
+  /// 🧮️ Queries the original frame or current source birth of this resident without taking its value.
+  pub fn retained_read_demands(&self,window:&str,key:RetainedOriginalSlotKey,body:usize)->Result<RetirementDemand,ValueError>{self.resident_slot(window)?.demands(key,body)}
+  /// 🎟️ Moves the resident value and the installed issuer into their granted read birth under the caller's recorded reply.
+  pub fn advance_retained_read_into<'r>(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<$state<M>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:OriginalReadReply<'r>)->Result<OriginalReadDone<'r>,ValueError>{self.resident_slot_mut(window)?.advance_read_into(key,factory,effect,reply)}
+  /// 🔁️ Recovers the unrecorded read birth step under its unchanged invocation.
+  pub fn recover_advance_retained_read_into<'r>(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<$state<M>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:OriginalReadReply<'r>)->Result<OriginalReadDone<'r>,ValueError>{self.resident_slot_mut(window)?.recover_advance_read_into(key,factory,effect,reply)}
+  /// 📏️ Quotes the retained projection of this resident read into the caller's admitted output.
+  pub fn retain_read_demand(&self,window:&str,key:RetainedOriginalSlotKey,output:&semio_framework_value::retained_clone::RetainedOwnedProjectionAdmission<$state<M>>)->Result<RetirementDemand,ValueError>{self.resident_slot(window)?.retain_read_demand(key,output)}
+  /// 📽️ Retains the genuine resident source into the caller's admission under the recorded reply.
+  pub fn retain_read_into<'r>(&self,window:&str,key:RetainedOriginalSlotKey,output:&mut semio_framework_value::retained_clone::RetainedOwnedProjectionAdmission<$state<M>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'r,semio_framework_value::retained_clone::RetainedCloneStep,ValueError>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,semio_framework_value::retained_clone::RetainedCloneStep,ValueError>,ValueError>{self.resident_slot(window)?.retain_read_into(key,output,effect,reply)}
+  /// ↩️ Restores the same resident slot and returns its captured issuer alias for controlled cleanup.
+  pub fn return_retained_read_into<'r>(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<$state<M>>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:OriginalReadReply<'r>)->Result<OriginalReadDone<'r>,ValueError>{self.resident_slot_mut(window)?.return_read_into(key,factory,effect,reply)}
+  /// 🔁️ Recovers the unrecorded read return step under its unchanged invocation.
+  pub fn recover_return_retained_read_into<'r>(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<$state<M>>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:OriginalReadReply<'r>)->Result<OriginalReadDone<'r>,ValueError>{self.resident_slot_mut(window)?.recover_return_read_into(key,factory,effect,reply)}
  }
  impl<M:Send+'static> $ledger<M>{
   /// 📏️ Quotes the original row, resident generation and complete-ledger source frontier once.

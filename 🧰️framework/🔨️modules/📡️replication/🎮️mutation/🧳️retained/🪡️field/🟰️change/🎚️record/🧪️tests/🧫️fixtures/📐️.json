@@ -1,11 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["bodyBytes", "workUnits", "checkPartialDenialWork", "cancelCuts", "cases"],
+  "required": ["bodyBytes", "workUnits", "birthWorkUnits", "checkPartialDenialWork", "cancelCuts", "cases"],
   "additionalProperties": false,
   "properties": {
     "bodyBytes": { "type": "integer", "minimum": 1 },
     "workUnits": { "type": "integer", "minimum": 1 },
+    "birthWorkUnits": { "type": "integer", "minimum": 1 },
     "checkPartialDenialWork": { "const": true },
     "cancelCuts": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
     "cases": {

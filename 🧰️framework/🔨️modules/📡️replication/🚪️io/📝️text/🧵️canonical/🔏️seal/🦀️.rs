@@ -2,7 +2,7 @@
 use crate::Edit;
 use semio_framework_hash::Sha256;
 use semio_framework_pack_json::{ArtifactCanonicalJsonTree,ArtifactCanonicalJsonTreeCursor};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneBinding,RetainedCloneSource,RetainedCloneSourceTake,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneBinding,RetainedCloneSource,OriginalEffectReply,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::size_of;
 
 fn refusal(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
@@ -42,10 +42,12 @@ pub struct ArtifactCanonicalEditSealCursor<M:RetireOwned+ArtifactCanonicalJsonTr
  digest:Option<[u8;32]>,
  last_work:u128,
  hash_offset:usize,
+ take_reply:Option<Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>>,
+ take_pending:bool,
 }
 impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>{
  pub fn constructor_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+size_of::<Box<Edit<M>>>(),capacity_bytes:RetainedCloneSource::<Box<Edit<M>>>::owned_constructor_capacity_bytes::<()>(),depth:2,release_bytes:0}}
- fn from_source(source:RetainedCloneSource<Box<Edit<M>>>)->Self{Self{source:Some(source),tree:None,original:None,retirement:None,phase:Phase::CountStart,closing:false,length:0,hashed:0,header:0,hash:Some(Sha256::new()),page:[0;SEAL_PAGE_BYTES],page_length:0,hash_pending:false,buffered:true,digest:None,last_work:0,hash_offset:0}}
+ fn from_source(source:RetainedCloneSource<Box<Edit<M>>>)->Self{Self{source:Some(source),tree:None,original:None,retirement:None,phase:Phase::CountStart,closing:false,length:0,hashed:0,header:0,hash:Some(Sha256::new()),page:[0;SEAL_PAGE_BYTES],page_length:0,hash_pending:false,buffered:true,digest:None,last_work:0,hash_offset:0,take_reply:None,take_pending:false}}
  /// 🎟️ Quotes only the actual native controller and original admitted source handoff, with no second birth.
  pub fn source_constructor_demand()->RetirementDemand{copy(size_of::<Self>()+size_of::<RetainedCloneSource<Box<Edit<M>>>>())}
  /// 🧳️ Adopts the genuine previously admitted immutable source and preserves it unchanged on refusal.
@@ -76,7 +78,7 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>
   })
  }
  pub fn begin_close(&mut self){self.closing=true;if let Some(tree)=self.tree.as_mut(){tree.begin_close();}}
- pub fn terminal_is_empty(&self)->bool{!self.hash_pending&&self.source.is_none()&&self.tree.is_none()&&self.original.is_none()&&self.retirement.is_none()}
+ pub fn terminal_is_empty(&self)->bool{!self.hash_pending&&self.source.is_none()&&self.tree.is_none()&&self.original.is_none()&&self.retirement.is_none()&&!self.take_pending}
  pub fn is_ready(&self)->bool{!self.closing&&self.phase==Phase::Ready&&self.original.is_some()}
  pub fn canonical_length(&self)->u64{self.length}
  pub fn digest(&self)->Option<[u8;32]>{if self.is_ready(){self.digest}else{None}}
@@ -106,14 +108,29 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>
    if tree.terminal_is_empty(){self.tree=None;progress.copied_bytes=demand.copy_bytes;if !self.closing{self.phase=if self.phase==Phase::Count{Phase::Header}else{if self.hashed!=self.length{return Err(refusal("seal canonical second pass length changed").into());}Phase::TakeOwner};}}
    else{let window=if self.phase==Phase::Count&&!self.buffered{0}else{self.page_length};let end=(window+SEAL_TURN_BYTES).min(SEAL_PAGE_BYTES);let turn=tree.advance(&mut self.page[window..end],&mut effect.nested(child_grant(grant)));self.last_work=u128::from(tree.last_turn_work());let step=turn?;progress=step.ownership.progress();if !self.closing&&step.written_bytes!=0{if self.phase==Phase::Count{self.length=self.length.checked_add(step.written_bytes as u64).ok_or_else(||refusal("seal canonical length overflow"))?;if self.buffered{self.page_length+=step.written_bytes;if !tree.terminal_is_empty()&&SEAL_PAGE_BYTES-self.page_length<SEAL_FLUSH_MARGIN_BYTES{self.buffered=false;self.page_length=0;}}}else{self.page_length+=step.written_bytes;if SEAL_PAGE_BYTES-self.page_length<SEAL_FLUSH_MARGIN_BYTES{self.hash_pending=true;}}}if !self.closing&&self.phase!=Phase::Count&&self.page_length!=0&&tree.terminal_is_empty(){self.hash_pending=true;}}
   }else if self.closing{
-   if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source=None;progress.copied_bytes=demand.copy_bytes;}else{let turn=RetirementPollExit::settled(source.close_step(&mut effect.nested(child_grant(grant))))?;self.last_work=turn.work;progress=turn.result?.progress();}}
+   if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source=None;progress.copied_bytes=demand.copy_bytes;}else{let turn=RetirementPollExit::settled(source.close_step(effect.grant().maximum_copy_bytes,&mut effect.nested(child_grant(grant))))?;self.last_work=turn.work;progress=turn.result?.progress();}}
    else if self.original.is_some(){let original=self.original.take().unwrap();match ControlledRetirement::new(original){Ok(owner)=>self.retirement=Some(owner),Err((error,original))=>{self.original=Some(original);return Err(error.into());}}progress.copied_bytes=demand.copy_bytes;}
-   else if let Some(owner)=self.retirement.as_mut(){if owner.terminal_is_empty(){self.retirement=None;progress.copied_bytes=demand.copy_bytes;}else{let turn=RetirementPollExit::settled(owner.step(&mut effect.nested(child_grant(grant))))?;self.last_work=turn.work;progress=turn.result?.progress();}}
+   else if let Some(owner)=self.retirement.as_mut(){if owner.terminal_is_empty(){self.retirement=None;progress.copied_bytes=demand.copy_bytes;}else{let turn=RetirementPollExit::settled(owner.step(effect.grant().maximum_copy_bytes,&mut effect.nested(child_grant(grant))))?;self.last_work=turn.work;progress=turn.result?.progress();}}
   }else{match self.phase{
-   Phase::CountStart|Phase::HashStart=>{let turn=self.source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.project_owned(0,|edit|edit as&dyn ArtifactCanonicalJsonTree,&mut effect.nested(child_grant(grant)));self.last_work=turn.work;let(projection,bound)=turn.result?;self.last_work+=1;let(tree,built)=ArtifactCanonicalJsonTreeCursor::admit(projection,child_grant(grant)).map_err(|_|ValueError::invariant("seal preadmitted original native tree"))?;self.tree=Some(tree);self.phase=if self.phase==Phase::CountStart{Phase::Count}else{Phase::Hash};progress=bound.checked_add(built)?;progress.copied_items=1;progress.copied_bytes=demand.copy_bytes;},
+   Phase::CountStart|Phase::HashStart=>{
+    let reference=self.source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.borrow().try_project(0,|edit|Ok::<&dyn ArtifactCanonicalJsonTree,ValueError>(edit as &dyn ArtifactCanonicalJsonTree))?;
+    let before=effect.performed_work();
+    match semio_framework_pack_json::retained_alias(reference,&mut effect.nested(child_grant(grant)))?{
+     None=>{self.last_work=effect.performed_work()-before;progress=Default::default();}
+     Some((projection,bound))=>{self.last_work=effect.performed_work()-before+1;let(tree,built)=ArtifactCanonicalJsonTreeCursor::admit(projection,child_grant(grant)).map_err(|_|ValueError::invariant("seal preadmitted original native tree"))?;self.tree=Some(tree);self.phase=if self.phase==Phase::CountStart{Phase::Count}else{Phase::Hash};progress=bound.checked_add(built)?;progress.copied_items=1;progress.copied_bytes=demand.copy_bytes;}
+    }
+   },
    Phase::Header=>{let limit=grant.maximum_copy_bytes.min(SEAL_TURN_BYTES);let mut taken=0usize;self.last_work=0;while taken<limit{self.last_work+=1;if let Some(byte)=self.header_byte()?{self.hash.as_mut().unwrap().update(&[byte]);self.header+=1;taken+=1;}else{if self.buffered{if self.page_length as u64!=self.length{return Err(refusal("seal buffered canonical bytes differ from their counted length").into());}self.hash_pending=true;self.phase=Phase::TakeOwner;}else{self.phase=Phase::HashStart;}break;}}progress.copied_bytes=taken.max(demand.copy_bytes);},
-   Phase::TakeOwner=>{let turn=match self.source.as_mut().ok_or_else(||ValueError::invariant("source absent"))?.take_authority(&mut effect.nested(child_grant(grant))){semio_framework_value::RetainedWorkPoll::Pending{work}=>return Err(RetirementPollExit::Pending(work)),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn};self.last_work=turn.work;match turn.result?{RetainedCloneSourceTake::Pending(step)=>progress=step,RetainedCloneSourceTake::Ready(original,step)=>{self.original=Some(original);self.phase=Phase::SourceClose;progress=step;}}},
-   Phase::SourceClose=>{let source=self.source.as_mut().ok_or_else(||ValueError::invariant("source absent"))?;if source.terminal_is_empty(){self.source=None;self.phase=Phase::Finalize;progress.copied_bytes=demand.copy_bytes;}else{let turn=RetirementPollExit::settled(source.close_step(&mut effect.nested(child_grant(grant))))?;self.last_work=turn.work;progress=turn.result?.progress();}},
+   Phase::TakeOwner=>{
+    let body=grant.maximum_copy_bytes;let before=effect.performed_work();let source=self.source.as_mut().ok_or_else(||ValueError::invariant("source absent"))?;
+    if self.take_reply.is_none(){let reply=OriginalEffectReply::borrow(&mut self.take_reply)?;let done=if self.take_pending{source.recover_take_authority_into(&mut self.original,body,effect,reply)?}else{source.take_authority_into(&mut self.original,body,effect,reply)?};drop(done);}
+    self.last_work=effect.performed_work()-before;
+    match self.take_reply.take(){
+     None=>{self.take_pending=true;progress=Default::default();}
+     Some(result)=>{self.take_pending=false;match result?{RetainedCloneStep::Progress(step)=>progress=step,RetainedCloneStep::Complete(step)=>{self.phase=Phase::SourceClose;progress=step;}}}
+    }
+   },
+   Phase::SourceClose=>{let source=self.source.as_mut().ok_or_else(||ValueError::invariant("source absent"))?;if source.terminal_is_empty(){self.source=None;self.phase=Phase::Finalize;progress.copied_bytes=demand.copy_bytes;}else{let turn=RetirementPollExit::settled(source.close_step(effect.grant().maximum_copy_bytes,&mut effect.nested(child_grant(grant))))?;self.last_work=turn.work;progress=turn.result?.progress();}},
    Phase::Finalize=>{self.digest=Some(self.hash.take().unwrap().finalize());self.phase=Phase::Ready;progress.copied_bytes=demand.copy_bytes;},
    _=>return Err(refusal("seal phase cannot advance without original traversal").into()),
   }}

@@ -119,7 +119,7 @@ impl FlowHost {
                 infos.insert(info.id.clone(), info);
             }
         }
-        self.install_kind_infos(Arc::new(infos));
+        self.install_kind_infos(SharedOwner::from_cold(infos));
         Ok(())
     }
 
@@ -128,28 +128,33 @@ impl FlowHost {
     /// ([`FlowHost::kind_infos`]), and its `ChannelSpec::default` values are `Value`s that fail
     /// closed on a bare drop, so a plain assignment aborted the process the moment a host swapped
     /// a uniquely-owned catalogue out (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn install_kind_infos(&mut self, kind_infos: Arc<HistoryFoldIndex<String, OperatorInfo>>) {
-        if let Some(displaced) = Arc::into_inner(std::mem::replace(&mut self.kind_infos, kind_infos)) {
-            displaced.retire_cold();
+    fn install_kind_infos(&mut self, kind_infos: SharedOwner<HistoryFoldIndex<String, OperatorInfo>>) {
+        match std::mem::replace(&mut self.kind_infos, kind_infos).retire() {
+            semio_framework_value::retirement::allocation_return::original::SharedOriginalRelease::Alias => {}
+            semio_framework_value::retirement::allocation_return::original::SharedOriginalRelease::Original(mut original) => {
+                if let Some(displaced) = original.take_value() {
+                    displaced.retire_cold();
+                }
+            }
         }
         self.rebuild_dag();
     }
 
     pub fn set_neuron_kind_infos_json(&mut self, json: &str) {
-        self.install_kind_infos(Arc::new(if json.trim().is_empty() { HistoryFoldIndex::new() } else { semio_framework_pack_json::from_json_str::<Vec<OperatorInfo>>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|items| items.into_iter().map(|info| (info.id.clone(), info)).collect()).unwrap_or_default() }));
+        self.install_kind_infos(SharedOwner::from_cold(if json.trim().is_empty() { HistoryFoldIndex::new() } else { semio_framework_pack_json::from_json_str::<Vec<OperatorInfo>>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|items| items.into_iter().map(|info| (info.id.clone(), info)).collect()).unwrap_or_default() }));
     }
 
     /// 🧠️ Same as `set_neuron_kind_infos_json` but over the already-built id-keyed map — the ONE
     /// in-process path, because the JSON form of this catalogue is ~108 kB and an evaluation tick
     /// that serialized and re-parsed it spent 11-26 ms per tick doing nothing else
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn set_neuron_kind_info_map(&mut self, infos: Arc<HistoryFoldIndex<String, OperatorInfo>>) {
+    pub fn set_neuron_kind_info_map(&mut self, infos: SharedOwner<HistoryFoldIndex<String, OperatorInfo>>) {
         self.install_kind_infos(infos);
     }
 
     /// 🧠️ Same as `set_neuron_kind_infos_json` but over the typed `NodeGraphScene.operators` records.
     pub fn set_neuron_kind_infos(&mut self, infos: &[semio_ui_declaration::ui::NodeGraphOperatorRecord]) {
-        self.install_kind_infos(Arc::new(infos.iter().map(|record| (record.id.clone(), node_graph_operator_record_to_operator_info(record))).collect()));
+        self.install_kind_infos(SharedOwner::from_cold(infos.iter().map(|record| (record.id.clone(), node_graph_operator_record_to_operator_info(record))).collect()));
     }
 
     pub fn evaluate(&mut self) -> Result<String, FlowCoreError> {

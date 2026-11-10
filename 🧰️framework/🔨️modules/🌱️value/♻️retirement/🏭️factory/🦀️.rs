@@ -326,7 +326,7 @@ pub fn factory_retire_owned<T:'static>(factory:&dyn ArtifactOwnedValueRetirement
 }
 
 /// 🏭️ Retires a resident frozen root through its typed snapshot factory inside the caller's effect; the root stays resident until the factory takes it, and a refused or pending turn keeps it.
-pub fn factory_retire_snapshot<P>(factory:&dyn SnapshotRetirementFactory<P>,root:&mut Option<Arc<P>>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkPoll<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),OriginalRetirementFailure>{
+pub fn factory_retire_snapshot<P:Send+Sync+'static>(factory:&dyn SnapshotRetirementFactory<P>,root:&mut Option<SharedOriginalStorage<P>>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkPoll<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),OriginalRetirementFailure>{
  let(mut output,mut reply,mut attempted)=(None,None,None);
  let producer=match FactoryProducerReply::borrow(&mut output,&mut reply,&mut attempted){Ok(producer)=>producer,Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};
  let _=factory.retire(root,effect,producer);
@@ -380,7 +380,7 @@ impl<T:RetireOwned+Sync> SnapshotRetirementFactory<T> for SharedValueRetirementF
 
 #[path="../🔗️arc-custody/🏭️factory/🦀️.rs"]
 pub mod shared;
-pub use shared::FactorySharedRetirement;
+pub use shared::{FactorySharedRetirement,ArcRootRetirement};
 
 #[cfg(test)]
 use semio_framework_value_testing_allocator as allocation_testing;

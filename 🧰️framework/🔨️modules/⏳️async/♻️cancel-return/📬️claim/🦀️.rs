@@ -47,7 +47,17 @@ impl Drop for PublicationPermit { fn drop(&mut self){if let Some(original)=self.
 impl RetirementCursor for ClaimRetirement {
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let Some(source)=self.source.as_ref()else{return Ok(Default::default())};if source.is_claimed(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original publication claim still has its permit"));}let returned=source.has_returned_alias();Ok(semio_framework_value::RetirementDemand{copy_bytes:if returned{size_of::<usize>()}else{size_of::<PublicationClaim>()},release_bytes:if returned{0}else{PublicationClaimHandle::frame_bytes()},depth:1,..Default::default()})}
 
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep {
+ fn close_into<'r>(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Ok(reply.complete(Ok(self.close_sync(effect))))}
+    fn recover_close_into<'r>(&mut self,_body:usize,_:&mut semio_framework_value::RetainedAllocationEffect<'_>,_:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::invariant("synchronous close has no unrecorded callback"))}
+ fn terminal_is_empty(&self)->bool { self.source.is_none() }
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(1)}
+ fn next_close_byte_demand(&self)->Option<usize> {Some(self.source.as_ref().map_or(0,|source|if source.has_returned_alias(){0}else{PublicationClaimHandle::frame_bytes()}))}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{let Some(source)=self.source.as_ref()else{return Ok(0);};if source.is_claimed(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original publication claim still has its permit"));}Ok(if source.has_returned_alias(){size_of::<usize>()}else{size_of::<PublicationClaim>()})}
+ fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+ fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
+}
+impl ClaimRetirement{
+ fn close_sync(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
   let grant=effect.grant();let Some(source)=self.source.as_ref()else{return RetirementStep::Complete(0);};
   if source.is_claimed(){return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original publication claim still has its permit").into(),0);}
   let returned=source.has_returned_alias();let copy=if returned{size_of::<usize>()}else{size_of::<PublicationClaim>()};let release=if returned{0}else{PublicationClaimHandle::frame_bytes()};
@@ -56,12 +66,6 @@ impl RetirementCursor for ClaimRetirement {
   let original=self.source.take().unwrap().return_original();let unique=original.is_some();if let Some(original)=original{assert!(original.returned.load(Ordering::Acquire).is_null(),"original claim frame cannot return a live alias");drop(original);}
   RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:if unique{copy}else{0},released_bytes:if unique{release}else{0},..Default::default()},1)
  }
- fn terminal_is_empty(&self)->bool { self.source.is_none() }
- fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(1)}
- fn next_close_byte_demand(&self)->Option<usize> {Some(self.source.as_ref().map_or(0,|source|if source.has_returned_alias(){0}else{PublicationClaimHandle::frame_bytes()}))}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{let Some(source)=self.source.as_ref()else{return Ok(0);};if source.is_claimed(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original publication claim still has its permit"));}Ok(if source.has_returned_alias(){size_of::<usize>()}else{size_of::<PublicationClaim>()})}
- fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
- fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
 
 impl RetireOwned for PublicationClaimHandle {

@@ -12,15 +12,15 @@ fn make(case:&serde_json::Value,law:&serde_json::Value)->PersistentList<Row>{
  let mut rank=0;let mut pages=Vec::new();
  for len in std::iter::repeat_n(PERSISTENT_PAGE_FANOUT,case["fullLeaves"].as_u64().unwrap()as usize).chain(case["tailLeaves"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as usize)){
   let rows=std::array::from_fn(|slot|if slot<len{let row=Row{rank:rank*law["stride"].as_i64().unwrap(),label:format!("{}{rank}",law["prefix"].as_str().unwrap())};rank+=1;Some(wallet::paid(crate::admit_funded(row,SharedIssuer::owned(),grant())).result.unwrap_or_else(|_|panic!("table row issuance")).0)}else{None});
-  pages.push(wallet::paid(PersistentList::admit_leaf(rows,len,grant(),&mut None)).result.unwrap_or_else(|_|panic!("table leaf issuance")).0);
+  pages.push(wallet::paid(crate::effect::settle(grant(),|effect|PersistentList::admit_leaf(rows,len,effect))).result.unwrap_or_else(|_|panic!("table leaf issuance")).0);
  }
- while pages.len()>1{let mut originals=pages.into_iter();let mut parents=Vec::new();loop{let children=std::array::from_fn(|_|originals.next());if children[0].is_none(){break;}parents.push(wallet::paid(PersistentList::admit_branch(children,grant(),&mut None)).result.unwrap_or_else(|_|panic!("table branch issuance")).0);}pages=parents;}
+ while pages.len()>1{let mut originals=pages.into_iter();let mut parents=Vec::new();loop{let children=std::array::from_fn(|_|originals.next());if children[0].is_none(){break;}parents.push(wallet::paid(crate::effect::settle(grant(),|effect|PersistentList::admit_branch(children,effect))).result.unwrap_or_else(|_|panic!("table branch issuance")).0);}pages=parents;}
  pages.pop().unwrap_or_default()
 }
 fn close<T:RetireOwned+Send+Sync+'static>(source:&mut RetainedCloneSource<T>){
  let mut idle=0;for _ in 0..1000000{
   if source.terminal_is_empty(){return;}let mut d=source.next_close_demand(4096).unwrap();let copy=4096.max(d.copy_bytes);if copy!=4096{d=source.next_close_demand(copy).unwrap();}
-  let g=wallet::cap(RetainedCloneGrant{maximum_copy_bytes:copy,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth,..grant()});let p=wallet::paid(crate::effect::settle(g,|effect|source.close_step(effect))).result.unwrap().progress();assert!(p.fits(g));if p==Default::default(){idle+=1;assert!(idle<8,"table original source repeats an inert quote: {g:?}");}else{idle=0;}
+  let g=wallet::cap(RetainedCloneGrant{maximum_copy_bytes:copy,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth,..grant()});let p=wallet::paid(crate::effect::settle(g,|effect|wallet::poll(effect,|effect,reply|source.close_into(effect.grant().maximum_copy_bytes,effect,reply)))).result.unwrap().progress();assert!(p.fits(g));if p==Default::default(){idle+=1;assert!(idle<8,"table original source repeats an inert quote: {g:?}");}else{idle=0;}
  }
  panic!("table original source did not close");
 }
@@ -34,7 +34,7 @@ fn oracle(law:&serde_json::Value)->serde_json::Value{
 fn persistent_table_traversal_preserves_original_rows_and_linear_zero_heap_scan(){
  let law=law();let independent=oracle(&law);
  for(case,rows)in law["cases"].as_array().unwrap().iter().zip(independent.as_array().unwrap()){let _bank=wallet::case(case["rowCount"].as_u64().unwrap()as usize);
-  let list=make(case,&law);let mut source=wallet::paid(semio_framework_value_clone_source_testing::admit_owned(list,(),grant())).result.unwrap_or_else(|_|panic!("table source")).0;let original=source.borrow();let list=original.get();let count=list.len();assert_eq!(count,case["rowCount"].as_u64().unwrap()as usize);
+  let list=make(case,&law);let mut source=wallet::admit(list);let original=source.borrow();let list=original.get();let count=list.len();assert_eq!(count,case["rowCount"].as_u64().unwrap()as usize);
   assert!(size_of::<super::PersistentListIter<'_,Row>>()<=law["expected"]["maximumIteratorBytes"].as_u64().unwrap()as usize);
   let((seen,visits),heap)=crate::value::observe_retirement_allocations(||{let mut cursor=list.iter();assert_eq!(cursor.size_hint(),(count,Some(count)));let mut seen=0;while let Some(row)=cursor.next(){assert!(std::ptr::eq(row,list.get(seen).unwrap()));assert_eq!(row.rank,rows[seen]["rank"].as_i64().unwrap());assert_eq!(row.label,rows[seen]["label"].as_str().unwrap());seen+=1;assert_eq!(cursor.len(),count-seen);}assert_eq!(cursor.size_hint(),(0,Some(0)));assert!(cursor.next().is_none());assert!(cursor.nth(usize::MAX).is_none());assert!(cursor.next().is_none());(seen,cursor.visited_pages)});
   assert_eq!(heap,(0,0));assert_eq!(seen,count);assert_eq!(visits,case["pageCount"].as_u64().unwrap()as usize);
@@ -49,12 +49,12 @@ fn persistent_table_traversal_projects_borrowed_records_and_controlled_wire_with
  let _initial_bank=wallet::case(1);
  let law=law();let independent=oracle(&law);
  let sealed=wallet::paid(crate::admit_funded(Row{rank:law["stride"].as_i64().unwrap(),label:format!("{}1",law["prefix"].as_str().unwrap())},SharedIssuer::owned(),grant())).result.unwrap_or_else(|_|panic!("sealed record issuance")).0;
- let mut sealed_source=wallet::paid(semio_framework_value_clone_source_testing::admit_owned(sealed,(),grant())).result.unwrap_or_else(|_|panic!("sealed record source")).0;
+ let mut sealed_source=wallet::admit(sealed);
  let mut accepted=|_|true;let mut control=semio_framework_value_native_encoding::native_encoding::NativeEncodeControl::new(65536,&mut accepted);let borrowed=sealed_source.borrow();let row=borrowed.get();
  let(shape,heap)=crate::value::observe_retirement_allocations(||row.value_shape_at_path(&["label"]).unwrap());assert_eq!(shape,ValueShape::String);assert_eq!(heap,(0,0));
  let(output,heap)=crate::value::observe_retirement_allocations(||row.to_value_controlled(&mut control).unwrap());assert_eq!(heap,(control.owned_bytes(),0));assert_eq!(serde_json::Value::from(&output),independent[3][1]);<crate::DslValue as FromValue>::retire_decoded(output);close(&mut sealed_source);assert_eq!(crate::value::observe_retirement_allocations(||drop(sealed_source)).1,(0,0));
  for(case,rows)in law["cases"].as_array().unwrap().iter().zip(independent.as_array().unwrap()){let _bank=wallet::case(case["rowCount"].as_u64().unwrap()as usize);
-  let mut source=wallet::paid(semio_framework_value_clone_source_testing::admit_owned(make(case,&law),(),grant())).result.unwrap_or_else(|_|panic!("wire table source")).0;
+  let mut source=wallet::admit(make(case,&law));
   let list=source.borrow();let list=list.get();
   let(shape,heap)=crate::value::observe_retirement_allocations(||list.value_shape_at_path(&[]).unwrap());assert_eq!(shape,ValueShape::Array{len:list.len()});assert_eq!(heap,(0,0));
   if !list.is_empty(){let(shape,heap)=crate::value::observe_retirement_allocations(||list.value_shape_at_path(&["0","label"]).unwrap());assert_eq!(shape,ValueShape::String);assert_eq!(heap,(0,0));assert_eq!(list.value_key_at_path(&["0"],1).unwrap(),"label");for bad in["","00","-","-1","184467440737095516160"]{assert!(list.value_shape_at_path(&[bad]).is_err());}}

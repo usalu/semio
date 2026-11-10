@@ -27,39 +27,7 @@ pub(crate) fn scene_from_bridge_fixture(fixture: &serde_json::Value) -> UiCompon
     scene
 }
 
-/// 🌉️ Drives the staged bridge to its sealed lease, then the snapshot apply ladder to `Complete`.
-pub(crate) fn drive_scene_bridge(state: &mut World3dState, scene: &UiComponentSceneNode, bounds: Rect) {
-    sync_world3d_state(state, scene, bounds);
-    for turn in 0..4_096 {
-        match with_world_step_context(64, |context| step_world3d_scene_bridge(state, context)) {
-            World3dSceneBridgeStep::Complete => break,
-            World3dSceneBridgeStep::Pending => {}
-            step => panic!("scene bridge stopped at {step:?} on turn {turn} (fault {:?})", state.session.snapshot_fault),
-        }
-        assert!(turn < 4_095, "scene bridge did not seal within its turn ceiling");
-    }
-    sync_world3d_state(state, scene, bounds);
-    for turn in 0..4_096 {
-        assert_ne!(with_world_step_context(64, |context| step_world3d_draw_rebuild(&mut state.session, &mut state.authority, &mut state.scene, context)), WorldDrawRebuildStep::Fault, "draw rebuild faulted on turn {turn}");
-        match with_world_step_context(64, |context| step_world3d_snapshot(state, context)) {
-            World3dSnapshotApplyStep::Complete | World3dSnapshotApplyStep::Idle => break,
-            World3dSnapshotApplyStep::Pending => {}
-            step => panic!("snapshot apply stopped at {step:?} on turn {turn} (fault {:?})", state.session.snapshot_fault),
-        }
-        assert!(turn < 4_095, "snapshot apply did not complete within its turn ceiling");
-    }
-    for turn in 0..4_096 {
-        let draw_step = with_world_step_context(64, |context| step_world3d_draw_rebuild(&mut state.session, &mut state.authority, &mut state.scene, context));
-        assert_ne!(draw_step, WorldDrawRebuildStep::Fault, "draw retirement faulted on turn {turn}");
-        let bridge_step = with_world_step_context(64, |context| step_world3d_scene_bridge(state, context));
-        assert_ne!(bridge_step, World3dSceneBridgeStep::Fault, "bridge retirement faulted on turn {turn}");
-        if world3d_draw_rebuild_terminal_is_empty(&state.scene) && state.bridge.scene_bridge_retired.is_none() && state.bridge.scene_bridge_close.is_none() && state.bridge.scene_bridge.is_none() {
-            break;
-        }
-        assert!(turn < 4_095, "scene bridge retirement did not complete within its turn ceiling");
-    }
-    apply_runtime_draw_flags(&mut state.selection, &mut state.interaction, &mut state.scene);
-}
+pub(crate) use semio_os_infinite_world_host::drive_scene_bridge;
 
 #[allow(non_snake_case)]
 fn CAMERA_FRAMING_FIXTURE() -> &'static str {
@@ -113,6 +81,7 @@ fn assert_camera_fit(state: &World3dState, expected: &serde_json::Value) {
 /// and advances one transformed AABB corner per retained step before matching Three's Box3 oracle.
 #[test]
 fn live_scene_mesh_bounds_frame_both_camera_families_like_current_react() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = camera_framing_fixture();
     let viewport = Rect::new(0.0, 0.0, fixture["viewport"][0].as_f64().unwrap() as f32, fixture["viewport"][1].as_f64().unwrap() as f32);
     for (camera, expected) in [("perspective", "perspective"), ("orthographicTop", "orthographicTop")] {
@@ -130,6 +99,7 @@ fn live_scene_mesh_bounds_frame_both_camera_families_like_current_react() {
 /// transformed corner has been consumed.
 #[test]
 fn resident_generation_wakes_every_visible_camera_fit_until_both_complete() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = camera_framing_fixture();
     let viewport = Rect::new(0.0, 0.0, fixture["viewport"][0].as_f64().unwrap() as f32, fixture["viewport"][1].as_f64().unwrap() as f32);
     let mut panes = [
@@ -174,6 +144,7 @@ fn resident_generation_wakes_every_visible_camera_fit_until_both_complete() {
 /// direction owns the fitted eye, while the measured geometry owns target and distance.
 #[test]
 fn initial_projection_template_seeds_the_actual_delivered_camera_before_fit() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = camera_framing_fixture();
     let viewport = Rect::new(0.0, 0.0, fixture["viewport"][0].as_f64().unwrap() as f32, fixture["viewport"][1].as_f64().unwrap() as f32);
     let mut state = World3dState::new("surface-template".into(), "controller".into());
@@ -192,6 +163,7 @@ fn initial_projection_template_seeds_the_actual_delivered_camera_before_fit() {
 /// because the url-backed draw is also the sole ledger that admits the document's GLB request.
 #[test]
 fn initial_projection_seed_preserves_the_delivered_url_draw_asset_request_and_loaded_fit() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut scene = url_mesh_wire_scene();
     let world = scene.world_3d.as_mut().expect("world scene");
     world.instances_json = r#"[{"id":"obj-left","meshId":"mesh:🧊️left","position":[2,0,0],"rotation":[0,0,0,1],"scale":[1,1,1]}]"#.into();
@@ -208,6 +180,7 @@ fn initial_projection_seed_preserves_the_delivered_url_draw_asset_request_and_lo
         }
         assert!(turn < 4_095, "url bridge did not seal inside its fixture ceiling");
     }
+    semio_os_infinite_world_host::drain_scene_bridge_close(&mut state);
     assert_eq!(state.scene.instance_positions.get("obj-left"), Some(&[2.0, 0.0, 0.0]), "the bridge retains React's raw pre-asset position for projection framing");
     sync_world3d_state(&mut state, &scene, bounds);
     for turn in 0..4_096 {
@@ -256,6 +229,7 @@ fn initial_projection_seed_preserves_the_delivered_url_draw_asset_request_and_lo
 /// 🎥️ Empty geometry leaves the key unconsumed; the same revision applies when its real mesh arrives.
 #[test]
 fn delayed_geometry_retires_stale_measurement_without_fitting_a_placeholder_origin() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = camera_framing_fixture();
     let viewport = Rect::new(0.0, 0.0, fixture["viewport"][0].as_f64().unwrap() as f32, fixture["viewport"][1].as_f64().unwrap() as f32);
     let empty = camera_framing_scene(&fixture, "perspective", false, None);
@@ -278,6 +252,7 @@ fn delayed_geometry_retires_stale_measurement_without_fitting_a_placeholder_orig
 /// 🧭️ Genuine navigation consumes an owed content frame before late geometry arrives.
 #[test]
 fn world_camera_content_frame_preserves_original_user_orbit() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture=camera_framing_fixture();let viewport=Rect::new(0.0,0.0,fixture["viewport"][0].as_f64().unwrap() as f32,fixture["viewport"][1].as_f64().unwrap() as f32);
     let mut scene=camera_framing_scene(&fixture,"perspective",false,None);let world=scene.world_3d.as_mut().unwrap();let mut delivered:serde_json::Value=serde_json::from_str(&world.camera_json).unwrap();delivered["projectionFrame"]=fixture["framePolicies"]["delayedContent"].clone();world.camera_json=delivered.to_string();
     let mut state=World3dState::new("surface-user-frame".into(),"controller".into());drive_scene_bridge(&mut state,&scene,viewport);
@@ -292,6 +267,7 @@ fn world_camera_content_frame_preserves_original_user_orbit() {
 /// 🎥️ User orbit owns one revision/seed; a new document revision or external seed owns a new frame.
 #[test]
 fn camera_fit_ownership_preserves_user_orbit_until_revision_or_seed_changes() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = camera_framing_fixture();
     let viewport = Rect::new(0.0, 0.0, fixture["viewport"][0].as_f64().unwrap() as f32, fixture["viewport"][1].as_f64().unwrap() as f32);
     let scene = camera_framing_scene(&fixture, "perspective", true, None);
@@ -322,6 +298,7 @@ fn camera_fit_ownership_preserves_user_orbit_until_revision_or_seed_changes() {
 
 #[test]
 fn scene_bridge_renders_the_generation3d_preview_payload_into_a_snapshot() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = scene_bridge_fixture();
     let scene = scene_from_bridge_fixture(&fixture);
     let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
@@ -363,6 +340,7 @@ fn scene_bridge_renders_the_generation3d_preview_payload_into_a_snapshot() {
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-regressions-sweep-2026-09-15.md`).
 #[test]
 fn a_first_framing_never_strands_the_deliverys_own_draw_rebuild() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = scene_bridge_fixture();
     let mut scene = scene_from_bridge_fixture(&fixture);
     scene.world_3d.as_mut().expect("world scene").fit_json = Some(BOOT_FRAME_FIT_JSON.to_string());
@@ -380,6 +358,7 @@ fn a_first_framing_never_strands_the_deliverys_own_draw_rebuild() {
 /// token; records without the flag stay ordinary instances.
 #[test]
 fn scene_bridge_collects_the_provisional_instance_flag_the_producer_stamps() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut fixture = scene_bridge_fixture();
     let bridged: Vec<String> = fixture["expect"]["instanceIds"].as_array().expect("instance ids").iter().map(|id| id.as_str().expect("instance id").to_string()).collect();
     let provisional = bridged.first().expect("a bridged instance").clone();
@@ -397,6 +376,7 @@ fn scene_bridge_collects_the_provisional_instance_flag_the_producer_stamps() {
 /// 🧭️ Only a world surface bound to a window AND holding an applied trace lane owes that window a cursor echo.
 #[test]
 fn world_surfaces_echo_their_trace_cursor_under_their_window_instance() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/⏯️tool-run/🧪️tests/🧫️fixtures/📼️trace-pages.json")).expect("trace pages fixture");
     let bytes: Vec<u8> = fixture["deltas"][0]["hex"].as_str().expect("delta hex").as_bytes().chunks(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("hex"), 16).expect("hex")).collect();
     let delta = semio_framework_tool_run::ToolRunTraceDelta::decode(&bytes).expect("fixture delta decodes");
@@ -415,6 +395,7 @@ fn world_surfaces_echo_their_trace_cursor_under_their_window_instance() {
 
 #[test]
 fn scene_bridge_honours_selection_hover_camera_and_sun() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = scene_bridge_fixture();
     let scene = scene_from_bridge_fixture(&fixture);
     let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
@@ -446,6 +427,7 @@ fn scene_bridge_honours_selection_hover_camera_and_sun() {
 /// — the one point guaranteed both inside the solid and inside the 45° frustum.
 #[test]
 fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = scene_bridge_fixture();
     let scene = scene_from_bridge_fixture(&fixture);
     let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
@@ -487,6 +469,7 @@ fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
 /// consume them; codec work remains outside the frame-owned World state.
 #[test]
 fn decoded_mesh_paint_publication_requires_rgba_and_matching_uvs() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     let mut painted = triangle_mesh_oracle();
     painted.uvs = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
@@ -513,6 +496,7 @@ fn decoded_mesh_paint_publication_requires_rgba_and_matching_uvs() {
 /// projected depth and preserve producer insertion order for exact ties.
 #[test]
 fn transparent_standard_draws_match_the_recorded_three_projected_order() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🎨️scene-shading/🔣️.json")).unwrap();
     let camera_json = &fixture["scene"]["camera"];
     let array3 = |value: &serde_json::Value| {
@@ -581,9 +565,10 @@ fn transparent_standard_draws_match_the_recorded_three_projected_order() {
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-spawn-job-effect-2026-09-13.md`).
 #[test]
 fn gumball_draws_ensure_the_plane_mesh_they_reference() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut lines = Vec::new();
     let mut translucent = Vec::new();
-    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut gpu = semio_os_infinite_world_host::prepared_world_build_context();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.session.active_utility = "select".into();
     state.scene.meshes.insert(GUMBALL_PLANE_MESH.into(), publish_oracle_mesh(triangle_mesh_oracle())).expect("plane lease admitted");
@@ -594,11 +579,12 @@ fn gumball_draws_ensure_the_plane_mesh_they_reference() {
     append_gumball_geometry(&mut lines, &mut translucent, &mut gpu, &state.selection, &state.gumball, &state.scene, &Camera3d::default(), &state.scene.meshes, &state.scene.mesh_versions);
 
     assert_eq!(translucent.len(), 3, "the gumball draws one quad per axis plane");
-    let requested: Vec<(String, u64)> = gpu.mesh_requests[..gpu.mesh_request_len].iter().flatten().cloned().collect();
+    let requested: Vec<(String, u64)> = gpu.mesh_requests.iter().take(gpu.mesh_request_len).flatten().cloned().collect();
     for draw in &translucent {
         assert!(requested.iter().any(|(key, version)| key == &draw.mesh_key && *version == draw.mesh_version), "gumball draw {}@{} was never ensured on the GPU; requested={requested:?}", draw.mesh_key, draw.mesh_version);
     }
     assert!(requested.iter().all(|(key, _)| key == GUMBALL_PLANE_MESH), "the gumball ensures nothing but its own plane: {requested:?}");
+    semio_os_infinite_world_host::retire_world_build_context(gpu);
 }
 
 /// 🎥️ LAW: the diagnostics row reports the LIVE orbit — the pose the pane is looking through this
@@ -611,6 +597,7 @@ fn gumball_draws_ensure_the_plane_mesh_they_reference() {
 /// (`📓️w8b-orthographic-camera-and-3d-parity.md` §7.5).
 #[test]
 fn the_live_camera_row_reports_the_orbit_and_not_the_wire() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.bounds = Rect::new(0.0, 0.0, 478.0, 814.0);
     let before = world3d_live_camera_json(&state.session, &state.camera, &state.selection, &state.scene);
@@ -639,6 +626,7 @@ fn the_live_camera_row_reports_the_orbit_and_not_the_wire() {
 /// round trip.
 #[test]
 fn a_local_projection_selection_retains_viewport_ownership() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.bounds = Rect::new(0.0, 0.0, 478.0, 814.0);
     state.camera.camera_user_moved = true;
@@ -671,6 +659,7 @@ fn a_local_projection_selection_retains_viewport_ownership() {
 /// projection family and FOV. This is the exact mounted React transition after initial framing.
 #[test]
 fn curvilinear_selection_retains_the_accepted_top_pose_and_zoom() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-curvilinear-frame".into(), "controller".into());
     state.session.bounds = Rect::new(0.0, 0.0, 400.0, 800.0);
     state.camera.orbit.projection = CameraProjection3d::Orthographic;
@@ -706,6 +695,7 @@ fn curvilinear_selection_retains_the_accepted_top_pose_and_zoom() {
 /// external seed or explicit projection selection rearms the debt.
 #[test]
 fn delivered_projection_spec_frames_once_after_accepted_camera() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = camera_framing_fixture();
     let viewport = Rect::new(0.0, 0.0, fixture["viewport"][0].as_f64().unwrap() as f32, fixture["viewport"][1].as_f64().unwrap() as f32);
     let spec = semio_ui_viewport::Viewport3dProjectionSpec {

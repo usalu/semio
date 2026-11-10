@@ -32,5 +32,9 @@
     "parentPublicationSeparate": true,
     "independentVectorOracle": true,
     "sameFiniteBank": true
+  },
+  "admission": {
+    "turns": 17,
+    "work": 37
   }
 }

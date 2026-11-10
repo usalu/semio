@@ -32,23 +32,7 @@ fn read_joined(paths: &[&str]) -> &'static str {
     Box::leak(joined.into_boxed_str())
 }
 
-pub(crate) fn with_world_step_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
-    let mut sequence = 0;
-    let grant=world_original_fixture_grant();
-    let mut receipt=semio_framework_value::RetainedCloneProgress::default();
-    let mut context = semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(1),
-        semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(fuel, u64::MAX,grant),
-        semio_framework_job::root_cancel_token(),
-        semio_framework_job::default_now_us,
-        &mut sequence,
-        &mut receipt,
-    );
-    let result=step(&mut context);
-    assert!(context.retained_progress().fits(grant));
-    result
-}
+use semio_os_infinite_world_host::with_world_step_context;
 
 fn scene_with_selection(selection_json: &str) -> UiComponentSceneNode {
     scene_with_selection_and_domain(selection_json, None)
@@ -129,39 +113,7 @@ fn retire_bridged_surface(state: &mut World3dState) {
     assert!(world3d_dynamic_retirement_terminal_is_empty(state), "the surface must reach terminal empty");
 }
 
-/// 🌉️ Drives the staged bridge to its sealed lease, then the snapshot apply ladder to `Complete`.
-pub(crate) fn drive_scene_bridge(state: &mut World3dState, scene: &UiComponentSceneNode, bounds: Rect) {
-    sync_world3d_state(state, scene, bounds);
-    for turn in 0..4_096 {
-        match with_world_step_context(64, |context| step_world3d_scene_bridge(state, context)) {
-            World3dSceneBridgeStep::Complete => break,
-            World3dSceneBridgeStep::Pending => {}
-            step => panic!("scene bridge stopped at {step:?} on turn {turn} (fault {:?})", state.session.snapshot_fault),
-        }
-        assert!(turn < 4_095, "scene bridge did not seal within its turn ceiling");
-    }
-    sync_world3d_state(state, scene, bounds);
-    for turn in 0..4_096 {
-        assert_ne!(with_world_step_context(64, |context| step_world3d_draw_rebuild(&mut state.session, &mut state.authority, &mut state.scene, context)), WorldDrawRebuildStep::Fault, "draw rebuild faulted on turn {turn}");
-        match with_world_step_context(64, |context| step_world3d_snapshot(state, context)) {
-            World3dSnapshotApplyStep::Complete | World3dSnapshotApplyStep::Idle => break,
-            World3dSnapshotApplyStep::Pending => {}
-            step => panic!("snapshot apply stopped at {step:?} on turn {turn} (fault {:?})", state.session.snapshot_fault),
-        }
-        assert!(turn < 4_095, "snapshot apply did not complete within its turn ceiling");
-    }
-    for turn in 0..4_096 {
-        let draw_step = with_world_step_context(64, |context| step_world3d_draw_rebuild(&mut state.session, &mut state.authority, &mut state.scene, context));
-        assert_ne!(draw_step, WorldDrawRebuildStep::Fault, "draw retirement faulted on turn {turn}");
-        let bridge_step = with_world_step_context(64, |context| step_world3d_scene_bridge(state, context));
-        assert_ne!(bridge_step, World3dSceneBridgeStep::Fault, "bridge retirement faulted on turn {turn}");
-        if world3d_draw_rebuild_terminal_is_empty(&state.scene) && state.bridge.scene_bridge_retired.is_none() && state.bridge.scene_bridge_close.is_none() && state.bridge.scene_bridge.is_none() {
-            break;
-        }
-        assert!(turn < 4_095, "scene bridge retirement did not complete within its turn ceiling");
-    }
-    apply_runtime_draw_flags(&mut state.selection, &mut state.interaction, &mut state.scene);
-}
+pub(crate) use semio_os_infinite_world_host::drive_scene_bridge;
 
 //#region 🔖️Modelling
 #[allow(non_snake_case)]
@@ -181,6 +133,7 @@ fn state_with_guest_selection(granularity: &str) -> World3dState {
 
 #[test]
 fn the_scene_pick_filter_admits_exactly_the_fixture_granularity_on_the_native_selection_channels() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     for row in modelling_fixture()["pickTargets"].as_array().unwrap() {
         let filter = semio_ui_declaration::ui::World3dPickGranularity::parse(row["filter"].as_str().unwrap()).unwrap();
         let mut state = state_with_guest_selection("face");
@@ -197,6 +150,7 @@ fn the_scene_pick_filter_admits_exactly_the_fixture_granularity_on_the_native_se
 
 #[test]
 fn the_scene_pick_filter_is_idempotent_and_absent_filter_leaves_the_guest_channels_alone() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = state_with_guest_selection("face");
     let before = (state.selection.granularity.clone(), state.selection.selection_targets.clone(), state.selection.component_ids.clone(), state.session.interaction_revision);
     apply_world3d_pick_filter(&mut state.session, &mut state.selection, &mut state.scene, None);
@@ -254,11 +208,12 @@ fn paint_world(scene: &UiComponentSceneNode, state: &mut World3dState, gpu: &mut
 }
 
 fn painted_pass(scene: &UiComponentSceneNode, state: &mut World3dState, theme: &semio_ui_theme::Theme, bounds: Rect, ready: impl Fn(&ScenePass3d) -> bool) -> semio_ui_draw_contract::DrawList {
-    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut gpu = semio_os_infinite_world_host::prepared_world_build_context();
     drive_scene_bridge(state, scene, bounds);
     for turn in 0..4_096 {
         let (draw, _) = paint_world(scene, state, &mut gpu, theme, bounds);
         if draw.scene_passes.last().is_some_and(&ready) {
+            semio_os_infinite_world_host::retire_world_build_context(gpu);
             return draw;
         }
     }
@@ -271,6 +226,7 @@ fn section_roles(draws: &[SceneDraw3d]) -> Vec<(String, ui_scene::math::SceneSec
 
 #[test]
 fn a_capped_section_clips_the_scene_and_brackets_the_cap_plane_between_two_stencil_toggles() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     use ui_scene::math::SceneSectionRole3d as Role;
     let fixture = modelling_fixture();
     let row = &fixture["sectionPlanes"][1];
@@ -301,6 +257,7 @@ fn a_capped_section_clips_the_scene_and_brackets_the_cap_plane_between_two_stenc
 
 #[test]
 fn an_open_section_clips_without_a_cap_and_no_section_changes_nothing() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     use ui_scene::math::SceneSectionRole3d as Role;
     let theme = semio_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 320.0, 240.0);
@@ -336,6 +293,7 @@ fn annotation_scene(layer: serde_json::Value) -> UiComponentSceneNode {
 
 #[test]
 fn annotations_paint_the_shared_projection_as_screen_constant_overlay_geometry() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = modelling_fixture();
     let layer = fixture["annotationProjection"]["layer"].clone();
     let scene = annotation_scene(layer.clone());
@@ -367,6 +325,7 @@ fn annotations_paint_the_shared_projection_as_screen_constant_overlay_geometry()
 
 #[test]
 fn annotation_sizes_stay_in_screen_pixels_when_the_camera_moves_away() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let layer = serde_json::json!({"items":[{"kind":"dimension","id":"d","from":[0,0,0],"to":[1,0,0],"offset":[0,-0.2,0],"text":{"en":"1","de":"1"}}]});
     let theme = semio_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
@@ -394,6 +353,7 @@ fn annotation_sizes_stay_in_screen_pixels_when_the_camera_moves_away() {
 
 #[test]
 fn annotation_text_follows_the_active_language() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let layer = serde_json::json!({"items":[{"kind":"leader","id":"m","anchor":[0.5,0.5,0.5],"labelOffsetPx":[10,10],"text":{"en":"Centre point","de":"Mitte"}}]});
     let theme = semio_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
@@ -429,12 +389,13 @@ fn ramp_slices(draw: &semio_ui_draw_contract::DrawList) -> Vec<[f32; 4]> {
 
 #[test]
 fn an_applied_scalar_field_paints_its_legend_ramp_top_down_in_the_fixture_ramp_colours() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let theme = semio_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
     let scene = legend_scene(serde_json::json!([0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 1.0]));
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let draw = painted_pass(&scene, &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
-    assert_eq!(state.overlay.scalar_field_status(), World3dScalarFieldStatus::Applied);
+    assert_eq!(state.overlay.scalar_field_status, World3dScalarFieldStatus::Applied);
     let slices = ramp_slices(&draw);
     assert_eq!(slices.len(), 32);
     let ramp = semio_ui_declaration::ui::World3dColorRamp::Inferno;
@@ -459,12 +420,13 @@ fn an_applied_scalar_field_paints_its_legend_ramp_top_down_in_the_fixture_ramp_c
 
 #[test]
 fn a_scalar_field_that_does_not_fit_its_mesh_announces_the_mismatch_instead_of_a_legend() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let theme = semio_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
     let scene = legend_scene(serde_json::json!([0.0, 1.0]));
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let draw = painted_pass(&scene, &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
-    assert_eq!(state.overlay.scalar_field_status(), World3dScalarFieldStatus::Mismatch);
+    assert_eq!(state.overlay.scalar_field_status, World3dScalarFieldStatus::Mismatch);
     assert!(ramp_slices(&draw).is_empty());
     assert_eq!(overlay_glyphs(&draw), semio_ui_declaration::ui::world3d_modelling_strings("en").mismatch.chars().count());
     retire_bridged_surface(&mut state);
@@ -477,6 +439,7 @@ fn a_scalar_field_that_does_not_fit_its_mesh_announces_the_mismatch_instead_of_a
 
 #[test]
 fn the_modelling_overlays_publish_a_text_alternative_in_the_active_language() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let theme = semio_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
     let mut scene = legend_scene(serde_json::json!([0.0, 0.1, 0.2, 0.3, null, 0.5, 0.6, 1.0]));
@@ -511,7 +474,6 @@ fn the_modelling_overlays_publish_a_text_alternative_in_the_active_language() {
 /// 🧊️ Renders one painted world draw list through the real prepared pipeline on a headless GPU and reads the pixels back, `None` when the machine has no adapter.
 #[cfg(not(target_arch = "wasm32"))]
 fn render_on_gpu(scene: &UiComponentSceneNode, state: &mut World3dState, theme: &semio_ui_theme::Theme, size: u32, ready: impl Fn(&ScenePass3d) -> bool) -> Option<Vec<u8>> {
-    use semio_framework_job::{InteractiveJob, StepOutcome};
     use ui_gpu::{RasterTextureCleanupStep, RasterTextureWitness};
     use semio_ui_prepared::{PreparedRasterKeepCursorV1, PreparedRasterKeepStepV1, PreparedRenderGate, PreparedRenderInput, PreparedRenderJob, UiPresentToken};
 use ui_gpu::{GpuContext};
@@ -521,7 +483,7 @@ use ui_gpu::{GpuContext};
         Err(error) => panic!("headless GPU {error}"),
     };
     let bounds = Rect::new(0.0, 0.0, size as f32, size as f32);
-    let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut resources = semio_os_infinite_world_host::prepared_world_build_context();
     drive_scene_bridge(state, scene, bounds);
     let mut draw = None;
     let mut readied = false;
@@ -536,23 +498,17 @@ use ui_gpu::{GpuContext};
     }
     assert!(readied, "the world pass never satisfied its readiness predicate");
     let draw = draw.expect("a painted frame");
-    let mut input = PreparedRenderInput::try_new(7, 1, draw, None, 0.0).unwrap_or_else(|rejected| panic!("prepared input refused: {}", rejected.fault()));
+    let mut input = PreparedRenderInput::try_new(7, 3, draw, None, 0.0).unwrap_or_else(|rejected| panic!("prepared input refused: {}", rejected.fault()));
     while !resources.append_step(&mut input).unwrap_or_else(|_| panic!("world resources refused")) {}
+    semio_os_infinite_world_host::retire_world_build_context(resources);
     let mut job = PreparedRenderJob::try_new(input).unwrap_or_else(|rejected| panic!("prepared job refused: {}", rejected.fault()));
-    let mut packet = None;
-    for _ in 0..8_192 {
-        match with_world_step_context(1_000, |context| job.step(context)) {
-            StepOutcome::Yield => {}
-            mut outcome @ StepOutcome::Complete(_) => {
-                packet = job.take_packet();
-                InteractiveJob::begin_close(&mut job);
-                while !outcome.terminal_is_empty(){let step=outcome.close_step(world_original_fixture_grant()).expect("original prepared outcome close");assert!(step.progress().fits(world_original_fixture_grant()));}
-                break;
-            }
-            other => panic!("prepared job ended in {other:?}: {:?}", job.fault()),
-        }
-    }
-    while !matches!(semio_framework_job::close_with_self_funded_context(world_original_fixture_grant(), |cx| PreparedRenderJob::close_step(&mut job, cx)).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Complete{..}) {}
+    let packet = match semio_ui_prepared::testing::drive_preparation_until_terminal(&mut job) {
+        Some(semio_framework_job::JobOutcomeKind::Complete) => job.take_packet(),
+        other => panic!("prepared job ended in {other:?}: {:?}", job.fault()),
+    };
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), world_gpu_fixture_stock(), semio_framework_job::default_now_us, u64::MAX, 1 << 40);
+    while !semio_ui_prepared::testing::close_job_step(&mut job, &mut caller) {}
+    while !caller.terminal_is_empty() { caller.retire_step(world_gpu_fixture_stock()).expect("original fixture caller retirement"); }
     let mut packet = packet.expect("a prepared packet");
     let mut gpu = source.offscreen(size, size).expect("offscreen target");
     gpu.begin_prepared(&UiPresentToken::mint_for_current_thread(), &PreparedRenderGate::default(), &packet, packet.scene_revision(), packet.preview_generation()).expect("packet admitted");
@@ -586,8 +542,12 @@ use ui_gpu::{GpuContext};
     while !gpu.close_mesh_upload_step() {}
     while !gpu.close_raster_table_step().expect("raster table") {}
     while !gpu.close_mesh_table_step() {}
-    while !packet.retirement_is_empty(){let step=packet.close_step(world_original_fixture_grant());assert!(step.progress().fits(world_original_fixture_grant()));}
+    while !semio_ui_prepared::testing::close_packet_step(&mut packet) {}
     Some(rgba)
+}
+
+fn world_gpu_fixture_stock() -> semio_framework_value::RetainedCloneGrant {
+    semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 256 }
 }
 
 fn top_camera(scene: &mut UiComponentSceneNode) {
@@ -610,6 +570,7 @@ fn distance(left: [u8; 4], right: [u8; 4]) -> i32 {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn on_a_real_gpu_a_section_removes_the_far_half_and_the_cap_closes_the_cut_without_leaking_stencil() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     use ui_scene::math::SceneSectionRole3d as Role;
     const SIZE: u32 = 128;
     let theme = semio_ui_theme::Theme::default();
@@ -667,6 +628,7 @@ pub(crate) fn terrain_test_retire_then_dynamic(state:&mut World3dState,context:&
 
 #[test]
 fn terrain_retirement_zero_grant_preserves_original_owner_without_bool_bridge() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state=World3dState::new("surface".into(),"controller".into());
     let payload=TerrainTileMeshPayload{positions:vec![0.0;9],normals:vec![0.0;9],indices:vec![0,1,2],uvs:vec![0.0;6]};
     let pointer=payload.positions.as_ptr();
@@ -686,6 +648,7 @@ fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
 
 #[test]
 fn scene_bridge_cursor_close_preserves_original_mesh_attribute_custody_and_physical_receipts(){
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     let mut state=World3dState::new("surface".into(),"controller".into());
     let(cursor,birth)=observe(||{
@@ -704,8 +667,23 @@ fn scene_bridge_cursor_close_preserves_original_mesh_attribute_custody_and_physi
     let(_,heap)=observe(||step_world3d_scene_bridge_close(&mut state.bridge,&mut context));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(state.bridge.scene_bridge.is_some());assert!(state.bridge.scene_bridge_close.is_none());
     let(mut born,mut released,mut turns)=(birth.requested_bytes,0,0);
     while state.bridge.scene_bridge.is_some()||state.bridge.scene_bridge_close.is_some(){
-        let(receipt,heap)=with_world_step_context(1,|context|{let(_,heap)=observe(||step_world3d_scene_bridge_close(&mut state.bridge,context));(context.retained_progress(),heap)});
-        assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<16384);
+        let(receipt,heap)=with_world_step_context(1,|context|{let before=context.retained_progress();let(_,heap)=observe(||step_world3d_scene_bridge_close(&mut state.bridge,context));let after=context.retained_progress();((after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes),heap)});
+        assert_eq!((heap.requested_bytes,heap.released_bytes),receipt);born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<16384);
     }
     assert_eq!(born,released);
+}
+
+#[test]
+fn placeholder_pump_grant_admits_the_source_retirement_quote_of_every_cursor() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    use semio_os_infinite_world_components::{WorldMeshBuffers, WorldPlaceholderKind, WorldPlaceholderMeshCursor};
+    use semio_os_infinite_world_interaction::{world_placeholder_pump_admits, WORLD_PLACEHOLDER_PUMP_GRANT};
+    let law = WORLD_PLACEHOLDER_PUMP_GRANT;
+    assert!(law.maximum_items >= 1 && law.maximum_depth >= 2, "the pump grant funds at least one nested retirement frame");
+    for kind in [WorldPlaceholderKind::Plane, WorldPlaceholderKind::Icosphere] {
+        let cursor = WorldPlaceholderMeshCursor::new("quote", kind, 1, 1).expect("placeholder authority");
+        assert!(world_placeholder_pump_admits(&cursor), "{kind:?}: the pump grant admits its source quote");
+    }
+    let cursor = WorldPlaceholderMeshCursor::inline("quote-inline", WorldMeshBuffers { positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], normals: vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], indices: vec![0, 1, 2], ..WorldMeshBuffers::default() }, 1, 1).expect("inline authority");
+    assert!(world_placeholder_pump_admits(&cursor), "the pump grant admits an inline source quote");
 }

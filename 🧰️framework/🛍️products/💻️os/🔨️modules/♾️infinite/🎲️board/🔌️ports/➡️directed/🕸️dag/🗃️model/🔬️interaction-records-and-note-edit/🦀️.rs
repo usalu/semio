@@ -169,7 +169,7 @@ impl DagPointerPlan {
 /// press, the moved node ids and their ONE relative offset), `setSlider` (the value an inline slider was released on) and
 /// `insertPort` (a variadic port inserted at `index`). Every renderer — React and wgpu alike — drains these after a
 /// gesture and dispatches exactly them ([`dag_graph_edit_rows_json`]); no renderer ever publishes the whole snapshot.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum DagGraphEdit {
     Connect { source_node_id: String, source_port_id: String, target_node_id: String, target_port_id: String },
     Disconnect { synapse_id: String },

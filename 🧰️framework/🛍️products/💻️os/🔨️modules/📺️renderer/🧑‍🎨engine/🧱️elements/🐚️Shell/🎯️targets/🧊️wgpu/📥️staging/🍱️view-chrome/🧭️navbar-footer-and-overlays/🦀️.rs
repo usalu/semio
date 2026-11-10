@@ -85,7 +85,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             }
             3 => {
                 if cursor.window.is_none() {
-                    let title = self.docs.session.as_ref().map_or_else(|| SHELL_NAVBAR_SESSIONLESS_TITLE.to_string(), |session| shell_navbar_title(&session.app, &self.prefs.terminology_id));
+                    let title = self.docs.session.as_ref().map_or_else(|| SHELL_NAVBAR_SESSIONLESS_TITLE.to_string(), |session| shell_navbar_title(&session.app, &self.prefs.terminology_id, self.prefs.active_locale()));
                     let Ok(title) = UiText::try_from_string(title) else {
                         self.chrome.error = Some("Shell navbar title exceeded the retained text boundary".to_string());
                         cursor.phase = 11;

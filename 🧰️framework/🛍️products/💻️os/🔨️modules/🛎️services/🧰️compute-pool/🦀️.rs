@@ -84,7 +84,7 @@ impl<J:InteractiveJob+'static> ComputeJobCompletion<J>{
             if cx.retirement_should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
             if session.checked_out_outcome_descriptor().is_none(){session.begin_close();}
             match session.has_original_cancel_alias_witness(cx.original_cancel_token()){Err(WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),Err(WorkerJobDemandError::Contention(_))=>return Ok(WorkerJobCloseStep::Blocked),Ok(true)=>{
-                let turn=session.return_original_cancel_alias_step(cx.original_cancel_token(),cx.retained_grant());let blocked=!matches!(&turn.result,Ok(Some(_)));
+                let turn=cx.with_original_effect(cx.retained_grant(),|cx,effect|session.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn);let blocked=!matches!(&turn.result,Ok(Some(_)));
                 let result=match turn.result{Ok(Some(step))=>Ok(step),Ok(None)|Err(WorkerJobDemandError::Contention(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(WorkerJobDemandError::Refused(error))=>Err(error)};
                 let step=receive_original_retained_work(cx,RetainedWorkOutcome{result,work:turn.work})?;
                 return Ok(if blocked{WorkerJobCloseStep::Blocked}else{WorkerJobCloseStep::Pending{progress:step.progress()}})

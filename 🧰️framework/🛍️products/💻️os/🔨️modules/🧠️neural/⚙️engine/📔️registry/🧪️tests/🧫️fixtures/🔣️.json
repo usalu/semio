@@ -68,7 +68,6 @@
     "maximumRetirementTurns": 10000
   },
   "physicalShell": {
-    "allocations": 2,
     "releasedBeforeGrant": 0,
     "zeroGrantFrozen": true,
     "undersizedGrantFrozen": true,

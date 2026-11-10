@@ -80,10 +80,10 @@ pub struct JsonBorrowedWriteCursor {
 fn writer_metadata_demand<S:JsonWriteSource+?Sized>(cursor:&JsonBorrowedWriteCursor,frame:JsonWriteFrame,node:&JsonWriteNode<'_>,source:&S)->Result<(usize,usize),ValueError>{
  let word=size_of::<usize>();let frame_bytes=size_of::<JsonWriteFrame>();let finish=frame_bytes+word+if cursor.frames.len()>1{2*word}else{0};let child=2*frame_bytes+3*word;
  let(extra,raw)=match(frame.state,node){
-  (0,JsonWriteNode::Null|JsonWriteNode::Bool(_)|JsonWriteNode::Number(_))=>(finish,1),
+  (0,JsonWriteNode::Null|JsonWriteNode::Bool(_)|JsonWriteNode::Number(_)|JsonWriteNode::Float32(_)|JsonWriteNode::QuotedUnsigned(_))=>(finish,1),
   (0,JsonWriteNode::String(_)|JsonWriteNode::NativeString(_)|JsonWriteNode::Array(_)|JsonWriteNode::Object(_))=>(size_of::<u8>(),1),
-  (1,JsonWriteNode::Array(length))=>if frame.index==*length{(finish,1)}else{(word+child,usize::from(frame.index!=0))},
-  (2,JsonWriteNode::Object(length))=>if frame.index==*length{(finish,1)}else{(size_of::<u8>()+word,1+usize::from(frame.index!=0))},
+  (1,JsonWriteNode::Array(length))=>if frame.index==*length{(finish,1)}else{(2*word+child,usize::from(frame.index!=0))},
+  (2,JsonWriteNode::Object(length))=>if frame.index==*length{(finish,1)}else{(size_of::<u8>()+3*word,1+usize::from(frame.index!=0))},
   (3,JsonWriteNode::Object(_))=>{let text=source.object_key_at_path(&cursor.path,frame.source_index)?;let remaining=text.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON object key position changed"))?;if remaining.is_empty(){(size_of::<u8>(),2)}else{(word,1)}},
   (5,JsonWriteNode::String(text))=>{let remaining=text.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON text position changed"))?;if remaining.is_empty(){(finish,1)}else{(word,1)}},
   (4,JsonWriteNode::Object(_))=>(size_of::<u8>()+word+child,0),

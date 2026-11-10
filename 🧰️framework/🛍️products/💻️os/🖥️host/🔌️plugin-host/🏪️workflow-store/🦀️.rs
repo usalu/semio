@@ -70,14 +70,11 @@ impl OsWorkflowStore {
     /// `programs` list moved off the dissolved `OsSnapshot` onto `space::SpaceSnapshot` (see
     /// `## The inversion` in the plan), so spawning a node into the workflow graph and installing its
     /// plugin into the space are now two operations against two separate documents.
-    pub fn add_workflow_node(&mut self, plugin_id: &str, app_id: &str, label: Option<&str>, x: f64, y: f64, space_store: &mut OsSpaceStore, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
+    pub fn add_workflow_node(&mut self, plugin_id: &str, app_id: &str, label: &str, x: f64, y: f64, space_store: &mut OsSpaceStore, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
         let app = resolve_os_app_definition(plugin_id, app_id).ok_or_else(|| VcsError::Deserialize(format!("unknown app {plugin_id}/{app_id}")))?;
         let node_id = create_os_id("node");
         let position = workflow::WorkflowPosition { x, y, width: 0.0, height: 0.0 };
-        let mut node = resolve_kernel_future(workflow::workflow_node_for_app(&app, plugin_id, &node_id, &position));
-        if let Some(label) = label {
-            node.label = label.into();
-        }
+        let node = resolve_kernel_future(workflow::workflow_node_for_app(&app, plugin_id, &node_id, &position, label));
         self.dispatch_apply(vec![workflow::WorkflowMutation::AddNode(workflow::AddNode { node })], identity)?;
         resolve_kernel_future(space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into(), index: None }], transaction: None }, identity))?;
         Ok(node_id)

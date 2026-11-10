@@ -163,6 +163,11 @@ pub trait Utf8Text {
     fn text_chunk_count(&self) -> usize;
     fn text_chunk(&self, index: usize) -> Option<&str>;
 }
+impl Utf8Text for semio_framework_value_shared_utf8::SharedUtf8 {
+    fn text_bytes(&self) -> usize { self.len() }
+    fn text_chunk_count(&self) -> usize { self.as_str().text_chunk_count() }
+    fn text_chunk(&self, index: usize) -> Option<&str> { self.as_str().text_chunk(index) }
+}
 
 #[path = "🎮️append/🦀️.rs"]
 mod append;

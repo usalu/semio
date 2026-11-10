@@ -29,6 +29,7 @@ semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-retirement-queue = { path = "../../../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { workspace = true }
+semio-framework-job = { workspace = true }
 semio-framework-value-ordered = { path = "../../../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }

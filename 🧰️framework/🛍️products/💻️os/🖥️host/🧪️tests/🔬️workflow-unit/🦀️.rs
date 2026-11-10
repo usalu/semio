@@ -150,7 +150,7 @@ mod tests {
             id: format!("{id}:{}", if direction == semio_framework::MediaPortDirection::In { "in" } else { "out" }),
             spec: semio_framework::MediaPortSpec {
                 id: if direction == semio_framework::MediaPortDirection::In { "in".into() } else { "out".into() },
-                label: "Port".into(),
+                label: semio_ui_locale::LocalizedLabel::data("Port"),
                 direction,
                 media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
                 kind_id: Some("2d.drawing".into()),

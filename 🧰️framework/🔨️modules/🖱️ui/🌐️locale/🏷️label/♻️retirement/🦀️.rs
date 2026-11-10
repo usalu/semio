@@ -5,15 +5,11 @@ use semio_framework_value::{RetainedAllocationEffect,RetirementDemand,ValueError
 use std::mem::ManuallyDrop;
 
 #[doc(hidden)]
-pub struct LocalizedLabelRetirement{cells:ManuallyDrop<[[Cow<'static,str>;Locale::COUNT];Terminology::COUNT]>,index:usize}
+pub struct LocalizedLabelRetirement{cells:ManuallyDrop<[super::LabelRow;Terminology::COUNT]>,index:usize}
 impl LocalizedLabelRetirement{
  fn new(label:LocalizedLabel)->Self{Self{cells:ManuallyDrop::new(label.cells),index:0}}
  fn current(&self)->Option<&Cow<'static,str>>{if self.terminal_is_empty(){None}else{Some(&self.cells[self.index/Locale::COUNT][self.index%Locale::COUNT])}}
-}
-impl RetirementCursor for LocalizedLabelRetirement{
- fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
- fn next_demand(&self,_body:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{release_bytes:match self.current(){Some(Cow::Owned(text))=>text.capacity(),_=>0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
+ fn close_step(&mut self,_body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
   if self.terminal_is_empty(){return RetirementStep::Complete(0);}
   let grant=effect.grant();
   if grant.maximum_items==0||effect.maximum_work_units()==0{return RetirementStep::BudgetExhausted;}
@@ -24,6 +20,11 @@ impl RetirementCursor for LocalizedLabelRetirement{
   self.cells[self.index/Locale::COUNT][self.index%Locale::COUNT]=Cow::Borrowed("");self.index+=1;
   RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()},work)
  }
+}
+impl RetirementCursor for LocalizedLabelRetirement{
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
+ fn next_demand(&self,_body:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{release_bytes:match self.current(){Some(Cow::Owned(text))=>text.capacity(),_=>0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
+ semio_framework_value_retirement::native_retirement_reply!();
  fn terminal_is_empty(&self)->bool{self.index==Terminology::COUNT*Locale::COUNT}
  fn next_close_byte_demand(&self)->Option<usize>{Some(match self.current(){Some(Cow::Owned(text))=>text.capacity(),_=>0})}
  fn next_birth_bytes(&self,_copy:usize)->Option<usize>{Some(0)}

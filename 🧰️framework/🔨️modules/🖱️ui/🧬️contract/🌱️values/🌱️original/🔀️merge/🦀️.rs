@@ -16,7 +16,7 @@ impl OriginalUiArgumentsMerge{
  /// 🔎️ Each original turn moves one header, compares at most sixty-four key bytes, or closes one actual displaced owner.
  pub fn advance(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.closing||self.taken{return Err(invalid().into())}if self.ready(){return Ok(true)}let d=self.demands()?;
   if self.private_close(){close_original_effect_step(cx,d,|effect|{
-   if !self.retirement.is_empty(){return self.retirement.step_granted(effect)}
+   if !self.retirement.is_empty(){return self.retirement.step_granted(self.body,effect)}
    if self.phase==6&&self.displaced.is_some(){return begun(self.retirement.begin_granted(&mut self.displaced,effect))}
    if self.phase==6&&self.current.is_some(){return begun(self.retirement.begin_granted(&mut self.current,effect))}
    if self.phase==8{return begun(self.retirement.begin_granted(&mut self.input,effect))}
@@ -36,7 +36,7 @@ impl OriginalUiArgumentsMerge{
  pub fn close_demands(&self)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(header::<bool>())}if !self.retirement.is_empty(){return self.retirement.demands(self.body)}if self.current.is_some(){return self.retirement.next_owner_demands::<(String,DslValue)>(true,&None,self.body)}if self.displaced.is_some(){return self.retirement.next_owner_demands::<DslValue>(true,&None,self.body)}if self.args.is_some(){return self.retirement.next_owner_demands::<DslValue>(true,&None,self.body)}if self.input.is_some(){return self.retirement.next_owner_demands::<DslValue>(true,&None,self.body)}Ok(Default::default())}
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.terminal_is_empty(){return Ok(true)}let d=self.close_demands()?;close_original_effect_step(cx,d,|effect|{
   if !self.closing{if let Err(error)=pay(effect){return closed(effect,Err(error))}self.closing=true;return closed(effect,Ok(RetainedCloneStep::Progress(receipt(d))))}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(effect)}
+  if !self.retirement.is_empty(){return self.retirement.step_granted(self.body,effect)}
   if self.current.is_some(){return begun(self.retirement.begin_granted(&mut self.current,effect))}
   if self.displaced.is_some(){return begun(self.retirement.begin_granted(&mut self.displaced,effect))}
   if self.args.is_some(){return begun(self.retirement.begin_granted(&mut self.args,effect))}

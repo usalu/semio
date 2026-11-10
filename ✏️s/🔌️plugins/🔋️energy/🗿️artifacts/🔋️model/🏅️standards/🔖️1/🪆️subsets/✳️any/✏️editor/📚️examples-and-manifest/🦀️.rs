@@ -80,7 +80,7 @@ pub fn create_energy_model_editor() -> semio_plugin::AppDefinition {
         .document(["semio", "energy", "model"])
         .artifact_kind(crate::snapshot::artifact_kind())
         .terminology("reuse")
-        .terminology_document("reuse", ["Entwerfen mit Bestand", "Energie"])
+        .terminology_document("reuse", [LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::native("Energy", "Energie")])
         .icon_id("battery")
         .mode_def(edit::definition())
         .default_mode_id(semio_s_artifact_energy_model_editor_edit::ENERGY_MODEL_EDIT_MODE_ID)

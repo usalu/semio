@@ -55,7 +55,7 @@ impl FlowHost {
     /// registry here: an ephemeral host is rebuilt after the install that bumped the generation, so
     /// reading "now" would tell every such host its inherited baseline is current when it is
     /// precisely the one that is not (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn install_eval_baseline(&mut self,snapshot:Option<Arc<TreeSnapshot>>,channels:Option<Arc<EvalChannels>>,registry_generation:u64,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Option<Arc<TreeSnapshot>>,Option<Arc<EvalChannels>>)>{
+    pub fn install_eval_baseline(&mut self,snapshot:Option<SharedOwner<TreeSnapshot>>,channels:Option<SharedOwner<EvalChannels>>,registry_generation:u64,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Option<SharedOwner<TreeSnapshot>>,Option<SharedOwner<EvalChannels>>)>{
         let refusal=if grant.maximum_items==0{Some((ValueRefusalKind::WorkLimit,"baseline lease handoff requires one admitted item"))}
             else if grant.maximum_depth==0{Some((ValueRefusalKind::DepthLimit,"baseline lease handoff requires source depth"))}
             else if !self.baseline_publication_terminal_is_empty(){Some((ValueRefusalKind::WorkLimit,"baseline publication must complete before installing another lease"))}
@@ -98,7 +98,7 @@ impl FlowHost {
     }
 
     /// 🧵️ Captures this host's eval baseline for persistence on a durable driver.
-    pub fn eval_baseline(&self) -> (Option<Arc<TreeSnapshot>>, Option<Arc<EvalChannels>>) {
+    pub fn eval_baseline(&self) -> (Option<SharedOwner<TreeSnapshot>>, Option<SharedOwner<EvalChannels>>) {
         (self.previous_snapshot.clone(), self.previous_channels.clone())
     }
 
@@ -130,7 +130,8 @@ impl FlowHost {
     /// 🎟️ Creates one admitted Arc header or transfers the same original baseline owners.
     pub fn baseline_publication_step_progress(&self)->RetainedCloneProgress{self.baseline_publication_progress}
 
-    pub fn baseline_publication_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn baseline_publication_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
         self.baseline_publication_progress=Default::default();
         let empty=RetainedCloneProgress::default();
         if self.baseline_publication_terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}
@@ -139,7 +140,7 @@ impl FlowHost {
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original baseline publication exceeds admitted depth"))}
         if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}
         if let Some(owner)=self.baseline_retirement.as_mut(){
-            let result=owner.step(grant);self.baseline_publication_progress=owner.step_progress();let step=result.map_err(|error|error.with_retained_progress(self.baseline_publication_progress))?;
+            let poll=owner.step(grant.maximum_copy_bytes,effect);self.baseline_publication_progress=owner.step_progress();let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll else{return Ok(RetainedCloneStep::Progress(empty))};let step=turn.result.map_err(|error|error.into_value_error().with_retained_progress(self.baseline_publication_progress))?;
             let progress=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"Flow original baseline source")?.progress();
             if owner.terminal_is_empty(){self.baseline_retirement=None;}
             return Ok(if self.baseline_publication_terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
@@ -147,8 +148,8 @@ impl FlowHost {
         if self.pending_baseline_publication.as_ref().is_some_and(|owner|owner.revision!=self.evaluation_revision){let original=FlowPublicationDisplaced{publication:self.pending_baseline_publication.take(),text:None,display:None,exports:None,pending:Vec::new(),remaining:Vec::new(),snapshot:None,leases:FlowBaselineLeases{snapshot:None,channels:None,current:None}};self.baseline_retirement=Some(ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("original canceled publication source")));self.baseline_publication_progress=RetainedCloneProgress{copied_items:1,..Default::default()};return Ok(RetainedCloneStep::Progress(self.baseline_publication_progress))}
         let owner=self.pending_baseline_publication.as_mut().unwrap();
         if let Some(display)=owner.display.as_mut(){if !display.complete(){let result=display.step(&self.host_snapshot,owner.channels.as_ref().unwrap(),&self.kind_infos,grant);match result{Ok(progress)=>{self.baseline_publication_progress=progress;return Ok(RetainedCloneStep::Progress(progress))},Err(error)=>{self.baseline_publication_progress=error.retained_progress();return Err(error)}}}}
-        if owner.converged{if let Some(source)=owner.snapshot.take(){owner.shared_snapshot=Some(FlowPublicationShared(Arc::new(source)));self.baseline_publication_progress=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:demand.capacity_bytes,..empty};return Ok(RetainedCloneStep::Progress(self.baseline_publication_progress))}}
-        if let Some(source)=owner.channels.take(){owner.shared_channels=Some(FlowPublicationShared(Arc::new(source)));self.baseline_publication_progress=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:demand.capacity_bytes,..empty};return Ok(RetainedCloneStep::Progress(self.baseline_publication_progress))}
+        if owner.converged&&owner.snapshot.is_some(){let turn=SharedOwner::<TreeSnapshot>::admit_from(&mut owner.snapshot,&mut owner.shared_snapshot,effect);return match turn.result{Ok(step)=>{self.baseline_publication_progress=step.progress();Ok(RetainedCloneStep::Progress(self.baseline_publication_progress))},Err(error)=>{self.baseline_publication_progress=error.retained_progress();Err(error)}}}
+        if owner.channels.is_some(){let turn=SharedOwner::<EvalChannels>::admit_from(&mut owner.channels,&mut owner.shared_channels,effect);return match turn.result{Ok(step)=>{self.baseline_publication_progress=step.progress();Ok(RetainedCloneStep::Progress(self.baseline_publication_progress))},Err(error)=>{self.baseline_publication_progress=error.retained_progress();Err(error)}}}
         let (display,text)=match owner.display.take(){Some(mut display)=>{let text=display.take_text();(Some(display),text)},None=>(None,None)};
         let previous_text=text.map(|text|std::mem::replace(&mut self.last_eval_json,text));
         let original=FlowPublicationDisplaced{publication:None,text:previous_text,display,exports:None,pending:std::mem::take(&mut self.pending_extension_evals),remaining:std::mem::take(&mut self.pending_remaining),snapshot:owner.snapshot.take(),leases:FlowBaselineLeases{

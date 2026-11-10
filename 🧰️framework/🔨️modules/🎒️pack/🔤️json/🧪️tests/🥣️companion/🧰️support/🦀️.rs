@@ -62,16 +62,19 @@ pub fn warm() {
     })
 }
 
-/// 🎟️ Lends one real original effect of `grant` to a single call; the bank is warmed so observed regions see no scaffold.
+/// 🎟️ Lends one real original effect of `grant`, nested in a driven producer action so sealed retirement finds its invocation; the bank is warmed so observed regions see no scaffold.
 pub fn fx<R>(grant: RetainedCloneGrant, run: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> R) -> R {
     BANK.with(|slot| {
         let mut bank = slot.borrow_mut().take().unwrap_or_else(new_bank);
-        let mut result = None;
-        let _ = bank.run(grant, 1 << 40, |effect| {
-            result = Some(run(effect));
-            let work = effect.performed_work();
-            admission::RetainedWorkPoll::Complete(RetainedWorkOutcome::<(), ValueError> { result: Ok(()), work })
+        let (mut run, mut result) = (Some(run), None);
+        let (poll, _) = admission::driven::<ValueError>(&mut bank, grant, 1 << 20, |effect, reply, _| {
+            result = Some((run.take().expect("single driven action"))(effect));
+            Ok(reply.complete(Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()))))
         });
+        match poll {
+            admission::RetainedWorkPoll::Complete(turn) => turn.result.expect("driven action"),
+            admission::RetainedWorkPoll::Pending { .. } => panic!("driven action stayed pending"),
+        };
         bank.take_admitted();
         *slot.borrow_mut() = Some(bank);
         result.expect("effect call ran")
@@ -84,4 +87,22 @@ pub fn fp<T, E>(grant: RetainedCloneGrant, run: impl FnOnce(&mut RetainedAllocat
         admission::RetainedWorkPoll::Complete(turn) => turn,
         admission::RetainedWorkPoll::Pending { .. } => panic!("synchronous original turn stayed pending"),
     }
+}
+
+/// 🗑️ Drives one controlled-retirement step under a genuine producer authority with the caller's own grant and body.
+pub fn retire_step<T: semio_framework_value::retirement::RetireOwned>(owner: &mut semio_framework_value::retirement::controlled::ControlledRetirement<T>, grant: RetainedCloneGrant, body: usize) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+    BANK.with(|slot| {
+        let mut bank = slot.borrow_mut().take().unwrap_or_else(new_bank);
+        let work = owner.next_computational_work(body).unwrap().max(1);
+        let ((poll, _), heap) = semio_framework_value_testing_allocator::observe_retirement_allocations(|| admission::driven::<semio_framework_value::OriginalRetirementFailure>(&mut bank, grant, work, |effect, reply, recover| if recover { owner.recover_step_into(body, effect, reply) } else { owner.step_into(body, effect, reply) }));
+        let result = match poll {
+            admission::RetainedWorkPoll::Complete(turn) => turn.result,
+            admission::RetainedWorkPoll::Pending { .. } => panic!("driven retirement stayed pending"),
+        };
+        if let Ok(step) = &result {
+            bank.post(step.progress(), grant, heap);
+        }
+        *slot.borrow_mut() = Some(bank);
+        result
+    })
 }

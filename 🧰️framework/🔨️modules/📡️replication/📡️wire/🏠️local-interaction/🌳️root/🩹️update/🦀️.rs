@@ -106,7 +106,7 @@ impl LocalInteractionRootUpdate {
         let mut work=0;
         let invalid=|message:&'static str|ValueError::literal(ValueRefusalKind::InvariantViolated,message);
         if let Some(owner)=state.cleanup.as_mut(){
-            if !owner.terminal_is_empty(){return owner.step(&mut effect.nested(child));}
+            if !owner.terminal_is_empty(){return owner.step(child.maximum_copy_bytes,&mut effect.nested(child));}
             if let Err(error)=pay(effect,&mut work){return done(Err(error),work);}
             state.cleanup.take();state.phase+=1;return done(Ok(metadata()),work);
         }
@@ -141,7 +141,7 @@ impl LocalInteractionRootUpdate {
         let state=std::mem::replace(&mut *self.owned,OwnerState::Empty);
         match state{OwnerState::Running(state)=>match ControlledRetirement::new(state){Ok(owner)=>*self.owned=OwnerState::Closing(owner),Err((error,state))=>{*self.owned=OwnerState::Running(state);return Err(error);}},state=>*self.owned=state}Ok(())
     }
-    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {match &mut *self.owned{OwnerState::Closing(owner)=>owner.step(effect),OwnerState::Empty=>RetainedWorkPoll::Complete(RetainedWorkOutcome {result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),work:0}),_=>RetainedWorkPoll::Complete(RetainedWorkOutcome {result:Ok(paused()),work:0})}}
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {match &mut *self.owned{OwnerState::Closing(owner)=>owner.step(effect.grant().maximum_copy_bytes,effect),OwnerState::Empty=>RetainedWorkPoll::Complete(RetainedWorkOutcome {result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),work:0}),_=>RetainedWorkPoll::Complete(RetainedWorkOutcome {result:Ok(paused()),work:0})}}
 }
 impl Drop for LocalInteractionRootUpdate {
     fn drop(&mut self){if !self.terminal_is_empty(){assert!(std::thread::panicking(),"interaction candidate abandoned before terminal ownership");return;}unsafe{ManuallyDrop::drop(&mut self.owned);}}

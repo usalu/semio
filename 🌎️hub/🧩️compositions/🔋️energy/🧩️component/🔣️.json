@@ -11975,8 +11975,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Energie"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Energy",
+                "de": "Energie"
+              },
+              "reuse": {
+                "en": "Energy",
+                "de": "Energie"
+              }
+            }
           ]
         },
         "tutorials": [],

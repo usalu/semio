@@ -55,8 +55,8 @@ impl AssemblyCsrBuild {
 
 impl AssemblyJob<'_> {
     /// 🧹️ Pays back the one lent completion payload so the finished matrices can be taken.
-    pub fn retire_outcome(&mut self) {
-        self.desk.retire_all();
+    pub fn retire_outcome(&mut self, cx: &mut StepContext<'_>) {
+        self.desk.retire_all(cx);
     }
 
     fn run(&mut self, context: &mut StepContext<'_>) -> NumericalRun {
@@ -191,7 +191,7 @@ impl InteractiveJob for AssemblyJob<'_> {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
         }
         let demand = self.close_demand()?;
-        numerical_close_original(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
+        numerical_close_effect(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.copy_bytes) }
@@ -221,7 +221,8 @@ impl NumericalStep for AssemblyJob<'_> {
 impl AssemblyJob<'_> {
     /// 🎟️ One close turn under an explicit grant: the owners of a child job and the original-context `close_step`
     /// both admit it through the job's own quote.
-    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    pub fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
         let frontier = self.close_frontier()?;
         if self.terminal_is_empty() {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
@@ -229,9 +230,9 @@ impl AssemblyJob<'_> {
         if !numerical_close_gate(grant, frontier) {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
-        let step = if let Some(step) = self.desk.close_step(grant) {
+        let step = if let Some(step) = self.desk.close_step(effect) {
             step?
-        } else if let Some(step) = self.publication.as_mut().and_then(|(_, publication)| publication.close_step(grant)) {
+        } else if let Some(step) = self.publication.as_mut().and_then(|(_, publication)| publication.close_step(effect)) {
             let step = step?;
             if self.publication.as_ref().is_some_and(|(_, publication)| publication.close_demand().is_none()) {
                 self.publication = None;

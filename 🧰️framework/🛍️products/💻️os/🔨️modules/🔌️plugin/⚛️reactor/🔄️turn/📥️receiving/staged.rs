@@ -61,7 +61,7 @@ impl StagedRequestInput {
                     let result=receiver.step(wire,control,grant);let progress=match &result.result {Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
                     OriginalNativeDecodeIssued{value:result.result.map(|_|()),grant,progress,work:u64::from(progress.copied_items!=0)}
                 })?else{return Ok(None)};
-                if let Some(failure)=outcome.receiving_refusal{if let Err(error)=outcome.value{self.inputs.as_mut().ok_or_else(invalid)?.issue=Some(fold(error));}return Err(failure);}outcome.value.map_err(fold)?;Ok(None)
+                if let Some(ticket)=outcome.receiving_refusal{let failure=self.native.take_receiving_refusal(ticket);if let Err(error)=outcome.value{self.inputs.as_mut().ok_or_else(invalid)?.issue=Some(fold(error));}return Err(failure);}outcome.value.map_err(fold)?;Ok(None)
             },
             2=>{
                 let progress=take_received_wire_value(self.receiver.as_mut().ok_or_else(invalid)?,&mut self.inputs.as_mut().ok_or_else(invalid)?.value,cx.retained_grant()).result?;

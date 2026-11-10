@@ -42,7 +42,7 @@ where
         if self.retired_messages.is_some() || self.pending_messages.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<semio_os_spr::command::MutationMessageLedgerRetirement>(), depth: 2, ..Default::default() }); }
         if self.owners.is_none() {
             if self.runtime.is_some() || self.pending_edit.is_some() || self.pending_snapshot.is_some() || self.validation.is_some() || self.current.is_some() || self.envelope.is_some() || self.initial.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "config root retirement requires its original catalog")); }
-            if let Some(value) = self.history.as_ref() { return controlled(value); }
+            if let Some(value) = self.history.as_ref() { return controlled(&semio_framework_value::retirement::arc_custody::ArcLease::new(std::sync::Arc::clone(value))); }
             if let Some(value) = self.edit_lookup.as_ref() { return controlled(value); }
             if let Some(value) = self.expected_id.as_ref() { return controlled(value); }
             if self.actor.0.has_owner() { return controlled(&self.actor.0); }
@@ -54,7 +54,7 @@ where
         if let Some(value) = self.pending_snapshot.as_ref().or_else(|| self.validation.as_ref()).or_else(|| self.current.as_ref()) { let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?; return Ok(RetirementDemand { capacity_bytes: owners.initial_snapshot_retirement.retirement_birth_bytes(value), depth: 2, ..Default::default() }); }
         if self.envelope.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<semio_os_store_read::ArtifactStoreEnvelopeRetirement<P, M>>(), depth: 2, ..Default::default() }); }
         if self.initial.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<semio_os_store_read::ArtifactGenesisRetirement<P>>(), depth: 2, ..Default::default() }); }
-        if let Some(value) = self.history.as_ref() { return controlled(value); }
+        if let Some(value) = self.history.as_ref() { return controlled(&semio_framework_value::retirement::arc_custody::ArcLease::new(std::sync::Arc::clone(value))); }
         if let Some(value) = self.edit_lookup.as_ref() { return controlled(value); }
         if let Some(value) = self.expected_id.as_ref() { return controlled(value); }
         if self.actor.0.has_owner() { return controlled(&self.actor.0); }
@@ -73,7 +73,7 @@ where
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.retirement_demands(copy).map(|demand| demand.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.retirement_demands(0).map(|demand| demand.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { self.retirement_demands(0).map(|demand| demand.depth) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_close}};
         use semio_framework_value::retirement::controlled::admit_typed_controlled_retirement;
         let empty = RetainedCloneProgress::default();
@@ -84,9 +84,9 @@ where
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.request_cancel();
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(owner) = self.fold_job.as_mut() {
-            let step = semio_os_store_read::settle_close_poll(owner.close_step(&mut effect.nested(child)))?;
+            let step = semio_os_store_read::settle_close_poll(owner.close_step(child.maximum_copy_bytes, &mut effect.nested(child)))?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original config fold")?;
             if terminal { drop(self.fold_job.take()); }
@@ -105,28 +105,28 @@ where
         controlled!(fold);
         controlled!(fold_auxiliary);
         if let Some(owner) = self.source_edits.as_mut() {
-            let step = semio_os_store_read::settle_close_poll(owner.close_step(&mut effect.nested(child)))?;
+            let step = semio_os_store_read::settle_close_poll(owner.close_step(child.maximum_copy_bytes, &mut effect.nested(child)))?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original config source_edits")?;
             if terminal { drop(self.source_edits.take()); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(owner) = self.source_forwards.as_mut() {
-            let step = semio_os_store_read::settle_close_poll(owner.close_step(&mut effect.nested(child)))?;
+            let step = semio_os_store_read::settle_close_poll(owner.close_step(child.maximum_copy_bytes, &mut effect.nested(child)))?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original config source_forwards")?;
             if terminal { drop(self.source_forwards.take()); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(owner) = self.source_inverse.as_mut() {
-            let step = semio_os_store_read::settle_close_poll(owner.close_step(&mut effect.nested(child)))?;
+            let step = semio_os_store_read::settle_close_poll(owner.close_step(child.maximum_copy_bytes, &mut effect.nested(child)))?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original config source_inverse")?;
             if terminal { drop(self.source_inverse.take()); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(owner) = self.source_metadata.as_mut() {
-            let step = semio_os_store_read::settle_close_poll(owner.close_step(&mut effect.nested(child)))?;
+            let step = semio_os_store_read::settle_close_poll(owner.close_step(child.maximum_copy_bytes, &mut effect.nested(child)))?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original config source_metadata")?;
             if terminal { drop(self.source_metadata.take()); }
@@ -151,7 +151,7 @@ where
                 }
             }
             if self.runtime.is_some() || self.pending_edit.is_some() || self.pending_snapshot.is_some() || self.validation.is_some() || self.current.is_some() || self.envelope.is_some() || self.initial.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "config root retirement requires its original catalog")); }
-            controlled!(history);
+            if self.history.is_some() { let mut lease = self.history.take().map(semio_framework_value::retirement::arc_custody::ArcLease::new); let admitted = admit_typed_controlled_retirement(&mut lease, &mut effect.nested(child)).result; *self.history = lease.and_then(|lease| lease.0); if let Some((owner, progress)) = admitted? { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); } return Ok(RetainedCloneStep::Progress(Default::default())); }
             controlled!(edit_lookup);
             controlled!(expected_id);
             if self.actor.0.has_owner() {
@@ -228,7 +228,7 @@ where
                 Err((error, value)) => { *self.initial = Some(value); return Err(error); }
             }
         }
-        controlled!(history);
+        if self.history.is_some() { let mut lease = self.history.take().map(semio_framework_value::retirement::arc_custody::ArcLease::new); let admitted = admit_typed_controlled_retirement(&mut lease, &mut effect.nested(child)).result; *self.history = lease.and_then(|lease| lease.0); if let Some((owner, progress)) = admitted? { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); } return Ok(RetainedCloneStep::Progress(Default::default())); }
         controlled!(edit_lookup);
         controlled!(expected_id);
         if self.actor.0.has_owner() {

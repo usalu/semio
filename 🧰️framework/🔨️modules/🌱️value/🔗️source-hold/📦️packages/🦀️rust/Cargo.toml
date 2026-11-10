@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-value-source-hold"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "One original Source authority, its projection action and its handback held in resident places across turns and cancellation."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-source-hold"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_source_hold"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../📦️packages/🦀️rust" }

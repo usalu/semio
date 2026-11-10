@@ -186,6 +186,9 @@ where
 #[path = "🧪️tests/🧪️outcome-code/🦀️.rs"]
 mod outcome_code_tests;
 #[cfg(test)]
+#[path = "🧪️tests/🎡️effect-turn/🦀️.rs"]
+pub(crate) mod effect_turn;
+#[cfg(test)]
 #[path = "🧪️tests/🧳️native-contract/🧪️tests/🦀️.rs"]
 mod native_diff_contract_tests;
 #[cfg(test)]
@@ -197,6 +200,3 @@ mod owned_retirement {
     semio_framework_value::artifact_retire_struct!(MutationMessage { level, code, message, target, op_index });
 }
 
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

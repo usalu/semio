@@ -361,7 +361,7 @@ impl<S: RetireOwned + 'static> ColdReplayProjection<S> {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
         if !self.retirement.is_empty() {
-            let step = RetirementPollExit::resume(self.retirement.step_granted(effect))?;
+            let step = RetirementPollExit::resume(self.retirement.step_granted(effect.grant().maximum_copy_bytes,effect))?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(step) = self.retirement.begin_granted(&mut self.clone, effect).result? {

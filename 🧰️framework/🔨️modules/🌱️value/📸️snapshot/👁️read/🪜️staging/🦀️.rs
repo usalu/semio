@@ -15,14 +15,14 @@ impl<T:RetireOwned+Sync> SnapshotReadSourceStaging<T>{
  /// 🪜️ Runs one stage, or publishes the source into the caller's slot once every stage is paid.
  pub fn step(&mut self,output:&mut Option<RetainedCloneSource<T,SnapshotRead<T>>>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
   let Some(admission)=self.0.as_mut()else{return RetainedWorkOutcome{result:Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())),work:0}};
-  let turn=if admission.phase()=="ready"{admission.take_output(output,effect.grant())}else{admission.advance(effect)};
+  let turn=if admission.phase()=="ready"{admission.take_output(output,effect)}else{admission.advance(effect)};
   if output.is_some()&&admission.terminal_is_empty(){self.0=None;}
   turn
  }
  /// ↩️ Returns the unmoved read (or the published source) toward the caller's slots under a close grant.
  pub fn close_step(&mut self,read:&mut Option<SnapshotRead<T>>,output:&mut Option<RetainedCloneSource<T,SnapshotRead<T>>>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
   let Some(admission)=self.0.as_mut()else{return RetainedWorkOutcome{result:Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())),work:0}};
-  let turn=if admission.phase()=="ready"{admission.take_output(output,effect.grant())}else{let mut inputs=None;let turn=admission.return_inputs(&mut inputs,effect);if let Some((returned,()))=inputs{*read=Some(returned);}turn};
+  let turn=if admission.phase()=="ready"{admission.take_output(output,effect)}else{let mut inputs=None;let turn=admission.return_inputs(&mut inputs,effect);if let Some((returned,()))=inputs{*read=Some(returned);}turn};
   if admission.terminal_is_empty(){self.0=None;}
   turn
  }
@@ -40,7 +40,17 @@ impl<T:RetireOwned+Sync> RetireOwned for SnapshotReadSourceStaging<T>{
 }
 impl<T:RetireOwned+Sync> RetirementCursor for StagingCursor<T>{
  fn next_demand(&self,_body:usize)->Result<RetirementDemand,ValueError>{if self.staging.is_staged(){self.staging.next_demand()}else{Ok(RetirementDemand{depth:usize::from(!self.terminal_is_empty()),..Default::default()})}}
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();
+ fn close_into<'r>(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Ok(reply.complete(Ok(self.close_sync(effect))))}
+    fn recover_close_into<'r>(&mut self,_body:usize,_:&mut semio_framework_value::RetainedAllocationEffect<'_>,_:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::invariant("synchronous close has no unrecorded callback"))}
+ fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{if self.staging.is_staged(){return self.staging.next_work_demand()}Ok(if self.source.is_some()||self.base.is_some(){retirement_cursor_birth_work()}else{0})}
+ fn terminal_is_empty(&self)->bool{self.staging.terminal_is_empty()&&self.base.is_none()&&self.source.is_none()}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
+ fn next_birth_bytes(&self,body:usize)->Option<usize>{self.next_demand(body).ok().map(|demand|demand.capacity_bytes)}
+ fn next_close_byte_demand(&self)->Option<usize>{self.next_demand(0).ok().map(|demand|demand.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.depth)}
+}
+impl<T:RetireOwned+Sync> StagingCursor<T>{
+ fn close_sync(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();
   if self.staging.is_staged(){
    let turn=self.staging.close_step(&mut self.base,&mut self.source,effect);
    return match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error.into(),turn.work)};
@@ -50,10 +60,4 @@ impl<T:RetireOwned+Sync> RetirementCursor for StagingCursor<T>{
   if self.base.is_some(){return admit_child(&mut self.base,effect);}
   RetirementStep::Complete(0)
  }
- fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{if self.staging.is_staged(){return self.staging.next_work_demand()}Ok(if self.source.is_some()||self.base.is_some(){retirement_cursor_birth_work()}else{0})}
- fn terminal_is_empty(&self)->bool{self.staging.terminal_is_empty()&&self.base.is_none()&&self.source.is_none()}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
- fn next_birth_bytes(&self,body:usize)->Option<usize>{self.next_demand(body).ok().map(|demand|demand.capacity_bytes)}
- fn next_close_byte_demand(&self)->Option<usize>{self.next_demand(0).ok().map(|demand|demand.release_bytes)}
- fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.depth)}
 }

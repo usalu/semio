@@ -144,7 +144,7 @@ pub fn block2d_io() -> AppIo {
     let io = ::semio_framework_async::poll::resolve_ready(AppIo::from_artifact(BLOCK_2D_SCHEMA, MediaType { class: MediaClass::Kit, form: MediaForm::Type }, ArtifactPresentation { id: "2d.block".into(), name: "Node Kind".into(), dimension: "2d".into(), component_kind: "block2d".into() }));
     ::semio_framework_async::poll::resolve_ready(io.with_ports(vec![MediaPortSpec {
         id: "catalog:out".into(),
-        label: "Kit Catalog".into(),
+        label: LocalizedLabel::native("Kit Catalog", "Kit-Katalog"),
         direction: MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
         kind_id: Some("kit.catalog".into()),

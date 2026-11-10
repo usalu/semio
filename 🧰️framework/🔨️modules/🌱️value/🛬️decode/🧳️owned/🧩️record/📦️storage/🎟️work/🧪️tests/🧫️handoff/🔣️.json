@@ -22,13 +22,13 @@
       "fields": 2,
       "initialized": 2,
       "work": 1,
-      "canCommit": false
+      "canCommit": true
     },
     {
       "fields": 0,
       "initialized": 0,
       "work": 1,
-      "canCommit": false
+      "canCommit": true
     },
     {
       "fields": 2,

@@ -23,15 +23,16 @@ pub fn with_allocated_effect<R>(&mut self,demand:crate::RetirementDemand,maximum
   if demand.capacity_bytes==0{return self.with_effect(grant,maximum_work,run)}
   let mut progress=None;
   match self.prepare_allocation_effect(demand.capacity_bytes,&None,&mut progress,true){NativeDecodeAllocationAdmission::Admitted=>{},NativeDecodeAllocationAdmission::Refused(outcome)=>return Err(outcome.primary.or(outcome.extent_refusal).or_else(||outcome.quote_refusal.map(|port|ValueError::new(ValueRefusalKind::AllocationFailed,format!("{port:?}")))).or_else(||outcome.settlement_refusal.map(|port|ValueError::new(ValueRefusalKind::AllocationFailed,format!("{port:?}")))).unwrap_or_else(||refusal("decoder allocation quote was refused"))),NativeDecodeAllocationAdmission::Pending=>return Err(refusal("decoder allocation quote stayed pending"))}
-  let opened=semio_framework_value_control_contract::OriginalEffectRun::begin(&mut self.work,grant,maximum_work);
+  let(widened,widened_work)=semio_framework_value_control_contract::invocation_extent(grant,maximum_work)?;
+  let opened=semio_framework_value_control_contract::OriginalEffectRun::begin(&mut self.work,widened,widened_work);
   let mut open=match opened{Ok(Some(open))=>open,Ok(None)=>{if let Some(state)=progress.as_mut(){let _=self.settle_allocation_progress(state,None)?;}return Ok(None)},Err(error)=>{if let Some(state)=progress.as_mut(){let _=state.record_primary(error.clone());let _=self.settle_allocation_progress(state,None);}return Err(error)}};
   let started=progress.as_mut().ok_or_else(||refusal("decoder allocation quote is absent"))?.start_operation();
-  let output={let mut effect=open.effect()?;run(self,&mut effect)};
+  let output={let mut effect=open.effect()?;semio_framework_value_control_contract::invoke_original(&mut effect,Some((grant,maximum_work)),|effect|run(self,effect))};
   let actual=open.actual();let mut spent=0;let finished=open.finish(&mut self.work,&mut spent);
   let state=progress.as_mut().ok_or_else(||refusal("decoder allocation quote is absent"))?;
   started?;state.record_actual(actual)?;
   if !self.settle_allocation_progress(state,actual)?{return Err(refusal("decoder allocation settlement stayed pending"))}
-  finished?;Ok(Some(output))
+  finished?;Ok(Some(output?))
  }
  /// 🧭️ Keeps an original quote pending when a child receipt cannot yet be reconciled.
  /// 🪑️ Retains the original quote before lending the decoder and its actual effect to a child.

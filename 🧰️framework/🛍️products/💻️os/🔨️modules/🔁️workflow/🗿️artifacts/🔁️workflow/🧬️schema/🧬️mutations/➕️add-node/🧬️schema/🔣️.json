@@ -355,6 +355,38 @@
         }
       }
     },
+    "LocalizedLabel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "native",
+        "reuse"
+      ],
+      "properties": {
+        "native": {
+          "$ref": "#/$defs/LocalizedLabelRow"
+        },
+        "reuse": {
+          "$ref": "#/$defs/LocalizedLabelRow"
+        }
+      }
+    },
+    "LocalizedLabelRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string"
+        },
+        "de": {
+          "type": "string"
+        }
+      }
+    },
     "MediaPortSpec": {
       "type": "object",
       "additionalProperties": false,
@@ -379,9 +411,8 @@
           }
         },
         "label": {
-          "type": "string",
+          "$ref": "#/$defs/LocalizedLabel",
           "x-semio-ui": {
-            "widget": "text",
             "role": "value",
             "label": {
               "en": "Label",

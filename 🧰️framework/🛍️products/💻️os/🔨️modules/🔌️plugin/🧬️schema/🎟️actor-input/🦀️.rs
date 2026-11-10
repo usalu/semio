@@ -225,7 +225,7 @@ impl ActorInputWire {
             "sqlite-retirement" => Self::SqliteRetirement { copy_bytes: uint(field(value, "copyBytes")?)? },
             "sqlite-close" => {
                 let input = closed(field(value, "input")?, &["ticket", "native"])?;
-                Self::SqliteClose { input: SnapshotCloseInput { ticket: uint(field(input, "ticket")?)?, native: grant(field(input, "native")?)? } }
+                Self::SqliteClose { input: SnapshotCloseInput { ticket: uint(field(input, "ticket")?)?, native: grant(field(input, "native")?)?, budget: None } }
             }
             "pack-schema-hash" => Self::PackSchemaHash { artifact_schema: schema()? },
             "genesis" => Self::Genesis { artifact_schema: schema()?, document_id: text(field(value, "documentId")?)? },

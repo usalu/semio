@@ -10,7 +10,6 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
-fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
 
 /// 🧳️ Object-safe app-instance operation state retained and closed by [VcsArtifactApp].
 pub trait ArtifactInstanceOperationOwner: std::any::Any + Send {
@@ -50,7 +49,7 @@ impl ArtifactInstanceOperationOwner for EmptyArtifactInstanceOperationOwner {
 trait OriginalInferenceSessionOwner:Send {
  fn original_mut(&mut self)->Option<&mut dyn std::any::Any>;
  fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>;
+ fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll;
  fn terminal_is_empty(&self)->bool;
 }
 
@@ -59,7 +58,7 @@ struct OriginalInferenceSession<T:semio_framework_value::retirement::RetireOwned
 impl<T:semio_framework_value::retirement::RetireOwned> OriginalInferenceSessionOwner for OriginalInferenceSession<T>{
  fn original_mut(&mut self)->Option<&mut dyn std::any::Any>{self.body.original_mut().map(|value|value as &mut dyn std::any::Any)}
  fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.body.selected_demand(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>{self.body.step(grant)}
+ fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{self.body.step(body,effect)}
  fn terminal_is_empty(&self)->bool{self.body.terminal_is_empty()}
 }
 
@@ -78,21 +77,22 @@ impl InstanceInferenceSessions {
   Ok(RetirementDemand{release_bytes:self.sessions.next_release_allocation_bytes().map_err(ValueError::from)?,depth:if self.sessions.terminal_is_empty(){usize::from(!self.closed)}else{self.sessions.next_release_depth_demand().map_err(ValueError::from)?},..Default::default()})
  }
  /// 🎟️ Advances only the same original data retirement after all independent currencies admit it.
- pub fn close_granted(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>{
-  use semio_framework_value::RetainedCloneStep;let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
+ pub fn close_granted(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,ValueError>{
+  use semio_framework_value::{RetainedCloneStep,RetainedWorkPoll};use semio_framework_value_persistent::list::{PagedListReleaseFailure,PagedListReleaseOutcome};
+  let grant=effect.grant();let demand=self.retirement_demands(body)?;
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}
   self.closing=true;
   if let Some((_,session))=self.sessions.last_mut(){
    if session.terminal_is_empty(){let bytes=std::mem::size_of_val(session.as_ref());drop(self.sessions.pop());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}))}
-   return session.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))
+   return match session.close_step(body,effect){RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default())),RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)}
   }
-  if !self.sessions.terminal_is_empty(){let released=self.sessions.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(released.progressed),released_bytes:released.released_allocation_bytes,..Default::default()}))}
+  if !self.sessions.terminal_is_empty(){return match self.sessions.release_empty_page(effect).result{Ok(PagedListReleaseOutcome::Ready(released))=>Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(released.progressed),released_bytes:released.released_allocation_bytes,..Default::default()})),Ok(PagedListReleaseOutcome::Denied)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(PagedListReleaseFailure::Work(error))=>Err(error),Err(PagedListReleaseFailure::Release(error))=>Err(ValueError::from(error))}}
   self.closed=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
  }
  pub fn close_step(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
   let demand=self.retirement_demands(loan.maximum_copy_bytes)?;
-  semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|_,grant|{let step=self.close_granted(grant)?;let terminal=self.terminal_is_empty();Ok((match step{semio_framework_value::RetainedCloneStep::Complete(progress)=>PluginLifecycleStep::Complete(progress),semio_framework_value::RetainedCloneStep::Progress(progress)=>PluginLifecycleStep::Progress(progress)},terminal))})
+  semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx,loan,demand,|_,effect|{let step=self.close_granted(loan.maximum_copy_bytes,effect)?;let terminal=self.terminal_is_empty();Ok((match step{semio_framework_value::RetainedCloneStep::Complete(progress)=>PluginLifecycleStep::Complete(progress),semio_framework_value::RetainedCloneStep::Progress(progress)=>PluginLifecycleStep::Progress(progress)},terminal))})
  }
 
 }
@@ -145,7 +145,7 @@ impl ArtifactInstanceOperationOwnerHandle {
     /// 📏️ Quotes the defining two shared original owners without constructing either source early.
     pub fn original_birth_demands()->Result<RetirementDemand,ValueError>{let capacity_bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellV1<dyn ArtifactInstanceOperationOwner>>().checked_add(semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<std::sync::Mutex<InstanceInferenceSessions>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original operation owner shared extent overflow"))?;Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<Self>()+2*std::mem::size_of::<Box<dyn ArtifactInstanceOperationOwner>>(),capacity_bytes,depth:2,..Default::default()})}
     /// 🌱️ An explicitly authored empty operation owner still admits its actual inference and mutable-owner authorities.
-    pub fn admit_original_empty(cx:&mut StepContext<'_>,output:&mut Option<Self>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if output.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original empty operation owner requires an empty recipient").into())}let demand=Self::original_birth_demands()?;built(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:0,depth:demand.depth},||Ok((Self::new(Box::new(EmptyArtifactInstanceOperationOwner)),RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()})))?;Ok(output.is_some())}
+    pub fn admit_original_empty(cx:&mut StepContext<'_>,birth:&mut semio_plugin_ownership::original_store_genesis::OriginalStoreBirth,output:&mut Option<Self>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if output.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original empty operation owner requires an empty recipient").into())}let demand=Self::original_birth_demands()?;birth.built(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:0,depth:demand.depth},||Ok((Self::new(Box::new(EmptyArtifactInstanceOperationOwner)),RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()})))?;Ok(output.is_some())}
     /// 🧳️ Wraps an owner the CALLER built. It confers no authority of its own — `with_mut`
     /// downcasts to the concrete type the caller passed in — so an app's own laws can build the
     /// handle their retained work expects instead of reaching into a live instance
@@ -193,9 +193,14 @@ impl ArtifactInstanceOperationOwnerHandle {
        if sessions.sessions.has_reserved_slot(){if original_inference_metadata(cx,0,1)?{access.phase=if access.original.is_some(){4}else{3}}return Ok(None)}
        if cx.should_yield(){return Ok(None)}
        let grant=cx.retained_grant();
-       match sessions.sessions.reserve_one_funded(grant){
-        Ok(progress)=>{if progress.copied_items!=0{cx.consume_fuel(1);cx.consume_retained(progress)?}Ok(None)},
-        Err(error)=>{cx.consume_fuel(1);Err(OriginalTurnFailure::debit_original(ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}),cx))}
+       let Some((reserved,performed))=cx.with_original_effect(grant,|_,effect|sessions.sessions.reserve_one_funded(effect).result)?else{return Ok(None)};
+       cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+       use semio_framework_value_persistent::list::{PagedListReservationOutcome,PagedListReservationFailure};
+       match reserved{
+        Ok(PagedListReservationOutcome::Ready(progress))=>{if progress.copied_items!=0{cx.consume_retained(progress)?}Ok(None)},
+        Ok(PagedListReservationOutcome::Denied)=>Ok(None),
+        Err(PagedListReservationFailure::Work(error))=>Err(OriginalTurnFailure::debit_original(error,cx)),
+        Err(PagedListReservationFailure::Allocation{error,..})=>Err(OriginalTurnFailure::debit_original(ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}),cx)),
        }
       },
       3=>{let before=cx.fuel_remaining();if let Some(original)=init(cx)?{access.original=Some(original);access.phase=4;if cx.fuel_remaining()==before{return Err(refused("defining mounted inference constructor omitted original work receipt").into())}}Ok(None)},
@@ -342,12 +347,13 @@ impl ArtifactInstanceOperationOwnerAliasRetirement {
         Ok(Default::default())
     }
     /// 📤️ Atomically returns the actual alias and retains any final original inferred payload.
-    pub fn alias_return_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn alias_return_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
-        let demand=self.alias_return_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        let demand=self.alias_return_demands(body)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}
         if !self.original.terminal_is_empty(){return self.original.step(grant,ArtifactInstanceOperationOwner::terminal_is_empty).map(|step|RetainedCloneStep::Progress(step.progress()))}
         if let Some(original)=self.inference.as_ref(){if std::sync::Arc::weak_count(original)!=0{return Ok(RetainedCloneStep::Progress(Default::default()))}let released=if let Some(value)=std::sync::Arc::into_inner(self.inference.take().unwrap()){*self.inference_owned=Some(value);demand.release_bytes}else{0};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}))}
-        if let Some(original)=self.inference_owned.as_mut(){let sessions=original.get_mut().map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inferred alias source is poisoned"))?;if !sessions.terminal_is_empty(){return sessions.close_granted(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}drop(self.inference_owned.take());return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+        if let Some(original)=self.inference_owned.as_mut(){let sessions=original.get_mut().map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inferred alias source is poisoned"))?;if !sessions.terminal_is_empty(){return sessions.close_granted(body,effect).map(|step|RetainedCloneStep::Progress(step.progress()))}drop(self.inference_owned.take());return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
     /// 🧾️ Closes shared backing, exact final owner and dynamic box in separate funded turns.
@@ -366,7 +372,9 @@ impl ArtifactInstanceOperationOwnerAliasRetirement {
                 return Ok(RetainedCloneStep::Progress(accepted.progress()));
             }
         }
-        self.alias_return_step(grant).map_err(PluginLifecycleFailure::from)
+        let Some((result,performed))=cx.with_original_effect(grant,|_,effect|self.alias_return_step(grant.maximum_copy_bytes,effect))?else{return Ok(RetainedCloneStep::Progress(Default::default()))};
+        cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+        result.map_err(PluginLifecycleFailure::from)
     }
     /// 🏁️ The original alias, final concrete payload and its dynamic box shell are all physically gone.
     pub fn terminal_is_empty(&self)->bool{self.original.terminal_is_empty()&&self.inference.is_none()&&self.inference_owned.is_none()}

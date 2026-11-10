@@ -48,6 +48,7 @@ use semio_framework_job::StepContext;
 use semio_framework_value_edit::sort::HeapSortCursor;
 use semio_framework_value_edit::sort::HeapSortWork;
 use semio_framework_value::RetirementDemand;
+use semio_framework_value::RetainedAllocationEffect;
 use semio_framework_value::ValueError;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
@@ -77,6 +78,7 @@ use semio_s_fem_model::PlateMoments;
 use semio_s_fem_model::ShellState;
 use semio_s_fem_model::SolidStress;
 use semio_s_fem_sparse::numerical_close_original;
+use semio_s_fem_sparse::numerical_close_effect;
 // #region 🧩️JobGraph
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind")]
@@ -280,7 +282,7 @@ impl InteractiveJob for FemJobGraph {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
         }
         let demand = self.close_demand()?;
-        numerical_close_original(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
+        numerical_close_effect(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.copy_bytes) }
@@ -310,7 +312,8 @@ impl NumericalStep for FemJobGraph {
 impl FemJobGraph {
     /// 🎟️ One close turn under an explicit grant: the owners of a child job and the original-context `close_step`
     /// both admit it through the job's own quote.
-    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    pub fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
         let frontier = self.close_frontier()?;
         if self.terminal_is_empty() {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
@@ -318,9 +321,9 @@ impl FemJobGraph {
         if !numerical_close_gate(grant, frontier) {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
-        let step = if let Some(step) = self.desk.close_step(grant) {
+        let step = if let Some(step) = self.desk.close_step(effect) {
             step?
-        } else if let Some(step) = self.publication.as_mut().and_then(|(_, publication)| publication.close_step(grant)) {
+        } else if let Some(step) = self.publication.as_mut().and_then(|(_, publication)| publication.close_step(effect)) {
             let step = step?;
             if self.publication.as_ref().is_some_and(|(_, publication)| publication.close_demand().is_none()) {
                 self.publication = None;

@@ -15,7 +15,7 @@ CREATE TABLE workflow_node (
 );
 CREATE TABLE workflow_port (
  id INTEGER PRIMARY KEY CHECK(id > 0), node_id INTEGER NOT NULL REFERENCES workflow_node(id), collection TEXT NOT NULL CHECK(collection IN ('input','output')), ordinal INTEGER NOT NULL CHECK(ordinal >= 0),
- endpoint_id TEXT NOT NULL, port_id TEXT NOT NULL, label TEXT NOT NULL, direction INTEGER NOT NULL CHECK(direction IN (0,1)), media_class INTEGER NOT NULL CHECK(media_class >= 0 AND media_class <= 7), media_form INTEGER NOT NULL CHECK(media_form >= 0 AND media_form <= 15),
+ endpoint_id TEXT NOT NULL, port_id TEXT NOT NULL, label_native_en TEXT NOT NULL, label_native_de TEXT NOT NULL, label_reuse_en TEXT NOT NULL, label_reuse_de TEXT NOT NULL, direction INTEGER NOT NULL CHECK(direction IN (0,1)), media_class INTEGER NOT NULL CHECK(media_class >= 0 AND media_class <= 7), media_form INTEGER NOT NULL CHECK(media_form >= 0 AND media_form <= 15),
  kind_id TEXT, required INTEGER NOT NULL CHECK(required IN (0,1)), multiplicity INTEGER NOT NULL CHECK(multiplicity IN (0,1))
 );
 CREATE TABLE workflow_edge (

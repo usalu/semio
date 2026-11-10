@@ -35,7 +35,6 @@ semio-framework-value-testing-effect-bank = { path="../../../🧪️testing/📥
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-value-testing-admission = { path = "../../../🧪️testing/📥️admission/📦️packages/🦀️rust" }
-semio-framework-value-testing-effect-bank = { path = "../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 
 [[test]]
 name = "owned-entry-effects"

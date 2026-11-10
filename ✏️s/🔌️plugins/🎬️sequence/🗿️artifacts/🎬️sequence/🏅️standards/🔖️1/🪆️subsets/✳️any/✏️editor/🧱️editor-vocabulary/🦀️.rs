@@ -100,7 +100,7 @@ pub fn sequence_io() -> AppIo {
         artifact_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Computation, form: semio_framework::MediaForm::Sequence },
         ports: vec![semio_framework::MediaPortSpec {
             id: "steps:in".into(),
-            label: "Steps".into(),
+            label: LocalizedLabel::native("Steps", "Schritte"),
             direction: semio_framework::MediaPortDirection::In,
             media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Computation, form: semio_framework::MediaForm::Any },
             kind_id: None,

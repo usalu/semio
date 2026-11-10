@@ -1,34 +1,27 @@
 //! 🧭️ Original tree topology preparation retains source identities and admitted backing.
 
+use semio_os_kernel_neural_engine_model::retirement::{close_reply,CloseReply,CloseComplete};
 use super::Tree;
-use std::{borrow::Borrow,cmp::Ordering,mem::ManuallyDrop,sync::Arc};
+use std::{borrow::Borrow,cmp::Ordering,mem::ManuallyDrop};
+use semio_framework_value_ordered::ordered::SharedOwner;
 use protocol::causal::transition::HistoryFoldIndex;
-use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementPollExit, ValueError, ValueRefusalKind, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close}, retirement::{RetireOwned, controlled::ControlledRetirement, arc_custody::{SharedControlledRetirement, shared_retirement_birth_bytes}}};
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementPollExit, ValueError, ValueRefusalKind, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close}, retirement::{RetireOwned, controlled::ControlledRetirement}};
 use semio_framework_value_persistent::{list::PagedList, list::PagedListError, list::PagedListReservationFailure, list::PagedListReservationOutcome};
 
 const TOPOLOGY_ITEMS:usize=1_048_576;
 
-struct TreeSourceLease(Arc<Tree>);
-impl RetireOwned for TreeSourceLease {
-    type RetirementCursor=SharedControlledRetirement<Tree>;
-    fn retirement_seed(self)->Self::RetirementCursor{SharedControlledRetirement::lease(self.0)}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(shared_retirement_birth_bytes::<Tree>())}
-    fn controlled_retirement_supported()->bool{true}
-}
-
-#[derive(Clone)]
-struct NodeKey {source:Arc<Tree>,index:usize}
-impl Borrow<str> for NodeKey {fn borrow(&self)->&str{&self.source.neurons[self.index].id}}
+/// 🔑️ Names one node by position inside the tree allocation that the topology keeps live until its funded closure.
+#[derive(Clone,Copy)]
+struct NodeKey {source:*const Tree,index:usize}
+unsafe impl Send for NodeKey {}
+unsafe impl Sync for NodeKey {}
+impl NodeKey {fn tree(&self)->&Tree{unsafe{&*self.source}}}
+impl Borrow<str> for NodeKey {fn borrow(&self)->&str{&self.tree().neurons[self.index].id}}
 impl PartialEq for NodeKey {fn eq(&self,other:&Self)->bool{self.cmp(other)==Ordering::Equal}}
 impl Eq for NodeKey {}
 impl PartialOrd for NodeKey {fn partial_cmp(&self,other:&Self)->Option<Ordering>{Some(self.cmp(other))}}
-impl Ord for NodeKey {fn cmp(&self,other:&Self)->Ordering{self.source.neurons[self.index].id.cmp(&other.source.neurons[other.index].id)}}
-impl RetireOwned for NodeKey {
-    type RetirementCursor=SharedControlledRetirement<Tree>;
-    fn retirement_seed(self)->Self::RetirementCursor{SharedControlledRetirement::lease(self.source)}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(shared_retirement_birth_bytes::<Tree>())}
-    fn controlled_retirement_supported()->bool{true}
-}
+impl Ord for NodeKey {fn cmp(&self,other:&Self)->Ordering{self.tree().neurons[self.index].id.cmp(&other.tree().neurons[other.index].id)}}
+semio_framework_value::artifact_retire_leaf!(NodeKey);
 
 #[derive(Clone,Copy,Default)]
 struct TopologyRow {incoming:usize,outgoing:Option<usize>}
@@ -46,7 +39,7 @@ struct TopologyOwners {
     next_ready:HistoryFoldIndex<NodeKey,()>,
     order:PagedList<usize,TOPOLOGY_ITEMS>,
     selected:Option<NodeKey>,
-    source:Option<TreeSourceLease>,
+    source:Option<SharedOwner<Tree>>,
 }
 
 impl TopologyOwners {
@@ -70,14 +63,14 @@ fn page_error(error:PagedListError)->ValueError{ValueError::literal(ValueRefusal
 
 impl BudgetedEvalTopology {
     /// 🌱️ Takes the exact preborn original tree without decomposing or cloning its payload.
-    pub fn new(source:Arc<Tree>)->Self{Self{owners:ManuallyDrop::new(TopologyOwners{source:Some(TreeSourceLease(source)),..Default::default()}),retirement:None,phase:0,cursor:0,node_has_key:false,edge_cursor:None,ready_candidate:None,closing:false,progress:Default::default()}}
-    pub fn source(&self)->Option<&Arc<Tree>>{self.owners.source.as_ref().map(|source|&source.0)}
+    pub fn new(source:SharedOwner<Tree>)->Self{Self{owners:ManuallyDrop::new(TopologyOwners{source:Some(source),..Default::default()}),retirement:None,phase:0,cursor:0,node_has_key:false,edge_cursor:None,ready_candidate:None,closing:false,progress:Default::default()}}
+    pub fn source(&self)->Option<&SharedOwner<Tree>>{self.owners.source.as_ref()}
     pub fn is_complete(&self)->bool{self.phase==5}
     pub fn order(&self)->impl Iterator<Item=&usize>{self.owners.order.iter()}
     pub fn order_at(&self,index:usize)->Option<usize>{self.owners.order.get(index).copied()}
-    fn key(&self,index:usize)->NodeKey{NodeKey{source:self.source().unwrap().clone(),index}}
+    fn key(&self,index:usize)->NodeKey{NodeKey{source:self.source().unwrap().as_ptr(),index}}
     fn page_demands<T>(list:&PagedList<T,TOPOLOGY_ITEMS>,extent:usize)->Result<RetirementDemand,ValueError>{
-        Ok(RetirementDemand{capacity_bytes:list.next_exact_capacity_allocation_bytes(extent).map_err(page_error)?.unwrap_or(0),depth:if list.has_reserved_slot(){1}else{list.next_reserve_depth_demand().map_err(page_error)?},..Default::default()})
+        Ok(RetirementDemand{copy_bytes:if list.has_reserved_slot(){0}else{list.next_capacity_copy_byte_demand(extent).map_err(page_error)?},capacity_bytes:list.next_exact_capacity_allocation_bytes(extent).map_err(page_error)?.unwrap_or(0),depth:if list.has_reserved_slot(){1}else{list.next_reserve_depth_demand().map_err(page_error)?},..Default::default()})
     }
     fn index_demands<V>(&self,index:&HistoryFoldIndex<NodeKey,V>,key:&NodeKey,copy:usize)->Result<RetirementDemand,ValueError>{
         Ok(RetirementDemand{copy_bytes:index.next_insert_copy_byte_demand(key)?,capacity_bytes:index.next_insert_capacity_byte_demand(key,copy)?,release_bytes:index.next_insert_release_byte_demand(key)?,depth:index.next_insert_depth_demand(key)?})
@@ -194,14 +187,14 @@ impl BudgetedEvalTopology {
     }
     /// ⛽️ Quotes the selected retirement child step or the one source handoff.
     pub fn next_close_work(&self,body:usize)->Result<u64,ValueError>{if let Some(owner)=self.retirement.as_ref(){return owner.next_computational_work(body)}Ok(u64::from(!self.owners.terminal_is_empty()))}
-    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+    pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
         self.progress=Default::default();let grant=effect.grant();
         let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
             if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original topology close was not begun").into())}
             if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
             let demand=self.next_close_demands(grant.maximum_copy_bytes)?;
             if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original topology close exceeds admitted depth").into())}
-            if let Some(owner)=self.retirement.as_mut(){let result=RetirementPollExit::resume(owner.step(effect));self.progress=owner.step_progress();let step=result?;let step=admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"Neural original topology source")?;if owner.terminal_is_empty(){self.retirement=None;}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+            if let Some(owner)=self.retirement.as_mut(){let result=RetirementPollExit::resume(owner.step(body,effect));self.progress=owner.step_progress();let step=result?;let step=admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"Neural original topology source")?;if owner.terminal_is_empty(){self.retirement=None;}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
             if self.owners.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
             if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original topology source handoff exceeds its work ceiling").into())}
             self.retirement=Some(ControlledRetirement::retain(std::mem::take(&mut*self.owners)));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
@@ -219,7 +212,7 @@ pub struct TopologyRetirement(BudgetedEvalTopology);
 impl semio_framework_value::retirement::RetirementCursor for TopologyRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.next_close_demands(body) }
     fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.0.next_close_work(body)}
-    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{semio_framework_value::retirement::erased_cursor_turn(self.0.close_step(effect))}
+    fn close_into<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:CloseReply<'reply>)->Result<CloseComplete<'reply>,ValueError>{close_reply(self.0.close_step(body,effect),effect,reply)}
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}
     fn allows_admitted_narrow_work(&self)->bool{true}

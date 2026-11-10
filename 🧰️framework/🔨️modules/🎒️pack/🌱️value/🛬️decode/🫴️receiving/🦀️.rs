@@ -164,14 +164,14 @@ impl RetainedRecordReceiving{
   *output=Some(value);Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})
  })();RetainedWorkOutcome{result,work}}
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.closed{return Ok(Default::default())}if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}if let Some(owned)=&self.retiring{if !owned.terminal_is_empty(){return owned.next_demand(body)}return Ok(RetirementDemand{depth:1,..Default::default()})}if !self.cursor.terminal_is_empty(){return self.cursor.source_close_demands().map_err(pack)}Ok(RetirementDemand{depth:1,..Default::default()})}
- pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
   use semio_framework_value::RetainedWorkPoll::Complete;
   let grant=effect.grant();let done=|result:Result<RetainedCloneStep,ValueError>,work:u128|Complete(RetainedWorkOutcome{result:result.map_err(Into::into),work});
   if self.closed{return done(Ok(RetainedCloneStep::Complete(Default::default())),0)}
   let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return done(Err(error),0)};
   if !funded(grant,demand){return done(Ok(RetainedCloneStep::Progress(Default::default())),0)}
   if !self.closing{let original=std::mem::take(&mut*self.owned);let result=match ControlledRetirement::new(original){Ok(owned)=>{self.retiring=Some(owned);self.pending=None;self.closing=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))},Err((error,original))=>{*self.owned=original;Err(error)}};let recorded=match effect.performed(1){Ok(true)=>Ok(()),Ok(false)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Record close exceeded its original work")),Err(error)=>Err(error)};return done(result.and(recorded.map(|()|RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))),1)}
-  if let Some(owned)=&mut self.retiring{if !owned.terminal_is_empty(){return owned.step(effect)}self.retiring=None;let recorded=match effect.performed(1){Ok(true)=>Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),Ok(false)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Record close exceeded its original work")),Err(error)=>Err(error)};return done(recorded,1)}
+  if let Some(owned)=&mut self.retiring{if !owned.terminal_is_empty(){return owned.step(body,effect)}self.retiring=None;let recorded=match effect.performed(1){Ok(true)=>Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),Ok(false)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Record close exceeded its original work")),Err(error)=>Err(error)};return done(recorded,1)}
   if !self.cursor.terminal_is_empty(){let turn=self.cursor.close_step(effect);return Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|error|pack(error).into()),work:turn.work})}
   self.closed=true;let recorded=match effect.performed(1){Ok(true)=>Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),Ok(false)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Record close exceeded its original work")),Err(error)=>Err(error)};done(recorded,1)
  }
@@ -185,10 +185,13 @@ impl semio_framework_value::retirement::RetireOwned for RetainedRecordReceiving{
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ReceivingRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }
+impl ReceivingRetirement{
+ fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;match self.0.close_step(body,effect){semio_framework_value::RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),semio_framework_value::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}}
+}
 impl semio_framework_value::retirement::RetirementCursor for ReceivingRetirement{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.close_demands(body)}
  fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;match self.0.close_step(effect){semio_framework_value::RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),semio_framework_value::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}}
+ semio_framework_value::native_retirement_reply!();
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demands(usize::MAX)?.depth)}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demands(usize::MAX)?.copy_bytes)}

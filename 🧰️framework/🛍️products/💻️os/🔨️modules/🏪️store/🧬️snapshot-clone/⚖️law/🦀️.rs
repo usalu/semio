@@ -10,7 +10,7 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::factory::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 use semio_framework_value::retirement::RetireOwned;
 use std::sync::Arc;
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+use semio_framework_value::{RetainedWorkPoll, RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use semio_framework_job::{Generation, OperationId, OriginalJobDecodeOwner, OriginalJobFixtureCaller};
 
 /// ⚖️ What a lawful preparation published: the post snapshot, the ordered inverse rows and the cumulative physical cost.
@@ -105,7 +105,19 @@ where
         }
         let copy = owner.next_close_copy_byte_demand().unwrap();
         let quote = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_close_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: owner.next_close_release_byte_demand().unwrap(), maximum_depth: owner.next_close_depth_demand().unwrap() };
-        let (step, heap) = observe(|| owner.close_step(quote).unwrap());
+        let (step, heap) = observe(|| {
+            let mut closed = None;
+            caller.turn_with_decoder(quote.retained_grant(), &mut decoder, |cx| cx.with_original_retirement(|cx| {
+                let grant = cx.retained_grant();
+                let Some((poll, performed)) = cx.with_original_effect(grant, |_, effect| owner.close_step(effect))? else { return Ok(false) };
+                let step = match poll { RetainedWorkPoll::Complete(turn) => turn.result.map_err(|failure| failure.into_value_error())?, RetainedWorkPoll::Pending { .. } => RetainedCloneStep::Progress(Default::default()) };
+                cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+                cx.consume_retained(step.progress())?;
+                closed = Some(step);
+                Ok(true)
+            })).unwrap_or_else(|error| panic!("law close failed: {error:?}"));
+            closed.expect("law close step")
+        });
         assert!(step.progress().fits(quote.retained_grant()), "law close receipt {:?} exceeds its quote {quote:?}", step.progress());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes), "law close accounting disagrees with its receipt");
     }

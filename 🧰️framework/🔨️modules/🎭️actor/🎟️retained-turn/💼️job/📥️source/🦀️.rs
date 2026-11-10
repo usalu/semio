@@ -91,7 +91,7 @@ impl OriginalJobSourceCursor{
   if self.bytes.capacity()!=0{let bytes=self.bytes.capacity();drop(std::mem::take(&mut*self.bytes));cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
   if let Some(owner)=self.retirement.as_mut(){if !owner.terminal_is_empty(){
    let child=RetainedCloneGrant{maximum_items:grant.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX)),maximum_depth:grant.maximum_depth-1,..grant};
-   let Some((poll,performed))=cx.with_original_effect(child,|_,effect|owner.step(effect))?else{return Ok(false)};
+   let Some((poll,performed))=cx.with_original_effect(child,|_,effect|owner.step(child.maximum_copy_bytes,effect))?else{return Ok(false)};
    let turn=match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};
    cx.consume_work(turn.work);let overrun=turn.work<performed;
    let step=turn.result.map_err(|error|{let progress=error.retained_progress();let _=cx.consume_retained(progress);error.into_value_error()})?;cx.consume_retained(step.progress())?;

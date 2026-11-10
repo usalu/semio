@@ -48,17 +48,13 @@ impl ::protocol::OpText for InteractionConfigMutation {
 
 impl ::protocol::OpBinary for InteractionConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-        let InteractionConfigMutation::SetInteractionState(state) = self;
-        Ok(semio_framework_pack_json::to_json_string(state).into_bytes())
+        Ok(semio_os_pack::pack_rt::encode_pack_value(&semio_framework_value::ToValue::to_value(self)))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail: error.to_string() })?;
-        let state: InteractionState = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| ::protocol::ProtocolError::Malformed {
-            what: "interaction-config-mutation",
-            offset: 0,
-            detail: error.to_string(),
-        })?;
-        Ok(InteractionConfigMutation::set_state(state))
+        let malformed = |detail: String| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail };
+        let value = semio_os_pack::pack_rt::decode_pack_value(bytes).map_err(|error| malformed(error.to_string()))?;
+        semio_framework_value::FromValue::from_value(semio_os_pack::pack_rt::renormalize_whole_number_floats(value)).map_err(|error| malformed(error.to_string()))
     }
 }
+semio_os_dsl::original_pack_value_operation_receiving!(InteractionConfigMutation);
 //#endregion 🧬️Aggregate

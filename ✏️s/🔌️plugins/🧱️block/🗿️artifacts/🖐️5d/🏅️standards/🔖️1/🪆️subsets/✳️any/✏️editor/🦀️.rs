@@ -137,7 +137,7 @@ pub fn block5d_io() -> semio_plugin::AppIo {
     ));
     ::semio_framework_async::poll::resolve_ready(io.with_ports(vec![semio_plugin::MediaPortSpec {
         id: "catalog:out".into(),
-        label: "Kit Catalog".into(),
+        label: LocalizedLabel::native("Kit Catalog", "Kit-Katalog"),
         direction: semio_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
         kind_id: Some("kit.catalog".into()),

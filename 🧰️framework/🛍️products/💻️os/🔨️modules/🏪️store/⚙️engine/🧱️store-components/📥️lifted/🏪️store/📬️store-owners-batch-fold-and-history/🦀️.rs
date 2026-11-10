@@ -511,7 +511,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let demand = self.displaced_retirements.demands(ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(refused)?;
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
             let mut wallet = semio_framework_value::AuthoringWallet::new(grant, u128::from(DISPLACED_RELIEF_STEP_WORK));
-            let Some((turn, _)) = wallet.run_settled(grant, DISPLACED_RELIEF_STEP_WORK, |effect| self.displaced_retirements.close_step(effect)).map_err(refused)? else { break };
+            let Some((turn, _)) = wallet.run_settled(grant, DISPLACED_RELIEF_STEP_WORK, |effect| self.displaced_retirements.close_step(grant.maximum_copy_bytes, effect)).map_err(refused)? else { break };
             match turn.result.map_err(|failure| refused(failure.into_value_error()))? {
                 RetainedCloneStep::Complete(_) => break,
                 RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => break,

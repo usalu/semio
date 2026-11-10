@@ -4,7 +4,7 @@ use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, crate::os_dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, crate::os_dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]

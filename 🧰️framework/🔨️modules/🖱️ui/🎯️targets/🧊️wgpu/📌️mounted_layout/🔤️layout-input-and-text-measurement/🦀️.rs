@@ -107,7 +107,8 @@ impl DeterministicTextWorker{
             }
             if let Some(original)=self.cancel_retirement.as_mut(){
                 if original.terminal_is_empty(){cx.consume_retained(metadata)?;self.cancel_retirement.take();cx.consume_fuel(1);return Ok(Step::Pending{progress:metadata})}
-                let step=original.return_alias_step(cx.original_cancel_token(),grant).map_err(|error|match error{
+                let turn=cx.with_original_effect(grant,|cx,effect|original.return_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0},|(turn,_)|turn);
+                let step=turn.result.map_err(|error|match error{
                     semio_framework_async::CancelTokenRetirementError::Refused(error)=>OriginalTurnFailure::debit_original(error,cx),
                     semio_framework_async::CancelTokenRetirementError::Blocked(_)=>OriginalTurnFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original text alias return is blocked"))
                 })?;cx.consume_retained(step.progress())?;cx.consume_fuel(1);return Ok(Step::Pending{progress:step.progress()})

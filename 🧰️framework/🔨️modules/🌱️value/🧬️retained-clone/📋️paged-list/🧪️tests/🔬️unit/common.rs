@@ -19,7 +19,7 @@ fn close_fixture<T: RetainedClone>(cursor: &mut impl RetainedCloneCursor<T>, ite
 
 fn retire_fixture<T: RetireOwned>(owner: &mut crate::retirement::controlled::ControlledRetirement<T>, items: usize, work: usize) -> Result<RetainedCloneStep, crate::OriginalRetirementFailure> {
     let d=owner.selected_demand(work)?;let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert_eq!(owner.selected_demand(grant.maximum_copy_bytes)?,d);
-    let result=effect::settle(grant,|e|owner.step(e)).result;assert!(owner.last_turn_work()<=1);let step=result?;
+    let result=effect::driven(grant,|e|owner.step(work,e)).0.result;assert!(owner.last_turn_work()<=1);let step=result?;
     assert!(step.progress().fits(grant));
     Ok(step)
 }

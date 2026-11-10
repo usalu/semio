@@ -9,7 +9,7 @@ pub enum ArtifactCodecCatalogStep { Blocked, Progress, Ready, Closed }
 
 /// 🏪️ Holds original borrowed codec bytes beside their genuine typed constructor and receipt recipient.
 pub struct RetainedArtifactCodecCatalog<'a, P, M>
-where P: ToValue, M: ToValue + Mutation<P> {
+where P: ToValue + Send + Sync + 'static, M: ToValue + Mutation<P> + Send + Sync + 'static {
     sources: [&'a [u8]; 3],
     original: ManuallyDrop<Option<DocumentStoreOwners<P, M>>>,
     failure: ManuallyDrop<Option<ValueError>>,
@@ -20,7 +20,7 @@ where P: ToValue, M: ToValue + Mutation<P> {
 }
 
 impl<'a, P, M> RetainedArtifactCodecCatalog<'a, P, M>
-where P: ToValue, M: ToValue + Mutation<P> {
+where P: ToValue + Send + Sync + 'static, M: ToValue + Mutation<P> + Send + Sync + 'static {
     /// 🪶️ Borrows all three original inputs without constructing any native owner or backing.
     pub fn new(pack: &'a [u8], spr: &'a [u8], commands: &'a [u8]) -> Self {
         Self { sources: [pack, spr, commands], original: ManuallyDrop::new(None), failure: ManuallyDrop::new(None), failure_close: ManuallyDrop::new(None), receipt: None, closing: false, done: false }
@@ -90,7 +90,7 @@ where P: ToValue, M: ToValue + Mutation<P> {
         if !covers(grant, demand) { return Ok(ArtifactCodecCatalogStep::Blocked); }
         self.closing = true;
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let progress = if self.failure_close.is_some() { crate::os_store::snapshot_read::settle_close_poll(crate::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.failure_close, &mut effect.nested(child)))?.progress() }
+        let progress = if self.failure_close.is_some() { crate::os_store::snapshot_read::settle_close_poll(crate::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.failure_close, effect.grant().maximum_copy_bytes, &mut effect.nested(child)))?.progress() }
         else if self.failure.is_some() { crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.failure, &mut self.failure_close, &mut effect.nested(child)).result?.progress() }
         else if let Some(owners) = self.original.as_mut() { if owners.uninstalled_owners_terminal_is_empty() { drop(self.original.take()); item() } else { close_catalog(owners, &mut effect.nested(child))?.progress() } }
         else { self.done = true; item() };
@@ -106,11 +106,11 @@ where P: ToValue, M: ToValue + Mutation<P> {
     pub fn terminal_is_empty(&self) -> bool { self.done && self.original.is_none() && self.failure.is_none() && self.failure_close.is_none() && self.receipt.is_none() }
 }
 impl<P, M> Drop for RetainedArtifactCodecCatalog<'_, P, M>
-where P: ToValue, M: ToValue + Mutation<P> {
+where P: ToValue + Send + Sync + 'static, M: ToValue + Mutation<P> + Send + Sync + 'static {
     fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "original codec catalog requires controlled custody and receipt closure"); if self.terminal_is_empty() { unsafe { ManuallyDrop::drop(&mut self.original); ManuallyDrop::drop(&mut self.failure); ManuallyDrop::drop(&mut self.failure_close); } } }
 }
 fn close_catalog<P, M>(owners: &mut DocumentStoreOwners<P, M>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>
-where P: ToValue, M: ToValue + Mutation<P> {
+where P: ToValue + Send + Sync + 'static, M: ToValue + Mutation<P> + Send + Sync + 'static {
     let grant = effect.grant();
     let step = owners.close_uninstalled_owners_step(effect)?;
     semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, owners.uninstalled_owners_terminal_is_empty(), "original codec catalog sources")

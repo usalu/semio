@@ -73,7 +73,7 @@ fn recover_native_advance_into<'reply>(&mut self,source:RetainedCloneRef<'_,Vec<
 
  fn advance_native_work(&self,s:RetainedCloneRef<'_,Vec<T>>,b:usize,m:u64,c:bool)->Result<u64,ValueError>{Ok(self.select_advance(s,b,m,c)?.work())}
 
- fn copy_count_at_with(&self,source:&Vec<T>,index:usize,body:usize,maximum:u64,check:u64)->usize{let width=size_of::<T>();let remaining=source.len().saturating_sub(index);let work=maximum.saturating_sub(check).saturating_sub(1);let by_body=if width==0{RETAINED_CLONE_BULK_PAGE_ITEMS}else{body.min(RETAINED_CLONE_BULK_PAGE_BYTES)/width};remaining.min(by_body).min(usize::try_from(work).unwrap_or(usize::MAX))}
+ fn copy_count_at_with(&self,source:&Vec<T>,index:usize,body:usize,maximum:u64,check:u64)->usize{let width=size_of::<T>();let remaining=source.len().saturating_sub(index);let work=maximum.saturating_sub(check).saturating_sub(1);let by_body=if width==0{RETAINED_CLONE_BULK_PAGE_ITEMS}else{(body.min(RETAINED_CLONE_BULK_PAGE_BYTES)/width).max(1)};remaining.min(by_body).min(usize::try_from(work).unwrap_or(usize::MAX))}
  fn copy_count_native(&self,source:&Vec<T>,body:usize,maximum:u64,captured:bool)->usize{self.copy_count_at_with(source,self.values.len(),body,maximum,if captured{0}else{RetainedCloneRef::<Vec<T>>::check_binding_work(&self.source)})}
  fn publication_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Vec<T>>()+size_of::<Option<Vec<T>>>()+size_of::<u8>(),depth:1,..Default::default()}}
 }

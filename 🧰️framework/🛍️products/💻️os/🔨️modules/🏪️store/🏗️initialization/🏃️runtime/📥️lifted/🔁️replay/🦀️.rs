@@ -3,7 +3,7 @@ use semio_framework_value::ArtifactOwnedValueRetirementFactory;
 use crate::lifted_store::ArtifactStoreInitializationRuntime;
 use semio_os_store_ledger::CursorRevisionAccumulator;
 use semio_os_spr::{Edit, Mutation, OpBinary};
-use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_value::factory::ArcRootRetirement as ReturnedSnapshotReadRetirement;
 use semio_os_store_replay::fold_operation;
 use semio_framework_value::retained_clone::{retained_clone_grant_admits, RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
@@ -32,7 +32,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         let poll=ReturnedSnapshotReadRetirement::admit_original(&mut self.current,&mut alias,&mut output,effect);
         drop(alias);
         let turn=match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>return Ok(None),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn};
-        let receipt=turn.result?.progress();
+        let receipt=turn.result.map_err(|failure|failure.into_value_error())?.progress();
         Ok(output.map(|owner|{*self.close_active=Some(owner);receipt}))
     }
     /// 🎟️ Keeps both actual roots unchanged when the original replacement frame is unfunded.

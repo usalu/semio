@@ -100,7 +100,7 @@ impl SharedRequestReceiver {
             self.closing = None;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }));
         }
-        if let Some(close) = self.closing.as_mut() { return match semio_framework_value::RetirementPollExit::resume(close.step(effect)) { Ok(step) => Ok(step), Err(semio_framework_value::RetirementPollExit::Pending(_)) => Ok(RetainedCloneStep::Progress(Default::default())), Err(semio_framework_value::RetirementPollExit::Failed(failure)) => Err(failure.into_value_error()) }; }
+        if let Some(close) = self.closing.as_mut() { return match semio_framework_value::RetirementPollExit::resume(close.step(grant.maximum_copy_bytes, effect)) { Ok(step) => Ok(step), Err(semio_framework_value::RetirementPollExit::Pending(_)) => Ok(RetainedCloneStep::Progress(Default::default())), Err(semio_framework_value::RetirementPollExit::Failed(failure)) => Err(failure.into_value_error()) }; }
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let source = self.source.as_ref().unwrap();

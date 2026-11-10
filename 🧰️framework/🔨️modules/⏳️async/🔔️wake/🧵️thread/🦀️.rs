@@ -16,7 +16,16 @@ impl RetireOwned for OriginalThreadWake{
 impl RetirementCursor for ThreadWakeRetirement{
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:if self.terminal_is_empty(){0}else{size_of::<Option<std::thread::Thread>>()+size_of::<std::thread::Thread>()+size_of::<Option<std::thread::ThreadId>>()},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
 
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+ fn close_into<'r>(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Ok(reply.complete(Ok(self.close_sync(effect))))}
+    fn recover_close_into<'r>(&mut self,_body:usize,_:&mut semio_framework_value::RetainedAllocationEffect<'_>,_:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::invariant("synchronous close has no unrecorded callback"))}
+ fn terminal_is_empty(&self)->bool{self.thread.is_none()&&self.id.is_none()}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.terminal_is_empty(){0}else{size_of::<Option<std::thread::Thread>>()+size_of::<std::thread::Thread>()+size_of::<Option<std::thread::ThreadId>>()})}
+ fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
+ fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl ThreadWakeRetirement{
+ fn close_sync(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
   let grant=effect.grant();
   if self.terminal_is_empty(){return RetirementStep::Complete(0)}
   let copy=self.next_work_byte_demand().unwrap();
@@ -25,11 +34,6 @@ impl RetirementCursor for ThreadWakeRetirement{
   match effect.performed(1){Ok(true)=>{},Ok(false)=>return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::WorkLimit,"thread wake release exceeded its original work").into(),1),Err(error)=>return RetirementStep::Failure(error.into(),1)}
   drop(self.thread.take());self.id.take();RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()},1)
  }
- fn terminal_is_empty(&self)->bool{self.thread.is_none()&&self.id.is_none()}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.terminal_is_empty(){0}else{size_of::<Option<std::thread::Thread>>()+size_of::<std::thread::Thread>()+size_of::<Option<std::thread::ThreadId>>()})}
- fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
- fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl Drop for ThreadWakeRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original thread handle abandoned its issuer TLS lease");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.thread);}}}}
 fn raw(original:Arc<OriginalThreadWake>)->RawWaker{RawWaker::new(Arc::into_raw(original).cast(),&VTABLE)}

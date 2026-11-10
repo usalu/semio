@@ -23,7 +23,7 @@ use history_read_admission::PreparedHistoryReadRetirement;
 use semio_framework_value_snapshot_read::SnapshotReadRegistryHandle;
 use semio_os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
 use semio_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
-use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_value::factory::ArcRootRetirement as ReturnedSnapshotReadRetirement;
 use semio_os_store_text_io::operation_identity;
 use semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 use semio_os_vcs::io::binary::entity_identity::{mint_alternative_id, mint_change_id};

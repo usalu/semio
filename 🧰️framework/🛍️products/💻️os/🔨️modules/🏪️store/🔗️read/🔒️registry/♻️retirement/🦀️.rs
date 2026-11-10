@@ -69,7 +69,7 @@ impl ErasedSnapshotRetirement for SnapshotReadRegistryAliasRetirement {
  fn next_capacity_byte_demand(&self,_body:usize)->Result<usize,ValueError>{Ok(self.demands()?.capacity_bytes)}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.depth)}
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let result=self.step(effect).map_err(Into::into);RetainedWorkPoll::Complete(OriginalRetirementOutcome{result,work:self.last_work})}
+ fn close_step(&mut self,_body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let result=self.step(effect).map_err(Into::into);RetainedWorkPoll::Complete(OriginalRetirementOutcome{result,work:self.last_work})}
  fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{self.selected_work_demand()}
  fn terminal_is_empty(&self)->bool{self.closed()}
 }

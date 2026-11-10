@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_fem_sparse::{Coo, NumericalBatchEnd, numerical_batch_step, numerical_batch_close, numerical_close_demand, numerical_close_original, numerical_ladder_turn};
+use semio_s_fem_sparse::{Coo, NumericalBatchEnd, numerical_batch_plain, numerical_batch_close, numerical_close_demand, numerical_close_original, numerical_ladder_turn};
 use semio_s_fem_test_support::TEST_GRANT;
 use semio_s_fem_test_support::{OriginalNumericalFixture, close_grant};
 
@@ -19,7 +19,7 @@ fn paged_ldlt_crosses_original_owner_and_checkpoint_boundaries() {
         let mut original = OriginalNumericalFixture::new(operation);
         let mut complete = false;
         for _ in 0..20_000_000 {
-            match original.turn(TEST_GRANT, 64, u64::MAX, |cx| numerical_batch_step(&mut job, cx)).expect("same original native batch") {
+            match original.turn(TEST_GRANT, 64, u64::MAX, |cx| numerical_batch_plain(&mut job, cx)).expect("same original native batch") {
                 NumericalBatchEnd::Complete => { complete = true; break; },
                 NumericalBatchEnd::Continue => {},
                 _ => panic!("{} factorization refused original paged input", case["id"]),

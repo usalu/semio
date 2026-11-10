@@ -43,7 +43,7 @@ impl<'ctx> SessionCtx<'ctx> {
         if panel {
             let controller_id = self.plugins.host_controller_id().unwrap_or_default();
             for program in self.prefs.build_space_workflows(&self.plugins) {
-                let breadcrumb = self.plugins.plugins.iter().find_map(|plugin| plugin.manifest.apps.iter().find(|app| app.id == program.app_id)).map(|app| shell_navbar_title(app, &self.prefs.terminology_id)).unwrap_or_else(|| program.breadcrumb.join(" · "));
+                let breadcrumb = self.plugins.plugins.iter().find_map(|plugin| plugin.manifest.apps.iter().find(|app| app.id == program.app_id)).map(|app| shell_navbar_title(app, &self.prefs.terminology_id, self.prefs.active_locale())).unwrap_or_else(|| program.breadcrumb.join(" · "));
                 items.push(SearchPaletteItem {
                     id: format!("spawn.{}", program.plugin_id),
                     label: format!("{} {breadcrumb}", shell_chrome_string("palette.spawnPrefix", is_de)),

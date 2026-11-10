@@ -48,7 +48,7 @@ pub fn durable_owned_group_journal_test_record(snapshot_json: &str) -> DurableOw
 /// 🧪️ Builds a typed fixed-three decision Event for downstream WAL laws; production code cannot
 /// fabricate this record and must obtain it from the retained Store-owned assembly.
 #[cfg(feature = "durable-group-testing")]
-pub fn durable_owned_group_journal_test_record_from_edits<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+pub fn durable_owned_group_journal_test_record_from_edits<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation>(
     document: semio_framework_artifact_reference::ArtifactRef,
     parent: DurableOwnedGroupTestMember<ParentP, ParentMutation>,
     drawing: DurableOwnedGroupTestMember<DrawingP, DrawingMutation>,

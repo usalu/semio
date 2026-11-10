@@ -93,12 +93,31 @@ impl StagedPayloadCursor{
     pub fn terminal_is_empty(&self)->bool{self.depth==0&&self.pending.is_none()}
 }
 impl Drop for StagedPayloadCursor{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"staged payload requires original paid retirement");}}
-impl RetireOwned for StagedPayloadCursor{
-    fn retirement(self)->Box<dyn RetirementCursor>{Box::new(self)}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}fn controlled_retirement_supported()->bool{true}
+/// 🧹️ Owns one staged cursor as its own retirement cursor; every close action settles its actual work once through the original effect.
+macro_rules! staged_close{
+    ($type:ty,$method:ident)=>{
+        impl RetireOwned for $type{type RetirementCursor=Self;fn retirement_seed(self)->Self{self}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}fn controlled_retirement_supported()->bool{true}}
+        impl $type{
+            fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+                if self.terminal_is_empty(){return RetirementStep::Complete(0);}
+                let grant=effect.grant();let result=self.$method(grant);
+                crate::payload::settle_close(effect,result)
+            }
+        }
+    };
 }
+pub(crate) use staged_close;
+pub(crate) fn settle_close(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,result:Result<RetainedCloneStep,ValueError>)->RetirementStep{
+    match result{
+        Ok(step)=>match semio_framework_value::retirement::record_retirement_work(effect,1){Ok(work)=>RetirementStep::Progress(step.progress(),work),Err((error,work))=>RetirementStep::Failure(error.into(),work)},
+        Err(error)=>RetirementStep::Failure(error.into(),0),
+    }
+}
+staged_close!(StagedPayloadCursor,close);
 impl RetirementCursor for StagedPayloadCursor{
     fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{self.close_demand()}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0);}match self.close(grant){Ok(step)=>RetirementStep::Progress(step.progress(),1),Err(error)=>RetirementStep::Failure(error,1)}}
+    semio_framework_value::native_retirement_reply!();
+    fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(1)}
     fn terminal_is_empty(&self)->bool{StagedPayloadCursor::terminal_is_empty(self)}
     fn next_close_byte_demand(&self)->Option<usize>{Some(0)}fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand()?.copy_bytes)}

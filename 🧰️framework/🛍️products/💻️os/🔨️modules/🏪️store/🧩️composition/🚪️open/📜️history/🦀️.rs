@@ -206,7 +206,7 @@ fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, effect: 
 
 impl ErasedSnapshotRetirement for MemberHistoryVerification {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -235,7 +235,7 @@ impl MemberHistoryVerification {
 
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryInput {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }

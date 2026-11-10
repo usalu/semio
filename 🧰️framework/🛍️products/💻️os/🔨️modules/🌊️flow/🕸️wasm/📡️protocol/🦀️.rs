@@ -72,8 +72,9 @@ impl FlowFailure {
 #[derive(semio_framework_value::RetireOwned)]
 struct FlowFailureOwners{cause:FlowFailureCause,receipt_refusal:Option<semio_framework_value::ValueError>}
 impl semio_framework_value::retirement::RetireOwned for FlowFailure {
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;FlowFailureOwners{cause:self.cause,receipt_refusal:self.receipt_refusal}.retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.cause),deferred_birth_bytes_for(&self.receipt_refusal)])}
+ type RetirementCursor=<FlowFailureOwners as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{use semio_framework_value::retirement::RetireOwned;FlowFailureOwners{cause:self.cause,receipt_refusal:self.receipt_refusal}.retirement_seed()}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{<FlowFailureOwners as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 

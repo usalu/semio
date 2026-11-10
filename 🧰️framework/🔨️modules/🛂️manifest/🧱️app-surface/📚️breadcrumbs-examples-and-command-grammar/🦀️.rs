@@ -9,15 +9,16 @@ pub fn app_breadcrumb(breadcrumb: &[String]) -> String {
     breadcrumb.join(" · ")
 }
 
-/// 🗺️ Resolves the breadcrumb effective under the active terminology; unknown/native ids fall back to the canonical breadcrumb.
-pub fn resolve_app_breadcrumb<'a>(app: &'a AppDefinition, terminology: &str) -> &'a [String] {
-    app.terminology_breadcrumbs.get(terminology).map_or(&app.breadcrumb, Vec::as_slice)
+/// 🗺️ Resolves the breadcrumb effective under the active terminology and `locale`; unknown/native ids fall back to the canonical breadcrumb.
+pub fn resolve_app_breadcrumb(app: &AppDefinition, terminology: &str, locale: Locale) -> Vec<String> {
+    let axis = Terminology::parse(terminology).unwrap_or(Terminology::Native);
+    app.terminology_breadcrumbs.get(terminology).map_or_else(|| app.breadcrumb.clone(), |segments| segments.iter().map(|segment| segment.resolve(axis, locale).to_string()).collect())
 }
 
 /// 🗂️ Formats a window tab within its canonical app breadcrumb, resolved under the active terminology
 /// and `locale` (needed to resolve the now-`LocalizedLabel` `app.label` for the dedup comparison below).
 pub fn app_window_label(app: &AppDefinition, terminology: &str, locale: Locale, window_label: &str) -> String {
-    let mut breadcrumb = resolve_app_breadcrumb(app, terminology).to_vec();
+    let mut breadcrumb = resolve_app_breadcrumb(app, terminology, locale);
     let normalized_window = window_label.trim().to_lowercase();
     let normalized_app = app.label.resolve(Terminology::parse(terminology).unwrap_or(Terminology::Native), locale).trim().to_lowercase();
     if !normalized_window.is_empty() && normalized_window != normalized_app && breadcrumb.last().is_none_or(|segment| segment.to_lowercase() != normalized_window) {

@@ -101,35 +101,15 @@ pub(crate) fn paint_minimap_widget(viewport_state: &DagViewportState, graph: &Da
 
 // #endregion 🔖️MinimapWidget
 
-impl RetireOwned for DagPointerState {
- fn retirement(self)->Box<dyn RetirementCursor>{let Self{widget_drag,pending_port_insert,ghost_node,pending_cluster_explode,pending_export_click,pending_open_instance_id,last_pointer_down_at_ms,last_pointer_down_world,last_pointer_down_node_id}=self;sequence(vec![deferred(widget_drag),deferred(pending_port_insert),deferred(ghost_node),deferred(pending_cluster_explode),deferred(pending_export_click),deferred(pending_open_instance_id),deferred(last_pointer_down_at_ms),deferred(last_pointer_down_world),deferred(last_pointer_down_node_id)])}
- fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.widget_drag),deferred_birth_bytes_for(&self.pending_port_insert),deferred_birth_bytes_for(&self.ghost_node),deferred_birth_bytes_for(&self.pending_cluster_explode),deferred_birth_bytes_for(&self.pending_export_click),deferred_birth_bytes_for(&self.pending_open_instance_id),deferred_birth_bytes_for(&self.last_pointer_down_at_ms),deferred_birth_bytes_for(&self.last_pointer_down_world),deferred_birth_bytes_for(&self.last_pointer_down_node_id)])}
- fn controlled_retirement_supported()->bool{true}
-}
+semio_framework_value::artifact_retire_struct!(DagPointerState {widget_drag,pending_port_insert,ghost_node,pending_cluster_explode,pending_export_click,pending_open_instance_id,last_pointer_down_at_ms,last_pointer_down_world,last_pointer_down_node_id});
 
-impl RetireOwned for DagPaintState {
- fn retirement(self)->Box<dyn RetirementCursor>{let Self{dimmed,icon_paint_cache,computing_active,computing_stale,computing_active_anim_phase,computing_stale_anim_phase,node_eval_status,unresolved_input_ports}=self;sequence(vec![deferred(dimmed),deferred(icon_paint_cache),deferred(computing_active),deferred(computing_stale),deferred(computing_active_anim_phase.into_inner()),deferred(computing_stale_anim_phase.into_inner()),deferred(node_eval_status),deferred(unresolved_input_ports)])}
- fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.dimmed),deferred_birth_bytes_for(&self.icon_paint_cache),deferred_birth_bytes_for(&self.computing_active),deferred_birth_bytes_for(&self.computing_stale),deferred_birth_bytes_for(&self.computing_active_anim_phase.get()),deferred_birth_bytes_for(&self.computing_stale_anim_phase.get()),deferred_birth_bytes_for(&self.node_eval_status),deferred_birth_bytes_for(&self.unresolved_input_ports)])}
- fn controlled_retirement_supported()->bool{true}
-}
+semio_framework_value::artifact_retire_struct!(DagPaintState {dimmed,icon_paint_cache,computing_active,computing_stale,computing_active_anim_phase,computing_stale_anim_phase,node_eval_status,unresolved_input_ports});
 
-impl RetireOwned for DagMinimapState {
- fn retirement(self)->Box<dyn RetirementCursor>{let Self{minimap_widget_visible,minimap_widget_hovered,minimap_widget_drag}=self;sequence(vec![deferred(minimap_widget_visible),deferred(minimap_widget_hovered),deferred(minimap_widget_drag)])}
- fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.minimap_widget_visible),deferred_birth_bytes_for(&self.minimap_widget_hovered),deferred_birth_bytes_for(&self.minimap_widget_drag)])}
- fn controlled_retirement_supported()->bool{true}
-}
+semio_framework_value::artifact_retire_struct!(DagMinimapState {minimap_widget_visible,minimap_widget_hovered,minimap_widget_drag});
 
-impl RetireOwned for DagNotesState {
- fn retirement(self)->Box<dyn RetirementCursor>{let Self{editing_note,caret_visible}=self;sequence(vec![deferred(editing_note),deferred(caret_visible)])}
- fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.editing_note),deferred_birth_bytes_for(&self.caret_visible)])}
- fn controlled_retirement_supported()->bool{true}
-}
+semio_framework_value::artifact_retire_struct!(DagNotesState {editing_note,caret_visible});
 
-impl RetireOwned for DagHost {
- fn retirement(self)->Box<dyn RetirementCursor>{let Self{viewport,graph,pointer,paint,minimap,notes}=self;sequence(vec![deferred(viewport),deferred(graph),deferred(pointer),deferred(paint),deferred(minimap),deferred(notes)])}
- fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.viewport),deferred_birth_bytes_for(&self.graph),deferred_birth_bytes_for(&self.pointer),deferred_birth_bytes_for(&self.paint),deferred_birth_bytes_for(&self.minimap),deferred_birth_bytes_for(&self.notes)])}
- fn controlled_retirement_supported()->bool{true}
-}
+semio_framework_value::artifact_retire_struct!(DagHost {viewport,graph,pointer,paint,minimap,notes});
 
 /// 🌳️ Retains the whole original DAG, including engine, scene, pending interaction and journal sources.
 #[must_use="the original DAG must reach physical terminal emptiness"]
@@ -139,9 +119,6 @@ impl DagHostRetirement {
  pub fn new(source:DagHost)->Self{Self{owner:ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!("original DAG fields declare typed retirement"))}}
  pub fn original(&self)->Option<&DagHost>{self.owner.original()}
  pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
- pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
- pub fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.owner.next_capacity_byte_demand(copy)}
- pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_release_byte_demand()}
- pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.owner.next_depth_demand()}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.owner.step(grant)}
+ pub fn next_close_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.owner.next_demand(body)}
+ pub fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{self.owner.step(body,effect)}
 }

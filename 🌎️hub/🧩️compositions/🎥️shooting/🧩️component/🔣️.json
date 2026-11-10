@@ -6582,7 +6582,16 @@
         "mediaOutputs": [
           {
             "id": "photos:out",
-            "label": "Photos",
+            "label": {
+              "native": {
+                "en": "Photos",
+                "de": "Fotos"
+              },
+              "reuse": {
+                "en": "Photos",
+                "de": "Fotos"
+              }
+            },
             "direction": "out",
             "mediaType": {
               "class": "twoD",
@@ -6796,7 +6805,16 @@
           "ports": [
             {
               "id": "photos:out",
-              "label": "Photos",
+              "label": {
+                "native": {
+                  "en": "Photos",
+                  "de": "Fotos"
+                },
+                "reuse": {
+                  "en": "Photos",
+                  "de": "Fotos"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "twoD",

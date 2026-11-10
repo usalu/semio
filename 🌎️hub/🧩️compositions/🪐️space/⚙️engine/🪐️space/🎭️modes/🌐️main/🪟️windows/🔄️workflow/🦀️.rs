@@ -92,8 +92,8 @@ async fn workflow_camera(config: &SpaceConfig) -> OsWorkflowCamera {
     config.camera.get(S_PLAY_WINDOW_WORKFLOW).copied().map(Into::into).unwrap_or_default()
 }
 
-pub async fn render(app: &crate::SpaceApp, projection: &WorkflowSnapshot, config: &SpaceConfig) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    let graph_payload = os_workflow_to_node_graph_payload(&projection.graph);
+pub async fn render(app: &crate::SpaceApp, projection: &WorkflowSnapshot, config: &SpaceConfig, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let graph_payload = os_workflow_to_node_graph_payload(&projection.graph, view_state.terminology, view_state.locale);
     let camera = workflow_camera(config).await;
     let fixture = os_workflow_to_flow_host_snapshot_json(&projection.graph, &camera);
     let operators = build_os_workflow_operator_infos(&projection.graph, &projection.parameters);

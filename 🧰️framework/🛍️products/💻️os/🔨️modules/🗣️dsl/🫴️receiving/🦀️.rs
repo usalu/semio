@@ -86,7 +86,7 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OriginalOperationReceiving
     let binding=self.binding.as_mut().ok_or_else(||ValueError::invariant("binding absent"))?;
     match binding.select_advance(&self.generic.value,body,effect.maximum_work_units())?{
      OwnedAdvanceSelection::Local{..}=>unpoll(binding.advance_local(&mut self.generic.value,body,&mut effect.nested(child))).result,
-     OwnedAdvanceSelection::Nested=>unpoll(binding.advance_nested(&mut self.generic.value,native,body,effect.maximum_work_units(),child)).result,
+     OwnedAdvanceSelection::Nested=>{let witness=native.source_witness()?;unpoll(binding.advance_nested(&mut self.generic.value,native,witness,body,effect.maximum_work_units(),child)).result},
     }
    },
    3=>{let(_,spec)=self.spec()?;let turn=RetainedRecordReceiving::admit(source,(self.position,self.range.1),spec,semio_os_pack::PackLimits::default(),child);perform(effect,turn.work)?;Ok(match turn.result?{Some((owner,progress))=>{self.record=Some(owner);self.phase=4;progress},None=>Default::default()})},
@@ -122,7 +122,7 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OriginalOperationReceiving
   if !self.output.terminal_is_empty(){return stepped(self.output.close_step(&mut effect.nested(child)))}
   if let Some(binding)=&mut self.binding{if !binding.terminal_is_empty(){return stepped(binding.close_step(&mut effect.nested(child)))}if let Err(e)=perform(effect,1){return settle(effect,Err(e))}std::mem::forget(self.binding.take());return settle(effect,Ok(RetainedCloneStep::Progress(receipt(demand))))}
   if !self.generic.terminal_is_empty(){return stepped(self.generic.close_step(&mut effect.nested(child)))}
-  if let Some(record)=&mut self.record{if !record.terminal_is_empty(){return match record.close_step(&mut effect.nested(child)){RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work})}}if let Err(e)=perform(effect,1){return settle(effect,Err(e))}self.record=None;return settle(effect,Ok(RetainedCloneStep::Progress(receipt(demand))))}
+  if let Some(record)=&mut self.record{if !record.terminal_is_empty(){return match record.close_step(grant.maximum_copy_bytes,&mut effect.nested(child)){RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work})}}if let Err(e)=perform(effect,1){return settle(effect,Err(e))}self.record=None;return settle(effect,Ok(RetainedCloneStep::Progress(receipt(demand))))}
   if let Err(e)=perform(effect,1){return settle(effect,Err(e))}self.closed=true;settle(effect,Ok(RetainedCloneStep::Complete(receipt(demand))))
  }
 }
@@ -147,8 +147,11 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> RetireOwned for OriginalOp
  fn retirement_seed(self)->Self::RetirementCursor{OperationRetirement(ManuallyDrop::new(self))}
  fn controlled_retirement_supported()->bool{true}
 }
+impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OperationRetirement<M>{
+ fn close_step(&mut self,_body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{erased_cursor_turn(self.0.close(effect))}
+}
 impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> RetirementCursor for OperationRetirement<M>{
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{erased_cursor_turn(self.0.close(effect))}
+ semio_framework_value::native_retirement_reply!();
  fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
  fn terminal_is_empty(&self)->bool{self.0.closed}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demand(usize::MAX)?.depth)}

@@ -233,7 +233,7 @@
             "items": 2,
             "value": 7,
             "copiedItems": 1,
-            "copyBytes": 0,
+            "copyBytes": 25,
             "workBeforeFailure": 1,
             "workLoanFromSameRemainingFuel": true,
             "noItemToCpuConversion": true,
@@ -249,11 +249,11 @@
     },
     "stock": {
       "const": {
-        "items": 100000,
-        "fuel": 100000,
-        "copyBytes": 33554432,
-        "capacityBytes": 33554432,
-        "releaseBytes": 33554432,
+        "items": 250000,
+        "fuel": 1200000,
+        "copyBytes": 160000000,
+        "capacityBytes": 40000000,
+        "releaseBytes": 40000000,
         "depth": 64
       }
     }

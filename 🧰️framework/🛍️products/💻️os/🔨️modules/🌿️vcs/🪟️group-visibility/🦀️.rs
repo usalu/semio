@@ -103,11 +103,11 @@ impl semio_framework_value::FactoryPayloadRetirement for ArtifactGroupVisibility
  fn close_state_constructor_copy_bytes(&self)->usize{0}
  fn prepare_close_state(&self){}
  fn close_state_preparation_demands(&self,_:&(),_:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
- fn prepare_close_state_step(&self,_:&mut(),_:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkPoll{semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())),work:0})}
+ fn prepare_close_state_step(&self,_:&mut(),_:usize,_:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkPoll{semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())),work:0})}
  fn close_state_preparation_is_complete(_:&())->bool{true}
  fn transfer_payload(_value:Self,_:&mut()){}
  fn close_state_demands(_:&(),_:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
- fn close_state_step(_:&mut(),_:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())),work:0})}
+ fn close_state_step(_:&mut(),_:usize,_:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())),work:0})}
  fn close_state_terminal_is_empty(_:&())->bool{true}
 }
 

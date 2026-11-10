@@ -66,7 +66,7 @@ export function useSearchItems({ session, appLabelsOverlay, uiTerminology, uiLoc
         spawnEntryCounts.set(program.pluginId, seen + 1);
         items.push({
           id: seen === 0 ? `spawn.${program.pluginId}` : `spawn.${program.pluginId}.${program.appId}`,
-          label: `${shellLabel("ui.palette.spawnPrefix")} ${appBreadcrumb(resolveArtifactByAppId(loadedPlugins, program.appId, program.breadcrumb, uiTerminology))}`,
+          label: `${shellLabel("ui.palette.spawnPrefix")} ${appBreadcrumb(resolveArtifactByAppId(loadedPlugins, program.appId, program.breadcrumb, uiTerminology, uiLocale))}`,
           description: `${program.pluginId} · ${program.appId}`,
           category: shellLabel("ui.search.category.catalogue"),
           onSelect: () => void spawnProgram(program),

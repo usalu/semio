@@ -2,6 +2,7 @@
 
 use protocol::{DomainSelection, InteractionState, LocalInteractionIdentity, SelectionMode};
 use std::{mem::ManuallyDrop, sync::Arc};
+use semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage;
 use store::{
     ArtifactCanonicalJson, ArtifactCanonicalJsonArray as JsonArray, ArtifactCanonicalJsonNode as JsonNode, ArtifactCanonicalJsonObject as JsonObject, ArtifactCanonicalJsonReader, ArtifactCanonicalJsonValue as JsonValue, os_store::one_item::ArtifactStoreOneItemGrant,
     ErasedSnapshotRetirement, os_store::snapshot_read::SnapshotRead, SnapshotRetirementFactory,
@@ -101,18 +102,17 @@ struct CapturedRootRetirement {
     owned: ManuallyDrop<CapturedRootRetirementState>,
 }
 struct CapturedRootRetirementState {
-    root: Option<Arc<CapturedRoot>>,
+    root: Option<SharedOriginalStorage<CapturedRoot>>,
 }
 
 impl SnapshotRetirementFactory<CapturedRoot> for CapturedRootRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<CapturedRoot>) -> usize { size_of::<CapturedRootRetirement>() }
-
-    fn retire(&self, root: Arc<CapturedRoot>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<CapturedRoot>)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<CapturedRoot>)> {
-        match (RetainedCloneBirthDemand { capacity_bytes: size_of::<CapturedRootRetirement>(), depth: 1 }).admit(grant) {
-            Ok(progress) => Ok((Box::new(CapturedRootRetirement { owned: ManuallyDrop::new(CapturedRootRetirementState { root: Some(root) }) }), progress)),
-            Err(error) => Err((error, root)),
-        }
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+    fn retirement_birth_bytes(&self, _snapshot: &SharedOriginalStorage<CapturedRoot>) -> usize { size_of::<CapturedRootRetirement>() }
+    fn retire_demands(&self, _snapshot: &SharedOriginalStorage<CapturedRoot>) -> Result<RetirementDemand, ValueError> { Ok(RetirementDemand { capacity_bytes: size_of::<CapturedRootRetirement>(), depth: 1, ..Default::default() }) }
+    fn retire_work_demand(&self, _snapshot: &SharedOriginalStorage<CapturedRoot>) -> Result<u64, ValueError> { Ok(1) }
+    fn retire<'reply>(&self, snapshot: &mut Option<SharedOriginalStorage<CapturedRoot>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::FactoryProducerReply<'reply, dyn ErasedSnapshotRetirement, semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply, semio_framework_value::OriginalRetirementFailure> {
+        semio_framework_value::factory_retire_framed(snapshot, effect, reply, |root| CapturedRootRetirement { owned: ManuallyDrop::new(CapturedRootRetirementState { root: Some(root) }) })
+    }
+    fn recover_retire<'reply>(&self, _: &mut Option<SharedOriginalStorage<CapturedRoot>>, _: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::FactoryProducerReply<'reply, dyn ErasedSnapshotRetirement, semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply, semio_framework_value::OriginalRetirementFailure> { reply.pending() }
 }
 
 impl CapturedRootRetirement {
@@ -127,26 +127,27 @@ impl ErasedSnapshotRetirement for CapturedRootRetirement {
     /// 🧹️ Hands the captured lease back to its exact registry. The registry's ACCEPTANCE is the
     /// witness; reclaiming the accepted slot into an owned-value retirement belongs to the Store's
     /// own one-slot-per-step cursor, which this owner must never wait on.
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome { let mut work = 0; let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(idle));
         }
         if grant.maximum_depth < self.demands().depth {
-            return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "local interaction capture return exceeds admitted depth"));
+            return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "local interaction capture return exceeds admitted depth").into());
         }
         if grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(idle));
         }
-        work = 1; if let Some(root) = self.owned.root.take() {
-            if let Some(mut root) = Arc::into_inner(root) {
+        if let Some(root) = self.owned.root.take() {
+            if let Some(mut root) = root.try_owner().ok().and_then(|mut original| original.take_value()) {
                 if !root.read.take().is_some_and(SnapshotRead::return_to_registry) {
-                    return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "local-interaction.capture-read-return"));
+                    return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "local-interaction.capture-read-return").into());
                 }
             }
         }
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..idle }))
-    })(); semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work } }
+    })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
+    fn next_computational_work(&self, _: usize) -> Result<u64, ValueError> { Ok(u64::from(!self.terminal_is_empty())) }
 
     fn terminal_is_empty(&self) -> bool {
         self.owned.root.is_none()
@@ -195,7 +196,7 @@ pub struct LocalInteractionCaptureCursor {
 impl LocalInteractionCaptureCursor {
     /// 🔒️ The app owner supplies the exact immutable read and current fixed-width authority identity.
     pub(crate) fn new(read: SnapshotRead<InteractionState>, identity: LocalInteractionIdentity) -> Self {
-        Self { identity: identity.clone(), reader: ArtifactCanonicalJsonReader::new(Arc::new(CapturedRoot::new(read, identity)), Arc::new(CapturedRootRetirementFactory)) }
+        Self { identity: identity.clone(), reader: ArtifactCanonicalJsonReader::new(SharedOriginalStorage::from_cold(CapturedRoot::new(read, identity)), Arc::new(CapturedRootRetirementFactory)) }
     }
 
     #[doc(hidden)]
@@ -227,8 +228,8 @@ impl LocalInteractionCaptureCursor {
         self.reader.retirement_demands(body)
     }
     #[doc(hidden)]
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        self.reader.close_step(grant)
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        self.reader.close_step(effect)
     }
     #[doc(hidden)]
     pub fn terminal_is_empty(&self) -> bool {

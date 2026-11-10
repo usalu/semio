@@ -33,7 +33,9 @@ pub(super) fn owner_step(owner:&mut FlowVcsRetirement,grant:RetainedCloneGrant)-
  if owner.as_ref().is_some_and(|owner|!owner.terminal_is_empty()){
   let demands=owner_demands(owner,grant.maximum_copy_bytes)?;
   if !admit_turn(grant,FlowVcsCloseDemands{copy_bytes:0,..demands})?{return Ok(RetainedCloneStep::Progress(Default::default()))}
-  let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let owner=owner.as_mut().unwrap();let step=owner.step(child)?;
+  let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let owner=owner.as_mut().unwrap();let body=grant.maximum_copy_bytes;
+  let Some(poll)=semio_framework_artifact_flow_flow::retained::cold_effect(child,|effect|owner.step(body,effect))else{return Ok(RetainedCloneStep::Progress(Default::default()))};
+  let step=match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>return Ok(RetainedCloneStep::Progress(Default::default())),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?};
   let step=admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original VCS retained owner")?;
   return Ok(RetainedCloneStep::Progress(step.progress()))
  }

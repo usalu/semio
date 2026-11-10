@@ -15,7 +15,6 @@
         "required": [
           "name",
           "items",
-          "grantItems",
           "slotBytes",
           "headerBytes",
           "copyLimit",
@@ -27,10 +26,6 @@
             "type": "string"
           },
           "items": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "grantItems": {
             "type": "integer",
             "minimum": 1
           },

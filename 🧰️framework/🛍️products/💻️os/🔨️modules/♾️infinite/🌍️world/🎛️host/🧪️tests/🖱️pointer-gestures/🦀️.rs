@@ -33,94 +33,10 @@ pub(crate) fn take_actions(input: &mut semio_ui_wgpu_input::InputState<ActionDes
     actions
 }
 
-pub(crate) fn mesh_oracle_from_buffers(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>) -> TerrainMeshOracleData {
-    TerrainMeshOracleData { positions, normals, indices, face_ids: Vec::new(), vertex_ids: Vec::new(), edge_positions: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), colors: Vec::new() }
-}
 
-pub(crate) fn publish_oracle_mesh(data: TerrainMeshOracleData) -> Mesh3dLease {
-    publish_oracle_mesh_at_revision(data, 0)
-}
+use semio_os_infinite_world_host::with_world_step_context;
+use semio_os_infinite_world_host::{allocate_oracle_mesh, mesh_oracle_from_buffers, publish_oracle_mesh, publish_oracle_mesh_at_revision};
 
-/// 🧊️ An oracle mesh stamped with a chosen interaction revision — what
-/// `publish_world3d_asset_mesh_lease` witnesses before it stores a decoded GLB under its url's id.
-pub(crate) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revision: u64) -> Mesh3dLease {
-    assert!(data.positions.len().is_multiple_of(3));
-    assert_eq!(data.normals.len(), data.positions.len());
-    assert!(data.edge_positions.len().is_multiple_of(6));
-    assert!(data.uvs.len().is_multiple_of(2));
-    assert!(data.colors.len().is_multiple_of(4));
-    static GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(10_000);
-    let schema = Mesh3dSchema {
-        vertices: (data.positions.len() / 3) as u32,
-        indices: data.indices.len() as u32,
-        face_ids: data.face_ids.len() as u32,
-        vertex_ids: data.vertex_ids.len() as u32,
-        edges: (data.edge_positions.len() / 6) as u32,
-        edge_ids: data.edge_ids.len() as u32,
-        uvs: (data.uvs.len() / 2) as u32,
-        colors: (data.colors.len() / 4) as u32,
-    surface_uvs:[0;4],tangents:0,};
-    let generation = GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_begin_capacity_byte_demand(),0,1);
-    let (token,progress)=mesh3d_begin(generation,revision,schema,grant).expect("oracle mesh claim");
-    assert!(progress.fits(grant));
-    allocate_oracle_mesh(token);
-    for value in data.positions.as_chunks::<3>().0 {
-        mesh3d_write_vec3(token, Mesh3dField::Positions, *value).unwrap();
-    }
-    for value in data.normals.as_chunks::<3>().0 {
-        mesh3d_write_vec3(token, Mesh3dField::Normals, *value).unwrap();
-    }
-    for value in data.indices {
-        mesh3d_write_u32(token, Mesh3dField::Indices, value).unwrap();
-    }
-    for value in data.face_ids {
-        mesh3d_write_u32(token, Mesh3dField::FaceIds, value).unwrap();
-    }
-    for value in data.vertex_ids {
-        mesh3d_write_u32(token, Mesh3dField::VertexIds, value).unwrap();
-    }
-    for value in data.edge_positions.as_chunks::<6>().0 {
-        mesh3d_write_edge(token, [value[..3].try_into().unwrap(), value[3..].try_into().unwrap()]).unwrap();
-    }
-    for value in data.edge_ids {
-        mesh3d_write_u32(token, Mesh3dField::EdgeIds, value).unwrap();
-    }
-    for value in data.uvs.as_chunks::<2>().0 {
-        ui_scene::math::mesh3d_write_vec2(token, Mesh3dField::Uvs, *value).unwrap();
-    }
-    for value in data.colors.as_chunks::<4>().0 {
-        ui_scene::math::mesh3d_write_vec4(token, Mesh3dField::Colors, *value).unwrap();
-    }
-    mesh3d_seal(token).expect("oracle mesh publication")
-}
-
-pub(crate) fn with_world_step_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
-    let mut sequence = 0;
-    let grant=world_original_fixture_grant();
-    let mut receipt=semio_framework_value::RetainedCloneProgress::default();
-    let mut context = semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(1),
-        semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(fuel, u64::MAX,grant),
-        semio_framework_job::root_cancel_token(),
-        semio_framework_job::default_now_us,
-        &mut sequence,
-        &mut receipt,
-    );
-    let result=step(&mut context);
-    assert!(context.retained_progress().fits(grant));
-    result
-}
-
-fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
-    loop {
-        let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
-        let step=mesh3d_allocate_step(token,grant).unwrap();
-        assert!(step.progress.fits(grant));
-        if step.complete{break}
-    }
-}
 
 fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
@@ -235,6 +151,7 @@ fn decoded_targets(action: &ActionDescriptor) -> serde_json::Value {
 
 #[test]
 fn the_instance_interaction_carrier_is_schema_bounded_and_retires_one_entry_per_step() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let scene = fixture()["scene"].clone();
     let parsed: Vec<World3dSceneInstanceEntry> = serde_json::from_value(scene["instances"].clone()).expect("shared instance records satisfy the native carrier");
     assert!(scene["instances"].to_string().len() <= WORLD_INTERACTION_TOPOLOGY_BYTE_CAPACITY, "the encoded fixture is inside the existing topology-byte authority");
@@ -266,6 +183,7 @@ fn the_instance_interaction_carrier_is_schema_bounded_and_retires_one_entry_per_
 /// from the fixture's declared topology target on every case.
 #[test]
 fn an_instance_pick_selects_the_topology_target_at_its_declared_granularity() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     for id in ["instance-pick-replaces", "instance-pick-additive", "instance-pick-subtractive", "instance-pick-subtractive-on-command", "instance-pick-invertive", "second-instance-of-one-topology-id-pick"] {
         let case = gesture(id);
         let expect = case["expect"].clone();
@@ -289,6 +207,7 @@ fn an_instance_pick_selects_the_topology_target_at_its_declared_granularity() {
 
 #[test]
 fn an_instance_hover_reports_the_resolved_granularity_on_the_pointer_channel() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     for id in ["instance-hover", "instance-hover-override"] {
         let case = gesture(id);
         let expect = case["expect"].clone();
@@ -307,6 +226,7 @@ fn an_instance_hover_reports_the_resolved_granularity_on_the_pointer_channel() {
 
 #[test]
 fn a_background_click_clears_with_an_empty_target_list_rather_than_a_silence() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let case = gesture("background-click-clears");
     let expect = case["expect"].clone();
     let mut state = fixture_state();
@@ -320,6 +240,7 @@ fn a_background_click_clears_with_an_empty_target_list_rather_than_a_silence() {
 
 #[test]
 fn a_marquee_release_replaces_with_the_deduplicated_topology_targets() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let case = gesture("marquee-release-replaces");
     let expect = case["expect"].clone();
     let mut state = fixture_state();
@@ -352,6 +273,7 @@ fn a_marquee_release_replaces_with_the_deduplicated_topology_targets() {
 /// this argument, and a World3d surface IS keyed by its window instance id.
 #[test]
 fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let case = gesture("orbit-completes-into-one-setcamera");
     let mut state = fixture_state();
     let mut plan = plan_world3d_wheel(&state.session, &state.camera, 1, 200.0).expect("bounded wheel plan");
@@ -393,6 +315,7 @@ fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`).
 #[test]
 fn an_empty_marquee_page_reserves_the_bytes_of_its_own_empty_array() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let state = fixture_state();
     let job = WorldMarqueePublishJob::new(2, WorldMarqueeGesture::new(state.session.interaction_revision, 1, [0.0, 0.0]), WorldMarqueeResultPages::default(), false, false);
     let base = semio_ui_action::checked_action_string_bytes(&[state.session.controller_id.as_str(), "interactionSelect", "domainId", resolved_domain_id(&state.session), "targets", "merge", job.merge, "method", selection_method_wire_str(SelectionMethod::Rectangle)])
@@ -408,6 +331,7 @@ fn an_empty_marquee_page_reserves_the_bytes_of_its_own_empty_array() {
 /// through to the chord table.
 #[test]
 fn escape_cancels_a_live_relocate_drag_and_commits_nothing() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = fixture_state();
     assert!(!world3d_cancel_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene), "with no live drag Escape is not consumed");
     state.gumball.relocate = Some(World3dRelocateSession { object_id: "o1".into(), origin: [0.0, 0.0, 0.0], from: [0.0, 0.0, 0.0] });
@@ -422,6 +346,7 @@ fn escape_cancels_a_live_relocate_drag_and_commits_nothing() {
 /// which a press arms the gesture.
 #[test]
 fn only_the_world_relocate_utility_arms_the_gesture() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = fixture_state();
     state.session.active_utility = "select".into();
     assert!(!world3d_relocate_mode(&state.session));

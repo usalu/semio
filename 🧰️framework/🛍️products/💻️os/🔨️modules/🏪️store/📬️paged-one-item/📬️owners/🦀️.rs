@@ -9,6 +9,7 @@ use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::{FactoryAuthority, FactoryRetirement, RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::{size_of, ManuallyDrop};
 use std::sync::Arc;
+use super::returned_custody::{close_returned_edit, close_returned_post, returned_edit_demands, returned_post_demands};
 
 /// 🧳️ Every original owner a one-item preparation holds, each retired in its own fully granted turn.
 ///
@@ -24,6 +25,9 @@ pub struct OneItemOwners<P: 'static, M: 'static> {
     pub sealed: ManuallyDrop<Option<(P, Edit<M>)>>,
     pub refused: ManuallyDrop<Option<(Edit<M>, Arc<P>)>>,
     pub failure: ManuallyDrop<Option<ValueError>>,
+    returned_edit: ManuallyDrop<Option<Edit<M>>>,
+    returned_edit_close: ManuallyDrop<Option<semio_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>>,
+    returned_post: ManuallyDrop<Option<Arc<P>>>,
     pub authority: ManuallyDrop<Option<Arc<ArtifactStoreOneItemLiveAuthority>>>,
     pub prepared: ManuallyDrop<Option<ArtifactStoreOneItemPrepared<P, M>>>,
     pub mutation_retirement: ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,
@@ -41,6 +45,9 @@ impl<P: 'static, M: 'static> OneItemOwners<P, M> {
             && self.candidate.is_none()
             && self.sealed.is_none()
             && self.refused.is_none()
+            && self.returned_edit.is_none()
+            && self.returned_edit_close.is_none()
+            && self.returned_post.is_none()
             && self.failure.is_none()
             && self.authority.is_none()
             && self.prepared.is_none()
@@ -81,7 +88,7 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
             inverse: ManuallyDrop::new(None),
             candidate: ManuallyDrop::new(None),
             sealed: ManuallyDrop::new(None),
-            refused: ManuallyDrop::new(None),
+            refused: ManuallyDrop::new(None), returned_edit: ManuallyDrop::new(None), returned_edit_close: ManuallyDrop::new(None), returned_post: ManuallyDrop::new(None),
             failure: ManuallyDrop::new(None),
             authority: ManuallyDrop::new(Some(authority)),
             prepared: ManuallyDrop::new(None),
@@ -102,7 +109,7 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
             inverse: ManuallyDrop::new(None),
             candidate: ManuallyDrop::new(None),
             sealed: ManuallyDrop::new(None),
-            refused: ManuallyDrop::new(None),
+            refused: ManuallyDrop::new(None), returned_edit: ManuallyDrop::new(None), returned_edit_close: ManuallyDrop::new(None), returned_post: ManuallyDrop::new(None),
             failure: ManuallyDrop::new(None),
             authority: ManuallyDrop::new(None),
             prepared: ManuallyDrop::new(None),
@@ -118,7 +125,7 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
     #[cfg(feature = "durable-group-testing")]
     #[doc(hidden)]
     pub fn from_returned(edit: Edit<M>, post: Arc<P>, mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>) -> Self {
-        Self { base: ManuallyDrop::new(None), mutation: ManuallyDrop::new(None), inverse: ManuallyDrop::new(None), candidate: ManuallyDrop::new(None), sealed: ManuallyDrop::new(None), refused: ManuallyDrop::new(Some((edit, post))), failure: ManuallyDrop::new(None), authority: ManuallyDrop::new(None), prepared: ManuallyDrop::new(None), mutation_retirement: ManuallyDrop::new(Some(mutation_retirement)), snapshot_retirement: ManuallyDrop::new(Some(snapshot_retirement)), active: ManuallyDrop::new(None), factories: ManuallyDrop::new(Default::default()), closing: false }
+        Self { base: ManuallyDrop::new(None), mutation: ManuallyDrop::new(None), inverse: ManuallyDrop::new(None), candidate: ManuallyDrop::new(None), sealed: ManuallyDrop::new(None), refused: ManuallyDrop::new(Some((edit, post))), returned_edit: ManuallyDrop::new(None), returned_edit_close: ManuallyDrop::new(None), returned_post: ManuallyDrop::new(None), failure: ManuallyDrop::new(None), authority: ManuallyDrop::new(None), prepared: ManuallyDrop::new(None), mutation_retirement: ManuallyDrop::new(Some(mutation_retirement)), snapshot_retirement: ManuallyDrop::new(Some(snapshot_retirement)), active: ManuallyDrop::new(None), factories: ManuallyDrop::new(Default::default()), closing: false }
     }
     /// 📮️ Quotes returned fixture closure before handing its originals to their captured retirement authorities; public only for the durable-group testing helpers of another crate, and only under `durable-group-testing`.
     #[cfg(feature = "durable-group-testing")]
@@ -163,7 +170,13 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
             return nested(artifact_retirement_owned_birth_demands(&*self.sealed)?);
         }
         if self.refused.is_some() {
-            return nested(artifact_retirement_owned_birth_demands(&*self.refused)?);
+            return nested(RetirementDemand { copy_bytes: 2 * size_of::<(Edit<M>, Arc<P>)>(), depth: 1, ..Default::default() });
+        }
+        if self.returned_edit.is_some() || self.returned_edit_close.is_some() {
+            return nested(returned_edit_demands(&self.returned_edit, &self.returned_edit_close, body)?);
+        }
+        if self.returned_post.is_some() {
+            return nested(returned_post_demands(&self.returned_post, &self.snapshot_retirement)?);
         }
         if self.failure.is_some() {
             return nested(artifact_retirement_owned_birth_demands(&*self.failure)?);
@@ -205,7 +218,7 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if self.active.is_some() {
-            let step = RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, &mut effect.nested(child)))?;
+            let step = RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, child.maximum_copy_bytes, &mut effect.nested(child)))?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.prepared.is_some() {
@@ -245,7 +258,16 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
             return artifact_retirement_admit_owned(&mut self.sealed, &mut self.active, &mut effect.nested(child)).result.map_err(Into::into);
         }
         if self.refused.is_some() {
-            return artifact_retirement_admit_owned(&mut self.refused, &mut self.active, &mut effect.nested(child)).result.map_err(Into::into);
+            let (edit, post) = self.refused.take().ok_or_else(|| ValueError::invariant("returned edit and post absent"))?;
+            *self.returned_edit = Some(edit);
+            *self.returned_post = Some(post);
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 2 * size_of::<(Edit<M>, Arc<P>)>(), ..Default::default() }));
+        }
+        if self.returned_edit.is_some() || self.returned_edit_close.is_some() {
+            if let Some(step) = close_returned_edit(&mut self.returned_edit, &mut self.returned_edit_close, &mut self.mutation_retirement, &mut effect.nested(child))? { return Ok(step); }
+        }
+        if self.returned_post.is_some() {
+            if let Some(step) = close_returned_post(&mut self.returned_post, &self.snapshot_retirement, &mut self.active, &mut effect.nested(child))? { return Ok(step); }
         }
         if self.failure.is_some() {
             return artifact_retirement_admit_owned(&mut self.failure, &mut self.active, &mut effect.nested(child)).result.map_err(Into::into);
@@ -281,7 +303,7 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
         }
         let slot = self.factories.iter_mut().find(|slot| slot.is_some()).expect("original preparation factory alias");
         let factory = slot.as_mut().expect("original preparation factory alias");
-        let step = RetirementPollExit::resume(factory.step(&mut effect.nested(child)))?;
+        let step = RetirementPollExit::resume(factory.step(child.maximum_copy_bytes, &mut effect.nested(child)))?;
         let step = admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original preparation factory close")?;
         if factory.terminal_is_empty() {
             *slot = None;

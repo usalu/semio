@@ -15,7 +15,7 @@ use semio_os_infinite_world_bridge::{advance_world3d_view_revision, append_compo
 use semio_os_infinite_world_bridge::{gumball_commit_action, is_click_gesture, pick_gumball_handle_at, reset_gumball_preview};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use semio_os_infinite_world_bridge::world3d_standard_material_for_mesh;
-use semio_os_infinite_world_interaction::{append_box_wireframe, append_vortex_arrow_draws, begin_world_placeholder_mesh, brush_preview_mesh_id, declare_scene_mesh_source, environment_authored_material, environment_clear_color, environment_explicit_clear_color, environment_scene_lighting, ghost_mesh_id, mark_world_dynamic_fault, preview_scale, retained_gumball_preview_model, step_world_placeholder_mesh, step_world_placeholder_mesh_batch, sync_terrain, world_interaction_active_census, world_marquee_overlay_points, WorldAuthorityState};
+use semio_os_infinite_world_interaction::{append_box_wireframe, append_vortex_arrow_draws, begin_world_placeholder_mesh, brush_preview_mesh_id, declare_scene_mesh_source, environment_authored_material, environment_clear_color, environment_explicit_clear_color, environment_scene_lighting, ghost_mesh_id, mark_world_dynamic_fault, preview_scale, retained_gumball_preview_model, pump_world_placeholder_mesh, step_world_placeholder_mesh_batch, sync_terrain, world_interaction_active_census, world_marquee_overlay_points, WorldAuthorityState};
 #[cfg(any(test, feature = "testkit"))]
 use semio_os_infinite_world_interaction::{marquee_select_action, pick_instance_at, pick_paint_hit, pick_select_action, pick_surface_at, pick_vortex_at, start_gumball_drag};
 use semio_ui_declaration::layout::ActionDescriptor;
@@ -272,3 +272,7 @@ pub use snapshot_and_input::*;
 #[cfg(any(test, feature = "testkit"))]
 #[path = "🧰️testkit/🦀️.rs"]
 mod testkit;
+#[cfg(any(test, feature = "testkit"))]
+pub use testkit::{allocate_oracle_mesh, drain_scene_bridge_close, drive_scene_bridge, mesh_oracle_from_buffers, publish_oracle_mesh, publish_oracle_mesh_at_revision};
+#[cfg(any(test, feature = "testkit"))]
+pub use semio_os_infinite_world_model::{prepared_world_build_context, retire_world_build_context, with_world_step_context, world_original_fixture_grant, world_test_gate};

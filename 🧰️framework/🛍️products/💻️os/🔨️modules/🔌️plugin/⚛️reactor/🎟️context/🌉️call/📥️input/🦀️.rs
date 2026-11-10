@@ -2,7 +2,8 @@
 use semio_framework_job::{OriginalCallerReturnPlace,OriginalSourceBinding,OriginalTurnFailure,StepContext};
 use semio_framework_job_native_decode::{OriginalNativeDecodeOutcome,OriginalNativeDecodePolicy};
 use semio_framework_pack_json::JsonReadLimits;
-use semio_framework_pack_json_output_receiving::{OriginalJsonOutputClose,OriginalJsonOutputOutcome,OriginalJsonOutputSource};
+pub use semio_framework_pack_json_output_receiving::OriginalJsonOutputFailure;
+use semio_framework_pack_json_output_receiving::{NativeReceivingFailure,OriginalJsonOutputClose,OriginalJsonOutputOutcome,OriginalJsonOutputSource};
 use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement};
 use semio_plugin_abi::owned_abi::ActorInput;
 use std::mem::ManuallyDrop;
@@ -11,30 +12,30 @@ use std::mem::ManuallyDrop;
 pub enum InputAdmission { Pending, Ready, Failed, Closed }
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct OriginalActorInputFailureIdentity{owner:usize,outcome:usize,settlement:usize,binding:OriginalSourceBinding}
-pub struct OriginalActorInputFailureView<'a>{pub identity:OriginalActorInputFailureIdentity,pub outcome:Option<&'a OriginalJsonOutputOutcome>,pub settlement:Option<&'a OriginalNativeDecodeOutcome<RetainedCloneStep>>}
+pub struct OriginalActorInputFailureView<'a>{pub identity:OriginalActorInputFailureIdentity,pub outcome:Option<&'a OriginalJsonOutputOutcome>,pub receiving:Option<&'a NativeReceivingFailure>,pub settlement:Option<&'a OriginalNativeDecodeOutcome<RetainedCloneStep>>,pub outcome_refusal:Option<&'a OriginalTurnFailure>,pub settlement_refusal:Option<&'a OriginalTurnFailure>}
 
 fn projection_invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"input failure projection changed its retained branch")}
 impl OriginalActorInputFailureView<'_>{
- fn field(&self,index:usize)->Result<&'static str,ValueError>{[self.outcome.and_then(|v|v.value.as_ref().err()).map(|_|"outcomeValue"),self.outcome.and_then(|v|v.receiving_refusal.as_ref()).map(|_|"outcomeReceiving"),self.settlement.and_then(|v|v.value.as_ref().err()).map(|_|"settlementValue"),self.settlement.and_then(|v|v.receiving_refusal.as_ref()).map(|_|"settlementReceiving")].into_iter().flatten().nth(index).ok_or_else(projection_invalid)}
+ fn field(&self,index:usize)->Result<&'static str,ValueError>{[self.outcome.and_then(|v|v.value.as_ref().err()).map(|_|"outcomeValue"),self.outcome_refusal.map(|_|"outcomeReceiving"),self.settlement.and_then(|v|v.value.as_ref().err()).map(|_|"settlementValue"),self.settlement_refusal.map(|_|"settlementReceiving")].into_iter().flatten().nth(index).ok_or_else(projection_invalid)}
 }
 impl semio_framework_job::OriginalDomainProjection for OriginalActorInputFailureView<'_>{
  fn projection_identity(&self)->usize{self.identity.owner}
  fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,ValueError>{
   let Some((&field,rest))=path.split_first()else{return Ok(semio_framework_job::OriginalDomainView::IntrinsicObject((0..4).filter(|i|self.field(*i).is_ok()).count()))};
   match self.field(field)?{
-   "outcomeValue"=>semio_framework_job::project_original_receiving_primary(self.outcome.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?,rest),
-   "outcomeReceiving"=>semio_framework_job::project_original_turn_failure(self.outcome.and_then(|v|v.receiving_refusal.as_ref()).ok_or_else(projection_invalid)?,rest),
+   "outcomeValue"=>match self.outcome.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?{OriginalJsonOutputFailure::Refused(error)=>semio_framework_job::project_original_value_error(error,rest),OriginalJsonOutputFailure::Stored(_)=>semio_framework_job::project_original_receiving_primary(self.receiving.ok_or_else(projection_invalid)?.primary(),rest)},
+   "outcomeReceiving"=>semio_framework_job::project_original_turn_failure(self.outcome_refusal.ok_or_else(projection_invalid)?,rest),
    "settlementValue"=>semio_framework_job::project_original_value_error(self.settlement.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?,rest),
-   _=>semio_framework_job::project_original_turn_failure(self.settlement.and_then(|v|v.receiving_refusal.as_ref()).ok_or_else(projection_invalid)?,rest)
+   _=>semio_framework_job::project_original_turn_failure(self.settlement_refusal.ok_or_else(projection_invalid)?,rest)
   }
  }
  fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{
   let Some((&field,rest))=path.split_first()else{return self.field(index)};
   match self.field(field)?{
-   "outcomeValue"=>semio_framework_job::key_original_receiving_primary(self.outcome.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?,rest,index),
-   "outcomeReceiving"=>semio_framework_job::key_original_turn_failure(self.outcome.and_then(|v|v.receiving_refusal.as_ref()).ok_or_else(projection_invalid)?,rest,index),
+   "outcomeValue"=>match self.outcome.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?{OriginalJsonOutputFailure::Refused(error)=>semio_framework_job::key_original_value_error(error,rest,index),OriginalJsonOutputFailure::Stored(_)=>semio_framework_job::key_original_receiving_primary(self.receiving.ok_or_else(projection_invalid)?.primary(),rest,index)},
+   "outcomeReceiving"=>semio_framework_job::key_original_turn_failure(self.outcome_refusal.ok_or_else(projection_invalid)?,rest,index),
    "settlementValue"=>semio_framework_job::key_original_value_error(self.settlement.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?,rest,index),
-   _=>semio_framework_job::key_original_turn_failure(self.settlement.and_then(|v|v.receiving_refusal.as_ref()).ok_or_else(projection_invalid)?,rest,index)
+   _=>semio_framework_job::key_original_turn_failure(self.settlement_refusal.ok_or_else(projection_invalid)?,rest,index)
   }
  }
 }
@@ -52,6 +53,13 @@ pub struct OriginalActorInputReceiving {
     failed:bool, outcome_failed:bool, settlement_failed:bool, closing:bool, returning:bool, returned:bool,
 }
 
+/// ♻️ Drives one paid retirement step of a retained owner through the caller's own original effect.
+pub fn retire_step<U:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<U>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+    let grant=cx.retained_grant();let body=grant.maximum_copy_bytes;
+    let Some((poll,_))=cx.with_original_effect(grant,|_,effect|owner.step(body,effect))?else{return Ok(())};
+    let turn=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn,semio_framework_value::RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};
+    semio_framework_job::receive_original_retained_work(cx,turn)?;Ok(())
+}
 fn invalid()->OriginalTurnFailure{ValueError::literal(ValueRefusalKind::InvariantViolated,"actor input changed its original Source or borrowed wire").into()}
 fn charge(cx:&mut StepContext<'_>,retiring:bool,bytes:usize)->Result<bool,OriginalTurnFailure>{
     let grant=cx.retained_grant();
@@ -78,13 +86,15 @@ impl OriginalActorInputReceiving {
         let outcome=self.outcome().filter(|raw|raw.value.is_err()||raw.receiving_refusal.is_some());let settlement=self.settlement.as_ref().and_then(ControlledRetirement::original).filter(|raw|raw.value.is_err()||raw.receiving_refusal.is_some());
         if outcome.is_none()&&settlement.is_none(){return Ok(false)}let binding=self.binding.filter(|binding|binding.matches(cx)).ok_or_else(invalid)?;
         let identity=OriginalActorInputFailureIdentity{owner:self as*const Self as usize,outcome:outcome.map_or(0,|value|value as*const OriginalJsonOutputOutcome as usize),settlement:settlement.map_or(0,|value|value as*const OriginalNativeDecodeOutcome<RetainedCloneStep>as usize),binding};
-        if expected.is_some_and(|expected|*expected!=identity){return Err(invalid())}if !charge(cx,true,std::mem::size_of::<OriginalActorInputFailureView<'_>>())?{return Ok(false)}receive(OriginalActorInputFailureView{identity,outcome,settlement},cx)?;Ok(true)
+        if expected.is_some_and(|expected|*expected!=identity){return Err(invalid())}if !charge(cx,true,std::mem::size_of::<OriginalActorInputFailureView<'_>>())?{return Ok(false)}receive(OriginalActorInputFailureView{identity,outcome,receiving:self.decoder.failure(),settlement,outcome_refusal:outcome.and_then(|raw|self.refusal(raw)),settlement_refusal:settlement.and_then(|raw|self.refusal(raw))},cx)?;Ok(true)
     }
+    /// 🎫️ Resolves the outcome's receiving ticket through the decoder Source that issued it.
+    fn refusal<T,E>(&self,raw:&OriginalNativeDecodeOutcome<T,E>)->Option<&OriginalTurnFailure>{raw.receiving_refusal.as_ref().and_then(|ticket|self.decoder.receiving_refusal(ticket))}
     /// 🧯️ A fixed refusal names only a kind present in the retained original decoder outcome.
     pub fn failure_kind(&self)->Option<ValueRefusalKind>{
-        let settlement=self.settlement.as_ref().and_then(ControlledRetirement::original).and_then(|raw|raw.receiving_refusal.as_ref().and_then(|failure|failure.primary_value().map(|error|error.kind)).or_else(||raw.value.as_ref().err().map(|error|error.kind)));
-        settlement.or_else(||{let outcome=self.outcome()?;outcome.receiving_refusal.as_ref().and_then(|failure|failure.primary_value().map(|error|error.kind).or_else(||failure.primary_receiving().and_then(|cause|cause.primary.as_ref().or(cause.quote_refusal.as_ref()).or(cause.allocation_refusal.as_ref()).map(|error|error.kind))))
-            .or_else(||outcome.value.as_ref().err().and_then(|cause|cause.primary.as_ref().or(cause.quote_refusal.as_ref()).or(cause.allocation_refusal.as_ref()).map(|error|error.kind)))})
+        let settlement=self.settlement.as_ref().and_then(ControlledRetirement::original).and_then(|raw|self.refusal(raw).and_then(|failure|failure.primary_value().map(|error|error.kind)).or_else(||raw.value.as_ref().err().map(|error|error.kind)));
+        settlement.or_else(||{let outcome=self.outcome()?;self.refusal(outcome).and_then(|failure|failure.primary_value().map(|error|error.kind).or_else(||failure.primary_receiving().and_then(|cause|cause.primary.as_ref().or(cause.quote_refusal.as_ref()).or(cause.allocation_refusal.as_ref()).map(|error|error.kind))))
+            .or_else(||outcome.value.as_ref().err().and_then(|cause|match cause{OriginalJsonOutputFailure::Refused(error)=>Some(error.kind),OriginalJsonOutputFailure::Stored(_)=>self.decoder.failure().map(NativeReceivingFailure::primary).and_then(|cause|cause.primary.as_ref().or(cause.quote_refusal.as_ref()).or(cause.allocation_refusal.as_ref()).map(|error|error.kind))}))})
     }
     pub fn input(&self)->Option<&ActorInput>{if self.input_returned()&&!self.closing{self.input.as_ref()}else{None}}
     pub fn with_input_step<T>(&mut self,cx:&mut StepContext<'_>,use_input:impl FnOnce(&mut ActorInput,&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<Option<T>,OriginalTurnFailure>{
@@ -150,7 +160,7 @@ impl OriginalActorInputReceiving {
     fn retire_outcome_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         if let Some(settlement)=self.settlement.as_mut(){
             if self.settlement_failed{return Ok(false)}
-            if !settlement.terminal_is_empty(){let result=settlement.step(cx.retained_grant());let work=settlement.last_turn_work();semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome{result,work})?;return Ok(false)}
+            if !settlement.terminal_is_empty(){retire_step(settlement,cx)?;return Ok(false)}
             if !charge(cx,true,std::mem::size_of::<Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>())?{return Ok(false)}self.settlement.take();return Ok(false)
         }
         if let Some(outcome)=self.outcome.as_mut(){
@@ -171,7 +181,7 @@ impl OriginalActorInputReceiving {
             if self.job_retirement.is_none()&&self.job.is_some(){if !charge(cx,true,std::mem::size_of::<Option<semio_framework_actor::OriginalJobSource>>()+std::mem::size_of::<Option<ControlledRetirement<semio_framework_actor::OriginalJobSource>>>())?{return Ok(InputAdmission::Pending)}*self.job_retirement=Some(ControlledRetirement::retain(self.job.take().ok_or_else(invalid)?));return Ok(InputAdmission::Pending)}
             if let Some(owner)=self.job_retirement.as_mut(){
                 if !owner.terminal_is_empty(){
-                    if self.decoder.terminal_is_empty(){let result=owner.step(cx.retained_grant());let work=owner.last_turn_work();semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome{result,work})?;}
+                    if self.decoder.terminal_is_empty(){retire_step(owner,cx)?;}
                     else {let address=(&mut *self.settlement as *mut Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>) as usize;let bytes=std::mem::size_of::<Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>();if !cx.with_original_retirement(|cx|self.capture.admit_sized(cx,address,bytes))?{return Ok(InputAdmission::Pending)}if let Some(raw)=cx.with_original_retirement(|cx|self.decoder.close_owned_step(owner,cx))?{self.retain_settlement(raw)?}}
                     return Ok(InputAdmission::Pending)
                 }
@@ -180,7 +190,7 @@ impl OriginalActorInputReceiving {
             if self.retirement.is_none()&&self.input.is_some(){if !charge(cx,true,std::mem::size_of::<Option<ActorInput>>()+std::mem::size_of::<Option<ControlledRetirement<ActorInput>>>())?{return Ok(InputAdmission::Pending)}*self.retirement=Some(ControlledRetirement::retain(self.input.take().ok_or_else(invalid)?));return Ok(InputAdmission::Pending)}
             if let Some(owner)=self.retirement.as_mut(){
                 if !owner.terminal_is_empty(){
-                    if self.decoder.terminal_is_empty(){let result=owner.step(cx.retained_grant());let work=owner.last_turn_work();semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome{result,work})?;}
+                    if self.decoder.terminal_is_empty(){retire_step(owner,cx)?;}
                     else {let address=(&mut *self.settlement as *mut Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>) as usize;let bytes=std::mem::size_of::<Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>();if !cx.with_original_retirement(|cx|self.capture.admit_sized(cx,address,bytes))?{return Ok(InputAdmission::Pending)}if let Some(raw)=cx.with_original_retirement(|cx|self.decoder.close_owned_step(owner,cx))?{self.retain_settlement(raw)?}}
                     return Ok(InputAdmission::Pending)
                 }

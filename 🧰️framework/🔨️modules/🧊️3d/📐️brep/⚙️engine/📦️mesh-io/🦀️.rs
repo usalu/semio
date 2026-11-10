@@ -204,7 +204,7 @@ impl MeshImportCursor {
         if grant.maximum_items==0 || grant.maximum_depth==0 || (!self.cancelled && self.phase<4) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(owner)=self.retirement.as_mut() {
             if owner.owner().terminal_is_empty() {self.retirement=None;work=1;return Ok(import_progress());}
-            let poll=owner.owner_mut().close_step(effect);work=poll.work();return match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default()))};
+            let poll=owner.owner_mut().close_step(grant.maximum_copy_bytes,effect);work=poll.work();return match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default()))};
         }
         match self.retirement_stage {
             0=>{work=1;let scratch=ImportScratch {positions:std::mem::take(&mut self.positions),positions64:std::mem::take(&mut self.positions64),normals64:std::mem::take(&mut self.normals64),normals:std::mem::take(&mut self.normals),indices:std::mem::take(&mut self.indices),faces:std::mem::take(&mut self.faces),vertices:std::mem::take(&mut self.vertex_map),edges:std::mem::take(&mut self.edge_map)};self.retirement=Some(ImportCloseOwner::Scratch(import_controller(scratch)));self.retirement_stage=2;Ok(import_progress())}

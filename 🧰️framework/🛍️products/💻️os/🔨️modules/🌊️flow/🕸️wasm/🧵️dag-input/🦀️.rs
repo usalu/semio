@@ -9,10 +9,9 @@ use semio_framework_value::native_encoding::NativeEncodeContinuation;
 use semio_framework_value::{NativeEncodeControl, ErasedSnapshotRetirement, retained_clone::RetainedCloneGrant, retirement::{RetireOwned, admit_owned_retirement}};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
-/// 🪙️ A guest budget carries no job fuel, so each input step spends its own explicit finite wallet bounded by the step grant.
+/// 🧊️ A guest budget carries no job fuel, so each input step runs inside one owner-less retirement-pump turn bounded by the step grant; an unadmitted quote keeps state and yields.
 fn authored_input(grant:RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,semio_framework_value::ValueError>)->Result<bool,semio_framework_value::ValueError>{
-    let maximum=u64::try_from(grant.maximum_copy_bytes).unwrap_or(u64::MAX).saturating_add(u64::try_from(grant.maximum_capacity_bytes).unwrap_or(u64::MAX)).saturating_add(1);
-    match semio_framework_value::AuthoringWallet::new(grant,u128::from(maximum)).run(grant,maximum,operation)?{Some(done)=>done.output,None=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"DAG input work quote was not admitted"))}
+    semio_os_flow_host_core::cold_effect(grant,operation)?.unwrap_or(Ok(false))
 }
 
 pub struct FlowDagAction{
@@ -56,7 +55,7 @@ impl FlowDagAction{
                     if self.application.is_none(){self.application=Some(DagInputApplication::new(self.input.as_mut().unwrap().take_facts().expect("complete admitted original DAG facts")));return self.progress()}
                     let Some(items)=budget.retained.maximum_items.checked_sub(progress.copied_items)else{return self.program.finish_domain(Err(abi_failure(AbiErrorCode::NoCredit)))};let Some(capacity)=budget.retained.maximum_capacity_bytes.checked_sub(progress.retained_capacity_bytes)else{return self.program.finish_domain(Err(abi_failure(AbiErrorCode::NoCredit)))};
                     let bytes=semio_framework_value::retirement::owned_retirement_birth_bytes::<DagInputDisplaced>();let grant=match self.close_grant(RetainedCloneGrant{maximum_items:items,maximum_capacity_bytes:capacity,..budget.retained},0,bytes,0,1){Ok(grant)=>grant,Err(_)=>return if progress.copied_items==0{FlowFeatureStep::Yield}else{self.progress()}};
-                    match admit_typed_controlled_retirement(DagInputDisplaced::empty(),grant).result{Ok((owner,receipt))=>{self.close_capacity-=receipt.retained_capacity_bytes;self.receipt=self.receipt.checked_add(receipt).expect("bounded displaced birth receipt");self.displaced=Some(owner);self.progress()},Err((error,_))=>self.program.finish_domain(Err(self.failure(error)))}
+                    let mut empty=Some(DagInputDisplaced::empty());let admitted=match semio_os_flow_host_core::cold_effect(grant,|effect|admit_typed_controlled_retirement(&mut empty,effect)){Ok(Some(admitted))=>admitted,Ok(None)=>return if progress.copied_items==0{FlowFeatureStep::Yield}else{self.progress()},Err(error)=>return self.program.finish_domain(Err(self.failure(error)))};match admitted.result{Ok(Some((owner,receipt)))=>{self.close_capacity-=receipt.retained_capacity_bytes;self.receipt=self.receipt.checked_add(receipt).expect("bounded displaced birth receipt");self.displaced=Some(owner);self.progress()},Ok(None)=>self.program.finish_domain(Err(self.failure(semio_framework_value::ValueError::invariant("DAG displaced custody was absent")))),Err(error)=>self.program.finish_domain(Err(self.failure(error)))}
                 },
                 Err(error)=>self.program.finish_domain(Err(self.failure(error))),
             }
@@ -83,7 +82,7 @@ impl FlowDagAction{
             let copy=owner.next_copy_byte_demand().map_err(dag_input_failure)?.min(admitted.maximum_copy_bytes);let capacity=owner.next_capacity_byte_demand(copy).map_err(dag_input_failure)?;let release=owner.next_release_byte_demand().map_err(dag_input_failure)?;let depth=owner.next_depth_demand().map_err(dag_input_failure)?;
             if admitted.maximum_items==0||copy>admitted.maximum_copy_bytes||capacity>admitted.maximum_capacity_bytes||release>admitted.maximum_release_bytes||depth>admitted.maximum_depth||copy>self.close_copy||capacity>self.close_capacity||release>self.close_release{return Ok(false)}
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
-            let step=owner.close_step(grant).result.map_err(dag_input_failure)?;let progress=match step{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};self.close_capacity-=progress.retained_capacity_bytes;self.close_copy-=progress.copied_bytes;self.close_release-=progress.released_bytes;self.receipt=self.receipt.checked_add(progress).map_err(dag_input_failure)?;
+            let Some(poll)=semio_os_flow_host_core::cold_effect(grant,|effect|owner.close_step(grant.maximum_copy_bytes,effect)).map_err(dag_input_failure)?else{return Ok(false)};let step=semio_os_flow_host_core::poll_close_step(poll).map_err(dag_input_failure)?;let progress=match step{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};self.close_capacity-=progress.retained_capacity_bytes;self.close_copy-=progress.copied_bytes;self.close_release-=progress.released_bytes;self.receipt=self.receipt.checked_add(progress).map_err(dag_input_failure)?;
             return Ok(false)
         }
         Ok(true)
@@ -94,7 +93,8 @@ impl FlowDagAction{
     }
     fn close_owned<T:RetireOwned>(&mut self,original:&mut Option<T>,admitted:RetainedCloneGrant)->Result<bool,FlowFailure>{
         if original.is_some(){let capacity=semio_framework_value::retirement::owned_retirement_birth_bytes::<T>();let grant=match self.close_grant(admitted,0,capacity,0,1){Ok(grant)=>grant,Err(_)=>return Ok(false)};
-            let Some(value)=original.take()else{return Ok(true)};match admit_owned_retirement(value,grant).result{Ok((owner,progress))=>{self.close_capacity-=progress.retained_capacity_bytes;self.receipt=self.receipt.checked_add(progress).map_err(dag_input_failure)?;self.retirement=Some(owner)},Err((error,value))=>{*original=Some(value);return Err(dag_input_failure(error))}}
+            let Some(admitted)=semio_os_flow_host_core::cold_effect(grant,|effect|admit_owned_retirement(original,effect)).map_err(dag_input_failure)?else{return Ok(false)};
+            match admitted.result.map_err(dag_input_failure)?{Some((owner,progress))=>{self.close_capacity-=progress.retained_capacity_bytes;self.receipt=self.receipt.checked_add(progress).map_err(dag_input_failure)?;self.retirement=Some(owner)},None=>return Ok(true)}
             return Ok(false)
         }Ok(true)
     }

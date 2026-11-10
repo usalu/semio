@@ -3,7 +3,7 @@
 use super::*;
 
 /// 📚️ Routes the four history-array closes through one exhaustive owner.
-impl<Mutation: Send + 'static> ArtifactEnvelopeFreshVcsActive<Mutation> {
+impl<Mutation: Send + Sync + 'static> ArtifactEnvelopeFreshVcsActive<Mutation> {
     pub fn terminal_is_empty(&self) -> bool {
         match self {
             Self::Snapshot { .. } => true,
@@ -35,7 +35,7 @@ impl<Mutation: Send + 'static> ArtifactEnvelopeFreshVcsActive<Mutation> {
     }
 }
 
-impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeVcsFieldAuthority<P, Mutation> for ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactEnvelopeVcsFieldAuthority<P, Mutation> for ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
     fn accept_token(&mut self, token: OwnedSchemaToken, _terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
         let (token, _terminal) = match self.pending {
             Some(pending) => pending,
@@ -137,7 +137,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeVcsFiel
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty }));
         }
         if self.retirement.is_some() {
-            return artifact_envelope_close_resume_with(artifact_retirement_box_close_step(&mut self.retirement, effect), |failure| artifact_envelope_failure_diagnostic(fault("artifact-envelope.fresh-vcs-retirement-fault"), &failure)).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return artifact_envelope_close_resume_with(artifact_retirement_box_close_step(&mut self.retirement,effect.grant().maximum_copy_bytes,effect), |failure| artifact_envelope_failure_diagnostic(fault("artifact-envelope.fresh-vcs-retirement-fault"), &failure)).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(active) = self.active.as_mut() {
             if active.terminal_is_empty() {
@@ -211,7 +211,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeVcsFiel
     }
 }
 
-impl<P: Send + Sync + 'static, Mutation: Send + 'static> Drop for ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> Drop for ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.owners_terminal_empty()), "fresh VCS authority reached Drop before every nested owner was published or cursor-retired");
     }

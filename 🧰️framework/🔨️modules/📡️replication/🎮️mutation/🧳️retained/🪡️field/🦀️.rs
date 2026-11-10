@@ -1,6 +1,24 @@
 //! 🪡️ Typed field copying and owned exchange retain only authored and displaced children.
+/// 🪢️ Generates the four reply-shaped close entries over fresh or recovered invocations with ordinary or original-loan control.
+macro_rules! retained_close{([$($generic:tt)*] $type:ty,$dispatch:ident)=>{
+ impl<$($generic)*> $type{
+  /// ♻️ Records one close step of the selected child in the caller's reply.
+  pub fn close_into<'r>(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:$crate::field::Reply<'r>)->Result<$crate::field::Done<'r>,semio_framework_value::ValueError>{self.$dispatch(None,body,effect,reply,false)}
+  /// 🔁️ Recovers the exact selected ordinary close action.
+  pub fn recover_close_into<'r>(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:$crate::field::Reply<'r>)->Result<$crate::field::Done<'r>,semio_framework_value::ValueError>{self.$dispatch(None,body,effect,reply,true)}
+  /// 🪢️ Records one close step under the original controller.
+  pub fn close_original_into<'r>(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:$crate::field::Reply<'r>)->Result<$crate::field::Done<'r>,semio_framework_value::ValueError>{if self.requires_original_birth(){return Err(semio_framework_value::ValueError::invariant("field close requires its selected original birth"))}if !self.requires_original_control(){return self.$dispatch(None,body,effect,reply,false)}self.$dispatch(Some(original),body,effect,reply,false)}
+  /// 🔁️ Recovers the same original-controller close action.
+  pub fn recover_close_original_into<'r>(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:$crate::field::Reply<'r>)->Result<$crate::field::Done<'r>,semio_framework_value::ValueError>{if self.flight.loanless(){return self.$dispatch(None,body,effect,reply,true)}self.$dispatch(Some(original),body,effect,reply,true)}
+ }
+};}
+/// ⏱️ Charges one unit of this action or completes the reply with a Work refusal.
+macro_rules! charge{($effect:ident,$reply:ident,$units:expr,$message:expr)=>{match $effect.performed($units){Ok(true)=>{},Ok(false)=>return Ok($reply.complete(Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,$message).into()))),Err(error)=>return Ok($reply.complete(Err(error.into())))}}}
 #[path="🟰️change/🦀️.rs"]
 pub mod change;
+#[cfg(test)]
+#[path="🧪️tests/harness.rs"]
+pub(crate) mod harness;
 pub use change::{RetainedFieldChange};
 pub use change::record::{RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldProjection, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field};
 use semio_framework_value::{OriginalRetirementFailure, OriginalRetirementOutcome, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, RetirementPollExit, ValueError, ValueRefusalKind};
@@ -78,3 +96,46 @@ impl<T> semio_framework_value::retained_clone::OriginalEffectProducer for Retain
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+
+/// 📬️ A reply recording one retained clone step.
+pub type Reply<'r,T=RetainedCloneStep,E=OriginalRetirementFailure>=semio_framework_value::retained_clone::OriginalEffectReply<'r,T,E>;
+/// ✅️ Proof that a retained clone step reply was recorded or kept pending.
+pub type Done<'r,T=RetainedCloneStep,E=OriginalRetirementFailure>=semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,T,E>;
+type Key=(semio_framework_value::retained_clone::OriginalEffectInvocationIdentity,u8,usize,u64,bool);
+/// 🛰️ Retains the one original child action in flight; the child's reply lives in the turn that lends it.
+#[derive(Default)]
+pub struct Flight{route:Option<Key>}
+impl Flight{
+ /// 💤️ Reports that no child action is retained.
+ pub fn idle(&self)->bool{self.route.is_none()}
+ /// 🪪️ Reports that the retained action runs without an original close loan.
+ pub fn loanless(&self)->bool{self.route.is_some_and(|key|!key.4)}
+ /// 🪢️ Reports whether the retained action runs under an original close loan.
+ pub fn loaned(&self)->Option<bool>{self.route.map(|key|key.4)}
+ /// 🧭️ Reads the retained child route.
+ pub fn route(&self)->Option<u8>{self.route.map(|key|key.1)}
+ fn key(effect:&RetainedAllocationEffect<'_>,recover:bool,route:u8,body:usize,maximum:u64,original:Option<&mut semio_framework_value::OriginalRetirementCloseLoan<'_>>)->Result<Key,ValueError>{
+  use semio_framework_value::retained_clone::OriginalEffectCallbackMode;
+  let invocation=effect.invocation().ok_or_else(||ValueError::invariant("retained field action lacks its original invocation"))?;
+  if invocation.mode()!=if recover{OriginalEffectCallbackMode::Recover}else{OriginalEffectCallbackMode::Receive}{return Err(ValueError::invariant("retained field action changed its invocation mode"))}
+  Ok((invocation.identity(),route,body,maximum,original.is_some()))
+ }
+ /// 🚀️ Retains a fresh child action before it runs.
+ pub fn start(&mut self,effect:&RetainedAllocationEffect<'_>,route:u8,body:usize,maximum:u64,original:Option<&mut semio_framework_value::OriginalRetirementCloseLoan<'_>>)->Result<(),ValueError>{
+  if !self.idle(){return Err(ValueError::invariant("retained field has an unresolved original action"))}
+  self.route=Some(Self::key(effect,false,route,body,maximum,original)?);Ok(())
+ }
+ /// 🔁️ Authenticates a recovery against the retained action and returns its route.
+ pub fn resume(&self,effect:&RetainedAllocationEffect<'_>,body:usize,maximum:u64,original:Option<&mut semio_framework_value::OriginalRetirementCloseLoan<'_>>)->Result<u8,ValueError>{
+  let stored=self.route.ok_or_else(||ValueError::invariant("retained field has no original action"))?;
+  if Self::key(effect,true,stored.1,body,maximum,original)?!=stored{return Err(ValueError::invariant("retained field recovery changed its original action"))}Ok(stored.1)
+ }
+ /// 📤️ Takes the child result recorded in this turn's slot and clears the action once it is recorded.
+ pub fn settle<T>(&mut self,stash:&mut Option<T>)->Option<T>{let result=stash.take();if result.is_some(){self.route=None}result}
+}
+/// 📥️ Lends this turn's slot to one child action.
+pub(crate) fn slot<T,E>(stash:&mut Option<Result<T,E>>)->Result<Reply<'_,T,E>,ValueError>{semio_framework_value::retained_clone::OriginalEffectReply::borrow(stash)}
+/// 📬️ Runs a child that completes natively inside the caller's own action and returns its recorded result.
+pub(crate) fn native<T,E>(call:impl for<'r> FnOnce(Reply<'r,T,E>)->Result<Done<'r,T,E>,ValueError>)->Result<Result<T,E>,ValueError>{let mut slot=None;let done=call(semio_framework_value::retained_clone::OriginalEffectReply::borrow(&mut slot)?)?;drop(done);slot.take().ok_or_else(||ValueError::invariant("native retained field child left its reply pending"))}
+/// ⏱️ Charges one unit of this action inside a recorded conclusion.
+pub(crate) fn unit(effect:&mut RetainedAllocationEffect<'_>,units:u64,message:&'static str)->Result<(),ValueError>{if effect.performed(units)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,message))}}

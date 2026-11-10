@@ -86,7 +86,7 @@ pub fn gis3d_io() -> AppIo {
 pub fn gis3d_map_in_port() -> semio_plugin::MediaPortSpec {
     semio_plugin::MediaPortSpec {
         id: "map:in".into(),
-        label: "Map".into(),
+        label: LocalizedLabel::native("Map", "Karte"),
         direction: semio_plugin::MediaPortDirection::In,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: Some(semio_s_artifact_gis_gismap::GISMAP_DIALECT.artifact_kind.into()),
@@ -101,7 +101,7 @@ pub fn gis3d_map_in_port() -> semio_plugin::MediaPortSpec {
 pub fn gis3d_scene_out_port() -> semio_plugin::MediaPortSpec {
     semio_plugin::MediaPortSpec {
         id: "scene:out".into(),
-        label: "Scene".into(),
+        label: LocalizedLabel::native("Scene", "Szene"),
         direction: semio_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         kind_id: Some("3d.mesh".into()),

@@ -47,8 +47,7 @@ pub mod paged;
 #[path = "🎮️paged-append/🦀️.rs"]
 pub mod paged_append;
 
-#[path = "📝️shared-utf8/🦀️.rs"]
-pub mod shared_utf8;
+pub use semio_framework_value::shared_utf8;
 
 
 #[path = "🧬️bounded-clone/🦀️.rs"]

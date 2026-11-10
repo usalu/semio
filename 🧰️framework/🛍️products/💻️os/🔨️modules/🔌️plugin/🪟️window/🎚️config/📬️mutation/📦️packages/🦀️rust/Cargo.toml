@@ -23,4 +23,5 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../../../../../../🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-retirement-queue = { path = "../../../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust" }

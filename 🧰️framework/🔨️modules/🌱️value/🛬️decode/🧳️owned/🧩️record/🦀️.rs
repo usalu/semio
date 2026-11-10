@@ -7,7 +7,8 @@ impl NativeRecordField{pub fn matches(self,key:NativeRecordKey<'_>)->bool{match 
 #[path="🔎️schema/🦀️.rs"]mod schema;
 pub use schema::{NativeSchemaLeaf,NativeSchemaFields,NativeSchemaKeyPoll,NativeSchemaKeyMetadata,NativeSchemaMatchSelection,NativeSchemaKeySource,NativeRecordSchema,NativeFieldMatch,NativeRecordMatcher};
 
+#[cfg(test)]pub(crate) use schema::{settlement_of,Settle};
 pub use semio_framework_value_native_storage::NativeRecordStorage;
 
 
-pub use crate::source::NativeSourceKeyValue;
+pub use crate::source::{NativeSourceKeyReply,NativeSourceKeyReplyComplete,NativeSourceKeyValue};

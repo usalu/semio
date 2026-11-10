@@ -2,11 +2,7 @@
 
 use std::fmt;
 
-pub use semio_framework_pack_json_canonical::{ArtifactCanonicalJsonText, ArtifactCanonicalJsonTextCursor, ArtifactCanonicalJsonTextStep, canonical_escape, canonical_escaped_byte, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonScalarBytes, ArtifactCanonicalDecimalI64, ArtifactCanonicalDecimalU64, ArtifactCanonicalHexWordArray, ArtifactCanonicalHexWordF32, ArtifactCanonicalHexWordList, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonTreeWireCursor, ArtifactCanonicalJsonTreeWireStep};
-
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+pub use semio_framework_pack_json_canonical::{retained_alias, retained_alias_demand, retained_alias_work_demand, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTextCursor, ArtifactCanonicalJsonTextStep, canonical_escape, canonical_escaped_byte, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonScalarBytes, ArtifactCanonicalDecimalI64, ArtifactCanonicalDecimalU64, ArtifactCanonicalHexWordArray, ArtifactCanonicalHexWordF32, ArtifactCanonicalHexWordList, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonTreeWireCursor, ArtifactCanonicalJsonTreeWireStep};
 
 use semio_framework_value::{DslValue, FromValue, ValueError, ValueRefusalKind};
 pub use semio_framework_value::ToValue;
@@ -54,7 +50,7 @@ mod borrowed_read_source;
 pub use borrowed_read_source::{JsonReadSource,JsonBorrowedParseCursor,JsonBorrowedDslCursor,JsonParsedValue,JsonReadLimits,JsonSourceCursor};
 #[path="📥️decode/🧳️receiving/🦀️.rs"]
 pub mod original_receiving;
-pub use original_receiving::OriginalJsonReceiving;
+pub use original_receiving::{OriginalJsonReceiving,close_native_receiver};
 #[path="📥️decode/🧵️operation/🦀️.rs"]
 mod original_read_operation;
 pub use original_read_operation::{JsonReadOperation,JsonReadPolicy};

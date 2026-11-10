@@ -24,44 +24,47 @@ impl FlowEvalSession {
     ///
     /// Answers whether anything was actually invalidated, so the caller only re-arms a chain it
     /// owes.
-    pub fn invalidate_for_flow_extension_registry(&mut self,generation:u64,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),ValueError>{
-        if self.operator_registry.is_some()||self.state.flow_extension_generation==generation{return Ok((false,Default::default()))}
-        self.state.retirement.preflight(grant)?;
-        let original=SessionResetSources::take(&mut self.state,true);
-        match self.state.retirement.admit(SessionCollectionOwner::Reset(original),grant){
-            Ok(progress)=>{self.state.flow_extension_generation=generation;self.state.preview_cancelled=false;self.state.tick_scheduled=false;self.state.published_preview_mesh_digest=0;self.state.pending_host_cancelled=self.state.pending_host.is_some();Ok((true,progress))},
-            Err((error,SessionCollectionOwner::Reset(original)))=>{original.restore(&mut self.state);Err(error)},
-            Err(_)=>unreachable!("original registry invalidation returned a different source family"),
+    pub fn invalidate_for_flow_extension_registry(&mut self,generation:u64,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<(bool,RetainedCloneProgress)>,ValueError>{
+        if self.operator_registry.is_some()||self.state.flow_extension_generation==generation{return Ok(Some((false,Default::default())))}
+        self.state.retirement.preflight(effect.grant())?;
+        let mut original=Some(SessionCollectionOwner::Reset(SessionResetSources::take(&mut self.state,true)));
+        let turn=self.state.retirement.admit(&mut original,effect);
+        match turn.result{
+            Ok(Some(progress))=>{self.state.flow_extension_generation=generation;self.state.preview_cancelled=false;self.state.tick_scheduled=false;self.state.published_preview_mesh_digest=0;self.state.pending_host_cancelled=self.state.pending_host.is_some();Ok(Some((true,progress)))},
+            result=>{let Some(SessionCollectionOwner::Reset(original))=original else{unreachable!("original registry invalidation returned a different source family")};original.restore(&mut self.state);result.map(|_|None)},
         }
     }
 
     /// 💥 Records the fault an `evaluate` answer came back with. The extension id and the decoded
     /// message are the SDK's own (`reactor::extension_response_args` echoes `faultCode`/
-    /// `faultMessage` onto the response action) — nothing here re-words them.
-    pub fn note_extension_evaluate_fault(&mut self,fault:ExtensionEvaluateFault,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,ExtensionEvaluateFault)> {
+    /// `faultMessage` onto the response action) — nothing here re-words them. The fault leaves its
+    /// slot only once recorded.
+    pub fn note_extension_evaluate_fault(&mut self,fault:&mut Option<ExtensionEvaluateFault>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError> {
+        let grant=effect.grant();
+        if fault.is_none(){return Err(ValueError::invariant("session fault handoff owner is absent"))}
         if self.state.extension_evaluate_fault.is_none(){
-            if grant.maximum_items==0{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"session fault handoff requires an admitted item"),fault))}
-            if grant.maximum_depth==0{return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"session fault handoff requires original source depth"),fault))}
-            self.state.extension_evaluate_fault=Some(fault);return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
+            if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"session fault handoff requires an admitted item"))}
+            if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"session fault handoff requires original source depth"))}
+            self.state.extension_evaluate_fault=fault.take();return Ok(Some(RetainedCloneProgress{copied_items:1,..Default::default()}))
         }
-        if let Err(error)=self.state.retirement.preflight(grant){return Err((error,fault))}
-        let original=self.state.extension_evaluate_fault.take().unwrap();
-        match self.state.retirement.admit(SessionCollectionOwner::Fault(original),grant){
-            Ok(progress)=>{self.state.extension_evaluate_fault=Some(fault);Ok(progress)},
-            Err((error,SessionCollectionOwner::Fault(original)))=>{self.state.extension_evaluate_fault=Some(original);Err((error,fault))},
-            Err(_)=>unreachable!("session original fault admission kind"),
+        self.state.retirement.preflight(grant)?;
+        let mut original=self.state.extension_evaluate_fault.take().map(SessionCollectionOwner::Fault);
+        let turn=self.state.retirement.admit(&mut original,effect);
+        match turn.result{
+            Ok(Some(progress))=>{self.state.extension_evaluate_fault=fault.take();Ok(Some(progress))},
+            result=>{let Some(SessionCollectionOwner::Fault(original))=original else{unreachable!("session original fault admission kind")};self.state.extension_evaluate_fault=Some(original);result.map(|_|None)},
         }
     }
 
     /// ✅️ Forgets the last evaluate fault — an answer that folded supersedes it.
-    pub fn clear_extension_evaluate_fault(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
-        if self.state.extension_evaluate_fault.is_none(){return Ok(Default::default())}
-        self.state.retirement.preflight(grant)?;
-        let original=self.state.extension_evaluate_fault.take().unwrap();
-        match self.state.retirement.admit(SessionCollectionOwner::Fault(original),grant){
-            Ok(progress)=>Ok(progress),
-            Err((error,SessionCollectionOwner::Fault(original)))=>{self.state.extension_evaluate_fault=Some(original);Err(error)},
-            Err(_)=>unreachable!("session original fault admission kind"),
+    pub fn clear_extension_evaluate_fault(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError> {
+        if self.state.extension_evaluate_fault.is_none(){return Ok(Some(Default::default()))}
+        self.state.retirement.preflight(effect.grant())?;
+        let mut original=self.state.extension_evaluate_fault.take().map(SessionCollectionOwner::Fault);
+        let turn=self.state.retirement.admit(&mut original,effect);
+        match turn.result{
+            Ok(Some(progress))=>Ok(Some(progress)),
+            result=>{let Some(SessionCollectionOwner::Fault(original))=original else{unreachable!("session original fault admission kind")};self.state.extension_evaluate_fault=Some(original);result.map(|_|None)},
         }
     }
 
@@ -133,7 +136,8 @@ impl FlowEvalSession {
         Ok(RetirementDemand{depth:depth.max(1),..Default::default()})
     }
     /// 🍂️ Compares one roster entry or closes one exact original removed row per turn.
-    pub fn retain_preview_meshes_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn retain_preview_meshes_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
         self.state.preview_retention_progress=Default::default();
         if self.preview_retention_terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
@@ -143,8 +147,9 @@ impl FlowEvalSession {
         let mut owner=self.state.preview_retention.take().unwrap();
         let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};
         if let Some(removed)=owner.removed.as_mut(){
-            let result=removed.step(grant);self.state.preview_retention_progress=removed.step_progress();self.state.preview_retention=Some(owner);
-            let step=result?;progress=step.progress();
+            let poll=removed.step(grant.maximum_copy_bytes,effect);self.state.preview_retention_progress=removed.step_progress();self.state.preview_retention=Some(owner);
+            let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll else{return Ok(RetainedCloneStep::Progress(Default::default()))};
+            let step=turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;progress=step.progress();
             if self.state.preview_retention.as_ref().unwrap().removed.as_ref().unwrap().terminal_is_empty(){self.state.preview_retention.as_mut().unwrap().removed=None;}
             self.state.preview_retention_progress=progress;return Ok(RetainedCloneStep::Progress(progress))
         }

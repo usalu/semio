@@ -219,7 +219,7 @@ impl RetainedKeyLookup {
         if !retained_clone_grant_admits(grant, demand) {
             return done(Ok(RetainedCloneStep::Progress(Default::default())));
         }
-        let turn = RetainedCloneBinding::close_one(if self.key.is_some() { &mut self.key } else { &mut self.rows }, effect);
+        let turn = RetainedCloneBinding::close_one(if self.key.is_some() { &mut self.key } else { &mut self.rows }, grant.maximum_copy_bytes, effect);
         turn.map(|step| if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
 

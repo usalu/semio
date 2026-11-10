@@ -373,7 +373,7 @@ fn close_borrowed_json<S: JsonReadSource + Copy, V: JsonParsedValue>(cursor: Jso
             maximum_release_bytes: if cursor.terminal_is_empty() { std::mem::size_of_val(cursor.as_ref()) } else { cursor.next_release_byte_demand().unwrap() },
             maximum_depth: if cursor.terminal_is_empty() { 1 } else { cursor.next_depth_demand().unwrap() },
         };
-        assert!(crate::fp(grant, |e| close_factory_ticket(&mut owner, e)).result.unwrap().progress().fits(grant));
+        assert!(crate::fp(grant, |e| close_factory_ticket(&mut owner, grant.maximum_copy_bytes, e)).result.unwrap().progress().fits(grant));
     }
     panic!("original borrowed JSON owner failed to retire");
 }
@@ -415,7 +415,7 @@ fn borrowed_json_retirement_admission_preserves_original_source_on_refusal() {
                     maximum_release_bytes: if cursor.terminal_is_empty() { std::mem::size_of_val(cursor.as_ref()) } else { cursor.next_release_byte_demand().unwrap() },
                     maximum_depth: if cursor.terminal_is_empty() { 1 } else { cursor.next_depth_demand().unwrap() },
                 };
-                assert!(crate::fp(grant, |e| semio_framework_value::close_factory_ticket(&mut owner, e)).result.unwrap().progress().fits(grant));
+                assert!(crate::fp(grant, |e| semio_framework_value::close_factory_ticket(&mut owner, grant.maximum_copy_bytes, e)).result.unwrap().progress().fits(grant));
             }
         } else {
             let (error, restored) = crate::fx(grant, |e| cursor.into_retirement(e)).result.err().expect("original handoff must refuse");
@@ -492,6 +492,7 @@ fn original_json_normal_frontiers_preserve_actual_independent_receipts() {
     let zero = RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 };
     for text in law["sources"].as_array().unwrap() {
         let text = text.as_str().unwrap();
+        assert_eq!(grant.maximum_copy_bytes, JsonParseCursor::new(JsonMemberPolicy::Reject).normal_step_demands(text).unwrap().copy_bytes, "the fixture copy grant is the exact first-step quote");
         let pointer = text.as_ptr();
         let expected: serde_json::Value = serde_json::from_str(text).unwrap();
         let mut parser = JsonParseCursor::new(JsonMemberPolicy::Reject);

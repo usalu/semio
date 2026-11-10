@@ -287,7 +287,7 @@ include!("../🧪️tests/🔬️workflow-standalone/🦀️.rs");
 /// WP-0.3/WP-3.2) — kept load-bearing for the space plugin ui crate (WP-1.5) until then. Port keys
 /// now read `artifactKind` off `WorkflowMediaPort.spec.kind_id` (was the deleted `OsMediaPort`'s
 /// `artifact_kind` string field under the stale `resourceKind` key).
-pub fn os_workflow_to_node_graph_payload(graph: &Workflow) -> OsWorkflowNodeGraphPayload {
+pub fn os_workflow_to_node_graph_payload(graph: &Workflow, terminology: semio_framework::Terminology, locale: semio_framework::Locale) -> OsWorkflowNodeGraphPayload {
     let nodes: Vec<_> = graph
         .nodes
         .iter()
@@ -304,13 +304,13 @@ pub fn os_workflow_to_node_graph_payload(graph: &Workflow) -> OsWorkflowNodeGrap
                     "id": port.id,
                     "artifactKind": port.spec.kind_id.clone().unwrap_or_default(),
                     "direction": "in",
-                    "label": port.spec.label,
+                    "label": port.spec.label.resolve(terminology, locale),
                 })).collect::<Vec<_>>(),
                 "outputs": node.outputs.iter().map(|port| json!({
                     "id": port.id,
                     "artifactKind": port.spec.kind_id.clone().unwrap_or_default(),
                     "direction": "out",
-                    "label": port.spec.label,
+                    "label": port.spec.label.resolve(terminology, locale),
                 })).collect::<Vec<_>>(),
             })
         })

@@ -73,7 +73,7 @@ async fn empty_workflow_default() {
 }
 
 async fn media_port_spec(id: &str, direction: MediaPortDirection, kind_id: Option<&str>) -> MediaPortSpec {
-    MediaPortSpec { id: id.into(), label: id.into(), direction, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, kind_id: kind_id.map(Into::into), required: true, multiplicity: PortMultiplicity::One }
+    MediaPortSpec { id: id.into(), label: semio_ui_locale::LocalizedLabel::data(id), direction, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, kind_id: kind_id.map(Into::into), required: true, multiplicity: PortMultiplicity::One }
 }
 
 pub(crate) async fn workflow_node(id: &str, outputs: Vec<WorkflowMediaPort>, inputs: Vec<WorkflowMediaPort>) -> WorkflowNode {

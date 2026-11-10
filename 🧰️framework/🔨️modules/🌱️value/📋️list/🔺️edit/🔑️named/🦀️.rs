@@ -1,9 +1,9 @@
 //! 🔑️ Named sparse edits map exact immutable UTF-8 keys to the shared strict indexed planner.
 use crate::{HeapSortCursor,HeapSortWork,IndexedEditShape,IndexedEditPlan,IndexedEditKind,IndexedEditFault,IndexedEditStep,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits,RETAINED_CLONE_BULK_PAGE_BYTES}};
+use semio_framework_value_control_contract::OriginalEffectReply;
 use std::{cmp::Ordering,mem::{ManuallyDrop,size_of}};
 macro_rules! take_work{($work:ident,$expression:expr)=>{{let turn=$crate::Settle::settled($expression);$work+=turn.work;turn.result?}};}
 macro_rules! exit_work{($work:ident,$expression:expr)=>{{let turn=$crate::Exit::exit($expression)?;$work+=turn.work;turn.result?}};}
-macro_rules! settle_work{($work:ident,$expression:expr)=>{take_work!($work,$expression)};}
 #[path="🧳️ranked/🦀️.rs"] pub mod ranked;
 #[path="📇️index/🦀️.rs"] pub mod index;
 pub use ranked::{NamedRankedSource,VecRankedKeys,PersistentRankedKeys};
@@ -50,9 +50,9 @@ impl Compare{
   Ok((settled.then(||if order==Ordering::Equal{a.len().cmp(&b.len())}else{order}),RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})) })();crate::RetainedWorkOutcome{result,work}}
 }
 /// 🧭️ Paid key directories and paged comparisons preserve original payloads and authored coordinate custody.
-pub struct NamedEditPlan{shape:IndexedEditShape,base:ManuallyDrop<Option<Vec<usize>>>,added:ManuallyDrop<Option<Vec<usize>>>,removed:ManuallyDrop<Option<Vec<usize>>>,modified:ManuallyDrop<Option<Vec<usize>>>,base_index:Option<AdmittedNamedKeyIndex>,plan:Option<IndexedEditPlan>,retirement:RetainedCloneClose,sort:HeapSortCursor,compare:Compare,phase:u8,cursor:usize,low:usize,high:usize,searching:bool,closing:bool,fault:Option<NamedEditFault>}
+pub struct NamedEditPlan{shape:IndexedEditShape,base:ManuallyDrop<Option<Vec<usize>>>,added:ManuallyDrop<Option<Vec<usize>>>,removed:ManuallyDrop<Option<Vec<usize>>>,modified:ManuallyDrop<Option<Vec<usize>>>,base_index:Option<AdmittedNamedKeyIndex>,plan:Option<IndexedEditPlan>,retirement:RetainedCloneClose,sort:HeapSortCursor,compare:Compare,phase:u8,cursor:usize,low:usize,high:usize,searching:bool,closing:bool,fault:Option<NamedEditFault>,close_route:Option<crate::indexed_edit::CloseKey>,child_reply:ManuallyDrop<Option<Result<RetainedCloneStep,crate::OriginalRetirementFailure>>>}
 impl NamedEditPlan{
- pub fn new(shape:IndexedEditShape)->Self{Self{shape,base:ManuallyDrop::new(None),added:ManuallyDrop::new(None),removed:ManuallyDrop::new(None),modified:ManuallyDrop::new(None),base_index:None,plan:None,retirement:Default::default(),sort:HeapSortCursor::new(0),compare:Default::default(),phase:0,cursor:0,low:0,high:0,searching:false,closing:false,fault:None}}
+ pub fn new(shape:IndexedEditShape)->Self{Self{shape,base:ManuallyDrop::new(None),added:ManuallyDrop::new(None),removed:ManuallyDrop::new(None),modified:ManuallyDrop::new(None),base_index:None,plan:None,retirement:Default::default(),sort:HeapSortCursor::new(0),compare:Default::default(),phase:0,cursor:0,low:0,high:0,searching:false,closing:false,fault:None,close_route:None,child_reply:ManuallyDrop::new(None)}}
  /// 📦️ An already admitted original index transfers under one quoted header action without another base sort.
  pub fn indexed_constructor_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()*2+size_of::<Option<AdmittedNamedKeyIndex>>()*2,depth:1,..Default::default()}}
  pub fn new_indexed(shape:IndexedEditShape,index:&mut Option<AdmittedNamedKeyIndex>,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<Self>>{let mut work=0;let result=(||{let d=Self::indexed_constructor_demand();if !retained_clone_grant_admits(grant,d){return Ok(None);}let original=index.as_ref().ok_or_else(invalid)?;if original.len()!=shape.base_len||!original.ready(){return Err(invalid());}let mut owner=Self::new(shape);owner.base_index=index.take();owner.phase=4;work=1;Ok(Some(owner))})();crate::RetainedWorkOutcome{result,work}}
@@ -119,23 +119,56 @@ impl NamedEditPlan{
   Self::nested(self.retirement.next_owner_demands::<Vec<usize>>(self.base.is_some()||self.added.is_some()||self.removed.is_some()||self.modified.is_some(),&None,body.saturating_sub(Self::fixed_copy_bytes()))?)
  }
  pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(invalid())}if self.terminal_is_empty(){return Ok(0)}let child=body.saturating_sub(Self::fixed_copy_bytes());if let Some(plan)=self.plan.as_ref(){return if plan.terminal_is_empty(){Ok(1)}else{plan.close_work_demand(child)}}if let Some(index)=self.base_index.as_ref(){return if index.terminal_is_empty(){Ok(1)}else{index.close_work_demand(child)}}self.retirement.next_owner_work::<Vec<usize>>(self.base.is_some()||self.added.is_some()||self.removed.is_some()||self.modified.is_some(),&None,child)}
- pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result:Result<RetainedCloneStep,crate::OriginalRetirementFailure>=(||{
-  if !self.closing{return Err(invalid().into());}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
-  let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if let Some(plan)=self.plan.as_mut(){if !plan.terminal_is_empty(){let step=settle_work!(work,plan.close_step(&mut effect.nested(Self::child(grant))));return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())));}self.plan=None;work+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:Self::fixed_copy_bytes(),..Default::default()}));}
-  if let Some(index)=self.base_index.as_mut(){if !index.terminal_is_empty(){let step=settle_work!(work,index.close_step(&mut effect.nested(Self::child(grant))));return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())));}self.base_index=None;work+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:Self::fixed_copy_bytes(),..Default::default()}));}
-  if !self.retirement.is_empty(){let step=settle_work!(work,self.retirement.step_granted(&mut effect.nested(Self::child(grant))));return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())));}
-  for owner in [&mut *self.base,&mut *self.added,&mut *self.removed,&mut *self.modified]{if let Some(step)=take_work!(work,self.retirement.begin_granted(owner,&mut effect.nested(Self::child(grant)))){return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())));}}
-  Err(invalid().into())
- })();crate::finish(effect,work,result)}
-
+ /// 📬️ Records one ordinary close directly into the caller's reply.
+ pub fn close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::indexed_edit::Reply<'r>)->Result<crate::indexed_edit::Done<'r>,ValueError>{self.close_reply_named(None,body,effect,reply,false)}
+ /// 🔁️ Recovers the same ordinary close invocation.
+ pub fn recover_close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::indexed_edit::Reply<'r>)->Result<crate::indexed_edit::Done<'r>,ValueError>{self.close_reply_named(None,body,effect,reply,true)}
+ /// 🪢️ Lends the actual original loan to the selected child close.
+ pub fn close_original_into<'r>(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::indexed_edit::Reply<'r>)->Result<crate::indexed_edit::Done<'r>,ValueError>{if self.requires_original_birth(){return Err(invalid())}if !self.requires_original_control(){return self.close_into(body,effect,reply)}self.close_reply_named(Some(original),body,effect,reply,false)}
+ /// 🔁️ Recovers the original-loan close invocation under its unchanged loan.
+ pub fn recover_close_original_into<'r>(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::indexed_edit::Reply<'r>)->Result<crate::indexed_edit::Done<'r>,ValueError>{if self.close_route.is_some_and(|(_,_,_,loan)|loan.is_none()){return self.close_reply_named(None,body,effect,reply,true)}self.close_reply_named(Some(original),body,effect,reply,true)}
+ fn close_reply_named<'r>(&mut self,mut original:Option<&mut crate::OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::indexed_edit::Reply<'r>,recover:bool)->Result<crate::indexed_edit::Done<'r>,ValueError>{
+  use crate::indexed_edit::CloseReply;
+  if !self.closing{return Err(invalid())}
+  let identity=crate::indexed_edit::invocation_identity(effect,recover)?;let loan=match original.as_deref_mut(){Some(loan)=>Some(crate::indexed_edit::loan_key(loan,effect)?),None=>None};
+  let grant=effect.grant();let child=Self::child(grant);let child_body=body.saturating_sub(Self::fixed_copy_bytes());
+  let key=if recover{let key=self.close_route.ok_or_else(invalid)?;if key.0!=identity||key.2!=body||key.3!=loan{return Err(ValueError::invariant("named edit close recovery changed its invocation, body or loan"))}key}else{
+   if self.close_route.is_some()||self.child_reply.is_some(){return Err(ValueError::invariant("named edit close requires recovery"))}
+   if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}
+   let demand=self.close_demand(body)?;if !retained_clone_grant_admits(grant,demand){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
+   let route=if let Some(plan)=self.plan.as_ref(){if plan.terminal_is_empty(){if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"named edit plan release exceeded its original work").into())))}self.plan=None;return Ok(reply.complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:Self::fixed_copy_bytes(),..Default::default()}))))}1}
+   else if let Some(index)=self.base_index.as_ref(){if index.terminal_is_empty(){if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"named edit index release exceeded its original work").into())))}self.base_index=None;return Ok(reply.complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:Self::fixed_copy_bytes(),..Default::default()}))))}2}
+   else if !self.retirement.is_empty(){3}
+   else{for owner in [&mut *self.base,&mut *self.added,&mut *self.removed,&mut *self.modified]{match self.retirement.begin_granted(owner,&mut effect.nested(child)).result{Ok(Some(step))=>{let mut progress=step.progress();progress.copied_bytes+=Self::fixed_copy_bytes();return Ok(reply.complete(Ok(RetainedCloneStep::Progress(progress))))},Ok(None)=>{},Err(error)=>return Ok(reply.complete(Err(error.into())))}}return Err(invalid())};
+   let key=(identity,route,body,loan);self.close_route=Some(key);key};
+  if self.child_reply.is_none(){
+   let mut nested=effect.nested(child);let inner=OriginalEffectReply::borrow(&mut self.child_reply)?;
+   let done=match key.1{1=>self.plan.as_mut().ok_or_else(invalid)?.close_reply(original,child_body,&mut nested,inner,recover),2=>self.base_index.as_mut().ok_or_else(invalid)?.close_reply(original,child_body,&mut nested,inner,recover),3=>self.retirement.close_reply(original,child_body,&mut nested,inner,recover),_=>Err(ValueError::invariant("named edit close route changed"))}?;drop(done);
+  }
+  crate::indexed_edit::deposit(&mut self.child_reply,&mut self.close_route,key,Self::fixed_copy_bytes(),grant,reply)
+ }
  pub fn requires_original_birth(&self)->bool{if let Some(plan)=self.plan.as_ref(){return !plan.terminal_is_empty()&&plan.requires_original_birth()}if let Some(index)=self.base_index.as_ref(){return !index.terminal_is_empty()&&index.requires_original_birth()}self.retirement.requires_original_birth()}
  pub fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<Self::fixed_copy_bytes(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}let child=Self::child(grant);if let Some(plan)=self.plan.as_mut(){if !plan.terminal_is_empty()&&plan.requires_original_birth(){return crate::Settle::settled(plan.close_original_birth_step(original,child))}}if let Some(index)=self.base_index.as_mut(){if !index.terminal_is_empty()&&index.requires_original_birth(){return crate::Settle::settled(index.close_original_birth_step(original,child))}}crate::Settle::settled(self.retirement.step_original_birth(original,child))}
  pub fn requires_original_control(&self)->bool{if let Some(plan)=self.plan.as_ref(){return !plan.terminal_is_empty()&&plan.requires_original_control()}if let Some(index)=self.base_index.as_ref(){return !index.terminal_is_empty()&&index.requires_original_control()}self.retirement.requires_original_control()}
- pub fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{if self.requires_original_birth(){return crate::RetainedWorkOutcome{result:Err(invalid().into()),work:0}}let grant=effect.grant();let demand=match self.close_demand(grant.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return crate::RetainedWorkOutcome{result:Err(e.into()),work:0}};if !retained_clone_grant_admits(grant,demand){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}let child=Self::child(grant);if let Some(plan)=self.plan.as_mut(){if !plan.terminal_is_empty()&&plan.requires_original_control(){return crate::Settle::settled(plan.close_original_step(original,&mut effect.nested(child)))}}if let Some(index)=self.base_index.as_mut(){if !index.terminal_is_empty()&&index.requires_original_control(){return crate::Settle::settled(index.close_original_step(original,&mut effect.nested(child)))}}if self.retirement.requires_original_control(){return crate::Settle::settled(self.retirement.step_original(original,&mut effect.nested(child)))}self.close_step(effect)}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.base_index.is_none()&&self.plan.is_none()&&self.base.is_none()&&self.added.is_none()&&self.removed.is_none()&&self.modified.is_none()&&self.retirement.is_empty()}
 }
-impl Drop for NamedEditPlan{fn drop(&mut self){let empty=self.base_index.is_none()&&self.plan.is_none()&&self.base.is_none()&&self.added.is_none()&&self.removed.is_none()&&self.modified.is_none()&&self.retirement.is_empty();assert!(std::thread::panicking()||empty,"named coordinate directories require original funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.base);ManuallyDrop::drop(&mut self.added);ManuallyDrop::drop(&mut self.removed);ManuallyDrop::drop(&mut self.modified);}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+/// 🔬️ Exposes the paged key comparison to integration targets.
+#[cfg(feature="testkit")]
+#[derive(Default)]
+pub struct NamedCompare(Compare);
+#[cfg(feature="testkit")]
+impl NamedCompare{
+ pub fn fixed()->usize{Compare::fixed()}
+ pub fn offset(&self)->usize{self.0.offset}
+ pub fn demand(&self,a:&str,b:&str,body:usize)->Result<RetirementDemand,ValueError>{self.0.demand(a,b,body)}
+ pub fn advance(&mut self,a:&str,b:&str,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Option<Ordering>,RetainedCloneProgress)>{self.0.advance(a,b,grant)}
+}
+#[cfg(feature="testkit")]
+impl NamedEditPlan{
+ /// 🔬️ Observes the resumable admission state without exposing its fields.
+ pub fn probe(&self)->String{format!("{:?}",(self.phase,self.cursor,self.low,self.high,self.searching,self.compare.offset))}
+ /// 🔬️ Observes the admitted shape.
+ pub fn shape(&self)->IndexedEditShape{self.shape}
+}
+impl crate::indexed_edit::CloseReply for NamedEditPlan{fn close_reply<'r>(&mut self,original:Option<&mut crate::OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::indexed_edit::Reply<'r>,recover:bool)->Result<crate::indexed_edit::Done<'r>,ValueError>{self.close_reply_named(original,body,effect,reply,recover)}}
+impl Drop for NamedEditPlan{fn drop(&mut self){let empty=self.close_route.is_none()&&self.child_reply.is_none()&&self.base_index.is_none()&&self.plan.is_none()&&self.base.is_none()&&self.added.is_none()&&self.removed.is_none()&&self.modified.is_none()&&self.retirement.is_empty();assert!(std::thread::panicking()||empty,"named coordinate directories require original funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.base);ManuallyDrop::drop(&mut self.added);ManuallyDrop::drop(&mut self.removed);ManuallyDrop::drop(&mut self.modified);ManuallyDrop::drop(&mut self.child_reply);}}}}

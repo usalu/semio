@@ -7,7 +7,7 @@ pub use semio_framework_value_shared_issuance as shared_issuance;
 pub use semio_framework_value_native_shared_slots::NativeSharedSlots;
 pub use semio_framework_value_native_shared_field::NativeIntrinsicSharedField;
 
-pub use semio_framework_value_native_receiver_protocol::{NativeReceiver,NativeReceivingBatch,native_receiver_backing_demands,NativeReceiverBackingClose};
+pub use semio_framework_value_native_receiver_protocol::{NativeReceiver,NativeReceivingBatch,NativeReceiverBackingClose};
 #[path="../../../🔗️sealed-shared-receiver/🦀️.rs"]mod shared_receiver;
 pub use shared_receiver::{NativeSharedReceiver,NativeSharedRoot};
 pub use semio_framework_value_native_receiver_protocol::NativeReceiverSeed;

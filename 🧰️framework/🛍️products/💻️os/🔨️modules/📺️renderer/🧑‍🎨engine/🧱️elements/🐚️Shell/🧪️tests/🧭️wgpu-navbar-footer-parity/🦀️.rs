@@ -412,15 +412,15 @@ fn the_navbar_title_is_the_apps_breadcrumb_not_its_dialect_id() {
     let mut app = test_app(Vec::new(), Vec::new());
     app.id = "fixture.scene@1/*#editor".into();
     app.breadcrumb = vec!["workspace".into(), "examples".into(), "scene".into()];
-    app.terminology_breadcrumbs = std::collections::HashMap::from([("reuse".to_string(), vec!["Entwerfen mit Bestand".to_string(), "Aggregator".to_string()])]);
-    assert_eq!(shell_navbar_title(&app, "native"), "workspace · examples · scene");
-    assert_eq!(shell_navbar_title(&app, "reuse"), "Entwerfen mit Bestand · Aggregator", "🗺️ a terminology override replaces the WHOLE breadcrumb, as React's `terminologyBreadcrumbs` does");
-    assert!(!shell_navbar_title(&app, "native").contains(&app.id), "🗺️ the raw dialect id never reaches the navbar");
+    app.terminology_breadcrumbs = std::collections::HashMap::from([("reuse".to_string(), vec![semio_ui_locale::LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), semio_ui_locale::LocalizedLabel::data("Aggregator")])]);
+    assert_eq!(shell_navbar_title(&app, "native", semio_ui_locale::Locale::En), "workspace · examples · scene");
+    assert_eq!(shell_navbar_title(&app, "reuse", semio_ui_locale::Locale::De), "Entwerfen mit Bestand · Aggregator", "🗺️ a terminology override replaces the WHOLE breadcrumb, as React's `terminologyBreadcrumbs` does");
+    assert!(!shell_navbar_title(&app, "native", semio_ui_locale::Locale::En).contains(&app.id), "🗺️ the raw dialect id never reaches the navbar");
 
     let mut bare = app.clone();
     bare.breadcrumb = Vec::new();
     bare.terminology_breadcrumbs = std::collections::HashMap::new();
-    assert_eq!(shell_navbar_title(&bare, "native"), "", "🗺️ an app that declares no breadcrumb renders a nameless title rather than faulting — React's own `appBreadcrumb(undefined)` contract");
+    assert_eq!(shell_navbar_title(&bare, "native", semio_ui_locale::Locale::En), "", "🗺️ an app that declares no breadcrumb renders a nameless title rather than faulting — React's own `appBreadcrumb(undefined)` contract");
 }
 
 /// 🧭️ **The navbar-walk law.** The whole centre cluster paints to completion in one bounded walk —
@@ -638,7 +638,7 @@ fn app_manifest_carries_the_introduction_the_tour_arms_on() {
     app.breadcrumb = editor["breadcrumb"].as_array().expect("the authored breadcrumb").iter().map(|part| part.as_str().expect("breadcrumb part").to_string()).collect();
     app.introduction = Some(introduction);
     assert_eq!(app.breadcrumb, vec!["workspace".to_string(), "examples".to_string(), "scene".to_string()], "🎓️ and the navbar title law's own oracle is the authored breadcrumb");
-    assert_eq!(shell_navbar_title(&app, "native"), "workspace · examples · scene");
+    assert_eq!(shell_navbar_title(&app, "native", semio_ui_locale::Locale::En), "workspace · examples · scene");
 
     assert!(should_auto_start_introduction(&app.id, app.introduction.is_some(), false, false, false, false), "🎓️ an unseen tour on a tutorial-free shell arms");
     assert!(!should_auto_start_introduction(&app.id, app.introduction.is_some(), false, true, false, false), "🎓️ an answered one never re-arms");

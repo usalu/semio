@@ -4,7 +4,8 @@ export type WorkflowMediaClass="twoD"|"threeD"|"text"|"data"|"graph"|"kit"|"comp
 /** 🧩️ Authored media forms in their native declaration order. */
 export type WorkflowMediaForm="any"|"vector"|"raster"|"brep"|"mesh"|"document"|"value"|"dag"|"trinity"|"type"|"design"|"kit"|"flow"|"sequence"|"procedure"|"deck";
 /** 🔌️ Literal persisted endpoint and complete port specification. */
-export interface WorkflowPort{id:string;spec:{id:string;label:string;direction:"in"|"out";mediaType:{class:WorkflowMediaClass;form:WorkflowMediaForm};kindId?:string;required:boolean;multiplicity:"one"|"many"}}
+export interface WorkflowLocalizedLabel{native:{en:string;de:string};reuse:{en:string;de:string}}
+export interface WorkflowPort{id:string;spec:{id:string;label:WorkflowLocalizedLabel;direction:"in"|"out";mediaType:{class:WorkflowMediaClass;form:WorkflowMediaForm};kindId?:string;required:boolean;multiplicity:"one"|"many"}}
 /** 🕸️ Complete persisted app node, including exact geometry words. */
 export interface WorkflowNode{id:string;pluginId:string;appId:string;label:string;yields:string;artifactRef:string;configRef:string;x:Binary64;y:Binary64;width:Binary64;height:Binary64;inputs:WorkflowPort[];outputs:WorkflowPort[]}
 /** 🤝️ Complete persisted edge contract and optional conversion pair. */

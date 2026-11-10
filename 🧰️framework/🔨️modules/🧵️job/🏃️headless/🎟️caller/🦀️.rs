@@ -1,7 +1,8 @@
 //! 🎟️ One explicit headless source owns every birth, bounded turn and paid retirement.
 use super::*;
 use semio_framework_async::CancelTokenRetirement;
-use semio_framework_job::{ClockStride,OriginalCallerSourceParent};
+use semio_framework_job::{ClockStride,OriginalCallerSourceAdmission,OriginalCallerSourceParent,OriginalRetirementPump};
+use semio_framework_value::{RetainedAllocationEffect,RetainedWorkPoll};
 use std::sync::atomic::{AtomicU64,Ordering};
 
 static NEXT_CLOCK_BINDING:AtomicU64=AtomicU64::new(1);
@@ -9,6 +10,7 @@ static NEXT_CLOCK_BINDING:AtomicU64=AtomicU64::new(1);
 pub(super) struct HeadlessCaller {
     authority_actual:Option<usize>,
     parent:Option<OriginalCallerSourceParent>,
+    source_admission:OriginalCallerSourceAdmission,
     authority:Option<semio_framework_job_payload::JobPayloadAuthority>,
     cancel:Option<CancelToken>,
     cancel_retirement:Option<CancelTokenRetirement>,
@@ -23,9 +25,12 @@ pub(super) struct HeadlessCaller {
     fuel:u64,
     reserve_fuel:u64,
     reserve:RetainedCloneGrant,
+    birth:semio_framework_job_native_turn::OriginalJobReturnBirth,
 }
 
 fn refusal(message:&'static str)->ValueError { ValueError::literal(ValueRefusalKind::WorkLimit,message) }
+/// 🎬️ The headless runner is the host: every owner-less close and birth runs inside one pump-issued Source turn.
+fn pump<R>(fuel:u64,deadline:u64,now:fn()->Option<u64>,grant:RetainedCloneGrant,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->Result<Option<(R,u128)>,ValueError> { OriginalRetirementPump::new().turn(fuel,deadline,now,grant).and_then(|mut turn|turn.with_effect(run)) }
 fn remaining(stock:RetainedCloneGrant,spent:RetainedCloneProgress)->RetainedCloneGrant {
     RetainedCloneGrant { maximum_items:stock.maximum_items.saturating_sub(spent.copied_items), maximum_copy_bytes:stock.maximum_copy_bytes.saturating_sub(spent.copied_bytes), maximum_capacity_bytes:stock.maximum_capacity_bytes.saturating_sub(spent.retained_capacity_bytes), maximum_release_bytes:stock.maximum_release_bytes.saturating_sub(spent.released_bytes), ..stock }
 }
@@ -43,18 +48,19 @@ impl HeadlessCaller {
         let binding=NEXT_CLOCK_BINDING.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|format!("{}-clock-binding-exhausted",site.label))?;
         let stock=site.retained_stock;
         let reserve=RetainedCloneGrant { maximum_items:stock.maximum_items/2, maximum_copy_bytes:stock.maximum_copy_bytes/2, maximum_capacity_bytes:stock.maximum_capacity_bytes/2, maximum_release_bytes:stock.maximum_release_bytes/2, ..stock };
-        Ok(Self { authority_actual:None,parent:None,authority:None,cancel:None,cancel_retirement:None,operation,now_us,deadline,binding,sequence:operation.preview_sequence,stride:ClockStride::new(),stock,spent:Default::default(),fuel:site.lifetime_fuel,reserve_fuel:site.lifetime_fuel/2,reserve })
+        Ok(Self { birth:Default::default(),authority_actual:None,parent:None,source_admission:OriginalCallerSourceAdmission::new(),authority:None,cancel:None,cancel_retirement:None,operation,now_us,deadline,binding,sequence:operation.preview_sequence,stride:ClockStride::new(),stock,spent:Default::default(),fuel:site.lifetime_fuel,reserve_fuel:site.lifetime_fuel/2,reserve })
     }
 
     pub(super) fn receipt(&self)->RetainedCloneProgress { self.spent }
     pub(super) fn fuel_remaining(&self)->u64 { self.fuel }
     pub(super) fn is_ready(&self)->bool { self.parent.is_some() }
-    pub(super) fn terminal_is_empty(&self)->bool { self.parent.is_none()&&self.authority.is_none()&&self.cancel.is_none()&&self.cancel_retirement.is_none() }
+    pub(super) fn terminal_is_empty(&self)->bool { self.parent.is_none()&&self.source_admission.terminal_is_empty()&&self.authority.is_none()&&self.cancel.is_none()&&self.cancel_retirement.is_none() }
     pub(super) fn retirement_grant(&self)->RetainedCloneGrant {
         let left=remaining(self.stock,self.spent);
         RetainedCloneGrant { maximum_items:left.maximum_items.min(1),maximum_copy_bytes:left.maximum_copy_bytes.min(HEADLESS_GRANT.maximum_copy_bytes),..left }
     }
-    pub(super) fn pay(&mut self,progress:RetainedCloneProgress,work:u64)->Result<(),ValueError> {
+    pub(super) fn pay(&mut self,progress:RetainedCloneProgress,work:u128)->Result<(),ValueError> {
+        let work=u64::try_from(work).map_err(|_|refusal("headless original work exceeds its u64 fuel"))?;
         if self.authority_actual.is_some_and(|actual|actual!=progress.retained_capacity_bytes){return Err(refusal("original headless authority attempt differs from its receipt"))}let enough=self.fuel>=work;
         self.fuel=self.fuel.saturating_sub(work);
         self.spent=self.spent.checked_add(progress)?;
@@ -68,7 +74,7 @@ impl HeadlessCaller {
         if self.parent.is_some() { return Ok(true); }
         let grant=self.retirement_grant();
         if (!retiring&&self.fuel<=self.reserve_fuel)||self.fuel==0||grant.maximum_items==0||grant.maximum_depth==0 { return Err(refusal("headless original source birth exhausted")); }
-        if self.cancel.is_none() {
+        if self.source_admission.terminal_is_empty()&&self.cancel.is_none() {
             let turn=CancelToken::admit_root(grant);
             match turn.result {
                 Ok(Some((cancel,progress)))=>{self.cancel=Some(cancel);self.pay(progress,turn.work)?;}
@@ -77,7 +83,7 @@ impl HeadlessCaller {
             }
             return Ok(false);
         }
-        if self.authority.is_none() {
+        if self.source_admission.terminal_is_empty()&&self.authority.is_none() {
             let turn=semio_framework_job_payload::JobPayloadAuthority::admit(self.operation.operation,self.operation.generation,grant,&mut self.authority_actual);
             match turn.result {
                 Ok(Some((authority,progress)))=>{self.authority=Some(authority);self.pay(progress,turn.work)?;}
@@ -86,12 +92,14 @@ impl HeadlessCaller {
             }
             return Ok(false);
         }
-        let authority=self.authority.take().expect("retained original payload source");
-        let cancel=self.cancel.take().expect("retained original cancellation root");
-        let turn=OriginalCallerSourceParent::admit(authority,cancel,grant,&mut self.authority_actual);
+        let stage=if self.source_admission.has_backing(){2}else if self.source_admission.has_roots(){1}else{0};
+        let(fuel,deadline,now)=(self.fuel,self.deadline,self.now_us);
+        let(authority,cancel,parent,admission)=(&mut self.authority,&mut self.cancel,&mut self.parent,&mut self.source_admission);
+        let ran=pump(fuel,deadline,now,grant,|effect|match stage {0=>admission.prepare(authority,cancel,effect),1=>admission.admit_backing(effect),_=>admission.publish(parent,effect)})?;
+        let Some((turn,work))=ran else { return Ok(false); };
         match turn.result {
-            Ok((parent,progress))=>{self.parent=Some(parent);self.pay(progress,turn.work)?;Ok(true)}
-            Err((error,authority,cancel))=>{self.authority=Some(authority);self.cancel=Some(cancel);self.pay(error.retained_progress(),turn.work)?;Err(error)}
+            Ok(step)=>{self.pay(step.progress(),work)?;Ok(self.parent.is_some())}
+            Err(error)=>{self.pay(error.retained_progress(),work)?;Err(error)}
         }
     }
 
@@ -109,6 +117,7 @@ impl HeadlessCaller {
         if fuel==0 { return Err(refusal("headless original turn fuel exhausted").into()); }
         self.stride.begin(Some(now));
         let parent=self.parent.as_ref().ok_or_else(||refusal("headless original parent is not admitted"))?;
+        let birth=&mut self.birth;let run=|cx:&mut StepContext<'_>|{if retiring{if !birth.terminal_is_empty(){birth.close_step(cx)?;}}else{birth.service(cx)?;}run(cx)};
         let mut cx=parent.borrow_context(StepBudget::new(self.fuel,self.deadline,self.stock),self.now_us,&mut self.sequence,&mut self.spent)?;
         cx.bind_original_clock_binding(self.binding)?;
         cx.restore_clock_stride(self.stride);
@@ -122,19 +131,33 @@ impl HeadlessCaller {
         result
     }
 
-    pub(super) fn close_step(&mut self)->Result<RetainedCloneStep,ValueError> {
+    /// ♻️ Closes one retained original owner inside one host-issued Source turn.
+    pub(super) fn step_cursor<T:semio_framework_value::retirement::RetireOwned>(&mut self,cursor:&mut semio_framework_value::retirement::controlled::ControlledRetirement<T>)->Result<RetainedCloneStep,OriginalTurnFailure> {
+        let grant=self.retirement_grant();
+        let Some((poll,work))=pump(self.fuel,self.deadline,self.now_us,grant,|effect|cursor.step(grant.maximum_copy_bytes,effect))? else { return Ok(RetainedCloneStep::Progress(Default::default())); };
+        match poll {
+            RetainedWorkPoll::Complete(turn)=>match turn.result {Ok(step)=>{self.pay(step.progress(),work)?;Ok(step)},Err(failure)=>{self.pay(failure.retained_progress(),work)?;Err(failure.into())}},
+            RetainedWorkPoll::Pending{..}=>{self.pay(Default::default(),work)?;Ok(RetainedCloneStep::Progress(Default::default()))}
+        }
+    }
+
+    pub(super) fn close_step(&mut self)->Result<RetainedCloneStep,OriginalTurnFailure> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let grant=self.retirement_grant();
         if self.fuel==0||grant.maximum_items==0||grant.maximum_depth==0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        let(fuel,deadline,now)=(self.fuel,self.deadline,self.now_us);
         if let Some(parent)=self.parent.as_mut() {
             if parent.terminal_is_empty() { self.parent=None;let progress=RetainedCloneProgress {copied_items:1,..Default::default()};self.pay(progress,1)?;return Ok(RetainedCloneStep::Progress(progress)); }
-            let turn=parent.close_step(grant);
-            return match turn.result {Ok(step)=>{self.pay(step.progress(),turn.work)?;Ok(step)},Err(error)=>{self.pay(error.retained_progress(),turn.work)?;Err(error)}};
+            let Some((poll,work))=pump(fuel,deadline,now,grant,|effect|parent.close_step(effect))? else { return Ok(RetainedCloneStep::Progress(Default::default())); };
+            return match poll {
+                RetainedWorkPoll::Complete(turn)=>match turn.result {Ok(step)=>{self.pay(step.progress(),work)?;Ok(step)},Err(failure)=>{let failure=OriginalTurnFailure::from(failure);self.pay(failure.retained_progress(),work)?;Err(failure)}},
+                RetainedWorkPoll::Pending{..}=>{self.pay(Default::default(),work)?;Ok(RetainedCloneStep::Progress(Default::default()))}
+            };
         }
         if let Some(authority)=self.authority.as_mut() {
             if authority.terminal_is_empty() { self.authority=None;let progress=RetainedCloneProgress {copied_items:1,..Default::default()};self.pay(progress,1)?;return Ok(RetainedCloneStep::Progress(progress)); }
-            let turn=authority.close_step(grant);
-            return match turn.result {Ok(step)=>{self.pay(step.progress(),turn.work)?;Ok(step)},Err(error)=>{self.pay(error.retained_progress(),turn.work)?;Err(error)}};
+            let Some((turn,work))=pump(fuel,deadline,now,grant,|effect|authority.close_step(effect))? else { return Ok(RetainedCloneStep::Progress(Default::default())); };
+            return match turn.result {Ok(step)=>{self.pay(step.progress(),work)?;Ok(step)},Err(error)=>{self.pay(error.retained_progress(),work)?;Err(error.into())}};
         }
         if let Some(cancel)=self.cancel.take() {
             self.cancel_retirement=Some(CancelTokenRetirement::from_token(cancel));
@@ -144,11 +167,11 @@ impl HeadlessCaller {
         }
         let owner=self.cancel_retirement.as_mut().expect("retained original cancellation retirement");
         if owner.terminal_is_empty() { self.cancel_retirement=None;let progress=RetainedCloneProgress {copied_items:1,..Default::default()};self.pay(progress,1)?;return Ok(RetainedCloneStep::Progress(progress)); }
-        let turn=owner.close_step(grant);
+        let Some((turn,work))=pump(fuel,deadline,now,grant,|effect|owner.close_step(effect))? else { return Ok(RetainedCloneStep::Progress(Default::default())); };
         match turn.result {
-            Ok(step)=>{self.pay(step.progress(),turn.work)?;Ok(step)}
-            Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>{self.pay(error.retained_progress(),turn.work)?;Err(error)}
-            Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>{self.pay(Default::default(),turn.work)?;Ok(RetainedCloneStep::Progress(Default::default()))}
+            Ok(step)=>{self.pay(step.progress(),work)?;Ok(step)}
+            Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>{self.pay(error.retained_progress(),work)?;Err(error.into())}
+            Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>{self.pay(Default::default(),work)?;Ok(RetainedCloneStep::Progress(Default::default()))}
         }
     }
 }

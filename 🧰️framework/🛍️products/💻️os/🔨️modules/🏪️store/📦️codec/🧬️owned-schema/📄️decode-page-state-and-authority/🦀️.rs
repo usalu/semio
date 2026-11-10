@@ -80,8 +80,8 @@ pub struct ArtifactEnvelopeDecodeAuthority<P, Mutation> {
 
 impl<P, Mutation> ArtifactEnvelopeDecodeAuthority<P, Mutation>
 where
-    P: Send,
-    Mutation: Send,
+    P: Send + Sync + 'static,
+    Mutation: Send + Sync + 'static,
 {
     /// 🏗️ Admits the field decoder before binding the shallow job lease and sealed record cursor.
     pub fn try_new(
@@ -236,7 +236,7 @@ where
                 };
                 if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Ok(Close::Pending { progress: empty }); }
                 let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-                let step = artifact_envelope_close_charge(effect, self.fault.close_step_granted(child_grant), artifact_envelope_close_work_error)?;
+                let step = artifact_envelope_close_resume_with(RetainedWorkPoll::Complete(self.fault.close_step(&mut effect.nested(child_grant))), |error| error)?;
                 return Ok(Close::Pending { progress: step.progress() });
             }
             if self.fields.is_some() {
@@ -446,8 +446,8 @@ where
 
 impl<P, Mutation> ArtifactEnvelopeDecodeAuthority<P, Mutation>
 where
-    P: Send,
-    Mutation: Send,
+    P: Send + Sync + 'static,
+    Mutation: Send + Sync + 'static,
 {
     pub fn step_original<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         let grant = cx.retained_grant();
@@ -473,8 +473,8 @@ where
 
 impl<P, Mutation> semio_framework_job::InteractiveJob for ArtifactEnvelopeDecodeAuthority<P, Mutation>
 where
-    P: Send,
-    Mutation: Send,
+    P: Send + Sync + 'static,
+    Mutation: Send + Sync + 'static,
 {
     fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
         semio_framework_job::InteractiveJobStep::from_callback(self.step_original(cx))

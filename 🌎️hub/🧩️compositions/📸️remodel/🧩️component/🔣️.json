@@ -12221,7 +12221,16 @@
         "mediaInputs": [
           {
             "id": "photos:in",
-            "label": "Photos",
+            "label": {
+              "native": {
+                "en": "Photos",
+                "de": "Fotos"
+              },
+              "reuse": {
+                "en": "Photos",
+                "de": "Fotos"
+              }
+            },
             "direction": "in",
             "mediaType": {
               "class": "twoD",
@@ -12235,7 +12244,16 @@
         "mediaOutputs": [
           {
             "id": "mesh:out",
-            "label": "Mesh",
+            "label": {
+              "native": {
+                "en": "Mesh",
+                "de": "Netz"
+              },
+              "reuse": {
+                "en": "Mesh",
+                "de": "Netz"
+              }
+            },
             "direction": "out",
             "mediaType": {
               "class": "threeD",
@@ -12307,7 +12325,16 @@
           "ports": [
             {
               "id": "photos:in",
-              "label": "Photos",
+              "label": {
+                "native": {
+                  "en": "Photos",
+                  "de": "Fotos"
+                },
+                "reuse": {
+                  "en": "Photos",
+                  "de": "Fotos"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "twoD",
@@ -12319,7 +12346,16 @@
             },
             {
               "id": "mesh:out",
-              "label": "Mesh",
+              "label": {
+                "native": {
+                  "en": "Mesh",
+                  "de": "Netz"
+                },
+                "reuse": {
+                  "en": "Mesh",
+                  "de": "Netz"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "threeD",

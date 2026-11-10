@@ -35,6 +35,7 @@ semio-framework-value = { workspace = true }
 semio-framework-value-persistent = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-framework-job = { workspace = true }
 semio-s-fem-model = { workspace = true }
 semio-s-fem-sqlite = { workspace = true }
 semio-s-fem-receiving = { path = "../../../../../../../../../🧩️receiving/📦️packages/🦀️rust" }

@@ -79,7 +79,7 @@ where
 /// 📡️ The transport of one store: the attached backbone, the member inbox and the durable-group root.
 pub struct StoreWire<P, Mutation>
 where
-    P: ToValue,
+    P: ToValue + Send + Sync + 'static,
     Mutation: ToValue + super::Mutation<P>,
 {
     pub backbone: std::mem::ManuallyDrop<Option<Backbones>>,

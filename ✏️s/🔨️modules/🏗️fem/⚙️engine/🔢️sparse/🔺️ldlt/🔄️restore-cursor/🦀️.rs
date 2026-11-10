@@ -136,10 +136,11 @@ impl LdltRestoreCursor {
 
     pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
         let demand = self.close_frontier()?.unwrap_or_else(|| numerical_rung_demand(self.terminal_is_empty()));
-        numerical_close_original(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
+        numerical_close_effect(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
         let frontier = self.close_frontier()?;
         if self.terminal_is_empty() {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
@@ -147,7 +148,7 @@ impl LdltRestoreCursor {
         if !numerical_close_gate(grant, frontier) {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
-        if let Some(step) = numerical_restore_payload_close(&mut self.payload, grant) {
+        if let Some(step) = numerical_restore_payload_close(&mut self.payload, effect) {
             return step?.admit(grant, self.terminal_is_empty());
         }
         let Some(state) = self.state.as_mut() else { return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }) };

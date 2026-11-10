@@ -72,7 +72,8 @@ impl RetireOwned for SnapshotReadReturn {
 }
 impl RetirementCursor for SnapshotReadReturnRetirement {
     fn next_demand(&self, _body: usize) -> Result<RetirementDemand, ValueError> { self.demands() }
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{let turn=self.step(effect);match turn.result{Err(error)=>RetirementStep::Failure(error.into(),turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work)}}
+ fn close_into<'r>(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Ok(reply.complete(Ok(self.close_sync(effect))))}
+    fn recover_close_into<'r>(&mut self,_body:usize,_:&mut semio_framework_value::RetainedAllocationEffect<'_>,_:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::invariant("synchronous close has no unrecorded callback"))}
  fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{if self.terminal_is_empty(){return Ok(0)}if self.registry.is_none()&&self.demands()?.release_bytes!=0{if let Some(owner)=self.last_registry.as_ref(){return owner.owned_backing_work_demand()}}Ok(1)}
  fn terminal_is_empty(&self)->bool{self.registry.is_none()&&self.last_registry.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
@@ -81,6 +82,9 @@ impl RetirementCursor for SnapshotReadReturnRetirement {
  fn next_close_byte_demand(&self)->Option<usize>{self.demands().ok().map(|demand|demand.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.depth)}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl SnapshotReadReturnRetirement{
+ fn close_sync(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{let turn=self.step(effect);match turn.result{Err(error)=>RetirementStep::Failure(error.into(),turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work)}}
 }
 impl Drop for SnapshotReadReturnRetirement {
  fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"returned read witness abandoned original registry custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.registry);ManuallyDrop::drop(&mut self.last_registry);}}}
@@ -99,13 +103,13 @@ impl ErasedSnapshotReadRetirement {
   let depth=owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"erased read witness depth overflow"))?;
   Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth})
  }
- fn step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+ fn step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   let grant=effect.grant();
   let done=|result:Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>,work:u128|RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work});
   let refuse=|error:ValueError|done(Err(error.into()),0);
   if self.terminal_is_empty(){return done(Ok(RetainedCloneStep::Complete(Default::default())),0);}
   if grant.maximum_items==0||effect.maximum_work_units()==0{return done(Ok(RetainedCloneStep::Progress(Default::default())),0);}
-  let demand=match self.demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return refuse(error)};
+  let demand=match self.demands(body){Ok(demand)=>demand,Err(error)=>return refuse(error)};
   if grant.maximum_depth<demand.depth{return refuse(ValueError::literal(ValueRefusalKind::DepthLimit,"erased read closure exceeds admitted depth"));}
   if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return done(Ok(RetainedCloneStep::Progress(Default::default())),0);}
   if let Some(read)=self.read.take(){
@@ -117,7 +121,7 @@ impl ErasedSnapshotReadRetirement {
   }
   let Some(owner)=self.witness.as_mut()else{return refuse(ValueError::literal(ValueRefusalKind::InvariantViolated,"erased read witness remains until terminal"))};
   let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-  let turn=match owner.step(&mut effect.nested(child)){RetainedWorkPoll::Pending{work}=>return RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>turn};
+  let turn=match owner.step(body,&mut effect.nested(child)){RetainedWorkPoll::Pending{work}=>return RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>turn};
   let step=match turn.result{Ok(step)=>step,Err(error)=>return done(Err(error),turn.work)};
   if owner.terminal_is_empty(){self.witness.take();return done(Ok(RetainedCloneStep::Complete(step.progress())),turn.work);}
   done(Ok(RetainedCloneStep::Progress(step.progress())),turn.work)
@@ -131,7 +135,8 @@ impl RetireOwned for super::ErasedSnapshotRead {
 }
 impl RetirementCursor for ErasedSnapshotReadRetirement {
     fn next_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.demands(body) }
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{match self.step(effect){RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),RetainedWorkPoll::Complete(turn)=>original_outcome_retirement_step(turn)}}
+ fn close_into<'r>(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Ok(reply.complete(Ok(self.close_sync(body,effect))))}
+    fn recover_close_into<'r>(&mut self,_body:usize,_:&mut semio_framework_value::RetainedAllocationEffect<'_>,_:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::invariant("synchronous close has no unrecorded callback"))}
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if self.read.is_some(){return Ok(1)}self.witness.as_ref().map_or(Ok(0),|owner|owner.next_computational_work(body))}
  fn terminal_is_empty(&self)->bool{self.read.is_none()&&self.witness.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
@@ -140,6 +145,9 @@ impl RetirementCursor for ErasedSnapshotReadRetirement {
  fn next_close_byte_demand(&self)->Option<usize>{self.demands(0).ok().map(|demand|demand.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl ErasedSnapshotReadRetirement{
+ fn close_sync(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{match self.step(body,effect){RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),RetainedWorkPoll::Complete(turn)=>original_outcome_retirement_step(turn)}}
 }
 impl Drop for ErasedSnapshotReadRetirement {
  fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"erased read custody requires full granted closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.read);ManuallyDrop::drop(&mut self.witness);}}}

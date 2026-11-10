@@ -319,9 +319,9 @@ pub fn unit_code(unit: Unit) -> u8 {
 }
 
 /// ♻️ Releases one locally owned packet turn by turn with grants it quotes itself.
-pub fn close_retained_packet(packet: &mut EnergyWirePacket) {
+pub fn close_retained_packet(packet: &mut EnergyWirePacket, cx: &mut StepContext<'_>) {
     while !packet.terminal_is_empty() {
-        let grant = energy_self_funded(packet.retirement_demands().expect("a locally owned packet quotes its close demand"));
-        energy_turn(packet.close_step(grant)).expect("a locally owned packet close is never refused");
+        let demand = packet.retirement_demands().expect("a locally owned packet quotes its close demand");
+        crate::retirement::energy_effect_step(cx, demand, |effect| packet.close_step(effect)).expect("a locally owned packet close is never refused");
     }
 }

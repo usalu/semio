@@ -3,11 +3,11 @@ use super::*;
 use semio_framework_value_control_contract::{OriginalEffectAuthority,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,OriginalEffectInvocationIdentity,OriginalEffectCallbackMode,OriginalSourceTurnIdentity,RetainedAllocationEffect,RetainedWorkPoll};
 
 trait CloseContextAccess{fn validate_close_payer(&self,payer:&OriginalCallerSourceLoan)->Result<(),ValueError>;fn close_source_turn(&self)->Option<OriginalSourceTurnIdentity>;}
-impl CloseContextAccess for std::sync::Mutex<&mut StepContext<'_>>{fn validate_close_payer(&self,payer:&OriginalCallerSourceLoan)->Result<(),ValueError>{let cx=self.lock().unwrap_or_else(|poison|poison.into_inner());payer.validate_retirement_context(&cx)}fn close_source_turn(&self)->Option<OriginalSourceTurnIdentity>{let cx=self.lock().unwrap_or_else(|poison|poison.into_inner());cx.original_source_turn_identity()}}
+impl CloseContextAccess for semio_framework_value_control_contract::RetainedOwnerGate<&mut StepContext<'_>>{fn validate_close_payer(&self,payer:&OriginalCallerSourceLoan)->Result<(),ValueError>{let cx=self.try_lock().map_err(|_|ValueError::invariant("original Source context is busy"))?;payer.validate_retirement_context(&cx)}fn close_source_turn(&self)->Option<OriginalSourceTurnIdentity>{self.try_lock().ok().and_then(|cx|cx.original_source_turn_identity())}}
 /// 🧭️ Borrows the actual Source context briefly and releases it before child callbacks.
 pub struct OriginalSourceCloseContext<'view>{context:&'view(dyn CloseContextAccess+'view)}
 impl<'view> OriginalSourceCloseContext<'view>{
- pub fn new<'turn:'view,'source:'view>(context:&'view std::sync::Mutex<&'turn mut StepContext<'source>>)->Self{Self{context}}
+ pub fn new<'turn:'view,'source:'view>(context:&'view semio_framework_value_control_contract::RetainedOwnerGate<&'turn mut StepContext<'source>>)->Self{Self{context}}
  fn validate_close_payer(&self,payer:&OriginalCallerSourceLoan)->Result<(),ValueError>{self.context.validate_close_payer(payer)}
  fn close_source_turn(&self)->Option<OriginalSourceTurnIdentity>{self.context.close_source_turn()}
 }

@@ -46,11 +46,15 @@ impl Drop for FaultMessageOwner{fn drop(&mut self){assert!(std::thread::panickin
 pub struct FaultMessageRetirement{owner:FaultMessageOwner}
 impl RetirementCursor for FaultMessageRetirement{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(self.owner.close_demand())}
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{let turn=self.owner.close_step(effect.grant());match turn.result{Ok(step)=>{if self.owner.terminal_is_empty()&&step.progress()==Default::default(){RetirementStep::Complete(turn.work)}else{RetirementStep::Progress(step.progress(),turn.work)}},Err(error)=>RetirementStep::Failure(error.into(),turn.work)}}
+ semio_framework_value_retirement::native_retirement_reply!();
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(1)}
  fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
  fn next_close_byte_demand(&self)->Option<usize>{Some(self.owner.close_demand().release_bytes)}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+}
+impl FaultMessageRetirement{
+ fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{let turn=self.owner.close_step(effect.grant());match turn.result{Ok(step)=>{if self.owner.terminal_is_empty()&&step.progress()==Default::default(){RetirementStep::Complete(turn.work)}else{RetirementStep::Progress(step.progress(),turn.work)}},Err(error)=>RetirementStep::Failure(error.into(),turn.work)}}
 }
 impl RetireOwned for FaultMessageOwner{
  type RetirementCursor=FaultMessageRetirement;

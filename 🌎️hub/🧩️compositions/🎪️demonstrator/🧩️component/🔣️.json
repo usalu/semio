@@ -18879,8 +18879,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Generator"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Generator",
+                "de": "Generator"
+              },
+              "reuse": {
+                "en": "Generator",
+                "de": "Generator"
+              }
+            }
           ]
         },
         "tutorials": [],
@@ -18996,7 +19014,16 @@
           "ports": [
             {
               "id": "params:in",
-              "label": "Parameters",
+              "label": {
+                "native": {
+                  "en": "Parameters",
+                  "de": "Parameter"
+                },
+                "reuse": {
+                  "en": "Parameters",
+                  "de": "Parameter"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -19007,7 +19034,16 @@
             },
             {
               "id": "geometry:out",
-              "label": "Geometry",
+              "label": {
+                "native": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                },
+                "reuse": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "threeD",
@@ -27755,8 +27791,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Koordinator"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Coordinator",
+                "de": "Koordinator"
+              },
+              "reuse": {
+                "en": "Coordinator",
+                "de": "Koordinator"
+              }
+            }
           ]
         },
         "tutorials": [],
@@ -27872,7 +27926,16 @@
           "ports": [
             {
               "id": "geometry:in",
-              "label": "Geometry",
+              "label": {
+                "native": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                },
+                "reuse": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "threeD",
@@ -27883,7 +27946,16 @@
             },
             {
               "id": "brep:out",
-              "label": "Brep",
+              "label": {
+                "native": {
+                  "en": "Brep",
+                  "de": "B-Rep"
+                },
+                "reuse": {
+                  "en": "Brep",
+                  "de": "B-Rep"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "threeD",
@@ -36872,8 +36944,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Aggregator"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Aggregator",
+                "de": "Aggregator"
+              },
+              "reuse": {
+                "en": "Aggregator",
+                "de": "Aggregator"
+              }
+            }
           ]
         },
         "introduction": {
@@ -37434,7 +37524,16 @@
           "ports": [
             {
               "id": "kit:in",
-              "label": "Kit Catalog",
+              "label": {
+                "native": {
+                  "en": "Kit Catalog",
+                  "de": "Kit-Katalog"
+                },
+                "reuse": {
+                  "en": "Kit Catalog",
+                  "de": "Kit-Katalog"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "kit",
@@ -44474,8 +44573,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Aussuchen"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Select",
+                "de": "Aussuchen"
+              },
+              "reuse": {
+                "en": "Select",
+                "de": "Aussuchen"
+              }
+            }
           ]
         },
         "tutorials": [],
@@ -44591,7 +44708,16 @@
           "ports": [
             {
               "id": "catalog:out",
-              "label": "Catalog",
+              "label": {
+                "native": {
+                  "en": "Catalog",
+                  "de": "Katalog"
+                },
+                "reuse": {
+                  "en": "Catalog",
+                  "de": "Katalog"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "kit",
@@ -50875,8 +51001,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Bearbeiten"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Edit",
+                "de": "Bearbeiten"
+              },
+              "reuse": {
+                "en": "Edit",
+                "de": "Bearbeiten"
+              }
+            }
           ]
         },
         "tutorials": [],
@@ -50992,7 +51136,16 @@
           "ports": [
             {
               "id": "geometry:in",
-              "label": "Geometry",
+              "label": {
+                "native": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                },
+                "reuse": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "threeD",
@@ -51003,7 +51156,16 @@
             },
             {
               "id": "brep:out",
-              "label": "Brep",
+              "label": {
+                "native": {
+                  "en": "Brep",
+                  "de": "B-Rep"
+                },
+                "reuse": {
+                  "en": "Brep",
+                  "de": "B-Rep"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "threeD",
@@ -57216,8 +57378,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Verfolgen"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Trace",
+                "de": "Verfolgen"
+              },
+              "reuse": {
+                "en": "Trace",
+                "de": "Verfolgen"
+              }
+            }
           ]
         },
         "tutorials": [],
@@ -57318,7 +57498,16 @@
         "mediaInputs": [
           {
             "id": "features:in",
-            "label": "Features",
+            "label": {
+              "native": {
+                "en": "Features",
+                "de": "Objekte"
+              },
+              "reuse": {
+                "en": "Features",
+                "de": "Objekte"
+              }
+            },
             "direction": "in",
             "mediaType": {
               "class": "twoD",
@@ -57331,7 +57520,16 @@
         "mediaOutputs": [
           {
             "id": "map:out",
-            "label": "Map",
+            "label": {
+              "native": {
+                "en": "Map",
+                "de": "Karte"
+              },
+              "reuse": {
+                "en": "Map",
+                "de": "Karte"
+              }
+            },
             "direction": "out",
             "mediaType": {
               "class": "twoD",
@@ -57358,7 +57556,16 @@
           "ports": [
             {
               "id": "features:in",
-              "label": "Features",
+              "label": {
+                "native": {
+                  "en": "Features",
+                  "de": "Objekte"
+                },
+                "reuse": {
+                  "en": "Features",
+                  "de": "Objekte"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "twoD",
@@ -57369,7 +57576,16 @@
             },
             {
               "id": "map:out",
-              "label": "Map",
+              "label": {
+                "native": {
+                  "en": "Map",
+                  "de": "Karte"
+                },
+                "reuse": {
+                  "en": "Map",
+                  "de": "Karte"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "twoD",

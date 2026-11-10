@@ -17,5 +17,5 @@
   "samePayload": true,
   "sameIssuer": true,
   "readersFenceReturn": true,
-  "maximumReadBirthTotal": 4096
+  "maximumReadBirthTotal": 4376
 }

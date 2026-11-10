@@ -91,15 +91,15 @@ impl TimeTravelDiscardCursor {
         self.pending.as_ref().filter(|owner|!owner.terminal_is_empty()).map(|owner|owner as &dyn semio_framework_value::ErasedSnapshotRetirement)
     }
     /// ♻️ One granted original child unit precedes a distinct zero-allocation header turn.
-    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+    pub fn close_step(&mut self,_body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
         let grant=effect.grant();
         let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
         if self.done{return Ok(RetainedCloneStep::Complete(Default::default()))}
         let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if !admits(demand,grant){return Ok(idle())}
         if !self.closing{self.begin_close();return Ok(RetainedCloneStep::Progress(copied(demand.copy_bytes)))}
-        if let Some(owner)=self.session.as_mut(){if !owner.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=RetirementPollExit::resume(owner.step(&mut effect.nested(child)))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original Discard Session")?;return Ok(RetainedCloneStep::Progress(step.progress()))}self.session=None;return Ok(RetainedCloneStep::Progress(copied(demand.copy_bytes)))}
-        if let Some(owner)=self.pending.as_mut(){if !owner.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=RetirementPollExit::resume(owner.step(&mut effect.nested(child)))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original Discard pending")?;return Ok(RetainedCloneStep::Progress(step.progress()))}self.pending=None;return Ok(RetainedCloneStep::Progress(copied(demand.copy_bytes)))}
+        if let Some(owner)=self.session.as_mut(){if !owner.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=RetirementPollExit::resume(owner.step(grant.maximum_copy_bytes,&mut effect.nested(child)))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original Discard Session")?;return Ok(RetainedCloneStep::Progress(step.progress()))}self.session=None;return Ok(RetainedCloneStep::Progress(copied(demand.copy_bytes)))}
+        if let Some(owner)=self.pending.as_mut(){if !owner.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=RetirementPollExit::resume(owner.step(grant.maximum_copy_bytes,&mut effect.nested(child)))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original Discard pending")?;return Ok(RetainedCloneStep::Progress(step.progress()))}self.pending=None;return Ok(RetainedCloneStep::Progress(copied(demand.copy_bytes)))}
         self.event=None;self.bound=None;self.planned_stage=None;self.done=true;
         Ok(RetainedCloneStep::Complete(copied(demand.copy_bytes)))
         })();
@@ -109,7 +109,7 @@ impl TimeTravelDiscardCursor {
 impl semio_framework_value::ErasedSnapshotRetirement for TimeTravelDiscardCursor {
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.retirement_demands(body)}
 
-    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{Self::close_step(self,effect)}
+    fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{Self::close_step(self,body,effect)}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.close_header_copy_bytes().map_or_else(||self.residue().map_or(Ok(0),|owner|owner.next_copy_byte_demand()),Ok)}
     fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if self.close_header_copy_bytes().is_some(){return Ok(0)}self.residue().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(body))}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{if self.close_header_copy_bytes().is_some(){return Ok(0)}self.residue().map_or(Ok(0),|owner|owner.next_release_byte_demand())}

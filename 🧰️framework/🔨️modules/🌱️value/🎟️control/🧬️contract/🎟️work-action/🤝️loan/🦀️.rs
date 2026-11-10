@@ -60,6 +60,8 @@ impl OriginalWorkLoan<'_>{
  pub fn source_turn(&self)->Option<crate::OriginalSourceTurnIdentity>{self.source_turn}
  pub fn validate_context(&self)->Result<(),ValueError>{self.recipient.validate()}
  pub fn issue(&mut self,scope:&mut OriginalWorkScope,work:u64)->Result<OriginalWorkActionReservation,ValueError>{self.recipient.validate()?;let mut action=self.issuer.issue(scope,work)?;action.source_turn=self.source_turn;Ok(action)}
+ /// 🪪️ Reports whether this issuer minted the reservation, whichever Source turn issued it.
+ pub fn issued_reservation(&self,scope:&OriginalWorkScope,action:&OriginalWorkActionReservation)->bool{self.issuer.owns_reservation(scope,action)}
  pub fn owns_reservation(&self,scope:&OriginalWorkScope,action:&OriginalWorkActionReservation)->bool{action.source_turn==self.source_turn&&self.issuer.owns_reservation(scope,action)}
  pub fn admits(&mut self,scope:&OriginalWorkScope,action:&mut OriginalWorkActionReservation,observed:u64,additional:u64)->Result<bool,ValueError>{
   self.recipient.validate()?;if !self.owns_reservation(scope,action)||action.reserved_work()!=additional||action.quote_started{return Err(refused())}

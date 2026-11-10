@@ -70,6 +70,23 @@ impl WasmtimeRuntime {
         Ok(self.epoch.arm(store, deadline, GUEST_JOB_WATCHDOG_MS))
     }
 
+    /// 🛡️ Arms one original job crossing: its execution validated against the job budget, metered, and held to the caller deadline for as long as the returned demand lives.
+    pub(super) fn arm_job<'a>(&self, inst: &'a mut GuestInstance, budget: OriginalJobBudget, execution: OriginalGuestExecutionBudget) -> Result<(&'a mut Store<ActorHostState>, &'a semio_plugin_host_wit::actor_bindings::Actor, EpochDemand), TurnFault> {
+        execution.validate_for(budget).map_err(identity_turn_fault)?;
+        if !self.fuel_metering { return Err(identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original job execution requires actual instruction metering"))); }
+        let GuestInstanceState::Wasmtime(state) = &mut inst.state else { return Err(identity_turn_fault(semio_plugin_guest_contract::operation_authority::refusal(4))); };
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
+        arm_store_fuel(store, true, execution.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
+        let epoch = self.epoch.arm_original(store, deadline, execution.deadline_us)?;
+        Ok((store, bindings, epoch))
+    }
+
+    /// 🧾️ The actual instruction spend of one submitted job crossing beside its original reply.
+    pub(super) fn job_receipt<T>(store: &Store<ActorHostState>, execution: OriginalGuestExecutionBudget, original: Result<T, TurnFault>) -> OriginalGuestJobCall<T> {
+        let spent_fuel = store.get_fuel().ok().and_then(|remaining| execution.fuel.checked_sub(remaining));
+        OriginalGuestJobCall { original, execution: OriginalGuestExecutionReceipt { budget: execution, spent_fuel, submitted: true }, returned_unsubmitted_source: None }
+    }
+
     /// 🌱️ The JIT half of [`OwnedRuntime::codec_call`]: one of the component's four pure `codec`
     /// functions on a throwaway instance. The hub itself runs these under the owned interpreter, so
     /// this exists as the A/B oracle — the two runtimes share nothing but the component bytes, and a
@@ -80,8 +97,8 @@ impl WasmtimeRuntime {
         self.instantiate(compiled, RuntimeActorId(0), &[], budget).await.map_err(TurnFault::Host)
     }
 
-    /// 🎟️ Admits one codec request wire into the guest's single input slot before the budget-only export consumes it.
-    async fn admit_codec_wire(&self, store: &mut Store<ActorHostState>, bindings: &semio_plugin_host_wit::actor_bindings::Actor, wire: &semio_plugin_guest_contract::actor_input_wire::ActorInputWire, deadline_us: u64) -> Result<(), TurnFault> {
+    /// 🎟️ Admits one request wire into the guest's single input slot before the budget-only export consumes it.
+    pub(super) async fn admit_wire(&self, store: &mut Store<ActorHostState>, bindings: &semio_plugin_host_wit::actor_bindings::Actor, wire: &semio_plugin_guest_contract::actor_input_wire::ActorInputWire, deadline_us: u64) -> Result<(), TurnFault> {
         let bytes = semio_plugin_host_wit::retained_turn_wire::wire_bytes(wire)?;
         let admitted = store
             .run_concurrent(async |accessor| bindings.semio_framework_reactor().call_admit_actor_input(accessor, Some(bytes), semio_plugin_host_wit::retained_turn_wire::self_issued_context_budget(deadline_us)).await)
@@ -97,7 +114,7 @@ impl WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else { return Err(TurnFault::Trapped("SQLite schema requires Wasmtime instance".into())); };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
-        self.admit_codec_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::SqliteSchema { dialect: dialect.to_string() }, 1 << 52).await?;
+        self.admit_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::SqliteSchema { dialect: dialect.to_string() }, 1 << 52).await?;
         store.run_concurrent(async |accessor| bindings.semio_framework_codec().call_sqlite_schema(accessor, semio_plugin_host_wit::retained_turn_wire::self_issued_context_budget(1 << 52)).await).await.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(decode_guest_plugin_error)
     }
 
@@ -109,7 +126,7 @@ impl WasmtimeRuntime {
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         if !matches!(encoding, "binary" | "text") { return Err(TurnFault::Trapped("invalid snapshot encoding".into())); }
         let (coordinate,bytes)=snapshot_component_transport(dialect,payload,identity)?;
-        self.admit_codec_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::SqliteExport { input: sqlite_wire::SnapshotInput { dialect: coordinate, encoding: encoding.to_string(), payload: bytes, limits: sqlite_wire::SnapshotLimits::from(limits), native: sqlite_wire::SnapshotGrant::from(native_grant) } }, budget.deadline_us).await?;
+        self.admit_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::SqliteExport { input: sqlite_wire::SnapshotInput { dialect: coordinate, encoding: encoding.to_string(), payload: bytes, limits: sqlite_wire::SnapshotLimits::from(limits), native: sqlite_wire::SnapshotGrant::from(native_grant) } }, budget.deadline_us).await?;
         let mut receiver=semio_plugin_host_operation::OriginalOperationReceiver::new(identity);
         let output = observe_sqlite_guest(store.run_concurrent(async |accessor| semio_plugin_host_operation::receive(accessor,&mut receiver,bindings.semio_framework_codec().call_sqlite_export(accessor, semio_plugin_host_wit::retained_turn_wire::self_issued_context_budget(budget.deadline_us))).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(receiving_turn_fault)?.map_err(decode_guest_plugin_error)?;
         Ok(match output { semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Done(output) => sqlite_wire::SnapshotFileResult::Done(sqlite_wire::SnapshotFile { bytes: output.bytes, diagnostics: output.diagnostics }), semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Rejected(output) => sqlite_wire::SnapshotFileResult::Rejected(wit_snapshot_rejection(output)), semio_plugin_host_wit::actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Pending(output)=>sqlite_wire::SnapshotFileResult::Pending(wit_snapshot_retirement(output)) })
@@ -122,7 +139,7 @@ impl WasmtimeRuntime {
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         let (coordinate,bytes)=snapshot_component_transport(dialect,payload,identity)?;
-        self.admit_codec_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::SqliteImport { input: sqlite_wire::SnapshotInput { dialect: coordinate, encoding: String::new(), payload: bytes, limits: sqlite_wire::SnapshotLimits::from(limits), native: sqlite_wire::SnapshotGrant::from(native_grant) } }, budget.deadline_us).await?;
+        self.admit_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::SqliteImport { input: sqlite_wire::SnapshotInput { dialect: coordinate, encoding: String::new(), payload: bytes, limits: sqlite_wire::SnapshotLimits::from(limits), native: sqlite_wire::SnapshotGrant::from(native_grant) } }, budget.deadline_us).await?;
         let mut receiver=semio_plugin_host_operation::OriginalOperationReceiver::new(identity);
         let output = observe_sqlite_guest(store.run_concurrent(async |accessor| semio_plugin_host_operation::receive(accessor,&mut receiver,bindings.semio_framework_codec().call_sqlite_import(accessor, semio_plugin_host_wit::retained_turn_wire::self_issued_context_budget(budget.deadline_us))).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(receiving_turn_fault)?.map_err(decode_guest_plugin_error)?;
         Ok(match output {
@@ -147,7 +164,7 @@ impl WasmtimeRuntime {
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
-        self.admit_codec_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::PackSchemaHash { artifact_schema: artifact_schema.to_string() }, budget.deadline_us).await?;
+        self.admit_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::PackSchemaHash { artifact_schema: artifact_schema.to_string() }, budget.deadline_us).await?;
         let bytes = store
             .run_concurrent(async |accessor| bindings.semio_framework_codec().call_pack_schema_hash(accessor, semio_plugin_host_wit::retained_turn_wire::self_issued_context_budget(budget.deadline_us)).await)
             .await
@@ -165,7 +182,7 @@ impl WasmtimeRuntime {
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
-        self.admit_codec_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::Genesis { artifact_schema: artifact_schema.to_string(), document_id: document_id.to_string() }, budget.deadline_us).await?;
+        self.admit_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::Genesis { artifact_schema: artifact_schema.to_string(), document_id: document_id.to_string() }, budget.deadline_us).await?;
         let pair = store
             .run_concurrent(async |accessor| bindings.semio_framework_codec().call_genesis(accessor, semio_plugin_host_wit::retained_turn_wire::self_issued_context_budget(budget.deadline_us)).await)
             .await
@@ -185,7 +202,7 @@ impl WasmtimeRuntime {
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
-        self.admit_codec_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::PrintMirror { artifact_schema: artifact_schema.to_string(), pair: semio_plugin_guest_contract::actor_input_wire::DocumentPairWire { pack: pack.to_vec(), spr: spr.to_vec() } }, budget.deadline_us).await?;
+        self.admit_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::PrintMirror { artifact_schema: artifact_schema.to_string(), pair: semio_plugin_guest_contract::actor_input_wire::DocumentPairWire { pack: pack.to_vec(), spr: spr.to_vec() } }, budget.deadline_us).await?;
         let mirror = store
             .run_concurrent(async |accessor| bindings.semio_framework_codec().call_print_mirror(accessor, semio_plugin_host_wit::retained_turn_wire::self_issued_context_budget(budget.deadline_us)).await)
             .await
@@ -204,7 +221,7 @@ impl WasmtimeRuntime {
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
-        self.admit_codec_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::ApplyOps { artifact_schema: artifact_schema.to_string(), pair: semio_plugin_guest_contract::actor_input_wire::DocumentPairWire { pack: pack.to_vec(), spr: spr.to_vec() }, ops: ops.to_vec() }, budget.deadline_us).await?;
+        self.admit_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::ApplyOps { artifact_schema: artifact_schema.to_string(), pair: semio_plugin_guest_contract::actor_input_wire::DocumentPairWire { pack: pack.to_vec(), spr: spr.to_vec() }, ops: ops.to_vec() }, budget.deadline_us).await?;
         let next = store
             .run_concurrent(async |accessor| bindings.semio_framework_codec().call_apply_ops(accessor, semio_plugin_host_wit::retained_turn_wire::self_issued_context_budget(budget.deadline_us)).await)
             .await
@@ -223,7 +240,7 @@ impl WasmtimeRuntime {
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
-        self.admit_codec_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::ReplayEnvelopes { artifact_schema: artifact_schema.to_string(), pair: semio_plugin_guest_contract::actor_input_wire::DocumentPairWire { pack: pack.to_vec(), spr: spr.to_vec() }, envelopes: envelopes.to_vec() }, budget.deadline_us).await?;
+        self.admit_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::ReplayEnvelopes { artifact_schema: artifact_schema.to_string(), pair: semio_plugin_guest_contract::actor_input_wire::DocumentPairWire { pack: pack.to_vec(), spr: spr.to_vec() }, envelopes: envelopes.to_vec() }, budget.deadline_us).await?;
         let next = store
             .run_concurrent(async |accessor| bindings.semio_framework_codec().call_replay_envelopes(accessor, semio_plugin_host_wit::retained_turn_wire::self_issued_context_budget(budget.deadline_us)).await)
             .await

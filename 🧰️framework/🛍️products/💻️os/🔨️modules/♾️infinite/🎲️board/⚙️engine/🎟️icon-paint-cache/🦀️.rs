@@ -185,46 +185,51 @@ impl Drop for IconPaintCache {
     }
 }
 
-struct IconOwnedRetirement {
+#[doc(hidden)]
+pub struct IconOwnedRetirement {
     pub source:ManuallyDrop<Option<IconPaintCache>>,
-    pub key:Option<semio_framework_value::retirement::controlled::ControlledRetirement<String>>,
-    image:Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<RasterImage>>,
-    metadata:Option<semio_framework_value::retirement::controlled::ControlledRetirement<(f64,f64,f64,f64)>>,
+    metadata:Option<(f64,f64,f64,f64)>,
+    image:Option<semio_framework_value::retirement::arc_custody::ArcLease<RasterImage>>,
     pub cursor:usize,
 }
 
 impl IconOwnedRetirement {
-    fn terminal(&self)->bool{self.source.is_none()&&self.key.is_none()&&self.image.is_none()&&self.metadata.is_none()}
-    pub fn demand(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
-        use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
-        let deeper=|depth:usize|depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original icon owner depth overflow"));
-        if let Some(owner)=self.key.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:deeper(owner.next_depth_demand()?)?})}
-        if let Some(owner)=self.metadata.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:deeper(owner.next_depth_demand()?)?})}
-        if let Some(owner)=self.image.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:deeper(owner.next_depth_demand()?)?})}
+    fn terminal(&self)->bool{self.source.is_none()&&self.metadata.is_none()&&self.image.is_none()}
+    pub fn demand(&self,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::retirement_cursor_birth_demand};
+        let child=|mut demand:RetirementDemand|{demand.depth+=1;demand};
+        if let Some(metadata)=self.metadata.as_ref(){return Ok(child(retirement_cursor_birth_demand(metadata)?))}
+        if let Some(image)=self.image.as_ref(){return Ok(child(retirement_cursor_birth_demand(image)?))}
         let Some(source)=self.source.as_ref() else{return Ok(RetirementDemand::default())};
         if source.retirement_scene.get().is_some()||source.retirement_credited_bytes.get()!=0{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"existing icon scene authority requires its original full receipt"))}
         if self.cursor==ICON_PAINT_CACHE_CAPACITY{return Ok(RetirementDemand{release_bytes:size_of::<[IconPaintSlot;ICON_PAINT_CACHE_CAPACITY]>(),depth:1,..Default::default()})}
-        if matches!(source.cache.borrow().slots[self.cursor].value.as_ref().map(|value|&value.body),Some(CachedIconBody::Vector(_))){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original vector icon producer has not declared full scene retirement authority"))}
-        Ok(RetirementDemand{depth:1,..Default::default()})
+        let cache=source.cache.borrow();let slot=&cache.slots[self.cursor];
+        if let Some(key)=slot.key.as_ref(){return Ok(child(retirement_cursor_birth_demand(key)?))}
+        match slot.value.as_ref().map(|value|&value.body){Some(CachedIconBody::Vector(_))=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original vector icon producer has not declared full scene retirement authority")),Some(CachedIconBody::Raster(_))=>Ok(RetirementDemand{copy_bytes:size_of::<CachedIconPaint>(),depth:1,..Default::default()}),None=>Ok(RetirementDemand{depth:1,..Default::default()})}
     }
-    pub fn step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
-        use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{controlled::ControlledRetirement,arc_custody::SharedControlledRetirement}};
-        let empty=RetainedCloneProgress::default();if self.terminal(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
-        let demand=self.demand(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original icon retirement exceeds admitted depth"))}if grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}
-        macro_rules! child{($field:ident,$method:ident)=>{if let Some(owner)=self.$field.as_mut(){if owner.terminal_is_empty(){self.$field=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.$method(child)?;return Ok(RetainedCloneStep::Progress(semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original icon child")?.progress()))}}}
-        child!(key,step);child!(metadata,step);child!(image,step);
-        let source=self.source.as_mut().unwrap();
-        if self.cursor==ICON_PAINT_CACHE_CAPACITY{unsafe{ManuallyDrop::drop(source.cache.get_mut())}source.registry_released.set(true);drop(self.source.take());return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..empty}))}
+    pub fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+        use semio_framework_value::{retirement::{RetirementStep,record_retirement_work,admit_retirement_cursor},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,retained_clone_grant_admits}};
+        if self.terminal(){return RetirementStep::Complete(0)}
+        let demand=match self.demand(body){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};let grant=effect.grant();
+        if effect.maximum_work_units()==0||grant.maximum_items==0||!retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
+        macro_rules! admit{($slot:expr)=>{{let mut child=match effect.reborrow(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant},effect.maximum_work_units()){Ok(child)=>child,Err(error)=>return RetirementStep::Failure(error.into(),0)};let turn=admit_retirement_cursor($slot,&mut child);return match turn.result{Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress,turn.work),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)}}}}
+        if self.metadata.is_some(){admit!(&mut self.metadata)}
+        if self.image.is_some(){admit!(&mut self.image)}
+        let source=self.source.as_mut().expect("icon cache source retained until release");
+        if self.cursor!=ICON_PAINT_CACHE_CAPACITY&&source.cache.get_mut().slots[self.cursor].key.is_some(){admit!(&mut source.cache.get_mut().slots[self.cursor].key)}
+        let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};
+        let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()};
+        if self.cursor==ICON_PAINT_CACHE_CAPACITY{unsafe{ManuallyDrop::drop(source.cache.get_mut())}source.registry_released.set(true);drop(self.source.take());return RetirementStep::Progress(progress,work)}
         let slot=&mut source.cache.get_mut().slots[self.cursor];
-        if let Some(key)=slot.key.take(){self.key=Some(ControlledRetirement::new(key).unwrap_or_else(|_|unreachable!("original icon key is supported")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
-        if let Some(value)=slot.value.take(){let CachedIconPaint{bx,by,bw,bh,body}=value;let CachedIconBody::Raster(image)=body else{unreachable!("original vector scene authority is checked before source transfer")};self.metadata=Some(ControlledRetirement::new((bx,by,bw,bh)).unwrap_or_else(|_|unreachable!("icon numeric metadata is supported")));self.image=Some(SharedControlledRetirement::lease(image));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
-        self.cursor+=1;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
+        if let Some(value)=slot.value.take(){let CachedIconPaint{bx,by,bw,bh,body}=value;let CachedIconBody::Raster(image)=body else{unreachable!("original vector scene authority is checked before source transfer")};self.metadata=Some((bx,by,bw,bh));self.image=Some(semio_framework_value::retirement::arc_custody::ArcLease::new(image));return RetirementStep::Progress(progress,work)}
+        self.cursor+=1;RetirementStep::Progress(progress,work)
     }
 }
 
 impl semio_framework_value::retirement::RetirementCursor for IconOwnedRetirement {
-        fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demand(body) }
-fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::{retirement::RetirementStep,retained_clone::{RetainedCloneProgress,RetainedCloneStep}};match self.step(grant){Err(error)=>RetirementStep::Failure(error,1),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(1),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,1)}}
+    semio_framework_value::native_retirement_reply!();
+    fn next_computational_work(&self,_:usize)->Result<u64,semio_framework_value::ValueError>{Ok(u64::from(!self.terminal()))}
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demand(body)}
     fn terminal_is_empty(&self)->bool{self.terminal()}
     fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.demand(0)?.copy_bytes)}
     fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.demand(copy).ok().map(|demand|demand.capacity_bytes)}
@@ -236,8 +241,8 @@ fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedClo
 impl Drop for IconOwnedRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal(),"original icon cache abandoned before physical retirement");if self.terminal(){unsafe{ManuallyDrop::drop(&mut self.source)}}}}
 
 impl semio_framework_value::retirement::RetireOwned for IconPaintCache {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(IconOwnedRetirement{source:ManuallyDrop::new(Some(self)),key:None,image:None,metadata:None,cursor:0})}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<IconOwnedRetirement>())}
+    type RetirementCursor=IconOwnedRetirement;
+    fn retirement_seed(self)->Self::RetirementCursor{IconOwnedRetirement{source:ManuallyDrop::new(Some(self)),metadata:None,image:None,cursor:0}}
     fn controlled_retirement_supported()->bool{true}
 }
 

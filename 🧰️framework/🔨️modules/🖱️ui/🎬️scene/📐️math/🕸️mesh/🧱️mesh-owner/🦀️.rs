@@ -31,7 +31,7 @@ pub(super) fn component_lengths(table:&ComponentReferenceTable)->Result<[usize;3
 pub(crate) fn authored_step<T:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<T>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,Mesh3dFault>{
     const MESH3D_CLOSE_WORK:u64=16;
     let mut wallet=semio_framework_value::AuthoringWallet::new(grant,u128::from(MESH3D_CLOSE_WORK));
-    match wallet.run_settled(grant,MESH3D_CLOSE_WORK,|effect|owner.step(effect)){
+    match wallet.run_settled(grant,MESH3D_CLOSE_WORK,|effect|owner.step(grant.maximum_copy_bytes,effect)){
         Ok(Some((turn,_)))=>turn.result.map(|step|step.progress()).map_err(|_|Mesh3dFault::Closing),
         Ok(None)|Err(_)=>Err(Mesh3dFault::Closing),
     }

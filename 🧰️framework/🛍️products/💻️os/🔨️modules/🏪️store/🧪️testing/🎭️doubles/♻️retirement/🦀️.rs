@@ -155,7 +155,7 @@ pub fn drive_retirement_terminal(retirement: Box<dyn ErasedSnapshotRetirement>) 
         let Some(owner) = original.as_ref() else { return; };
         let demand = artifact_retirement_box_demands(owner, grant.maximum_copy_bytes).expect("current original boxed owner frontier");
         let turn = RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(grant.maximum_copy_bytes), maximum_capacity_bytes: demand.capacity_bytes.max(grant.maximum_capacity_bytes), maximum_release_bytes: demand.release_bytes.max(grant.maximum_release_bytes), maximum_depth: demand.depth.max(grant.maximum_depth), ..grant };
-        let Some((closed, _)) = semio_framework_value::AuthoringWallet::new(turn, 64).run_settled(turn, 64, |effect| artifact_retirement_box_close_step(&mut original, effect)).expect("original owner and Box close in distinct granted turns") else { continue; };
+        let Some((closed, _)) = semio_framework_value::AuthoringWallet::new(turn, 64).run_settled(turn, 64, |effect| artifact_retirement_box_close_step(&mut original,effect.grant().maximum_copy_bytes,effect)).expect("original owner and Box close in distinct granted turns") else { continue; };
         let step = closed.result.expect("original owner and Box close in distinct granted turns");
         assert!(step.progress().fits(turn));
     }

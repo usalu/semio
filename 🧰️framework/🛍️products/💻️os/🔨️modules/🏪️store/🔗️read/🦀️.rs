@@ -33,7 +33,7 @@ use semio_framework_value_snapshot_read::SnapshotReadRegistryHandle;
 pub use semio_framework_value_snapshot_read::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step,snapshot_registry_alias_work_demand};
 use semio_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_value::factory::ArcRootRetirement as ReturnedSnapshotReadRetirement;
 use semio_os_vcs::{Author, VcsError};
 use semio_os_vcs::{Alternative, ArtifactHistoryLedger, ArtifactVcs, Change, Checkpoint, Identified, Patchable};
 use semio_os_store_envelope::owner::OwnerRef;

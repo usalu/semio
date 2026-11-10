@@ -68,7 +68,7 @@ impl OriginalUiValueConversion{
  pub fn close_step(&mut self,input:&mut Option<UiValue>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(input,cx)?;if self.terminal_is_empty(){return Ok(true)}let d=self.close_demands()?;close_original_effect_step(cx,d,|effect|{
   macro_rules! pure{($body:expr)=>{{if let Err(error)=pay(effect){return closed(effect,Err(error))}$body;return closed(effect,Ok(RetainedCloneStep::Progress(receipt(d))))}}}
   if !self.closing{pure!(self.closing=true)}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(effect)}
+  if !self.retirement.is_empty(){return self.retirement.step_granted(self.body,effect)}
   if self.pending.is_some(){return begun(self.retirement.begin_granted(&mut self.pending,effect))}
   if !self.frames.is_empty(){pure!(*self.pending=self.frames.pop())}
   if !self.frames.terminal_is_empty(){let turn=self.frames.release_empty_page(effect);let work=turn.work;return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:released(turn).map(RetainedCloneStep::Progress).map_err(Into::into),work})}

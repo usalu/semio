@@ -18,7 +18,7 @@ extern crate semio_os_kernel as store;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Transient
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_os_kernel::DslArtifact, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_os_kernel::DslArtifact, semio_framework_value::RetainedClone, semio_framework_value::SnapshotProjection)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "generation3dview.transient")]
 #[dsl(layout = "lines")]
@@ -26,13 +26,6 @@ pub struct Generation3dViewTransient {
     /// 🧮️ `FlowEvalSession::eval_json()` for the current document — `None` until the first command
     /// evaluated it, in which case the preview window evaluates once inline instead.
     pub preview_eval_text: Option<String>,
-}
-
-impl semio_framework_value_snapshot_projection::SnapshotProjection for Generation3dViewTransient {
-    type Output = Self;
-    type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
-    fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
-    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress)> { Self::Projection::begin(grant) }
 }
 
 impl pack::snapshot::ArtifactDsl for Generation3dViewTransient {

@@ -186,11 +186,11 @@ pub struct RetainedWireFieldRetirement(RetainedWireFieldDecode);
 impl semio_framework_value::retirement::RetirementCursor for RetainedWireFieldRetirement{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(self.0.close_demands())}
  fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.0.terminal_is_empty()))}
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{
+ fn close_into<'reply>(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'reply,semio_framework_value::retirement::RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'reply,semio_framework_value::retirement::RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{if effect.invocation().is_none(){return Err(semio_framework_value::ValueError::invariant("native retirement requires its original producer invocation"))}let step=(||->semio_framework_value::retirement::RetirementStep{
   use semio_framework_value::retirement::RetirementStep;
   self.0.cancel();self.0.take_receipt();
   let result=self.0.close_step(effect);let work=u128::from(self.0.last_turn_work());match result{Ok(_)=>{let progress=self.0.take_receipt().map_or(Default::default(),|(_,progress)|progress);if work==0&&!self.0.terminal_is_empty(){RetirementStep::BudgetExhausted}else{RetirementStep::Progress(progress,work)}},Err(error)=>RetirementStep::Failure(error.into(),work)}
- }
+ })();Ok(match step{semio_framework_value::retirement::RetirementStep::Failure(error,_)=>reply.complete(Err(error)),step=>reply.complete(Ok(step))})}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(!self.terminal_is_empty()))}
  fn next_close_byte_demand(&self)->Option<usize>{Some(self.0.output.as_ref().map_or(0,Vec::capacity))}

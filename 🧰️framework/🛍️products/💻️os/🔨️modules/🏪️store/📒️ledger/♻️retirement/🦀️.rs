@@ -91,7 +91,7 @@ impl<Mu: 'static> ArtifactStoreOperationRowsRetirement<Mu> {
 }
 
 impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRowsRetirement<Mu> {
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_progress};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -99,7 +99,7 @@ impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRows
         let demand = self.demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "operation retirement exceeds admitted depth").into()); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, effect)); }
+        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)); }
         if self.pending.is_none() { *self.pending = self.rows.pop(); }
         if self.pending.is_some() {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
@@ -123,7 +123,7 @@ impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRows
         }
         let owner = self.closing_factory.as_mut().expect("remaining original operation factory");
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = semio_framework_value::RetirementPollExit::resume(owner.step(&mut effect.nested(child)))?;
+        let step = semio_framework_value::RetirementPollExit::resume(owner.step(effect.grant().maximum_copy_bytes, &mut effect.nested(child)))?;
         semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original operation row factory")?;
         if owner.terminal_is_empty() { drop(self.closing_factory.take()); }
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
@@ -194,20 +194,25 @@ impl<Mutation: 'static> ArtifactStoreDecodedEditRetirement<Mutation> {
     pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, body); }
         let mutation = self.pending_mutation.as_ref().or_else(|| self.edit.as_ref().and_then(|edit| edit.inverse.last().or_else(|| edit.forwards.last())));
-        if let Some(mutation) = mutation { return Ok(semio_framework_value::RetirementDemand { copy_bytes: 2 * size_of::<Mutation>(), capacity_bytes: self.mutation_factory.as_ref().expect("pending edit retains original mutation factory").retirement_birth_bytes(mutation), depth: 2, ..Default::default() }); }
+        if let Some(mutation) = mutation { let inner = self.mutation_factory.as_ref().expect("pending edit retains original mutation factory").retire_owned_demands(mutation)?; let copy_bytes = inner.copy_bytes.checked_add(2 * size_of::<Mutation>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "decoded edit row quote overflow"))?; return Ok(semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: inner.capacity_bytes, release_bytes: inner.release_bytes, depth: inner.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "decoded edit row depth overflow"))? }); }
         let Some(edit) = self.edit.as_ref() else {
             if self.mutation_factory.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
             return self.closing_factory.as_ref().map_or(Ok(Default::default()), |factory| { let mut demand = factory.demands(body)?; demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "decoded edit factory depth overflow"))?; Ok(demand) });
         };
         let forwards = edit.forwards.capacity().checked_mul(size_of::<Mutation>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "decoded edit backing overflow"))?;
         if forwards != 0 { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Vec<Mutation>>(), release_bytes: forwards, depth: 1, ..Default::default() }); }
-        if !edit.inverse.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: edit.inverse.next_release_allocation_bytes().map_err(ValueError::from)?, depth: 1, ..Default::default() }); }
+        if !edit.inverse.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: edit.inverse.next_release_copy_byte_demand().map_err(ValueError::from)?, release_bytes: edit.inverse.next_release_allocation_bytes().map_err(ValueError::from)?, depth: edit.inverse.next_release_depth_demand().map_err(ValueError::from)?, ..Default::default() }); }
         Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Edit<Mutation>>() + size_of::<ArtifactStoreEditRetirement<Mutation>>(), capacity_bytes: size_of::<ArtifactStoreEditRetirement<Mutation>>(), depth: 2, ..Default::default() })
     }
 }
 
 impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecodedEditRetirement<Mutation> {
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
+    fn native_header_release(&self) -> Option<semio_framework_value::RetirementHeaderRelease> { self.terminal_is_empty().then(|| unsafe { semio_framework_value::RetirementHeaderRelease::native(self, 0, 0) }) }
+    fn close_into<'r>(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>, reply: semio_framework_value::retained_clone::OriginalEffectReply<'r, RetainedCloneStep, OriginalRetirementFailure>) -> Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r, RetainedCloneStep, OriginalRetirementFailure>, ValueError> {
+        match self.close_step(body, effect) { semio_framework_value::RetainedWorkPoll::Complete(turn) => Ok(reply.complete(turn.result)), semio_framework_value::RetainedWorkPoll::Pending { .. } => Err(ValueError::invariant("synchronous decoded edit close left its reply pending")) }
+    }
+    fn recover_close_into<'r>(&mut self, _body: usize, _effect: &mut RetainedAllocationEffect<'_>, _reply: semio_framework_value::retained_clone::OriginalEffectReply<'r, RetainedCloneStep, OriginalRetirementFailure>) -> Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r, RetainedCloneStep, OriginalRetirementFailure>, ValueError> { Err(ValueError::invariant("synchronous decoded edit close has no unrecorded callback")) }
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -215,12 +220,12 @@ impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecoded
         let demand = self.demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "decoded edit retirement exceeds admitted depth").into()); }
         if grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_copy_bytes < demand.copy_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, effect)); }
+        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)); }
         if self.edit.is_none() {
             if self.mutation_factory.is_some() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = self.mutation_factory.take().unwrap(); *self.closing_factory = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
             let factory = self.closing_factory.as_mut().expect("nonterminal decoded edit retains original closing capability");
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = semio_framework_value::RetirementPollExit::resume(factory.step(&mut effect.nested(child)))?;
+            let step = semio_framework_value::RetirementPollExit::resume(factory.step(effect.grant().maximum_copy_bytes, &mut effect.nested(child)))?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "decoded edit original factory capability")?;
             if factory.terminal_is_empty() { drop(self.closing_factory.take()); }
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
@@ -228,12 +233,13 @@ impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecoded
         let edit = self.edit.as_mut().expect("decoded edit retains its original owner");
         if self.pending_mutation.is_none() { *self.pending_mutation = edit.inverse.pop().or_else(|| edit.forwards.pop()); }
         if self.pending_mutation.is_some() {
-            let child = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - demand.copy_bytes, maximum_depth: grant.maximum_depth - 1, ..grant };
+            let transfer = 2 * size_of::<Mutation>();
+            let child = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - transfer, maximum_depth: grant.maximum_depth - 1, ..grant };
             let Some(factory) = self.mutation_factory.as_ref() else { return Err(ValueError::invariant("mutation_factory absent").into()); };
             let (owner, mut progress) = semio_framework_value::RetirementPollExit::resume(semio_framework_value::factory_retire_owned(factory.as_ref(), &mut *self.pending_mutation, &mut effect.nested(child)))?;
             *self.active = Some(owner);
             let valid = progress.fits(child) && progress.retained_capacity_bytes == demand.capacity_bytes;
-            progress.copied_bytes = progress.copied_bytes.checked_add(demand.copy_bytes).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "decoded edit original row transfer receipt overflow"))?;
+            progress.copied_bytes = progress.copied_bytes.checked_add(transfer).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "decoded edit original row transfer receipt overflow"))?;
             progress.copied_items = progress.copied_items.max(1);
             if !valid { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "decoded edit original factory changed admitted constructor receipt").with_retained_progress(progress).into()); }
             return Ok(RetainedCloneStep::Progress(progress));

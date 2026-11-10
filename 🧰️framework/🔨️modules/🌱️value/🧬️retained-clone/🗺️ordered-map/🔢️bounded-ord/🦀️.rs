@@ -1,5 +1,5 @@
 //! 🔢️ Native bounded comparison retains actual bindings and records original Work before source reads.
-use semio_framework_value_control_contract::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,retained_clone_grant_admits};
+use semio_framework_value_control_contract::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,RetainedWorkOutcome,RetainedWorkPoll,retained_clone_grant_admits};
 use semio_framework_value_clone_source::{RetainedCloneBinding,RetainedCloneRef};
 use std::{cmp::Ordering,mem::size_of};
 use semio_framework_value_control_contract::{OriginalEffectReply,OriginalEffectReplyComplete};
@@ -96,10 +96,10 @@ impl<T:BoundedOrd> NativeBoundedOrdCursor<T>{
   Ok((demand(copy),work,reads))
  }
 }
-pub(super) fn flatten_poll<T>(poll:crate::RetainedWorkPoll<T,crate::OriginalRetirementFailure>)->crate::RetainedWorkOutcome<T,ValueError>{
+pub(super) fn flatten_poll<T>(poll:RetainedWorkPoll<T,OriginalRetirementFailure>)->RetainedWorkOutcome<T,ValueError>{
     match poll{
-        crate::RetainedWorkPoll::Pending{work}=>crate::RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"ordered-map cleanup left its producer reply pending inside an advance")),work},
-        crate::RetainedWorkPoll::Complete(turn)=>crate::RetainedWorkOutcome{result:turn.result.map_err(|failure|{let(primary,work,receipt,..)=failure.into_parts();primary.or(work).or(receipt).unwrap_or_else(||ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"ordered-map cleanup failed with an unrepresentable owner"))}),work:turn.work},
+        RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"ordered-map cleanup left its producer reply pending inside an advance")),work},
+        RetainedWorkPoll::Complete(turn)=>RetainedWorkOutcome{result:turn.result.map_err(|failure|{let(primary,work,receipt,..)=failure.into_parts();primary.or(work).or(receipt).unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"ordered-map cleanup failed with an unrepresentable owner"))}),work:turn.work},
     }
 }
 impl<T:BoundedOrd> BoundedOrdCursor<T> for NativeBoundedOrdCursor<T>{

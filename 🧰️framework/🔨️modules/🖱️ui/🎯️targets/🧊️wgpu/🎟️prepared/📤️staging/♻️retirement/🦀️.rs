@@ -1,6 +1,6 @@
 //! ♻️ Shared bounded close receipt and original backing retirement contracts.
 use semio_framework_job::{InteractiveJobCloseStep as CloseStep, OriginalTurnFailure, RetainedCloneGrant, RetainedCloneProgress, StepContext};
-use semio_framework_value::{AuthoringWallet, OriginalRetirementFailure, OriginalRetirementPoll, RetainedAllocationEffect, RetainedCloneStep, RetainedWorkPoll, RetirementDemand, RetirementPollExit, ValueError, ValueRefusalKind};
+use semio_framework_value::{OriginalRetirementFailure, OriginalRetirementPoll, RetainedAllocationEffect, RetainedCloneStep, RetainedWorkPoll, RetirementDemand, RetirementPollExit, ValueError, ValueRefusalKind};
 use std::mem::size_of;
 
 /// 🧾️ One prepared close ladder step under the effect of the turn that funds it.
@@ -49,12 +49,22 @@ pub fn prepared_close_turn(cx: &mut StepContext<'_>, quote: RetainedCloneGrant, 
     Ok(prepared_close_shape(step, blocked, complete))
 }
 
-/// 🏦️ Runs one prepared close ladder step of a turn-less owner (fixtures, standalone hosts) under an explicit finite stock that is the grant itself.
+/// 🏦️ Runs one prepared close ladder step of a turn-less owner (fixtures, standalone hosts) under a genuine producer invocation of the shared `driven` harness.
+#[cfg(any(test, feature = "testkit"))]
 pub fn prepared_close_authored(grant: RetainedCloneGrant, close: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> PreparedClose) -> Result<CloseStep, OriginalRetirementFailure> {
+    use semio_framework_value_testing_admission::{driven, EffectBank, Wallet};
     let (mut blocked, mut complete) = (false, false);
-    let authored = AuthoringWallet::new(grant, 64).run(grant, 64, |effect| { let result = close(effect); prepared_close_receipt(effect, result, &mut blocked, &mut complete) })?;
-    let Some(authored) = authored else { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "original prepared close work quote exceeds its authored stock").into()) };
-    let step = match authored.output {
+    let mut close = Some(close);
+    let mut bank = EffectBank::new(Wallet::new(RetainedCloneGrant { maximum_items: 1 << 40, maximum_copy_bytes: 1 << 40, maximum_capacity_bytes: 1 << 40, maximum_release_bytes: 1 << 40, maximum_depth: 1 << 20 }, 1 << 40));
+    let (poll, _) = driven::<OriginalRetirementFailure>(&mut bank, grant, 64, |effect, reply, recover| {
+        let Some(close) = close.take().filter(|_| !recover) else { return Err(ValueError::invariant("prepared close never suspends")) };
+        let result = close(effect);
+        Ok(match prepared_close_receipt(effect, result, &mut blocked, &mut complete) {
+            RetainedWorkPoll::Pending { .. } => reply.pending(),
+            RetainedWorkPoll::Complete(turn) => reply.complete(turn.result),
+        })
+    });
+    let step = match poll {
         RetainedWorkPoll::Pending { .. } => CloseStep::Pending { progress: RetainedCloneProgress::default() },
         RetainedWorkPoll::Complete(turn) => CloseStep::Pending { progress: turn.result?.progress() },
     };

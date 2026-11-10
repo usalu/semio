@@ -22,6 +22,8 @@ semio-framework-value-native-owned = { path = "../../../../../../../../🧰️fr
 semio-framework-value-derive = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-admission = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-io-control-testing = { path = "../../../../../../../../🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust", features = ["testkit"] }

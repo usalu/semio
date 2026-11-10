@@ -133,7 +133,7 @@ impl NativeRetirementDecodeControl<'_,'_>{
   if frame.phase()==super::NativeReceivingEffectPhase::Empty&&demand.capacity_bytes>self.capacity.saturating_sub(self.spent){return Ok(super::NativeReceivingEffectPoll::Pending{work:0})}
   if self.funding.is_some(){return Err(invalid(ValueRefusalKind::InvariantViolated,"cleanup effect cannot replace its active original funding"))}
   let before=self.original.owned_bytes();let initial_spent=self.spent;let accounting=RetirementEffectSpend{loan:self,before,initial_spent};let owner=&mut *accounting.loan;
-  if frame.phase()==super::NativeReceivingEffectPhase::Empty{frame.quote_retirement(owner.original,demand,maximum_work)?}
+  if frame.phase()==super::NativeReceivingEffectPhase::Empty{frame.bind_original(owner.original)?;frame.quote_retirement(owner.original,demand,maximum_work)?}
   let capacity=owner.capacity;let spent=&mut owner.spent;
   owner.original.receive_original_effect(demand,maximum_work,frame,authority,|control,effect,authority,action|{let previous_maximum=control.maximum_bytes;let mut funding=RetirementFundingScope{loan:NativeRetirementDecodeControl{original:control,funding:None,capacity,spent:*spent,previous_maximum},spent};invoke(&mut funding.loan,effect,authority,action)})
  }

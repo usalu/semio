@@ -36,10 +36,10 @@ pub trait ErasedWindowConfigPublication: Send {
     fn preparation_refusal(&self) -> Option<&ValueError>;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll;
     fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
     fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
-    fn close_ingress(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+    fn close_ingress(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -118,27 +118,31 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPublication for TypedWindowConfigPu
         if let Some(publication)=self.publication.as_mut(){publication.begin_close();}
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
-        if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original window publication requires its close decision"));}
-        let demand=self.close_demand(grant.maximum_copy_bytes)?;
-        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if !self.pending.is_empty(){
-            if self.publication.is_some()||self.pending.len()!=1||!self.ingress.original_is_untouched(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original window cancellation lost its unconsumed typed carrier"));}
-            let original=self.pending.pop().expect("quoted original window mutation remains");
-            let carrier=self.ingress.take_original().expect("quoted original carrier remains untouched").restore(original);
-            self.cancelled=Some(ControlledRetirement::new(carrier).map_err(|(error,_)|error)?);
-        }else if self.pending_bytes()!=0{drop(std::mem::take(&mut *self.pending));}
-        else if let Some(actor)=self.actor.as_mut(){if actor.terminal_is_empty(){drop(self.actor.take());}else{return actor.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}}
-        else if !self.ingress.terminal_is_empty(){return self.ingress.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        else if let Some(cancelled)=self.cancelled.as_mut(){if cancelled.terminal_is_empty(){drop(self.cancelled.take());}else{return cancelled.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}}
-        else if let Some(publication)=self.publication.as_mut(){if publication.terminal_is_empty(){drop(self.publication.take());}else{return publication.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}}
-        else{return self.window_id.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))
+    fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+        use semio_framework_value::RetirementPollExit as Exit;
+        let result=(||->Result<RetainedCloneStep,Exit>{
+            if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+            if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original window publication requires its close decision").into())}
+            let demand=self.close_demand(body)?;
+            if effect.maximum_work_units()==0||!semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(),demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
+            if !self.pending.is_empty(){
+                if self.publication.is_some()||self.pending.len()!=1||!self.ingress.original_is_untouched(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original window cancellation lost its unconsumed typed carrier").into())}
+                let original=self.pending.pop().expect("quoted original window mutation remains");
+                let carrier=self.ingress.take_original().expect("quoted original carrier remains untouched").restore(original);
+                self.cancelled=Some(ControlledRetirement::new(carrier).map_err(|(error,_)|error)?);
+            }else if self.pending_bytes()!=0{drop(std::mem::take(&mut *self.pending));}
+            else if let Some(actor)=self.actor.as_mut(){if actor.terminal_is_empty(){drop(self.actor.take());}else{return Ok(RetainedCloneStep::Progress(Exit::resume(actor.step(body,effect))?.progress()))}}
+            else if !self.ingress.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(Exit::resume(self.ingress.step(body,effect))?.progress()))}
+            else if let Some(cancelled)=self.cancelled.as_mut(){if cancelled.terminal_is_empty(){drop(self.cancelled.take());}else{return Ok(RetainedCloneStep::Progress(Exit::resume(cancelled.step(body,effect))?.progress()))}}
+            else if let Some(publication)=self.publication.as_mut(){if publication.terminal_is_empty(){drop(self.publication.take());}else{return Ok(RetainedCloneStep::Progress(publication.close_step(effect)?.progress()))}}
+            else{return Ok(RetainedCloneStep::Progress(Exit::resume(self.window_id.step(body,effect))?.progress()))}
+            Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))
+        })();
+        Exit::settle(effect,result)
     }
 
     fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{Ok(self.ingress.next_demand(body)?)}
-    fn close_ingress(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.ingress.step(grant)}
+    fn close_ingress(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{self.ingress.step(body,effect)}
     fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}
     fn terminal_is_empty(&self) -> bool {
         self.closing&&self.pending.is_empty()&&self.pending_bytes()==0&&self.transaction.is_none()&&self.actor.is_none()&&self.publication.is_none()&&self.ingress.terminal_is_empty()&&self.cancelled.is_none()&&self.window_id.terminal_is_empty()

@@ -44,21 +44,21 @@ export function flowTypedRetirementSelfTests(): number {
   if (text.reduce((total, value) => total + Buffer.byteLength(value), 0) !== fixture.expected.releasedBytes) throw new Error("Flow retirement independent JSON byte oracle disagrees");
   const source = readFileSync(join(base, "🦀️.rs"), "utf8");
   const exact = (value: string) => value.includes("root:Option<ControlledRetirement<FlowOwner>>")
-    && value.includes("queue:RetirementQueue") && value.includes("pub fn step(&mut self,grant:RetainedCloneGrant)")
-    && value.includes("pub fn next_capacity_byte_demand") && value.includes("pub fn next_release_byte_demand")
+    && value.includes("queue:RetirementQueue") && value.includes("pub fn step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll")
+    && value.includes("pub fn demands(&self,body:usize)") && value.includes("pub fn admission_demand")
     && value.includes("pub fn reserve_push") && value.includes("pub fn admit_owner")
     && value.includes("pub fn push(&mut self,owner:FlowOwner)->Result<(),FlowOwner>") && value.includes("return Err(owner)")
-    && value.includes("std::thread::panicking()||self.terminal_is_empty()") && value.includes("owned_variant!(Spec,Neuron,Synapse,Preview,Channel,Bytes,Strings,Set,Dictionary,Value,HostSnapshot,Widget")
+    && value.includes("std::thread::panicking()||self.terminal_is_empty()") && value.includes("#[derive(semio_framework_value::RetireOwned)]\npub enum FlowOwner") && value.includes("HostSnapshot(FlowHostComponents)")
     && !value.includes("maximum_bytes.max") && !value.includes("released_bytes.min")
     && !value.includes("std::mem::forget(owner)") && !/\.clone\(|serde_json::to_/.test(value);
   if (!exact(source)) throw new Error("Flow retirement exact source ownership linkage failed");
   const mutants = [
     source.replace("root:Option<ControlledRetirement<FlowOwner>>", "root:Vec<FlowOwner>"),
-    source.replace("pub fn next_release_byte_demand", "fn next_release_byte_demand"),
+    source.replace("pub fn demands", "fn demands"),
     source.replace("pub fn reserve_push", "fn reserve_push"),
     source.replace("return Err(owner)", "drop(owner); return Ok(())"),
     source.replace("std::thread::panicking()||self.terminal_is_empty()", "true"),
-    source.replace("owned_variant!(Spec,Neuron,Synapse,Preview,Channel,Bytes,Strings,Set,Dictionary,Value,HostSnapshot,Widget", "owned_variant!(Spec,Neuron,Synapse,Preview,Channel,Bytes,Strings,Set,Dictionary,Value,Widget"),
+    source.replace("HostSnapshot(FlowHostComponents),", ""),
   ];
   for (const value of mutants) if (exact(value)) throw new Error("Flow retirement accepted hostile source");
   return 2 + mutants.length;

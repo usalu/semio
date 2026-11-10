@@ -35,7 +35,7 @@ impl RetainedWireBytesDecode{
   let d=self.close_demands(g.maximum_copy_bytes)?;if !funded(g,d)||effect.maximum_work_units()==0{return Ok(RetainedWireFieldStep::Blocked)}
   let p=if let Some(retiring)=self.retiring.as_mut(){
    if !retiring.terminal_is_empty(){
-    match retiring.step(effect){
+    match retiring.step(g.maximum_copy_bytes,effect){
      RetainedWorkPoll::Pending{work}=>{self.last_work=narrow(work)?;return Ok(RetainedWireFieldStep::Blocked)},
      RetainedWorkPoll::Complete(turn)=>{self.last_work=narrow(turn.work)?;match turn.result{Ok(step)=>step.progress(),Err(error)=>{let p=error.retained_progress();self.receipt=Some((g,p));return Err(error)}}},
     }

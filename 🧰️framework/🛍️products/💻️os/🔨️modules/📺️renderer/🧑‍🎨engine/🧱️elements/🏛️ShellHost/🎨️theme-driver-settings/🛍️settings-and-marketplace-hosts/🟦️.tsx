@@ -25,7 +25,7 @@ export function useSettingsHost({ session, uiTerminology, uiDriverId, uiDriverBa
   const settingsHost: SettingsHostApi = useMemo(
     () => ({
       appId: session?.app.id,
-      appLabel: session ? appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology)) : undefined,
+      appLabel: session ? appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology, uiLocale)) : undefined,
       controllerId: session?.app.controllerId,
       pluginId: session?.pluginId,
       driverId: uiDriverId,

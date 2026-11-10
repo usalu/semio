@@ -2,7 +2,6 @@
 
 use neural_engine as neural;
 use std::collections::BTreeSet;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
 use protocol::causal::transition::HistoryFoldIndex;
 use semio_framework::MeshData;

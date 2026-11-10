@@ -9,7 +9,7 @@ fn admit<M:RetireOwned+Send+Sync+'static>(edit:&mut Option<Box<Edit<M>>>,wire:Ar
 pub fn with_original_edit_message<M:RetireOwned+Send+Sync+'static>(wire:ArtifactOperationWire<M>)->ArtifactOperationWire<M>{wire.with_original_message(birth::<M>,admit::<M>)}
 impl<M:RetireOwned+Send+Sync+'static> ArtifactStoreBatchMessage<M> for NativeMessage<M>{
  fn next_message_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.original.demands(body)}
- fn advance_message(&mut self,document:&str,schema:&str,observed:Option<&str>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.original.advance(OriginalEditWireHeaders{document,schema,observed},effect)}
+ fn advance_message(&mut self,document:&str,schema:&str,observed:Option<&str>,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.original.advance(OriginalEditWireHeaders{document,schema,observed},effect)}
  fn ready(&self)->bool{self.original.ready()}
  fn take_edit_message(&mut self,grant:RetainedCloneGrant)->Result<Option<(Box<Edit<M>>,PagedBytes<{isize::MAX as usize}>,RetainedCloneProgress)>,ValueError>{self.original.take(grant)}
  fn begin_close(&mut self){self.original.begin_close()}
@@ -20,6 +20,6 @@ impl<M:RetireOwned+Send+Sync+'static> ErasedSnapshotRetirement for NativeMessage
  fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.original.close_demands(body)?.capacity_bytes)}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.original.close_demands(4096)?.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.original.close_demands(4096)?.depth)}
- fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { self.original.begin_close();Ok(self.original.close_step(effect)?)})(); semio_framework_value::RetirementPollExit::settle(effect, result) }
+ fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let result=(||->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{self.original.begin_close();Ok(self.original.close_step(body,effect)?)})(); semio_framework_value::RetirementPollExit::settle(effect, result) }
  fn terminal_is_empty(&self)->bool{self.original.terminal_is_empty()}
 }

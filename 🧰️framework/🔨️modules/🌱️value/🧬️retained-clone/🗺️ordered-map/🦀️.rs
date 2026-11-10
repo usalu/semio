@@ -22,34 +22,9 @@ pub(crate) mod bounded_test_support;
 mod lookup_cursor;
 pub use lookup_cursor::*;
 
-#[path = "➕️insert-cursor/🦀️.rs"]
-mod insert_cursor;
-pub use insert_cursor::*;
-
 #[path="🚦️native/🦀️.rs"]
 mod native;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-
-#[cfg(test)]
-#[path="➖️remove/🧪️tests/🦀️.rs"]
-mod removal_tests;
-
-#[path="🎟️lease/🦀️.rs"]
-mod staged_lease;
-
-#[path="➖️remove/🦀️.rs"]
-mod removal;
-pub use removal::{RetainedOrderedMapRemoveCursor,RetainedOrderedMapRemoveGrant,RetainedOrderedMapRemoveProgress,RetainedOrderedMapRemoveStep};
-
-#[path="📥️workspace/🦀️.rs"]
-mod edit_input;
-
-#[path="♻️retirement/🦀️.rs"]
-mod edit_retirement;
-
-#[cfg(test)]
-#[path="🧪️tests/edit-support.rs"]
-pub(crate) mod edit_test_support;

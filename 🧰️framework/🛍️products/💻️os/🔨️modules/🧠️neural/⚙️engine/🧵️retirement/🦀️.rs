@@ -4,18 +4,17 @@ use super::{Atom, ChannelSpec, Dictionary, EvalChannels, FieldSpec, Operator, Op
 use semio_framework_value_ordered::ordered::{OrderedMap, RetirementStep, SharedOwner, UpdateCursor};
 use semio_framework_value_persistent::list::{PagedList,PagedListReservationFailure,PagedListReservationOutcome};
 use protocol::causal::transition::HistoryFoldIndex;
-use semio_framework_value::{AuthoringWallet,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,RetirementPollExit,ValueError,ValueRefusalKind};
+use semio_framework_value::{AuthoringWallet,invocation_extent,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,RetirementPollExit,ValueError,ValueRefusalKind};
 use semio_framework_value_retirement_queue::RetirementQueue;
 use semio_framework_value::retirement::{controlled::ControlledRetirement,RetireOwned,RetirementCursor,RetirementStep as CursorStep};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close};
 use std::collections::VecDeque;
 use std::mem::{size_of,size_of_val};
-use std::sync::Arc;
 //#region 🧵️DomainRetirement
 #[derive(semio_framework_value::RetireOwned)]
 enum Owner {
-    Map(OrderedMap<Value>), Value(Value), Shared(Arc<Value>), Bytes(Vec<u8>), Strings(Vec<String>),
+    Map(OrderedMap<Value>), Value(Value), Shared(SharedOwner<Value>), Bytes(Vec<u8>), Strings(Vec<String>),
     Dictionaries(HistoryFoldIndex<String,Dictionary>), Snapshot(TreeSnapshot), Operator(OperatorInfo),
     Channels(EvalChannels), Schema(Schema), Fields(Vec<FieldSpec>), Type(ValueType),
     SchemaEntry(String,Schema), OperatorEntry(String,OperatorInfo), StringsEntry(String,Vec<String>),
@@ -44,7 +43,7 @@ impl ValueRetirement {
     fn from_owner(value:Owner)->Self {Self {root:Some(ControlledRetirement::retain(value)),owners:RetirementQueue::default()}}
     pub fn from_value(value:Value)->Self {Self::from_owner(Owner::Value(value))}
     pub fn from_dictionary(value:Dictionary)->Self {Self::from_value(Value::Dictionary(value))}
-    pub fn from_shared(value:Arc<Value>)->Self {Self::from_owner(Owner::Shared(value))}
+    pub fn from_shared(value:SharedOwner<Value>)->Self {Self::from_owner(Owner::Shared(value))}
     pub fn from_channels(value:EvalChannels)->Self {Self::from_owner(Owner::Channels(value))}
     pub fn from_snapshot(value:TreeSnapshot)->Self {Self::from_owner(Owner::Snapshot(value))}
     pub fn from_schema_entry(key:String,value:Schema)->Self {Self::from_owner(Owner::SchemaEntry(key,value))}
@@ -75,7 +74,7 @@ impl ValueRetirement {
         RetainedWorkOutcome {result:Ok(Some(RetainedCloneProgress {copied_items:1,..Default::default()})),work:1}
     }
     domain_admission!(push_value,Value,Value);
-    domain_admission!(push_shared,Shared,Arc<Value>);
+    domain_admission!(push_shared,Shared,SharedOwner<Value>);
     domain_admission!(push_dictionaries,Dictionaries,HistoryFoldIndex<String,Dictionary>);
     domain_admission!(push_channels,Channels,EvalChannels);
     domain_admission!(push_snapshot,Snapshot,TreeSnapshot);
@@ -103,11 +102,11 @@ impl ValueRetirement {
     }
     /// ⛽️ Quotes the selected inline root or queued frame action.
     pub fn next_computational_work(&self,body:usize)->Result<u64,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_computational_work(body),|owner|owner.next_computational_work(body))}
-    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
+    pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
         let grant=effect.grant();
         let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
-            let Some(root)=self.root.as_mut() else {return RetirementPollExit::resume(self.owners.step(effect));};
-            let step=RetirementPollExit::resume(root.step(effect))?;
+            let Some(root)=self.root.as_mut() else {return RetirementPollExit::resume(self.owners.step(body,effect));};
+            let step=RetirementPollExit::resume(root.step(body,effect))?;
             let progress=admit_retained_clone_close(grant,step,root.terminal_is_empty(),"Neural original inline root")?.progress();
             if root.terminal_is_empty() {self.root=None;}
             Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
@@ -116,6 +115,15 @@ impl ValueRetirement {
     }
 }
 impl Drop for ValueRetirement {fn drop(&mut self) {assert!(self.terminal_is_empty(),"neural values must finish explicit domain retirement before drop");}}
+/// 📥️ Records one settled native close poll in the caller-owned reply slot of its original invocation.
+pub fn close_reply<'reply>(poll:OriginalRetirementPoll,effect:&RetainedAllocationEffect<'_>,reply:CloseReply<'reply>)->Result<CloseComplete<'reply>,ValueError> {
+    if effect.invocation().is_none() {return Err(ValueError::invariant("native retirement requires its original producer invocation"));}
+    Ok(match cursor_step(poll) {CursorStep::Failure(error,_)=>reply.complete(Err(error)),step=>reply.complete(Ok(step))})
+}
+/// 📨️ Names the reply a native close step records.
+pub type CloseReply<'reply>=semio_framework_value::retirement::__control::OriginalEffectReply<'reply,CursorStep,semio_framework_value::OriginalRetirementFailure>;
+/// 📬️ Names the completion token of a recorded native close step.
+pub type CloseComplete<'reply>=semio_framework_value::retirement::__control::OriginalEffectReplyComplete<'reply,CursorStep,semio_framework_value::OriginalRetirementFailure>;
 /// 🔁️ Maps a settled original close poll onto the cursor step vocabulary, keeping a suspended effect pending.
 pub fn cursor_step(poll:OriginalRetirementPoll)->CursorStep {
     match poll {
@@ -137,7 +145,7 @@ impl RetireOwned for ValueRetirement {
 impl RetirementCursor for ValueRetirement {
     fn next_computational_work(&self,body:usize)->Result<u64,ValueError> {Self::next_computational_work(self,body)}
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.root.as_ref().map_or_else(||self.owners.next_demand(body),|owner|owner.next_demand(body))}
-    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->CursorStep {cursor_step(Self::close_step(self,effect))}
+    fn close_into<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:CloseReply<'reply>)->Result<CloseComplete<'reply>,ValueError> {close_reply(Self::close_step(self,body,effect),effect,reply)}
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
     fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.next_capacity_byte_demand(copy).ok()}
@@ -152,14 +160,10 @@ semio_framework_value::artifact_retire_struct!(OperatorInfo {id,extension,name,a
 semio_framework_value::artifact_retire_struct!(super::Tree {neurons,synapses});
 semio_framework_value::artifact_retire_struct!(super::Neuron {id,kind,params,tree});
 semio_framework_value::artifact_retire_struct!(super::Synapse {id,from,to,from_port,to_port});
-pub struct SnapshotTreeLease(Arc<super::Tree>);
-pub struct SnapshotSeedLease(Arc<HistoryFoldIndex<String,Dictionary>>);
-impl RetireOwned for SnapshotTreeLease{type RetirementCursor=semio_framework_value::retirement::arc_custody::SharedControlledRetirement<super::Tree>;fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.0)}fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<super::Tree>())}fn controlled_retirement_supported()->bool{true}}
-impl RetireOwned for SnapshotSeedLease{type RetirementCursor=semio_framework_value::retirement::arc_custody::SharedControlledRetirement<HistoryFoldIndex<String,Dictionary>>;fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.0)}fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<HistoryFoldIndex<String,Dictionary>>())}fn controlled_retirement_supported()->bool{true}}
-/// 🌳️ Pairs the two shared snapshot leases so a snapshot retires through one derived seed.
+/// 🌳️ Pairs the two shared snapshot originals so a snapshot retires through one derived seed.
 #[derive(semio_framework_value::RetireOwned)]
-pub struct SnapshotSources{tree:SnapshotTreeLease,seeds:SnapshotSeedLease}
-impl RetireOwned for TreeSnapshot{type RetirementCursor=<SnapshotSources as RetireOwned>::RetirementCursor;fn retirement_seed(self)->Self::RetirementCursor{SnapshotSources{tree:SnapshotTreeLease(self.tree),seeds:SnapshotSeedLease(self.seeds)}.retirement_seed()}fn controlled_retirement_supported()->bool{true}}
+pub struct SnapshotSources{tree:SharedOwner<super::Tree>,seeds:SharedOwner<HistoryFoldIndex<String,Dictionary>>}
+impl RetireOwned for TreeSnapshot{type RetirementCursor=<SnapshotSources as RetireOwned>::RetirementCursor;fn retirement_seed(self)->Self::RetirementCursor{SnapshotSources{tree:self.tree,seeds:self.seeds}.retirement_seed()}fn controlled_retirement_supported()->bool{true}}
 semio_framework_value::artifact_retire_struct!(EvalChannels {outputs,inputs});
 impl RetireOwned for super::VariadicSpec {
     type RetirementCursor=<String as RetireOwned>::RetirementCursor;
@@ -178,9 +182,10 @@ const COLD_STEP_WORK:u64=1<<10;
 /// 🧊️ Names the page width of every cold copy grant.
 const COLD_PAGE_BYTES:usize=4096;
 /// 🧊️ Runs one cold step inside an explicit authoring stock because no turn funds it.
-pub(crate) fn cold_effect<R>(grant:RetainedCloneGrant,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->Result<R,ValueError> {
-    let mut wallet=AuthoringWallet::new(grant,u128::from(COLD_STEP_WORK));
-    wallet.run(grant,COLD_STEP_WORK,operation)?.map(|authored|authored.output).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"cold Neural step work quote was not admitted"))
+pub fn cold_effect<R>(grant:RetainedCloneGrant,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->Result<R,ValueError> {
+    let (stock,work)=invocation_extent(grant,COLD_STEP_WORK)?;
+    let mut wallet=AuthoringWallet::new(stock,u128::from(work));
+    wallet.run_invoked(grant,COLD_STEP_WORK,operation)?.map(|authored|authored.output).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"cold Neural step work quote was not admitted"))
 }
 /// 🧊️ A synchronous boundary can never await a suspended original effect.
 pub(crate) fn settled(poll:OriginalRetirementPoll)->Result<RetainedCloneStep,ValueError> {
@@ -199,11 +204,11 @@ fn moving(poll:OriginalRetirementPoll)->Result<(),ValueError> {
 }
 fn cold_retire_step(owner:&mut ValueRetirement)->Result<(),ValueError> {
     let grant=retire_grant(owner)?;
-    moving(cold_effect(grant,|effect|owner.close_step(effect))?)
+    let body=grant.maximum_copy_bytes;moving(cold_effect(grant,|effect|owner.close_step(body,effect))?)
 }
 fn controlled_retire_step(owner:&mut ValueRetirement,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError> {
     let grant=retire_grant(owner)?;let quote=owner.next_computational_work(grant.maximum_copy_bytes)?;
-    let poll=control.with_effect(grant,quote,|_,effect|owner.close_step(effect))?.ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"native Neural retirement work quote was not admitted"))?;
+    let body=grant.maximum_copy_bytes;let poll=control.with_effect(grant,quote,|_,effect|owner.close_step(body,effect))?.ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"native Neural retirement work quote was not admitted"))?;
     moving(poll)
 }
 /// 🧊️ Drives one typed input binding phase under an exact cold grant.
@@ -216,7 +221,7 @@ pub(crate) fn cold_input_step(input:&mut RetainedDictionaryInput)->Result<Dictio
 pub(crate) fn cold_input_close(input:&mut RetainedDictionaryInput)->Result<(),ValueError> {
     let copy=4096.max(input.next_close_copy_byte_demand()?);
     let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:input.next_close_capacity_byte_demand(copy)?,maximum_release_bytes:input.next_close_release_byte_demand()?,maximum_depth:input.next_close_depth_demand()?};
-    moving(cold_effect(grant,|effect|input.close_step(effect))?)
+    moving(cold_effect(grant,|effect|input.close_step(copy,effect))?)
 }
 /// 🧊️ Explicit synchronous boundary; never used by retained advance or close operations.
 pub fn retire_value_cold(mut owner: ValueRetirement) {
@@ -278,7 +283,11 @@ impl ColdDictionaryBuilder {
         let mut update = self.dictionary.pairs.begin_set(key, value);
         let dictionary = &mut self.dictionary;
         let result = (|| {
-            while !update.is_complete() { update.advance_insert_controlled(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: update.next_capacity_byte_demand()?, maximum_release_bytes: 0, maximum_depth: update.next_depth_demand() }, control).result.map_err(|error|error.primary.or(error.quote_refusal).or(error.allocation_refusal).unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native construction refused")))?; }
+            while !update.is_complete() {
+                let demand = update.native_demands(COLD_PAGE_BYTES)?;let quote = update.native_work_demand(COLD_PAGE_BYTES)?;
+                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(update.next_depth_demand()) };
+                control.with_effect(grant, quote, |_, effect| update.advance_native(COLD_PAGE_BYTES, effect))?.ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"native dictionary update work quote was not admitted"))?.result?;
+            }
             let result = update.take_result().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"native dictionary update produced no result"))?;
             let displaced = std::mem::replace(&mut dictionary.pairs, result);
             retire_value_controlled(ValueRetirement::from_map(displaced), control);
@@ -339,8 +348,8 @@ impl RetainedDictionaryInput {
     pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {
         if !self.retirement.terminal_is_empty() {return self.retirement.next_copy_byte_demand();}
         if self.update.is_none()&&self.value.is_some()&&!self.frames.is_empty() {
-            if self.shared_key.is_none() {return Ok(semio_framework_value::retirement::arc_custody::shared_allocation_value_demand::<String>()?.copy_bytes);}
-            if self.shared_value.is_none() {return Ok(semio_framework_value::retirement::arc_custody::shared_allocation_value_demand::<Value>()?.copy_bytes);}
+            if self.shared_key.is_none() {return Ok(SharedOwner::<String>::source_admission_demand()?.copy_bytes);}
+            if self.shared_value.is_none() {return Ok(SharedOwner::<Value>::source_admission_demand()?.copy_bytes);}
         }
         if self.reserving_frame() {return self.frames.next_reserve_copy_byte_demand().map_err(|error|ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason))}
         let Some(update)=self.update.as_ref().filter(|_|!self.closing_update) else {return Ok(0)};
@@ -351,7 +360,7 @@ impl RetainedDictionaryInput {
         if !self.retirement.terminal_is_empty() {return self.retirement.next_capacity_byte_demand(copy);}
         if let Some(update)=self.update.as_ref() {return if self.closing_update {Ok(0)}else {update.next_capacity_byte_demand()};}
         if self.value.is_some()&&!self.frames.is_empty() {
-            return Ok(if self.shared_key.is_none() {SharedOwner::<String>::allocation_bytes()}else if self.shared_value.is_none() {SharedOwner::<Value>::allocation_bytes()}else {0});
+            return Ok(if self.shared_key.is_none() {SharedOwner::<String>::source_admission_demand()?.capacity_bytes}else if self.shared_value.is_none() {SharedOwner::<Value>::source_admission_demand()?.capacity_bytes}else {0});
         }
         if matches!(self.pending,Some(protocol::value::DslValue::Object(_))) {
             if self.frames.len()>=128 {return Ok(0);}
@@ -374,7 +383,7 @@ impl RetainedDictionaryInput {
         if grant.maximum_depth<self.next_depth_demand()? {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"typed input phase requires admitted depth"));}
         if !self.retirement.terminal_is_empty() {
             self.phase="input-bind-retire";
-            let step=settled(self.retirement.close_step(effect))?;
+            let step=settled(self.retirement.close_step(grant.maximum_copy_bytes,effect))?;
             let progress=admit_retained_clone_close(grant,step,self.retirement.terminal_is_empty(),"Neural input child")?.progress();
             return Ok(DictionaryInputStep {progress,dictionary:None});
         }
@@ -402,14 +411,12 @@ impl RetainedDictionaryInput {
             if let Some(frame)=self.frames.last_mut() {
                 if self.shared_key.is_none() {
                     let key=frame.key.take().ok_or_else(||ValueError::invariant("key absent"))?;
-                    let turn=SharedOwner::admit(key,grant,effect.actual());let work=turn.work;
-                    match turn.result {Ok((owner,receipt))=>{self.shared_key=Some(owner);progress=receipt;},Err((error,key))=>{frame.key=Some(key);pay_child_work(effect,work)?;return Err(error);}}
-                    pay_child_work(effect,work)?;
+                    let mut source=Some(key);let turn=SharedOwner::admit_from(&mut source,&mut self.shared_key,effect);
+                    frame.key=source;progress=turn.result?.progress();
                 } else if self.shared_value.is_none() {
-                    let value=self.value.take().ok_or_else(||ValueError::invariant("value absent"))?;
-                    let turn=SharedOwner::admit(value,grant,effect.actual());let work=turn.work;
-                    match turn.result {Ok((owner,receipt))=>{self.shared_value=Some(owner);progress=receipt;},Err((error,value))=>{self.value=Some(value);pay_child_work(effect,work)?;return Err(error);}}
-                    pay_child_work(effect,work)?;
+                    if self.value.is_none() {return Err(ValueError::invariant("value absent"));}
+                    let mut source=self.value.take();let turn=SharedOwner::admit_from(&mut source,&mut self.shared_value,effect);
+                    self.value=source;progress=turn.result?.progress();
                 } else {
                     let (key,value)=(self.shared_key.take(),self.shared_value.take());
                     let (Some(key),Some(value))=(key,value) else {return Err(ValueError::invariant("typed input shared owners absent"));};
@@ -464,10 +471,10 @@ impl RetainedDictionaryInput {
     pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError> {if self.retirement.terminal_is_empty(){Ok(0)}else{self.retirement.next_release_byte_demand()}}
     pub fn next_close_depth_demand(&self)->Result<usize,ValueError> {if self.retirement.terminal_is_empty(){Ok(usize::from(!self.terminal_is_empty()))}else{self.retirement.next_depth_demand()}}
     /// ♻️ Moves each original inline frontier before closing its genuine payload and backing.
-    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
+    pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
         self.cancelled=true;let grant=effect.grant();
         let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
-            if !self.retirement.terminal_is_empty() {let step=RetirementPollExit::resume(self.retirement.close_step(effect))?;return Ok(if self.terminal_is_empty(){step}else{RetainedCloneStep::Progress(step.progress())});}
+            if !self.retirement.terminal_is_empty() {let step=RetirementPollExit::resume(self.retirement.close_step(body,effect))?;return Ok(if self.terminal_is_empty(){step}else{RetainedCloneStep::Progress(step.progress())});}
             if self.terminal_is_empty() {self.done=true;return Ok(RetainedCloneStep::Complete(Default::default()));}
             if grant.maximum_items==0 {return Ok(RetainedCloneStep::Progress(Default::default()));}
             if grant.maximum_depth==0 {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"typed input handoff requires admitted depth").into());}
@@ -497,7 +504,7 @@ macro_rules! original_retirement_cursor {
     ($type:ty) => {impl ::semio_framework_value::retirement::RetirementCursor for $type {
         fn next_demand(&self,body:usize)->Result<::semio_framework_value::RetirementDemand,::semio_framework_value::ValueError>{Self::demands(self,body)}
         fn next_computational_work(&self,body:usize)->Result<u64,::semio_framework_value::ValueError>{Self::next_computational_work(self,body)}
-        fn close_step(&mut self,effect:&mut ::semio_framework_value::RetainedAllocationEffect<'_>)->::semio_framework_value::retirement::RetirementStep {$crate::retirement::cursor_step(Self::close_step(self,effect))}
+        fn close_into<'reply>(&mut self,body:usize,effect:&mut ::semio_framework_value::RetainedAllocationEffect<'_>,reply:$crate::retirement::CloseReply<'reply>)->Result<$crate::retirement::CloseComplete<'reply>,::semio_framework_value::ValueError>{$crate::retirement::close_reply(Self::close_step(self,body,effect),effect,reply)}
         fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
         fn next_work_byte_demand(&self)->Result<usize,::semio_framework_value::ValueError> {self.next_copy_byte_demand()}
         fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.next_capacity_byte_demand(copy).ok()}
@@ -526,11 +533,11 @@ impl OperatorRetirement {
         if !self.values.terminal_is_empty() {return self.values.next_computational_work(body);}
         Ok(match self.operator.as_ref() {None=>0,Some(value) if value.retirement_is_empty()=>1,Some(_)=>OPERATOR_FIELD_ADMISSION_WORK})
     }
-    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
+    pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
         let grant=effect.grant();let empty=RetainedCloneProgress::default();
         let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
             if self.terminal_is_empty() {return Ok(RetainedCloneStep::Complete(empty));}
-            if !self.values.terminal_is_empty() {let step=RetirementPollExit::resume(self.values.close_step(effect))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+            if !self.values.terminal_is_empty() {let step=RetirementPollExit::resume(self.values.close_step(body,effect))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
             if grant.maximum_items==0 {return Ok(RetainedCloneStep::Progress(empty));}
             if grant.maximum_depth<self.next_depth_demand()? {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"operator retained ownership exceeds admitted depth").into());}
             let Some(value)=self.operator.as_mut() else {return Err(ValueError::invariant("operator shell absent").into());};

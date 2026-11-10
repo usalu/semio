@@ -2,7 +2,8 @@
 use super::{RasterImage,png_decoding::{PngDecodeInput,PngDecodeJob},jpeg_decoding::{JpegDecodeError,JpegDecodeInput,JpegDecodeJob}};
 use semio_framework_io_binary_source::{BinarySourceInput,BinarySourceJob,BinarySourceProgress};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
-use semio_framework_value::{AuthoringWallet,RetainedAllocationEffect};
+use semio_framework_value::RetainedAllocationEffect;
+use semio_framework_2d_retire::{BlockingTurns,EffectTurns};
 #[derive(Clone,Copy,Debug)]
 pub struct ImageDecodeInput<'a>{pub mime:&'a str,pub data:&'a str,pub max_source_bytes:usize,pub max_bytes:usize,pub max_pixels:usize,pub max_chunks:usize}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -67,40 +68,47 @@ impl DecodedEncodedImage{
 /// lane under unbounded-for-this-call grants, polling `cancelled` between 4096-step turns, and returns the stored straight RGBA
 /// pixels with the orientation the source declares; [`DecodedEncodedImage::upright`] applies it. The cooperative [`ImageDecodeJob`]
 /// stays the owner for interactive lanes.
-pub fn decode_encoded_blocking(bytes:Vec<u8>,limits:EncodedDecodeLimits,cancelled:&dyn Fn()->bool)->Result<DecodedEncodedImage,ImageDecodeError>{
+pub fn decode_encoded_blocking(bytes:Vec<u8>,limits:EncodedDecodeLimits,cancelled:&dyn Fn()->bool)->Result<DecodedEncodedImage,ImageDecodeError>{decode_encoded_with(bytes,limits,cancelled,&mut BlockingTurns::new(BLOCKING_TURN_WORK))}
+/// ⏱️ Work ceiling of every turn the blocking edge opens.
+const BLOCKING_TURN_WORK:u64=1<<32;
+/// 🪙️ [`decode_encoded_blocking`] on turns the caller's host opens: every decode and close turn runs inside one host-opened original effect.
+pub fn decode_encoded_with(bytes:Vec<u8>,limits:EncodedDecodeLimits,cancelled:&dyn Fn()->bool,turns:&mut impl EffectTurns)->Result<DecodedEncodedImage,ImageDecodeError>{
  let orientation=crate::encoded_orientation(&bytes);
- let mut wallet=authoring_wallet(&limits);
  let image=if bytes.starts_with(&[137,80,78,71,13,10,26,10]){
   let mut job=PngDecodeJob::new(PngDecodeInput{data:bytes,max_pixels:limits.max_pixels,max_bytes:limits.max_source_bytes,max_chunks:65536}).map_err(|_|ImageDecodeError::Invalid("PNG input admission refused"))?;
-  let image=drive_png(&mut job,cancelled,&mut wallet);retire_blocking(job)?;image?
+  let image=drive_png(&mut job,cancelled,turns);retire_funded(job,|grant|grant,turns)?;image?
  }else if bytes.starts_with(&[255,216,255]){
   let mut job=JpegDecodeJob::new(JpegDecodeInput{data:bytes,max_pixels:limits.max_pixels,max_bytes:limits.max_source_bytes,max_segments:65536,max_working_bytes:536870912}).map_err(|_|ImageDecodeError::Invalid("JPEG input admission refused"))?;
-  let image=drive_jpeg(&mut job,cancelled,&mut wallet);retire_blocking(job)?;image?
+  let image=drive_jpeg(&mut job,cancelled,turns);retire_funded(job,|grant|grant,turns)?;image?
  }else{return Err(ImageDecodeError::UnsupportedMime);};
  Ok(DecodedEncodedImage{image,orientation})
 }
 /// 🧱️ Runs the PNG job to completion under grants that quote each turn's own demand and hands the pixels over.
-fn drive_png(job:&mut PngDecodeJob,cancelled:&dyn Fn()->bool,wallet:&mut AuthoringWallet)->Result<RasterImage,ImageDecodeError>{
- let mut work=0;loop{if cancelled(){job.cancel();return Err(ImageDecodeError::Cancelled);}let grant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:job.next_copy_byte_demand().map_err(|_|ImageDecodeError::Invalid("PNG work demand refused"))?.max(32)*4096,maximum_capacity_bytes:job.next_capacity_byte_demand().map_err(|_|ImageDecodeError::Invalid("PNG capacity demand refused"))?,maximum_release_bytes:0,maximum_depth:job.next_depth_demand().map_err(|_|ImageDecodeError::Invalid("PNG depth demand refused"))?};let Some(turn)=wallet.run(grant,4096,|effect|job.advance(effect)).map_err(|_|ImageDecodeError::Invalid("PNG authoring wallet refused"))? else{return Err(ImageDecodeError::Invalid("PNG reconstruction exceeded its authoring wallet"));};let(progress,receipt)=turn.output.map_err(|_|ImageDecodeError::Invalid("PNG reconstruction refused"))?;wallet.post(receipt).map_err(|_|ImageDecodeError::Invalid("PNG authoring wallet exhausted"))?;if !receipt.fits(grant){return Err(ImageDecodeError::Invalid("PNG reconstruction exceeded its grant"));}if progress.done{break;}if progress.work==work{return Err(ImageDecodeError::Invalid("PNG reconstruction stalled"));}work=progress.work;}
+fn drive_png(job:&mut PngDecodeJob,cancelled:&dyn Fn()->bool,turns:&mut impl EffectTurns)->Result<RasterImage,ImageDecodeError>{
+ let mut work=0;loop{if cancelled(){job.cancel();return Err(ImageDecodeError::Cancelled);}let grant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:job.next_copy_byte_demand().map_err(|_|ImageDecodeError::Invalid("PNG work demand refused"))?.max(32)*4096,maximum_capacity_bytes:job.next_capacity_byte_demand().map_err(|_|ImageDecodeError::Invalid("PNG capacity demand refused"))?,maximum_release_bytes:0,maximum_depth:job.next_depth_demand().map_err(|_|ImageDecodeError::Invalid("PNG depth demand refused"))?};let(progress,receipt)=turns.turn(grant,|effect|job.advance(effect)).map_err(|_|ImageDecodeError::Invalid("PNG turn refused"))?.map_err(|_|ImageDecodeError::Invalid("PNG reconstruction refused"))?;if !receipt.fits(grant){return Err(ImageDecodeError::Invalid("PNG reconstruction exceeded its grant"));}if progress.done{break;}if progress.work==work{return Err(ImageDecodeError::Invalid("PNG reconstruction stalled"));}work=progress.work;}
  job.take_result(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<RasterImage>(),maximum_depth:1,..Default::default()}).map_err(|_|ImageDecodeError::Invalid("PNG image handoff refused"))?.ok_or(ImageDecodeError::Incomplete).map(|(image,_)|image)
 }
 /// 🧱️ Runs the JPEG job to completion under grants that quote each turn's own demand and hands the pixels over; every turn's honest work is charged to the wallet.
-fn drive_jpeg(job:&mut JpegDecodeJob,cancelled:&dyn Fn()->bool,wallet:&mut AuthoringWallet)->Result<RasterImage,ImageDecodeError>{
- let mut work=0;loop{if cancelled(){job.cancel();return Err(ImageDecodeError::Cancelled);}let grant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:job.next_copy_byte_demand().max(32)*4096,maximum_capacity_bytes:job.next_capacity_byte_demand(),maximum_release_bytes:0,maximum_depth:job.next_depth_demand()};let Some(turn)=wallet.run(grant,4096*256,|effect|job.advance(effect)).map_err(|_|ImageDecodeError::Invalid("JPEG authoring wallet refused"))? else{return Err(ImageDecodeError::Invalid("JPEG reconstruction exceeded its authoring wallet"));};let(progress,receipt)=turn.output.map_err(|error|match error{JpegDecodeError::WorkLimit=>ImageDecodeError::WorkLimit,JpegDecodeError::Cancelled=>ImageDecodeError::Cancelled,_=>ImageDecodeError::Invalid("JPEG reconstruction refused")})?;wallet.post(receipt).map_err(|_|ImageDecodeError::Invalid("JPEG authoring wallet exhausted"))?;if !receipt.fits(grant){return Err(ImageDecodeError::Invalid("JPEG reconstruction exceeded its grant"));}if progress.done{break;}if progress.work==work{return Err(ImageDecodeError::Invalid("JPEG reconstruction stalled"));}work=progress.work;}
+fn drive_jpeg(job:&mut JpegDecodeJob,cancelled:&dyn Fn()->bool,turns:&mut impl EffectTurns)->Result<RasterImage,ImageDecodeError>{
+ let mut work=0;loop{if cancelled(){job.cancel();return Err(ImageDecodeError::Cancelled);}let grant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:job.next_copy_byte_demand().max(32)*4096,maximum_capacity_bytes:job.next_capacity_byte_demand(),maximum_release_bytes:0,maximum_depth:job.next_depth_demand()};let(progress,receipt)=turns.turn(grant,|effect|job.advance(effect)).map_err(|_|ImageDecodeError::Invalid("JPEG turn refused"))?.map_err(|error|match error{JpegDecodeError::WorkLimit=>ImageDecodeError::WorkLimit,JpegDecodeError::Cancelled=>ImageDecodeError::Cancelled,_=>ImageDecodeError::Invalid("JPEG reconstruction refused")})?;if !receipt.fits(grant){return Err(ImageDecodeError::Invalid("JPEG reconstruction exceeded its grant"));}if progress.done{break;}if progress.work==work{return Err(ImageDecodeError::Invalid("JPEG reconstruction stalled"));}work=progress.work;}
  let handoff=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<RasterImage>(),maximum_depth:1,..Default::default()};
- let Some(turn)=wallet.run(handoff,1,|effect|job.take_result(effect)).map_err(|_|ImageDecodeError::Invalid("JPEG authoring wallet refused"))? else{return Err(ImageDecodeError::Invalid("JPEG reconstruction exceeded its authoring wallet"));};
- turn.output.map_err(|_|ImageDecodeError::Invalid("JPEG image handoff refused"))?.ok_or(ImageDecodeError::Incomplete).map(|(image,_)|image)
+ turns.turn(handoff,|effect|job.take_result(effect)).map_err(|_|ImageDecodeError::Invalid("JPEG handoff turn refused"))?.map_err(|_|ImageDecodeError::Invalid("JPEG image handoff refused"))?.ok_or(ImageDecodeError::Incomplete).map(|(image,_)|image)
 }
-/// 🪙️ A finite authoring stock sized from the declared decode limits.
-fn authoring_wallet(limits:&EncodedDecodeLimits)->AuthoringWallet{let pixels=limits.max_pixels.saturating_mul(32).saturating_add(1<<24);let bytes=limits.max_source_bytes.saturating_mul(4).saturating_add(pixels);AuthoringWallet::new(RetainedCloneGrant{maximum_items:pixels,maximum_copy_bytes:bytes,maximum_capacity_bytes:bytes,maximum_release_bytes:bytes,maximum_depth:256},(pixels as u128).saturating_mul(8))}
-/// ♻️ Pays the close of a finished or abandoned decode job step by step, each under a close stock quoted from its own demand and work, so close liveness never depends on the decode stock.
-fn retire_blocking<T:semio_framework_value::retirement::RetireOwned>(job:T)->Result<(),ImageDecodeError>{retire_funded(job,|grant|grant)}
+/// 🧹️ A stalled funded close still drives every remaining owner, deferred children included, to terminal through paid closes at their own quoted grants.
+fn close_unfunded<T:semio_framework_value::retirement::RetireOwned>(mut owner:semio_framework_value::retirement::controlled::ControlledRetirement<T>,turns:&mut impl EffectTurns)->Result<(),ImageDecodeError>{
+ while !owner.terminal_is_empty(){
+  let body=usize::MAX;let demand=owner.next_demand(body).map_err(|_|ImageDecodeError::Invalid("Decode job close stalled"))?;
+  let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+  match turns.turn(grant,|effect|owner.step(body,effect)){Ok(semio_framework_value::RetainedWorkPoll::Complete(turn))if turn.result.is_ok()=>{},_=>return Err(ImageDecodeError::Invalid("Decode job close stalled"))}
+ }
+ Ok(())
+}
 /// ♻️ A close that cannot progress releases its memory and answers a typed refusal; it never leaks the owner. `fund` maps the grant a step's own demand quotes to the grant actually lent.
-#[doc(hidden)] pub fn retire_funded<T:semio_framework_value::retirement::RetireOwned>(job:T,fund:impl Fn(RetainedCloneGrant)->RetainedCloneGrant)->Result<(),ImageDecodeError>{
+#[doc(hidden)] pub fn retire_funded<T:semio_framework_value::retirement::RetireOwned>(job:T,fund:impl Fn(RetainedCloneGrant)->RetainedCloneGrant,turns:&mut impl EffectTurns)->Result<(),ImageDecodeError>{
  let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::retain(job);
  while !owner.terminal_is_empty(){
-  let progressed=(||{let demand=owner.next_demand(usize::MAX).ok()?;let work=owner.next_computational_work(demand.copy_bytes).ok()?;let grant=fund(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth});let mut wallet=AuthoringWallet::new(grant,u128::from(work));match wallet.run_settled(grant,work,|effect|owner.step(effect)){Ok(Some((turn,_)))=>turn.result.ok().map(|step|step.progress()!=RetainedCloneProgress::default()),_=>None}})();
-  if progressed!=Some(true)&&!owner.terminal_is_empty(){owner.abandon();return Err(ImageDecodeError::Invalid("Decode job close stalled"));}
+  let progressed=(||{let demand=owner.next_demand(usize::MAX).ok()?;let grant=fund(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth});match turns.turn(grant,|effect|owner.step(usize::MAX,effect)){Ok(semio_framework_value::RetainedWorkPoll::Complete(turn))=>turn.result.ok().map(|step|step.progress()!=RetainedCloneProgress::default()),_=>None}})();
+  if progressed!=Some(true)&&!owner.terminal_is_empty(){return close_unfunded(owner,turns).and(Err(ImageDecodeError::Invalid("Decode job close stalled")));}
  }
  Ok(())
 }

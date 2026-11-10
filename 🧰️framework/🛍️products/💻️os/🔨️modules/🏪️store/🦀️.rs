@@ -159,7 +159,7 @@ use semio_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictR
 
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 
-use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_value::factory::ArcRootRetirement as ReturnedSnapshotReadRetirement;
 
 //#endregion 🧬️OpaqueSnapshotRead
 use semio_os_store_text_io::operation_identity;
@@ -423,7 +423,7 @@ mod prepared_operation_wire {
     pub use semio_os_store_operation_wire::*;
     pub use semio_os_store_one_item_publication::lifted_prepared_operation_wire::*;
 }
-pub use prepared_operation_wire::{ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor, ArtifactPreparedOperationSource, ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError, ArtifactPreparedOperationOutput, ArtifactPreparedOperations, ArtifactPreparedOperationsOwner, operation_wire_preparation_factory, operation_wire_preparation_factory_birth_bytes, operation_wire_preparation_factory_source_birth_demand};
+pub use prepared_operation_wire::{artifact_persisted_binary_operation, ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor, ArtifactPreparedOperationSource, ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError, ArtifactPreparedOperationOutput, ArtifactPreparedOperations, ArtifactPreparedOperationsOwner, operation_wire_preparation_factory, operation_wire_preparation_factory_birth_bytes, operation_wire_preparation_factory_source_birth_demand};
 
 pub use semio_os_store_one_item as one_item;
 use one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_RETRIES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, mutation_inverse_rows_declaration_failures, validate_original_preparation_step};

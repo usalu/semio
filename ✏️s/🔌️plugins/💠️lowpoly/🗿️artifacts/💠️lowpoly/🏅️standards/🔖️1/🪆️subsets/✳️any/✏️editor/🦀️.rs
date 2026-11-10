@@ -104,7 +104,7 @@ pub fn lowpoly_io() -> semio_plugin::AppIo {
         ports: vec![
             semio_plugin::MediaPortSpec {
                 id: "mesh:in".into(),
-                label: "Mesh".into(),
+                label: LocalizedLabel::native("Mesh", "Netz"),
                 direction: semio_plugin::MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
                 kind_id: None,
@@ -113,7 +113,7 @@ pub fn lowpoly_io() -> semio_plugin::AppIo {
             },
             semio_plugin::MediaPortSpec {
                 id: "mesh:out".into(),
-                label: "Mesh".into(),
+                label: LocalizedLabel::native("Mesh", "Netz"),
                 direction: semio_plugin::MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
                 kind_id: None,

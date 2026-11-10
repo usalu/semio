@@ -41,3 +41,7 @@ path = "../../🧪️tests/pure-publication.rs"
 [[test]]
 name = "backing"
 path = "../../🧪️tests/backing.rs"
+
+[[test]]
+name = "closed-header"
+path = "../../🧪️tests/closed-header.rs"

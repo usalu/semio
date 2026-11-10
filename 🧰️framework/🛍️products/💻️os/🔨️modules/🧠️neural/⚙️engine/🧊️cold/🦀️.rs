@@ -2,6 +2,7 @@
 
 use super::*;
 use std::ops::{Deref, DerefMut};
+use semio_framework_value_ordered::ordered::SharedOwner;
 //#region 🧊️Scope
 /// 🧊️ Consumes an explicitly cold owner, including nested domain values and error-path cleanup.
 pub trait ColdRetire { fn retire_cold(self); }
@@ -37,6 +38,14 @@ impl ColdRetire for ChannelSpec { fn retire_cold(self) { self.default.retire_col
 impl ColdRetire for OperatorInfo { fn retire_cold(self) { self.inputs.retire_cold(); self.outputs.retire_cold(); } }
 impl ColdRetire for Neuron { fn retire_cold(self) { native_controlled::retire_neuron(self); } }
 impl ColdRetire for Tree { fn retire_cold(self) { native_controlled::retire_tree(self); } }
-impl ColdRetire for TreeSnapshot { fn retire_cold(self) { if let Ok(tree) = Arc::try_unwrap(self.tree) { tree.retire_cold(); } if let Ok(seeds) = Arc::try_unwrap(self.seeds) { seeds.retire_cold(); } } }
+impl<T: ColdRetire> ColdRetire for SharedOwner<T> {
+    fn retire_cold(mut self) {
+        if let Some(mut original) = self.elect_cold() {
+            while !original.physical_is_unique() { std::hint::spin_loop(); }
+            if let Some(value) = original.take_value() { value.retire_cold(); }
+        }
+    }
+}
+impl ColdRetire for TreeSnapshot { fn retire_cold(self) { self.tree.retire_cold(); self.seeds.retire_cold(); } }
 impl ColdRetire for EvalChannels { fn retire_cold(self) { self.outputs.retire_cold(); self.inputs.retire_cold(); } }
 //#endregion 🧬️DomainOwners

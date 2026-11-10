@@ -28,6 +28,7 @@ protocol-laws = []
 semio-framework-job = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-source-hold = { path = "../../../../../../../🔨️modules/🌱️value/🔗️source-hold/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path = "../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }

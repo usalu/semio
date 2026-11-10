@@ -4,7 +4,7 @@ use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_instance_extension::InstanceExtension;
 use semio_plugin_job::original_emission::{OriginalEmissionInput,OriginalEmissionCapture,OriginalEmissionReceipt,admit_original_emission_receipt};
 use semio_framework_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation,original_emission::{OriginalEmissionAdmission,OriginalEmissionPublicationFrontier}};
-use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
+use semio_framework_job::{StepContext,OriginalTurnFailure,close_original_retained_step};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
 use semio_plugin_decl_views::child_view::ChildContentView;
 use semio_framework::kernel::InvocationResult;
@@ -37,7 +37,7 @@ impl<'ctx,A:ArtifactApp,M:store::ReferenceSpaceMember+MemberFactory+'static,X:In
    5=>{let source=self.tools.original_emission_admission.as_mut().unwrap();if source.window_transient.as_ref().is_some_and(|owner|owner.handoff_complete()){source.advance_phase(5,6,cx)?;}else{source.capture_window_transient(&mut self.stores.window_transient_store,cx)?;}},
    6=>{
     let source=self.tools.original_emission_admission.as_mut().unwrap();if source.mounted.as_ref().unwrap().captured_child_content.is_some(){source.advance_phase(6,7,cx)?;return Ok(false)}let mounted=source.mounted.as_mut().unwrap();let bytes=semio_framework_value::retirement::arc_custody::arc_bytes::<ChildContentView>();let copy=size_of::<ChildContentView>()+2*size_of::<std::sync::Arc<ChildContentView>>();
-    if admit_original_construction(cx,&mut mounted.captured_child_content,OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:bytes,release_bytes:0,depth:1},|_|semio_framework_value::RetainedWorkOutcome{result:Ok((std::sync::Arc::new(ChildContentView::clone(&*self.child_composition.child_content_root)),RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:bytes,..Default::default()})),work:1})?{mounted.captured_child_content_generation=self.child_composition.child_content_generation;}
+    let p=RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:bytes,..Default::default()};if !cx.is_cancelled()&&!cx.should_yield()&&cx.fuel_remaining()>=1&&p.fits(cx.retained_grant()){cx.consume_retained(p)?;cx.consume_fuel(1);mounted.captured_child_content=Some(std::sync::Arc::new(ChildContentView::clone(&*self.child_composition.child_content_root)));mounted.captured_child_content_generation=self.child_composition.child_content_generation;}
    },
    7=>{
     if self.tools.original_emission_admission.as_ref().unwrap().mounted.is_none(){self.tools.original_emission_admission.as_mut().unwrap().advance_phase(7,8,cx)?;return Ok(false)}

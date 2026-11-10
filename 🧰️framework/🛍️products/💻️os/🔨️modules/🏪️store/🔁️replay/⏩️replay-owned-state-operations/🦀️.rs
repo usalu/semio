@@ -53,7 +53,7 @@ impl<P,Mutation:super::Mutation<P>+OpBinary> ReplayOwnedState<P,Mutation>{
                 let body = retirement.next_copy_byte_demand().map_err(VcsError::InverseRefused)?;
                 let capacity = retirement.next_capacity_byte_demand(body).map_err(VcsError::InverseRefused)?;
                 let grant=original.ok_or_else(||VcsError::ValidationFailed("native replay cleanup requires the original caller grant".into()))?;
-                let Some(poll) = replay_effect(grant, control.as_deref_mut(), |_, effect| retirement.close_step(effect))? else { return Ok(ReplayStep::Pending(self.progress)); };
+                let Some(poll) = replay_effect(grant, control.as_deref_mut(), |_, effect| {let body=effect.grant().maximum_copy_bytes;retirement.close_step(body,effect)})? else { return Ok(ReplayStep::Pending(self.progress)); };
                 let step = settle_poll(poll)?;self.native_receipt=step.progress();
                 if !step.progress().fits(grant) { return Err(VcsError::ValidationFailed("replay cleanup exceeded its admitted grant".into())); }
                 if retirement.terminal_is_empty() {

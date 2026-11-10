@@ -140,7 +140,7 @@ pub fn close_journal_owner(owner: &mut Option<Box<dyn DurableOwnedGroupJournalCo
     if owner.is_none() { return Ok(RetainedCloneStep::Complete(Default::default())); }
     let demand = semio_framework_value::factory_ticket_demands(owner.as_ref().unwrap(), grant.maximum_copy_bytes)?;
     if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-    semio_os_store_read::settle_close_poll(semio_framework_value::close_factory_ticket(owner, effect))
+    semio_os_store_read::settle_close_poll(semio_framework_value::close_factory_ticket(owner, grant.maximum_copy_bytes, effect))
 }
 
 /// 🗄️ Kernel-owned journal port implemented by a storage owner with an exclusive writer permit.
@@ -150,7 +150,7 @@ pub trait DurableOwnedGroupJournalSinkV1: Send {
     fn begin_commit(&mut self, decision_pack: Vec<u8>, decision_sha256: String) -> Box<dyn DurableOwnedGroupJournalCommitV1>;
 }
 
-pub struct ArtifactStoreDurableGroupRootV1<P, Mutation> {
+pub struct ArtifactStoreDurableGroupRootV1<P: Send + Sync + 'static, Mutation> {
         pub diagnostics: semio_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage,
 pub visibility: Arc<semio_os_vcs::ArtifactGroupVisibility>,
     pub current: Option<Arc<P>>,

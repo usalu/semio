@@ -1,45 +1,56 @@
-//! 🧪️ Native central tests lend the actual post and restore it with the same original funded custody owner.
-use semio_framework_value::{RetirementDemand,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneRef,RetainedCloneGrant}};
-use semio_framework_value_snapshot_projection::snapshot_projection::post::{OriginalPostRead,PagedOneItemPostMode};
-use std::mem::ManuallyDrop;
+//! 🧪️ Native central tests capture the actual post once and lend or return it through the same original funded custody owner.
+use semio_framework_value::{OriginalRetirementFailure,RetirementDemand,ValueError,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
+use semio_framework_value_clone_source_testing::drive::{drive,drive_reply};
+use semio_framework_value_snapshot_projection::snapshot_projection::post::{OriginalPostRead,PagedOneItemPost,PagedOneItemPostMode,PagedOneItemPostRead};
+const UNITS:u64=1<<20;
+const BODY:usize=4096;
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
-pub struct PostFixture<S:RetireOwned+Sync>{held_post:ManuallyDrop<Option<S>>,original_post_read:OriginalPostRead<S>}
-impl<S:RetireOwned+Sync> PostFixture<S>{
- pub fn projected<O:semio_framework_value_snapshot_projection::snapshot_projection::ProjectionOutput<S>>(output:O)->Self{let d=O::placement_demand();let mut target=std::mem::MaybeUninit::<S>::uninit();let p=output.place(&mut target,grant(d)).result.unwrap_or_else(|_|panic!("test projected output original placement"));assert!(p.fits(grant(d)));Self::new(unsafe{target.assume_init()})}
- pub fn new(value:S)->Self{let mut owner=Self{held_post:ManuallyDrop::new(Some(value)),original_post_read:Default::default()};owner.prepare(PagedOneItemPostMode::Original);owner}
- fn prepare(&mut self,mode:PagedOneItemPostMode){for _ in 0..100000{let Some(d)=self.original_post_read.demand(&self.held_post,mode,4096).unwrap()else{return;};let p=eff::with_effect(grant(d),|e|self.original_post_read.prepare(&mut self.held_post,mode,4096,e)).result.unwrap().expect("selected original post frontier");assert!(p.fits(grant(d)));}panic!("test post original handback stalled");}
- pub fn turn_demand(&self,mode:PagedOneItemPostMode,body:usize)->Result<Option<RetirementDemand>,semio_framework_value::ValueError>{self.original_post_read.demand(&self.held_post,mode,body)}
- pub fn read_mode(&self,mode:PagedOneItemPostMode)->Result<semio_framework_value_snapshot_projection::snapshot_projection::post::PagedOneItemPostRead<'_,S>,semio_framework_value::ValueError>{self.original_post_read.read(&self.held_post,mode)}
- pub fn prepare_turn(&mut self,mode:PagedOneItemPostMode,body:usize,grant:RetainedCloneGrant)->Result<Option<semio_framework_value::retained_clone::RetainedCloneProgress>,semio_framework_value::ValueError>{eff::with_effect(grant,|e|self.original_post_read.prepare(&mut self.held_post,mode,body,e)).result.map_err(|failure|failure.primary().or(failure.work_refusal()).or(failure.receipt_refusal()).cloned().unwrap_or_else(||semio_framework_value::ValueError::invariant("test post preparation failed without a value cause")))}
- pub fn access(&mut self,mode:PagedOneItemPostMode)->Result<semio_framework_value_snapshot_projection::snapshot_projection::post::PagedOneItemPost<'_,S>,semio_framework_value::ValueError>{self.original_post_read.access(&mut self.held_post,mode)}
- pub fn borrow(&self)->RetainedCloneRef<'_,S>{self.original_post_read.read(&self.held_post,PagedOneItemPostMode::Original).unwrap().original().unwrap()}
- pub fn mutable_read(&mut self)->&S{self.prepare(PagedOneItemPostMode::Mutable);self.held_post.as_ref().unwrap()}
- pub fn into_inner(mut self)->S{self.prepare(PagedOneItemPostMode::Mutable);self.held_post.take().unwrap()}
+trait Failure{fn progress(&self)->RetainedCloneProgress;}
+impl Failure for ValueError{fn progress(&self)->RetainedCloneProgress{self.retained_progress()}}
+impl Failure for OriginalRetirementFailure{fn progress(&self)->RetainedCloneProgress{self.retained_progress()}}
+fn progress_of<E:Failure>(answer:&Result<RetainedCloneStep,E>)->RetainedCloneProgress{match answer{Ok(step)=>step.progress(),Err(failure)=>failure.progress()}}
+fn fault(reason:&'static str)->ValueError{ValueError::invariant(reason)}
+type Reply<'r,E>=OriginalEffectReply<'r,RetainedCloneStep,E>;
+type Done<'r,E>=Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,E>,ValueError>;
+pub struct PostFixture<S:RetireOwned+Sync+'static>{original_post_read:OriginalPostRead<S>}
+impl<S:RetireOwned+Sync+'static> PostFixture<S>{
+ pub fn new(value:S)->Self{
+  let mut owner=Self{original_post_read:Default::default()};let mut input=Some(value);
+  let capture=drive_reply::<RetainedCloneStep,ValueError>(grant(OriginalPostRead::<S>::capture_demand()),UNITS,progress_of,|effect,reply:Reply<'_,ValueError>,recover|->Done<'_,ValueError>{if recover{return Err(fault("test post capture has no unrecorded callback"))}owner.original_post_read.capture_into(&mut input,effect,reply)});
+  capture.result.unwrap_or_else(|_|panic!("test post original capture"));assert!(input.is_none(),"test post capture kept its input");
+  owner.prepare(PagedOneItemPostMode::Original);owner
+ }
+ fn prepare_once(&mut self,mode:PagedOneItemPostMode,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,OriginalRetirementFailure>{
+  drive_reply::<RetainedCloneStep,OriginalRetirementFailure>(g,UNITS,progress_of,|effect,reply:Reply<'_,OriginalRetirementFailure>,recover|->Done<'_,OriginalRetirementFailure>{if recover{self.original_post_read.recover_prepare_into(mode,body,effect,reply)}else{self.original_post_read.prepare_into(mode,body,effect,reply)}}).result
+ }
+ fn prepare(&mut self,mode:PagedOneItemPostMode){for _ in 0..100000{let Some(d)=self.original_post_read.demand(mode,BODY).unwrap()else{return};let step=self.prepare_once(mode,BODY,grant(d)).unwrap_or_else(|_|panic!("test post original preparation"));assert!(step.progress().fits(grant(d)));}panic!("test post original handback stalled");}
+ pub fn turn_demand(&self,mode:PagedOneItemPostMode,body:usize)->Result<Option<RetirementDemand>,ValueError>{self.original_post_read.demand(mode,body)}
+ pub fn read_mode(&self,mode:PagedOneItemPostMode)->Result<PagedOneItemPostRead<'_,S>,ValueError>{self.original_post_read.read(mode)}
+ pub fn prepare_turn(&mut self,mode:PagedOneItemPostMode,body:usize,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
+  if self.original_post_read.demand(mode,body)?.is_none(){return Ok(None)}
+  self.prepare_once(mode,body,g).map(|step|Some(step.progress())).map_err(|failure|failure.primary().or(failure.work_refusal()).or(failure.receipt_refusal()).cloned().unwrap_or_else(||fault("test post preparation failed without a value cause")))
+ }
+ pub fn access(&mut self,mode:PagedOneItemPostMode)->Result<PagedOneItemPost<'_,S>,ValueError>{self.original_post_read.access(mode)}
+ pub fn borrow(&self)->RetainedCloneRef<'_,S>{self.original_post_read.read(PagedOneItemPostMode::Original).unwrap().original().unwrap()}
+ pub fn mutable_read(&mut self)->&S{self.prepare(PagedOneItemPostMode::Mutable);self.original_post_read.read(PagedOneItemPostMode::Mutable).unwrap().get()}
+ fn give_back(&mut self)->Option<S>{
+  if self.original_post_read.terminal_is_empty(){return None}
+  self.prepare(PagedOneItemPostMode::Mutable);let mut output=None;
+  let back=drive_reply::<RetainedCloneStep,ValueError>(grant(self.original_post_read.return_demand()),UNITS,progress_of,|effect,reply:Reply<'_,ValueError>,recover|->Done<'_,ValueError>{if recover{return Err(fault("test post return has no unrecorded callback"))}self.original_post_read.return_into(&mut output,effect,reply)});
+  back.result.unwrap_or_else(|_|panic!("test post original return"));output
+ }
+ pub fn into_inner(mut self)->S{self.give_back().expect("test post is resident")}
 }
-impl<S:RetireOwned+Sync>std::ops::Deref for PostFixture<S>{type Target=S;fn deref(&self)->&S{if self.original_post_read.terminal_is_empty(){self.held_post.as_ref().unwrap()}else{self.borrow().get()}}}
-impl<S:RetireOwned+Sync>std::ops::DerefMut for PostFixture<S>{fn deref_mut(&mut self)->&mut S{assert!(self.original_post_read.terminal_is_empty(),"mutable test post requires explicit funded handback before observed commit");self.held_post.as_mut().unwrap()}}
-impl<S:RetireOwned+Sync+std::fmt::Debug>std::fmt::Debug for PostFixture<S>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{std::fmt::Debug::fmt(&**self,f)}}
-impl<S:RetireOwned+Sync+PartialEq>PartialEq<S>for PostFixture<S>{fn eq(&self,other:&S)->bool{&**self==other}}
-impl<S:RetireOwned+Sync>Drop for PostFixture<S>{fn drop(&mut self){if std::thread::panicking(){return;}if self.held_post.is_none()&&self.original_post_read.terminal_is_empty(){return;}self.prepare(PagedOneItemPostMode::Mutable);if let Some(value)=self.held_post.take(){let mut close=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("test post original typed retirement"));for _ in 0..100000{if close.terminal_is_empty(){return;}let d=close.next_demand(4096).unwrap();let p=eff::settled(eff::run(grant(d),|e|close.step(e))).result.unwrap().progress();assert!(p.fits(grant(d)));}panic!("test post original retirement stalled");}}}
-/// ⏱️ Local fixture effect: one actual original Work action around each post preparation turn.
-mod eff {
- use semio_framework_value::retained_clone::{OriginalSourceTurnIdentity,OriginalWork,OriginalWorkAuthority,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkRecipient,OriginalWorkSink,RetainedCloneGrant};
- use semio_framework_value::{RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,ValueError};
- const CPU:u64=1<<20;
- struct Producer;
- impl OriginalWorkRecipient for Producer{
-  type Context<'turn,'source>=() where 'source:'turn;
-  fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError>where 'source:'turn{Ok(())}
-  fn source_turn<'turn,'source>(&self,_:&())->Option<OriginalSourceTurnIdentity>where 'source:'turn{None}
-  fn admits<'reply,'turn,'source>(&mut self,_:&mut (),quote:OriginalWorkQuote<'reply>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'reply>where 'source:'turn{quote.complete(Ok(observed.checked_add(additional).is_some_and(|total|total<=CPU)))}
-  fn settle_partial<'reply,'turn,'source>(&mut self,context:&mut (),check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply>where 'source:'turn{check.complete(self.validate_context(context))}
-  fn recover_partial<'reply,'turn,'source>(&mut self,context:&mut (),check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply>where 'source:'turn{check.complete(self.validate_context(context))}
+impl<S:RetireOwned+Sync+'static> std::ops::Deref for PostFixture<S>{type Target=S;fn deref(&self)->&S{self.original_post_read.read(PagedOneItemPostMode::Mutable).or_else(|_|self.original_post_read.read(PagedOneItemPostMode::Original)).expect("test post is resident").get()}}
+impl<S:RetireOwned+Sync+'static> std::ops::DerefMut for PostFixture<S>{fn deref_mut(&mut self)->&mut S{assert!(self.original_post_read.demand(PagedOneItemPostMode::Mutable,BODY).unwrap().is_none(),"mutable test post requires explicit funded handback before observed commit");self.original_post_read.access(PagedOneItemPostMode::Mutable).unwrap().mutable().unwrap()}}
+impl<S:RetireOwned+Sync+std::fmt::Debug+'static> std::fmt::Debug for PostFixture<S>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{std::fmt::Debug::fmt(&**self,f)}}
+impl<S:RetireOwned+Sync+PartialEq+'static> PartialEq<S> for PostFixture<S>{fn eq(&self,other:&S)->bool{&**self==other}}
+impl<S:RetireOwned+Sync+'static> Drop for PostFixture<S>{
+ fn drop(&mut self){
+  if std::thread::panicking(){return}
+  let Some(value)=self.give_back()else{return};
+  let mut close=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("test post original typed retirement"));
+  for _ in 0..100000{if close.terminal_is_empty(){return}let d=close.next_demand(BODY).unwrap();let step=drive(grant(d),UNITS,|effect|close.step(BODY,effect)).result.unwrap_or_else(|_|panic!("test post original retirement"));assert!(step.progress().fits(grant(d)));}
+  panic!("test post original retirement stalled");
  }
- pub fn run<R>(grant:RetainedCloneGrant,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->R{
-  let mut authority=OriginalWorkAuthority::new(Producer);let mut actual=None;
-  let result=authority.with_loan(&mut (),|loan|{let mut loan=loan.reborrow();let mut work=OriginalWork::empty();work.recipient=Some(&mut loan);let mut action=None;let mut proof=None;assert_eq!(work.prepare_for_action(CPU,&mut action).unwrap(),Some(true));let mut receipt=None;work.issue_performed_for_action(action,&mut receipt).unwrap();let output={let mut effect=RetainedAllocationEffect::new(grant,CPU,&mut actual,receipt.as_mut().unwrap());operation(&mut effect)};let performed=OriginalWorkSink::observed_work(receipt.as_ref().unwrap());work.claim_performed_for_action(action,&mut receipt).unwrap();if performed==0{work.cancel_for_action(&mut action).unwrap()}else{let mut partial=None;assert!(work.settle_partial_for_action_into(action,&mut partial).unwrap());let partial=partial.take().expect("original fixture Work partial outcome");assert_eq!(partial.total(),performed);assert!(partial.source_refusal().is_none());assert!(work.commit_for_action(performed,action,&mut proof).unwrap());work.finish_for_action(&mut proof,&mut action).unwrap()}output}).unwrap();
-  assert!(!authority.has_live_actions());result
- }
- pub fn with_effect<T,E>(grant:RetainedCloneGrant,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<T,E>)->RetainedWorkOutcome<T,E>{run(grant,operation)}
- pub fn settled<T,E>(poll:RetainedWorkPoll<T,E>)->RetainedWorkOutcome<T,E>{match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{..}=>panic!("original fixture turn stayed pending")}}
 }

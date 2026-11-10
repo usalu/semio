@@ -1,8 +1,8 @@
 //! 📮️ Funded payload-builder turns shared by every fem numerical job and its contract tests: one boxed builder slot is opened, staged, finished and closed one granted turn at a time.
 
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, OriginalTurnFailure, OriginalTurnPrimary, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext, close_original_retained_step, receive_original_retained_work};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, OriginalTurnFailure, OriginalTurnPrimary, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext, close_original_effect_step, close_original_retained_step, receive_original_retained_work};
 use semio_framework_job_payload::{JobPayloadStream, RetainedJobPayload, RetainedPayloadBuilder, RetainedWorkOutcome};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect, RetainedWorkPoll, RetirementDemand, ValueError, ValueRefusalKind};
 
 /// 🎟️ Whether one grant covers one quoted demand with at least one item.
 pub fn numerical_grant_covers(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
@@ -77,7 +77,7 @@ pub fn numerical_finish_writer(slot: &mut NumericalPayloadSlot, lent: &mut Optio
     }
     if lent.is_some() {
         let demand = builder.retirement_demands()?;
-        close_original_retained_step(context, demand, |grant| builder.close_step_granted(grant)).map_err(numerical_turn_error)?;
+        close_original_effect_step(context, demand, |effect| RetainedWorkPoll::Complete(builder.close_step(effect))).map_err(numerical_turn_error)?;
         return Ok(false);
     }
     if builder.published().is_none() {
@@ -121,17 +121,22 @@ impl NumericalBytesPublication {
     /// 📏️ Quotes the next close turn of the half-built builder; `None` once nothing remains.
     pub fn close_demand(&self) -> Option<Result<RetirementDemand, ValueError>> { numerical_writer_demand(&self.writer) }
 
-    /// 🧹️ Closes the half-built builder under a covering grant; `None` once nothing remains.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Option<Result<InteractiveJobCloseStep, ValueError>> { numerical_writer_close(&mut self.writer, grant) }
+    /// 🧹️ Closes the half-built builder inside the calling turn's effect; `None` once nothing remains.
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Option<Result<InteractiveJobCloseStep, ValueError>> { numerical_writer_close(&mut self.writer, effect) }
 }
 
-/// 🧯️ Closes one half-built writer slot under a grant that covers its own quote; `None` when the slot is empty.
-pub fn numerical_writer_close(slot: &mut NumericalPayloadSlot, grant: RetainedCloneGrant) -> Option<Result<InteractiveJobCloseStep, ValueError>> {
+/// 🧯️ Closes one half-built writer slot inside the calling turn's original effect; `None` when the slot is empty.
+pub fn numerical_writer_close(slot: &mut NumericalPayloadSlot, effect: &mut RetainedAllocationEffect<'_>) -> Option<Result<InteractiveJobCloseStep, ValueError>> {
     let builder = slot.as_mut()?;
     if builder.terminal_is_empty() {
         let demand = RetainedPayloadBuilder::boxed_release_demands();
-        if !numerical_grant_covers(grant, demand) {
+        if !numerical_grant_covers(effect.grant(), demand) {
             return Some(Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }));
+        }
+        match effect.performed(1) {
+            Ok(true) => {}
+            Ok(false) => return Some(Err(ValueError::literal(ValueRefusalKind::WorkLimit, "numerical box release exceeded its original work"))),
+            Err(error) => return Some(Err(error)),
         }
         *slot = None;
         return Some(Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() } }));
@@ -140,10 +145,10 @@ pub fn numerical_writer_close(slot: &mut NumericalPayloadSlot, grant: RetainedCl
         Ok(demand) => demand,
         Err(error) => return Some(Err(error)),
     };
-    if !numerical_grant_covers(grant, demand) {
+    if !numerical_grant_covers(effect.grant(), demand) {
         return Some(Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }));
     }
-    Some(numerical_close_result(builder.close_step_granted(grant).result))
+    Some(numerical_close_result(builder.close_step(effect).result))
 }
 
 /// 📏️ Quotes a half-built writer slot's next close turn; `None` when the slot is empty.

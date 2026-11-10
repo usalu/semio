@@ -10,4 +10,5 @@ pub fn observe_retirement_allocations<R>(run:impl FnOnce()->R)->(R,(usize,usize)
 #[path="../🦀️.rs"]mod fields;
 #[path="../../../../✨️derive/🛬️receive/🔀️enum/🧪️tests/🦀️.rs"]mod payloads;
 
-pub(crate) use semio_framework_value_testing_admission as source_fixture;
+#[path="../../../../🧪️testing/📥️admission/receiver-driver.rs"]pub(crate) mod driver;
+#[path="../../../../🧪️testing/📥️admission/default-receiver.rs"]pub(crate) mod default_receiver;

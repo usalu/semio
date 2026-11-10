@@ -749,7 +749,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
             return Ok(match step { PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), other => other });
         }
         if self.rejected.is_some() {
-            let step = semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected, effect))?;
+            let step = semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected,effect.grant().maximum_copy_bytes,effect))?;
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         if let Some(commit) = self.pending_commit.take() {
@@ -771,7 +771,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
             return Ok(PluginLifecycleStep::Progress(self.raw.close_step(grant).progress()));
         }
         if self.pack_close.is_some() {
-            return semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.pack_close, effect)).map(|step| PluginLifecycleStep::Progress(step.progress()));
+            return semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.pack_close,effect.grant().maximum_copy_bytes,effect)).map(|step| PluginLifecycleStep::Progress(step.progress()));
         }
         if self.packs_len != 0 {
             *self.pending_pack = self.packs[self.packs_len - 1].take(); self.packs_len -= 1;

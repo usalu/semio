@@ -42,7 +42,7 @@ pub(super) fn mock_job_call<T>(execution: OriginalGuestExecutionBudget, original
 
 #[derive(Default)]
 pub struct MockInstanceState {
-    pub actor_context:semio_framework_plugin_guest_contract::original_actor_context::OriginalActorGuestEntry,
+    pub actor_context:semio_plugin_guest_contract::original_actor_context::OriginalActorGuestEntry,
     pub(super) outputs: HashMap<u64, MockJobOutput>,
     #[allow(dead_code)]
     pub checkpoint: Option<Vec<u8>>,
@@ -288,8 +288,8 @@ impl MockGuestRuntime {
 
 #[cfg(any(test, feature = "testkit"))]
 impl GuestRuntime for MockGuestRuntime {
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>{let _=(budget,identity);let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_context::OriginalActorAdmissionReply::borrow_original(&state.actor_context.admit_step(input,input.grant,|| Some(0))))}
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{let _=(budget,identity);let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_context::OriginalActorCloseReply::borrow_original(&state.actor_context.close_step(input,input.grant)))}
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>{let _=(budget,identity);let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(identity_turn_fault(semio_plugin_guest_contract::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_context::OriginalActorAdmissionReply::borrow_original(&state.actor_context.admit_step(input,input.grant,|| Some(0))))}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{let _=(budget,identity);let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(identity_turn_fault(semio_plugin_guest_contract::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_context::OriginalActorCloseReply::borrow_original(&state.actor_context.close_step(input,input.grant)))}
 
     async fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         Ok(CompiledHandle { package_hash: package.hash.0, component: None, owned: None })

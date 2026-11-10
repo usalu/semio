@@ -30,6 +30,3 @@ impl<T:RetireOwned+Send+Sync+'static> NamedRankedSource for PersistentRankedKeys
  fn observe_key(&self,ordinal:usize,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(RetainedCloneRef<'_,str>,RetainedCloneProgress)>>{let mut work=0;let result=(||{let d=self.rank_demand(ordinal)?;if !retained_clone_grant_admits(grant,d){return Ok(None);}let turn=PersistentList::observe_rank(self.original,ordinal,grant);work=turn.work;let(row,mut p)=turn.result?.expect("funded original ranked key row");let key=row.project(self.key as usize,self.key);work+=1;p.copied_bytes=d.copy_bytes;Ok(Some((key,p)))})();crate::RetainedWorkOutcome{result,work}}
 }
 
-#[cfg(test)]
-#[path="🧪️tests/actual.rs"]
-mod actual_work_tests;

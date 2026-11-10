@@ -6,11 +6,9 @@
 pub mod numeric_scratch;
 #[path="🔑️hashed/🧮️scratch/🦀️.rs"]
 pub mod scratch_hash;
-#[path = "📦️paged/🦀️.rs"]
-pub mod paged;
+pub use semio_framework_value_paged as paged;
 pub use paged::{ByteReadSource,ByteReadRange};
-#[path = "📝️shared-utf8/🦀️.rs"]
-pub mod shared_utf8;
+pub use semio_framework_value_shared_utf8 as shared_utf8;
 pub use shared_utf8::SharedUtf8;
 //#endregion 🗂️OrderedOwnership
 
@@ -20,6 +18,9 @@ pub use semio_framework_value_intrinsic::bytes;
 
 #[path = "🧬️clone/🦀️.rs"]
 pub mod bounded_clone;
+#[path = "📬️reply-stash/🦀️.rs"]
+pub mod reply_stash;
+pub use reply_stash::ReplyStash;
 
 pub use semio_framework_value_native_encoding::native_encoding;
 pub use native_encoding::{NativeEncodeControl,NativeEncodeContinuation,NativeScopedEncodeContinuation,NativeScopedEncodePauseFailure};

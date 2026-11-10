@@ -43,7 +43,7 @@
     "id": "\u0000世界:out",
     "spec": {
       "id": "",
-      "label": "😀",
+      "label": { "native": { "de": "😀", "en": "😀" }, "reuse": { "de": "😀", "en": "😀" } },
       "direction": "out",
       "mediaType": {
         "class": "presentation",

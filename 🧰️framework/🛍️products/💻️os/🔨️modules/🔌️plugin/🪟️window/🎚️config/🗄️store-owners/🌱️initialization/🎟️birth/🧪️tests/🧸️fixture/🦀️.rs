@@ -47,6 +47,7 @@ impl protocol::Mutation<State> for Mutation{
 }
 impl protocol::ColdMutation<State> for Mutation{type ReferenceDiff=Diff;fn diff(&self,base:&State)->protocol::MutationOutcome<Diff>{let Self::Zoom{zoom}=self;protocol::MutationOutcome::new(Diff{zoom:(*zoom!=base.zoom).then_some(*zoom)})}fn inverse(&self,base:&State)->Result<Vec<Self>,ValueError>{Ok(vec![Self::Zoom{zoom:base.zoom}])}}
 impl protocol::OpBinary for Mutation{fn encode_op(&self)->Result<Vec<u8>,protocol::ProtocolError>{dsl::variants_binary::encode_op(self)}fn decode_op(bytes:&[u8])->Result<Self,protocol::ProtocolError>{dsl::variants_binary::decode_op(bytes)}}
+dsl::original_ordinal_operation_receiving!(Mutation);
 impl protocol::OpText for Mutation{
  fn parse_op(line:&str)->Result<Self,semio_framework_diagnostic::TextError>{let spec=<Self as semio_framework_dsl_record::DslVariants>::variants()[0].1;let record=semio_framework_dsl_record::parse(line,&(spec.ordinary)(),&semio_framework_dsl_record::ParseOptions{limits:Default::default(),mode:semio_framework_dsl_record::SourceMode::Inline})?;<Self as semio_framework_dsl_record::DslVariants>::from_named_record("zoom",&record)}
  fn print_op(&self)->String{let(_,record)=<Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);let spec=<Self as semio_framework_dsl_record::DslVariants>::variants()[0].1;semio_framework_dsl_record::print(&record,&(spec.ordinary)(),semio_framework_dsl_record::JoinMode::Inline)}

@@ -13,7 +13,10 @@ where
         macro_rules! retire {
             ($field:ident) => { if self.$field.is_some() { let step = owned_outcome(cx, grant, &mut self.$field, &mut self.active); return self.admitted_step(step.result, cx); } };
         }
-        retire!(history);
+        macro_rules! leased {
+            ($field:ident) => { if self.$field.is_some() { let mut lease = self.$field.take().map(semio_framework_value::retirement::arc_custody::ArcLease::new); let step = owned_outcome(cx, grant, &mut lease, &mut self.active); *self.$field = lease.and_then(|lease| lease.0); return self.admitted_step(step.result, cx); } };
+        }
+        leased!(history);
         retire!(mutation_lookup);
         retire!(pin_refs);
         retire!(edit_lookup);

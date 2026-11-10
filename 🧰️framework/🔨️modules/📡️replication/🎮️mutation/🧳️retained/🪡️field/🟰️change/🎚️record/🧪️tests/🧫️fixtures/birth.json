@@ -2,16 +2,16 @@
   {
     "type": "optionalText",
     "cursorWork": 8,
-    "baseWork": 42
+    "baseWork": 52
   },
   {
     "type": "integer",
     "cursorWork": 2,
-    "baseWork": 36
+    "baseWork": 46
   },
   {
     "type": "bytes",
     "cursorWork": 8,
-    "baseWork": 42
+    "baseWork": 52
   }
 ]

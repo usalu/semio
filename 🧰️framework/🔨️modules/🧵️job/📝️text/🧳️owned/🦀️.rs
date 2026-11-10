@@ -65,10 +65,10 @@ impl FundedText{
  /// ♻️ Quotes the genuine selected retirement child before its close turn.
  pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(invalid())}if !self.retirement.is_empty()||self.owner.is_some(){return self.retirement.next_owner_work::<String>(self.owner.is_some(),&None,body)}Ok(u64::from(self.source.is_some()))}
  /// ♻️ One close step runs inside the caller's effect and records its work once.
- pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   let done=|effect:&RetainedAllocationEffect<'_>,result|RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()});
   if !self.closing{return done(effect,Err(invalid().into()))}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(effect)}
+  if !self.retirement.is_empty(){return self.retirement.step_granted(body,effect)}
   if self.owner.is_some(){let turn=self.retirement.begin_granted(&mut self.owner,effect);return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work})}
   if self.source.is_some(){let d=fixed(size_of::<Option<(usize,usize)>>());if !retained_clone_grant_admits(effect.grant(),d){return done(effect,Ok(RetainedCloneStep::Progress(Default::default())))}if let Err(error)=performed(effect,1){return done(effect,Err(error.into()))}self.source=None;return done(effect,Ok(RetainedCloneStep::Complete(progress(d))))}
   done(effect,Ok(RetainedCloneStep::Complete(Default::default())))

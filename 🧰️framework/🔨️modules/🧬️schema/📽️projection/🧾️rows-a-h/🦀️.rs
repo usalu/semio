@@ -206,10 +206,10 @@ interactions: Array<InteractionDefinition>, namedLayouts: Array<NamedLayout>, de
  */
 terminologies: Array<string>,
 /**
- * 🗺️ Terminology id -> full replacement breadcrumb (product + app segments), e.g. "reuse" ->
- * ["Entwerfen mit Bestand", "Aggregator"]; ids absent here keep the canonical breadcrumb under that terminology.
+ * 🗺️ Terminology id -> full replacement breadcrumb (product + app segments), every segment a `LocalizedLabel`, e.g. "reuse" ->
+ * [Designing with Existing Stock | Entwerfen mit Bestand, Aggregator]; ids absent here keep the canonical breadcrumb under that terminology.
  */
-terminologyBreadcrumbs: { [key in string]?: Array<string> },
+terminologyBreadcrumbs: { [key in string]?: Array<unknown> },
 /**
  * 🎓️ This app's first-run walkthrough, if it declares one — see `IntroductionDefinition`.
  */

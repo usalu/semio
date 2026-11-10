@@ -60,9 +60,6 @@ pub use thread_transport::ThreadTransport;
 //#endregion 🔖️ThreadTransport
 //#endregion 🚚️ShardTransport
 
-#[cfg(test)]
-#[global_allocator]
-static ACTOR_TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 #[cfg(test)]
 #[path = "🧪️tests/🎟️retained-turn/🦀️.rs"]

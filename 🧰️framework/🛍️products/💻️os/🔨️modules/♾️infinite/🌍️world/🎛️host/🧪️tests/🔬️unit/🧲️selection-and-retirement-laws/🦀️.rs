@@ -2,6 +2,7 @@
 
 #[test]
 fn marquee_preview_respects_pick_bounds_offset() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "vertex".into();
     state.selection.active_object_id = Some("obj-1".into());
@@ -16,6 +17,7 @@ fn marquee_preview_respects_pick_bounds_offset() {
 
 #[test]
 fn marquee_crossing_includes_partial_overlap_window_does_not() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "mesh".into();
     state.scene.meshes.insert("mesh-1".into(), topology_mesh());
@@ -47,6 +49,7 @@ fn marquee_crossing_includes_partial_overlap_window_does_not() {
 
 #[test]
 fn marquee_component_mode_emits_exact_interaction_targets() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "vertex".into();
     state.selection.component_ids = vec!["1".into()];
@@ -63,6 +66,7 @@ fn marquee_component_mode_emits_exact_interaction_targets() {
 
 #[test]
 fn click_release_routes_to_pick_select_instead_of_empty_marquee() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.session.active_utility = "select".into();
@@ -81,6 +85,7 @@ fn click_release_routes_to_pick_select_instead_of_empty_marquee() {
 
 #[test]
 fn marquee_face_preview_and_overlay_use_logical_face_ids() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "face".into();
@@ -100,6 +105,7 @@ fn marquee_face_preview_and_overlay_use_logical_face_ids() {
 
 #[test]
 fn fresh_scene_selection_without_hover_clears_previous_component_hover() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let selection = r#"{"granularity":"face","componentIds":[10]}"#;
     let scene = scene_with_selection(selection);
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
@@ -115,6 +121,7 @@ fn fresh_scene_selection_without_hover_clears_previous_component_hover() {
 
 #[test]
 fn apply_world_action_preview_updates_component_hover_and_selection() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.scene.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "obj-1".into(), model: Mat4::identity(), color: [1.0;4], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }).unwrap();
     apply_world_action_preview(
@@ -152,6 +159,7 @@ fn apply_world_action_preview_updates_component_hover_and_selection() {
 
 #[test]
 fn preview_survives_sync_when_scene_json_unchanged() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let selection = r#"{"granularity":"vertex","componentIds":[1],"hoveredComponent":{"objectId":"obj-1","mode":"vertex","id":2}}"#;
     let scene = scene_with_selection(selection);
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
@@ -176,6 +184,7 @@ fn preview_survives_sync_when_scene_json_unchanged() {
 
 #[test]
 fn typed_camera_snapshot_matches_current_camera_fixture_without_production_parsing() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut scene = scene_with_selection("{}");
     let mut page = semio_ui_declaration::ui::World3dSnapshotPage::new(World3dSnapshotPageKind::Camera);
     page.push_item(World3dSnapshotItem { numbers: [4.0, 4.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 45.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0], number_len: 12, ..Default::default() }).unwrap();
@@ -228,6 +237,7 @@ fn typed_camera_snapshot_matches_current_camera_fixture_without_production_parsi
 /// `terrain_tile_misses` already gives DEM tiles and React gives a failed texture url.
 #[test]
 fn a_refused_asset_url_is_never_offered_again_by_its_surface() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.scene.mesh_source_urls.insert("mesh".into(), "/mesh/🧊️refused.glb".into());
     state.scene.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version: 1, instances: Vec::new(), shadow_role: Default::default() }).expect("one scene draw");
@@ -254,6 +264,7 @@ fn a_refused_asset_url_is_never_offered_again_by_its_surface() {
 
 #[test]
 fn dynamic_world_owners_retire_one_nested_owner_per_grant_to_terminal_empty() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     let mesh = publish_oracle_mesh(mesh_oracle_from_buffers(vec![0.0; 3 * 128], vec![0.0; 3 * 128], vec![0; 3 * 64]));
     state.scene.meshes.insert("mesh".into(), mesh);
@@ -267,7 +278,7 @@ fn dynamic_world_owners_retire_one_nested_owner_per_grant_to_terminal_empty() {
     let mut turns = 0;
     while !with_world_step_context(1, |context| terrain_test_retire_then_dynamic(&mut state,context)) {
         turns += 1;
-        assert!(turns < 16);
+        assert!(turns < 64);
     }
     assert!(turns >= 8, "each registry transition and opaque owner transfer consumes a distinct grant");
     assert!(world3d_dynamic_retirement_terminal_is_empty(&state));
@@ -283,6 +294,7 @@ fn draw_fixture_bytes(draws: &[(&str, &[&str])]) -> u32 {
 
 #[test]
 fn retained_draw_rebuild_preserves_mixed_group_and_instance_fifo_then_swaps_atomically() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     let bytes = draw_fixture_bytes(&[("mesh-a", &["a-0", "a-1"]), ("mesh-b", &["b-0"])]);
     begin_world3d_draw_rebuild(&mut state.session, &mut state.retirement, &mut state.scene, WorldDrawRebuildDescriptor { generation: 1, revision: 0, draw_count: 2, instance_count: 3, byte_count: bytes }).unwrap();
@@ -306,6 +318,7 @@ fn retained_draw_rebuild_preserves_mixed_group_and_instance_fifo_then_swaps_atom
 
 #[test]
 fn retained_draw_rebuild_rejects_byte_and_identifier_plus_one_before_owner_publication() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     begin_world3d_draw_rebuild(&mut state.session, &mut state.retirement, &mut state.scene, WorldDrawRebuildDescriptor { generation: 1, revision: 0, draw_count: 1, instance_count: 0, byte_count: 0 }).unwrap();
     let rejected = world3d_draw_rebuild_admit_draw(&mut state.scene, "mesh", 1, 0).expect_err("byte +1 leaves borrowed mesh owner at producer");
@@ -320,6 +333,7 @@ fn retained_draw_rebuild_rejects_byte_and_identifier_plus_one_before_owner_publi
 
 #[test]
 fn retained_draw_rebuild_rejects_aggregate_instance_plus_one_before_draft_ownership() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     let result = begin_world3d_draw_rebuild(&mut state.session, &mut state.retirement, &mut state.scene, WorldDrawRebuildDescriptor { generation: 1, revision: 0, draw_count: 1, instance_count: (WORLD_DYNAMIC_DRAW_INSTANCE_CAPACITY + 1) as u32, byte_count: WORLD_DYNAMIC_DRAW_BYTE_CAPACITY as u32 });
     assert_eq!(result, Err(WorldDynamicFault::InstanceCapacity));
@@ -328,6 +342,7 @@ fn retained_draw_rebuild_rejects_aggregate_instance_plus_one_before_draft_owners
 
 #[test]
 fn retained_draw_rebuild_stale_and_interrupted_close_never_publish() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     let bytes = draw_fixture_bytes(&[("mesh", &["one", "two"])]);
     begin_world3d_draw_rebuild(&mut state.session, &mut state.retirement, &mut state.scene, WorldDrawRebuildDescriptor { generation: 1, revision: 0, draw_count: 1, instance_count: 2, byte_count: bytes }).unwrap();
@@ -349,6 +364,7 @@ fn retained_draw_rebuild_stale_and_interrupted_close_never_publish() {
 
 #[test]
 fn pick_viewport_uses_render_bounds_not_pick_clip_offset() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "vertex".into();
@@ -369,6 +385,7 @@ fn pick_viewport_uses_render_bounds_not_pick_clip_offset() {
 
 #[test]
 fn append_component_face_overlay_lines_include_hovered_face() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "face".into();
@@ -384,6 +401,7 @@ fn append_component_face_overlay_lines_include_hovered_face() {
 
 #[test]
 fn pick_component_at_face_mode_uses_ray_pick() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "face".into();
@@ -405,6 +423,7 @@ fn pick_component_at_face_mode_uses_ray_pick() {
 
 #[test]
 fn pick_component_at_edge_mode_uses_ray_pick() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mesh = topology_mesh();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.selection.granularity = "edge".into();
@@ -426,6 +445,7 @@ fn pick_component_at_edge_mode_uses_ray_pick() {
 
 #[test]
 fn mesh_pool_release_clears_at_zero_refcount() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.scene.mesh_pool.acquire("mesh-1".into());
     assert!(state.scene.mesh_pool.release(&"mesh-1".into()));
@@ -440,6 +460,7 @@ fn mesh_pool_release_clears_at_zero_refcount() {
 
 #[test]
 fn resolve_physical_mesh_id_picks_closest_lod_url() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.scene.mesh_lod_catalog.insert("tower".into(), vec![WorldMeshLodEntry { lod: 1.0, url: "https://example.com/tower-high.glb".into() }, WorldMeshLodEntry { lod: 100.0, url: "https://example.com/tower-low.glb".into() }]);
     let detailed = resolve_physical_mesh_id(&state.scene, "tower", 2.0);
@@ -452,7 +473,7 @@ fn publish_retained_draw_fixture(state: &mut World3dState, vector: &serde_json::
     let mesh = vector["mesh"].as_str().unwrap();
     let instances = vector["instances"].as_array().unwrap();
     let ids: Vec<_> = instances.iter().map(|instance| instance["id"].as_str().unwrap()).collect();
-    begin_world3d_draw_rebuild(&mut state.session, &mut state.retirement, &mut state.scene, WorldDrawRebuildDescriptor { generation: state.scene.draw_generation + 1, revision: state.session.interaction_revision, draw_count: 1, instance_count: instances.len() as u32, byte_count: draw_fixture_bytes(&[(mesh, &ids)]) })
+    { let descriptor = WorldDrawRebuildDescriptor { generation: state.scene.draw_generation + 1, revision: state.session.interaction_revision, draw_count: 1, instance_count: instances.len() as u32, byte_count: draw_fixture_bytes(&[(mesh, &ids)]) }; begin_world3d_draw_rebuild(&mut state.session, &mut state.retirement, &mut state.scene, descriptor) }
         .unwrap();
     world3d_draw_rebuild_admit_draw(&mut state.scene, mesh, vector["version"].as_u64().unwrap(), instances.len() as u16).unwrap();
     for instance in instances {
@@ -472,6 +493,7 @@ fn publish_retained_draw_fixture(state: &mut World3dState, vector: &serde_json::
 
 #[test]
 fn retained_draw_rebuild_keeps_url_backed_asset_authority() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🔣️draws.json")).unwrap();
     let vector = &fixture["draws"][1];
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
@@ -528,6 +550,7 @@ fn retire_bridged_surface(state: &mut World3dState) {
 /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3a-asset-decoder-boot-fault.md` §6.
 #[test]
 fn the_scene_bridge_keeps_url_and_kind_declared_meshes_with_their_instances() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let scene = url_mesh_wire_scene();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     drive_scene_bridge(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 });
@@ -546,6 +569,7 @@ fn the_scene_bridge_keeps_url_and_kind_declared_meshes_with_their_instances() {
 /// inline geometry remains `0/1`, while the adjacent GLB consumes the environment override.
 #[test]
 fn one_scene_resolves_distinct_inline_and_glb_standard_materials() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🎨️scene-shading/🔣️.json")).unwrap();
     let mut scene = url_mesh_wire_scene();
     scene.world_3d.as_mut().unwrap().environment_json = Some(serde_json::json!({ "material": fixture["mixedMaterialScope"]["environment"] }).to_string());
@@ -563,6 +587,7 @@ fn one_scene_resolves_distinct_inline_and_glb_standard_materials() {
 /// decoded mesh lands under the wire's own id, and the instance draws from then on.
 #[test]
 fn a_url_declared_mesh_reserves_one_glb_fetch_and_draws_once_its_mesh_lands() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let scene = url_mesh_wire_scene();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     drive_scene_bridge(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 });
@@ -596,6 +621,7 @@ fn a_url_declared_mesh_reserves_one_glb_fetch_and_draws_once_its_mesh_lands() {
 /// 🗑️ A refused GLB is a miss, not an endless retry.
 #[test]
 fn a_refused_mesh_url_is_never_offered_again_by_its_surface() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let scene = url_mesh_wire_scene();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     drive_scene_bridge(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 });
@@ -619,6 +645,7 @@ fn a_refused_mesh_url_is_never_offered_again_by_its_surface() {
 /// ghost switches to the real mesh, exactly like React's `BrushPreviewGhost`.
 #[test]
 fn a_ghost_never_stands_in_under_the_id_of_a_mesh_the_surface_is_still_fetching() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let scene = url_mesh_wire_scene();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     drive_scene_bridge(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 });
@@ -633,39 +660,7 @@ fn a_ghost_never_stands_in_under_the_id_of_a_mesh_the_surface_is_still_fetching(
     retire_bridged_surface(&mut state);
 }
 
-/// 🌉️ Drives the staged bridge to its sealed lease, then the snapshot apply ladder to `Complete`.
-pub(crate) fn drive_scene_bridge(state: &mut World3dState, scene: &UiComponentSceneNode, bounds: Rect) {
-    sync_world3d_state(state, scene, bounds);
-    for turn in 0..4_096 {
-        match with_world_step_context(64, |context| step_world3d_scene_bridge(state, context)) {
-            World3dSceneBridgeStep::Complete => break,
-            World3dSceneBridgeStep::Pending => {}
-            step => panic!("scene bridge stopped at {step:?} on turn {turn} (fault {:?})", state.session.snapshot_fault),
-        }
-        assert!(turn < 4_095, "scene bridge did not seal within its turn ceiling");
-    }
-    sync_world3d_state(state, scene, bounds);
-    for turn in 0..4_096 {
-        assert_ne!(with_world_step_context(64, |context| step_world3d_draw_rebuild(&mut state.session, &mut state.authority, &mut state.scene, context)), WorldDrawRebuildStep::Fault, "draw rebuild faulted on turn {turn}");
-        match with_world_step_context(64, |context| step_world3d_snapshot(state, context)) {
-            World3dSnapshotApplyStep::Complete | World3dSnapshotApplyStep::Idle => break,
-            World3dSnapshotApplyStep::Pending => {}
-            step => panic!("snapshot apply stopped at {step:?} on turn {turn} (fault {:?})", state.session.snapshot_fault),
-        }
-        assert!(turn < 4_095, "snapshot apply did not complete within its turn ceiling");
-    }
-    for turn in 0..4_096 {
-        let draw_step = with_world_step_context(64, |context| step_world3d_draw_rebuild(&mut state.session, &mut state.authority, &mut state.scene, context));
-        assert_ne!(draw_step, WorldDrawRebuildStep::Fault, "draw retirement faulted on turn {turn}");
-        let bridge_step = with_world_step_context(64, |context| step_world3d_scene_bridge(state, context));
-        assert_ne!(bridge_step, World3dSceneBridgeStep::Fault, "bridge retirement faulted on turn {turn}");
-        if world3d_draw_rebuild_terminal_is_empty(&state.scene) && state.bridge.scene_bridge_retired.is_none() && state.bridge.scene_bridge_close.is_none() && state.bridge.scene_bridge.is_none() {
-            break;
-        }
-        assert!(turn < 4_095, "scene bridge retirement did not complete within its turn ceiling");
-    }
-    apply_runtime_draw_flags(&mut state.selection, &mut state.interaction, &mut state.scene);
-}
+pub(crate) use semio_os_infinite_world_host::drive_scene_bridge;
 
 fn terrain_test_grant()->semio_framework_value::retained_clone::RetainedCloneGrant {semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64}}
 

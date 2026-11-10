@@ -86,7 +86,7 @@ where
             runtime.set_supersessions(std::mem::take(&mut result.supersessions)).expect("replay returns the original effective-input owner");
             let state = result.take_state().expect("completed replay retains its reached projection");
             let factory = self.owners.as_ref().expect("hydration owner catalog remains retained").initial_snapshot_retirement.clone();
-            *self.active = Some(Box::new(semio_framework_value::factory::FactorySharedRetirement::new(runtime.replace_current_alias(state), factory)));
+            *self.active = Some(Box::new(semio_framework_value::factory::ArcRootRetirement::new(runtime.replace_current_alias(state), factory)));
             self.phase = Phase::SettleReplay;
         }
         cx.consume_fuel(1);

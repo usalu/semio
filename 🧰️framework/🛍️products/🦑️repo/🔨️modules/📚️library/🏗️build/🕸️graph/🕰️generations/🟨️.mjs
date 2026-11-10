@@ -381,7 +381,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const change of changes){
    const known=configs.get(change.path);
    if(pending.has(change.path))continue;
-   if(change.config&&change.kind==="added")added.push(change.path);
+   if(change.config&&change.kind==="added"){added.push(change.path);const prior=ownerOf(change.path);if(prior!==undefined&&manifest.owners[prior].config!==change.path&&change.path.startsWith(manifest.owners[prior].root+"/")&&!change.path.slice(manifest.owners[prior].root.length+1).includes("/"))removed.add(prior);}
    else if(change.config&&change.kind==="removed"&&known)removed.add(known);
    else if(change.config&&known)dirty.add(known);
    else if(change.directory&&change.kind!=="removed")continue;

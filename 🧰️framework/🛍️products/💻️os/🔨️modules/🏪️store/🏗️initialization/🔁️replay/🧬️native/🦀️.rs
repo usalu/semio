@@ -1,7 +1,7 @@
 //! 🧬️ Initialization folds the actual ledger operation through its installed original semantic producer.
 use super::*;
 use semio_os_store_replay_operation::{ArtifactDerivedOperation,ArtifactDerivedOperationMode,ArtifactReplayPreparationContext,ArtifactReplayPreparationMode,ArtifactReplayPreparationRequest,ArtifactReplayPreparationTask};
-use semio_os_store_replay_operation::native::history::OriginalHistorySource;
+use semio_os_store_replay_operation::native::history::{OriginalHistoryInput,OriginalHistorySource};
 use semio_framework_value::retained_clone::{RetainedOwnedProjection,retained_clone_grant_admits};
 
 pub struct NativeInitializationFold<P,M:Sync+'static>{
@@ -11,7 +11,7 @@ pub struct NativeInitializationFold<P,M:Sync+'static>{
     history:Option<OriginalHistorySource<Edit<M>>>,
     issuer:Option<Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<M>>>>,
     issuer_close:Option<semio_framework_value::FactoryAuthority>,
-    input:Option<RetainedOwnedProjection<M>>,
+    input:OriginalHistoryInput<M>,
     owner:Option<ArtifactDerivedOperation<P,M>>,
     next:Option<Arc<P>>,
     next_close:Option<Box<dyn ErasedSnapshotRetirement>>,
@@ -19,7 +19,7 @@ pub struct NativeInitializationFold<P,M:Sync+'static>{
     phase:u8,
     closing:bool,
 }
-impl<P,M:Sync+'static> Default for NativeInitializationFold<P,M>{fn default()->Self{Self{replacement:Default::default(),replacement_key:None,failure:None,history:None,issuer:None,issuer_close:None,input:None,owner:None,next:None,next_close:None,revision:[0;32],phase:0,closing:false}}}
+impl<P,M:Sync+'static> Default for NativeInitializationFold<P,M>{fn default()->Self{Self{replacement:Default::default(),replacement_key:None,failure:None,history:None,issuer:None,issuer_close:None,input:Default::default(),owner:None,next:None,next_close:None,revision:[0;32],phase:0,closing:false}}}
 fn poll_outcome<T:Into<RetainedCloneStep>>(poll:semio_framework_value::RetainedWorkPoll<T,semio_framework_value::OriginalRetirementFailure>)->semio_framework_value::RetainedWorkOutcome{match poll{semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work},semio_framework_value::RetainedWorkPoll::Complete(turn)=>semio_framework_value::RetainedWorkOutcome{result:turn.result.map(Into::into).map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),work:turn.work}}}
 fn value_poll_outcome(poll:semio_framework_value::RetainedWorkPoll)->semio_framework_value::RetainedWorkOutcome{match poll{semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work},semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn}}
 fn demand<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
@@ -81,7 +81,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
         if self.replacement_key.is_some()&&self.owner.is_none()&&self.input.is_none(){
             let original=envelope.vcs.edits.get(edit).ok_or_else(||invalid("native replacement original edit absent"))?;let factory=owners.mutation_retirement.as_ref().ok_or_else(||invalid("native replacement original mutation issuer absent"))?;
             let result=native_digest::with_operation_identity::<P,M,_>(original,mutation,|id|{let row=runtime.supersessions.get_mut(id).ok_or_else(||invalid("native replacement original supersession absent"))?;if let semio_os_spr::InputReplacement::Input{schema,..}=&row.replacement{if schema!=&envelope.schema{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"native replacement schema differs from its original artifact"))}}Ok(self.replacement.advance(&mut row.replacement,&owners.operation_wire,factory,cx))})?;
-            match result{Ok(true)=>{if let Err(error)=self.replacement.take_input(&mut self.input,cx){self.failure=Some(error)}},Ok(false)=>{},Err(error)=>self.failure=Some(error)}return Ok(false);
+            match result{Ok(true)=>{if let Err(error)=self.replacement.take_input(self.input.slot(),cx){self.failure=Some(error)}},Ok(false)=>{},Err(error)=>self.failure=Some(error)}return Ok(false);
         }
         if self.replacement_key.is_none()&&self.issuer.is_none(){
             let quote=owners.history_edit_read_issuer_demands();
@@ -92,7 +92,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
             Self::physical(cx,OriginalHistorySource::<Edit<M>>::constructor_demand(),|grant|{let Some((source,receipt))=OriginalHistorySource::admit(key,self.issuer.as_ref().unwrap(),grant)?else{return Ok(Default::default());};self.history=Some(source);self.phase=1;Ok(receipt)})?;return Ok(false);
         }
         if self.replacement_key.is_none()&&self.input.is_none()&&self.owner.is_none(){
-            let history=self.history.as_mut().unwrap();let quote=history.demands(&envelope.vcs.edits)?;
+            let history=self.history.as_mut().unwrap();let quote=history.projection_demands(&envelope.vcs.edits,cx.retained_grant().maximum_copy_bytes,&self.input,mutation+1,|edit|&edit.forwards[mutation])?;
             Self::physical_work(cx,quote,|effect|history.advance(&mut envelope.vcs.edits,&mut self.input,mutation+1,|edit|&edit.forwards[mutation],effect))?;return Ok(false);
         }
         if self.owner.is_none(){
@@ -136,7 +136,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
     }
     pub fn close_demands(&self,envelope:&ArtifactEnvelope<P,M>,runtime:&ArtifactStoreInitializationRuntime<P>,body:usize)->Result<RetirementDemand,ValueError>{
         if let Some(owner)=self.owner.as_ref(){return if owner.terminal_is_empty(){Ok(demand::<Option<ArtifactDerivedOperation<P,M>>>())}else{owner.demands(owner.context.generation,owner.context.base_revision,body,u64::MAX)};}
-        if let Some(input)=self.input.as_ref(){return if input.terminal_is_empty(){Ok(demand::<Option<RetainedOwnedProjection<M>>>())}else{input.close_demand(body)};}
+        if self.input.occupied(){return if self.input.terminal_is_empty(){Ok(demand::<Option<RetainedOwnedProjection<M>>>())}else{self.input.close_demand(body)};}
         if let Some(owner)=self.next_close.as_ref(){return semio_framework_value::factory_ticket_demands(owner,body);}
         if self.closing&&self.next.is_some(){return Ok(RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()});}
         if self.replacement_key.is_some(){return self.replacement.close_demands(body);}
@@ -154,23 +154,23 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
         if owner.terminal_is_empty(){Self::physical(cx,demand::<Option<ArtifactDerivedOperation<P,M>>>(),|_|{self.owner=None;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<ArtifactDerivedOperation<P,M>>>(),..Default::default()})})?;return Ok(self.owner.is_none());}
         let grant=cx.retained_grant();let quote=owner.demands(owner.context.generation,owner.context.base_revision,grant.maximum_copy_bytes,u64::MAX)?;
         if !retained_clone_grant_admits(grant,quote){return Ok(false);}
-        Self::close_poll(cx,grant,|cx,effect|cx.with_native_retirement(|control|Ok(owner.close_step_controlled(effect,control))))?;Ok(false)
+        Self::close_poll(cx,grant,|cx,effect|cx.with_native_retirement(|control|Ok(owner.close_step_controlled(grant.maximum_copy_bytes,effect,control))))?;Ok(false)
     }
     fn finish(&mut self,envelope:&mut ArtifactEnvelope<P,M>,runtime:&mut ArtifactStoreInitializationRuntime<P>,owners:&DocumentStoreOwners<P,M>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         if !self.retire_owner(cx)?{return Ok(false);}
-        if let Some(input)=self.input.as_ref(){
-            if input.terminal_is_empty(){Self::physical(cx,demand::<Option<RetainedOwnedProjection<M>>>(),|_|{self.input=None;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<RetainedOwnedProjection<M>>>(),..Default::default()})})?;}
-            else{let quote=input.close_demand(cx.retained_grant().maximum_copy_bytes)?;Self::physical_work(cx,quote,|effect|match self.input.as_mut(){Some(input)=>poll_outcome(input.close_step(effect)),None=>semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::invariant("initialization input owner is absent")),work:0}})?;}
+        if self.input.occupied(){
+            if self.input.terminal_is_empty(){Self::physical(cx,demand::<Option<RetainedOwnedProjection<M>>>(),|_|{self.input.vacate();Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<RetainedOwnedProjection<M>>>(),..Default::default()})})?;}
+            else{let quote=self.input.close_demand(cx.retained_grant().maximum_copy_bytes)?;Self::physical_work(cx,quote,|effect|match self.input.as_mut(){Some(input)=>poll_outcome(input.close_step(effect)),None=>semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::invariant("initialization input owner is absent")),work:0}})?;}
             return Ok(false);
         }
         if self.next_close.is_some(){
             let quote=semio_framework_value::factory_ticket_demands(self.next_close.as_ref().unwrap(),cx.retained_grant().maximum_copy_bytes)?;let grant=cx.retained_grant();
             if !retained_clone_grant_admits(grant,quote){return Ok(false);}
-            Self::close_poll(cx,grant,|cx,effect|cx.with_native_retirement(|control|Ok(semio_framework_value::close_factory_ticket_controlled(&mut self.next_close,effect,control))))?;return Ok(false);
+            Self::close_poll(cx,grant,|cx,effect|cx.with_native_retirement(|control|Ok(semio_framework_value::close_factory_ticket_controlled(&mut self.next_close,effect.grant().maximum_copy_bytes,effect,control))))?;return Ok(false);
         }
         if self.closing&&self.next.is_some(){
             let quote=RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()};
-            Self::physical_work(cx,quote,|effect|{let Some(factory)=owners.initial_snapshot_retirement.as_ref()else{return semio_framework_value::RetainedWorkOutcome{result:Err(invalid("initialization original snapshot issuer absent")),work:0}};let mut alias=Some(Arc::clone(factory));let outcome=value_poll_outcome(ReturnedSnapshotReadRetirement::<P>::admit_original(&mut self.next,&mut alias,&mut self.next_close,effect));drop(alias);outcome})?;return Ok(false);
+            Self::physical_work(cx,quote,|effect|{let Some(factory)=owners.initial_snapshot_retirement.as_ref()else{return semio_framework_value::RetainedWorkOutcome{result:Err(invalid("initialization original snapshot issuer absent")),work:0}};let mut alias=Some(Arc::clone(factory));let outcome=poll_outcome(ReturnedSnapshotReadRetirement::<P>::admit_original(&mut self.next,&mut alias,&mut self.next_close,effect));drop(alias);outcome})?;return Ok(false);
         }
         if let Some((edit,mutation))=self.replacement_key{
             let original=envelope.vcs.edits.get(edit).ok_or_else(||invalid("closing native replacement edit absent"))?;
@@ -190,7 +190,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
         if self.issuer.is_some(){Self::physical(cx,demand::<Arc<dyn semio_framework_value::FactoryRetirement>>(),|_|{self.issuer_close=Some(semio_framework_value::FactoryAuthority::new(self.issuer.take().unwrap()));Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(),..Default::default()})})?;return Ok(false);}
         if let Some(owner)=self.issuer_close.as_ref(){
             if owner.terminal_is_empty(){Self::physical(cx,demand::<Option<semio_framework_value::FactoryAuthority>>(),|_|{self.issuer_close=None;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<semio_framework_value::FactoryAuthority>>(),..Default::default()})})?;}
-            else{let quote=owner.demands(cx.retained_grant().maximum_copy_bytes)?;Self::physical_work(cx,quote,|effect|match self.issuer_close.as_mut(){Some(owner)=>poll_outcome(owner.step(effect)),None=>semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::invariant("initialization issuer closure is absent")),work:0}})?;}
+            else{let quote=owner.demands(cx.retained_grant().maximum_copy_bytes)?;Self::physical_work(cx,quote,|effect|match self.issuer_close.as_mut(){Some(owner)=>poll_outcome(owner.step(effect.grant().maximum_copy_bytes,effect)),None=>semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::invariant("initialization issuer closure is absent")),work:0}})?;}
             return Ok(false);
         }
         let mut complete=false;

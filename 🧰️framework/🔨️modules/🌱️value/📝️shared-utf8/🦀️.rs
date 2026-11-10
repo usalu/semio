@@ -1,5 +1,8 @@
 //! 📝️ Shared immutable UTF8 adopts the original byte allocation and exposes borrowed projections.
-use crate::{paged::Utf8Text,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,arc_custody::{SharedControlledRetirement,shared_retirement_allocation_bytes}},ValueError,ValueRefusalKind};
+pub use semio_framework_value_retained_clone::*;
+pub use semio_framework_value_retirement::{retirement,RetainedWorkOutcome};
+pub use semio_framework_value_intrinsic::{ToValue,FromValue};
+use crate::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,arc_custody::{ArcLeaseRetirement,shared_retirement_allocation_bytes}},ValueError,ValueRefusalKind};
 use std::{sync::Arc,mem::size_of};
 
 #[derive(Clone,Debug,Default)]
@@ -41,11 +44,6 @@ impl Eq for SharedUtf8 {}
 impl PartialOrd for SharedUtf8 {fn partial_cmp(&self,other:&Self)->Option<std::cmp::Ordering>{Some(self.cmp(other))}}
 impl Ord for SharedUtf8 {fn cmp(&self,other:&Self)->std::cmp::Ordering{self.as_str().cmp(other.as_str())}}
 impl std::hash::Hash for SharedUtf8 {fn hash<H:std::hash::Hasher>(&self,state:&mut H){std::hash::Hash::hash(self.as_str(),state)}}
-impl Utf8Text for SharedUtf8 {
-    fn text_bytes(&self)->usize {self.len()}
-    fn text_chunk_count(&self)->usize {self.as_str().text_chunk_count()}
-    fn text_chunk(&self,index:usize)->Option<&str> {self.as_str().text_chunk(index)}
-}
 impl std::ops::Deref for SharedUtf8 {type Target=str;fn deref(&self)->&str{self.as_str()}}
 impl std::borrow::Borrow<str> for SharedUtf8 {fn borrow(&self)->&str{self.as_str()}}
 impl AsRef<str> for SharedUtf8 {fn as_ref(&self)->&str{self.as_str()}}
@@ -54,19 +52,9 @@ impl From<String> for SharedUtf8 {fn from(original:String)->Self{Self(Some(Arc::
 impl From<&str> for SharedUtf8 {fn from(original:&str)->Self{Self::from(original.to_owned())}}
 impl serde::Serialize for SharedUtf8 {fn serialize<S:serde::Serializer>(&self,serializer:S)->Result<S::Ok,S::Error>{serializer.serialize_str(self.as_str())}}
 impl<'de> serde::Deserialize<'de> for SharedUtf8 {fn deserialize<D:serde::Deserializer<'de>>(deserializer:D)->Result<Self,D::Error>{<String as serde::Deserialize>::deserialize(deserializer).map(Self::from)}}
-impl crate::ToValue for SharedUtf8 {fn to_value(&self)->crate::DslValue{crate::DslValue::String(self.as_str().to_owned())}}
-impl crate::FromValue for SharedUtf8 {fn from_value(value:crate::DslValue)->Result<Self,ValueError>{<String as crate::FromValue>::from_value(value).map(Self::from)}}
-#[doc(hidden)]
-pub struct Utf8Lease(Arc<String>);
-impl RetireOwned for Utf8Lease {
-    type RetirementCursor=SharedControlledRetirement<String>;
-    fn retirement_seed(self)->Self::RetirementCursor{SharedControlledRetirement::lease(self.0)}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<SharedControlledRetirement<String>>())}
-    fn controlled_retirement_supported()->bool{true}
-}
 impl RetireOwned for SharedUtf8 {
-    type RetirementCursor=<Option<Utf8Lease> as RetireOwned>::RetirementCursor;
-    fn retirement_seed(self)->Self::RetirementCursor{self.0.map(Utf8Lease).retirement_seed()}
+    type RetirementCursor=ArcLeaseRetirement<String>;
+    fn retirement_seed(self)->Self::RetirementCursor{ArcLeaseRetirement::from_source(self.0)}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self::RetirementCursor>())}
     fn controlled_retirement_supported()->bool{true}
 }
@@ -77,3 +65,5 @@ pub use original_clone::SharedUtf8CloneCursor;
 
 
 #[path="🎟️native/🦀️.rs"]mod native_receiving;
+impl ToValue for SharedUtf8 {fn to_value(&self)->DslValue{DslValue::String(self.as_str().to_owned())}}
+impl FromValue for SharedUtf8 {fn from_value(value:DslValue)->Result<Self,ValueError>{<String as FromValue>::from_value(value).map(Self::from)}}

@@ -174,7 +174,7 @@ pub fn shooting_io() -> AppIo {
 pub fn shooting_photos_out_port() -> semio_plugin::MediaPortSpec {
     semio_plugin::MediaPortSpec {
         id: "photos:out".into(),
-        label: "Photos".into(),
+        label: semio_plugin::LocalizedLabel::native("Photos", "Fotos"),
         direction: semio_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
         kind_id: Some("2d.image".into()),

@@ -1,6 +1,7 @@
 {
   "bodyBytes": 4096,
   "workUnits": 4096,
+  "birthWorkUnits": 65536,
   "checkPartialDenialWork": true,
   "cancelCuts": [
     0,

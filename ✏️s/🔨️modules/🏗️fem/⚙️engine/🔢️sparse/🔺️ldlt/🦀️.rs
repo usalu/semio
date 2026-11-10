@@ -68,6 +68,8 @@ use semio_framework_value_persistent::list::PagedListReservationOutcome;
 use semio_framework_job::receive_original_retained_work;
 use semio_framework_job_payload::RetainedWorkOutcome;
 use semio_s_fem_sparse::numerical_close_original;
+use semio_s_fem_sparse::numerical_close_effect;
+use semio_framework_value::RetainedAllocationEffect;
 use semio_s_fem_payload_turns::NumericalPayloadSlot;
 use semio_s_fem_payload_turns::numerical_open_writer;
 use semio_s_fem_payload_turns::numerical_finish_writer;
@@ -128,9 +130,6 @@ mod run_and_close;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-#[cfg(test)]
-#[global_allocator]
-static ORIGINAL_LDLT_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 // #endregion 🔖️Tests
 
 fn ldlt_checkpoint_retirement_demand(state: &LdltCheckpoint) -> Result<Option<RetirementDemand>, ValueError> {

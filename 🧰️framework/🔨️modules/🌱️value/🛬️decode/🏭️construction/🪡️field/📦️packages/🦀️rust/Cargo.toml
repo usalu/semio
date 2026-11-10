@@ -28,4 +28,3 @@ semio-framework-value-retained-clone = { path = "../../../../../🧬️retained-
 semio-framework-value-shared-issuance = { path = "../../../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 semio-framework-value-native-receiver-protocol = { path = "../../../../🧳️owned/🧬️protocol/📦️packages/🦀️rust" }
 semio-framework-value-native-shared-slots = { path = "../../../🧳️slots/📦️packages/🦀️rust" }
-semio-framework-value-native-receiver-protocol = { path = "../../../../🧳️owned/🧬️protocol/📦️packages/🦀️rust" }

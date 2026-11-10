@@ -8511,8 +8511,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Koordinator"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Coordinator",
+                "de": "Koordinator"
+              },
+              "reuse": {
+                "en": "Coordinator",
+                "de": "Koordinator"
+              }
+            }
           ]
         },
         "tutorials": [],
@@ -8675,7 +8693,16 @@
           "ports": [
             {
               "id": "geometry:in",
-              "label": "Geometry",
+              "label": {
+                "native": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                },
+                "reuse": {
+                  "en": "Geometry",
+                  "de": "Geometrie"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "threeD",
@@ -8686,7 +8713,16 @@
             },
             {
               "id": "brep:out",
-              "label": "Brep",
+              "label": {
+                "native": {
+                  "en": "Brep",
+                  "de": "B-Rep"
+                },
+                "reuse": {
+                  "en": "Brep",
+                  "de": "B-Rep"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "threeD",

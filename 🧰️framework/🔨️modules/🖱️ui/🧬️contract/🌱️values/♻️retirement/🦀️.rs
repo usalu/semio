@@ -350,6 +350,7 @@ pub fn close_ui_value_page_with_grant(maximum_items: usize, maximum_bytes: usize
     let mut arena = match ui_value_arena_registry().borrow() {
         Ok(Some(arena)) => arena,
         Ok(None) => return Ok(UiValueRetirementStep::default()),
+        Err(error) if error.kind == semio_framework_value::ValueRefusalKind::UnsupportedOwner => return Ok(UiValueRetirementStep { complete: true, ..UiValueRetirementStep::default() }),
         Err(_) => return Err("queued UI value retirement arena is poisoned"),
     };
     arena.advance_retirement_queue(maximum_bytes)

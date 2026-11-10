@@ -145,11 +145,15 @@ pub fn now_ms() -> Option<u64> {
 }
 
 
+/// 🧮️ Turns the receiving prepare needs before the job body is entered: frame allocation, claim, entry.
+const PREPARE_STAGES: usize = 3;
+
 /// 🔭️ Drives one prepared step on an admitted original fixture caller and acknowledges its outcome through the genuine return origin.
 pub fn observe_prepared_step(job: &mut PreparedRenderJob, operation: OperationId, generation: Generation, budget: StepBudget, cancel: semio_framework_job::CancelToken, now: fn() -> Option<u64>, preview: &mut u64, acknowledgement: RetainedCloneGrant) -> (Option<JobOutcomeKind>, RetainedCloneProgress) {
     use semio_framework_job::{OriginalJobFixtureCaller, OriginalJobReturn, OriginalJobReturnOrigin};
     let stock = close_source::STOCK;
     let mut caller = OriginalJobFixtureCaller::admit(operation, generation, stock, now, u64::MAX, 1 << 20);
+    caller.birth_returns(stock);
     if cancel.is_cancelled_now() { caller.cancel().cancel_now(); }
     let mut origin = OriginalJobReturnOrigin::empty();
     let mut returned = None;
@@ -161,19 +165,29 @@ pub fn observe_prepared_step(job: &mut PreparedRenderJob, operation: OperationId
         if ready { ready_after_setup = true; break; }
     }
     assert!(ready_after_setup, "prepared return origin never became ready");
-    caller.turn(budget.retained, |cx| cx.with_original_work_loan(budget.fuel, budget.deadline_us, |cx| {
+    let refresh = caller.turn(stock, |cx| semio_framework_job::original_return_refresh_quote(cx).map_err(Into::into)).expect("prepared return refresh quote turn");
+    let policy = budget.retained;
+    let turn_grant = RetainedCloneGrant { maximum_items: policy.maximum_items + refresh.copied_items, maximum_copy_bytes: policy.maximum_copy_bytes + refresh.copied_bytes, maximum_capacity_bytes: policy.maximum_capacity_bytes + refresh.retained_capacity_bytes, maximum_release_bytes: policy.maximum_release_bytes + refresh.released_bytes, maximum_depth: policy.maximum_depth };
+    let mut body_entered = false;
+    for _ in 0..PREPARE_STAGES {
+    let mut preparing = false;
+    caller.turn(turn_grant, |cx| cx.with_original_work_loan(budget.fuel, budget.deadline_us, |cx| {
         let before = cx.retained_progress();
         let mut verdict = None;
         match semio_framework_job::drive_step(job, cx, origin.receiver()?, "ui-wgpu.prepare", InteractiveStage::BackgroundStep, &mut verdict)? {
             OriginalJobReturn::Outcome(reply) => returned = Some(reply.into_descriptor()),
-            OriginalJobReturn::Preparing | OriginalJobReturn::Pending => {},
+            OriginalJobReturn::Preparing => preparing = true,
+            OriginalJobReturn::Pending => {},
             OriginalJobReturn::Continuation(_) => panic!("prepared render job returned a failure continuation"),
         }
         let after = cx.retained_progress();
         receipt = RetainedCloneProgress { copied_items: after.copied_items - before.copied_items, copied_bytes: after.copied_bytes - before.copied_bytes, retained_capacity_bytes: after.retained_capacity_bytes - before.retained_capacity_bytes, released_bytes: after.released_bytes - before.released_bytes };
         Ok(())
     })).expect("prepared original drive turn");
-    assert!(receipt.fits(budget.retained));
+    if !preparing { body_entered = true; break; }
+    }
+    assert!(body_entered, "prepared return origin kept preparing for {PREPARE_STAGES} turns: the receiving frame or claim is not fundable by the policy grant plus its refresh quote");
+    assert!(receipt.fits(turn_grant), "prepared drive receipt {receipt:?} exceeds its policy grant plus refresh quote {turn_grant:?}");
     let mut kind = None;
     if returned.is_some() {
         for _ in 0..64 {
@@ -217,8 +231,7 @@ pub fn observe_prepared_terminal(job: &mut PreparedRenderJob, operation: Operati
 pub fn drive_preparation_until_terminal(job: &mut PreparedRenderJob) -> Option<JobOutcomeKind> {
     let mut preview = 0;
     for _ in 0..4_096 {
-        let (outcome,original_retained_receipt) = observe_prepared_step(job, OperationId(1), Generation(3), StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
-        assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
+        let (outcome,_) = observe_prepared_step(job, OperationId(1), Generation(3), StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
         if !matches!(outcome, None | Some(JobOutcomeKind::Yield)) {
             return outcome;
         }

@@ -29,7 +29,7 @@ pub fn puzzle3d_io() -> AppIo {
         ))
         .with_ports(vec![MediaPortSpec {
             id: "kit:in".into(),
-            label: "Kit Catalog".into(),
+            label: LocalizedLabel::native("Kit Catalog", "Kit-Katalog"),
             direction: MediaPortDirection::In,
             media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
             kind_id: Some("kit.catalog".into()),
@@ -152,7 +152,7 @@ fn create_puzzle3d_app_part_1(builder: semio_plugin::app::EditorBuilder, envelop
             .artifact_kind(semio_s_artifact_puzzle_3d_model::artifact_kind())
             .icon_id("puzzle")
             .terminology("reuse")
-            .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
+            .terminology_document("reuse", [LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::native("Aggregator", "Aggregator")])
             .mode_def(edit::definition())
             .default_mode_id(edit::PUZZLE3D_PLAY_MODE_EDIT)
             .io(puzzle3d_io())

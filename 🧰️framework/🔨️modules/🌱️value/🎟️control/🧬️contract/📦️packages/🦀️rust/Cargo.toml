@@ -33,3 +33,7 @@ serde_json = { workspace = true }
 encoding_rs = "0.8"
 
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
+[[test]]
+name = "producer-original-effects"
+path = "../../🏭️producer/🧪️tests/🦀️.rs"

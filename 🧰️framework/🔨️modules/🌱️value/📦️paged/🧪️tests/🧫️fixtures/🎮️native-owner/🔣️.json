@@ -5,8 +5,8 @@
   "treeDepth": 17,
   "maximumCursorBytes": 4096,
   "cloneFrames": {
-    "perLevel": 5,
-    "base": 3
+    "perLevel": 1,
+    "base": 4
   },
   "controlledRetirement": {
     "depth": 80,

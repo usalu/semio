@@ -53,7 +53,7 @@
     {
       "complete": true,
       "childWork": 2,
-      "parentWork": 2,
+      "parentWork": 0,
       "index": 1,
       "phase": 4,
       "donor": null

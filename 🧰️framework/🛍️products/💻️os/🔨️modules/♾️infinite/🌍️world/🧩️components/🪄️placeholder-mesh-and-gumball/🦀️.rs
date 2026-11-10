@@ -303,8 +303,8 @@ impl WorldPlaceholderMeshCursor {
         if let Some(previous)=self.primitives.last_mut().filter(|previous|previous.material==material){previous.index_count+=3;}else{if self.primitives.len()==WORLD_DYNAMIC_MESH_CAPACITY{return Err(ui_scene::math::Mesh3dFault::ItemCapacity)}self.primitives.push(World3dPrimitiveMaterial{first_index:self.item,index_count:3,material});}Ok(())
     }
 
-    fn texture_step(&mut self)->Result<bool,ui_scene::math::Mesh3dFault> {
-        if self.texture_retirement.is_some(){self.retire_texture_job()?;return Ok(false)}
+    fn texture_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,ui_scene::math::Mesh3dFault> {
+        if self.texture_retirement.is_some(){self.retire_texture_job(effect)?;return Ok(false)}
         let WorldMeshInput::Inline(mesh)=&mut self.source else{return Ok(true)};
         if self.texture_name.is_none(){let Some(id)=mesh.textures.keys().nth(self.texture_cursor)else{return Ok(true)};self.texture_name=Some(id.clone());self.texture_scan=0;self.texture_required=false;}
         let id=self.texture_name.as_ref().unwrap();let role=if self.texture_role==0 {"srgb"}else{"linear"};let key=format!("inline:{}:{id}:{role}",self.key);
@@ -330,14 +330,14 @@ impl WorldPlaceholderMeshCursor {
             }
             let job=self.texture_job.as_mut().unwrap();
             let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:job.next_copy_byte_demand().map_err(|_|ui_scene::math::Mesh3dFault::Schema)?.max(32)*4096,maximum_capacity_bytes:job.next_capacity_byte_demand().map_err(|_|ui_scene::math::Mesh3dFault::Schema)?,maximum_release_bytes:0,maximum_depth:job.next_depth_demand().map_err(|_|ui_scene::math::Mesh3dFault::Schema)?};
-            let (progress,receipt)=job.advance(grant).map_err(|_|ui_scene::math::Mesh3dFault::Schema)?;
+            let (progress,receipt)=job.advance(&mut effect.nested(grant)).map_err(|_|ui_scene::math::Mesh3dFault::Schema)?;
             if !receipt.fits(grant){return Err(ui_scene::math::Mesh3dFault::Schema)}
             if progress.done {
                 let grant=world_mesh_ownership_grant(size_of::<semio_framework_pixels::RasterImage>(),0,0,1);
                 let(image,receipt)=job.take_result(grant).map_err(|_|ui_scene::math::Mesh3dFault::Schema)?.ok_or(ui_scene::math::Mesh3dFault::Schema)?;
                 if !receipt.fits(grant){return Err(ui_scene::math::Mesh3dFault::Schema)}
                 self.texture_image=Some(image);
-                self.retire_texture_job()?;
+                self.retire_texture_job(effect)?;
             }
             return Ok(false)
         }
@@ -357,20 +357,20 @@ impl WorldPlaceholderMeshCursor {
         }
     }
 
-    pub fn step(&mut self) -> WorldPlaceholderMeshStep {
+    pub fn step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> WorldPlaceholderMeshStep {
         if self.faulted {
-            return if self.close_step() && self.terminal_is_empty() { WorldPlaceholderMeshStep::Fault } else { WorldPlaceholderMeshStep::Pending };
+            return if self.close_step(effect) && self.terminal_is_empty() { WorldPlaceholderMeshStep::Fault } else { WorldPlaceholderMeshStep::Pending };
         }
-        let result = self.step_live();
+        let result = self.step_live(effect);
         if result.is_err() {
             self.faulted = true;
-            let _ = self.close_step();
+            let _ = self.close_step(effect);
             return WorldPlaceholderMeshStep::Pending;
         }
         result.expect("placeholder result checked above")
     }
 
-    pub fn step_live(&mut self) -> Result<WorldPlaceholderMeshStep, ui_scene::math::Mesh3dFault> {
+    pub fn step_live(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<WorldPlaceholderMeshStep, ui_scene::math::Mesh3dFault> {
         match self.phase {
             WorldPlaceholderMeshPhase::Allocate => {
                 let token = self.token()?;
@@ -449,7 +449,7 @@ impl WorldPlaceholderMeshCursor {
                 else {self.material_step()?;self.item+=3;}
             }
             WorldPlaceholderMeshPhase::Textures => {
-                if self.texture_step()? {
+                if self.texture_step(effect)? {
                     if !self.primitives.is_empty() {self.appearance=Some(World3dMeshAppearance::new(std::mem::take(&mut self.primitives),std::mem::take(&mut self.textures)).map_err(|(primitives,textures)|{self.primitives=primitives;self.textures=textures;ui_scene::math::Mesh3dFault::ByteCapacity})?);}
                     self.phase=WorldPlaceholderMeshPhase::Provenance;
                 }
@@ -476,7 +476,7 @@ impl WorldPlaceholderMeshCursor {
             }
             WorldPlaceholderMeshPhase::Publish => {
                 let grant=self.source_retirement_grant(4096)?;
-                if !matches!(self.retire_source_step(grant)?,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)){return Ok(WorldPlaceholderMeshStep::Pending)}
+                if !matches!(self.retire_source_step(effect,grant)?,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)){return Ok(WorldPlaceholderMeshStep::Pending)}
                 let WorldPlaceholderOwner::Ready(lease) = self.owner else { return Err(ui_scene::math::Mesh3dFault::Stale) };
                 self.owner = WorldPlaceholderOwner::Empty;
                 return Ok(WorldPlaceholderMeshStep::Ready(std::mem::take(&mut self.key), lease,self.appearance.take()));
@@ -491,10 +491,10 @@ impl WorldPlaceholderMeshCursor {
         Ok(world_mesh_ownership_grant(copy_bytes,owner.next_capacity_byte_demand(copy_bytes).map_err(|_|ui_scene::math::Mesh3dFault::Closing)?,owner.next_release_byte_demand().map_err(|_|ui_scene::math::Mesh3dFault::Closing)?,owner.next_depth_demand().map_err(|_|ui_scene::math::Mesh3dFault::Closing)?))
     }
 
-    pub fn retire_source_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ui_scene::math::Mesh3dFault> {
+    pub fn retire_source_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ui_scene::math::Mesh3dFault> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
         if let Some(owner)=self.source_retirement.as_mut(){
-            let step=owner.step(grant).map_err(|_|ui_scene::math::Mesh3dFault::Closing)?;
+            let step=world_retire_step(effect,owner,grant)?;
             let progress=match step{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};
             if !progress.fits(grant){return Err(ui_scene::math::Mesh3dFault::Closing)}
             if matches!(step,RetainedCloneStep::Complete(_)){
@@ -512,11 +512,11 @@ impl WorldPlaceholderMeshCursor {
         }
     }
 
-    fn retire_texture_job(&mut self)->Result<bool,ui_scene::math::Mesh3dFault> {
+    fn retire_texture_job(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,ui_scene::math::Mesh3dFault> {
         if let Some(owner)=self.texture_retirement.as_mut(){
             let copy=owner.next_copy_byte_demand().map_err(|_|ui_scene::math::Mesh3dFault::Closing)?;
             let grant=world_mesh_ownership_grant(copy,owner.next_capacity_byte_demand(copy).map_err(|_|ui_scene::math::Mesh3dFault::Closing)?,owner.next_release_byte_demand().map_err(|_|ui_scene::math::Mesh3dFault::Closing)?,owner.next_depth_demand().map_err(|_|ui_scene::math::Mesh3dFault::Closing)?);
-            let step=owner.step(grant).map_err(|_|ui_scene::math::Mesh3dFault::Closing)?;
+            let step=world_retire_step(effect,owner,grant)?;
             let receipt=match step{semio_framework_value::retained_clone::RetainedCloneStep::Progress(receipt)|semio_framework_value::retained_clone::RetainedCloneStep::Complete(receipt)=>receipt};
             if !receipt.fits(grant){return Err(ui_scene::math::Mesh3dFault::Closing)}
             if matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)){self.texture_retirement=None;return Ok(true)}
@@ -526,13 +526,13 @@ impl WorldPlaceholderMeshCursor {
         match semio_framework_value::retirement::controlled::ControlledRetirement::new(job){Ok(owner)=>{self.texture_retirement=Some(owner);Ok(false)},Err((_,job))=>{self.texture_job=Some(job);Err(ui_scene::math::Mesh3dFault::Closing)}}
     }
 
-    pub fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> bool {
         self.texture_cancelled.store(true,std::sync::atomic::Ordering::Release);
         if self.texture_submission.take().is_some(){self.texture_worker=None;return false}
         if let Some(worker)=self.texture_worker.as_ref(){let Ok(mut output)=worker.try_lock()else{return false};let Some(result)=output.take()else{return false};self.texture_image=result;drop(output);self.texture_worker=None;return false}
         if self.texture_bytes.pop().is_some(){return false}
         if let Some(name)=self.texture_name.as_mut(){if name.pop().is_some(){return false}self.texture_name=None;return false}
-        match self.source_retirement_grant(4096).and_then(|grant|self.retire_source_step(grant)){
+        match self.source_retirement_grant(4096).and_then(|grant|self.retire_source_step(effect,grant)){
             Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(_))=>{},
             Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(_))=>return false,
             Err(_)=>{self.faulted=true;return false}
@@ -540,7 +540,7 @@ impl WorldPlaceholderMeshCursor {
         if let Some(appearance)=self.appearance.as_mut(){if !appearance.close_step(){return false}self.appearance=None;return false}
         if self.primitives.pop().is_some()||self.textures.pop().is_some(){return false}
         if let Some(job)=self.texture_job.as_mut(){job.cancel();}
-        match self.retire_texture_job(){Ok(true)=>{},Ok(false)=>return false,Err(_)=>{self.faulted=true;return false}}
+        match self.retire_texture_job(effect){Ok(true)=>{},Ok(false)=>return false,Err(_)=>{self.faulted=true;return false}}
         if let Some(image)=self.texture_image.as_mut(){if image.pixels.pop().is_some(){return false}self.texture_image=None;return false}
 
         match self.owner {
@@ -764,3 +764,10 @@ impl<'a> WorldComponentAddress<'a> {
 //#endregion PlaceholderMeshAuthority
 //#endregion MeshHelpers
 //#endregion WorldRelocateGesture
+
+/// 🪙️ Runs one controlled retirement step inside the caller's effect narrowed to the cursor's quote; a pending poll keeps its state for the next turn.
+fn world_retire_step<T:semio_framework_value::retirement::RetireOwned>(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,owner:&mut semio_framework_value::retirement::controlled::ControlledRetirement<T>,quote:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ui_scene::math::Mesh3dFault>{
+    use semio_framework_value::{RetirementPollExit,retained_clone::{RetainedCloneProgress,RetainedCloneStep}};
+    let mut quoted=effect.nested(quote);
+    match RetirementPollExit::resume(owner.step(quote.maximum_copy_bytes,&mut quoted)){Ok(step)=>Ok(step),Err(RetirementPollExit::Pending(_))=>Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())),Err(RetirementPollExit::Failed(_))=>Err(ui_scene::math::Mesh3dFault::Closing)}
+}

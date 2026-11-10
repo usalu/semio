@@ -6985,8 +6985,26 @@
         ],
         "terminologyBreadcrumbs": {
           "reuse": [
-            "Entwerfen mit Bestand",
-            "Aussuchen"
+            {
+              "native": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              },
+              "reuse": {
+                "en": "Designing with Existing Stock",
+                "de": "Entwerfen mit Bestand"
+              }
+            },
+            {
+              "native": {
+                "en": "Select",
+                "de": "Aussuchen"
+              },
+              "reuse": {
+                "en": "Select",
+                "de": "Aussuchen"
+              }
+            }
           ]
         },
         "tutorials": [],
@@ -7187,7 +7205,16 @@
           "ports": [
             {
               "id": "catalog:out",
-              "label": "Catalog",
+              "label": {
+                "native": {
+                  "en": "Catalog",
+                  "de": "Katalog"
+                },
+                "reuse": {
+                  "en": "Catalog",
+                  "de": "Katalog"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "kit",

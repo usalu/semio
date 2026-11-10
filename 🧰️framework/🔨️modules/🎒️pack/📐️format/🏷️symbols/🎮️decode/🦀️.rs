@@ -142,7 +142,7 @@ impl RetainedInlineSymbols {
             let progress = crate::released(self.symbols.release_empty_page(&mut *effect)).map_err(|_| InlineSymbolRefusal::Ownership)?;
             return Ok(RetainedCloneProgress { copied_items: usize::from(progress.progressed), released_bytes: progress.released_allocation_bytes, ..idle });
         }
-        match RetainedCloneBinding::close_one(&mut self.binding, effect) { semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map(|step| step.progress()).map_err(|_| InlineSymbolRefusal::Source), semio_framework_value::RetainedWorkPoll::Pending { .. } => Err(InlineSymbolRefusal::Source) }
+        match RetainedCloneBinding::close_one(&mut self.binding, effect.grant().maximum_copy_bytes, effect) { semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map(|step| step.progress()).map_err(|_| InlineSymbolRefusal::Source), semio_framework_value::RetainedWorkPoll::Pending { .. } => Err(InlineSymbolRefusal::Source) }
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.pending.is_none() && self.symbols.terminal_is_empty() && self.binding.is_none() }

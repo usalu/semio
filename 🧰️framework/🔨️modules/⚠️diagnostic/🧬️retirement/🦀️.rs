@@ -19,6 +19,8 @@ impl semio_framework_value::retirement::RetireOwned for crate::FaultScope{
  fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.plugin_id),semio_framework_value::retirement::deferred_birth_bytes_for(&self.app_id),semio_framework_value::retirement::deferred_birth_bytes_for(&self.instance_id),semio_framework_value::retirement::deferred_birth_bytes_for(&self.module),semio_framework_value::retirement::deferred_birth_bytes_for(&self.body_key)])}
  fn controlled_retirement_supported()->bool{true}
  fn boxed_original_demands(&self)->Result<Option<semio_framework_value::RetirementDemand>,semio_framework_value::ValueError>{Ok(Some(scope::demands()))}
+ fn boxed_original_work_demand(&self)->Result<Option<u64>,semio_framework_value::ValueError>{Ok(Some(1))}
+    fn native_boxed_original_admission()->Option<semio_framework_value::retirement::NativeBoxedRetirementAdmission<Self>>{Some(unsafe{semio_framework_value::retirement::NativeBoxedRetirementAdmission::new(<Self as semio_framework_value::retirement::RetireOwned>::boxed_original_retirement)})}
  fn boxed_original_retirement(original:&mut Option<semio_framework_value::retirement::original_box::BoxOriginal<Self>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::retirement::RetirementCursor>,semio_framework_value::RetainedCloneProgress)>>{scope::admit(original,effect.grant())}
 }
 semio_framework_value::artifact_retire_struct!(crate::FaultCause { message, code, retained_progress });
@@ -34,6 +36,8 @@ impl semio_framework_value::retirement::RetireOwned for crate::FaultParams {
     fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)}
     fn controlled_retirement_supported()->bool{<Vec<(String,String)> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
     fn boxed_original_demands(&self)->Result<Option<semio_framework_value::RetirementDemand>,semio_framework_value::ValueError>{Ok(Some(params::demands()))}
+    fn boxed_original_work_demand(&self)->Result<Option<u64>,semio_framework_value::ValueError>{Ok(Some(1))}
+    fn native_boxed_original_admission()->Option<semio_framework_value::retirement::NativeBoxedRetirementAdmission<Self>>{Some(unsafe{semio_framework_value::retirement::NativeBoxedRetirementAdmission::new(<Self as semio_framework_value::retirement::RetireOwned>::boxed_original_retirement)})}
     fn boxed_original_retirement(original:&mut Option<semio_framework_value::retirement::original_box::BoxOriginal<Self>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::retirement::RetirementCursor>,semio_framework_value::RetainedCloneProgress)>>{params::admit(original,effect.grant())}
 
 }

@@ -1,13 +1,13 @@
 use super::*;
 use semio_framework_trace_memory_testing::observe_backing;
 
-/// 🏦️ Closes one slot step under an authoring wallet equal to the granted stock (no job turn exists in this law) and reads the poll as the funded step.
+/// 🏦️ Closes one slot step inside one original effect carrying its producer invocation and reads the poll as the funded step.
 fn close<T: semio_framework_value::ErasedSnapshotRetirement + ?Sized>(slot: &mut Option<Box<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
-    match semio_framework_value::AuthoringWallet::new(grant, 1 << 20).run(grant, 1 << 16, |effect| semio_framework_value::close_factory_ticket(slot, effect)).unwrap().expect("work quote admitted").output {
-        semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
-        semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(RetainedCloneStep::Progress(Default::default())),
-    }
+    funding::settled(funding::with_effect(grant, funding::WORK, &mut None, |effect| semio_framework_value::close_factory_ticket(slot, grant.maximum_copy_bytes, effect))).result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)
 }
+
+#[path = "../../../../◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs"]
+mod funding;
 
 #[test]
 fn original_canvas_path_retains_all_cancelled_backings_and_exact_native_receipts() {

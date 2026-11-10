@@ -67,22 +67,22 @@ impl EnergyJobAuthority {
             return self.input_identity.close_step(grant).map(|progress|InteractiveJobCloseStep::Pending{progress});
         }
         if let Some(build) = self.wire_build.as_mut() {
-            let (step, done) = energy_turn(energy_builder_close(&mut build.builder, grant))?;
+            let (step, done) = energy_turn(energy_builder_close(&mut build.builder, effect))?;
             if done {
                 self.wire_build = None;
             }
             return Ok(step);
         }
         if self.output_writer.is_some() {
-            let (step, _) = energy_turn(energy_builder_close(&mut self.output_writer, grant))?;
+            let (step, _) = energy_turn(energy_builder_close(&mut self.output_writer, effect))?;
             return Ok(step);
         }
         if self.builder_retiring.is_some() {
-            let (step, _) = energy_turn(energy_builder_close(&mut self.builder_retiring, grant))?;
+            let (step, _) = energy_turn(energy_builder_close(&mut self.builder_retiring, effect))?;
             return Ok(step);
         }
         if let Some(payload) = self.output_payload.as_mut() {
-            let (step, done) = energy_turn(energy_guarded(grant, payload.retirement_demands(), || payload.close_step(grant).result))?;
+            let (step, done) = energy_turn(energy_guarded(grant, payload.retirement_demands(), || payload.close_step(effect).result))?;
             if done {
                 self.output_payload = None;
             }
@@ -91,7 +91,7 @@ impl EnergyJobAuthority {
         macro_rules! close_packet {
             ($packet:expr) => {
                 if let Some(packet) = $packet.as_mut() {
-                    let (step, done) = energy_turn(packet.close_step(grant))?;
+                    let (step, done) = energy_turn(packet.close_step(effect))?;
                     if done {
                         $packet = None;
                     }
@@ -105,7 +105,7 @@ impl EnergyJobAuthority {
         close_packet!(self.publication.retiring_preview);
         close_packet!(self.commit_output);
         for queue in [&mut self.publication.checkpoints, &mut self.publication.commits, &mut self.publication.faults] {
-            if let Some(step) = queue.close_step(grant)? {
+            if let Some(step) = queue.close_step(effect)? {
                 return Ok(step);
             }
         }
@@ -131,7 +131,7 @@ impl EnergyJobAuthority {
             return Ok(energy_one());
         }
         if !self.precompute_close.is_empty() {
-            return crate::retirement::energy_poll(self.precompute_close.step_granted(effect)).map(|step| InteractiveJobCloseStep::Pending { progress: step.map(|step| step.progress()).unwrap_or_default() });
+            return crate::retirement::energy_poll(self.precompute_close.step_granted(effect.grant().maximum_copy_bytes, effect)).map(|step| InteractiveJobCloseStep::Pending { progress: step.map(|step| step.progress()).unwrap_or_default() });
         }
         if let Some(step) = crate::retirement::energy_begin(self.precompute_close.begin_granted(&mut self.precompute, effect))? {
             return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });

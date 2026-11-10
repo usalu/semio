@@ -13,13 +13,13 @@ impl RejectedCompletion{pub fn new(original:semio_plugin::ArtifactToolCompletion
 struct Cursor{original:ManuallyDrop<Option<Source>>,phase:u8,faulted:bool}
 fn unsupported()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Draw completion retains an original opaque payload without an exact retirement facet")}
 pub fn birth(value:&Value)->Option<usize>{supported(value).then_some(size_of::<ControlledRetirement<DrawingCompletionPayload>>())}
-pub fn admit(value:&mut Option<Value>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>>{
+pub fn admit(value:&mut Option<Value>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>>{
  let Some(original)=value.as_ref()else{return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0};};
- let Some(bytes)=birth(original)else{return semio_framework_value::RetainedWorkOutcome{result:Err(unsupported()),work:0};};
- if grant.maximum_items==0||grant.maximum_capacity_bytes<bytes||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0};}
- let Some(original)=value.take()else{return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0};};
- let turn=admit_typed_controlled_retirement(DrawingCompletionPayload(original),grant);
- semio_framework_value::RetainedWorkOutcome{work:turn.work,result:match turn.result{Ok((owner,progress))=>Ok(Some((owner as Box<dyn ErasedSnapshotRetirement>,progress))),Err((error,DrawingCompletionPayload(original)))=>{*value=Some(original);Err(error)}}}
+ if birth(original).is_none(){return semio_framework_value::RetainedWorkOutcome{result:Err(unsupported()),work:0};}
+ let mut payload=value.take().map(DrawingCompletionPayload);
+ let turn=admit_typed_controlled_retirement(&mut payload,effect);
+ *value=payload.map(|DrawingCompletionPayload(original)|original);
+ semio_framework_value::RetainedWorkOutcome{work:turn.work,result:turn.result.map(|owner|owner.map(|(owner,progress)|(owner as Box<dyn ErasedSnapshotRetirement>,progress)))}
 }
 fn supported(value:&Value)->bool{
  let ephemeral=match value{Value::Emit(_,ephemeral)|Value::Download(_,ephemeral)=>ephemeral};if !ephemeral.presence.is_empty()||!ephemeral.transient.is_empty(){return false;}
@@ -37,14 +37,18 @@ impl Cursor{
  _=>match self.phase{1=>VacantVec::original_birth(&source.ephemeral().presence),2=>VacantVec::original_birth(&source.ephemeral().transient),3=>source.ephemeral().window_transient.retirement_birth_bytes(),_=>Some(0)}
  }}
 }
-impl RetirementCursor for Cursor{
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0);}if self.faulted{return RetirementStep::Failure(unsupported(),0);}if grant.maximum_items==0||grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}let Some(bytes)=self.birth()else{self.faulted=true;return RetirementStep::Failure(unsupported(),1);};if grant.maximum_capacity_bytes<bytes{return RetirementStep::BudgetExhausted;}
+impl Cursor{
+ fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();if self.terminal_is_empty(){return RetirementStep::Complete(0);}if self.faulted{return RetirementStep::Failure(unsupported(),0);}if grant.maximum_items==0||grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}let Some(bytes)=self.birth()else{self.faulted=true;return RetirementStep::Failure(unsupported(),1);};if grant.maximum_capacity_bytes<bytes{return RetirementStep::BudgetExhausted;}
   let source=self.original.as_mut().unwrap();let child=match source{
    Source::Emit(emit,ephemeral)=>match self.phase{0=>std::mem::take(&mut emit.artifact_mutations).retirement(),1=>VacantVec(std::mem::take(&mut emit.config_mutations)).retirement(),2=>std::mem::take(&mut emit.window_config_mutations).retirement(),3=>VacantVec(std::mem::take(&mut emit.draft_mutations)).retirement(),4=>std::mem::take(&mut emit.transaction).retirement(),5=>std::mem::take(&mut emit.transaction_phase).retirement(),6=>{if let Some(effect)=emit.effects.pop(){self.phase-=1;CompletionEffect(effect).retirement()}else{VacantVec(std::mem::take(&mut emit.effects)).retirement()}},7=>VacantVec(std::mem::take(&mut emit.extension_invocations)).retirement(),8=>VacantVec(std::mem::take(&mut emit.events)).retirement(),9=>std::mem::take(&mut emit.ui_scope).retirement(),10=>VacantVec(std::mem::take(&mut emit.child_emits)).retirement(),11=>VacantVec(std::mem::take(&mut emit.owned_child_emits)).retirement(),12=>VacantDeque(std::mem::take(&mut emit.child_preparations)).retirement(),13=>std::mem::take(&mut emit.interaction_writes).retirement(),14=>VacantVec(std::mem::take(&mut emit.tasks)).retirement(),15=>VacantVec(std::mem::take(&mut ephemeral.presence)).retirement(),16=>VacantVec(std::mem::take(&mut ephemeral.transient)).retirement(),17=>std::mem::take(&mut ephemeral.window_transient).retirement(),_=>{drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1);}},
    Source::Download(download,_)if self.phase==0=>download.take().retirement(),Source::Fault(fault,_)if self.phase==0=>fault.take().retirement(),
    _=>match self.phase{1=>VacantVec(std::mem::take(&mut source.ephemeral_mut().presence)).retirement(),2=>VacantVec(std::mem::take(&mut source.ephemeral_mut().transient)).retirement(),3=>std::mem::take(&mut source.ephemeral_mut().window_transient).retirement(),_=>{drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1);}}
   };self.phase+=1;RetirementStep::Child(child)
  }
+}
+impl RetirementCursor for Cursor{
+ semio_framework_value::native_retirement_reply!();
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(1)}
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_birth_bytes(&self,_copy:usize)->Option<usize>{self.birth()}
  fn next_close_byte_demand(&self)->Option<usize>{Some(0)}

@@ -1,5 +1,5 @@
 //! 📋️ The retained paged clone laws.
-pub use semio_framework_value::retained_clone::paged::*;
+pub use semio_framework_value::paged::retained_clone::cursors::*;
 use semio_framework_value_paged_list::list::PagedList;
 use crate::paged::{PagedBytes, PagedMap, PagedUtf8};
 use crate::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneStep};

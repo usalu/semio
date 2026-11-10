@@ -1,14 +1,16 @@
 //! ⛽️ A read-only work view borrows its real caller fuel and fresh readiness predicate.
 use semio_framework_value_retained_clone::ValueError;
 /// 🔭️ The context keeps cancellation, deadline and retirement authority; this adapter only reads them.
-pub struct OriginalJobWorkRecipient<'turn>{fuel:&'turn u64,ready:&'turn mut (dyn FnMut()->bool+Send+'turn)}
-impl<'turn> OriginalJobWorkRecipient<'turn>{pub fn new(fuel:&'turn u64,ready:&'turn mut (dyn FnMut()->bool+Send+'turn))->Self{Self{fuel,ready}}}
+pub struct OriginalJobWorkRecipient<'turn>{fuel:&'turn u64,ready:&'turn mut (dyn FnMut()->bool+Send+'turn),source:Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity>}
+impl<'turn> OriginalJobWorkRecipient<'turn>{pub fn new(fuel:&'turn u64,ready:&'turn mut (dyn FnMut()->bool+Send+'turn))->Self{Self{fuel,ready,source:None}}
+ /// 🪪️ Makes this Work carry the resident Source's own turn.
+ pub fn with_source(mut self,source:Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity>)->Self{self.source=source;self}}
 /// 🫴️ The resident producer; each Job turn lends its read-only fuel and readiness as the context.
 pub struct OriginalJobWorkDriver;
 impl semio_framework_value_native_owned::native_decoding::OriginalWorkRecipient for OriginalJobWorkDriver{
  type Context<'turn,'source>=OriginalJobWorkRecipient<'turn> where 'source:'turn;
  fn validate_context<'turn,'source>(&self,_:&OriginalJobWorkRecipient<'turn>)->Result<(),ValueError> where 'source:'turn{Ok(())}
- fn source_turn<'turn,'source>(&self,_:&OriginalJobWorkRecipient<'turn>)->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity> where 'source:'turn{None}
+ fn source_turn<'turn,'source>(&self,c:&OriginalJobWorkRecipient<'turn>)->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity> where 'source:'turn{c.source}
  fn admits<'reply,'turn,'source>(&mut self,c:&mut OriginalJobWorkRecipient<'turn>,quote:semio_framework_value_native_owned::native_decoding::OriginalWorkQuote<'reply>,observed:u64,additional:u64)->semio_framework_value_native_owned::native_decoding::OriginalWorkQuoteComplete<'reply> where 'source:'turn{quote.complete(Ok((c.ready)()&&observed.checked_add(additional).is_some_and(|work|work<=*c.fuel)))}
  fn settle_partial<'reply,'turn,'source>(&mut self,_:&mut OriginalJobWorkRecipient<'turn>,check:semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheck<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.complete(Ok(()))}
  fn recover_partial<'reply,'turn,'source>(&mut self,_:&mut OriginalJobWorkRecipient<'turn>,check:semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheck<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.pending()}

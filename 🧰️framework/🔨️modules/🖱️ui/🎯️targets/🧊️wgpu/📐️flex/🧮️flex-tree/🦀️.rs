@@ -70,6 +70,20 @@ pub enum NodeFunding {
     Denied,
 }
 
+fn released(turn: semio_framework_value::RetainedWorkOutcome<ui_contract::PagedListReleaseOutcome, ui_contract::PagedListReleaseFailure>) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::ValueError> {
+    let page = |reason: &'static str| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, reason);
+    match turn.result {
+        Ok(ui_contract::PagedListReleaseOutcome::Ready(progress)) => Ok(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: usize::from(progress.progressed), released_bytes: progress.released_allocation_bytes, ..Default::default() }),
+        Ok(ui_contract::PagedListReleaseOutcome::Denied) => Ok(Default::default()),
+        Err(ui_contract::PagedListReleaseFailure::Work(error)) => Err(error),
+        Err(ui_contract::PagedListReleaseFailure::Release(error)) => Err(page(error.reason)),
+    }
+}
+
+fn fund_turn(turn: semio_framework_value::RetainedWorkOutcome<ui_contract::PagedListReservationOutcome<semio_framework_value::retained_clone::RetainedCloneProgress>, ui_contract::PagedListReservationFailure>) -> semio_framework_value::RetainedWorkOutcome<NodeFunding, ui_contract::PagedListReservationFailure> {
+    semio_framework_value::RetainedWorkOutcome { result: turn.result.map(|outcome| match outcome { ui_contract::PagedListReservationOutcome::Ready(progress) => NodeFunding::Funded(progress), ui_contract::PagedListReservationOutcome::Denied => NodeFunding::Denied }), work: turn.work }
+}
+
 impl Default for FlexTree {
     fn default() -> Self {
         Self::new()
@@ -115,10 +129,10 @@ impl FlexTree {
     }
 
     /// ⏭️ Admits at most one backing page of the four node tables under the caller's grant, first table first, so that [`Self::push`] never allocates a table page on its own.
-    pub fn fund_next_node(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<NodeFunding, ui_contract::PagedListAllocationError> {
-        macro_rules! fund {($table:ident)=>{if !self.$table.has_reserved_slot(){let progress=self.$table.try_reserve_one_funded(grant)?;return Ok(if progress.copied_items==0{NodeFunding::Denied}else{NodeFunding::Funded(progress)})}}}
+    pub fn fund_next_node(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome<NodeFunding, ui_contract::PagedListReservationFailure> {
+        macro_rules! fund {($table:ident)=>{if !self.$table.has_reserved_slot(){return fund_turn(self.$table.try_reserve_one_funded(effect))}}}
         fund!(flows);fund!(grids);fund!(intrinsic);fund!(resolved);
-        Ok(NodeFunding::Ready)
+        semio_framework_value::RetainedWorkOutcome { result: Ok(NodeFunding::Ready), work: 0 }
     }
 
     /// 👣️ How many track slots node `index` needs while its measure or arrange step runs: a grid's explicit and implicit columns and rows, nothing for every other container.
@@ -130,13 +144,12 @@ impl FlexTree {
     }
 
     /// 📃️ Admits at most one backing page of the track table under the caller's grant, until it holds every slot node `index`'s grid sizing needs, so that [`Self::measure_one`] and [`Self::arrange_one`] never allocate.
-    pub fn fund_scratch(&mut self, index: usize, children: impl Iterator<Item = usize> + Clone, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<NodeFunding, ui_contract::PagedListAllocationError> {
+    pub fn fund_scratch(&mut self, index: usize, children: impl Iterator<Item = usize> + Clone, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome<NodeFunding, ui_contract::PagedListReservationFailure> {
         let demand = self.scratch_demand(index, children);
         if demand <= self.tracks.capacity() || demand > FLEX_TRACK_CREDITS {
-            return Ok(NodeFunding::Ready);
+            return semio_framework_value::RetainedWorkOutcome { result: Ok(NodeFunding::Ready), work: 0 };
         }
-        let progress = self.tracks.try_reserve_capacity_one_funded(demand, grant)?;
-        Ok(if progress.copied_items == 0 { NodeFunding::Denied } else { NodeFunding::Funded(progress) })
+        fund_turn(self.tracks.try_reserve_capacity_one_funded(demand, effect))
     }
 
     /// 🌱️ Admits the job's next node (nodes arrive in the admission walk's depth-first preorder) into slots
@@ -479,8 +492,9 @@ impl FlexTree {
         release!(flows,grids,intrinsic,resolved,tracks);
         Ok(usize::from(!self.close_is_empty()))
     }
-    pub fn close_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
+    pub fn close_granted(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
+        let grant=effect.grant();
         let empty=RetainedCloneProgress::default();if self.close_is_empty(){return Ok(Step::Complete{progress:empty})}
         if grant.maximum_items==0{return Ok(Step::Pending{progress:empty})}
         let bytes=self.next_close_release_byte_demand()?;
@@ -488,12 +502,12 @@ impl FlexTree {
         let pending=|progress:RetainedCloneProgress|Ok(Step::Pending{progress});
         if let Some(index)=self.grids.len().checked_sub(1){
             if let Some(Some(grid))=self.grids.get_mut(index){
-                let result=if grid.columns.pop().is_some(){None}else if !grid.columns.terminal_is_empty(){Some(grid.columns.release_empty_page(grant.maximum_release_bytes))}else if grid.rows.pop().is_some(){None}else if !grid.rows.terminal_is_empty(){Some(grid.rows.release_empty_page(grant.maximum_release_bytes))}else{*self.grids.get_mut(index).unwrap()=None;return pending(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})};
-                return match result{Some(Ok(receipt))=>pending(RetainedCloneProgress{copied_items:usize::from(receipt.progressed),released_bytes:receipt.released_allocation_bytes,..Default::default()}),Some(Err(error))=>Err(semio_framework_value::ValueError::from(error)),None=>pending(RetainedCloneProgress{copied_items:1,..Default::default()})};
+                let result=if grid.columns.pop().is_some(){None}else if !grid.columns.terminal_is_empty(){Some(released(grid.columns.release_empty_page(effect)))}else if grid.rows.pop().is_some(){None}else if !grid.rows.terminal_is_empty(){Some(released(grid.rows.release_empty_page(effect)))}else{*self.grids.get_mut(index).unwrap()=None;return pending(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})};
+                return match result{Some(Ok(progress))=>pending(progress),Some(Err(error))=>Err(error),None=>pending(RetainedCloneProgress{copied_items:1,..Default::default()})};
             }
         }
         if self.nodes_remain(){self.flows.pop();self.grids.pop();self.intrinsic.pop();self.resolved.pop();self.tracks.pop();return pending(RetainedCloneProgress{copied_items:1,..Default::default()})}
-        macro_rules! table{($($table:ident),+)=>{$(if !self.$table.terminal_is_empty(){return match self.$table.release_empty_page(grant.maximum_release_bytes){Ok(receipt)=>pending(RetainedCloneProgress{copied_items:usize::from(receipt.progressed),released_bytes:receipt.released_allocation_bytes,..Default::default()}),Err(error)=>Err(semio_framework_value::ValueError::from(error))}})+}}
+        macro_rules! table{($($table:ident),+)=>{$(if !self.$table.terminal_is_empty(){return match released(self.$table.release_empty_page(effect)){Ok(progress)=>pending(progress),Err(error)=>Err(error)}})+}}
         table!(flows,grids,intrinsic,resolved,tracks);
         Ok(Step::Complete{progress:empty})
     }

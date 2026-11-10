@@ -790,6 +790,10 @@ impl protocol::ColdDiffAlgebra<Fem2dSnapshotValue> for Fem2dDiff {
 }
 //#endregion 🔖️Apply
 
+protocol::retained_empty_option_patch!(Fem2dMaterialPatch { name, e, nu, rho });
+protocol::retained_empty_option_patch!(Fem2dNodePatch { x, y });
+protocol::retained_empty_option_patch!(Fem2dSectionPatch { name, area, iy });
+protocol::retained_empty_option_patch!(Fem2dRegionPatch { name, outline, holes, thickness, material_id, mesh_size });
 protocol::retained_row_patch!(pub retained_material_fields for Fem2dMaterialPatch => FemMaterialValue {name:String,e:f64,nu:f64,rho:f64});
 protocol::retained_row_patch!(pub retained_node_fields for Fem2dNodePatch => FemNodeValue {x:f64,y:f64});
 protocol::retained_row_patch!(pub retained_section_fields for Fem2dSectionPatch => FemSection {name:String,area:f64,iy:f64});

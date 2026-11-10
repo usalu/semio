@@ -82,14 +82,20 @@ impl store::ArtifactPackReceiving for Fem2dSnapshot {
     let grant=original.remaining_grant();
     let Some((receiving,progress))=work.take(RetainedRecordReceiving::admit_document(body,(0,body.len()),<Fem2dSnapshotValue as BorrowedDslRecord>::RECORD,protocol::PackLimits::default(),grant))? else{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original FEM pack grant cannot admit its receiving parser").into())};
     *cursor=Some(receiving);original.record_progress(progress)?;
-    work.take(original.drive_cursor(cursor,record,&mut |cursor,output,native,grant|{
+    work.take(original.drive_cursor(cursor,record,&mut |cursor,output,_,_,native,wallet|{
      if cursor.is_ready(){
-      let turn=cursor.take_into(output,grant);
-      RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(store::NativeSnapshotFailure::from)}
-     }else{
-      let turn=cursor.step(body,native,grant);
-      RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(store::NativeSnapshotFailure::from)}
+      let turn=cursor.take_into(output,wallet.remaining_grant());
+      return RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(store::NativeSnapshotFailure::from).and_then(|progress|wallet.record_progress(progress).map_err(store::NativeSnapshotFailure::from))};
      }
+     let mut performed=0;
+     let result=(||{
+      let demand=cursor.demands(body)?;
+      let maximum=semio_framework_value_native_owned::native_decoding::owned::native_work_limit(native,4)?;
+      if !semio_framework_value::retained_clone::retained_clone_grant_admits(wallet.remaining_grant(),demand){return Ok(())}
+      let ran=native.with_allocated_effect(demand,maximum,|native,effect|{let turn=cursor.step(body,native,effect);performed=turn.work;turn.result.map_err(store::NativeSnapshotFailure::from)})?;
+      match ran{Some(result)=>wallet.record_progress(result?).map_err(store::NativeSnapshotFailure::from),None=>Ok(())}
+     })();
+     RetainedWorkOutcome{work:performed,result}
     }))
    })))?;
    work.take(Self::receive_exchange_record(slot.as_ref().unwrap(),output,original))

@@ -1,5 +1,10 @@
 use super::*;
 use semio_s_fem_payload_turns::{NumericalBytesPublication, numerical_begin_page, numerical_commit_page, numerical_post, numerical_writer_demand};
+use semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
+
+fn released_bytes(outcome: semio_framework_value_persistent::list::PagedListReleaseOutcome) -> usize {
+    match outcome { semio_framework_value_persistent::list::PagedListReleaseOutcome::Ready(progress) => progress.released_allocation_bytes, semio_framework_value_persistent::list::PagedListReleaseOutcome::Denied => 0 }
+}
 use semio_framework_job::StepBudget;
 use semio_s_fem_test_support::{OriginalNumericalFixture, TEST_GRANT, close_grant, observe_original_numerical_allocations};
 
@@ -65,7 +70,7 @@ fn numerical_restore_funds_each_original_contributor_frontier_separately() {
         assert_eq!(value.next, fixture["next"][index].as_u64().unwrap());
     }
     while !owner.terminal_is_empty() {
-        if owner.pop().is_none() { owner.release_empty_page(SPARSE_PAGE_BYTES).unwrap(); }
+        if owner.pop().is_none() { semio_s_fem_test_support::granted(TEST_GRANT, |effect| owner.release_empty_page(effect)).result.unwrap(); }
     }
 }
 
@@ -99,7 +104,7 @@ fn original_step<T>(original: &mut OriginalNumericalFixture, step: impl FnOnce(&
 
 fn empty_paged_backing<T>(count: usize) -> PagedList<T, SPARSE_INDEX_SPACE> {
     let mut owner = PagedList::empty();
-    while owner.capacity() < count { owner.reserve_capacity_one(count, SPARSE_PAGE_BYTES).expect("original fixture backing"); }
+    while owner.capacity() < count { semio_s_fem_test_support::granted(TEST_GRANT, |effect| owner.reserve_capacity_one(count, effect)).result.expect("original fixture backing"); }
     owner
 }
 
@@ -175,7 +180,7 @@ fn numerical_page_restore_rejects_hostile_coordinates_without_changing_target_ba
         for _ in 0..10_000 {
             if owner.pop().is_some() { continue; }
             if owner.terminal_is_empty() { break; }
-            released += owner.release_empty_page(SPARSE_PAGE_BYTES).unwrap().released_allocation_bytes;
+            released += semio_s_fem_test_support::granted(TEST_GRANT, |effect| owner.release_empty_page(effect)).result.map(released_bytes).unwrap();
         }
         let closed = owner.terminal_is_empty();
         let fault = result.err().map(|fault| format!("{fault:?}"));
@@ -223,8 +228,8 @@ fn numerical_page_restore_accepts_every_declared_paged_scalar_continuation() {
         let mut released = 0;
         for _ in 0..count + 1024 {
             if owner.pop().is_some() { continue; }
-            match owner.release_empty_page(SPARSE_PAGE_BYTES) {
-                Ok(step) => released += step.released_allocation_bytes,
+            match semio_s_fem_test_support::granted(TEST_GRANT, |effect| owner.release_empty_page(effect)).result {
+                Ok(step) => released += released_bytes(step),
                 Err(_) => break,
             }
             if owner.terminal_is_empty() { break; }
@@ -374,8 +379,8 @@ fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
     }
     integers.pop();
     scalars.pop();
-    while integers.allocated_bytes() != 0 { integers.release_empty_page(JOB_PAYLOAD_PAGE_BYTES).unwrap(); }
-    while scalars.allocated_bytes() != 0 { scalars.release_empty_page(JOB_PAYLOAD_PAGE_BYTES).unwrap(); }
+    while integers.allocated_bytes() != 0 { semio_s_fem_test_support::granted(TEST_GRANT, |effect| integers.release_empty_page(effect)).result.unwrap(); }
+    while scalars.allocated_bytes() != 0 { semio_s_fem_test_support::granted(TEST_GRANT, |effect| scalars.release_empty_page(effect)).result.unwrap(); }
     for (id, actual, expected, valid, held, released) in observations {
         assert!(valid && held && released, "{id} preserves pending input and exact backing");
         assert_eq!(actual, expected, "{id}");
@@ -483,7 +488,7 @@ fn bytes_publication_cancelled_mid_publication_closes_with_funded_turns() {
     for _ in 0..10_000 {
         let Some(demand) = publication.close_demand() else { break };
         let demand = demand.expect("a half-built builder quotes its close demand");
-        let step = original.turn(close_grant(demand), 1, u64::MAX, |cx| { let grant = cx.retained_grant(); Ok(publication.close_step(grant)) }).expect("same original close turn");
+        let step = original.turn(close_grant(demand), 1, u64::MAX, |cx| { let grant = cx.retained_grant(); Ok(semio_s_fem_test_support::granted(grant, |effect| publication.close_step(effect))) }).expect("same original close turn");
         released += step.expect("a half-built builder closes").expect("funded close turn").progress().released_bytes;
     }
     assert!(publication.close_demand().is_none(), "close ends with the box released");

@@ -39,8 +39,12 @@ pub struct ArtifactCursor {
 }
 
 struct ArtifactCursorGroupRoot {
-    visibility: Arc<semio_os_vcs::ArtifactGroupVisibility>,
+    visibility: semio_framework_value::retirement::arc_custody::ArcLease<semio_os_vcs::ArtifactGroupVisibility>,
     owners: ArtifactCursorOwners,
+}
+
+impl ArtifactCursorGroupRoot {
+    fn visibility(&self) -> &Arc<semio_os_vcs::ArtifactGroupVisibility> { self.visibility.0.as_ref().expect("cursor group visibility lease is held until retirement") }
 }
 
 impl ArtifactCursor {
@@ -56,12 +60,12 @@ impl ArtifactCursor {
         if self.group.is_some() || !visibility.pending() {
             return Err(owners);
         }
-        *self.group = Some(ArtifactCursorGroupRoot { visibility: Arc::clone(visibility), owners });
+        *self.group = Some(ArtifactCursorGroupRoot { visibility: semio_framework_value::retirement::arc_custody::ArcLease::new(Arc::clone(visibility)), owners });
         Ok(())
     }
 
     pub fn adopt_group_owned(&mut self, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>) -> Result<ArtifactCursorOwners, ()> {
-        if !visibility.committed() || !self.group.as_ref().is_some_and(|group| Arc::ptr_eq(&group.visibility, visibility)) {
+        if !visibility.committed() || !self.group.as_ref().is_some_and(|group| Arc::ptr_eq(group.visibility(), visibility)) {
             return Err(());
         }
         let group = self.group.take().expect("validated committed cursor root remains owned");
@@ -69,19 +73,19 @@ impl ArtifactCursor {
     }
 
     pub fn abort_group_owned(&mut self, visibility: &Arc<semio_os_vcs::ArtifactGroupVisibility>) -> Result<ArtifactCursorOwners, ()> {
-        if visibility.pending() || visibility.committed() || !self.group.as_ref().is_some_and(|group| Arc::ptr_eq(&group.visibility, visibility)) {
+        if visibility.pending() || visibility.committed() || !self.group.as_ref().is_some_and(|group| Arc::ptr_eq(group.visibility(), visibility)) {
             return Err(());
         }
         Ok(self.group.take().expect("validated aborted cursor root remains owned").owners)
     }
 
     pub fn group_visibility(&self) -> Option<&semio_os_vcs::ArtifactGroupVisibility> {
-        self.group.as_ref().map(|group| group.visibility.as_ref())
+        self.group.as_ref().map(|group| group.visibility().as_ref())
     }
 
     pub fn read_group(&self, decision: Option<&semio_os_vcs::ArtifactGroupReadDecision<'_>>) -> Result<&ArtifactCursorOwners, ()> {
         match self.group.as_ref() {
-            Some(group) if decision.ok_or(())?.committed_for(&group.visibility)? => Ok(&group.owners),
+            Some(group) if decision.ok_or(())?.committed_for(group.visibility())? => Ok(&group.owners),
             _ => Ok(&*self.owners),
         }
     }
@@ -97,7 +101,7 @@ impl std::ops::Deref for ArtifactCursor {
     type Target = ArtifactCursorOwners;
 
     fn deref(&self) -> &Self::Target {
-        self.group.as_ref().filter(|group| group.visibility.committed()).map_or(&*self.owners, |group| &group.owners)
+        self.group.as_ref().filter(|group| group.visibility().committed()).map_or(&*self.owners, |group| &group.owners)
     }
 }
 

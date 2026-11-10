@@ -85,34 +85,34 @@ impl StrokeOutlineJob {
  fn check(&self,p:Vec2)->Result<(),StrokeOutlineError> {
   let m=self.input.transform;if !p.into_iter().all(valid)||!valid(m[0]*p[0]+m[2]*p[1]+m[4])||!valid(m[1]*p[0]+m[3]*p[1]+m[5]) {return Err(StrokeOutlineError::Invalid("Invalid stroke geometry point"));}Ok(())
  }
- fn reserve<T>(values:&mut Vec<T>,required:usize,limit:usize,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,StrokeOutlineError>{
+ fn reserve<T>(values:&mut Vec<T>,required:usize,limit:usize,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,StrokeOutlineError>{
   if required>limit{return Err(StrokeOutlineError::Invalid("Stroke preparation exceeds retained output budget"));}
-  if values.capacity()<required{let target=values.capacity().max(1).saturating_mul(2).max(required).min(limit);if !work.reserve_vec(values,target,alloc).map_err(StrokeOutlineError::Invalid)?{return Ok(false);}}Ok(true)
+  if values.capacity()<required{let target=values.capacity().max(1).saturating_mul(2).max(required).min(limit);if !work.reserve_vec(values,target,effect.actual()).map_err(StrokeOutlineError::Invalid)?{return Ok(false);}}Ok(true)
  }
- fn append(values:&mut Vec<Vec2>,points:&[Vec2],work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,StrokeOutlineError>{
-  let target=values.len()+points.len();if !Self::reserve(values,target,MAX_POINTS,work,alloc)?||!work.copy_bytes(std::mem::size_of_val(points)){return Ok(false);}values.extend_from_slice(points);Ok(true)
+ fn append(values:&mut Vec<Vec2>,points:&[Vec2],work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,StrokeOutlineError>{
+  let target=values.len()+points.len();if !Self::reserve(values,target,MAX_POINTS,work,effect)?||!work.copy_bytes(std::mem::size_of_val(points)){return Ok(false);}values.extend_from_slice(points);Ok(true)
  }
- fn run_point(&mut self,at:usize,p:Vec2,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,StrokeOutlineError>{
-  if self.run_points>=MAX_POINTS{return Err(StrokeOutlineError::Invalid("Stroke dashing exceeds point budget"));}if !Self::append(&mut self.runs[at].points,&[p],work,alloc)?{return Ok(false);}self.run_points+=1;Ok(true)
+ fn run_point(&mut self,at:usize,p:Vec2,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,StrokeOutlineError>{
+  if self.run_points>=MAX_POINTS{return Err(StrokeOutlineError::Invalid("Stroke dashing exceeds point budget"));}if !Self::append(&mut self.runs[at].points,&[p],work,effect)?{return Ok(false);}self.run_points+=1;Ok(true)
  }
- fn create_run(&mut self,a:Vec2,b:Vec2,positive:bool,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,StrokeOutlineError>{
+ fn create_run(&mut self,a:Vec2,b:Vec2,positive:bool,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,StrokeOutlineError>{
   if self.run_points.checked_add(2).is_none_or(|n|n>MAX_POINTS){return Err(StrokeOutlineError::Invalid("Stroke dashing exceeds point budget"));}
   let src=&self.sources[self.source];let n=src.points.len();let tangent=if n>=2{let edge=self.edge.min(if src.closed{n-1}else{n-2});unit(src.points[edge],src.points[(edge+1)%n])}else{[1.0,0.0]};
-  let target=self.runs.len()+1;if !Self::reserve(&mut self.runs,target,MAX_POINTS,work,alloc)?||!Self::reserve(&mut self.new_run_points,2,MAX_POINTS,work,alloc)?||!work.copy_bytes(2*std::mem::size_of::<Vec2>()+std::mem::size_of::<Run>()){return Ok(false);}
+  let target=self.runs.len()+1;if !Self::reserve(&mut self.runs,target,MAX_POINTS,work,effect)?||!Self::reserve(&mut self.new_run_points,2,MAX_POINTS,work,effect)?||!work.copy_bytes(2*std::mem::size_of::<Vec2>()+std::mem::size_of::<Run>()){return Ok(false);}
   self.new_run_points.extend([a,b]);let at=self.runs.len();self.runs.push(Run{points:std::mem::take(&mut self.new_run_points),closed:false,cap_start:true,cap_end:true,painted:positive,tangent});self.run_points+=2;self.active=Some(at);if positive{if self.first.is_none(){self.first=Some(at);}self.last=Some(at);}Ok(true)
  }
  fn location(&self)->Vec2 {
   let src=&self.sources[self.source];let count=if src.closed {src.points.len()} else {src.points.len()-1};if self.edge>=count {return if src.closed {src.points[0]} else {*src.points.last().unwrap()};}
   let a=src.points[self.edge];let b=src.points[(self.edge+1)%src.points.len()];let length=(b[0]-a[0]).hypot(b[1]-a[1]);if self.position==0.0 {a} else {[a[0]+(b[0]-a[0])*self.position/length,a[1]+(b[1]-a[1])*self.position/length]}
  }
- fn polygon(&mut self,points:[Vec2;4],length:usize,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,StrokeOutlineError>{
+ fn polygon(&mut self,points:[Vec2;4],length:usize,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,StrokeOutlineError>{
   let points=&points[..length];let mut area=0.0;let origin=points[0];for at in 0..length{self.check(points[at])?;let a=points[at];let b=points[(at+1)%length];area+=(a[0]-origin[0])*(b[1]-origin[1])-(a[1]-origin[1])*(b[0]-origin[0]);}
   if area==0.0{return Ok(true);}if self.count+length>MAX_POINTS||self.polygons.len()>=MAX_CONTOURS{return Err(StrokeOutlineError::Invalid("Stroke outline exceeds geometry budget"));}
-  let target=self.polygons.len()+1;if !Self::reserve(&mut self.polygons,target,MAX_CONTOURS,work,alloc)?||!Self::reserve(&mut self.new_polygon,length,MAX_POINTS,work,alloc)?||!work.copy_bytes(std::mem::size_of_val(points)+std::mem::size_of::<Vec<Vec2>>()){return Ok(false);}
+  let target=self.polygons.len()+1;if !Self::reserve(&mut self.polygons,target,MAX_CONTOURS,work,effect)?||!Self::reserve(&mut self.new_polygon,length,MAX_POINTS,work,effect)?||!work.copy_bytes(std::mem::size_of_val(points)+std::mem::size_of::<Vec<Vec2>>()){return Ok(false);}
   self.new_polygon.extend_from_slice(points);if area<0.0{self.new_polygon.reverse();}self.polygons.push(std::mem::take(&mut self.new_polygon));self.count+=length;Ok(true)
  }
  fn circle_point(&self,center:Vec2,angle:f64)->Vec2 {let (s,c)=angle.sin_cos();[center[0]+self.radius*c,center[1]+self.radius*s]}
- fn round_point(&mut self,p:Vec2,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,StrokeOutlineError>{self.check(p)?;if self.count>=MAX_POINTS{return Err(StrokeOutlineError::Invalid("Stroke outline exceeds point budget"));}let index=self.round.as_ref().ok_or(StrokeOutlineError::Invalid("round absent"))?.polygon;if !Self::append(&mut self.polygons[index],&[p],work,alloc)?{return Ok(false);}self.count+=1;Ok(true)}
+ fn round_point(&mut self,p:Vec2,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,StrokeOutlineError>{self.check(p)?;if self.count>=MAX_POINTS{return Err(StrokeOutlineError::Invalid("Stroke outline exceeds point budget"));}let index=self.round.as_ref().ok_or(StrokeOutlineError::Invalid("round absent"))?.polygon;if !Self::append(&mut self.polygons[index],&[p],work,effect)?{return Ok(false);}self.count+=1;Ok(true)}
  fn join(&self,[before,p,after]:[Vec2;3])->Option<Primitive>{
   let a=unit(before,p);let b=unit(p,after);let cross=a[0]*b[1]-a[1]*b[0];let dot=(a[0]*b[0]+a[1]*b[1]).clamp(-1.0,1.0);if cross==0.0&&dot>0.0{return None;}let side=if cross<0.0{1.0}else{-1.0};let n=normal(a);let z=normal(b);let from=shifted(p,n,side*self.radius);let to=shifted(p,z,side*self.radius);
   if self.input.style.join==StrokeGeometryJoin::Round{let start=if cross<0.0{to}else{from};let theta=(start[1]-p[1]).atan2(start[0]-p[0]);return Some(Primitive::Round{center:p,a:theta,b:theta+cross.abs().atan2(dot)});}
@@ -121,76 +121,76 @@ impl StrokeOutlineJob {
  fn endpoint(&self,p:Vec2,t:Vec2,start:bool)->Option<Primitive>{
   if self.input.style.cap==StrokeGeometryCap::Butt{return None;}let n=normal(t);let a=shifted(p,n,self.radius);let b=shifted(p,n,-self.radius);Some(if self.input.style.cap==StrokeGeometryCap::Square{let extension=shifted([0.0,0.0],t,(if start{-1.0}else{1.0})*self.radius);Primitive::Polygon{points:[a,b,[b[0]+extension[0],b[1]+extension[1]],[a[0]+extension[0],a[1]+extension[1]]],length:4}}else{let theta=if start{n[1].atan2(n[0])}else{(-n[1]).atan2(-n[0])};Primitive::Round{center:p,a:theta,b:theta+std::f64::consts::PI}})
  }
- fn enqueue(&mut self,first:Option<Primitive>,second:Option<Primitive>,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->bool{
+ fn enqueue(&mut self,first:Option<Primitive>,second:Option<Primitive>,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->bool{
   if !work.can_step(){return false;}if let Some(p)=first{self.queue.push_back(p);}if let Some(p)=second{self.queue.push_back(p);}true
  }
- fn outline(&mut self,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,StrokeOutlineError>{
+ fn outline(&mut self,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,StrokeOutlineError>{
   if let Some(round)=&self.round{
    let Some(node)=round.stack.last()else{self.round=None;return Ok(true);};let center=round.center;let span=node.b-node.a;let error=2.0*self.round_bound*(span/4.0).sin().powi(2);
-   if span<=std::f64::consts::PI&&error<=self.input.tolerance{let completed=self.round_point(self.circle_point(center,node.b),work,alloc)?;if completed{self.round.as_mut().ok_or(StrokeOutlineError::Invalid("round absent"))?.stack.pop();}return Ok(completed);}
+   if span<=std::f64::consts::PI&&error<=self.input.tolerance{let completed=self.round_point(self.circle_point(center,node.b),work,effect)?;if completed{self.round.as_mut().ok_or(StrokeOutlineError::Invalid("round absent"))?.stack.pop();}return Ok(completed);}
    if node.depth>=32{return Err(StrokeOutlineError::Invalid("Stroke outline exceeds subdivision budget"));}if !work.can_step(){return Ok(false);}let middle=(node.a+node.b)/2.0;let stack=&mut self.round.as_mut().ok_or(StrokeOutlineError::Invalid("round absent"))?.stack;stack.pop();stack.extend([ArcNode{a:middle,b:node.b,depth:node.depth+1},ArcNode{a:node.a,b:middle,depth:node.depth+1}]);return Ok(true);
   }
   if let Some(primitive)=self.queue.front(){
    match primitive{
-    Primitive::Polygon{points,length}=>{if !self.polygon(points,length,work,alloc)?{return Ok(false);}}
+    Primitive::Polygon{points,length}=>{if !self.polygon(points,length,work,effect)?{return Ok(false);}}
     Primitive::Round{center,a,b}=>{
      let start=self.circle_point(center,a);self.check(center)?;self.check(start)?;if self.polygons.len()>=MAX_CONTOURS||self.count+2>MAX_POINTS{return Err(StrokeOutlineError::Invalid("Stroke outline exceeds geometry budget"));}
-     let target=self.polygons.len()+1;if !Self::reserve(&mut self.polygons,target,MAX_CONTOURS,work,alloc)?||!Self::reserve(&mut self.new_polygon,2,MAX_POINTS,work,alloc)?||!work.copy_bytes(2*std::mem::size_of::<Vec2>()+std::mem::size_of::<Vec<Vec2>>()){return Ok(false);}
+     let target=self.polygons.len()+1;if !Self::reserve(&mut self.polygons,target,MAX_CONTOURS,work,effect)?||!Self::reserve(&mut self.new_polygon,2,MAX_POINTS,work,effect)?||!work.copy_bytes(2*std::mem::size_of::<Vec2>()+std::mem::size_of::<Vec<Vec2>>()){return Ok(false);}
      let polygon=self.polygons.len();self.new_polygon.extend([center,start]);self.polygons.push(std::mem::take(&mut self.new_polygon));self.round=Some(Round{center,polygon,stack:ArcStack::new(ArcNode{a,b,depth:0})});self.count+=2;
     }
    }self.queue.pop_front();return Ok(true);
   }
-  let Some(run)=self.runs.get(self.run)else{if let Some(seam)=self.seams.get(self.seam).copied(){let primitive=self.join(seam);let completed=self.enqueue(primitive,None,work,alloc);if completed{self.seam+=1;}return Ok(completed);}self.stage=Stage::Done;self.step_prepared=true;return Ok(false);};
+  let Some(run)=self.runs.get(self.run)else{if let Some(seam)=self.seams.get(self.seam).copied(){let primitive=self.join(seam);let completed=self.enqueue(primitive,None,work,effect);if completed{self.seam+=1;}return Ok(completed);}self.stage=Stage::Done;self.step_prepared=true;return Ok(false);};
   let n=run.points.len();let count=if run.closed{n}else{n-1};
   if n<2||n==2&&run.points[0]==run.points[1]{
-   let p=run.points[0];let primitive=if self.input.style.cap==StrokeGeometryCap::Round{Some(Primitive::Round{center:p,a:0.0,b:std::f64::consts::TAU})}else if self.input.style.cap==StrokeGeometryCap::Square{let tangent=run.tangent;let normal=normal(tangent);let a=shifted(p,tangent,-self.radius);let b=shifted(p,tangent,self.radius);Some(Primitive::Polygon{points:[shifted(a,normal,self.radius),shifted(b,normal,self.radius),shifted(b,normal,-self.radius),shifted(a,normal,-self.radius)],length:4})}else{None};let completed=self.enqueue(primitive,None,work,alloc);if completed{self.run+=1;}return Ok(completed);
+   let p=run.points[0];let primitive=if self.input.style.cap==StrokeGeometryCap::Round{Some(Primitive::Round{center:p,a:0.0,b:std::f64::consts::TAU})}else if self.input.style.cap==StrokeGeometryCap::Square{let tangent=run.tangent;let normal=normal(tangent);let a=shifted(p,tangent,-self.radius);let b=shifted(p,tangent,self.radius);Some(Primitive::Polygon{points:[shifted(a,normal,self.radius),shifted(b,normal,self.radius),shifted(b,normal,-self.radius),shifted(a,normal,-self.radius)],length:4})}else{None};let completed=self.enqueue(primitive,None,work,effect);if completed{self.run+=1;}return Ok(completed);
   }
   if self.geom_edge<count{
-   let at=self.geom_edge;let a=run.points[at];let b=run.points[(at+1)%n];let normal=normal(unit(a,b));let join=(at>0||run.closed).then(||self.join([run.points[(at+n-1)%n],a,b])).flatten();let rectangle=Primitive::Polygon{points:[shifted(a,normal,self.radius),shifted(b,normal,self.radius),shifted(b,normal,-self.radius),shifted(a,normal,-self.radius)],length:4};let completed=self.enqueue(Some(rectangle),join,work,alloc);if completed{self.geom_edge+=1;}return Ok(completed);
+   let at=self.geom_edge;let a=run.points[at];let b=run.points[(at+1)%n];let normal=normal(unit(a,b));let join=(at>0||run.closed).then(||self.join([run.points[(at+n-1)%n],a,b])).flatten();let rectangle=Primitive::Polygon{points:[shifted(a,normal,self.radius),shifted(b,normal,self.radius),shifted(b,normal,-self.radius),shifted(a,normal,-self.radius)],length:4};let completed=self.enqueue(Some(rectangle),join,work,effect);if completed{self.geom_edge+=1;}return Ok(completed);
   }
-  if self.cap==0{let endpoint=if !run.closed&&run.cap_start{self.endpoint(run.points[0],unit(run.points[0],run.points[1]),true)}else{None};let completed=self.enqueue(endpoint,None,work,alloc);if completed{self.cap+=1;}return Ok(completed);}
-  if self.cap==1{let endpoint=if !run.closed&&run.cap_end{self.endpoint(run.points[n-1],unit(run.points[n-2],run.points[n-1]),false)}else{None};let completed=self.enqueue(endpoint,None,work,alloc);if completed{self.cap+=1;}return Ok(completed);}
+  if self.cap==0{let endpoint=if !run.closed&&run.cap_start{self.endpoint(run.points[0],unit(run.points[0],run.points[1]),true)}else{None};let completed=self.enqueue(endpoint,None,work,effect);if completed{self.cap+=1;}return Ok(completed);}
+  if self.cap==1{let endpoint=if !run.closed&&run.cap_end{self.endpoint(run.points[n-1],unit(run.points[n-2],run.points[n-1]),false)}else{None};let completed=self.enqueue(endpoint,None,work,effect);if completed{self.cap+=1;}return Ok(completed);}
   self.run+=1;self.geom_edge=0;self.cap=0;Ok(true)
  }
- fn step(&mut self,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,StrokeOutlineError>{
+ fn step(&mut self,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,StrokeOutlineError>{
   match self.stage{
    Stage::Pattern=>{
-    let source=&self.input.style.dash;let target=source.len()*(1+usize::from(source.len()%2==1));if self.pattern.len()<target{if !Self::reserve(&mut self.pattern,target,2048,work,alloc)?||!work.copy_bytes(std::mem::size_of::<f64>()){return Ok(false);}let index=self.pattern.len();let value=source[index%source.len()];self.pattern.push(value);self.pattern_total+=value;self.pattern_has_gap|=index%2==1&&value>0.0;}else{if self.pattern_total==0.0||!self.pattern_has_gap{self.pattern.clear();}self.stage=Stage::Prepare;}self.step_prepared=true;return Ok(false);
+    let source=&self.input.style.dash;let target=source.len()*(1+usize::from(source.len()%2==1));if self.pattern.len()<target{if !Self::reserve(&mut self.pattern,target,2048,work,effect)?||!work.copy_bytes(std::mem::size_of::<f64>()){return Ok(false);}let index=self.pattern.len();let value=source[index%source.len()];self.pattern.push(value);self.pattern_total+=value;self.pattern_has_gap|=index%2==1&&value>0.0;}else{if self.pattern_total==0.0||!self.pattern_has_gap{self.pattern.clear();}self.stage=Stage::Prepare;}self.step_prepared=true;return Ok(false);
    }
    Stage::Prepare=>{
     let Some(contour)=self.input.contours.get(self.contour)else{self.stage=if self.radius==0.0{Stage::Done}else{Stage::Source};self.step_prepared=true;return Ok(false);};
-    if self.point<contour.points.len(){let p=contour.points[self.point];self.check(p)?;if self.prepared.last().is_none_or(|last|*last!=p)&&!Self::append(&mut self.prepared,&[p],work,alloc)?{return Ok(false);}self.point+=1;}
+    if self.point<contour.points.len(){let p=contour.points[self.point];self.check(p)?;if self.prepared.last().is_none_or(|last|*last!=p)&&!Self::append(&mut self.prepared,&[p],work,effect)?{return Ok(false);}self.point+=1;}
     else{
      let closed=contour.closed;let raw=contour.points.len();let repeated=closed&&self.prepared.len()>1&&self.prepared.first()==self.prepared.last();let length=self.prepared.len()-usize::from(repeated);let retained=length>=2||length==1&&(raw>=2||closed);
-     if retained{let target=self.sources.len()+1;if !Self::reserve(&mut self.sources,target,4096,work,alloc)?||!work.copy_bytes(std::mem::size_of::<StrokeContour>()){return Ok(false);}}
+     if retained{let target=self.sources.len()+1;if !Self::reserve(&mut self.sources,target,4096,work,effect)?||!work.copy_bytes(std::mem::size_of::<StrokeContour>()){return Ok(false);}}
      if repeated{self.prepared.pop();}if retained{self.sources.push(StrokeContour{points:std::mem::take(&mut self.prepared),closed});}else{self.prepared.clear();}self.contour+=1;self.point=0;
     }
    }
    Stage::Source=>{
     let Some(src)=self.sources.get_mut(self.source)else{self.stage=Stage::Outline;self.step_prepared=true;return Ok(false);};
-    if self.pattern.is_empty(){let target=self.runs.len()+1;if !Self::reserve(&mut self.runs,target,MAX_POINTS,work,alloc)?||!work.copy_bytes(std::mem::size_of::<Run>()){return Ok(false);}self.runs.push(Run{points:std::mem::take(&mut src.points),closed:src.closed,cap_start:true,cap_end:true,painted:true,tangent:[1.0,0.0]});self.source+=1;return Ok(true);}
+    if self.pattern.is_empty(){let target=self.runs.len()+1;if !Self::reserve(&mut self.runs,target,MAX_POINTS,work,effect)?||!work.copy_bytes(std::mem::size_of::<Run>()){return Ok(false);}self.runs.push(Run{points:std::mem::take(&mut src.points),closed:src.closed,cap_start:true,cap_end:true,painted:true,tangent:[1.0,0.0]});self.source+=1;return Ok(true);}
     self.edge=0;self.position=0.0;self.dash=0;self.offset=(self.input.style.dash_offset%self.pattern_total+self.pattern_total)%self.pattern_total;self.active=None;self.first=None;self.last=None;self.stage=Stage::Offset;
    }
    Stage::Offset=>{let length=self.pattern[self.dash];if self.offset>0.0&&self.offset>=length{self.offset-=length;self.dash=(self.dash+1)%self.pattern.len();}else{self.remaining=length-self.offset;self.offset=0.0;self.stage=Stage::Walk;}}
    Stage::Walk=>{
     let src=&self.sources[self.source];let n=src.points.len();let count=if src.closed{n}else{n-1};
-    if self.remaining==0.0{if self.dash%2==0&&self.active.is_none(){let p=self.location();if !self.create_run(p,p,false,work,alloc)?{return Ok(false);}}self.dash=(self.dash+1)%self.pattern.len();self.remaining=self.pattern[self.dash];return Ok(true);}
-    if self.edge>=count{if n==1&&self.dash%2==0&&self.active.is_none(){let p=src.points[0];if !self.create_run(p,p,false,work,alloc)?{return Ok(false);}}self.stage=Stage::Finish;return Ok(true);}
+    if self.remaining==0.0{if self.dash%2==0&&self.active.is_none(){let p=self.location();if !self.create_run(p,p,false,work,effect)?{return Ok(false);}}self.dash=(self.dash+1)%self.pattern.len();self.remaining=self.pattern[self.dash];return Ok(true);}
+    if self.edge>=count{if n==1&&self.dash%2==0&&self.active.is_none(){let p=src.points[0];if !self.create_run(p,p,false,work,effect)?{return Ok(false);}}self.stage=Stage::Finish;return Ok(true);}
     let a=src.points[self.edge];let b=src.points[(self.edge+1)%n];let length=(b[0]-a[0]).hypot(b[1]-a[1]);let left=length-self.position;let take=left.min(self.remaining);let from=self.location();let end_edge=take==left;let end_dash=take==self.remaining;let position=self.position+take;
     if take>0.0&&position==self.position{return Err(StrokeOutlineError::Invalid("Stroke dashing exceeds numeric limits"));}let to=if end_edge{b}else{[a[0]+(b[0]-a[0])*position/length,a[1]+(b[1]-a[1])*position/length]};
     if self.dash%2==0{
-     if let Some(active)=self.active{if !self.runs[active].painted{if !work.copy_bytes(std::mem::size_of::<Vec2>()){return Ok(false);}*self.runs[active].points.last_mut().ok_or(StrokeOutlineError::Invalid("last_mut target absent"))?=to;self.runs[active].painted=true;if self.first.is_none(){self.first=Some(active);}self.last=Some(active);}else if !self.run_point(active,to,work,alloc)?{return Ok(false);}}
-     else if !self.create_run(from,to,true,work,alloc)?{return Ok(false);}
+     if let Some(active)=self.active{if !self.runs[active].painted{if !work.copy_bytes(std::mem::size_of::<Vec2>()){return Ok(false);}*self.runs[active].points.last_mut().ok_or(StrokeOutlineError::Invalid("last_mut target absent"))?=to;self.runs[active].painted=true;if self.first.is_none(){self.first=Some(active);}self.last=Some(active);}else if !self.run_point(active,to,work,effect)?{return Ok(false);}}
+     else if !self.create_run(from,to,true,work,effect)?{return Ok(false);}
     }else{self.active=None;}
     self.position=position;self.remaining-=take;if end_dash{self.dash=(self.dash+1)%self.pattern.len();self.remaining=self.pattern[self.dash];}if end_edge{self.edge+=1;self.position=0.0;}
    }
    Stage::Finish=>{
     let src=&self.sources[self.source];let seam=if src.closed{if let(Some(first),Some(last))=(self.first,self.last){if self.runs[first].points[0]==src.points[0]&&self.runs[last].points.last()==Some(&src.points[0])&&first!=last{let end=self.runs[last].points.len();Some([self.runs[last].points[end-2],src.points[0],self.runs[first].points[1]])}else{None}}else{None}}else{None};
-    if seam.is_some(){let target=self.seams.len()+1;if !Self::reserve(&mut self.seams,target,MAX_POINTS,work,alloc)?||!work.copy_bytes(std::mem::size_of::<[Vec2;3]>()){return Ok(false);}}
+    if seam.is_some(){let target=self.seams.len()+1;if !Self::reserve(&mut self.seams,target,MAX_POINTS,work,effect)?||!work.copy_bytes(std::mem::size_of::<[Vec2;3]>()){return Ok(false);}}
     if src.closed{if let(Some(first),Some(last))=(self.first,self.last){if self.runs[first].points[0]==src.points[0]&&self.runs[last].points.last()==Some(&src.points[0]){if first==last{self.runs[first].closed=true;self.runs[first].points.pop();}else{self.runs[first].cap_start=false;self.runs[last].cap_end=false;self.seams.push(seam.ok_or(StrokeOutlineError::Invalid("seam absent"))?);}}}}
     self.active=None;self.source+=1;self.stage=Stage::Source;
    }
-   Stage::Outline=>return self.outline(work,alloc),Stage::Done=>{}
+   Stage::Outline=>return self.outline(work,effect),Stage::Done=>{}
   }Ok(true)
  }
  pub fn next_work_demand(&self)->RetirementDemand{self.pending}
@@ -198,10 +198,10 @@ impl StrokeOutlineJob {
  pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
  pub fn failure_pending(&self)->bool{self.failed.is_some()}
  pub fn settlement_pending(&self)->bool{self.stage==Stage::Done||self.stage==Stage::Prepare&&self.contour>=self.input.contours.len()&&self.radius==0.0||self.stage==Stage::Source&&self.source>=self.sources.len()&&self.runs.is_empty()&&self.seams.is_empty()||self.stage==Stage::Outline&&self.queue.is_empty()&&self.round.is_none()&&self.run>=self.runs.len()&&self.seam>=self.seams.len()}
- pub fn advance(&mut self,budget:usize,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<StrokeOutlineProgress,StrokeOutlineError>{
+ pub fn advance(&mut self,budget:usize,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<StrokeOutlineProgress,StrokeOutlineError>{
   self.last_turn_work=0;self.last_turn_semantic_work=0;if budget==0||budget as u128>9_007_199_254_740_991{return Err(StrokeOutlineError::Invalid("Stroke work grant must be a positive integer"));}if self.cancelled{return Err(StrokeOutlineError::Cancelled);}if let Some(error)=&self.failed{return Err(error.clone());}
   let d=self.pending;if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.progress());}
-  if let Some(root)=work.enter(){let result=(||{for _ in 0..budget{if self.stage==Stage::Done{break;}if !work.can_step(){self.pending=work.next_demand();break;}let before=work.receipt();self.step_prepared=false;let result=self.step(work,alloc);let completed=result.as_ref().copied().unwrap_or(true);if work.receipt()!=before||completed||self.step_prepared{work.note_source(root);self.last_turn_work+=1;}if completed{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failed=Some(error.clone());return Err(error);}if work.blocked(){break;}}Ok(self.progress())})();work.exit();result}else{self.pending=work.next_demand();Ok(self.progress())}
+  if let Some(root)=work.enter(){let result=(||{for _ in 0..budget{if self.stage==Stage::Done{break;}if !work.can_step(){self.pending=work.next_demand();break;}let before=work.receipt();self.step_prepared=false;let result=self.step(work,effect);let completed=result.as_ref().copied().unwrap_or(true);if work.receipt()!=before||completed||self.step_prepared{work.note_source(root);self.last_turn_work+=1;}if completed{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failed=Some(error.clone());return Err(error);}if work.blocked(){break;}}Ok(self.progress())})();work.exit();result}else{self.pending=work.next_demand();Ok(self.progress())}
  }
  fn progress(&self)->StrokeOutlineProgress{
   let phase=match self.stage{Stage::Pattern|Stage::Prepare=>StrokeOutlinePhase::Preparing,Stage::Outline=>StrokeOutlinePhase::Outlining,Stage::Done=>StrokeOutlinePhase::Complete,_=>StrokeOutlinePhase::Dashing};let(completed,total)=match phase{StrokeOutlinePhase::Preparing=>(self.contour,self.input.contours.len()),StrokeOutlinePhase::Dashing=>(self.source,self.sources.len()),_=>(self.run,self.runs.len())};StrokeOutlineProgress{phase,completed,total,points:self.count,work:self.work,done:self.stage==Stage::Done}

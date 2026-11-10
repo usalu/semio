@@ -13,6 +13,3 @@ pub mod lifted_one_item_publication;
 pub mod lifted_native;
 #[path = "📥️lifted/🤝️group/🦀️.rs"]
 pub mod lifted_member_group;
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

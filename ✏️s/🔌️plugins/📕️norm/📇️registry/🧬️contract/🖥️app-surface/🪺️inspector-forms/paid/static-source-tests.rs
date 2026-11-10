@@ -46,7 +46,7 @@ impl Owner{
     for _ in 0..100_000{
      let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.caller.turn(grant(),|cx|{
       let result=decoder.receive_step(cx,|control,grant|{let(value,progress,work)=run.take().unwrap()(control);semio_framework_job_native_decode::OriginalNativeDecodeIssued{value,grant,progress,work}})?;
-      let Some(result)=result else{return Ok(false)};if let Some(error)=result.receiving_refusal{return Err(error)}result.value?;Ok(true)
+      let Some(result)=result else{return Ok(false)};if let Some(ticket)=result.receiving_refusal{return Err(decoder.take_receiving_refusal(ticket))}result.value?;Ok(true)
      }));
      let receipt=self.caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));if result.unwrap(){return}
     }panic!("production original receiving stalled")
@@ -67,7 +67,7 @@ impl Owner{
     for _ in 0..100_000{
      let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{
       let result=decoder.close_producer_step(cx,|control,grant|{let turn=control.with_retirement(grant,|control|Ok(run.take().unwrap()(control))).unwrap();let progress=match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};semio_framework_job_native_decode::OriginalNativeDecodeIssued{value:turn.result,grant,progress,work:turn.work}})?;
-      let Some(result)=result else{return Ok(false)};if let Some(error)=result.receiving_refusal{return Err(error)}result.value?;Ok(true)
+      let Some(result)=result else{return Ok(false)};if let Some(ticket)=result.receiving_refusal{return Err(decoder.take_receiving_refusal(ticket))}result.value?;Ok(true)
      })));
      let receipt=self.caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));if result.unwrap(){return}
     }panic!("production original retirement stalled")

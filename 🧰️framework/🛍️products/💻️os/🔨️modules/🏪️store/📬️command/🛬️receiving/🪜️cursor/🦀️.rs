@@ -268,7 +268,7 @@ impl<M:OpBinaryReceiving> RetainedArtifactCommandReceiving<M>{
   if let Some(operation)=self.operation.as_mut(){if operation.terminal_is_empty(){std::mem::forget(self.operation.take());return progress(item())}return closed_progress(operation.close_step(&mut effect.nested(grant)))}
   if let Some(child)=self.child.as_mut(){if !child.terminal_is_empty(){return closed_progress(child.close_step(&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth.saturating_sub(1),..grant})))}let Some(owner)=self.child.take()else{return Err(invariant("child absent").into())};let pointer=Box::into_raw(owner);unsafe{std::alloc::dealloc(pointer.cast(),std::alloc::Layout::new::<Self>())};return progress(RetainedCloneProgress{released_bytes:size_of::<Self>(),..item()})}
   if self.retiring.is_none(){if !Fields::<M>::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original command fields lack controlled retirement").into())}if let Some(fields)=self.fields.take(){match ControlledRetirement::new(fields){Ok(owner)=>self.retiring=Some(owner),Err((error,fields))=>{*self.fields=Some(fields);return Err(error.into())}}return progress(item())}}
-  if let Some(owner)=self.retiring.as_mut(){if !owner.terminal_is_empty(){return closed_progress(owner.step(effect))}self.retiring=None;return progress(item())}
+  if let Some(owner)=self.retiring.as_mut(){if !owner.terminal_is_empty(){return closed_progress(owner.step(grant.maximum_copy_bytes,effect))}self.retiring=None;return progress(item())}
   self.closed=true;self.ready=false;Ok(RetainedCloneStep::Complete(item()))
  }
  /// 🔒️ Terminal custody includes all native fields, nested cursors, operations and final typed output.

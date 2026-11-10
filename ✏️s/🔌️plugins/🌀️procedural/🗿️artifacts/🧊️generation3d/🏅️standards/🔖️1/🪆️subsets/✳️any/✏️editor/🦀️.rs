@@ -272,7 +272,7 @@ pub async fn generation3d_io() -> semio_plugin::AppIo {
     .with_ports(vec![
         semio_plugin::MediaPortSpec {
             id: "params:in".into(),
-            label: "Parameters".into(),
+            label: LocalizedLabel::native("Parameters", "Parameter"),
             direction: semio_plugin::MediaPortDirection::In,
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: None,
@@ -281,7 +281,7 @@ pub async fn generation3d_io() -> semio_plugin::AppIo {
         },
         semio_plugin::MediaPortSpec {
             id: "geometry:out".into(),
-            label: "Geometry".into(),
+            label: LocalizedLabel::native("Geometry", "Geometrie"),
             direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
             kind_id: Some("3d.mesh".into()),

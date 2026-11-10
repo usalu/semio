@@ -62,7 +62,7 @@ impl<V:RetireOwned> InferenceValues<V> {
             return Ok(false)
         }
         let Some(owner)=self.parents_retirement.as_mut()else{return Err(changed().into())};
-        if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(effect))?;return Ok(false)}
+        if !owner.terminal_is_empty(){let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.selected_demand(body)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect))?;return Ok(false)}
         if !metadata(cx,size_of::<Option<ControlledRetirement<Vec<V>>>>(),1)?{return Ok(false)}self.parents_retirement=None;Ok(true)
     }
 
@@ -139,8 +139,9 @@ impl<V:RetireOwned> InferenceValues<V> {
         }
         if let Some(owner)=self.retirement.as_mut() {
             if !owner.terminal_is_empty() {
-                let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;
-                semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(effect))?;
+                let body=cx.retained_grant().maximum_copy_bytes;
+                let demand=owner.selected_demand(body)?;
+                semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect))?;
                 return Ok(false);
             }
             self.retirement=None;

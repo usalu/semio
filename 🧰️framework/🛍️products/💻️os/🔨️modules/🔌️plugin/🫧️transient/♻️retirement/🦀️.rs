@@ -6,34 +6,19 @@ use crate::store;
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use crate::NoTransient;
 use crate::NoTransientMutation;
-use semio_framework_value::{ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+use semio_framework_value::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 use std::sync::Arc;
 
 type Store = TransientStore<NoTransient, NoTransientMutation>;
 const _: () = assert!(size_of::<NoTransient>() == 0 && !std::mem::needs_drop::<NoTransient>());
 const _: () = assert!(size_of::<NoTransientMutation>() == 0 && !std::mem::needs_drop::<NoTransientMutation>());
 
-/// 🫧️ Exact shared and owned retirement for the statically empty transient state.
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub struct NoTransientRetirementFactory;
-
-impl store::SnapshotRetirementFactory<NoTransient> for NoTransientRetirementFactory {
-    fn retirement_birth_bytes(&self, _: &Arc<NoTransient>) -> usize { semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<NoTransient>() }
-    fn retire(&self, root: Arc<NoTransient>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<NoTransient>)> { semio_framework_value::retirement::arc_custody::admit_shared_retirement(root, grant, true) }
-}
-
-impl store::ArtifactOwnedValueRetirementFactory<NoTransient> for NoTransientRetirementFactory {
-    fn retire_owned_work_demand(&self, _: &NoTransient) -> Result<u64, ValueError> { Ok(1) }
-    fn retirement_birth_bytes(&self, _: &NoTransient) -> usize { semio_framework_value::retirement::owned_retirement_birth_bytes::<NoTransient>() }
-    fn retire_owned(&self, root: NoTransient, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (semio_framework_value::OriginalRetirementFailure, NoTransient)> {let turn=(||{ semio_framework_value::retirement::admit_owned_retirement(root, grant) })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
-}
-
 pub fn no_transient_store_disposer() -> Box<dyn ArtifactOwnedDisposer<Store>> {
-    transient_store_disposer(Arc::new(NoTransientRetirementFactory))
+    transient_store_disposer(Arc::new(OwnedValueRetirementFactory::<NoTransient>::default()))
 }
 
 pub fn no_transient_local_root_retirement_factory() -> Arc<dyn store::SnapshotRetirementFactory<NoTransient>> {
-    Arc::new(NoTransientRetirementFactory)
+    Arc::new(SharedValueRetirementFactory::<NoTransient>::default())
 }
 
 #[cfg(test)]

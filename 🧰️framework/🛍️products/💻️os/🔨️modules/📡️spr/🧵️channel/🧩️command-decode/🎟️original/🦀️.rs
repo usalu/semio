@@ -15,7 +15,7 @@ fn pay(cx:&mut StepContext<'_>,bytes:usize,work:u64)->Result<bool,OriginalTurnFa
 /// 🪙️ Steps one retained cleanup owner inside the context's own performed-work effect and settles its receipt once.
 pub(super) fn close_controlled<U:RetireOwned>(owner:&mut ControlledRetirement<U>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
  let grant=cx.retained_grant();
- let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|owner.step(effect))?else{return Ok(())};
+ let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|owner.step(grant.maximum_copy_bytes,effect))?else{return Ok(())};
  let Ok(turn)=RetirementPollExit::settled(poll)else{return Err(invalid("original command cleanup left its producer reply pending"))};
  let overrun=performed>turn.work;
  let settled=semio_framework_job::receive_original_retained_work(cx,turn).map(|_|());

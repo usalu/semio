@@ -2,6 +2,7 @@
 use super::{input_to_wit,input_from_wit,progress_from_wit,cause_from_wit};
 use super::super::{wit_jobs, wit_reactor};
 use semio_plugin_guest_contract::TurnFault;
+use semio_framework_value::RetainedCloneProgress;
 use semio_framework_actor::{OriginalJobBudget,OriginalJobSource,OriginalJobCallFailure,OriginalJobStartReply,OriginalJobStepReply,OriginalJobOutcome,OriginalJobOutputState,OriginalJobOutputReply,OriginalJobOutputChunk,OriginalJobOutputAckReply,OriginalJobCancelReply};
 pub fn budget_to_wit(budget:OriginalJobBudget)->wit_jobs::JobBudget{wit_jobs::JobBudget{input:input_to_wit(budget.input),retained_policy:super::grant_to_wit(budget.retained_policy),fuel:budget.fuel,deadline_us:budget.deadline_us,cancelled:budget.cancelled}}
 fn failure_from_wit(failure:wit_reactor::ActorCallFailure)->OriginalJobCallFailure{match failure{wit_reactor::ActorCallFailure::Authority(cause)=>OriginalJobCallFailure::Authority(cause_from_wit(cause)),wit_reactor::ActorCallFailure::Semantic=>OriginalJobCallFailure::Semantic}}
@@ -11,3 +12,13 @@ pub fn step_from_wit(call:wit_jobs::JobStepCall)->Result<OriginalJobStepReply<Or
 pub fn output_from_wit(call:wit_jobs::JobOutputCall)->Result<OriginalJobOutputReply,TurnFault>{Ok(OriginalJobOutputReply{input:input_from_wit(call.input)?,spent:progress_from_wit(call.spent)?,work_units_spent:call.work_units_spent,chunk:call.chunk.map(|chunk|OriginalJobOutputChunk{offset:chunk.offset,bytes:chunk.bytes,output_closed:chunk.output_closed}),source_closed:call.source_closed,refusal:call.refusal.map(failure_from_wit)})}
 pub fn ack_from_wit(call:wit_jobs::JobOutputAckCall)->Result<OriginalJobOutputAckReply,TurnFault>{Ok(OriginalJobOutputAckReply{input:input_from_wit(call.input)?,spent:progress_from_wit(call.spent)?,work_units_spent:call.work_units_spent,acknowledged:call.acknowledged,source_closed:call.source_closed,refusal:call.refusal.map(failure_from_wit)})}
 pub fn cancel_from_wit(call:wit_jobs::JobCancelCall)->Result<OriginalJobCancelReply,TurnFault>{Ok(OriginalJobCancelReply{input:input_from_wit(call.input)?,spent:progress_from_wit(call.spent)?,work_units_spent:call.work_units_spent,admitted:call.admitted,refusal:call.refusal.map(failure_from_wit)})}
+/// 🎚️ The context budget one job-source admission crosses with: the job's own issued input, policy, work and deadline.
+pub fn admission_budget(budget:OriginalJobBudget)->wit_reactor::ActorContextBudget{wit_reactor::ActorContextBudget{input:input_to_wit(budget.input),retained_policy:super::grant_to_wit(budget.retained_policy),fuel:budget.fuel,deadline_us:budget.deadline_us,cancelled:budget.cancelled}}
+/// ➖️ The authority a crossing keeps once its admission has spent its share.
+pub fn after_admission(budget:OriginalJobBudget,spent:RetainedCloneProgress,work_units:u64)->OriginalJobBudget{let(retained_policy,fuel)=super::remaining_after(budget.retained_policy,budget.fuel,spent,work_units);OriginalJobBudget{retained_policy,fuel,..budget}}
+/// 🧾️ A refused source admission is the start reply: the host-held source returns beside the guest's actual spending.
+pub fn refused_start_from_wit(call:wit_reactor::ActorInputAdmissionCall,source:Option<OriginalJobSource>)->Result<OriginalJobStartReply,TurnFault>{let reply=super::input_admission_from_wit(call).map_err(|(fault,_)|fault)?;Ok(OriginalJobStartReply{input:reply.input,spent:reply.spent,work_units_spent:reply.work_units_spent,admitted:false,returned_source:source,refusal:reply.refusal.map(OriginalJobCallFailure::Authority)})}
+/// ➕️ The start reply charges the admission crossing and the start crossing as the one actual spend.
+pub fn start_after_admission(admission:(RetainedCloneProgress,u64),reply:OriginalJobStartReply)->OriginalJobStartReply{OriginalJobStartReply{spent:admission.0.saturating_add(reply.spent),work_units_spent:admission.1.saturating_add(reply.work_units_spent),..reply}}
+/// 🧮️ The retained and work spend one source admission crossing actually reported.
+pub fn admission_charge(call:&wit_reactor::ActorInputAdmissionCall)->Result<(RetainedCloneProgress,u64),TurnFault>{Ok((progress_from_wit(wit_reactor::RetainedProgress{copied_items:call.spent.copied_items,copied_bytes:call.spent.copied_bytes,retained_capacity_bytes:call.spent.retained_capacity_bytes,released_bytes:call.spent.released_bytes})?,call.work_units_spent))}

@@ -12,7 +12,7 @@ pub fn step(owner:&mut FlowOperatorCatalogueOwner,closing:bool,cx:&mut StepConte
  let loan=semio_plugin::app::original_lifecycle_grant(cx,grant);
  cx.with_retained_loan(loan,|cx|{
   let before=cx.retained_progress();
-  if closing{owner.begin_close();let d=owner.close_demands(cx.retained_grant().maximum_copy_bytes)?;cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,|g|owner.close_step(g)))?;}
+  if closing{owner.begin_close();cx.with_original_retirement(|cx|owner.close(cx))?;}
   else{owner.step(cx)?;}
   let progress=delta(before,cx.retained_progress())?;
   Ok(if closing&&owner.terminal_is_empty()||!closing&&owner.ready(){PluginLifecycleStep::Complete(progress)}else{PluginLifecycleStep::Progress(progress)})

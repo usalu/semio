@@ -30,6 +30,7 @@ semio-framework-value-native-receiver-protocol = { path = "../../🧬️protocol
 semio-framework-value-native-tree-engine = { path = "../../🌳️value/🧱️bulk/📦️packages/🦀️rust" }
 semio-framework-value-native-schema-engine = { path = "../../🧩️record/📦️packages/🦀️rust" }
 semio-framework-value-native-reservation = { path = "../../🌳️value/🎟️reservation/📦️packages/🦀️rust" }
+semio-framework-value-native-shared-engine = { path = "../../🔐️shared-slots/📦️packages/🦀️rust" }
 semio-framework-value-native-shared-field = { path = "../../../🏭️construction/🪡️field/📦️packages/🦀️rust" }
 semio-framework-value-native-shared-slots = { path = "../../../🏭️construction/🧳️slots/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../✨️derive/📦️packages/🦀️rust" }
@@ -56,6 +57,10 @@ semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixt
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 serde = { workspace = true }
+
+[[test]]
+name = "record_matcher_driver"
+path = "../../🧩️record/🔎️schema/🎟️work/🧪️tests/🦀️.rs"
 
 [[test]]
 name = "record_source"
@@ -94,3 +99,7 @@ path = "../../🌳️value/🔀️variant/⚖️result/🦀️.rs"
 [[test]]
 name = "native_slot_custody"
 path = "../../🌳️value/🧪️tests/source-custody.rs"
+
+[[test]]
+name = "refusal"
+path = "../../🌳️value/⚠️refusal/🧪️tests/🦀️.rs"

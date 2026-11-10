@@ -27,12 +27,17 @@ impl FlowSourceReadOwner{
  pub fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   let Some(read)=self.read.as_deref()else{return Ok(Default::default())};let mut demand=read.next_close_demands(copy)?;demand.release_bytes=demand.release_bytes.checked_add(BYTES).ok_or_else(||refusal("original read owner release overflows"))?;demand.depth=demand.depth.max(1);Ok(demand)
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  self.progress=Default::default();if self.read.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}
-  if !admitted(self.next_close_demands(grant.maximum_copy_bytes)?,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  let read=self.read.as_deref_mut().ok_or_else(||refusal("original read owner is released"))?;let mut progress=read.close_step(grant)?.progress();
-  if read.terminal_is_empty(){self.read=None;progress.released_bytes=progress.released_bytes.checked_add(BYTES).ok_or_else(||refusal("original read owner release overflows"))?;self.progress=progress;return Ok(RetainedCloneStep::Complete(progress))}
-  self.progress=progress;Ok(RetainedCloneStep::Progress(progress))
+ pub fn next_close_work(&self,body:usize)->Result<u64,ValueError>{match self.read.as_deref(){Some(read)=>read.next_close_work(body),None=>Ok(0)}}
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+  self.progress=Default::default();let grant=effect.grant();
+  let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+   if self.read.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+   if !admitted(self.next_close_demands(grant.maximum_copy_bytes)?,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
+   let read=self.read.as_deref_mut().ok_or_else(||refusal("original read owner is released"))?;let step=RetirementPollExit::resume(read.close_step(body,effect))?;let mut progress=step.progress();
+   if read.terminal_is_empty(){self.read=None;progress.released_bytes=progress.released_bytes.checked_add(BYTES).ok_or_else(||refusal("original read owner release overflows"))?;self.progress=progress;return Ok(RetainedCloneStep::Complete(progress))}
+   self.progress=progress;Ok(RetainedCloneStep::Progress(progress))
+  })();
+  settle_close(effect,result,&mut self.progress)
  }
  pub fn terminal_is_empty(&self)->bool{self.read.is_none()}
 }

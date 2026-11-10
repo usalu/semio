@@ -12,6 +12,13 @@ use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 
+/// 🎟️ Records work a grant-shaped child reported into the caller's effect; an unfunded unit is a typed work-limit refusal.
+pub(crate) fn pay_work(effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, work: u128) -> Result<(), ValueError> {
+    if work == 0 { return Ok(()); }
+    let work = u64::try_from(work).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "child retirement work exceeds the original ceiling"))?;
+    if effect.performed(work)? { Ok(()) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "child retirement exceeds its original work ceiling")) }
+}
+
 /// 🧸️ Read-only access to a composing document's live child stores, keyed `(slot,
 /// child_id)` exactly as the parent's `ArtifactChild` handles name them.
 ///

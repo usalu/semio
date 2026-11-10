@@ -3,15 +3,12 @@
 use super::*;
 use std::mem::size_of;
 
-#[global_allocator]
-static OBSERVED_SYSTEM:crate::testkit::ObservedSystem=crate::testkit::ObservedSystem;
-
 fn fixture_effect<R>(grant:RetainedCloneGrant,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->R {cold_effect(grant,operation).unwrap()}
-fn cstep<T:RetireOwned>(owner:&mut ControlledRetirement<T>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {settled(fixture_effect(grant,|effect|owner.step(effect)))}
-fn vturn(owner:&mut ValueRetirement,grant:RetainedCloneGrant)->OriginalRetirementPoll {fixture_effect(grant,|effect|owner.close_step(effect))}
+fn cstep<T:RetireOwned>(owner:&mut ControlledRetirement<T>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {settled(fixture_effect(grant,|effect|owner.step(grant.maximum_copy_bytes,effect)))}
+fn vturn(owner:&mut ValueRetirement,grant:RetainedCloneGrant)->OriginalRetirementPoll {fixture_effect(grant,|effect|owner.close_step(grant.maximum_copy_bytes,effect))}
 fn vstep(owner:&mut ValueRetirement,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {settled(vturn(owner,grant))}
 fn istep(input:&mut RetainedDictionaryInput,grant:RetainedCloneGrant)->Result<DictionaryInputStep,ValueError> {fixture_effect(grant,|effect|input.step(effect))}
-fn iclose(input:&mut RetainedDictionaryInput,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {settled(fixture_effect(grant,|effect|input.close_step(effect)))}
+fn iclose(input:&mut RetainedDictionaryInput,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {settled(fixture_effect(grant,|effect|input.close_step(grant.maximum_copy_bytes,effect)))}
 
 #[test]
 fn recursive_dictionary_owns_typed_retirement_under_independent_grants() {
@@ -263,7 +260,7 @@ fn evaluation_snapshot_and_channel_owners_preserve_payload_and_close_all_allocat
     assert_eq!(node.len()+2*payload.len()+"seednodelabel".len(),fixture["expectedBytes"].as_u64().unwrap()as usize);
     for page in [1,64,4096] {
         let (_,born,freed)=observe_ownership(|| {
-            let snapshot=TreeSnapshot {tree:Arc::new(crate::Tree {neurons:vec![crate::Neuron{id:node.clone(),kind:"input".into(),params:Dictionary::new(),tree:None}],synapses:vec![crate::Synapse{id:"seed".into(),from:String::new(),to:payload.clone(),from_port:String::new(),to_port:String::new()}]}),seeds:Arc::new(HistoryFoldIndex::new())};
+            let snapshot=TreeSnapshot {tree:SharedOwner::from_cold(crate::Tree {neurons:vec![crate::Neuron{id:node.clone(),kind:"input".into(),params:Dictionary::new(),tree:None}],synapses:vec![crate::Synapse{id:"seed".into(),from:String::new(),to:payload.clone(),from_port:String::new(),to_port:String::new()}]}),seeds:SharedOwner::from_cold(HistoryFoldIndex::new())};
             let channels=EvalChannels {outputs:HistoryFoldIndex::from([("node".into(),Dictionary::new().insert("label",Value::Atom(Atom::String(payload.clone()))))]),inputs:HistoryFoldIndex::new()};
             assert_eq!(serde_json::to_value(channels.outputs.get("node").unwrap()).unwrap(),serde_json::json!({"label":payload}));
             close(ValueRetirement::from_snapshot(snapshot),page);close(ValueRetirement::from_channels(channels),page)
@@ -283,16 +280,14 @@ fn body_dependent_birth_uses_the_same_borrowed_body_and_finite_progress() {
         fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<BodyCursor>())}
         fn controlled_retirement_supported()->bool {true}
     }
-    impl RetirementCursor for BodyCursor {
-    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { copy_bytes:usize::from(self.storage.is_none()&&!self.finished), capacity_bytes:if self.storage.is_none()&&!self.finished{self.overhead.checked_add(body).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"fixture body extent overflow"))?}else{0}, release_bytes:self.storage.as_ref().map_or(0,Vec::capacity), depth:usize::from(!self.terminal_is_empty()) })}
-        fn next_computational_work(&self,_body:usize)->Result<u64,semio_framework_value::ValueError> {Ok(u64::from(!self.terminal_is_empty()))}
-        fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->TypedStep {
+    impl BodyCursor {
+        fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->TypedStep {
             let grant=effect.grant();
             if grant.maximum_items==0||effect.maximum_work_units()==0 {return TypedStep::BudgetExhausted;}
             if self.finished {return TypedStep::Complete(0);}
             if self.storage.is_none() {
-                let bytes=self.overhead+grant.maximum_copy_bytes;
-                if grant.maximum_copy_bytes==0 || bytes>grant.maximum_capacity_bytes {return TypedStep::BudgetExhausted;}
+                let bytes=self.overhead+body;
+                if body==0 || bytes>grant.maximum_capacity_bytes {return TypedStep::BudgetExhausted;}
                 let work=match semio_framework_value::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return TypedStep::Failure(error.into(),work)};
                 let storage=Vec::with_capacity(bytes);assert_eq!(storage.capacity(),bytes);self.storage=Some(storage);
                 TypedStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:1,retained_capacity_bytes:bytes,released_bytes:0},work)
@@ -303,6 +298,11 @@ fn body_dependent_birth_uses_the_same_borrowed_body_and_finite_progress() {
                 self.storage=None;self.finished=true;TypedStep::Bytes(bytes)
             }
         }
+    }
+    impl RetirementCursor for BodyCursor {
+        semio_framework_value::native_retirement_reply!();
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { copy_bytes:usize::from(self.storage.is_none()&&!self.finished), capacity_bytes:if self.storage.is_none()&&!self.finished{self.overhead.checked_add(body).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"fixture body extent overflow"))?}else{0}, release_bytes:self.storage.as_ref().map_or(0,Vec::capacity), depth:usize::from(!self.terminal_is_empty()) })}
+        fn next_computational_work(&self,_body:usize)->Result<u64,semio_framework_value::ValueError> {Ok(u64::from(!self.terminal_is_empty()))}
         fn terminal_is_empty(&self)->bool {self.finished&&self.storage.is_none()}
         fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(usize::from(self.storage.is_none()&&!self.finished))}
         fn next_birth_bytes(&self,body:usize)->Option<usize> {Some(if self.storage.is_none()&&!self.finished {self.overhead+body}else {0})}

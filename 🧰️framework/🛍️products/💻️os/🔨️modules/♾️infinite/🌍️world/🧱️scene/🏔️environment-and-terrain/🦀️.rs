@@ -297,8 +297,8 @@ impl WorldTerrainMeshCursor {
         if source_revision != self.source_revision || terrain_revision != self.terrain_revision { self.faulted = Some(WorldDynamicFault::StaleToken); }
         let closing=self.faulted.is_some();
         let result = if let Some(fault) = self.faulted {
-            self.close_step(grant).map(|step| (if step.complete { WorldTerrainMeshStep::Fault(fault) } else { WorldTerrainMeshStep::Pending }, step.progress))
-        } else { self.step_live(grant) };
+            self.close_step(grant, context).map(|step| (if step.complete { WorldTerrainMeshStep::Fault(fault) } else { WorldTerrainMeshStep::Pending }, step.progress))
+        } else { self.step_live(grant, context) };
         context.consume_fuel(1);
         match result {
             Err(WorldDynamicFault::Mesh(ui_scene::math::Mesh3dFault::Busy)) => Ok((WorldTerrainMeshStep::Pending, Default::default())),
@@ -308,7 +308,7 @@ impl WorldTerrainMeshCursor {
         }
     }
 
-    pub fn step_live(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(WorldTerrainMeshStep, semio_framework_value::retained_clone::RetainedCloneProgress), WorldDynamicFault> {
+    pub fn step_live(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<(WorldTerrainMeshStep, semio_framework_value::retained_clone::RetainedCloneProgress), WorldDynamicFault> {
         let empty = semio_framework_value::retained_clone::RetainedCloneProgress::default();
         if grant.maximum_items == 0 { return Ok((WorldTerrainMeshStep::Pending, empty)); }
         if grant.maximum_depth == 0 { return Err(WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::DepthLimit)); }
@@ -366,7 +366,7 @@ impl WorldTerrainMeshCursor {
                 return Ok((WorldTerrainMeshStep::Ready(key,lease),progress));
             }
             WorldTerrainMeshPhase::RetireSource=>{
-                let step=self.close_step(grant)?;
+                let step=self.close_step(grant, context)?;
                 return Ok((if step.complete { WorldTerrainMeshStep::Complete((self.z,self.x,self.y)) } else {WorldTerrainMeshStep::Pending},step.progress));
             }
         }
@@ -374,7 +374,7 @@ impl WorldTerrainMeshCursor {
         Ok((WorldTerrainMeshStep::Pending,progress))
     }
 
-    pub fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<ui_scene::math::Mesh3dOwnershipStep,WorldDynamicFault> {
+    pub fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<ui_scene::math::Mesh3dOwnershipStep,WorldDynamicFault> {
         let empty=ui_scene::math::Mesh3dOwnershipStep::default();
         if self.terminal_is_empty() {return Ok(ui_scene::math::Mesh3dOwnershipStep {complete:true,..empty});}
         if grant.maximum_items==0 {return Ok(empty);}
@@ -413,7 +413,12 @@ impl WorldTerrainMeshCursor {
             }
         }
         let owner=self.source_retirement.as_mut().unwrap();
-        let step=owner.step(grant).map_err(|error|WorldDynamicFault::Ownership(error.kind))?;
+        let Some((poll,_))=context.with_original_effect(grant,|_,effect|semio_framework_value::RetirementPollExit::resume(owner.step(grant.maximum_copy_bytes,effect))).map_err(|error|WorldDynamicFault::Ownership(error.kind))? else{return Ok(empty)};
+        let step=match poll {
+            Ok(step)=>step,
+            Err(semio_framework_value::RetirementPollExit::Pending(_))=>semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()),
+            Err(semio_framework_value::RetirementPollExit::Failed(_))=>return Err(WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated)),
+        };
         let progress=match step {semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)=>progress};
         if !progress.fits(grant) {return Err(WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));}
         if owner.terminal_is_empty() {self.source_retirement=None;}
@@ -460,7 +465,7 @@ pub fn step_world3d_terrain_retirement(session_state: &mut WorldSessionState, te
         context.consume_fuel(1);return result;
     }
     let Some(cursor)=terrain_state.terrain_build.as_mut() else{return result};
-    let step=cursor.close_step(grant);
+    let step=cursor.close_step(grant, context);
     context.consume_fuel(1);
     match step {
         Ok(step)=>{

@@ -158,7 +158,7 @@ fn paid_metadata<T>(effect:&mut RetainedAllocationEffect<'_>,value:T,copied_byte
  Ok((value,RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}))
 }
 fn history_progress(error:&RetainedHistoryOpMetaFault)->RetainedCloneProgress{match error{RetainedHistoryOpMetaFault::Value(error)=>error.retained_progress(),RetainedHistoryOpMetaFault::Native(error)=>error.retained_progress(),RetainedHistoryOpMetaFault::Retirement(error)=>error.retained_progress(),RetainedHistoryOpMetaFault::Json(_)=>Default::default()}}
-fn receive<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,turn:RetainedWorkOutcome<T,E>,issued:Option<(RetainedCloneGrant,RetainedCloneProgress)>,observed:u64,error_progress:fn(&E)->RetainedCloneProgress)->semio_framework_job_native_decode::OriginalNativeDecodeOutcome<T,E>{
+fn receive<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,turn:RetainedWorkOutcome<T,E>,issued:Option<(RetainedCloneGrant,RetainedCloneProgress)>,observed:u64,error_progress:fn(&E)->RetainedCloneProgress)->semio_framework_job_native_decode::OriginalNativeDecodeOutcome<T,E,OriginalTurnFailure>{
  let(original,progress)=issued.unwrap_or_else(||(grant,turn.result.as_ref().err().map_or(Default::default(),error_progress)));
  semio_framework_job_native_decode::OriginalNativeDecodeSource::receive_observed_work(cx,grant,fuel,semio_framework_job_native_decode::OriginalNativeDecodeIssued{value:turn.result,grant:original,progress,work:u64::try_from(turn.work).unwrap_or(u64::MAX)},observed)
 }
@@ -209,7 +209,7 @@ impl MemberHistoryReceiving {
   let parent=cx.original_source_parent()?;let step=source.close_step(parent,cx)?;
   Ok(RetainedCloneStep::Progress(step.progress()))
  }
- fn accept(&mut self,outcome:semio_framework_job_native_decode::OriginalNativeDecodeOutcome<RetainedHistorySourceStep,RetainedHistoryOpMetaFault>)->Result<RetainedHistorySourceStep,OriginalTurnFailure>{
+ fn accept(&mut self,outcome:semio_framework_job_native_decode::OriginalNativeDecodeOutcome<RetainedHistorySourceStep,RetainedHistoryOpMetaFault,OriginalTurnFailure>)->Result<RetainedHistorySourceStep,OriginalTurnFailure>{
   let semio_framework_job_native_decode::OriginalNativeDecodeOutcome{value,progress,receiving_refusal,..}=outcome;
   match(value,receiving_refusal){
    (Ok(step),None)=>Ok(step),
@@ -235,7 +235,7 @@ impl MemberHistoryReceiving {
  }
  fn close_recipient(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<RetainedCloneStep,OriginalTurnFailure>{
   let fuel=cx.fuel_remaining();
-  let settled=retirement_turn(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,closing,grant,|control,effect|Ok(control.close_retirement_recipient(effect)))?;
+  let settled=retirement_turn(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,closing,grant,|control,effect|Ok(control.close_retirement_recipient(grant.maximum_copy_bytes,effect)))?;
   self.finish_retirement(cx,grant,fuel,settled)
  }
  fn refill_failure_storage(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<RetainedCloneStep,OriginalTurnFailure>{
@@ -292,7 +292,7 @@ impl MemberHistoryReceiving {
   let fuel=cx.fuel_remaining();
   if self.active.is_some()&&self.birth_is_empty(){
    let active=&mut self.active;
-   let settled=retirement_turn(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,true,grant,|control,effect|control.with_retirement(grant,|same|Ok::<_,ValueError>(semio_framework_value::close_factory_ticket_controlled(active,effect,same))))?;
+   let settled=retirement_turn(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,true,grant,|control,effect|control.with_retirement(grant,|same|Ok::<_,ValueError>(semio_framework_value::close_factory_ticket_controlled(active,grant.maximum_copy_bytes,effect,same))))?;
    return self.finish_retirement(cx,grant,fuel,settled)
   }
   if !self.birth_is_empty()||self.fault.is_some()||self.inner_fault.is_some()||self.decoder.is_none()&&self.partial.is_some(){
@@ -400,8 +400,8 @@ mod actual_work_laws{
     let fuel=cx.fuel_remaining();
     let(settled,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
      if refill{let(polled,observed)=with_original_control(&mut receipt,&mut recipient,&mut allocation,1<<20,cx,true,|control|control.with_retirement(stock(),|same|{let funding:&mut dyn OriginalRetirementControl=same;Ok::<_,ValueError>(semio_framework_value::refill_original_failure_storage(funding,stock()))}))?;Ok::<_,OriginalTurnFailure>(Some((settled(polled),observed,false)))}
-     else if active.is_some(){retirement_turn(&mut receipt,&mut recipient,&mut allocation,1<<20,cx,true,stock(),|control,effect|control.with_retirement(stock(),|same|Ok::<_,ValueError>(semio_framework_value::close_factory_ticket_controlled(&mut active,effect,same))))}
-     else{retirement_turn(&mut receipt,&mut recipient,&mut allocation,1<<20,cx,true,stock(),|control,effect|Ok(control.close_retirement_recipient(effect)))}
+     else if active.is_some(){retirement_turn(&mut receipt,&mut recipient,&mut allocation,1<<20,cx,true,stock(),|control,effect|control.with_retirement(stock(),|same|Ok::<_,ValueError>(semio_framework_value::close_factory_ticket_controlled(&mut active,stock().maximum_copy_bytes,effect,same))))}
+     else{retirement_turn(&mut receipt,&mut recipient,&mut allocation,1<<20,cx,true,stock(),|control,effect|Ok(control.close_retirement_recipient(stock().maximum_copy_bytes,effect)))}
     });
     let(turn,observed,overrun)=settled?.expect("original Member cleanup quote admitted");assert!(!overrun);assert!(turn.work>0);let progress=turn.result.as_ref().unwrap().progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(heap.requested_bytes,heap.released_bytes));
     let posted=turn.work;let outcome=receive(cx,stock(),fuel,turn,Some((stock(),progress)),observed,semio_framework_value::OriginalRetirementFailure::retained_progress);assert!(outcome.value.is_ok());assert!(outcome.receiving_refusal.is_none());assert_eq!(u128::from(fuel-cx.fuel_remaining()),posted);Ok(())

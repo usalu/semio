@@ -2,6 +2,7 @@
 
 #[test]
 fn world_gumball_cursor_caps_selected_tokens_and_closes_one_owner_per_grant() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.interaction_revision = 9;
     state.interaction.interaction_objects.revision = 9;
@@ -30,6 +31,7 @@ fn world_gumball_cursor_caps_selected_tokens_and_closes_one_owner_per_grant() {
 
 #[test]
 fn world_gumball_update_validates_one_selected_aba_token_per_turn() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.interaction_revision = 3;
     state.interaction.interaction_objects.revision = 3;
@@ -108,6 +110,7 @@ fn world_gumball_commit_host_snapshot() -> (World3dState, WorldGumballGesture) {
 /// whatever has focus — see `WorldGumballCommitJob::step`'s `windowId` stage.
 #[test]
 fn world_gumball_commit_builds_one_flat_node_per_grant_then_retires_tokens() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let (state, gesture) = world_gumball_commit_host_snapshot();
     let mut job = WorldGumballCommitJob::new(8, gesture, WorldGumballPhase::Once);
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
@@ -134,6 +137,7 @@ fn world_gumball_commit_builds_one_flat_node_per_grant_then_retires_tokens() {
 /// `mode`, `ids[`.
 #[test]
 fn world_gumball_commit_saturation_aba_and_interrupted_close_retain_claim_authority() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let (mut state, gesture) = world_gumball_commit_host_snapshot();
     let mut job = WorldGumballCommitJob::new(8, gesture, WorldGumballPhase::Once);
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
@@ -170,6 +174,7 @@ fn world_gumball_commit_saturation_aba_and_interrupted_close_retain_claim_author
 
 #[test]
 fn world_gumball_fixed_gesture_projects_preview_without_mutating_source_draw() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let (mut state, gesture) = world_gumball_commit_host_snapshot();
     state.authority.interaction_authority.as_mut().unwrap().gumball = Some(gesture);
     let source = Mat4::identity();
@@ -203,6 +208,7 @@ fn world_gumball_publish(state: &World3dState, gesture: WorldGumballGesture, pha
 /// exactly the motion React streamed.
 #[test]
 fn world_gumball_gesture_answers_the_shared_live_protocol() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json")).expect("the protocol fixture parses");
     let vector = |value: &serde_json::Value| Vec3::new(value[0].as_f64().expect("x") as f32, value[1].as_f64().expect("y") as f32, value[2].as_f64().expect("z") as f32);
     let handle = |name: &str| match name {
@@ -310,6 +316,7 @@ fn world_gumball_gesture_answers_the_shared_live_protocol() {
 /// the pivot, so a multi-object preview equals the committed state.
 #[test]
 fn world_gumball_turn_and_scale_preview_each_instance_in_place() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let (mut state, mut gesture) = world_gumball_commit_host_snapshot();
     let mut source = Mat4::identity();
     source.cols[3] = [5.0, 0.0, 0.0, 1.0];
@@ -346,6 +353,7 @@ fn world_brush_commit_host_snapshot(target: String) -> World3dState {
 
 #[test]
 fn world_brush_commit_copies_and_revalidates_fixed_chunks_before_claimed_publication() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let state = world_brush_commit_host_snapshot("v".repeat(WORLD_BRUSH_COPY_CHUNK_BYTES * 2 + 1));
     let mut job = WorldBrushCommitJob::new(&state.session, &state.gumball, 9).unwrap().expect("brush job");
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
@@ -367,6 +375,7 @@ fn world_brush_commit_copies_and_revalidates_fixed_chunks_before_claimed_publica
 
 #[test]
 fn world_brush_validation_detects_same_length_replacement_and_close_releases_draft_claim() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = world_brush_commit_host_snapshot("first".into());
     let mut stale = WorldBrushCommitJob::new(&state.session, &state.gumball, 9).unwrap().expect("brush job");
     while !stale.validating {
@@ -399,6 +408,7 @@ fn world_intent(generation: u64, delta: f32) -> WorldInteractionIntent {
 /// settle's, one per gesture (see `WorldCameraSync`).
 #[test]
 fn world_wheel_plan_revalidates_before_mutation_and_publishes_flat_action() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     let original_distance = state.camera.orbit.distance;
     let mut stale = plan_world3d_wheel(&state.session, &state.camera, 7, 20.0).expect("bounded wheel plan");
@@ -431,6 +441,7 @@ fn world_wheel_plan_revalidates_before_mutation_and_publishes_flat_action() {
 
 #[test]
 fn world_drag_and_paint_plans_reserve_before_exact_mutation() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     let original_target = state.camera.orbit.target;
     let modifiers = PointerModifiers { shift: false, ctrl: false, alt: false, meta: false };
@@ -468,6 +479,7 @@ fn world_drag_and_paint_plans_reserve_before_exact_mutation() {
 /// once the abort is reserved; with no stroke open it owes nothing.
 #[test]
 fn world_paint_cancel_aborts_the_open_stroke_with_its_reason() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.selection.interaction_mode = "paint".into();
     assert!(plan_world3d_paint_abort(&state.session, &state.selection, 4, WorldCancelReason::Blur).is_none(), "no open stroke, nothing to abort");
@@ -489,6 +501,7 @@ fn world_paint_cancel_aborts_the_open_stroke_with_its_reason() {
 /// gesture keeps the host's in-place preview.
 #[test]
 fn world_live_gumball_skips_the_local_preview() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let (mut state, mut gesture) = world_gumball_commit_host_snapshot();
     gesture.live = true;
     state.authority.interaction_authority.as_mut().unwrap().gumball = Some(gesture);
@@ -501,6 +514,7 @@ fn world_live_gumball_skips_the_local_preview() {
 /// 🧯️ LAW: a cancel is owed exactly while a live gumball gesture has streamed or a paint stroke is open.
 #[test]
 fn world_cancel_is_owed_only_by_a_streamed_live_gesture_or_an_open_stroke() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let (mut state, mut gesture) = world_gumball_commit_host_snapshot();
     assert!(!world3d_cancel_owed(&state.selection, &state.authority), "nothing open, nothing owed");
     gesture.live = true;
@@ -526,6 +540,7 @@ fn world_pick_fixture() -> World3dState {
 
 #[test]
 fn world_ray_pick_cursor_advances_one_triangle_or_boundary_per_grant() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let state = world_pick_fixture();
     let mut cursor = WorldRayPickCursor {
         revision: state.session.interaction_revision,
@@ -574,6 +589,7 @@ fn world_ray_pick_cursor_advances_one_triangle_or_boundary_per_grant() {
 
 #[test]
 fn world_ray_pick_cursor_stale_and_interrupted_close_do_not_publish() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = world_pick_fixture();
     let mut cursor = WorldRayPickCursor {
         revision: state.session.interaction_revision,
@@ -614,6 +630,7 @@ fn world_ray_pick_cursor_stale_and_interrupted_close_do_not_publish() {
 /// `setCamera`), never dropped. See `WorldCameraSync`.
 #[test]
 fn world_authority_retains_front_plan_across_output_saturation_and_retries_in_order() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.interaction.interaction_objects.revision = state.session.interaction_revision;
     let original_distance = state.camera.orbit.distance;
@@ -652,6 +669,7 @@ fn world_authority_retains_front_plan_across_output_saturation_and_retries_in_or
 
 #[test]
 fn world_authority_close_drains_active_and_queued_fixed_owners_to_terminal() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     enqueue_world3d_intent(&mut state.authority, world_intent(1, 10.0)).expect("active intent");
     enqueue_world3d_intent(&mut state.authority, world_intent(2, 20.0)).expect("queued intent");
@@ -675,6 +693,7 @@ fn world_authority_close_drains_active_and_queued_fixed_owners_to_terminal() {
 /// itself several turns).
 #[test]
 fn world_saturation_owner_blocks_new_ingress_until_exact_fifo_transfer() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.interaction.interaction_objects.revision = state.session.interaction_revision;
     for generation in 1..=WORLD_INTERACTION_INTENT_CAPACITY as u64 + 1 {

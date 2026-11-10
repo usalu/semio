@@ -15,7 +15,7 @@
                 id: row["id"].as_str().unwrap().to_string(), source_node_id: "source".into(), source_port_id: "out".into(),
                 target_node_id: "target".into(), target_port_id: "in".into(), contract,
             }] };
-            let payload = os_workflow_to_node_graph_payload(&graph);
+            let payload = os_workflow_to_node_graph_payload(&graph, semio_framework::Terminology::Native, semio_framework::Locale::En);
             let edges: Value = serde_json::from_str(&payload.edges_json).expect("actual scene edge payload");
             assert_eq!(edges.as_array().unwrap().len(), 1);
             assert_eq!(edges[0]["contract"], row["expected"], "{}", row["id"]);

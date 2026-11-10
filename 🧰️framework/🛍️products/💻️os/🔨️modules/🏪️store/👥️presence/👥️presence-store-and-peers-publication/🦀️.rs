@@ -128,7 +128,7 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
             return Ok(moved);
         }
         if let Some(factory) = self.factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
-        if let Some(factory) = self.factory_close.as_mut() { let step = semio_framework_value::RetirementPollExit::resume(factory.step(&mut effect.nested(child)))?; let step = admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original peer publication factory")?; if factory.terminal_is_empty() { self.factory_close = None; } return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }); }
+        if let Some(factory) = self.factory_close.as_mut() { let step = semio_framework_value::RetirementPollExit::resume(factory.step(child.maximum_copy_bytes, &mut effect.nested(child)))?; let step = admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original peer publication factory")?; if factory.terminal_is_empty() { self.factory_close = None; } return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }); }
         Ok(RetainedCloneStep::Complete(empty))
     }
 
@@ -213,7 +213,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
         if let Some(active) = self.active_returned_local.as_ref() { return nested(artifact_retirement_box_demands(active, body)?); }
         if let Some(reads) = self.local_reads.as_ref().filter(|reads| reads.has_returned()) {
             let factory = self.local_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence returned read lacks its original factory"))?;
-            return nested(reads.returned_admission_demands::<P>(|root| RetirementDemand { capacity_bytes: factory.retirement_birth_bytes(root), depth: 1, ..Default::default() }).map_err(SnapshotReadLeaseRefusal::into_value_error)?);
+            return nested(reads.returned_admission_demands::<P>(|_root| semio_framework_value::factory::ArcRootRetirement::<P>::admission_demand()).map_err(SnapshotReadLeaseRefusal::into_value_error)?);
         }
         Ok(Default::default())
     }

@@ -76,48 +76,48 @@ impl PathFlattenJob {
  }
  /// 📥️ Refused source contracts remain owned until their physical close.
  pub fn new(input:PathFlattenInput)->Self {let failed=Self::validate(&input).err();Self {input,contours:Vec::new(),pending_points:Vec::new(),pending:RetirementDemand{depth:1,..Default::default()},last_turn_work:0,last_turn_semantic_work:0,step_prepared:false,current:None,stack:Vec::new(),pen:[0.0;2],start:[0.0;2],index:0,count:0,work:0,done:false,cancelled:false,failed}}
- fn slot<T>(values:&mut Vec<T>,limit:usize,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,PathFlattenError>{
+ fn slot<T>(values:&mut Vec<T>,limit:usize,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,PathFlattenError>{
   if values.len()>=limit{return Err(PathFlattenError::Invalid("Path preparation exceeds output budget"));}
-  if values.len()==values.capacity(){let target=values.capacity().max(1).saturating_mul(2).min(limit);if !work.reserve_vec(values,target,alloc).map_err(PathFlattenError::Invalid)?{return Ok(false);}}
+  if values.len()==values.capacity(){let target=values.capacity().max(1).saturating_mul(2).min(limit);if !work.reserve_vec(values,target,effect.actual()).map_err(PathFlattenError::Invalid)?{return Ok(false);}}
   work.vec_slot(values).map_err(PathFlattenError::Invalid)
  }
- fn append(&mut self,p:Vec2,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,PathFlattenError>{
+ fn append(&mut self,p:Vec2,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,PathFlattenError>{
   point(p)?;transformed(p,self.input.transform)?;if self.count>=MAX_POINTS{return Err(PathFlattenError::Invalid("Path preparation exceeds point budget"));}
-  let points=&mut self.contours[self.current.ok_or(PathFlattenError::Invalid("path flatten has no current contour"))?].points;if !Self::slot(points,MAX_POINTS,work,alloc)?{return Ok(false);}work.vec_push(points,p).map_err(|_|PathFlattenError::Invalid("Path point copy authority lost"))?;self.count+=1;Ok(true)
+  let points=&mut self.contours[self.current.ok_or(PathFlattenError::Invalid("path flatten has no current contour"))?].points;if !Self::slot(points,MAX_POINTS,work,effect)?{return Ok(false);}work.vec_push(points,p).map_err(|_|PathFlattenError::Invalid("Path point copy authority lost"))?;self.count+=1;Ok(true)
  }
- fn begin(&mut self,p:Vec2,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,PathFlattenError>{
+ fn begin(&mut self,p:Vec2,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,PathFlattenError>{
   point(p)?;transformed(p,self.input.transform)?;if self.count>=MAX_POINTS{return Err(PathFlattenError::Invalid("Path preparation exceeds point budget"));}
-  if !Self::slot(&mut self.contours,MAX_CONTOURS,work,alloc)?||!Self::slot(&mut self.pending_points,MAX_POINTS,work,alloc)?{return Ok(false);}
+  if !Self::slot(&mut self.contours,MAX_CONTOURS,work,effect)?||!Self::slot(&mut self.pending_points,MAX_POINTS,work,effect)?{return Ok(false);}
   work.vec_push(&mut self.pending_points,p).map_err(|_|PathFlattenError::Invalid("Path first point copy authority lost"))?;let index=self.contours.len();work.vec_push(&mut self.contours,FlatContour{points:std::mem::take(&mut self.pending_points),closed:false}).map_err(|_|PathFlattenError::Invalid("Path contour copy authority lost"))?;self.current=Some(index);self.count+=1;self.pen=p;self.start=p;Ok(true)
  }
- fn stack_room(&mut self,count:usize,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,PathFlattenError>{
+ fn stack_room(&mut self,count:usize,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,PathFlattenError>{
   let target=self.stack.len().checked_add(count).and_then(|value|value.checked_sub(usize::from(!self.stack.is_empty()))).ok_or(PathFlattenError::Invalid("Path subdivision extent overflow"))?;
   if target>MAX_DEPTH as usize+1{return Err(PathFlattenError::Invalid("Path preparation exceeds subdivision budget"));}
-  if self.stack.capacity()<target&&!work.reserve_vec(&mut self.stack,target,alloc).map_err(PathFlattenError::Invalid)?{return Ok(false);}Ok(work.copy_bytes(count*std::mem::size_of::<Curve>()))
+  if self.stack.capacity()<target&&!work.reserve_vec(&mut self.stack,target,effect.actual()).map_err(PathFlattenError::Invalid)?{return Ok(false);}Ok(work.copy_bytes(count*std::mem::size_of::<Curve>()))
  }
- fn step(&mut self,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<bool,PathFlattenError>{
+ fn step(&mut self,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,PathFlattenError>{
   if let Some(curve)=self.stack.last().copied(){
    match curve{
     Curve::Bezier{points,count,depth}=>{
      let mut p=[[0.0;2];4];for at in 0..count{p[at]=transformed(points[at],self.input.transform)?;}let mut error=0.0f64;for at in 1..count-1{error=error.max(distance_to_chord(p[at],p[0],p[count-1]));}
-     if error<=self.input.tolerance{let completed=self.append(points[count-1],work,alloc)?;if completed{self.stack.pop();}return Ok(completed);}
-     if depth>=MAX_DEPTH{return Err(PathFlattenError::Invalid("Path preparation exceeds subdivision budget"));}if !self.stack_room(2,work,alloc)?{return Ok(false);}let(left,right)=split(points,count);self.stack.pop();self.stack.extend([Curve::Bezier{points:right,count,depth:depth+1},Curve::Bezier{points:left,count,depth:depth+1}]);
+     if error<=self.input.tolerance{let completed=self.append(points[count-1],work,effect)?;if completed{self.stack.pop();}return Ok(completed);}
+     if depth>=MAX_DEPTH{return Err(PathFlattenError::Invalid("Path preparation exceeds subdivision budget"));}if !self.stack_room(2,work,effect)?{return Ok(false);}let(left,right)=split(points,count);self.stack.pop();self.stack.extend([Curve::Bezier{points:right,count,depth:depth+1},Curve::Bezier{points:left,count,depth:depth+1}]);
     }
     Curve::Arc{ellipse,a,b,to,depth}=>{
-     let span=(b-a).abs();let error=2.0*ellipse.bound*(span/4.0).sin().powi(2);if span<=std::f64::consts::PI&&error<=self.input.tolerance{let completed=self.append(to,work,alloc)?;if completed{self.stack.pop();}return Ok(completed);}
-     if depth>=MAX_DEPTH{return Err(PathFlattenError::Invalid("Path preparation exceeds subdivision budget"));}let middle=(a+b)/2.0;let mid=ellipse_point(ellipse,middle)?;transformed(mid,self.input.transform)?;if !self.stack_room(2,work,alloc)?{return Ok(false);}self.stack.pop();self.stack.extend([Curve::Arc{ellipse,a:middle,b,to,depth:depth+1},Curve::Arc{ellipse,a,b:middle,to:mid,depth:depth+1}]);
+     let span=(b-a).abs();let error=2.0*ellipse.bound*(span/4.0).sin().powi(2);if span<=std::f64::consts::PI&&error<=self.input.tolerance{let completed=self.append(to,work,effect)?;if completed{self.stack.pop();}return Ok(completed);}
+     if depth>=MAX_DEPTH{return Err(PathFlattenError::Invalid("Path preparation exceeds subdivision budget"));}let middle=(a+b)/2.0;let mid=ellipse_point(ellipse,middle)?;transformed(mid,self.input.transform)?;if !self.stack_room(2,work,effect)?{return Ok(false);}self.stack.pop();self.stack.extend([Curve::Arc{ellipse,a:middle,b,to,depth:depth+1},Curve::Arc{ellipse,a,b:middle,to:mid,depth:depth+1}]);
     }
    }return Ok(true);
   }
   let Some(segment)=self.input.segments.get(self.index).cloned()else{self.done=true;self.step_prepared=true;return Ok(false);};
-  if let PathSegment::Move{to}=segment{let completed=self.begin(point(to)?,work,alloc)?;if completed{self.index+=1;}return Ok(completed);}
+  if let PathSegment::Move{to}=segment{let completed=self.begin(point(to)?,work,effect)?;if completed{self.index+=1;}return Ok(completed);}
   if matches!(segment,PathSegment::Close){if !work.can_step(){return Ok(false);}if let Some(current)=self.current{self.contours[current].closed=true;self.pen=self.start;self.current=None;}self.index+=1;return Ok(true);}
-  if self.current.is_none()&&!self.begin(self.pen,work,alloc)?{return Ok(false);}
+  if self.current.is_none()&&!self.begin(self.pen,work,effect)?{return Ok(false);}
   let pen=match segment{
-   PathSegment::Line{to}=>{let to=point(to)?;if !self.append(to,work,alloc)?{return Ok(false);}to}
-   PathSegment::Quad{ctrl,to}=>{let curve=Curve::Bezier{points:[self.pen,point(ctrl)?,point(to)?,[0.0;2]],count:3,depth:0};if !self.stack_room(1,work,alloc)?{return Ok(false);}self.stack.push(curve);to}
-   PathSegment::Cubic{ctrl1,ctrl2,to}=>{let curve=Curve::Bezier{points:[self.pen,point(ctrl1)?,point(ctrl2)?,point(to)?],count:4,depth:0};if !self.stack_room(1,work,alloc)?{return Ok(false);}self.stack.push(curve);to}
-   PathSegment::Arc{to,..}=>{if let Some(curve)=arc(self.pen,&segment,self.input.transform)?{if !self.stack_room(1,work,alloc)?{return Ok(false);}self.stack.push(curve);}to}
+   PathSegment::Line{to}=>{let to=point(to)?;if !self.append(to,work,effect)?{return Ok(false);}to}
+   PathSegment::Quad{ctrl,to}=>{let curve=Curve::Bezier{points:[self.pen,point(ctrl)?,point(to)?,[0.0;2]],count:3,depth:0};if !self.stack_room(1,work,effect)?{return Ok(false);}self.stack.push(curve);to}
+   PathSegment::Cubic{ctrl1,ctrl2,to}=>{let curve=Curve::Bezier{points:[self.pen,point(ctrl1)?,point(ctrl2)?,point(to)?],count:4,depth:0};if !self.stack_room(1,work,effect)?{return Ok(false);}self.stack.push(curve);to}
+   PathSegment::Arc{to,..}=>{if let Some(curve)=arc(self.pen,&segment,self.input.transform)?{if !self.stack_room(1,work,effect)?{return Ok(false);}self.stack.push(curve);}to}
    _=>return Err(PathFlattenError::Invalid("Invalid path preparation segment")),
   };self.pen=pen;self.index+=1;Ok(true)
  }
@@ -126,10 +126,10 @@ impl PathFlattenJob {
  pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
  pub fn failure_pending(&self)->bool{self.failed.is_some()}
  pub fn settlement_pending(&self)->bool{self.done||self.stack.is_empty()&&self.index>=self.input.segments.len()}
- pub fn advance(&mut self,budget:usize,work:&mut RetainedWorkLedger,alloc:&mut Option<usize>)->Result<PathFlattenProgress,PathFlattenError>{
+ pub fn advance(&mut self,budget:usize,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<PathFlattenProgress,PathFlattenError>{
   self.last_turn_work=0;self.last_turn_semantic_work=0;if budget==0||budget as u128>9_007_199_254_740_991{return Err(PathFlattenError::Invalid("Path preparation work grant must be a positive integer"));}if self.cancelled{return Err(PathFlattenError::Cancelled);}if let Some(error)=&self.failed{return Err(error.clone());}
   let d=self.pending;if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.progress());}
-  if let Some(root)=work.enter(){let result=(||{for _ in 0..budget{if self.done{break;}if !work.can_step(){self.pending=work.next_demand();break;}let before=work.receipt();self.step_prepared=false;let result=self.step(work,alloc);let completed=result.as_ref().copied().unwrap_or(true);if work.receipt()!=before||completed||self.step_prepared{work.note_source(root);self.last_turn_work+=1;}if completed{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failed=Some(error.clone());return Err(error);}if work.blocked(){break;}}Ok(self.progress())})();work.exit();result}else{self.pending=work.next_demand();Ok(self.progress())}
+  if let Some(root)=work.enter(){let result=(||{for _ in 0..budget{if self.done{break;}if !work.can_step(){self.pending=work.next_demand();break;}let before=work.receipt();self.step_prepared=false;let result=self.step(work,effect);let completed=result.as_ref().copied().unwrap_or(true);if work.receipt()!=before||completed||self.step_prepared{work.note_source(root);self.last_turn_work+=1;}if completed{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failed=Some(error.clone());return Err(error);}if work.blocked(){break;}}Ok(self.progress())})();work.exit();result}else{self.pending=work.next_demand();Ok(self.progress())}
  }
  fn progress(&self)->PathFlattenProgress{PathFlattenProgress{phase:if self.done{PathFlattenPhase::Complete}else if self.stack.is_empty(){PathFlattenPhase::Preparing}else{PathFlattenPhase::Subdividing},completed:self.index,total:self.input.segments.len(),points:self.count,work:self.work,done:self.done}}
  pub fn cancel(&mut self) {self.cancelled=true;self.current=None;}

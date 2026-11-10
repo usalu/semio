@@ -1,12 +1,15 @@
 //! 🪶️ Same-instance snapshot recipients preserve actual partial ownership across receiving turns.
-use super::{admitted,refusal,refusal_code};
+use super::{admitted,refusal,refusal_code,release,settle_parked,HostAllocation};
 use crate::{sqlite_wire,Fault};
 use crate::component::wasip2::semio::framework::pure;
 use semio_os_kernel::io::io_mechanism::{IoNativeDirection,IoRunControl};
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeForwardedDecodeControl, native_decoding::allocation::NativeForwardedDecodeReceipt, native_decoding::NativeDecodeRetirementRecipient};
 use semio_framework_value::native_encoding::{NativeEncodeControl,NativeForwardedEncodeControl,allocation::NativeForwardedEncodeReceipt,NativeEncodeRetirementRecipient,NativeAllocationRequest};
-use std::{cell::{RefCell,Cell},mem::size_of};
+use std::{cell::{RefCell,Cell},mem::size_of,rc::Rc};
+use semio_framework_value::{RetainedWorkPoll};
+use semio_framework_value_native_owned::native_decoding::NativeAllocationAuthority;
+use semio_framework_job::OriginalRetirementPump;
 
 #[derive(semio_framework_value::RetireOwned)]
 pub enum SnapshotOutput{File(sqlite_wire::SnapshotFileResult),Payload(sqlite_wire::SnapshotPayloadResult),Fault(Fault)}
@@ -36,7 +39,7 @@ impl SnapshotReturn for sqlite_wire::SnapshotPayloadResult{
  fn reserve(&self,component:bool,cursor:&mut u8)->Result<(),ValueError>{if !component{return Ok(())}match self{Self::Done(value)=>reserve_fields(pure::OperationReturnAllocation::Bytes,value.bytes.len(),value.diagnostics.len(),cursor),Self::Rejected(value)=>reserve_rejection(value,cursor),Self::Pending(_)=>Ok(())}}
 }
 enum NativeReceipt{Decode(NativeForwardedDecodeReceipt),Encode(NativeForwardedEncodeReceipt)}
-struct SnapshotOperation{ticket:u64,maximum:usize,owned:usize,body:usize,grant:RetainedCloneGrant,progress:RetainedCloneProgress,decoding:bool,return_cursor:u8,refusal:u32,native:Option<NativeReceipt>,decode:NativeDecodeRetirementRecipient,encode:NativeEncodeRetirementRecipient,input:ControlledRetirement<Option<sqlite_wire::SnapshotInputOwner>>,output:ControlledRetirement<Option<SnapshotOutput>>}
+struct SnapshotOperation{ticket:u64,maximum:usize,owned:usize,body:usize,grant:RetainedCloneGrant,progress:RetainedCloneProgress,decoding:bool,return_cursor:u8,refusal:u32,native:Option<NativeReceipt>,decode:NativeDecodeRetirementRecipient,encode:NativeEncodeRetirementRecipient,input:ControlledRetirement<Option<sqlite_wire::SnapshotInputOwner>>,output:ControlledRetirement<Option<SnapshotOutput>>,ledger:Rc<Cell<usize>>,authority:Option<NativeAllocationAuthority<HostAllocation>>}
 thread_local!{static SNAPSHOT:RefCell<Option<Box<SnapshotOperation>>>=const{RefCell::new(None)};static NEXT_TICKET:Cell<u64>=const{Cell::new(0)};}
 fn demand(owner:&dyn ErasedSnapshotRetirement,body:usize)->Result<sqlite_wire::SnapshotDemands,ValueError>{Ok(sqlite_wire::SnapshotDemands{items:1,copy_bytes:owner.next_copy_byte_demand()?as u64,capacity_bytes:owner.next_capacity_byte_demand(body)?as u64,release_bytes:owner.next_release_byte_demand()?as u64,depth:owner.next_depth_demand()?as u64})}
 impl SnapshotOperation{
@@ -52,27 +55,36 @@ pub fn snapshot_original_progress(ticket:u64)->Result<(RetainedCloneGrant,Retain
 fn reservation(owned:&Cell<usize>,maximum:usize,bytes:usize)->Result<(),ValueError>{let previous=owned.get();let next=previous.checked_add(bytes).filter(|next|*next<=maximum).ok_or_else(||refusal(2))?;admitted(pure::operation_allocation(bytes as u64,previous as u64,next as u64,maximum as u64))?;owned.set(next);Ok(())}
 /// 🌱️ Holds real native recipient slots and denied output in the component that allocated them.
 pub fn with_snapshot_authority<T:SnapshotReturn>(input:&mut Option<sqlite_wire::SnapshotInput>,direction:IoNativeDirection,component:bool,operation:impl FnOnce(&mut sqlite_wire::SnapshotInputOwner,&mut IoRunControl<'_,'_>,&mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<T,Fault>)->Result<Result<T,Fault>,ValueError>{
+ settle_parked();
  let original=input.as_ref().ok_or_else(||refusal(4))?;let grant=original.native.native()?;let limits=original.limits.native().map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot SQL bounds exceed address space"))?;
  if SNAPSHOT.with(|slot|slot.borrow().is_some()){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"same snapshot instance still owns its original retirement ticket"))}
  let maximum=usize::try_from(pure::operation_begin().map_err(refusal)?).map_err(|_|refusal(2))?.min(grant.maximum_capacity_bytes);
  let frame=size_of::<SnapshotOperation>();
  if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<frame{admitted(pure::operation_finish(0))?;return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot component recipient frame exceeds original grant"))}
- let owned=Cell::new(0usize);reservation(&owned,maximum,frame)?;
+ let ledger=Rc::new(Cell::new(0usize));reservation(&ledger,maximum,frame)?;
  let ticket=NEXT_TICKET.with(|next|{let ticket=next.get().checked_add(1).ok_or_else(||refusal(4))?;next.set(ticket);Ok::<_,ValueError>(ticket)})?;
  let output=ControlledRetirement::new(None::<SnapshotOutput>).map_err(|(error,_)|error)?;
  let input_owner=ControlledRetirement::new(None::<sqlite_wire::SnapshotInputOwner>).map_err(|(error,_)|error)?;
- SNAPSHOT.with(|slot|{let mut state=Box::new(SnapshotOperation{ticket,maximum,owned:frame,body:grant.maximum_copy_bytes,grant,progress:RetainedCloneProgress{copied_items:1,retained_capacity_bytes:frame,..Default::default()},decoding:matches!(direction,IoNativeDirection::Decode),return_cursor:0,refusal:0,native:None,decode:NativeDecodeRetirementRecipient::new(),encode:NativeEncodeRetirementRecipient::new(),input:input_owner,output});*state.input.original_mut().unwrap()=Some(sqlite_wire::SnapshotInputOwner{wire:input.take(),dialect:None,route:None,payload:None,hop:None});*slot.borrow_mut()=Some(state);});
+ SNAPSHOT.with(|slot|{let mut state=Box::new(SnapshotOperation{ticket,maximum,owned:frame,body:grant.maximum_copy_bytes,grant,progress:RetainedCloneProgress{copied_items:1,retained_capacity_bytes:frame,..Default::default()},decoding:matches!(direction,IoNativeDirection::Decode),return_cursor:0,refusal:0,native:None,decode:NativeDecodeRetirementRecipient::new(),encode:NativeEncodeRetirementRecipient::new(),input:input_owner,output,ledger:ledger.clone(),authority:Some(NativeAllocationAuthority::new(HostAllocation::reserving(Default::default(),ledger.clone(),maximum)))});*state.input.original_mut().unwrap()=Some(sqlite_wire::SnapshotInputOwner{wire:input.take(),dialect:None,route:None,payload:None,hop:None});*slot.borrow_mut()=Some(state);});
  let child=RetainedCloneGrant{maximum_items:grant.maximum_items-1,maximum_capacity_bytes:grant.maximum_capacity_bytes-frame,maximum_depth:grant.maximum_depth-1,..grant};
+
  SNAPSHOT.with(|slot|{
   let mut slot=slot.borrow_mut();let state=slot.as_mut().unwrap();
-  let report=|completed:usize,total:usize|pure::operation_progress(completed as u64,total as u64,owned.get()as u64)==0;
-  let mut sql_observer=|next:semio_framework::sqlite_snapshot::SqliteSnapshotProgress|report(next.completed,next.total);let mut sql_allocate=|next:NativeAllocationRequest|reservation(&owned,maximum,next.bytes);
-  let mut sql=semio_framework::sqlite_snapshot::SqliteSnapshotControl::new_forwarded(&mut sql_observer,limits,&mut sql_allocate);
-  let result=match direction{
-   IoNativeDirection::Decode=>{let mut observe=|next:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|report(next.completed,next.total);let mut allocate=|next:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|reservation(&owned,maximum,next.bytes);let mut native=NativeDecodeControl::new_forwarded(maximum,&mut observe,&mut allocate);native.install_retirement_recipient(&mut state.decode)?;let ceiling=maximum.saturating_sub(frame);let result=native.scoped_maximum(ceiling,|control|{let mut run=IoRunControl::decoding(control,child);let result=operation(state.input.original_mut().unwrap().as_mut().unwrap(),&mut run,&mut sql);state.progress=state.progress.checked_add(run.progress())?;Ok::<_,ValueError>(result)});state.native=Some(NativeReceipt::Decode(match native.detach(){Ok(receipt)=>receipt,Err((error,_))=>return Err(error)}));result},
-   IoNativeDirection::Encode=>{let mut observe=|next:semio_framework_value::native_encoding::NativeEncodeProgress|report(next.completed,next.total);let mut allocate=|next:NativeAllocationRequest|reservation(&owned,maximum,next.bytes);let mut native=NativeEncodeControl::new_forwarded(maximum,&mut observe,&mut allocate);native.install_retirement_recipient(&mut state.encode)?;let ceiling=maximum.saturating_sub(frame);let result=native.scoped_maximum(ceiling,|control|{let mut run=IoRunControl::encoding(control,child);let result=operation(state.input.original_mut().unwrap().as_mut().unwrap(),&mut run,&mut sql);state.progress=state.progress.checked_add(run.progress())?;Ok::<_,ValueError>(result)});state.native=Some(NativeReceipt::Encode(match native.detach(){Ok(receipt)=>receipt,Err((error,_))=>return Err(error)}));result},
-  };
-  state.owned=owned.get();state.progress.retained_capacity_bytes=state.owned;
+  let report=|completed:usize,total:usize|pure::operation_progress(completed as u64,total as u64,ledger.get()as u64)==0;
+  let mut authority=state.authority.take().ok_or_else(||refusal(4))?;
+  let mut sql_authority=NativeAllocationAuthority::new(HostAllocation::reserving(Default::default(),ledger.clone(),maximum));
+  let s=&mut **state;let (decode,encode,input,progress,native_slot)=(&mut s.decode,&mut s.encode,&mut s.input,&mut s.progress,&mut s.native);
+  let outcome=sql_authority.with_send_loan(&mut (),|sql_loan|authority.with_send_loan(&mut (),|native_loan|->Result<Result<T,Fault>,ValueError>{
+   let mut sql_observer=|next:semio_framework::sqlite_snapshot::SqliteSnapshotProgress|report(next.completed,next.total);
+   let mut sql=semio_framework::sqlite_snapshot::SqliteSnapshotControl::new_forwarded(&mut sql_observer,limits,sql_loan);
+   match direction{
+    IoNativeDirection::Decode=>{let mut observe=|next:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|report(next.completed,next.total);let mut native=NativeDecodeControl::new_forwarded(maximum,&mut observe,native_loan);native.install_retirement_recipient(decode)?;let ceiling=maximum.saturating_sub(frame);let result=native.scoped_maximum(ceiling,|control|{let mut run=IoRunControl::decoding(control,child);let result=operation(input.original_mut().unwrap().as_mut().unwrap(),&mut run,&mut sql);*progress=progress.checked_add(run.progress())?;Ok::<_,ValueError>(result)});*native_slot=Some(NativeReceipt::Decode(match native.detach(){Ok(receipt)=>receipt,Err((error,_))=>return Err(error)}));result},
+    IoNativeDirection::Encode=>{let mut observe=|next:semio_framework_value::native_encoding::NativeEncodeProgress|report(next.completed,next.total);let mut native=NativeEncodeControl::new_forwarded(maximum,&mut observe,native_loan);native.install_retirement_recipient(encode)?;let ceiling=maximum.saturating_sub(frame);let result=native.scoped_maximum(ceiling,|control|{let mut run=IoRunControl::encoding(control,child);let result=operation(input.original_mut().unwrap().as_mut().unwrap(),&mut run,&mut sql);*progress=progress.checked_add(run.progress())?;Ok::<_,ValueError>(result)});*native_slot=Some(NativeReceipt::Encode(match native.detach(){Ok(receipt)=>receipt,Err((error,_))=>return Err(error)}));result},
+   }
+  }).and_then(|inner|inner)).and_then(|inner|inner);
+  state.authority=Some(authority);release(sql_authority);
+  let result=outcome;
+  state.owned=ledger.get();state.progress.retained_capacity_bytes=state.owned;
   match result{
    Err(error)=>{state.refusal=refusal_code(error.kind);let finished=admitted(pure::operation_finish(state.owned as u64));finished?;Ok(Ok(T::pending(state.status(state.body)?)))},
    Ok(Err(fault))=>{*state.output.original_mut().unwrap()=Some(SnapshotOutput::Fault(fault));admitted(pure::operation_finish(state.owned as u64))?;Ok(Ok(T::pending(state.status(state.body)?)))},
@@ -88,17 +100,41 @@ pub fn snapshot_take<T:SnapshotReturn>(ticket:u64,component:bool)->Result<Result
  })
 }
 /// ♻️ Applies one original grant to actual recipient or returned output, preserving denied custody.
-pub fn snapshot_close(ticket:u64,grant:RetainedCloneGrant)->Result<(sqlite_wire::SnapshotRetirement,RetainedCloneProgress,u32),ValueError>{
+thread_local!{static CLOSE_CLOCK:Cell<u64>=const{Cell::new(0)};}
+fn close_clock()->Option<u64>{pure::operation_clock_us(CLOSE_CLOCK.get())}
+pub fn snapshot_close(ticket:u64,grant:RetainedCloneGrant,budget:sqlite_wire::SnapshotCloseBudget)->Result<(sqlite_wire::SnapshotRetirement,RetainedCloneProgress,u32),ValueError>{
  SNAPSHOT.with(|slot|{
   let mut slot=slot.borrow_mut();let state=slot.as_mut().ok_or_else(||refusal(4))?;if state.ticket!=ticket{return Err(refusal(4))}let quoted=state.status(grant.maximum_copy_bytes)?;
   let fits=grant.maximum_items>=quoted.demands.items as usize&&grant.maximum_copy_bytes>=quoted.demands.copy_bytes as usize&&grant.maximum_capacity_bytes>=quoted.demands.capacity_bytes as usize&&grant.maximum_release_bytes>=quoted.demands.release_bytes as usize&&grant.maximum_depth>=quoted.demands.depth as usize;
   if !fits{admitted(pure::operation_finish(state.owned as u64))?;return Ok((quoted,Default::default(),0))}
-  if !quoted.native_pending&&!quoted.output_pending{let progress=RetainedCloneProgress{copied_items:1,copied_bytes:quoted.demands.copy_bytes as usize,released_bytes:size_of::<SnapshotOperation>(),..Default::default()};let owned=state.owned;admitted(pure::operation_finish(owned as u64))?;drop(slot.take());return Ok((sqlite_wire::SnapshotRetirement{ticket,owned_bytes:owned as u64,terminal:true,..Default::default()},progress,0))}
-  let owned=Cell::new(state.owned);let maximum=state.maximum;
-  let result=match state.native.take().ok_or_else(||refusal(4))?{
-   NativeReceipt::Decode(receipt)=>{let mut observe=|next:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|pure::operation_progress(next.completed as u64,next.total as u64,owned.get()as u64)==0;let mut allocate=|next:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|reservation(&owned,maximum,next.bytes);let mut native=match NativeForwardedDecodeControl::rebind(receipt,&mut observe,&mut allocate,&mut state.decode){Ok(native)=>native,Err((error,receipt))=>{state.native=Some(NativeReceipt::Decode(receipt));return Err(error)}};let ceiling=native.maximum_bytes().min(native.owned_bytes().saturating_add(grant.maximum_capacity_bytes));let result=native.scoped_maximum(ceiling,|control|if quoted.native_pending{control.close_retirement_recipient(grant).result}else{control.charge(quoted.demands.capacity_bytes as usize)?;if !state.input.terminal_is_empty(){state.input.step(grant)}else{state.output.step(grant)}});state.native=Some(NativeReceipt::Decode(match native.detach(){Ok(receipt)=>receipt,Err((error,_))=>return Err(error)}));result},
-   NativeReceipt::Encode(receipt)=>{let mut observe=|next:semio_framework_value::native_encoding::NativeEncodeProgress|pure::operation_progress(next.completed as u64,next.total as u64,owned.get()as u64)==0;let mut allocate=|next:NativeAllocationRequest|reservation(&owned,maximum,next.bytes);let mut native=match NativeForwardedEncodeControl::rebind(receipt,&mut observe,&mut allocate,&mut state.encode){Ok(native)=>native,Err((error,receipt))=>{state.native=Some(NativeReceipt::Encode(receipt));return Err(error)}};let ceiling=native.maximum_bytes().min(native.owned_bytes().saturating_add(grant.maximum_capacity_bytes));let result=native.scoped_maximum(ceiling,|control|if quoted.native_pending{control.close_retirement_recipient(grant).result}else{control.charge(quoted.demands.capacity_bytes as usize)?;if !state.input.terminal_is_empty(){state.input.step(grant)}else{state.output.step(grant)}});state.native=Some(NativeReceipt::Encode(match native.detach(){Ok(receipt)=>receipt,Err((error,_))=>return Err(error)}));result},
+  if !quoted.native_pending&&!quoted.output_pending{let progress=RetainedCloneProgress{copied_items:1,copied_bytes:quoted.demands.copy_bytes as usize,released_bytes:size_of::<SnapshotOperation>(),..Default::default()};let owned=state.owned;admitted(pure::operation_finish(owned as u64))?;if let Some(authority)=state.authority.take(){release(authority);}drop(slot.take());return Ok((sqlite_wire::SnapshotRetirement{ticket,owned_bytes:owned as u64,terminal:true,..Default::default()},progress,0))}
+  let ledger=state.ledger.clone();let body=grant.maximum_copy_bytes;
+  let Some(receipt)=state.native.take()else{return Err(refusal(4))};let mut receipt=Some(receipt);
+  let mut authority=state.authority.take().ok_or_else(||refusal(4))?;
+  let s=&mut **state;let (decode,encode,input,output,native_slot)=(&mut s.decode,&mut s.encode,&mut s.input,&mut s.output,&mut s.native);
+  CLOSE_CLOCK.set(budget.clock_binding);settle_parked();
+  let ran=OriginalRetirementPump::new().turn(budget.fuel,budget.deadline_us,close_clock,grant).and_then(|mut turn|turn.with_effect(|effect|->Result<semio_framework_value::OriginalRetirementPoll,ValueError>{
+   authority.with_send_loan(&mut (),|loan|match receipt.take().ok_or_else(||refusal(4))?{
+    NativeReceipt::Decode(taken)=>{let mut observe=|next:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|pure::operation_progress(next.completed as u64,next.total as u64,ledger.get()as u64)==0;let mut native=match NativeForwardedDecodeControl::rebind(taken,&mut observe,loan,decode){Ok(native)=>native,Err((error,taken))=>{*native_slot=Some(NativeReceipt::Decode(taken));return Err(error)}};let ceiling=native.maximum_bytes().min(native.owned_bytes().saturating_add(grant.maximum_capacity_bytes));let result=native.scoped_maximum(ceiling,|control|if quoted.native_pending{Ok(control.close_retirement_recipient(body,effect))}else{control.charge(quoted.demands.capacity_bytes as usize)?;Ok::<_,ValueError>(if !input.terminal_is_empty(){input.step(body,effect)}else{output.step(body,effect)})});*native_slot=Some(NativeReceipt::Decode(match native.detach(){Ok(receipt)=>receipt,Err((error,_))=>return Err(error)}));result},
+    NativeReceipt::Encode(taken)=>{let mut observe=|next:semio_framework_value::native_encoding::NativeEncodeProgress|pure::operation_progress(next.completed as u64,next.total as u64,ledger.get()as u64)==0;let mut native=match NativeForwardedEncodeControl::rebind(taken,&mut observe,loan,encode){Ok(native)=>native,Err((error,taken))=>{*native_slot=Some(NativeReceipt::Encode(taken));return Err(error)}};let ceiling=native.maximum_bytes().min(native.owned_bytes().saturating_add(grant.maximum_capacity_bytes));let result=native.scoped_maximum(ceiling,|control|if quoted.native_pending{Ok(encode_close_poll(control,body,effect))}else{control.charge(quoted.demands.capacity_bytes as usize)?;Ok::<_,ValueError>(if !input.terminal_is_empty(){input.step(body,effect)}else{output.step(body,effect)})});*native_slot=Some(NativeReceipt::Encode(match native.detach(){Ok(receipt)=>receipt,Err((error,_))=>return Err(error)}));result},
+   }).and_then(|inner|inner)
+  }));
+  if let Some(unused)=receipt.take(){state.native=Some(unused);}
+  state.authority=Some(authority);
+  state.owned=ledger.get();let finished=admitted(pure::operation_finish(state.owned as u64));
+  let (progress,mut cause)=match ran{
+   Ok(None)=>(Default::default(),0),
+   Ok(Some((Ok(RetainedWorkPoll::Pending{..}),_)))=>(Default::default(),0),
+   Ok(Some((Ok(RetainedWorkPoll::Complete(outcome)),_)))=>match outcome.result{Ok(step)=>(step.progress(),0),Err(failure)=>{let error=failure.into_value_error();(error.retained_progress(),refusal_code(error.kind))}},
+   Ok(Some((Err(error),_)))|Err(error)=>(error.retained_progress(),refusal_code(error.kind)),
   };
-  state.owned=owned.get();let finished=admitted(pure::operation_finish(state.owned as u64));let (progress,mut cause)=match result{Ok(step)=>(step.progress(),0),Err(error)=>(error.retained_progress(),refusal_code(error.kind))};if let Err(error)=finished{if cause==0{cause=refusal_code(error.kind);}}Ok((state.status(state.body)?,progress,cause))
+  if let Err(error)=finished{if cause==0{cause=refusal_code(error.kind);}}Ok((state.status(state.body)?,progress,cause))
  })
+}
+/// ♻️ Settles one reply-shaped encoder recipient close as the poll its caller expects.
+fn encode_close_poll(native:&mut NativeEncodeControl<'_>,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+ let mut slot=None;
+ let recorded=semio_framework_value::retirement::__control::OriginalEffectReply::borrow(&mut slot).and_then(|reply|native.close_retirement_recipient_into(body,effect,reply).map(|_|()));
+ let result=match recorded{Ok(())=>slot.take().expect("encoder close records its reply"),Err(error)=>Err(semio_framework_value::OriginalRetirementFailure::from(error))};
+ RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result,work:effect.performed_work()})
 }

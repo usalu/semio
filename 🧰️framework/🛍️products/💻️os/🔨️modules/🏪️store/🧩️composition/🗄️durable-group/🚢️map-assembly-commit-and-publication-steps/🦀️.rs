@@ -2,7 +2,7 @@
 
 use super::*;
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + Send + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -330,8 +330,8 @@ if self.recovery_committed {
                         semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,progress)),
                     }
                 }
-                if let Some(owner)=self.decision_retirement.as_mut(){let receipt=close_turn(receiving,grant,|effect|Ok(semio_os_store_read::settle_close_poll(owner.step(effect))?.progress()))?;if owner.terminal_is_empty(){self.decision_retirement=None;}return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt));}
-                if let Some(owner)=self.output_retirement.as_mut(){let receipt=close_turn(receiving,grant,|effect|Ok(semio_os_store_read::settle_close_poll(owner.step(effect))?.progress()))?;if owner.terminal_is_empty(){self.output_retirement=None;}return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt));}
+                if let Some(owner)=self.decision_retirement.as_mut(){let receipt=close_turn(receiving,grant,|effect|Ok(semio_os_store_read::settle_close_poll(owner.step(effect.grant().maximum_copy_bytes,effect))?.progress()))?;if owner.terminal_is_empty(){self.decision_retirement=None;}return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt));}
+                if let Some(owner)=self.output_retirement.as_mut(){let receipt=close_turn(receiving,grant,|effect|Ok(semio_os_store_read::settle_close_poll(owner.step(effect.grant().maximum_copy_bytes,effect))?.progress()))?;if owner.terminal_is_empty(){self.output_retirement=None;}return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt));}
                 let copy=size_of::<Box<DurableOwnedThreeMemberDecisionV1>>()+size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<Box<DurableOwnedThreeMemberDecisionV1>>>()+size_of::<DurablePlanningOutputV1>()+size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>();
                 if self.decision.is_some()||self.decision_pack.is_some()||!self.decision_sha256.is_empty()||self.receipt.is_some(){if grant.maximum_copy_bytes<copy{return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);}if let Some(decision)=self.decision.take(){self.decision_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(decision).map_err(|(reason,_)|DurableOwnedGroupDecisionError::Retirement(reason))?);}else{self.output_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(DurablePlanningOutputV1::Commit{pack:self.decision_pack.take(),sha256:std::mem::take(&mut self.decision_sha256),receipt:self.receipt.take()}).map_err(|(reason,_)|DurableOwnedGroupDecisionError::Retirement(reason))?);}return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));}
                 self.visibility_owner = None;
@@ -345,7 +345,7 @@ if self.recovery_committed {
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> Drop for DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
     fn drop(&mut self) {
         assert!(
             std::thread::panicking()
@@ -365,7 +365,7 @@ impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> 
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + Send + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -422,7 +422,7 @@ where
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> Drop for DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,

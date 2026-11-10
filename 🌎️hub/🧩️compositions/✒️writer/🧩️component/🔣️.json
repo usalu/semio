@@ -4478,7 +4478,16 @@
           "ports": [
             {
               "id": "text:out",
-              "label": "Text",
+              "label": {
+                "native": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "reuse": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "text",

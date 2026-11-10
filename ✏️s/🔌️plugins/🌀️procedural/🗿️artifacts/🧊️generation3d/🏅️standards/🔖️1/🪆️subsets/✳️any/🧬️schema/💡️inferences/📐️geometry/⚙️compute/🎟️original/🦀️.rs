@@ -2,13 +2,14 @@
 use crate::WidgetJob;
 use crate::WidgetStep;
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_inputs::construction::{insert_advance,insert_close,insert_take};
 use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
 use semio_s_artifact_procedural_3d_geometry_value::Outputs;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use semio_s_artifact_procedural_3d_model::catalogue::Quality;
 use semio_framework_job::{OriginalTurnFailure,StepContext};
-use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneProgress,ordered_map::{BoundedOrdGrant,RetainedOrderedMapInsertCursor,RetainedOrderedMapInsertGrant,RetainedOrderedMapInsertProgress,RetainedOrderedMapInsertStep}},retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement}};
+use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneProgress,ordered_map::RetainedOrderedMapInsertCursor},retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement}};
 use semio_framework_3d_brep_engine::{ShapeValue,ShapeRoot};
 use {semio_framework_3d_brep_curve::Curve3, semio_framework_3d_brep_surface::Surface, semio_framework_3d_brep_representation::topology::Body, semio_framework_3d_brep_vector::{Pnt3, Vec3, matrix::Frame3}};
 use semio_framework_3d::mesh::{HalfedgeMesh,MeshPlaneProduction,MeshTranslationProduction};
@@ -29,7 +30,7 @@ enum ValueKind{Slider,Number,Integer,Boolean,Vector,Point,Plane,MeshVertex,MeshE
 semio_framework_value::artifact_retire_leaf!(ValueKind);
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
-struct State{source:Source,kind:ValueKind,quality:Quality,inputs:Option<ControlledRetirement<WidgetInputs>>,value:Option<GeometryValue>,extra:[Option<GeometryValue>;2],output:usize,key:String,outputs:Option<Outputs>,insertion:Option<Insert>,phase:u8,byte:usize,cancelled:bool,curve:Option<geometry_read::CurveEvaluation>,curve_close:Option<ControlledRetirement<geometry_read::CurveEvaluation>>,plane:Option<MeshPlaneProduction>,mesh:Option<HalfedgeMesh>,shape:Option<ShapeValue>,translation:Option<MeshTranslationProduction>}
+struct State{source:Source,kind:ValueKind,quality:Quality,inputs:Option<ControlledRetirement<WidgetInputs>>,value:Option<GeometryValue>,extra:[Option<GeometryValue>;2],output:usize,key:String,outputs:Option<Outputs>,insertion:Option<Insert>,phase:u8,byte:usize,cancelled:bool,curve:Option<geometry_read::CurveEvaluation>,curve_close:Option<ControlledRetirement<geometry_read::CurveEvaluation>>,plane:Option<MeshPlaneProduction>,mesh:Option<HalfedgeMesh>,shape:Option<ShapeValue>,translation:Option<MeshTranslationProduction>,translation_close:Option<ControlledRetirement<MeshTranslationProduction>>}
 
 /// 🧵️ Retains original inputs, output backing and insertion ownership through every denied turn.
 pub struct OriginalFixedOutputJob{state:ManuallyDrop<State>,transferred:bool}
@@ -44,18 +45,18 @@ impl OriginalFixedOutputJob{
         if inputs.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original fixed-output operator requires its actual resolved inputs").into())}
         post(cx,RetainedCloneProgress{copied_items:1,copied_bytes:if number.is_some(){8}else{0},..Default::default()})?;
         let owner=match ControlledRetirement::new(inputs.take().unwrap()){Ok(owner)=>owner,Err((error,value))=>{*inputs=Some(value);return Err(error.into())}};
-        Ok(Some(Self{state:ManuallyDrop::new(State{source,kind:value_kind,quality:kind.quality,inputs:Some(owner),value:number.map(GeometryValue::Number),extra:[None,None],output:0,key:String::new(),outputs:Some(Outputs::default()),insertion:None,phase:u8::from(number.is_some()),byte:0,cancelled:false,curve:number.is_none().then(geometry_read::CurveEvaluation::default),curve_close:None,plane:None,mesh:None,shape:None,translation:None}),transferred:false}))
+        Ok(Some(Self{state:ManuallyDrop::new(State{source,kind:value_kind,quality:kind.quality,inputs:Some(owner),value:number.map(GeometryValue::Number),extra:[None,None],output:0,key:String::new(),outputs:Some(Outputs::default()),insertion:None,phase:u8::from(number.is_some()),byte:0,cancelled:false,curve:number.is_none().then(geometry_read::CurveEvaluation::default),curve_close:None,plane:None,mesh:None,shape:None,translation:None,translation_close:None}),transferred:false}))
     }
     /// 🔢️ An explicit host number policy donates its real scalar while preserving and closing actual resolved inputs.
     pub fn admit_number(kind:&Kind,inputs:&mut Option<WidgetInputs>,value:f64,cx:&mut StepContext<'_>)->Result<Option<Self>,OriginalTurnFailure>{Self::admit_with_number(kind,inputs,Some(value),cx)}
     /// 🎚️ Starts the actual source slider value directly without inventing a catalogue kind or inputs.
     pub fn admit_slider(value:f64,cx:&mut StepContext<'_>)->Result<Option<Self>,OriginalTurnFailure>{
         let source=source(cx)?;if !open(cx)||cx.retained_grant().maximum_copy_bytes<8{return Ok(None)}if !value.is_finite(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original slider value must be finite").into())}post(cx,RetainedCloneProgress{copied_items:1,copied_bytes:8,..Default::default()})?;
-        Ok(Some(Self{state:ManuallyDrop::new(State{source,kind:ValueKind::Slider,quality:Quality::ExactAnalytic,inputs:None,value:Some(GeometryValue::Number(value)),extra:[None,None],output:0,key:String::new(),outputs:Some(Outputs::default()),insertion:None,phase:2,byte:0,cancelled:false,curve:None,curve_close:None,plane:None,mesh:None,shape:None,translation:None}),transferred:false}))
+        Ok(Some(Self{state:ManuallyDrop::new(State{source,kind:ValueKind::Slider,quality:Quality::ExactAnalytic,inputs:None,value:Some(GeometryValue::Number(value)),extra:[None,None],output:0,key:String::new(),outputs:Some(Outputs::default()),insertion:None,phase:2,byte:0,cancelled:false,curve:None,curve_close:None,plane:None,mesh:None,shape:None,translation:None,translation_close:None}),transferred:false}))
     }
     /// 📊️ Reads one fixed operator phase without scanning any payload.
     pub fn progress(&self)->f32{if self.state.phase==0{if let Some(translation)=self.state.translation.as_ref(){return 0.1*translation.progress()}if let Some(plane)=self.state.plane.as_ref(){return 0.1*plane.progress()}if matches!(self.state.kind,ValueKind::CurvePoint){return self.state.curve.as_ref().map_or(0.0,|curve|0.1*curve.progress())}return if self.state.shape.is_some(){0.1}else{0.0}}let phase=self.state.phase.min(7)as f32/7.0;if matches!(self.state.kind,ValueKind::MeshEdge){(self.state.output as f32+phase)/3.0}else{phase}}
-    pub fn terminal_is_empty(&self)->bool{self.transferred||self.state.inputs.as_ref().is_none_or(ControlledRetirement::terminal_is_empty)&&self.state.value.is_none()&&self.state.extra.iter().all(Option::is_none)&&self.state.key.capacity()==0&&self.state.outputs.is_none()&&self.state.insertion.is_none()&&self.state.curve.is_none()&&self.state.curve_close.is_none()&&self.state.plane.is_none()&&self.state.mesh.is_none()&&self.state.shape.is_none()&&self.state.translation.is_none()}
+    pub fn terminal_is_empty(&self)->bool{self.transferred||self.state.inputs.as_ref().is_none_or(ControlledRetirement::terminal_is_empty)&&self.state.value.is_none()&&self.state.extra.iter().all(Option::is_none)&&self.state.key.capacity()==0&&self.state.outputs.is_none()&&self.state.insertion.is_none()&&self.state.curve.is_none()&&self.state.curve_close.is_none()&&self.state.plane.is_none()&&self.state.mesh.is_none()&&self.state.shape.is_none()&&self.state.translation.is_none()&&self.state.translation_close.is_none()}
     /// 🪜️ Advances actual scalar evaluation, recursive input closure, UTF8 output and fixed-page publication.
     pub fn step_original(&mut self,cx:&mut StepContext<'_>)->Result<Option<WidgetStep>,OriginalTurnFailure>{
         if source(cx)?!=self.state.source{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"fixed-output job requires its original initiating caller").into())}
@@ -88,10 +89,10 @@ impl OriginalFixedOutputJob{
                     let(result,receipt)=state.plane.as_mut().unwrap().step(cx.retained_grant()).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;if receipt!=Default::default(){post(cx,receipt)?}state.mesh=result;return Ok(None)
                 }
                 if matches!(state.kind,ValueKind::MeshTranslation){
-                    if state.mesh.is_some(){let bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<HalfedgeMesh>();if cx.retained_grant().maximum_capacity_bytes<bytes{return Ok(None)}state.value=Some(GeometryValue::Mesh(Arc::new(state.mesh.take().unwrap())));state.translation.take();state.curve.take();state.phase=1;post(cx,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})?;return Ok(None)}
+                    if state.mesh.is_some(){let bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<HalfedgeMesh>();if cx.retained_grant().maximum_capacity_bytes<bytes{return Ok(None)}state.value=Some(GeometryValue::Mesh(Arc::new(state.mesh.take().unwrap())));if let Some(translation)=state.translation.take(){match ControlledRetirement::new(translation){Ok(owner)=>state.translation_close=Some(owner),Err((error,translation))=>{state.translation=Some(translation);return Err(error.into())}}}state.curve.take();state.phase=1;post(cx,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})?;return Ok(None)}
                     let original=match inputs.get("mesh"){Some(GeometryValue::Mesh(mesh))=>mesh,_=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original mesh translation requires its actual mesh input").into())};
                     if state.translation.is_none(){if cx.retained_grant().maximum_copy_bytes<24{return Ok(None)}let offset=match inputs.get("offset"){Some(GeometryValue::Vector(offset))=>offset.map(|value|value as f32),_=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original mesh translation requires its actual vector offset").into())};let translation=MeshTranslationProduction::new(original,offset)?;post(cx,RetainedCloneProgress{copied_items:1,copied_bytes:24,..Default::default()})?;state.translation=Some(translation);return Ok(None)}
-                    let(result,receipt)=state.translation.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original mesh translation lost its production"))?.step(original,size_of::<HalfedgeMesh>(),cx.retained_grant()).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;if receipt!=Default::default(){post(cx,receipt)?}state.mesh=result;return Ok(None)
+                    let translation=state.translation.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original mesh translation lost its production"))?;let body=size_of::<HalfedgeMesh>();let grant=cx.retained_grant();let demand=translation.demand(body)?;if grant.maximum_items==0||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(None)}let Some((step,_))=cx.with_original_effect(grant,|_,effect|translation.step_turn(body,effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(None)};if let Some(step)=step.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{post(cx,step.progress())?}if let Some(mesh)=translation.take_output(){state.mesh=Some(mesh)}return Ok(None)
                 }
                 if matches!(state.kind,ValueKind::CurvePoint){
                     let(result,receipt)=state.curve.as_mut().unwrap().step(inputs,cx.retained_grant()).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;
@@ -113,15 +114,18 @@ impl OriginalFixedOutputJob{
                 post(cx,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;state.value=Some(value);state.curve.take();state.phase=1;
             }
             1=>{
-                if let Some(owner)=state.curve_close.as_mut(){
+                if let Some(owner)=state.translation_close.as_mut(){
                     let grant=cx.retained_grant();let demand=owner.selected_demand(grant.maximum_copy_bytes)?;
                     if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(None)}
-                    let receipt=owner.step(grant).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?.progress();post(cx,receipt)?;if owner.terminal_is_empty(){state.curve_close.take();}return Ok(None)
+                    let body=grant.maximum_copy_bytes;semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect))?;if owner.terminal_is_empty(){state.translation_close.take();}return Ok(None)
+                }
+                if let Some(owner)=state.curve_close.as_mut(){
+                    let grant=cx.retained_grant();let demand=owner.selected_demand(grant.maximum_copy_bytes)?;
+                    let body=grant.maximum_copy_bytes;semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect))?;if owner.terminal_is_empty(){state.curve_close.take();}return Ok(None)
                 }
                 let owner=state.inputs.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"math value original input owner disappeared"))?;
-                let grant=cx.retained_grant();let demand=owner.selected_demand(grant.maximum_copy_bytes)?;
-                if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(None)}
-                let receipt=owner.step(grant).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?.progress();post(cx,receipt)?;
+                let grant=cx.retained_grant();let demand=owner.selected_demand(grant.maximum_copy_bytes)?;let body=grant.maximum_copy_bytes;
+                semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect))?;
                 if owner.terminal_is_empty(){state.inputs.take();state.phase=2;}
             }
             2=>{
@@ -134,18 +138,17 @@ impl OriginalFixedOutputJob{
                 else if cx.retained_grant().maximum_copy_bytes>0{state.key.push(output_name.as_bytes()[state.byte]as char);state.byte+=1;post(cx,RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?;}
             }
             4=>{
-                let grant=cx.retained_grant();if grant.maximum_copy_bytes<Insert::constructor_copy_bytes()||grant.maximum_capacity_bytes<Insert::constructor_capacity_bytes(){return Ok(None)}
+                let bytes=size_of::<Insert>();if cx.retained_grant().maximum_copy_bytes<bytes{return Ok(None)}
                 let map=state.outputs.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"math value output dictionary disappeared"))?;let key=std::mem::take(&mut state.key);let value=state.value.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"math value scalar disappeared"))?;
-                match {let outcome=Insert::admit(map,key,value,grant);cx.consume_fuel(outcome.work);outcome.result}{Ok((insertion,receipt))=>{state.insertion=Some(insertion);state.phase=5;post(cx,receipt)?;},Err((error,map,key,value))=>{state.outputs=Some(map);state.key=key;state.value=Some(value);return Err(OriginalTurnFailure::debit_original(error,cx))}}
+                state.insertion=Some(Insert::new(map,key,value));state.phase=5;post(cx,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
             }
             5=>{
                 let insertion=state.insertion.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"math value insertion disappeared"))?;
-                if insertion.output_ready(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.outputs=insertion.take();insertion.begin_close();state.phase=6;}
-                else{let grant=cx.retained_grant();let step={let Some((outcome,performed))=cx.with_original_effect(grant,|_,effect|insertion.advance(RetainedOrderedMapInsertGrant{retirement:grant,comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:1},maximum_moved_items:grant.maximum_items,maximum_moved_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes},effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(None)};cx.consume_fuel(outcome.work.saturating_sub(u64::try_from(performed).unwrap_or(u64::MAX)));outcome.result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?};let receipt=match step{RetainedOrderedMapInsertStep::Progress(receipt)|RetainedOrderedMapInsertStep::Complete{progress:receipt,..}=>receipt};post(cx,insert_receipt(receipt)?)?;}
+                if insertion.output_ready(){insert_take(insertion,&mut state.outputs,cx)?;if state.outputs.is_some(){state.phase=6;}}else{insert_advance(insertion,cx)?;}
             }
             6=>{
                 let insertion=state.insertion.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"math value insertion closure disappeared"))?;
-                if !insertion.terminal_is_empty(){let receipt={let outcome=insertion.close_step(cx.retained_grant());cx.consume_fuel(outcome.work);outcome.result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?.progress()};post(cx,receipt)?;return Ok(None)}
+                if !insertion.terminal_is_empty(){insert_close(insertion,cx)?;return Ok(None)}
                 state.insertion.take();post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;
                 if matches!(state.kind,ValueKind::MeshEdge)&&state.output<2{state.value=state.extra[state.output].take();state.output+=1;state.byte=0;state.phase=2;return Ok(None)}state.phase=7;
                 let outputs=state.outputs.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"math value completed output disappeared"))?;return Ok(Some(WidgetStep::Done(WidgetEvaluation::ok(outputs,state.quality))))
@@ -168,7 +171,6 @@ fn analytic_plane(inputs:&WidgetInputs)->Result<Surface,ValueError>{
 }
 fn open(cx:&StepContext<'_>)->bool{let grant=cx.retained_grant();!cx.should_yield()&&!cx.is_cancelled()&&grant.maximum_items>0&&grant.maximum_depth>0}
 fn post(cx:&mut StepContext<'_>,receipt:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{let result=cx.consume_retained(receipt);cx.consume_fuel(1);result.map_err(|error|error.with_retained_progress(receipt).into())}
-fn insert_receipt(receipt:RetainedOrderedMapInsertProgress)->Result<RetainedCloneProgress,ValueError>{receipt.retirement.checked_add(RetainedCloneProgress{copied_items:receipt.moved_items,copied_bytes:receipt.moved_bytes,retained_capacity_bytes:receipt.retained_capacity_bytes,..Default::default()})}
 impl WidgetJob for OriginalFixedOutputJob{fn cancel(&mut self){self.state.cancelled=true}fn step(&mut self,cx:&mut StepContext<'_>)->Result<Option<WidgetStep>,OriginalTurnFailure>{self.step_original(cx)}}
 impl RetireOwned for OriginalFixedOutputJob{fn retirement(mut self)->Box<dyn RetirementCursor>{self.transferred=true;unsafe{ManuallyDrop::take(&mut self.state)}.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.state.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}fn retirement_element_copy_bytes()->usize{size_of::<Self>()}}
 impl Drop for OriginalFixedOutputJob{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"math value job reached Drop before original paid output or retirement closure");if self.terminal_is_empty()&&!self.transferred{unsafe{ManuallyDrop::drop(&mut self.state)}}}}

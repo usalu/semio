@@ -17,7 +17,7 @@ pub fn sourcing_curation_io() -> semio_plugin::AppIo {
         artifact_media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Kit },
         ports: vec![semio_plugin::MediaPortSpec {
             id: "catalog:out".into(),
-            label: "Catalog".into(),
+            label: semio_plugin::LocalizedLabel::native("Catalog", "Katalog"),
             direction: semio_plugin::MediaPortDirection::Out,
             media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
             kind_id: Some("kit.catalog".into()),

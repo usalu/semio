@@ -284,16 +284,16 @@ where
                 _ => size_of::<ArtifactStorePendingReportRetirement>(),
             }),
             ArtifactStoreCursorDisposerPhase::PrefixSnapshots => match self.prefix_ring.last() {
-                Some(entry) if Arc::strong_count(&entry.snapshot) == 1 => birth(store_owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "prefix retirement requires exact snapshot factory"))?.retirement_birth_bytes(&entry.snapshot)),
+                Some(entry) if Arc::strong_count(&entry.snapshot) == 1 => birth(ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes()),
                 _ => structural,
             },
             ArtifactStoreCursorDisposerPhase::TailSnapshot => match self.tail_undo_cache.as_ref() {
-                Some((_, snapshot)) if Arc::strong_count(snapshot) == 1 => birth(store_owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "tail retirement requires exact snapshot factory"))?.retirement_birth_bytes(snapshot)),
+                Some((_, snapshot)) if Arc::strong_count(snapshot) == 1 => birth(ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes()),
                 _ => structural,
             },
             ArtifactStoreCursorDisposerPhase::CurrentSnapshot if !self.current_detached => {
                 if std::ptr::eq(self.current.as_ref(), store_log.envelope.vcs.genesis.facts().snapshot()) { birth(ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes()) }
-                else { birth(store_owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "current retirement requires exact snapshot factory"))?.retirement_birth_bytes(&self.current)) }
+                else { birth(ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes()) }
             }
             ArtifactStoreCursorDisposerPhase::Backbone if !store_wire.original_outbox.terminal_is_empty()=>ArtifactStoreBackboneRetirement::original_outbox_birth_demands(),
             ArtifactStoreCursorDisposerPhase::Backbone if store_wire.member_inbox.capacity() != 0 || store_wire.backbone.is_some() => birth(ArtifactStoreBackboneRetirement::constructor_capacity_bytes()),

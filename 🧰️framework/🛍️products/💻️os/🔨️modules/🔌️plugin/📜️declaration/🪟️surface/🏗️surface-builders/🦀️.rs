@@ -59,7 +59,7 @@ impl ViewerBuilder {
         self
     }
     #[inline(never)]
-    pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
+    pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = LocalizedLabel>) -> Self {
         self.inner = Box::new(::semio_framework_async::poll::resolve_ready((*self.inner).terminology_document(id, document)));
         self
     }
@@ -82,7 +82,7 @@ impl EditorBuilder {
         self
     }
     #[inline(never)]
-    pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
+    pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = LocalizedLabel>) -> Self {
         self.inner = Box::new(::semio_framework_async::poll::resolve_ready((*self.inner).terminology_document(id, document)));
         self
     }

@@ -26,7 +26,7 @@ use crate::initialization_authority::ArtifactStoreInitializationAuthority;
 use semio_os_store_initialization_runtime::lifted_store::{ArtifactStoreInitializationEditAdmission, ArtifactStoreInitializationEditIndex, ArtifactStoreInitializationOwnerCatalog, ArtifactStoreInitializationRuntime};
 use semio_os_store_ledger::CursorRevisionAccumulator;
 use semio_os_store_engine_owners::DocumentStoreOwners;
-use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_value::factory::ArcRootRetirement as ReturnedSnapshotReadRetirement;
 use semio_os_store_read::{artifact_retirement_admit_owned, artifact_retirement_box_close_step, artifact_retirement_box_demands, artifact_retirement_owned_birth_demands};
 use semio_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 use semio_framework_job::{Generation, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, OperationId, StepContext};
@@ -539,7 +539,7 @@ where
             if !permits(grant,quote){return Ok(false);}
             let ledger=match cx.with_native_retirement(|control|Ok(control.ledger_identity())){Ok(ledger)=>ledger,Err(error)=>{self.original_failure=Some(error.into());return Ok(false)}};
             let birth=&mut self.registry_birth;
-            let step=semio_framework_job::close_original_effect_step(cx,quote,|effect|{let turn=match birth.close_step(ledger,effect){Ok(step)=>semio_framework_value::RetainedWorkOutcome{result:Ok(step),work:birth.last_turn_work()},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:birth.last_turn_work()}};semio_framework_value::RetainedWorkPoll::Complete(turn)});
+            let step=semio_framework_job::close_original_effect_step(cx,quote,|effect|{let turn=match birth.close_step(ledger,effect){Ok(step)=>semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(step),work:birth.last_turn_work()},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:birth.last_turn_work()}};semio_framework_value::RetainedWorkPoll::Complete(turn)});
             if let Err(failure)=step{self.original_failure=Some(failure);}
             return Ok(false);
         }
@@ -660,7 +660,7 @@ where
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
         if self.active.is_some() {
-            return semio_os_store_read::settle_close_poll(artifact_retirement_box_close_step(&mut self.active, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return semio_os_store_read::settle_close_poll(artifact_retirement_box_close_step(&mut self.active, effect.grant().maximum_copy_bytes, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.construction_failure.is_some() {
             return semio_os_store_read::artifact_retirement_admit_owned(&mut self.construction_failure, &mut self.active, &mut effect.nested(child)).result;
@@ -692,7 +692,7 @@ where
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.envelope_retirement.is_some() {
-            return semio_os_store_read::settle_close_poll(artifact_retirement_box_close_step(&mut self.envelope_retirement, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return semio_os_store_read::settle_close_poll(artifact_retirement_box_close_step(&mut self.envelope_retirement, effect.grant().maximum_copy_bytes, &mut effect.nested(child))).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.envelope.is_some() {
             if self.owners.is_none() {
@@ -747,7 +747,7 @@ where
                 drop(self.actor_close.take());
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
             }
-            let step = semio_os_store_read::settle_close_poll(actor.step(&mut effect.nested(child)))?;
+            let step = semio_os_store_read::settle_close_poll(actor.step(effect.grant().maximum_copy_bytes, &mut effect.nested(child)))?;
             return admit_retained_clone_close(child, step, actor.terminal_is_empty(), "replay initializer original actor").map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(actor) = self.actor.take() {
@@ -763,7 +763,7 @@ where
             };
         }
         if !self.publication.terminal_is_empty() {
-            return self.publication.close_step(child).result.map(|step| RetainedCloneStep::Progress(step.progress()));
+            return self.publication.close_step(&mut effect.nested(child)).result.map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         Ok(RetainedCloneStep::Complete(empty))
     }

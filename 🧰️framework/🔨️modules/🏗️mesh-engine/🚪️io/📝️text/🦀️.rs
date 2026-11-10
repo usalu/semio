@@ -56,11 +56,23 @@ impl ObjSourceCursor {
 /// 🔎️ Parses bounded indexed polygon source without reconstructing geometry.
 pub fn parse_polygon_mesh_source(text:&str)->Result<PolygonMeshSource,String> {
     let mut preparation=PolygonSourcePreparation::new();
-    loop {let grant=preparation.cold_grant(text,4096,4096)?;if let Some(source)=preparation.step(text,grant)?.source{return Ok(source);}}
+    let mut idle=0usize;
+    let mut turns=0usize;
+    loop {
+        turns+=1;if turns>text.len().saturating_mul(4).saturating_add(100_000){return Err("mesh source preparation exceeded its turn bound".into())}
+        let grant=preparation.cold_grant(text,4096,4096)?;
+        let mut wallet=pack::value::AuthoringWallet::new(grant.retirement,COLD_WORK);
+        let Some(done)=wallet.run(grant.retirement,COLD_STEP_WORK,|effect|preparation.step(text,grant,effect)).map_err(|error|error.to_string())? else {idle+=1;if idle>=COLD_IDLE_TURNS{return Err("mesh source preparation was denied its quoted work".into())}continue};
+        let step=done.output?;
+        if let Some(source)=step.source {return Ok(source);}
+        idle=0;
+    }
 }
 
-const AUTHORING_WORK:u128=1_000_000_000;
-const STEP_WORK:u64=1<<20;
+const COLD_WORK:u128=1_000_000_000;
+const COLD_STEP_WORK:u64=1<<20;
+const COLD_IDLE_TURNS:usize=64;
+
 /// 🎛️ Keeps projection work and retirement currencies independent.
 #[derive(Clone,Copy,Debug)]
 pub struct PolygonSourceGrant {pub maximum_units:usize,pub maximum_projection_bytes:usize,pub retirement:pack::value::retained_clone::RetainedCloneGrant}
@@ -109,19 +121,12 @@ impl PolygonSourcePreparation {
         };
         Ok(PolygonSourceGrant{maximum_units,maximum_projection_bytes,retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)}})
     }
-    /// 💼️ Advances projection work or one independently admitted closure turn.
-    pub fn step(&mut self,text:&str,grant:PolygonSourceGrant)->Result<PolygonSourceStep,String> {
-        let mut wallet=pack::value::AuthoringWallet::new(grant.retirement,AUTHORING_WORK);
-        match wallet.run(grant.retirement,STEP_WORK,|effect|self.step_authored(text,grant,effect)).map_err(|error|error.to_string())?{
-            Some(done)=>done.output,
-            None=>Ok(PolygonSourceStep{source:None,retirement:Default::default()}),
-        }
-    }
-    fn step_authored(&mut self,text:&str,grant:PolygonSourceGrant,effect:&mut pack::value::RetainedAllocationEffect<'_>)->Result<PolygonSourceStep,String> {
+    /// 💼️ Advances projection work or one independently admitted closure turn under the calling turn's effect.
+    pub fn step(&mut self,text:&str,grant:PolygonSourceGrant,effect:&mut pack::value::RetainedAllocationEffect<'_>)->Result<PolygonSourceStep,String> {
         let waiting=|retirement|PolygonSourceStep{source:None,retirement};
         if text.len()>16_000_000{return Err("mesh input exceeds 16 MB".into());}
         if grant.maximum_units==0{return Ok(waiting(Default::default()));}
-        if self.retirement.is_some(){let closed=match pack::value::close_factory_ticket(&mut self.retirement,effect){pack::value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|error|error.to_string())?.progress(),pack::value::RetainedWorkPoll::Pending{..}=>Default::default()};return Ok(waiting(closed));}
+        if self.retirement.is_some(){let closed=match pack::value::close_factory_ticket(&mut self.retirement,grant.retirement.maximum_copy_bytes,effect){pack::value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|error|error.to_string())?.progress(),pack::value::RetainedWorkPoll::Pending{..}=>Default::default()};return Ok(waiting(closed));}
         if self.stage==1&&self.parser.is_some(){return Ok(waiting(admit_source_retirement(&mut self.retirement,&mut self.parser,effect)?));}
         if self.stage==2&&self.projection.is_some(){return Ok(waiting(admit_source_retirement(&mut self.retirement,&mut self.projection,effect)?));}
         if self.stage==10&&!self.garbage.is_empty(){let bytes=pack::value::retirement::owned_retirement_birth_bytes::<Vec<pack::value::DslValue>>();if grant.retirement.maximum_items==0||grant.retirement.maximum_capacity_bytes<bytes{return Ok(waiting(Default::default()));}let mut original=Some(std::mem::take(&mut self.garbage));let admitted=admit_source_retirement(&mut self.retirement,&mut original,effect);if let Some(original)=original{self.garbage=original;}return admitted.map(waiting);}

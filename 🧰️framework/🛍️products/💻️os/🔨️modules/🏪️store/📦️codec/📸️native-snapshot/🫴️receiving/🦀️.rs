@@ -74,7 +74,7 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
    3=>{
     if !self.binding.is_ready(){return match self.binding.select_advance(&self.generic.value,body,effect.maximum_work_units())?{
      OwnedAdvanceSelection::Local{..}=>unpoll(self.binding.advance_local(&mut self.generic.value,body,&mut effect.nested(child))).result,
-     OwnedAdvanceSelection::Nested=>unpoll(self.binding.advance_nested(&mut self.generic.value,native,body,effect.maximum_work_units(),child)).result,
+     OwnedAdvanceSelection::Nested=>{let witness=native.source_witness()?;unpoll(self.binding.advance_nested(&mut self.generic.value,native,witness,body,effect.maximum_work_units(),child)).result}
     }}
     let turn=unpoll(self.binding.take_into(&mut self.output.value,&mut effect.nested(child)));if self.output.value.is_some(){self.phase=4;}turn.result.map_err(OriginalReceivingPrimary::from)
    },
@@ -98,16 +98,18 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
   if self.closed{return Ok(Default::default())}if !self.closing{return Ok(metadata::<bool>())}if !self.output.terminal_is_empty(){return nested(self.output.close_demands(body)?)}if !self.binding.terminal_is_empty(){return nested(self.binding.close_demands(body)?)}if !self.generic.terminal_is_empty(){return nested(self.generic.close_demands(body)?)}if let Some(record)=&self.record{if !record.terminal_is_empty(){return nested(record.close_demands(body)?)}return Ok(metadata::<Option<RetainedRecordReceiving>>())}Ok(metadata::<bool>())
  }
  /// ♻️ Every partial value remains resident when admission refuses or cancellation starts closure.
- pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+ /// ♻️ Settles the close poll as the erased cursor step.
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{erased_cursor_turn(self.close_poll(body,effect))}
+ pub fn close_poll(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   let grant=effect.grant();let child=child(grant);
   let settle=|effect:&RetainedAllocationEffect<'_>,result:Result<RetainedCloneStep,ValueError>|RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map_err(OriginalRetirementFailure::from),work:effect.performed_work()});
   if self.closed{return settle(effect,Ok(RetainedCloneStep::Complete(Default::default())))}
-  let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return settle(effect,Err(error))};if !funds(grant,demand){return settle(effect,Ok(RetainedCloneStep::Progress(Default::default())))}
+  let demand=match self.close_demands(body){Ok(demand)=>demand,Err(error)=>return settle(effect,Err(error))};if !funds(grant,demand){return settle(effect,Ok(RetainedCloneStep::Progress(Default::default())))}
   if !self.closing{if let Err(error)=perform(effect,1){return settle(effect,Err(error))}self.closing=true;return settle(effect,Ok(RetainedCloneStep::Progress(receipt(demand))))}
   if !self.output.terminal_is_empty(){return stepped(self.output.close_step(&mut effect.nested(child)))}
   if !self.binding.terminal_is_empty(){return stepped(self.binding.close_step(&mut effect.nested(child)))}
   if !self.generic.terminal_is_empty(){return stepped(self.generic.close_step(&mut effect.nested(child)))}
-  if let Some(record)=&mut self.record{if !record.terminal_is_empty(){return match record.close_step(&mut effect.nested(child)){RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work})}}if let Err(error)=perform(effect,1){return settle(effect,Err(error))}self.record=None;return settle(effect,Ok(RetainedCloneStep::Progress(receipt(demand))))}
+  if let Some(record)=&mut self.record{if !record.terminal_is_empty(){return match record.close_step(body,&mut effect.nested(child)){RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work})}}if let Err(error)=perform(effect,1){return settle(effect,Err(error))}self.record=None;return settle(effect,Ok(RetainedCloneStep::Progress(receipt(demand))))}
   if let Err(error)=perform(effect,1){return settle(effect,Err(error))}self.closed=true;settle(effect,Ok(RetainedCloneStep::Complete(receipt(demand))))
  }
  /// 🕳️ Terminal means no typed, generic or Pack backing can be released by implicit destruction.
@@ -123,7 +125,7 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> RetireOwned for OriginalSnapsh
 }
 impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> RetirementCursor for OriginalSnapshotRecordReceiving<T>{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{erased_cursor_turn(OriginalSnapshotRecordReceiving::close_step(self,effect))}
+ semio_framework_value::native_retirement_reply!();
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
  fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
@@ -134,7 +136,7 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalArtifactSnapshotReceiv
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{self.take_demand()}
  fn take_into(&mut self,output:&mut Option<T>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.take_into(output,grant)}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{OriginalSnapshotRecordReceiving::close_step(self,effect)}
+ fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let body=effect.grant().maximum_copy_bytes;OriginalSnapshotRecordReceiving::close_poll(self,body,effect)}
  fn terminal_is_empty(&self)->bool{self.terminal_is_empty()}
 }
 

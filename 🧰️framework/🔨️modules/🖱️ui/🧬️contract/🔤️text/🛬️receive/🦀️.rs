@@ -3,7 +3,8 @@ use super::UiText;
 use semio_framework_value::{NativeDecodeControl,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,record_retirement_work};
 use semio_framework_value::retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete,RetainedCloneBinding,RetainedCloneClose,RetainedCloneRef,retained_clone_grant_admits};
-use semio_framework_value::native_decoding::{NativeReceive,NativeReceiver,OriginalReceivingPrimary,owned::{NativeAdvanceSelection,NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,native_output_take,native_record_pure_take,tree::{NativeValueSource,fixed,receipt,invalid}}};
+use semio_framework_value::{OriginalRetirementCloseLoan,OriginalRetirementFailure};
+use semio_framework_value::native_decoding::{NativeReceive,NativeReceiver,OriginalReceivingPrimary,NativeReceivingFailure,owned::{OriginalSourceTurnWitness,NativeAdvanceSelection,native_receiver_close_start,NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,native_output_take,native_record_pure_take,tree::{NativeValueSource,fixed,receipt,invalid}}};
 use std::mem::ManuallyDrop;
 
 #[doc(hidden)]
@@ -11,12 +12,13 @@ pub struct TextRetirement(pub(crate) Option<UiText>);
 impl RetirementCursor for TextRetirement{
  fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(self.0.is_some()))}
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(fixed(size_of::<UiText>()))}
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
-  if self.0.is_none(){return RetirementStep::Complete(0)}
-  if effect.maximum_work_units()==0||!retained_clone_grant_admits(effect.grant(),fixed(size_of::<UiText>())){return RetirementStep::BudgetExhausted}
-  let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};
-  self.0=None;RetirementStep::Complete(work)
+ fn close_into<'reply>(&mut self,_:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetirementStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetirementStep,OriginalRetirementFailure>,ValueError>{
+  if self.0.is_none(){return Ok(reply.complete(Ok(RetirementStep::Complete(0))))}
+  if effect.maximum_work_units()==0||!retained_clone_grant_admits(effect.grant(),fixed(size_of::<UiText>())){return Ok(reply.complete(Ok(RetirementStep::BudgetExhausted)))}
+  let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return Ok(reply.complete(Ok(RetirementStep::Failure(error.into(),work))))};
+  self.0=None;Ok(reply.complete(Ok(RetirementStep::Complete(work))))
  }
+ fn recover_close_into<'reply>(&mut self,_:usize,_:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetirementStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetirementStep,OriginalRetirementFailure>,ValueError>{Ok(reply.pending())}
  fn terminal_is_empty(&self)->bool{self.0.is_none()}
  fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
@@ -45,7 +47,7 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,UiText> for UiTextNativeReceiv
   if work>maximum_work_units{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"UI text action exceeds its original work ceiling"))}
   Ok(NativeAdvanceSelection::Local{work})
  }
- fn advance_nested(&mut self,_:RetainedCloneRef<'_,I>,_:&mut NativeDecodeControl<'_>,_:usize,_:u64,_:RetainedCloneGrant)->RetainedWorkPoll<RetainedCloneStep,OriginalReceivingPrimary>{
+ fn advance_nested(&mut self,_:RetainedCloneRef<'_,I>,_:&mut NativeDecodeControl<'_>,_:OriginalSourceTurnWitness<'_>,_:usize,_:u64,_:RetainedCloneGrant)->RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure>{
   RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})
  }
  fn advance_local<'reply>(&mut self,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{
@@ -69,22 +71,28 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,UiText> for UiTextNativeReceiv
   if matches!(&turn,RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(_)),..})){self.ready=false;self.closing=true;}
   native_record_pure_take(turn,reply)
  }
- fn begin_close(&mut self){self.closing=true;}
+ fn advance_pending(&self)->bool{false}
+ native_receiver_close_start!(closing);
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty()||self.output.is_some(){self.retirement.next_owner_demands::<UiText>(self.output.is_some(),&None,body)}else{RetainedCloneBinding::close_demand(&self.binding,body)}}
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.retirement.is_empty()||self.output.is_some(){self.retirement.next_owner_work::<UiText>(self.output.is_some(),&None,body)}else{RetainedCloneBinding::close_work_demand(&self.binding,body)}}
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
-  if !self.closing{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(effect)}
-  if self.output.is_some(){let turn=self.retirement.begin_granted(&mut self.output,effect);return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work})}
-  RetainedCloneBinding::close_one(&mut self.binding,effect)
+ fn close_step<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{
+  if !self.closing{return Ok(reply.complete(Err(invalid().into())))}
+  if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}
+  let demand=self.close_demands(body)?;if !retained_clone_grant_admits(effect.grant(),demand){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
+  if !self.retirement.is_empty(){return self.retirement.step_into(body,effect,reply)}
+  if self.output.is_some(){let turn=self.retirement.begin_granted(&mut self.output,effect);return Ok(reply.complete(turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into)))}
+  Ok(match RetainedCloneBinding::close_one(&mut self.binding,body,effect){RetainedWorkPoll::Pending{..}=>reply.pending(),RetainedWorkPoll::Complete(turn)=>reply.complete(turn.result)})
  }
+ fn recover_close_step<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{if !self.retirement.is_empty(){return self.retirement.recover_step_into(body,effect,reply)}if self.output.is_none()&&self.binding.is_some(){return self.close_step(body,effect,reply)}Ok(reply.pending())}
+ fn close_original_step<'reply>(&mut self,_:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.close_step(body,effect,reply)}
+ fn recover_close_original_step<'reply>(&mut self,_:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.recover_close_step(body,effect,reply)}
  fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.output.is_none()&&self.retirement.is_empty()}
 }
 impl<I:NativeValueSource+?Sized> Drop for UiTextNativeReceiver<I>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"UI text receiving reached Drop before funded closure")}}
 impl NativeDefaultValue for UiText{
  fn default_demand()->RetirementDemand{fixed(size_of::<UiText>())}
  fn default_work_demand()->Result<u64,ValueError>{Ok(1)}
- fn default_allocates()->bool{false}
- fn admit_default(output:&mut Option<Self>,g:RetainedCloneGrant,_actual:Option<&mut Option<usize>>)->RetainedWorkOutcome{if output.is_some(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if !retained_clone_grant_admits(g,fixed(size_of::<UiText>())){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some(Self::default());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(fixed(size_of::<UiText>())))),work:1}}
+ fn admit_default<'reply>(output:&mut Option<Self>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{if output.is_some(){return Ok(reply.complete(Err(invalid().into())))}let d=Self::default_demand();if !retained_clone_grant_admits(effect.grant(),d)||effect.maximum_work_units()==0{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"UI text default exceeded its work authority").into())))}*output=Some(Self::default());Ok(reply.complete(Ok(RetainedCloneStep::Complete(receipt(d)))))}
+ fn recover_default<'reply>(_:&mut Option<Self>,_:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{Ok(reply.pending())}
 }
 impl NativeDefault for UiText{type Cursor=NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{Self::Cursor::new()}}

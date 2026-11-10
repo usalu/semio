@@ -12,12 +12,12 @@ fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_v
 
 struct Owned{presentation:Option<ToolRunPresentationSlot>,tick:Option<ToolRunTick>}
 semio_framework_value::artifact_retire_struct!(Owned{presentation,tick});
-pub struct OriginalToolRunNativeState{owned:ManuallyDrop<Owned>,cursor:Option<Box<ToolRunTickNativeCursor>>,outcome:Option<semio_framework_job::OriginalNativeReceivingOutcome>,stepped:Option<Result<RetainedCloneStep,semio_framework_value::native_decoding::OriginalReceivingPrimary>>,close:Option<ControlledRetirement<Owned>>,phase:u8,closing:bool,invalidated:bool}
+pub struct OriginalToolRunNativeState{owned:ManuallyDrop<Owned>,cursor:Option<Box<ToolRunTickNativeCursor>>,outcome:Option<semio_framework_job::OriginalNativeReceivingOutcome>,stepped:Option<Result<RetainedCloneStep,semio_framework_value::native_decoding::OriginalReceivingPrimary>>,close:Option<ControlledRetirement<Owned>>,adv_reply:Option<Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>>,adv_pending:bool,close_reply:Option<Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>>,close_pending:bool,phase:u8,closing:bool,invalidated:bool}
 fn cursor_release_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Box<ToolRunTickNativeCursor>>>(),release_bytes:size_of::<ToolRunTickNativeCursor>(),depth:1,..Default::default()}}
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn funds(cx:&StepContext<'_>,d:RetirementDemand)->bool{!cx.should_yield()&&semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),d)}
 impl OriginalToolRunNativeState{
- pub fn empty()->Self{Self{owned:ManuallyDrop::new(Owned{presentation:None,tick:None}),cursor:None,outcome:None,stepped:None,close:None,phase:0,closing:false,invalidated:false}}
+ pub fn empty()->Self{Self{owned:ManuallyDrop::new(Owned{presentation:None,tick:None}),cursor:None,outcome:None,stepped:None,close:None,adv_reply:None,adv_pending:false,close_reply:None,close_pending:false,phase:0,closing:false,invalidated:false}}
  pub fn initialize(&mut self,tool_id:&str,identity:ToolRunIdentity,state:ToolRunState,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.invalidated&&!self.terminal_is_empty(){return Ok(false)}
   if self.closing||self.invalidated{let d=RetirementDemand{copy_bytes:2*size_of::<bool>(),depth:1,..Default::default()};if !funds(cx,d){return Ok(false)}self.closing=false;self.invalidated=false;self.phase=0;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
@@ -36,7 +36,7 @@ impl OriginalToolRunNativeState{
   if self.closing{return Err(invalid("original run presentation is closing").into())}
   let owned=&mut *self.owned;
   let presentation=owned.presentation.as_mut().ok_or_else(||invalid("original run presentation is absent"))?;
-  if !presentation.ready(){advance_presentation(presentation,cx)?;return Ok(false)}
+  if !presentation.ready(){advance_presentation(presentation,&mut self.adv_reply,&mut self.adv_pending,cx)?;return Ok(false)}
   match self.phase{
    0=>{if self.cursor.is_none(){let bytes=size_of::<ToolRunTickNativeCursor>();built(cx,&mut self.cursor,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes+size_of::<Option<Box<ToolRunTickNativeCursor>>>(),capacity_bytes:bytes,release_bytes:0,depth:1},||Ok((Box::write(Box::new_uninit(),ToolRunTickNativeCursor::empty()),RetainedCloneProgress{copied_items:1,copied_bytes:bytes+size_of::<Option<Box<ToolRunTickNativeCursor>>>(),retained_capacity_bytes:bytes,..Default::default()})))?;return Ok(false)}let d=ToolRunTickNativeCursor::birth_demands();if funds(cx,d){if let Some(p)=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?.admit(source,cx.retained_grant())?{cx.consume_retained(p)?;cx.consume_fuel(1);self.phase=1;}}},
    1=>{
@@ -87,18 +87,32 @@ impl OriginalToolRunNativeState{
   let grant=effect.grant();let d=self.next_close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}self.closing=true;
   if self.outcome.is_some()||self.stepped.is_some(){if effect.remaining_work_units()?==0||!effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}let message=self.outcome.take().filter(|outcome|outcome.source_refusal.is_some()||outcome.call.is_err()).map(|outcome|outcome.retained_progress());let failed=matches!(self.stepped.take(),Some(Err(_)));let progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};if failed||message.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original tick receiving was refused before its cancelled close").with_retained_progress(progress))}return Ok(RetainedCloneStep::Progress(progress))}
   if let Some(cursor)=self.cursor.as_mut(){if !cursor.terminal_is_empty(){return cursor.close_step(effect)}drop(self.cursor.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
-  if let Some(close)=self.close.as_mut(){if !close.terminal_is_empty(){return semio_framework_tool_run_entities::settle_close(close.step(effect)).map(RetainedCloneStep::Progress)}self.close=None;}
+  if let Some(close)=self.close.as_mut(){if !close.terminal_is_empty(){{let body=grant.maximum_copy_bytes;if self.close_reply.is_none(){let reply=semio_framework_value::retained_clone::OriginalEffectReply::borrow(&mut self.close_reply)?;let done=if self.close_pending{close.recover_step_into(body,effect,reply)?}else{close.step_into(body,effect,reply)?};drop(done);}return match self.close_reply.take(){None=>{self.close_pending=true;Ok(RetainedCloneStep::Progress(Default::default()))},Some(result)=>{self.close_pending=false;result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)}}}}self.close=None;}
   else if self.owned.presentation.is_some()||self.owned.tick.is_some(){let owned=std::mem::replace(&mut*self.owned,Owned{presentation:None,tick:None});match ControlledRetirement::new(owned){Ok(close)=>self.close=Some(close),Err((error,owned))=>{*self.owned=owned;return Err(error)}}}
   else{return Ok(RetainedCloneStep::Complete(Default::default()))}
   Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
  }
- pub fn terminal_is_empty(&self)->bool{self.cursor.is_none()&&self.outcome.is_none()&&self.stepped.is_none()&&self.close.is_none()&&self.owned.presentation.is_none()&&self.owned.tick.is_none()}
+ pub fn terminal_is_empty(&self)->bool{self.cursor.is_none()&&self.outcome.is_none()&&self.stepped.is_none()&&self.close.is_none()&&self.adv_reply.is_none()&&self.close_reply.is_none()&&!self.adv_pending&&!self.close_pending&&self.owned.presentation.is_none()&&self.owned.tick.is_none()}
 }
-fn advance_presentation(presentation:&mut ToolRunPresentationSlot,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
- let d=presentation.next_demands(cx.retained_grant().maximum_copy_bytes)?;if !funds(cx,d){return Ok(())}
+fn advance_presentation(presentation:&mut ToolRunPresentationSlot,reply:&mut Option<Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>>,pending:&mut bool,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+ let body=cx.retained_grant().maximum_copy_bytes;
+ if !*pending{let d=presentation.next_demands(body)?;if !funds(cx,d){return Ok(())}}
  let fuel=(cx.fuel_remaining().saturating_sub(1)/3)as usize;
  let grant=ToolRunEntityEditGrant{retirement:cx.retained_grant(),comparison:semio_framework_value::retained_clone::ordered_map::BoundedOrdGrant{maximum_items:fuel.min(1),maximum_bytes:fuel.min(64)},maximum_moved_items:fuel.min(1),maximum_moved_bytes:cx.retained_grant().maximum_copy_bytes,maximum_capacity_bytes:cx.retained_grant().maximum_capacity_bytes};
- let result=match cx.with_original_effect(grant.retirement,|_,effect|presentation.advance(grant,effect))?{Some((result,performed))=>(result,u64::try_from(performed).unwrap_or(u64::MAX)),None=>return Ok(())};let(result,performed)=result;let p=match &result{Ok(p)=>RetainedCloneProgress{retained_capacity_bytes:p.retirement.retained_capacity_bytes+p.retained_capacity_bytes,..p.retirement},Err(error)=>error.retained_progress()};settle_presentation_turn(cx,p,performed)?;result?;Ok(())
+ let recover=*pending;
+ let(outcome,performed)=match cx.with_original_effect(grant.retirement,|_,effect|{
+  if reply.is_none(){let slot=semio_framework_value::retained_clone::OriginalEffectReply::borrow(&mut *reply)?;let done=if recover{presentation.recover_advance_into(body,grant,effect,slot)?}else{presentation.advance_into(body,grant,effect,slot)?};drop(done);}
+  Ok::<_,ValueError>(reply.take())
+ })?{Some((outcome,performed))=>(outcome,u64::try_from(performed).unwrap_or(u64::MAX)),None=>return Ok(())};
+ let(progress,failure)=match outcome{
+  Ok(Some(Ok(step)))=>{*pending=false;(step.progress(),None)},
+  Ok(Some(Err(error)))=>{*pending=false;(error.retained_progress(),Some(error.into_value_error()))},
+  Ok(None)=>{*pending=true;(Default::default(),None)},
+  Err(error)=>(error.retained_progress(),Some(error)),
+ };
+ settle_presentation_turn(cx,progress,performed)?;
+ if let Some(error)=failure{return Err(error.into())}
+ Ok(())
 }
 /// ⛽️ Settles one presentation advance: the physical receipt and exactly the work the effect performed, the single fuel charge of the turn.
 fn settle_presentation_turn(cx:&mut StepContext<'_>,progress:RetainedCloneProgress,performed:u64)->Result<(),OriginalTurnFailure>{cx.consume_retained(progress)?;cx.consume_fuel(performed);Ok(())}

@@ -1,5 +1,6 @@
 //! ⚙️ The engine's private-state laws: a child that reports beyond its grant is refused before owner placement, and an abandoned active cursor fails fast without running payload destructors. The public clone laws live in `public.rs`.
-use crate::retained_clone::{FixtureSourceBirth,RetainedCloneProgress,RetainedCloneStep,settled,with_effect};
+use crate::effect;
+use crate::retained_clone::{FixtureSourceBirth,RetainedCloneProgress,RetainedCloneStep};
 use crate::retirement::{RetirementCursor,RetirementStep};
 use semio_framework_value_retirement::retirement_contract::RetirementPollExit;
 use super::*;
@@ -20,17 +21,22 @@ impl<T:RetainedClone> PagedCloneElement<T> for Element<T>{fn new()->Self{Self(T:
 fn output_ready(&self)->bool{self.0.output_ready()}
 fn advance_demands(&self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{self.0.advance_demands(source,body,maximum_work_units)}
 fn advance_work_demand(&self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.0.advance_work_demand(source,body,maximum_work_units)}
-fn advance(&mut self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementOutcome{self.0.advance(source,body,maximum_work_units,effect)}
+fn advance_into<'r>(&mut self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.0.advance_into(source,body,maximum_work_units,effect,reply)}
+fn recover_advance_into<'r>(&mut self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.0.recover_advance_into(source,body,maximum_work_units,effect,reply)}
+fn native_terminal_release(&self)->Option<RetainedCursorRelease<Self>>{self.0.terminal_is_empty().then(||unsafe{RetainedCursorRelease::native(|element:&Self|element.0.terminal_is_empty())})}
 fn take_demand(&self)->Result<RetirementDemand,ValueError>{self.0.take_demand()}
 fn take_work_demand(&self)->Result<u64,ValueError>{self.0.take_work_demand()}
 fn take<'reply>(&mut self,output:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{self.0.take(output,effect,reply)}
+fn recover_take<'reply>(&mut self,output:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{self.0.recover_take(output,effect,reply)}
 fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>{self.0.begin_close_demand()}
 fn begin_close_work_demand(&self)->Result<u64,ValueError>{self.0.begin_close_work_demand()}
-fn begin_close_paid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>{self.0.begin_close_paid(effect)}
+fn begin_close_into<'r>(&mut self,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.0.begin_close_into(effect,reply)}
+fn recover_begin_close_into<'r>(&mut self,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.0.recover_begin_close_into(effect,reply)}
 fn close_started(&self)->bool{self.0.close_started()}
 fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.close_demands(body)}
 fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.0.close_work_demand(body)}
-fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let grant=effect.grant();self.0.close_step(&mut effect.nested(grant))}
+fn close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.0.close_into(body,effect,reply)}
+fn recover_close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.0.recover_close_into(body,effect,reply)}
 fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
 }
 type Cursor<T,const N:usize>=PagedListCloneEngine<T,Element<T>,N>;
@@ -38,7 +44,7 @@ type Cursor<T,const N:usize>=PagedListCloneEngine<T,Element<T>,N>;
 fn close_fixture<T: RetainedClone, const N: usize>(cursor: &mut Cursor<T,N>, items: usize, work: usize) -> Result<RetainedCloneStep, OriginalRetirementFailure> {
     let d=cursor.close_demands(work).map_err(OriginalRetirementFailure::from)?;
     let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
-    let mut actual=None;let turn=settled(with_effect(grant,CPU,&mut actual,|effect|cursor.close_step(effect)).0);assert!(turn.work<=1);let step=turn.result?;
+    let quote=cursor.close_work_demand(work)?;let turn=effect::turn::<OriginalRetirementFailure>(grant,CPU,&mut |effect,reply|cursor.close_into(work,effect,reply));assert!(turn.work<=u128::from(quote));let step=turn.result?;
     assert!(step.progress().fits(grant));
     Ok(step)
 }
@@ -46,17 +52,18 @@ fn close_fixture<T: RetainedClone, const N: usize>(cursor: &mut Cursor<T,N>, ite
 fn begin<T: RetainedClone, const N: usize>(cursor: &mut Cursor<T,N>) {
     let d=cursor.begin_close_demand().unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
-    let mut actual=None;with_effect(grant,CPU,&mut actual,|effect|cursor.begin_close_paid(effect)).0.result.unwrap();
+    effect::turn::<OriginalRetirementFailure>(grant,CPU,&mut |effect,reply|cursor.begin_close_into(effect,reply)).result.unwrap();
 }
 
 fn advance<T: RetainedClone, const N: usize>(cursor: &mut Cursor<T,N>, source: RetainedCloneRef<'_, PagedList<T,N>>, body: usize, grant: RetainedCloneGrant) -> OriginalRetirementOutcome {
-    let mut actual=None;with_effect(grant,CPU,&mut actual,|effect|cursor.advance(source,body,CPU,effect)).0
+    let quote=cursor.advance_demands(source,body,CPU).unwrap_or_default();
+    let grant=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.max(quote.copy_bytes),maximum_capacity_bytes:grant.maximum_capacity_bytes.max(quote.capacity_bytes),maximum_release_bytes:grant.maximum_release_bytes.max(quote.release_bytes),maximum_depth:grant.maximum_depth.max(quote.depth),..grant};
+    effect::turn::<OriginalRetirementFailure>(grant,CPU,&mut |effect,reply|cursor.advance_into(source,body,CPU,effect,reply))
 }
 
 fn fill<T, const N: usize>(source: &mut PagedList<T, N>) {
     while !source.has_reserved_slot() {
-        let mut actual=None;
-        let outcome=with_effect(STOCK,CPU,&mut actual,|effect|source.reserve_one(effect)).0.result.expect("fixture reserve");
+        let outcome=effect::run(STOCK,|effect|source.reserve_one(effect)).result.expect("fixture reserve");
         assert!(matches!(outcome,PagedListReservationOutcome::Ready(progress) if progress.progressed));
     }
 }
@@ -83,14 +90,17 @@ struct DropProbeRetirement {
 impl RetirementCursor for DropProbeRetirement {
     fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.released))}
     fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
-    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
-        if effect.grant().maximum_items == 0 || effect.maximum_work_units() == 0 { return RetirementStep::BudgetExhausted; }
-        if self.released { return RetirementStep::Complete(0); }
-        if self.value.as_ref().is_some_and(|value|Arc::strong_count(&value.drops)<=1){return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"fixture drop counter requires its original external observer").into(),0);}
-        let work=match retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};
-        drop(self.value.take());
-        self.released = true;
-        RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},work)
+    fn close_into<'reply>(&mut self,_body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetirementStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetirementStep,OriginalRetirementFailure>,ValueError>{
+        let step=(||{
+            if effect.grant().maximum_items == 0 || effect.remaining_work_units()? == 0 { return Ok(RetirementStep::BudgetExhausted); }
+            if self.released { return Ok(RetirementStep::Complete(0)); }
+            if self.value.as_ref().is_some_and(|value|Arc::strong_count(&value.drops)<=1){return Ok(RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"fixture drop counter requires its original external observer").into(),0));}
+            let work=match retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return Ok(RetirementStep::Failure(error.into(),work))};
+            drop(self.value.take());
+            self.released = true;
+            Ok::<_,ValueError>(RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},work))
+        })();
+        Ok(reply.complete(step.map_err(Into::into)))
     }
     fn terminal_is_empty(&self) -> bool { self.released }
     fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
@@ -123,7 +133,6 @@ impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
     fn take_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(self.output_ready()))}
     fn begin_close_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(!self.close_started()))}
     fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>{Ok(retained_close_start_demand(self.closing))}
-    fn begin_close_paid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,ValueError>{start_retained_close(&mut self.closing,effect)}
     fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing||self.terminal_is_empty(){return Ok(0)}if !self.close.is_empty()||self.output.is_some(){return self.close.next_owner_work::<DropProbe>(self.output.is_some(),&self.source,body)}RetainedCloneBinding::close_work_demand(&self.source,body)}
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(Default::default());}self.close.next_owner_demands::<DropProbe>(self.output.is_some(),&self.source,body)}
     fn output_ready(&self) -> bool { !self.closing && self.output.is_some() }
@@ -131,16 +140,22 @@ impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
 
     fn advance_demands(&self,source:RetainedCloneRef<'_,DropProbe>,_body:usize,_maximum_work_units:u64)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<DropProbe>()},depth:1,..Default::default()})}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, DropProbe>, _body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>) -> OriginalRetirementOutcome {let grant=effect.grant();let mut work=0;let result=(|| -> Result<RetainedCloneStep,OriginalRetirementFailure>{
+    fn advance_into<'reply>(&mut self, source: RetainedCloneRef<'_, DropProbe>, _body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError> {let grant=effect.grant();let result=(|| -> Result<RetainedCloneStep,OriginalRetirementFailure>{
         if maximum_work_units==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-        let turn=source.bind(&mut self.source,effect);work=turn.work;if let Some(progress)=turn.result? { return Ok(RetainedCloneStep::Progress(progress)); }
+        let turn=source.bind(&mut self.source,effect);if let Some(progress)=turn.result? { return Ok(RetainedCloneStep::Progress(progress)); }
         if self.output.is_some() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<DropProbe>(), retained_capacity_bytes: 0, released_bytes: 0 };
         if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"drop probe advance exceeded its original work").into())}
-        work=1;self.output = Some(DropProbe { drops: Arc::clone(&source.get().drops) });
+        self.output = Some(DropProbe { drops: Arc::clone(&source.get().drops) });
         Ok(RetainedCloneStep::Complete(progress))
-    })();RetainedWorkOutcome{result,work}}
+    })();Ok(reply.complete(result))}
+    fn begin_close_into<'reply>(&mut self,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{let turn=start_retained_close(&mut self.closing,effect);Ok(reply.complete(turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)))}
+    fn recover_begin_close_into<'reply>(&mut self,_effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Ok(reply.pending())}
+    fn recover_advance_into<'reply>(&mut self,_source:RetainedCloneRef<'_,DropProbe>,_body:usize,_maximum_work_units:u64,_effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Ok(reply.pending())}
+    fn recover_close_into<'reply>(&mut self,_body:usize,_effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Ok(reply.pending())}
+    fn native_terminal_release(&self)->Option<RetainedCursorRelease<Self>>{{self.terminal_is_empty().then(||unsafe{{RetainedCursorRelease::native(|cursor:&Self|cursor.terminal_is_empty())}})}}
+
 
     fn take_demand(&self)->Result<RetirementDemand,ValueError>{retained_clone_take_demand::<DropProbe>()}
     fn take<'reply>(&mut self,output:&mut Option<DropProbe>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{if !self.output_ready(){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}let turn=take_retained_clone_output(&mut self.output,output,effect);Ok(reply.complete(turn.result.map(|progress|if output.is_some(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})))}
@@ -153,13 +168,15 @@ impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
         self.closing && self.output.is_none() && self.source.is_none() && self.close.is_empty()
     }
 
-    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {let grant=effect.grant();let mut work=0;let result=(|| -> Result<RetainedCloneStep,RetirementPollExit>{
-        if !self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "drop probe close must begin").into()); }
-        if !self.close.is_empty() { let turn=RetirementPollExit::settled(self.close.step_granted(effect))?;work=turn.work;return turn.result.map_err(Into::into); }
-        let turn=self.close.begin_granted(&mut self.output,effect);work=turn.work;if let Some(step)=turn.result? { return Ok(step); }
-        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-        {let turn=RetirementPollExit::settled(close_retained_binding(&mut self.source,effect))?;work+=turn.work;turn.result.map_err(Into::into)}
-    })();RetirementPollExit::finish(result,work)}
+    fn close_into<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError> {
+        let grant=effect.grant();
+        if !self.closing { return Ok(reply.complete(Err(ValueError::new(ValueRefusalKind::InvariantViolated, "drop probe close must begin").into()))); }
+        if !self.close.is_empty() { return self.close.step_into(body,effect,reply); }
+        match self.close.begin_granted(&mut self.output,effect).result { Err(error)=>return Ok(reply.complete(Err(error.into()))), Ok(Some(step))=>return Ok(reply.complete(Ok(step))), Ok(None)=>{} }
+        if grant.maximum_items==0{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
+        let result=(|| -> Result<RetainedCloneStep,RetirementPollExit>{let turn=RetirementPollExit::settled(close_retained_binding(&mut self.source,body,effect))?;turn.result.map_err(Into::into)})();
+        Ok(match RetirementPollExit::finish(result,0){RetainedWorkPoll::Complete(turn)=>reply.complete(turn.result),RetainedWorkPoll::Pending{..}=>reply.pending()})
+    }
 }
 
 impl RetainedClone for DropProbe {
@@ -190,7 +207,6 @@ impl RetainedCloneCursor<NonconformingChild> for NonconformingChildCursor {
     fn take_work_demand(&self)->Result<u64,ValueError>{Ok(0)}
     fn begin_close_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(!self.close_started()))}
     fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>{Ok(retained_close_start_demand(self.closing))}
-    fn begin_close_paid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,ValueError>{start_retained_close(&mut self.closing,effect)}
     fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing||self.terminal_is_empty(){return Ok(0)}RetainedCloneBinding::close_work_demand(&self.source,body)}
     fn output_ready(&self) -> bool { false }
     fn close_started(&self) -> bool { self.closing }
@@ -198,13 +214,18 @@ impl RetainedCloneCursor<NonconformingChild> for NonconformingChildCursor {
 
     fn advance_demands(&self,source:RetainedCloneRef<'_,NonconformingChild>,_body:usize,_maximum_work_units:u64)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<NonconformingChild>()},depth:1,..Default::default()})}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingChild>, _body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>) -> OriginalRetirementOutcome {let grant=effect.grant();let mut work=0;let result=(|| -> Result<RetainedCloneStep,OriginalRetirementFailure>{
+    fn advance_into<'reply>(&mut self, source: RetainedCloneRef<'_, NonconformingChild>, _body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError> {let grant=effect.grant();let result=(|| -> Result<RetainedCloneStep,OriginalRetirementFailure>{
         if maximum_work_units==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-        let turn=source.bind(&mut self.source,effect);work=turn.work;if let Some(progress)=turn.result? { return Ok(RetainedCloneStep::Progress(progress)); }
+        let turn=source.bind(&mut self.source,effect);if let Some(progress)=turn.result? { return Ok(RetainedCloneStep::Progress(progress)); }
         if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"nonconforming child advance exceeded its original work").into())}
-        work=1;
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items.saturating_add(1), copied_bytes: grant.maximum_copy_bytes.saturating_add(1), retained_capacity_bytes: 0, released_bytes: 0 }))
-    })();RetainedWorkOutcome{result,work}}
+    })();Ok(reply.complete(result))}
+    fn begin_close_into<'reply>(&mut self,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{let turn=start_retained_close(&mut self.closing,effect);Ok(reply.complete(turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)))}
+    fn recover_begin_close_into<'reply>(&mut self,_effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Ok(reply.pending())}
+    fn recover_advance_into<'reply>(&mut self,_source:RetainedCloneRef<'_,NonconformingChild>,_body:usize,_maximum_work_units:u64,_effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Ok(reply.pending())}
+    fn recover_close_into<'reply>(&mut self,_body:usize,_effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Ok(reply.pending())}
+    fn native_terminal_release(&self)->Option<RetainedCursorRelease<Self>>{self.terminal_is_empty().then(||unsafe{RetainedCursorRelease::native(|cursor:&Self|cursor.terminal_is_empty())})}
+
 
     fn take_demand(&self)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
     fn take<'reply>(&mut self,_output:&mut Option<NonconformingChild>,_effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
@@ -213,7 +234,10 @@ impl RetainedCloneCursor<NonconformingChild> for NonconformingChildCursor {
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::copy_demand(&self.source)}
     fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{RetainedCloneBinding::capacity_demand(&self.source,body)}
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::release_demand(&self.source)}
-    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{close_retained_binding(&mut self.source,effect)}
+    fn close_into<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{
+        let result=(|| -> Result<RetainedCloneStep,RetirementPollExit>{let turn=RetirementPollExit::settled(close_retained_binding(&mut self.source,body,effect))?;turn.result.map_err(Into::into)})();
+        Ok(match RetirementPollExit::finish(result,0){RetainedWorkPoll::Complete(turn)=>reply.complete(turn.result),RetainedWorkPoll::Pending{..}=>reply.pending()})
+    }
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.source.is_none()
     }
@@ -249,7 +273,6 @@ impl RetainedCloneCursor<NonconformingRetirementChild> for NonconformingRetireme
     fn take_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(self.output_ready()))}
     fn begin_close_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(!self.close_started()))}
     fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>{Ok(retained_close_start_demand(self.closing))}
-    fn begin_close_paid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,ValueError>{start_retained_close(&mut self.closing,effect)}
     fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing||self.terminal_is_empty(){return Ok(0)}if !self.reported{return Ok(1)}RetainedCloneBinding::close_work_demand(&self.source,body)}
     fn output_ready(&self) -> bool { !self.closing && self.output.is_some() }
     fn close_started(&self) -> bool { self.closing }
@@ -257,13 +280,19 @@ impl RetainedCloneCursor<NonconformingRetirementChild> for NonconformingRetireme
 
     fn advance_demands(&self,source:RetainedCloneRef<'_,NonconformingRetirementChild>,_body:usize,_maximum_work_units:u64)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<NonconformingRetirementChild>()},depth:1,..Default::default()})}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingRetirementChild>, _body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>) -> OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,OriginalRetirementFailure>{
+    fn advance_into<'reply>(&mut self, source: RetainedCloneRef<'_, NonconformingRetirementChild>, _body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError> {let result=(|| -> Result<RetainedCloneStep,OriginalRetirementFailure>{
         if maximum_work_units==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-        let turn=source.bind(&mut self.source,effect);work=turn.work;if let Some(progress)=turn.result? { return Ok(RetainedCloneStep::Progress(progress)); }
+        let turn=source.bind(&mut self.source,effect);if let Some(progress)=turn.result? { return Ok(RetainedCloneStep::Progress(progress)); }
         if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"nonconforming retirement child advance exceeded its original work").into())}
-        work=1;self.output = Some(NonconformingRetirementChild);
+        self.output = Some(NonconformingRetirementChild);
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
-    })();RetainedWorkOutcome{result,work}}
+    })();Ok(reply.complete(result))}
+    fn begin_close_into<'reply>(&mut self,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{let turn=start_retained_close(&mut self.closing,effect);Ok(reply.complete(turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)))}
+    fn recover_begin_close_into<'reply>(&mut self,_effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Ok(reply.pending())}
+    fn recover_advance_into<'reply>(&mut self,_source:RetainedCloneRef<'_,NonconformingRetirementChild>,_body:usize,_maximum_work_units:u64,_effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Ok(reply.pending())}
+    fn recover_close_into<'reply>(&mut self,_body:usize,_effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Ok(reply.pending())}
+    fn native_terminal_release(&self)->Option<RetainedCursorRelease<Self>>{self.terminal_is_empty().then(||unsafe{RetainedCursorRelease::native(|cursor:&Self|cursor.terminal_is_empty())})}
+
 
     fn take_demand(&self)->Result<RetirementDemand,ValueError>{retained_clone_take_demand::<NonconformingRetirementChild>()}
     fn take<'reply>(&mut self,output:&mut Option<NonconformingRetirementChild>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{if !self.output_ready(){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}let turn=take_retained_clone_output(&mut self.output,output,effect);Ok(reply.complete(turn.result.map(|progress|if output.is_some(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})))}
@@ -276,14 +305,14 @@ impl RetainedCloneCursor<NonconformingRetirementChild> for NonconformingRetireme
         self.closing && self.reported && self.source.is_none() && self.output.is_none()
     }
 
-    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {let grant=effect.grant();let mut work=0;let result=(|| -> Result<RetainedCloneStep,RetirementPollExit>{
+    fn close_into<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError> {let grant=effect.grant();let result=(|| -> Result<RetainedCloneStep,RetirementPollExit>{
         if !self.reported {
             if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"nonconforming retirement child close exceeded its original work").into())}
-            work=1;self.reported = true;
+            self.reported = true;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items.saturating_add(1), copied_bytes: 0, retained_capacity_bytes: grant.maximum_capacity_bytes.saturating_add(1), released_bytes: grant.maximum_release_bytes.saturating_add(1) }));
         }
-        {let turn=RetirementPollExit::settled(close_retained_binding(&mut self.source,effect))?;work+=turn.work;turn.result.map_err(Into::into)}
-    })();RetirementPollExit::finish(result,work)}
+        {let turn=RetirementPollExit::settled(close_retained_binding(&mut self.source,body,effect))?;turn.result.map_err(Into::into)}
+    })();Ok(match RetirementPollExit::finish(result,0){RetainedWorkPoll::Complete(turn)=>reply.complete(turn.result),RetainedWorkPoll::Pending{..}=>reply.pending()})}
 }
 
 impl RetainedClone for NonconformingRetirementChild {
@@ -317,10 +346,10 @@ fn retained_paged_list_refuses_over_budget_child_before_owner_placement() {
     let mut cursor = Cursor::<NonconformingChild, 1>::default();
     let body = RetainedCloneBinding::alias_copy_bytes().max(size_of::<NonconformingChildCursor>());
     let grant = binding_grant(body);
-    let mut error_turns=0;
+    let mut error_turns=0;let mut last=None;
     let error = loop {
-        error_turns+=1;assert!(error_turns<100000,"adversarial retained fixture must terminate");
-        let turn=advance(&mut cursor,retained.borrow(),body,grant);let work=turn.work;if let Ok(step)=&turn.result{assert!(step.progress()==Default::default()||work>0)}match turn.result {
+        error_turns+=1;assert!(error_turns<2000,"adversarial retained fixture must terminate; last {last:?}");
+        let turn=advance(&mut cursor,retained.borrow(),body,grant);let work=turn.work;last=Some((work,format!("{:?}",turn.result),cursor.placement()));if let Ok(step)=&turn.result{assert!(step.progress()==Default::default()||work>0)}match turn.result {
             Ok(RetainedCloneStep::Progress(_)) => {}
             Ok(RetainedCloneStep::Complete(_)) => panic!("over-budget child must not complete"),
             Err(error) => break error,
@@ -330,9 +359,7 @@ fn retained_paged_list_refuses_over_budget_child_before_owner_placement() {
     assert_eq!(primary.kind,ValueRefusalKind::InvariantViolated);
     assert_eq!(primary.message.as_ref(),REFUSAL);
     assert!(matches!(primary.message,std::borrow::Cow::Borrowed(_)));
-    assert_eq!(cursor.index, 0);
-    assert_eq!(cursor.values.len(), 0);
-    assert!(cursor.child_value.is_none());
+    assert_eq!(cursor.placement(), (0, 0, false));
     begin(&mut cursor);
     drain(&mut cursor);
 }
@@ -346,10 +373,10 @@ fn retained_paged_list_refuses_over_budget_child_retirement_before_owner_placeme
     let mut cursor = Cursor::<NonconformingRetirementChild, 1>::default();
     let body = RetainedCloneBinding::alias_copy_bytes().max(size_of::<NonconformingRetirementChildCursor>());
     let grant = binding_grant(body);
-    let mut error_turns=0;
+    let mut error_turns=0;let mut last=None;
     loop {
-        error_turns+=1;assert!(error_turns<100000,"adversarial retained fixture must terminate");
-        let turn=advance(&mut cursor,retained.borrow(),body,grant);let work=turn.work;if let Ok(step)=&turn.result{assert!(step.progress()==Default::default()||work>0)}match turn.result {
+        error_turns+=1;assert!(error_turns<2000,"adversarial retained fixture must terminate; last {last:?}");
+        let turn=advance(&mut cursor,retained.borrow(),body,grant);let work=turn.work;last=Some((work,format!("{:?}",turn.result),cursor.placement()));if let Ok(step)=&turn.result{assert!(step.progress()==Default::default()||work>0)}match turn.result {
             Ok(RetainedCloneStep::Progress(_)) => {}
             Ok(RetainedCloneStep::Complete(_)) => panic!("over-budget child retirement must be refused before completion"),
             Err(error) => {
@@ -361,9 +388,7 @@ fn retained_paged_list_refuses_over_budget_child_retirement_before_owner_placeme
             }
         }
     }
-    assert_eq!(cursor.index, 0);
-    assert_eq!(cursor.values.len(), 0);
-    assert!(cursor.child_value.is_some());
+    assert_eq!(cursor.placement(), (0, 0, true));
     begin(&mut cursor);
     drain(&mut cursor);
 }
@@ -379,7 +404,7 @@ fn retained_paged_list_abandonment_panics_without_running_payload_destructors() 
     let retained = crate::retained_clone::RetainedCloneSource::from_owner(source);
     let mut cursor = Cursor::<DropProbe, 64>::default();
     let grant = RetainedCloneGrant { maximum_items: 5, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 4096 };
-    while cursor.values.len() < 8 {
+    while cursor.placement().1 < 8 {
         assert!(matches!(advance(&mut cursor,retained.borrow(),4096,grant).result.expect("drop probe prefix"), RetainedCloneStep::Progress(_)));
     }
     let abandoned = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(cursor)));

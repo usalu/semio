@@ -517,6 +517,10 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             let step=semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|store.retire_snapshot_alias(&mut self.pending_snapshot_alias,effect).map(|result|RetainedCloneStep::Progress(match result{Some((owner,progress))=>{self.snapshot_retirement=Some(owner);progress},None=>Default::default()})))?;
             return Ok(Some(RetainedCloneStep::Progress(step.progress())))
         }
+        if self.retired_publications.is_empty()&&self.snapshot_retirement.is_none()&&self.pending_discarded.is_some(){
+            let step=semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|store.retire_owned_mutation(&mut self.pending_discarded,effect).map(|result|RetainedCloneStep::Progress(match result{Some((owner,progress))=>{self.snapshot_retirement=Some(owner);progress},None=>Default::default()})))?;
+            return Ok(Some(RetainedCloneStep::Progress(step.progress())))
+        }
         let step=retired(cx,demand,|grant|{
         if let Some(publication)=self.retired_publications.last_mut(){
             if publication.terminal_is_empty(){drop(self.retired_publications.pop());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
@@ -524,7 +528,6 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             let step=admit_retained_clone_close(child,step,publication.terminal_is_empty(),"tool publication original")?;return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.snapshot_retirement.is_some(){return close_tool_erased_retirement(&mut self.snapshot_retirement,grant);}
-        if self.pending_discarded.is_some(){let result=store.retire_owned_mutation(&mut self.pending_discarded,grant)?;return Ok(RetainedCloneStep::Progress(match result{Some((owner,progress))=>{self.snapshot_retirement=Some(owner);progress},None=>Default::default()}));}
         let alias=self.retired_snapshots.pop().or_else(||self.entries.iter_mut().find(|entry|!entry.displaced.is_empty()).and_then(|entry|entry.displaced.pop()));
         if let Some(alias)=alias{self.pending_snapshot_alias=Some(alias);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
         if let Some(operation)=self.discarded.pop(){self.pending_discarded=Some(operation);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}

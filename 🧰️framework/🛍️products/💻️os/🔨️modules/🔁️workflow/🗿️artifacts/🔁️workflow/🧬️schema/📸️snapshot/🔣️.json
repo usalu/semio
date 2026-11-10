@@ -3,6 +3,24 @@
   "$id": "https://json.schemas.assets.semio-tech.com/os/workflow/snapshot.json",
   "title": "Workflow Snapshot",
   "$defs": {
+    "LocalizedLabel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["native", "reuse"],
+      "properties": {
+        "native": { "$ref": "#/$defs/LocalizedLabelRow" },
+        "reuse": { "$ref": "#/$defs/LocalizedLabelRow" }
+      }
+    },
+    "LocalizedLabelRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string" },
+        "de": { "type": "string" }
+      }
+    },
     "Port": {
       "type": "object",
       "additionalProperties": false,
@@ -30,7 +48,7 @@
               "type": "string"
             },
             "label": {
-              "type": "string"
+              "$ref": "#/$defs/LocalizedLabel"
             },
             "direction": {
               "enum": [

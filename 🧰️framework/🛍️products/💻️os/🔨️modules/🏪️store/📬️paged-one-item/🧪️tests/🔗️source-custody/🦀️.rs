@@ -3,6 +3,7 @@ use super::*;
 use semio_os_store_one_item_batch::paged_one_item::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
 use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,SnapshotRetirementFactory,RetirementDemand,ErasedSnapshotRetirement};
+use semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage;
 use semio_framework_value::retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 
 thread_local! {
@@ -38,18 +39,18 @@ impl ArtifactOwnedValueRetirementFactory<DocumentMutation> for ExactMutationIssu
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ExactSnapshotIssuer;
 impl SnapshotRetirementFactory<Document> for ExactSnapshotIssuer{
-    fn retirement_birth_bytes(&self,value:&Arc<Document>)->usize{SharedValueRetirementFactory::<Document>::default().retirement_birth_bytes(value)}
-    fn retire_demands(&self,value:&Arc<Document>)->Result<semio_framework_value::RetirementDemand,ValueError>{semio_framework_value::SnapshotRetirementFactory::<Document>::retire_demands(&SharedValueRetirementFactory::<Document>::default(),value)}
-    fn retire_work_demand(&self,value:&Arc<Document>)->Result<u64,ValueError>{semio_framework_value::SnapshotRetirementFactory::<Document>::retire_work_demand(&SharedValueRetirementFactory::<Document>::default(),value)}
-    fn retire<'reply>(&self,value:&mut Option<Arc<Document>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::factory::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>)->semio_framework_value::factory::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure>{
+    fn retirement_birth_bytes(&self,value:&SharedOriginalStorage<Document>)->usize{SharedValueRetirementFactory::<Document>::default().retirement_birth_bytes(value)}
+    fn retire_demands(&self,value:&SharedOriginalStorage<Document>)->Result<semio_framework_value::RetirementDemand,ValueError>{semio_framework_value::SnapshotRetirementFactory::<Document>::retire_demands(&SharedValueRetirementFactory::<Document>::default(),value)}
+    fn retire_work_demand(&self,value:&SharedOriginalStorage<Document>)->Result<u64,ValueError>{semio_framework_value::SnapshotRetirementFactory::<Document>::retire_work_demand(&SharedValueRetirementFactory::<Document>::default(),value)}
+    fn retire<'reply>(&self,value:&mut Option<SharedOriginalStorage<Document>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::factory::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>)->semio_framework_value::factory::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure>{
         SNAPSHOT_CALLS.set(SNAPSHOT_CALLS.get()+1);
         assert_eq!(std::ptr::from_ref(self) as usize,SNAPSHOT_ISSUER.get());
         let resident=value.as_ref().expect("original snapshot resident");
-        let identity=Arc::as_ptr(resident) as usize;if POST.get()==0{POST.set(identity);}else{assert_eq!(identity,POST.get());}
-        assert_eq!(resident.title.identity(),TITLE_ROOT.get());
+        let identity=resident.identity();if POST.get()==0{POST.set(identity);}else{assert_eq!(identity,POST.get());}
+        assert_eq!(resident.get().title.identity(),TITLE_ROOT.get());
         semio_framework_value::SnapshotRetirementFactory::<Document>::retire(&SharedValueRetirementFactory::<Document>::default(),value,effect,reply)
     }
-    fn recover_retire<'reply>(&self,value:&mut Option<Arc<Document>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::factory::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>)->semio_framework_value::factory::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure>{semio_framework_value::SnapshotRetirementFactory::<Document>::recover_retire(&SharedValueRetirementFactory::<Document>::default(),value,effect,reply)}
+    fn recover_retire<'reply>(&self,value:&mut Option<SharedOriginalStorage<Document>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::factory::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>)->semio_framework_value::factory::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure>{semio_framework_value::SnapshotRetirementFactory::<Document>::recover_retire(&SharedValueRetirementFactory::<Document>::default(),value,effect,reply)}
 }
 
 #[derive(Default)]
@@ -94,7 +95,7 @@ impl PagedOneItemEdit<Document,DocumentMutation> for SourceProbeEdit{
         use semio_framework_value::RetirementPollExit;
         let result=(||->Result<RetainedCloneStep,RetirementPollExit>{
             assert!(self.closing);let grant=effect.grant();self.close_demands(factory,grant.maximum_copy_bytes)?;
-            let step=RetirementPollExit::resume(semio_framework_value::retained_clone::close_retained_binding(if self.before.is_some(){&mut self.before}else if self.mutation.is_some(){&mut self.mutation}else{&mut self.post},effect))?;self.last_work=u64::try_from(effect.performed_work()).unwrap_or(u64::MAX);
+            let step=RetirementPollExit::resume(semio_framework_value::retained_clone::close_retained_binding(if self.before.is_some(){&mut self.before}else if self.mutation.is_some(){&mut self.mutation}else{&mut self.post},grant.maximum_copy_bytes,effect))?;self.last_work=u64::try_from(effect.performed_work()).unwrap_or(u64::MAX);
             Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
         })();
         RetirementPollExit::settle(effect,result)
@@ -158,7 +159,7 @@ fn paged_original_cold_refusal_reports_actual_work_and_resets_on_denial_and_canc
     assert!(matches!(receiver.run(grant.retained_grant(),|control|owner.advance(grant.maximum_copy_bytes,denied,control)).unwrap(),ArtifactStoreOneItemPreparationStep::Blocked));assert_eq!(owner.last_turn_work(),law["expected"]["deniedWork"].as_u64().unwrap());
     owner.cancel();assert!(matches!(receiver.run(grant.retained_grant(),|control|owner.advance(grant.maximum_copy_bytes,grant,control)).unwrap(),ArtifactStoreOneItemPreparationStep::Blocked));assert_eq!(owner.last_turn_work(),law["expected"]["cancelledWork"].as_u64().unwrap());
     close_exact(&mut owner,law["maximumTurns"].as_u64().unwrap() as usize);drop(owner);receiver.finish();
-    drain_fixture(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
+    drain_root(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
 }
 
 #[test]
@@ -184,10 +185,10 @@ fn cold_publication_semantics_preserve_diagnostics_and_refuse_before_inverse_and
         let messages=prepared.as_ref().map_or_else(||owner.outcome_messages(),|value|value.outcome_messages()).iter().map(|message|serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(message)).unwrap()).collect::<Vec<_>>();
         if let Some(prepared)=prepared{
             let(mut retirement,_)=prepared.admit_retirement(Arc::clone(&mutations),Arc::clone(&snapshots),grant.retained_grant()).unwrap_or_else(|_|panic!("cold diagnostic candidate retirement"));
-            for _ in 0..maximum{if retirement.terminal_is_empty(){break;}effect::settle(grant.retained_grant(),|e|retirement.close_step(e)).result.unwrap();}assert!(retirement.terminal_is_empty());
+            for _ in 0..maximum{if retirement.terminal_is_empty(){break;}effect::settle(grant.retained_grant(),|e|retirement.close_step(grant.maximum_copy_bytes,e)).result.unwrap();}assert!(retirement.terminal_is_empty());
         }
         close_exact(&mut owner,maximum);drop(owner);receiver.finish();
-        assert_eq!(serde_json::to_value(root.as_ref()).unwrap(),scope["base"]);drain_fixture(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
+        assert_eq!(serde_json::to_value(root.as_ref()).unwrap(),scope["base"]);drain_root(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
         assert_eq!(applied,case["applied"].as_bool().unwrap());assert_eq!(refused,!applied);
         assert_eq!(calls,(1,case["inverseCalls"].as_u64().unwrap() as usize,case["applyCalls"].as_u64().unwrap() as usize,1));
         let mut expected=case.as_object().unwrap().clone();for key in ["applied","post","applyCalls","inverseCalls"]{expected.remove(key);}assert_eq!(messages,vec![Value::Object(expected)]);
@@ -210,7 +211,7 @@ fn paged_original_mutation_sources_keep_genuine_refs_and_exact_issuer_through_al
             let(result,heap)=receiver.run(policy(&law).retained_grant(),|control|Ok::<_,ValueError>(observe(||owner.advance(policy(&law).maximum_copy_bytes,ArtifactStoreOneItemGrant{maximum_items:0,..policy(&law)},control)))).unwrap();
             assert!(matches!(result.unwrap(),ArtifactStoreOneItemPreparationStep::Blocked));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(EDIT_CALLS.get(),calls);
             assert_eq!(owner.last_turn_work(),law["expected"]["deniedWork"].as_u64().unwrap());
-            match receiver.run(policy(&law).retained_grant(),|control|{let before=control.actual_work();let result=owner.advance(policy(&law).maximum_copy_bytes,policy(&law),control);assert_eq!(owner.last_turn_work()>=control.actual_work()-before,law["expected"]["reportedWorkCoversNative"].as_bool().unwrap());assert!(owner.last_turn_work()>0,"funded original preparation at {:?}: {result:?}",owner.checkpoint());result}){
+            match receiver.run(policy(&law).retained_grant(),|control|{let before=control.actual_work();let result=owner.advance(policy(&law).maximum_copy_bytes,policy(&law),control);assert_eq!(u128::from(owner.last_turn_work())>=control.actual_work()-before,law["expected"]["reportedWorkCoversNative"].as_bool().unwrap());assert!(owner.last_turn_work()>0,"funded original preparation at {:?}: {result:?}",owner.checkpoint());result}){
                 Ok(ArtifactStoreOneItemPreparationStep::Prepared(..))=>{prepared=owner.take_prepared();break;}
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(_,receipt))=>assert!(receipt.fits(policy(&law).retained_grant())),
                 Ok(ArtifactStoreOneItemPreparationStep::Blocked)=>panic!("funded original source action stalled"),
@@ -221,17 +222,17 @@ fn paged_original_mutation_sources_keep_genuine_refs_and_exact_issuer_through_al
         if let Some(prepared)=prepared{
             POST.set(Arc::as_ptr(prepared.post_snapshot()) as usize);assert_eq!(serde_json::to_value(prepared.post_snapshot().as_ref()).unwrap(),law["base"]);
             let(mut ticket,receipt)=prepared.admit_retirement(Arc::clone(&mutations),Arc::clone(&snapshots),policy(&law).retained_grant()).unwrap_or_else(|_|panic!("exact source candidate retirement"));assert!(receipt.fits(policy(&law).retained_grant()));
-            for _ in 0..maximum{if ticket.terminal_is_empty(){break;}let copy=ticket.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:ticket.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:ticket.next_release_byte_demand().unwrap(),maximum_depth:ticket.next_depth_demand().unwrap()};assert!(effect::settle(grant,|e|ticket.close_step(e)).result.unwrap().progress().fits(grant));}assert!(ticket.terminal_is_empty());
+            for _ in 0..maximum{if ticket.terminal_is_empty(){break;}let copy=ticket.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:ticket.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:ticket.next_release_byte_demand().unwrap(),maximum_depth:ticket.next_depth_demand().unwrap()};assert!(effect::settle(grant,|e|ticket.close_step(grant.maximum_copy_bytes,e)).result.unwrap().progress().fits(grant));}assert!(ticket.terminal_is_empty());
         }
         close_exact(&mut owner,maximum);assert_eq!(CALLS.get(),row["expectedMutationCalls"].as_u64().unwrap() as usize);assert_eq!(SNAPSHOT_CALLS.get(),row["expectedSnapshotCalls"].as_u64().unwrap() as usize);assert_eq!(observe(||drop(owner)).1.requested_bytes,0);receiver.finish();
-        drain_fixture(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
+        drain_root(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
     }
     for stop in law["cancelAt"].as_array().unwrap(){
         CALLS.set(0);SNAPSHOT_CALLS.set(0);EDIT_CALLS.set(0);REFUSE_EDIT.set(false);REFUSE_ISSUER.set(false);
         let(mut owner,root,mutations,snapshots)=original_owner(&law);let mut receiver=Receiver::new(policy(&law).retained_grant());
         for _ in 0..stop.as_u64().unwrap(){assert!(!matches!(receiver.run(policy(&law).retained_grant(),|control|owner.advance(policy(&law).maximum_copy_bytes,policy(&law),control)).unwrap(),ArtifactStoreOneItemPreparationStep::Prepared(..)));}
         owner.cancel();assert!(matches!(receiver.run(policy(&law).retained_grant(),|control|owner.advance(policy(&law).maximum_copy_bytes,policy(&law),control)).unwrap(),ArtifactStoreOneItemPreparationStep::Blocked));assert_eq!(owner.last_turn_work(),law["expected"]["cancelledWork"].as_u64().unwrap());close_exact(&mut owner,maximum);assert_eq!(CALLS.get(),1);assert_eq!(serde_json::to_value(root.as_ref()).unwrap(),law["base"]);assert_eq!(observe(||drop(owner)).1.requested_bytes,0);receiver.finish();
-        drain_fixture(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
+        drain_root(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
     }
 }      
 #[test]
@@ -285,22 +286,22 @@ fn paged_failed_seal_keeps_actual_returned_edit_post_and_exact_issuer_pair_until
         let Some(ticket)=post_close.as_ref()else{break;};
         let demand=semio_framework_value_snapshot_read::artifact_retirement_box_demands(ticket,4096).unwrap();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-        assert!(effect::settle(grant,|e|semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut post_close,e)).result.unwrap().progress().fits(grant));
+        assert!(effect::settle(grant,|e|semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut post_close,grant.maximum_copy_bytes,e)).result.unwrap().progress().fits(grant));
     }
     assert!(post_close.is_none()&&retained_post.is_none());assert_eq!(CALLS.get(),law["expected"]["failedSealMutationCalls"].as_u64().unwrap() as usize);assert_eq!(SNAPSHOT_CALLS.get(),law["expected"]["failedSealSnapshotCalls"].as_u64().unwrap() as usize);
     let mut factory_close=Some(semio_framework_value::FactoryAuthority::new(retained_snapshots.take().unwrap()));
     for _ in 0..maximum{
         let Some(owner)=factory_close.as_mut()else{break;};
         let demand=owner.demands(0).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-        assert!(effect::settle(grant,|e|owner.step(e)).result.unwrap().progress().fits(grant));if owner.terminal_is_empty(){factory_close=None;}
+        assert!(effect::settle(grant,|e|owner.step(grant.maximum_copy_bytes,e)).result.unwrap().progress().fits(grant));if owner.terminal_is_empty(){factory_close=None;}
     }
     assert!(factory_close.is_none());
     let authority=retained_authority.take().unwrap();
-    let mut authority_close=semio_framework_value::retirement::arc_custody::SharedControlledRetirement::new(authority);
+    let mut authority_close=semio_framework_value::retirement::arc_custody::SharedControlledRetirement::new(SharedOriginalStorage::from_cold(Arc::into_inner(authority).expect("failed seal returned the sole authority")));
     for _ in 0..maximum{
         if authority_close.terminal_is_empty(){break;}
         let copy=authority_close.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:authority_close.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:authority_close.next_release_byte_demand().unwrap(),maximum_depth:authority_close.next_depth_demand().unwrap()};
-        assert!(effect::settle(grant,|e|authority_close.close_step(e)).result.unwrap().progress().fits(grant));
+        assert!(effect::settle(grant,|e|authority_close.close_step(grant.maximum_copy_bytes,e)).result.unwrap().progress().fits(grant));
     }
     assert!(authority_close.terminal_is_empty());assert_eq!(observe(||drop((edit_close,post_close,authority_close,factory_close))).1.released_bytes,0);
 }

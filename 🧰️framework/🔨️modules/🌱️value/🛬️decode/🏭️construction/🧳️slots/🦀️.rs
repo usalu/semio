@@ -43,6 +43,8 @@ impl<T:RetireOwned+Sync,R:RetireOwned+Sync> NativeSharedSlots<T,R>{
  pub fn capture_work_demand(&self,input:&Option<T>)->Result<u64,ValueError>{if self.has_pending_recovery()||self.retired.is_some()||self.data().is_some_and(|data|!data.empty())||input.is_none(){return Err(invalid())}Ok(if self.authority.is_none(){2}else{1})}
  pub fn input(&self)->Option<&T>{self.data().and_then(|data|data.input.as_ref())}
  pub fn output_ready(&self)->bool{!self.has_pending_recovery()&&self.data().is_some_and(Producer::output_ready)}
+ /// 🧾️ Reports the physical progress of the settled advance action for the turn that performed it.
+ pub fn advance_settled_progress(&self)->Option<RetainedCloneProgress>{self.effect.settled_progress()}
  pub fn advance_pending(&self)->bool{(self.effect.has_pending_recovery()&&!self.effect.transfer_ready())||self.birth_pending}
  pub fn has_pending_recovery(&self)->bool{self.effect.has_pending_recovery()||self.local_action.is_some()||self.local_reply.is_some()||self.local_transfer.is_some()||self.operation.is_some()||self.authority.as_ref().is_some_and(OriginalEffectAuthority::has_pending_action)}
  pub fn capture_plan(&self)->Result<Option<NativeEffectCapturePlan>,ValueError>{Ok(Some(self.effect.capture_plan()))}

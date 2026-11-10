@@ -3,7 +3,7 @@ use super::{FlowAuthoringRequest,FlowAuthoringOutcome,FlowAuthoringSerials};
 use super::{remove::RemoveWork,add::AddWork,insert::InsertWork,connect::ConnectWork,reorganize::ReorganizeWork};
 use super::super::*;
 use semio_framework_artifact_flow_flow::{FlowSnapshotSource,FlowSourceIdentity,FlowMutation};
-use semio_framework_job::{OriginalTurnFailure,StepContext,close_original_retained_step};
+use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
 use std::mem::{ManuallyDrop,size_of};
@@ -34,7 +34,7 @@ impl Child{
  }}
  fn begin_close(&mut self){macro_rules! close{($slot:ident)=>{if let Some(work)=$slot.get_mut(){work.begin_close()}}}match self{Self::Remove(s)=>close!(s),Self::Add(s)=>close!(s),Self::Insert(s)=>close!(s),Self::Connect(s)=>close!(s),Self::Reorganize(s)=>close!(s)}}
  fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{macro_rules! quote{($slot:ident)=>{storage_close_demands($slot,|work|work.close_demands(copy),|work|work.terminal_is_empty())}}match self{Self::Remove(s)=>quote!(s),Self::Add(s)=>quote!(s),Self::Insert(s)=>quote!(s),Self::Connect(s)=>quote!(s),Self::Reorganize(s)=>quote!(s)}}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{macro_rules! close{($slot:ident)=>{storage_close_step($slot,grant,|work,g|work.close_step(g),|work|work.terminal_is_empty())}}match self{Self::Remove(s)=>close!(s),Self::Add(s)=>close!(s),Self::Insert(s)=>close!(s),Self::Connect(s)=>close!(s),Self::Reorganize(s)=>close!(s)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{macro_rules! close{($slot:ident)=>{storage_close_step($slot,grant,|work,g|work.close_step(g,effect),|work|work.terminal_is_empty())}}match self{Self::Remove(s)=>close!(s),Self::Add(s)=>close!(s),Self::Insert(s)=>close!(s),Self::Connect(s)=>close!(s),Self::Reorganize(s)=>close!(s)}}
  fn terminal_is_empty(&self)->bool{match self{Self::Remove(s)=>s.terminal_is_empty(),Self::Add(s)=>s.terminal_is_empty(),Self::Insert(s)=>s.terminal_is_empty(),Self::Connect(s)=>s.terminal_is_empty(),Self::Reorganize(s)=>s.terminal_is_empty()}}
 }
 /// 🎮️ All six operations share one original admission and preserve their complete output through close.
@@ -64,7 +64,7 @@ impl FlowAuthoringWork{
   match self.phase{
    0=>{let d=self.next_demands(source,infos,request,cx.retained_grant().maximum_copy_bytes)?;if Self::paid(cx,d)?{self.binding=Some((source.source_identity(),infos as*const _ as usize,request.identity()));self.origin=Some(origin);self.child=Some(Child::new(request));self.phase=1}},
    1=>{if let Some(result)=self.child.as_mut().ok_or_else(invalid)?.step(source,infos,request,&mut self.serials,cx)?{*self.result=Some(result);self.child.as_mut().unwrap().begin_close();self.phase=2}},
-   2=>{let child=self.child.as_mut().ok_or_else(invalid)?;if !child.terminal_is_empty(){let d=child.close_demands(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,d,|g|child.close_step(g))?;return Ok(None)}if Self::paid(cx,fixed(size_of::<Option<Child>>()))?{self.child=None;self.phase=3}},
+   2=>{let child=self.child.as_mut().ok_or_else(invalid)?;if !child.terminal_is_empty(){let d=child.close_demands(cx.retained_grant().maximum_copy_bytes)?;close_with_effect(cx,d,|g,effect|child.close_step(g,effect))?;return Ok(None)}if Self::paid(cx,fixed(size_of::<Option<Child>>()))?{self.child=None;self.phase=3}},
    3=>if Self::paid(cx,self.next_demands(source,infos,request,cx.retained_grant().maximum_copy_bytes)?)?{*self.output=Some(FlowAuthoringOutcome{result:self.result.take().ok_or_else(invalid)?,serials:self.serials});self.phase=4},
    4=>if Self::paid(cx,fixed(size_of::<Option<FlowAuthoringOutcome>>()))?{self.phase=5;return Ok(self.output.take())},
    5=>{},_=>return Err(invalid().into()),
@@ -78,14 +78,14 @@ impl FlowAuthoringWork{
  pub fn begin_close(&mut self){self.closing=true;if let Some(child)=self.child.as_mut(){child.begin_close()}}
  pub fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if let Some(child)=self.child.as_ref(){return if child.terminal_is_empty(){Ok(fixed(size_of::<Option<Child>>()))}else{child.close_demands(copy)}}if !self.retirement.is_empty(){return self.retirement.demands(copy)}if self.result.is_some(){return self.retirement.next_owner_demands::<Result<Vec<FlowMutation>,FlowCoreError>>(true,&None,copy)}if self.output.is_some(){return self.retirement.next_owner_demands::<FlowAuthoringOutcome>(true,&None,copy)}Ok(if self.binding.is_some()||self.origin.is_some(){fixed(size_of::<Option<(FlowSourceIdentity,usize,[u64;20])>>()+size_of::<Option<(u64,u64)>>())}else{Default::default()})}
  /// 🧹️ Returns the exact child work as well as its physical progress on both result branches.
- pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub fn close_step(&mut self,g:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
   self.progress=Default::default();self.last_work=0;let outcome=self.close_once(g);self.last_work=outcome.work;self.progress=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|s|s.progress());outcome
  }
  fn close_once(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
   if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}
-  if let Some(child)=self.child.as_mut(){if !child.terminal_is_empty(){return child.close_step(g)}let d=fixed(size_of::<Option<Child>>());if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.child=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(d))),work:1}}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(g)}
-  macro_rules! owner{($field:ident)=>{if self.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.$field,g);return RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
+  if let Some(child)=self.child.as_mut(){if !child.terminal_is_empty(){return child.close_step(g,effect)}let d=fixed(size_of::<Option<Child>>());if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.child=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(d))),work:1}}
+  if !self.retirement.is_empty(){return poll_outcome(self.retirement.step_granted(g.maximum_copy_bytes,effect))}
+  macro_rules! owner{($field:ident)=>{if self.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.$field,effect);return RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
   owner!(result);owner!(output);if self.binding.is_some()||self.origin.is_some(){let d=fixed(size_of::<Option<(FlowSourceIdentity,usize,[u64;20])>>()+size_of::<Option<(u64,u64)>>());if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.binding=None;self.origin=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}}
   RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}
  }

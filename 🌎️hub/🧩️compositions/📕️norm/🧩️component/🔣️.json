@@ -2128,7 +2128,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -2139,7 +2148,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -4997,7 +5015,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -5008,7 +5035,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -7866,7 +7902,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -7877,7 +7922,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -11077,7 +11131,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -11088,7 +11151,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -13946,7 +14018,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -13957,7 +14038,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -17157,7 +17247,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -17168,7 +17267,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -20368,7 +20476,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -20379,7 +20496,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -23579,7 +23705,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -23590,7 +23725,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -26448,7 +26592,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -26459,7 +26612,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -29659,7 +29821,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -29670,7 +29841,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -32528,7 +32708,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -32539,7 +32728,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -35739,7 +35937,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -35750,7 +35957,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -38950,7 +39166,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -38961,7 +39186,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -41819,7 +42053,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -41830,7 +42073,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",
@@ -44688,7 +44940,16 @@
           "ports": [
             {
               "id": "model:in",
-              "label": "Model / Modell",
+              "label": {
+                "native": {
+                  "en": "Model",
+                  "de": "Modell"
+                },
+                "reuse": {
+                  "en": "Model",
+                  "de": "Modell"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "data",
@@ -44699,7 +44960,16 @@
             },
             {
               "id": "report:out",
-              "label": "Report / Bericht",
+              "label": {
+                "native": {
+                  "en": "Report",
+                  "de": "Bericht"
+                },
+                "reuse": {
+                  "en": "Report",
+                  "de": "Bericht"
+                }
+              },
               "direction": "out",
               "mediaType": {
                 "class": "computation",

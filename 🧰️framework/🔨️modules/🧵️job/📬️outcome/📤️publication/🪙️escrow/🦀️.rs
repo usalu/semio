@@ -57,7 +57,19 @@ impl OriginalEscrowPublisherBirth{
  pub fn is_empty(&self)->bool{self.backing.is_none()&&self.binding.is_none()}
  /// 📤️ Reports only whether the actual publisher backing is ready for its separate placement.
  pub fn ready_to_publish(&self)->bool{self.backing.is_some()&&self.initialized==MAX&&self.header}
+ /// ⛽️ Quotes the exact Work units of the remaining allocation, rows, header and output placement.
+ pub fn remaining_work(&self)->u64{u64::from(self.backing.is_none())+(MAX-self.initialized).div_ceil(1024) as u64+u64::from(!self.header)+1}
  fn metadata()->usize{std::mem::size_of::<Option<std::ptr::NonNull<OriginalEscrowPublisher>>>()+std::mem::size_of::<Option<semio_framework_value_control_contract::OriginalWorkBindingIdentity>>()+std::mem::size_of::<usize>()+std::mem::size_of::<bool>()}
+ /// 🧮️ Sums every remaining paid step (allocation, byte chunks, header, placement) as items and extents, exactly as the stage will charge them.
+ pub fn remaining_demand(&self)->(usize,semio_framework_value_retained_clone::RetirementDemand){
+  let(mut backing,mut initialized,mut header)=(self.backing.is_some(),self.initialized,self.header);let mut items=0usize;let mut total=semio_framework_value_retained_clone::RetirementDemand::default();
+  loop{
+   let scratch=std::mem::ManuallyDrop::new(Self{backing:backing.then(std::ptr::NonNull::dangling),binding:None,initialized,header});let step=scratch.demand();
+   items+=1;total.copy_bytes+=step.copy_bytes;total.capacity_bytes+=step.capacity_bytes;total.release_bytes+=step.release_bytes;total.depth=total.depth.max(step.depth);
+   if !backing{backing=true}else if initialized<MAX{initialized+=(MAX-initialized).min(1024)}else if !header{header=true}else{break}
+  }
+  (items,total)
+ }
  pub fn demand(&self)->semio_framework_value_retained_clone::RetirementDemand{
   use semio_framework_value_retained_clone::RetirementDemand as D;
   if self.backing.is_none(){D{copy_bytes:std::mem::size_of::<Option<std::ptr::NonNull<OriginalEscrowPublisher>>>()+std::mem::size_of::<Option<semio_framework_value_control_contract::OriginalWorkBindingIdentity>>(),capacity_bytes:std::mem::size_of::<OriginalEscrowPublisher>(),depth:1,..Default::default()}}
@@ -141,7 +153,7 @@ impl OriginalEscrowPublisher{
  fn close_header_failure<'a>(&mut self,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'a,RetainedCloneStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,recover:bool)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'a,RetainedCloneStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,ValueError>{
   if self.header_state==3{return Ok(reply.complete(Err(invalid().into())))}
   if let Some(close)=self.failure_close.as_mut(){
-   if !close.is_empty(){return if recover{close.recover_step_into(effect,reply.progress())}else{close.step_into(effect,reply.progress())}}
+   if !close.is_empty(){return if recover{close.recover_step_into(effect.grant().maximum_copy_bytes,effect,reply.progress())}else{close.step_into(effect.grant().maximum_copy_bytes,effect,reply.progress())}}
    if recover{return Err(invalid())}
    let source=if self.header_codec_failure.is_some(){&mut self.header_codec_failure}else if self.header_retained_failure.is_some(){&mut self.header_retained_failure}else{&mut self.header_work_failure};
    if source.is_some(){let turn=close.begin_granted(source,effect);return Ok(reply.complete(turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into)))}

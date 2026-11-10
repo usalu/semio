@@ -31,7 +31,7 @@
     },
     "stock": {
       "const": {
-        "maximumItems": 1048576,
+        "maximumItems": 4194304,
         "maximumCopyBytes": 16777216,
         "maximumCapacityBytes": 16777216,
         "maximumReleaseBytes": 33554432,
@@ -41,7 +41,7 @@
     "expected": {
       "const": {
         "deniedCpu": 0,
-        "birthCpu": 36,
+        "birthCpu": 37,
         "cachedCloseCpu": 0,
         "liveCloseMinimumDepth": 1
       }
@@ -63,6 +63,7 @@
         4,
         1,
         4,
+        1,
         1
       ]
     },

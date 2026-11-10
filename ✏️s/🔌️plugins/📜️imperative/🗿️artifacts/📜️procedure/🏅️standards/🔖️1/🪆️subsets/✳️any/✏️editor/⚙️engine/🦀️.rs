@@ -59,7 +59,7 @@ pub fn imperative_io() -> semio_plugin::AppIo {
         artifact_media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Computation, form: semio_plugin::MediaForm::Procedure },
         ports: vec![semio_plugin::MediaPortSpec {
             id: "result:out".into(),
-            label: "Result".into(),
+            label: semio_plugin::LocalizedLabel::native("Result", "Ergebnis"),
             direction: semio_plugin::MediaPortDirection::Out,
             media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Data, form: semio_plugin::MediaForm::Value },
             kind_id: Some("computation.procedure".into()),

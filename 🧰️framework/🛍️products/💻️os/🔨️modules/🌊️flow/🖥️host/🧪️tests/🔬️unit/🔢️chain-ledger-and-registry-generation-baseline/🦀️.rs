@@ -81,17 +81,17 @@ fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generatio
     assert!(session.sync(&host), "the default demo graph has pending nodes, so a chain is armed");
     assert!(session.pending());
 
-    assert!(!session.invalidate_for_flow_extension_registry(generation,FIXTURE_SESSION_GRANT).unwrap().0, "an unmoved generation invalidates nothing");
+    assert!(!funded(FIXTURE_SESSION_GRANT,|effect|session.invalidate_for_flow_extension_registry(generation,effect)).unwrap().unwrap().0, "an unmoved generation invalidates nothing");
     assert!(session.pending(), "and therefore releases nothing");
     assert!(session.neural_cache().contains(17));
 
-    assert!(session.invalidate_for_flow_extension_registry(generation + 1,FIXTURE_SESSION_GRANT).unwrap().0, "a moved generation invalidates");
+    assert!(funded(FIXTURE_SESSION_GRANT,|effect|session.invalidate_for_flow_extension_registry(generation + 1,effect)).unwrap().unwrap().0, "a moved generation invalidates");
     assert_eq!(session.flow_extension_generation(), generation + 1);
     assert_eq!(session.status_json(), "{}", "the per-node status computed against the old registry is released");
     assert!(session.eval_json().is_empty(), "the published evaluation is released");
     assert!(!session.pending(), "a released session admits a new chain rather than waiting on the one that gave up");
     assert!(!session.neural_cache().contains(17), "every node output computed against the old registry is evicted");
-    assert!(!session.invalidate_for_flow_extension_registry(generation + 1,FIXTURE_SESSION_GRANT).unwrap().0, "the same generation twice invalidates once");
+    assert!(!funded(FIXTURE_SESSION_GRANT,|effect|session.invalidate_for_flow_extension_registry(generation + 1,effect)).unwrap().unwrap().0, "the same generation twice invalidates once");
 
     session.begin_close();
     for _ in 0..1_000_000 {
@@ -138,7 +138,7 @@ fn an_invalidated_session_hands_an_ephemeral_host_a_re_dispatching_baseline() {
     session.install_baseline_into(&mut settled,FIXTURE_SESSION_GRANT).unwrap();
     assert!(settled.pending_eval_widget_ids().is_empty(), "control: an unchanged tree under an unchanged registry owes no dispatch");
     let generation = session.flow_extension_generation();
-    assert!(session.invalidate_for_flow_extension_registry(generation + 1,FIXTURE_SESSION_GRANT).unwrap().0, "a moved generation invalidates");
+    assert!(funded(FIXTURE_SESSION_GRANT,|effect|session.invalidate_for_flow_extension_registry(generation + 1,effect)).unwrap().unwrap().0, "a moved generation invalidates");
     let mut rearmed = replay_host_of(&host);
     settle_baseline(&mut rearmed);
     session.install_baseline_into(&mut rearmed,FIXTURE_SESSION_GRANT).unwrap();

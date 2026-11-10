@@ -14,6 +14,7 @@ pub trait PagedCloneElement<T:RetireOwned+Send+Sync+'static>:Send+Sized{
  fn output_ready(&self)->bool;
  fn advance_demands(&self,source:RetainedCloneRef<'_,T>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>;
  fn advance_work_demand(&self,source:RetainedCloneRef<'_,T>,body:usize,maximum:u64)->Result<u64,ValueError>;
+ fn advance_selection(&self,source:RetainedCloneRef<'_,T>,body:usize,maximum:u64)->Result<(RetirementDemand,u64),ValueError>{Ok((self.advance_demands(source,body,maximum)?,self.advance_work_demand(source,body,maximum)?))}
  fn advance_into<'r>(&mut self,source:RetainedCloneRef<'_,T>,body:usize,maximum:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>;
  fn recover_advance_into<'r>(&mut self,source:RetainedCloneRef<'_,T>,body:usize,maximum:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>;
  fn take_demand(&self)->Result<RetirementDemand,ValueError>;

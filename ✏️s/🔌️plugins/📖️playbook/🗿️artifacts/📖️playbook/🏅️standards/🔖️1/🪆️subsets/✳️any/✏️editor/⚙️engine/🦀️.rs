@@ -17,7 +17,7 @@ pub fn playbook_io() -> semio_plugin::AppIo {
         artifact_media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Text, form: semio_plugin::MediaForm::Document },
         ports: vec![semio_plugin::MediaPortSpec {
             id: "chapters:in".into(),
-            label: "Chapters".into(),
+            label: semio_plugin::LocalizedLabel::native("Chapters", "Kapitel"),
             direction: semio_plugin::MediaPortDirection::In,
             media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Text, form: semio_plugin::MediaForm::Document },
             kind_id: Some("text.document".into()),

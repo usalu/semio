@@ -1,6 +1,8 @@
 use super::*;
 use serde_json::Value;
 
+const TURN_WORK: u64 = 1 << 20;
+
 fn fixtures() -> Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
@@ -35,7 +37,7 @@ fn offsets_match_closed_form_fixtures() {
         let name = case["name"].as_str().unwrap();
         let holes: Vec<Vec<Vec2>> = case["holes"].as_array().unwrap().iter().map(ring).collect();
         let region = Region::new(&ring(&case["outer"]), &holes);
-        let got = offset_regions(&[region], case["distance"].as_f64().unwrap(), join(&case["join"]), &mut |_| true).unwrap();
+        let got = offset_regions(&[region], case["distance"].as_f64().unwrap(), join(&case["join"]), &mut |_| true, &mut semio_framework_2d_retire::BlockingTurns::new(TURN_WORK)).unwrap();
         let e = &case["expected"];
         assert_eq!(got.len(), e["regions"].as_u64().unwrap() as usize, "{name}: regions");
         assert_eq!(hole_count(&got), e["holes"].as_u64().unwrap() as usize, "{name}: holes");
@@ -51,7 +53,7 @@ fn booleans_match_closed_form_fixtures() {
     for case in fixtures()["booleans"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
         let operation = BooleanOperation::parse(case["operation"].as_str().unwrap()).unwrap();
-        let got = region_boolean(operation, &regions_of(&case["subject"]), &regions_of(&case["clip"]), &mut |_| true).unwrap();
+        let got = region_boolean(operation, &regions_of(&case["subject"]), &regions_of(&case["clip"]), &mut |_| true, &mut semio_framework_2d_retire::BlockingTurns::new(TURN_WORK)).unwrap();
         let e = &case["expected"];
         assert_eq!(got.len(), e["regions"].as_u64().unwrap() as usize, "{name}: regions");
         assert_eq!(hole_count(&got), e["holes"].as_u64().unwrap() as usize, "{name}: holes");
@@ -68,24 +70,24 @@ fn control_can_cancel_without_a_partial_result() {
         calls += 1;
         assert!(!progress.done);
         false
-    });
+    }, &mut semio_framework_2d_retire::BlockingTurns::new(TURN_WORK));
     assert_eq!(result, Err(BooleanError::Cancelled));
     assert_eq!(calls, 1);
-    let complete = offset_regions(&[region], 0.5, OffsetJoin::Round { tolerance: 1e-3 }, &mut |_| true).unwrap();
+    let complete = offset_regions(&[region], 0.5, OffsetJoin::Round { tolerance: 1e-3 }, &mut |_| true, &mut semio_framework_2d_retire::BlockingTurns::new(TURN_WORK)).unwrap();
     assert_eq!(complete.len(), 1);
 }
 
 #[test]
 fn invalid_distances_are_rejected_and_zero_is_the_identity() {
     let region = Region::new(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], &[]);
-    assert!(offset_regions(&[region.clone()], f64::NAN, OffsetJoin::Bevel, &mut |_| true).is_err());
-    assert_eq!(offset_regions(&[region.clone()], 0.0, OffsetJoin::Bevel, &mut |_| true).unwrap(), vec![region]);
+    assert!(offset_regions(&[region.clone()], f64::NAN, OffsetJoin::Bevel, &mut |_| true, &mut semio_framework_2d_retire::BlockingTurns::new(TURN_WORK)).is_err());
+    assert_eq!(offset_regions(&[region.clone()], 0.0, OffsetJoin::Bevel, &mut |_| true, &mut semio_framework_2d_retire::BlockingTurns::new(TURN_WORK)).unwrap(), vec![region]);
 }
 
 #[test]
 fn sharp_corners_obey_the_miter_limit() {
     let spike = Region::new(&[[0.0, 0.0], [10.0, 0.0], [0.0, 0.5]], &[]);
-    let long = offset_regions(&[spike.clone()], 0.1, OffsetJoin::Miter { limit: 100.0 }, &mut |_| true).unwrap();
-    let cut = offset_regions(&[spike], 0.1, OffsetJoin::Miter { limit: 2.0 }, &mut |_| true).unwrap();
+    let long = offset_regions(&[spike.clone()], 0.1, OffsetJoin::Miter { limit: 100.0 }, &mut |_| true, &mut semio_framework_2d_retire::BlockingTurns::new(TURN_WORK)).unwrap();
+    let cut = offset_regions(&[spike], 0.1, OffsetJoin::Miter { limit: 2.0 }, &mut |_| true, &mut semio_framework_2d_retire::BlockingTurns::new(TURN_WORK)).unwrap();
     assert!(total_area(&cut) < total_area(&long));
 }

@@ -36,7 +36,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
             .document(["semio", "sourcing", "curation"])
             .terminology("reuse")
-            .terminology_document("reuse", ["Entwerfen mit Bestand", "Aussuchen"])
+            .terminology_document("reuse", [LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::native("Select", "Aussuchen")])
             .artifact_kind(crate::artifact_kind())
             .artifact_kind(ArtifactKindSpec {
                 id: "catalogue.kinds".into(),

@@ -33,7 +33,7 @@ pub use named_edit::{NamedEditLane,NamedEditSource,NamedEditFault,NamedEditStep,
 pub(crate) const ADMISSION_STAGE_COPY_BYTES:usize=4096;
 #[cfg(test)]
 /// 🎟️ Funds the complete admission quote of one value, copy included, on top of the caller's authority.
-pub(crate) fn admit_funded<T:Send+Sync+'static>(value:T,issuer:shared_issuance::SharedIssuer<T>,mut grant:RetainedCloneGrant)->RetainedWorkOutcome<(shared_issuance::SealedShared<T>,RetainedCloneProgress),(ValueError,T)>{let d=shared_issuance::SealedShared::<T>::admission_demand().unwrap();grant.maximum_copy_bytes=grant.maximum_copy_bytes.max(d.copy_bytes);shared_issuance::SealedShared::admit(value,issuer,grant,&mut None)}
+pub(crate) fn admit_funded<T:Send+Sync+'static>(value:T,issuer:shared_issuance::SharedIssuer<T>,mut grant:RetainedCloneGrant)->RetainedWorkOutcome<(shared_issuance::SealedShared<T>,RetainedCloneProgress),(ValueError,T)>{let d=shared_issuance::SealedShared::<T>::admission_demand().unwrap();grant.maximum_copy_bytes=grant.maximum_copy_bytes.max(d.copy_bytes);let mut input=Some(value);let mut output=None;let turn=crate::effect::run(grant,|effect|shared_issuance::SealedShared::admit_from(&mut input,issuer,&mut output,effect));RetainedWorkOutcome{result:match(turn.result,output.take()){(Ok(step),Some(sealed))=>Ok((sealed,step.progress())),(outcome,_)=>Err((outcome.err().unwrap_or_else(||ValueError::invariant("sealed admission is not funded")),input.take().expect("refused admission keeps its value")))},work:turn.work}}
 #[cfg(test)]
 #[path="../../../../♻️retirement/🧪️tests/⏱️effect/🦀️.rs"]
 pub(crate) mod effect;

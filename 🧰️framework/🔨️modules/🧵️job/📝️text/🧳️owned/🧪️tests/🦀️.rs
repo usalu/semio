@@ -1,7 +1,5 @@
 //! 🧪️ Original authoring text receipts match physical allocation through success and cancellation.
 use super::FundedText;
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,StepContext,OriginalTurnFailure,OperationId,Generation,close_original_effect_step,receive_original_retained_work};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll};
 use semio_framework_value::retained_clone::RetainedCloneClose;
@@ -47,14 +45,14 @@ fn close_text(work:&mut FundedText,output:&mut Option<String>,caller:&mut Origin
  work.begin_close();
  for index in 0..limit{
   if work.terminal_is_empty(){break}
-  native(caller,decoder,g,|cx|cx.with_original_retirement(|cx|{let d=work.close_demands(4096)?;close_original_effect_step(cx,d,|effect|work.close_step(effect))?;Ok(())}));
+  native(caller,decoder,g,|cx|cx.with_original_retirement(|cx|{let d=work.close_demands(4096)?;close_original_effect_step(cx,d,|effect|work.close_step(4096,effect))?;Ok(())}));
   assert!(index+1<limit);
  }
  assert!(work.terminal_is_empty());
  let mut close=RetainedCloneClose::default();
  for index in 0..limit{
   if output.is_none()&&close.is_empty(){break}
-  native(caller,decoder,g,|cx|cx.with_original_retirement(|cx|{let d=close.next_owner_demands::<String>(output.is_some(),&None,4096)?;close_original_effect_step(cx,d,|effect|if close.is_empty(){let turn=close.begin_granted(output,effect);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::<semio_framework_value::OriginalRetirementFailure>::into),work:turn.work})}else{close.step_granted(effect)})?;Ok(())}));
+  native(caller,decoder,g,|cx|cx.with_original_retirement(|cx|{let d=close.next_owner_demands::<String>(output.is_some(),&None,4096)?;close_original_effect_step(cx,d,|effect|if close.is_empty(){let turn=close.begin_granted(output,effect);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::<semio_framework_value::OriginalRetirementFailure>::into),work:turn.work})}else{close.step_granted(4096,effect)})?;Ok(())}));
   assert!(index+1<limit);
  }
  assert!(output.is_none()&&close.is_empty());

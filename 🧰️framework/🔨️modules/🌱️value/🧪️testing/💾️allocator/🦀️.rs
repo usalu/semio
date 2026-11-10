@@ -21,6 +21,8 @@ pub fn observe_retirement_allocations<T>(operation: impl FnOnce() -> T) -> (T, (
     drop(guard);
     (result,events)
 }
+/// 📏️ Reads the requested and released bytes the open retirement scope of this thread has recorded so far; nested observers measure by difference.
+pub fn retirement_allocations_so_far()->Option<(usize,usize)>{RETIREMENT_ALLOCATION_EVENTS.try_with(|events|events.get()).ok().flatten()}
 pub static OBSERVE_ALLOCATIONS:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
 pub static LARGEST_ALLOCATION:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
 unsafe impl std::alloc::GlobalAlloc for ObservedAllocator {

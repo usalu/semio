@@ -1,6 +1,6 @@
 //! 🧱️ Original job ownership is independent of application requests and their nineteen field retirement.
 use semio_framework_job::{StepContext,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeKind,JobOutcomeView,InteractiveJobCloseStep};
-use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,arc_custody::SharedControlledRetirement}};
+use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,arc_custody::ArcLeaseRetirement}};
 use std::{mem::{ManuallyDrop,size_of,size_of_val},sync::Arc};
 #[path="🎮️action/🦀️.rs"]
 pub mod original_action_command;

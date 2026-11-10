@@ -101,8 +101,8 @@ impl GuestRuntimes {
 //#endregion 🗂️GuestCodecDispatch
 
 impl GuestRuntime for WasmtimeRuntime {
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm_original(store,deadline,budget.deadline_us)?;let input=semio_framework_plugin_host_wit::retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_admit_actor_context(accessor,semio_framework_plugin_host_wit::wit_reactor::ActorContextBudget{input,retained_policy:semio_framework_plugin_host_wit::retained_turn_wire::grant_to_wit(budget.retained_policy),fuel:budget.work_fuel,deadline_us:budget.deadline_us,cancelled:false}).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;semio_framework_plugin_host_wit::retained_turn_wire::admission_from_wit(original)}
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm_original(store,deadline,budget.deadline_us)?;let input=semio_framework_plugin_host_wit::retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_close_actor_context(accessor,semio_framework_plugin_host_wit::wit_reactor::ActorContextBudget{input,retained_policy:semio_framework_plugin_host_wit::retained_turn_wire::grant_to_wit(budget.retained_policy),fuel:budget.work_fuel,deadline_us:budget.deadline_us,cancelled:false}).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;semio_framework_plugin_host_wit::retained_turn_wire::close_from_wit(original)}
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(semio_plugin_guest_contract::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm_original(store,deadline,budget.deadline_us)?;let input=semio_plugin_host_wit::retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_admit_actor_context(accessor,semio_plugin_host_wit::wit_reactor::ActorContextBudget{input,retained_policy:semio_plugin_host_wit::retained_turn_wire::grant_to_wit(budget.retained_policy),fuel:budget.work_fuel,deadline_us:budget.deadline_us,cancelled:false}).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;semio_plugin_host_wit::retained_turn_wire::admission_from_wit(original)}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(semio_plugin_guest_contract::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm_original(store,deadline,budget.deadline_us)?;let input=semio_plugin_host_wit::retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_close_actor_context(accessor,semio_plugin_host_wit::wit_reactor::ActorContextBudget{input,retained_policy:semio_plugin_host_wit::retained_turn_wire::grant_to_wit(budget.retained_policy),fuel:budget.work_fuel,deadline_us:budget.deadline_us,cancelled:false}).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;semio_plugin_host_wit::retained_turn_wire::close_from_wit(original)}
 
     /// 🚫️async: R13/R14 corollary — `let _ = <async call>;` used to suppress the lint while
     /// silently dropping this call's future: the on-disk compilation cache write never ran, so
@@ -136,7 +136,7 @@ impl GuestRuntime for WasmtimeRuntime {
         let (wasi, diagnostics) = guest_wasi_ctx();
         let host_state = ActorHostState {
             original_job_clock:None,
-            operation_slot:semio_framework_plugin_host_operation::OperationSlot::new(),
+            operation_slot:semio_plugin_host_operation::OperationSlot::new(),
             plugin_id: format!("actor-{}", actor.0),
             actor,
             caps: caps.to_vec(),
@@ -156,10 +156,10 @@ impl GuestRuntime for WasmtimeRuntime {
         let remaining=remaining_original_deadline_us((self.original_clock)(),budget.deadline_us).map_err(|error|PluginHostError::NativeIo(semio_framework_value::ValueError::literal(match error{OriginalDeadlineError::MissingClock=>semio_framework_value::ValueRefusalKind::UnsupportedOwner,OriginalDeadlineError::Expired=>semio_framework_value::ValueRefusalKind::WorkLimit},"original guest admission requires its live caller deadline")))?;
         let _epoch = self.epoch.arm(&mut store, &deadline, remaining.div_ceil(1_000));
         deadline.1.store(budget.deadline_us,std::sync::atomic::Ordering::Release);
-        let bindings = semio_framework_plugin_host_wit::actor_bindings::Actor::instantiate_async(&mut store, component, &self.linker).await.map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let bindings = semio_plugin_host_wit::actor_bindings::Actor::instantiate_async(&mut store, component, &self.linker).await.map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let guest = store.run_concurrent(async |accessor| bindings.semio_framework_reactor().call_channel_version(accessor).await).await.and_then(|inner| inner).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         protocol::admit_guest_channel_version(guest, protocol::CHANNEL_VERSION).map_err(|fault| PluginHostError::Refused(Box::new(fault)))?;
-        Ok(GuestInstance { actor, state: GuestInstanceState::Wasmtime(WasmtimeInstanceState { store, bindings, instance_id, deadline }) })
+        Ok(GuestInstance { actor, state: GuestInstanceState::Wasmtime(WasmtimeInstanceState { store, bindings, instance_id, deadline, admitted_shape: None }) })
     }
 
     /// 🚫️async: R10 residue shape 1 — `kernel_event_to_wit` is async, hoisted out of the sync
@@ -191,11 +191,14 @@ impl GuestRuntime for WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("execute_turn called on a non-wasmtime GuestInstance".to_string()));
         };
-        let WasmtimeInstanceState { store, bindings, instance_id, deadline } = state;
+        let WasmtimeInstanceState { store, bindings, instance_id, deadline, admitted_shape } = state;
         arm_store_fuel(store, self.fuel_metering, budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
-        let wit_budget = wit_reactor::Budget { retained:semio_framework_plugin_host_wit::retained_turn_wire::input_to_wit(budget.retained), retained_policy:semio_framework_plugin_host_wit::retained_turn_wire::grant_to_wit(budget.retained_policy),work_fuel:budget.work_fuel, fuel: budget.fuel, deadline_us: budget.deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+        let (input, policy, fuel, deadline_us) = (budget.retained, budget.retained_policy, budget.work_fuel, budget.deadline_us);
+        let shape = semio_plugin_guest_contract::actor_input_wire::TurnShape { max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let (wit_events, wit_command_page, wit_cold_pair_page) = kernel_turn_inputs_to_wit(events, *instance_id).await?;
+        let wire = if wit_events.is_empty() && *admitted_shape == Some(shape) { None } else { Some(semio_plugin_host_wit::retained_turn_wire::wire_bytes(&semio_plugin_host_wit::retained_turn_wire::poll_wire(&wit_events, shape))?) };
+        *admitted_shape = None;
         let call_result = store
             .run_concurrent(async |accessor| {
                 if let Some((cursor, bytes)) = wit_command_page {
@@ -208,7 +211,16 @@ impl GuestRuntime for WasmtimeRuntime {
                         return Ok(Err(decode_guest_plugin_error(error)));
                     }
                 }
-                bindings.semio_framework_reactor().call_poll(accessor, wit_events, wit_budget).await.map(|original|original.map_err(semio_framework_plugin_host_wit::retained_turn_wire::failure_from_wit))
+                let (mut admission, mut policy, mut fuel) = ((semio_framework_value::RetainedCloneProgress::default(), 0u64), policy, fuel);
+                if let Some(bytes) = wire {
+                    let admitted = bindings.semio_framework_reactor().call_admit_actor_input(accessor, Some(bytes), semio_plugin_host_wit::retained_turn_wire::context_budget(input, policy, fuel, deadline_us)).await?;
+                    if let Err(fault) = semio_plugin_host_wit::retained_turn_wire::input_admitted(&admitted) {
+                        return Ok(Err(fault));
+                    }
+                    admission = match semio_plugin_host_wit::admission_charge(&admitted) { Ok(charge) => charge, Err(fault) => return Ok(Err(fault)) };
+                    (policy, fuel) = semio_plugin_host_wit::retained_turn_wire::remaining_after(policy, fuel, admission.0, admission.1);
+                }
+                bindings.semio_framework_reactor().call_poll(accessor, semio_plugin_host_wit::retained_turn_wire::context_budget(input, policy, fuel, deadline_us)).await.map(|original| original.map(|turn| (admission, turn)).map_err(semio_plugin_host_wit::retained_turn_wire::failure_from_wit))
             })
             .await
             .and_then(|inner| inner);
@@ -217,7 +229,9 @@ impl GuestRuntime for WasmtimeRuntime {
             Err(trap) => return Err(classify_guest_trap(&trap)),
         };
         let wit_turn_result = poll_result?;
-        let retained_receipt = semio_framework_plugin_host_wit::retained_turn_wire::receipt_from_wit(wit_turn_result.retained_receipt,budget.retained)?;
+        *admitted_shape = Some(shape);
+        let (admission, wit_turn_result) = wit_turn_result;
+        let retained_receipt = semio_plugin_host_wit::retained_turn_wire::receipt_after_admission(semio_plugin_host_wit::retained_turn_wire::receipt_from_wit(wit_turn_result.retained_receipt,budget.retained)?, admission);
         let emitted: Vec<wit_effects::Effect> = std::mem::take(&mut store.data_mut().emit_sink);
         let emitted_patches: Vec<wit_ui::UiPatch> = std::mem::take(&mut store.data_mut().emit_patch_sink);
         let mut effects = Vec::with_capacity(emitted.len() + wit_turn_result.effects.len());
@@ -225,7 +239,7 @@ impl GuestRuntime for WasmtimeRuntime {
             effects.push(wit_effect_to_kernel(effect).await.map_err(TurnFault::Host)?);
         }
         let ui_patch_receipt = wit_turn_result.ui_patch_receipt.map(wit_patch_receipt_to_kernel);
-        let ui_patches = semio_framework_plugin_host_wit::ui_patch::wit_ui_patches_to_kernel(*instance_id, budget.max_patch_bytes, emitted_patches, wit_turn_result.ui_patches, ui_patch_receipt).map_err(|error| TurnFault::Host(PluginHostError::Plugin(error)))?;
+        let ui_patches = semio_plugin_host_wit::ui_patch::wit_ui_patches_to_kernel(*instance_id, budget.max_patch_bytes, emitted_patches, wit_turn_result.ui_patches, ui_patch_receipt).map_err(|error| TurnFault::Host(PluginHostError::Plugin(error)))?;
         Ok(TurnResult {
             retained_receipt,
             ui_patches,
@@ -260,81 +274,55 @@ impl GuestRuntime for WasmtimeRuntime {
     /// `execute_turn`/`step-job` left in the store: a start after a fully spent turn began with
     /// an already-passed epoch and no fuel.
     async fn start_job(&self,inst:&mut GuestInstance,source:Option<OriginalJobSource>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStartReply>{
-        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,source,identity_turn_fault(error))}
-        if !self.fuel_metering{return OriginalGuestJobCall::unsubmitted(execution,source,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original job execution requires actual instruction metering")))}
-        let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return OriginalGuestJobCall::unsubmitted(execution,source,identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};
-        let WasmtimeInstanceState{store,bindings,deadline,..}=state;
-        if let Err(error)=arm_store_fuel(store,true,execution.fuel){return OriginalGuestJobCall::unsubmitted(execution,source,TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))}
-        let _epoch=match self.epoch.arm_original(store,deadline,execution.deadline_us){Ok(epoch)=>epoch,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,source,error.into())};
-        let wit_budget=semio_framework_plugin_host_wit::budget_to_wit(budget);
-        let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_start_job(accessor,source.map(semio_framework_plugin_host_wit::source_to_wit),wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
-        let spent_fuel=store.get_fuel().ok().and_then(|remaining|execution.fuel.checked_sub(remaining));
-        OriginalGuestJobCall{original:returned.and_then(semio_framework_plugin_host_wit::start_from_wit),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel,submitted:true},returned_unsubmitted_source:None}
+        let Some(source)=source else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_plugin_guest_contract::operation_authority::refusal(4)))};
+        let (store,bindings,_epoch)=match self.arm_job(inst,budget,execution){Ok(armed)=>armed,Err(fault)=>return OriginalGuestJobCall::unsubmitted(execution,Some(source),fault)};
+        let job=source.job;
+        let wire=semio_plugin_guest_contract::actor_input_wire::ActorInputWire::StartJob{source:Some(source)};
+        let bytes=semio_plugin_host_wit::retained_turn_wire::wire_bytes(&wire);
+        let semio_plugin_guest_contract::actor_input_wire::ActorInputWire::StartJob{source:Some(source)}=wire else{unreachable!("the start wire was built with its source")};
+        let bytes=match bytes{Ok(bytes)=>bytes,Err(fault)=>return OriginalGuestJobCall::unsubmitted(execution,Some(source),fault)};
+        let admitted=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_admit_actor_input(accessor,Some(bytes),semio_plugin_host_wit::admission_budget(budget)).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
+        let admitted=match admitted{Ok(admitted)=>admitted,Err(fault)=>return OriginalGuestJobCall::unsubmitted(execution,Some(source),fault)};
+        if semio_plugin_host_wit::retained_turn_wire::input_admitted(&admitted).is_err(){return Self::job_receipt(store,execution,semio_plugin_host_wit::refused_start_from_wit(admitted,Some(source)))}
+        let charged=match semio_plugin_host_wit::admission_charge(&admitted){Ok(charged)=>charged,Err(fault)=>return Self::job_receipt(store,execution,Err(fault))};
+        let wit_budget=semio_plugin_host_wit::budget_to_wit(semio_plugin_host_wit::after_admission(budget,charged.0,charged.1));
+        let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_start_job(accessor,job,wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
+        Self::job_receipt(store,execution,returned.and_then(|call|semio_plugin_host_wit::start_from_wit(call,Some(source))).map(|reply|semio_plugin_host_wit::start_after_admission(charged,reply)))
     }
 
     async fn step_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStepReply<OriginalJobOutcome>>{
-        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(error))}
-        if !self.fuel_metering{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original job execution requires actual instruction metering")))}
-        let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};
-        let WasmtimeInstanceState{store,bindings,deadline,..}=state;
-        if let Err(error)=arm_store_fuel(store,true,execution.fuel){return OriginalGuestJobCall::unsubmitted(execution,None,TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))}
-        let _epoch=match self.epoch.arm_original(store,deadline,execution.deadline_us){Ok(epoch)=>epoch,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,None,error.into())};
-        let wit_budget=semio_framework_plugin_host_wit::budget_to_wit(budget);
+        let (store,bindings,_epoch)=match self.arm_job(inst,budget,execution){Ok(armed)=>armed,Err(fault)=>return OriginalGuestJobCall::unsubmitted(execution,None,fault)};
+        let wit_budget=semio_plugin_host_wit::budget_to_wit(budget);
         let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_step_job(accessor,job,wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
-        let spent_fuel=store.get_fuel().ok().and_then(|remaining|execution.fuel.checked_sub(remaining));
-        OriginalGuestJobCall{original:returned.and_then(semio_framework_plugin_host_wit::step_from_wit),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel,submitted:true},returned_unsubmitted_source:None}
+        Self::job_receipt(store,execution,returned.and_then(semio_plugin_host_wit::step_from_wit))
     }
 
     async fn read_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputReply>{
-        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(error))}
-        if !self.fuel_metering{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original job execution requires actual instruction metering")))}
-        let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};
-        let WasmtimeInstanceState{store,bindings,deadline,..}=state;
-        if let Err(error)=arm_store_fuel(store,true,execution.fuel){return OriginalGuestJobCall::unsubmitted(execution,None,TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))}
-        let _epoch=match self.epoch.arm_original(store,deadline,execution.deadline_us){Ok(epoch)=>epoch,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,None,error.into())};
-        let wit_budget=semio_framework_plugin_host_wit::budget_to_wit(budget);
+        let (store,bindings,_epoch)=match self.arm_job(inst,budget,execution){Ok(armed)=>armed,Err(fault)=>return OriginalGuestJobCall::unsubmitted(execution,None,fault)};
+        let wit_budget=semio_plugin_host_wit::budget_to_wit(budget);
         let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_read_job_output(accessor,job,wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
-        let spent_fuel=store.get_fuel().ok().and_then(|remaining|execution.fuel.checked_sub(remaining));
-        OriginalGuestJobCall{original:returned.and_then(semio_framework_plugin_host_wit::output_from_wit),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel,submitted:true},returned_unsubmitted_source:None}
+        Self::job_receipt(store,execution,returned.and_then(semio_plugin_host_wit::output_from_wit))
     }
 
     async fn acknowledge_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputAckReply>{
-        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(error))}
-        if !self.fuel_metering{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original job execution requires actual instruction metering")))}
-        let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};
-        let WasmtimeInstanceState{store,bindings,deadline,..}=state;
-        if let Err(error)=arm_store_fuel(store,true,execution.fuel){return OriginalGuestJobCall::unsubmitted(execution,None,TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))}
-        let _epoch=match self.epoch.arm_original(store,deadline,execution.deadline_us){Ok(epoch)=>epoch,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,None,error.into())};
-        let wit_budget=semio_framework_plugin_host_wit::budget_to_wit(budget);
+        let (store,bindings,_epoch)=match self.arm_job(inst,budget,execution){Ok(armed)=>armed,Err(fault)=>return OriginalGuestJobCall::unsubmitted(execution,None,fault)};
+        let wit_budget=semio_plugin_host_wit::budget_to_wit(budget);
         let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_acknowledge_job_output(accessor,job,wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
-        let spent_fuel=store.get_fuel().ok().and_then(|remaining|execution.fuel.checked_sub(remaining));
-        OriginalGuestJobCall{original:returned.and_then(semio_framework_plugin_host_wit::ack_from_wit),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel,submitted:true},returned_unsubmitted_source:None}
+        Self::job_receipt(store,execution,returned.and_then(semio_plugin_host_wit::ack_from_wit))
     }
 
     async fn cancel_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
-        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(error))}
-        if !self.fuel_metering{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original job execution requires actual instruction metering")))}
-        let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};
-        let WasmtimeInstanceState{store,bindings,deadline,..}=state;
-        if let Err(error)=arm_store_fuel(store,true,execution.fuel){return OriginalGuestJobCall::unsubmitted(execution,None,TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))}
-        let _epoch=match self.epoch.arm_original(store,deadline,execution.deadline_us){Ok(epoch)=>epoch,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,None,error.into())};
-        let wit_budget=semio_framework_plugin_host_wit::budget_to_wit(budget);
+        let (store,bindings,_epoch)=match self.arm_job(inst,budget,execution){Ok(armed)=>armed,Err(fault)=>return OriginalGuestJobCall::unsubmitted(execution,None,fault)};
+        let wit_budget=semio_plugin_host_wit::budget_to_wit(budget);
         let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_cancel_job(accessor,job,wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
-        let spent_fuel=store.get_fuel().ok().and_then(|remaining|execution.fuel.checked_sub(remaining));
-        OriginalGuestJobCall{original:returned.and_then(semio_framework_plugin_host_wit::cancel_from_wit),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel,submitted:true},returned_unsubmitted_source:None}
+        Self::job_receipt(store,execution,returned.and_then(semio_plugin_host_wit::cancel_from_wit))
     }
 
     async fn close_jobs(&self,inst:&mut GuestInstance,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
-        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(error))}
-        if !self.fuel_metering{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original job execution requires actual instruction metering")))}
-        let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};
-        let WasmtimeInstanceState{store,bindings,deadline,..}=state;
-        if let Err(error)=arm_store_fuel(store,true,execution.fuel){return OriginalGuestJobCall::unsubmitted(execution,None,TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))}
-        let _epoch=match self.epoch.arm_original(store,deadline,execution.deadline_us){Ok(epoch)=>epoch,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,None,error.into())};
-        let wit_budget=semio_framework_plugin_host_wit::budget_to_wit(budget);
+        let (store,bindings,_epoch)=match self.arm_job(inst,budget,execution){Ok(armed)=>armed,Err(fault)=>return OriginalGuestJobCall::unsubmitted(execution,None,fault)};
+        let wit_budget=semio_plugin_host_wit::budget_to_wit(budget);
         let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_close_jobs(accessor,wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
-        let spent_fuel=store.get_fuel().ok().and_then(|remaining|execution.fuel.checked_sub(remaining));
-        OriginalGuestJobCall{original:returned.and_then(semio_framework_plugin_host_wit::cancel_from_wit),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel,submitted:true},returned_unsubmitted_source:None}
+        Self::job_receipt(store,execution,returned.and_then(semio_plugin_host_wit::cancel_from_wit))
     }
 
     async fn checkpoint(&self, inst: &mut GuestInstance, _identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
@@ -344,7 +332,7 @@ impl GuestRuntime for WasmtimeRuntime {
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.arm_guest_watchdog(store, deadline)?;
         store
-            .run_concurrent(async |accessor| bindings.semio_framework_checkpoint().call_checkpoint(accessor).await)
+            .run_concurrent(async |accessor| bindings.semio_framework_checkpoint().call_checkpoint(accessor, semio_plugin_host_wit::retained_turn_wire::self_issued_context_budget(1 << 52)).await)
             .await
             .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
             .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
@@ -355,11 +343,12 @@ impl GuestRuntime for WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(PluginHostError::Plugin("restore called on a non-wasmtime GuestInstance".to_string()));
         };
-        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
+        let WasmtimeInstanceState { store, bindings, deadline, admitted_shape, .. } = state;
         let _epoch = self.arm_guest_watchdog(store, deadline)?;
-        let state_bytes = state_bytes.to_vec();
+        *admitted_shape = None;
+        self.admit_wire(store, bindings, &semio_plugin_guest_contract::actor_input_wire::ActorInputWire::Restore { state: state_bytes.to_vec() }, 1 << 52).await.map_err(|fault| PluginHostError::Plugin(format!("{fault:?}")))?;
         store
-            .run_concurrent(async |accessor| bindings.semio_framework_checkpoint().call_restore(accessor, state_bytes).await)
+            .run_concurrent(async |accessor| bindings.semio_framework_checkpoint().call_restore(accessor, semio_plugin_host_wit::retained_turn_wire::self_issued_context_budget(1 << 52)).await)
             .await
             .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
             .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?

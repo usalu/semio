@@ -5,13 +5,13 @@
 
 use semio_framework_2d_booleans::{BooleanError, BooleanFillRule, BooleanInput, BooleanJob, BooleanOperand, BooleanOperation, BooleanProgress};
 use semio_framework_2d_engine::{PathSegment, Vec2};
-use semio_framework_value::{AuthoringWallet, work::RetainedWorkLedger, RetainedCloneGrant, ValueError, ValueRefusalKind};
+use semio_framework_value::{work::RetainedWorkLedger, RetainedAllocationEffect, RetainedCloneGrant, RetainedWorkPoll, ValueError, ValueRefusalKind};
+
+pub use semio_framework_2d_retire::EffectTurns;
 
 /// 🕐️ Work steps granted to the arrangement job between two `control` calls.
 pub const GRANT: usize = 4096;
-const CLOSE_WORK: u64 = 1 << 20;
-const WALLET_WORK: u128 = 1_000_000_000;
-const STOCK: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 22, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 25, maximum_release_bytes: 1 << 26, maximum_depth: 256 };
+const CEILING: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 22, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 25, maximum_release_bytes: 1 << 26, maximum_depth: 256 };
 
 /// 💠️ Polygon with holes; the outer ring is counter-clockwise, holes are clockwise.
 #[derive(Clone, Debug, PartialEq)]
@@ -76,12 +76,11 @@ fn operand(regions: &[Region]) -> BooleanOperand {
     BooleanOperand { contours: regions.iter().flat_map(|r| r.rings().cloned()).collect(), fill_rule: BooleanFillRule::Nonzero }
 }
 
-fn run(operation: BooleanOperation, operands: Vec<BooleanOperand>, control: &mut dyn FnMut(&BooleanProgress) -> bool) -> Result<Vec<Region>, BooleanError> {
+fn run(operation: BooleanOperation, operands: Vec<BooleanOperand>, control: &mut dyn FnMut(&BooleanProgress) -> bool, turns: &mut impl EffectTurns) -> Result<Vec<Region>, BooleanError> {
     let magnitude = operands.iter().flat_map(|o| o.contours.iter().flatten()).fold(0.0f64, |m, p| m.max(p[0].abs()).max(p[1].abs()));
     let mut job = BooleanJob::new(BooleanInput { operation, operands, epsilon: 1e-8f64.max(magnitude * f64::EPSILON * 32.0), max_edges: 262144, max_parameters: 1048576, max_atomic_edges: 262144, max_segments: 327680, max_work: 1_000_000_000 });
     let outcome = (|| loop {
-        let mut alloc = None;
-        let progress = job.advance(GRANT, &mut RetainedWorkLedger::new(STOCK), &mut alloc)?;
+        let progress = turns.turn(CEILING, |effect| job.advance(GRANT, &mut RetainedWorkLedger::new(effect.grant()), effect)).map_err(BooleanError::Refused)??;
         if progress.done {
             return job.result().map(regions_from_path);
         }
@@ -95,7 +94,6 @@ fn run(operation: BooleanOperation, operands: Vec<BooleanOperand>, control: &mut
     })();
     let (mut retired, _, _) = job.into_retirement();
     let refused = BooleanError::Refused;
-    let mut wallet = AuthoringWallet::new(STOCK, WALLET_WORK);
     while !retired.terminal_is_empty() {
         let mut body = 0;
         let mut quoted = None;
@@ -106,12 +104,11 @@ fn run(operation: BooleanOperation, operands: Vec<BooleanOperand>, control: &mut
         }
         let Some(demand) = quoted else { return Err(BooleanError::Invalid("Region boolean retirement quote did not settle")); };
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        let Some((turn, _)) = wallet.run_settled(grant, CLOSE_WORK, |effect| retired.close_step(effect)).map_err(refused)? else {
-            return Err(BooleanError::Invalid("Region boolean retirement exceeded its authoring wallet"));
+        let RetainedWorkPoll::Complete(turn) = turns.turn(grant, |effect| retired.close_step(body, effect)).map_err(refused)? else {
+            return Err(BooleanError::Invalid("Region boolean retirement stayed pending"));
         };
         let work = turn.work;
         let step = turn.result.map_err(|failure| refused(failure.primary().cloned().unwrap_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, failure.to_string()))))?;
-        wallet.post(step.progress()).map_err(refused)?;
         if work == 0 {
             return Err(BooleanError::Invalid("Region boolean retirement made no progress"));
         }
@@ -147,8 +144,8 @@ pub fn regions_from_path(path: &[PathSegment]) -> Vec<Region> {
 }
 
 /// 🔀️ Boolean of two region sets (nonzero fill inside each set, so overlapping regions of one set are merged first).
-pub fn region_boolean(operation: BooleanOperation, subject: &[Region], clip: &[Region], control: &mut dyn FnMut(&BooleanProgress) -> bool) -> Result<Vec<Region>, BooleanError> {
-    run(operation, vec![operand(subject), operand(clip)], control)
+pub fn region_boolean(operation: BooleanOperation, subject: &[Region], clip: &[Region], control: &mut dyn FnMut(&BooleanProgress) -> bool, turns: &mut impl EffectTurns) -> Result<Vec<Region>, BooleanError> {
+    run(operation, vec![operand(subject), operand(clip)], control, turns)
 }
 
 fn wedge(vertex: Vec2, from: Vec2, to: Vec2, distance: f64, join: OffsetJoin) -> Vec<Vec2> {
@@ -215,7 +212,7 @@ fn bands(region: &Region, distance: f64, join: OffsetJoin) -> Vec<Vec<Vec2>> {
 }
 
 /// ↔️ Offsets every region by `distance` (positive grows, negative shrinks) with the given corner join.
-pub fn offset_regions(regions: &[Region], distance: f64, join: OffsetJoin, control: &mut dyn FnMut(&BooleanProgress) -> bool) -> Result<Vec<Region>, BooleanError> {
+pub fn offset_regions(regions: &[Region], distance: f64, join: OffsetJoin, control: &mut dyn FnMut(&BooleanProgress) -> bool, turns: &mut impl EffectTurns) -> Result<Vec<Region>, BooleanError> {
     if !distance.is_finite() {
         return Err(BooleanError::Invalid("Offset distance must be finite"));
     }
@@ -224,7 +221,7 @@ pub fn offset_regions(regions: &[Region], distance: f64, join: OffsetJoin, contr
     }
     let strips = BooleanOperand { contours: regions.iter().flat_map(|r| bands(r, distance, join)).collect(), fill_rule: BooleanFillRule::Nonzero };
     let operation = if distance > 0.0 { BooleanOperation::Union } else { BooleanOperation::Difference };
-    run(operation, vec![operand(regions), strips], control)
+    run(operation, vec![operand(regions), strips], control, turns)
 }
 
 #[cfg(test)]

@@ -20,7 +20,7 @@ impl FinalMessageSource for ReplayMessageAccumulator {
     fn len(&self)->usize{self.rows().len()}
     fn get(&self,index:usize)->Option<&MutationMessage>{self.rows().get(index)}
     fn pop(&mut self)->Option<MutationMessage>{self.rows_mut().pop()}
-    fn release_copy_demand(&self)->usize{0}
+    fn release_copy_demand(&self)->usize{self.rows().next_release_copy_byte_demand().unwrap_or(0)}
     fn release_byte_demand(&self)->Result<usize,ValueError>{self.rows().next_release_allocation_bytes().map_err(ValueError::from)}
     fn release(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{let turn=self.rows_mut().release_empty_page(effect);match turn.result{Ok(semio_framework_value_persistent::list::PagedListReleaseOutcome::Denied)=>Ok(Default::default()),Ok(semio_framework_value_persistent::list::PagedListReleaseOutcome::Ready(step))=>Ok(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..Default::default()}),Err(failure)=>Err(crate::replay_retirement::release_error(failure))}}
     fn terminal_is_empty(&self)->bool{ReplayMessageAccumulator::terminal_is_empty(self)}
@@ -34,7 +34,7 @@ impl FinalMessageSource for Vec<MutationMessage> {
     fn release(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{let grant=effect.grant();if !self.is_empty(){return Err(failure());}let copy=self.release_copy_demand();let bytes=self.release_byte_demand()?;if grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<bytes{return Ok(Default::default());}drop(std::mem::take(self));Ok(RetainedCloneProgress{copied_items:usize::from(bytes!=0),copied_bytes:copy,released_bytes:bytes,..Default::default()})}
     fn terminal_is_empty(&self)->bool{self.is_empty()&&self.capacity()==0}
 }
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Phase { Reserve, Measure, Rank, Drain, PrefixReserve, PrefixCopy, PrefixPlace, Summary, CodeReserve, CodeCopy, BodyReserve, BodyCopy, SummaryPlace, Reverse, Pages, Finished }
 
 pub struct FinalMessageSelection {

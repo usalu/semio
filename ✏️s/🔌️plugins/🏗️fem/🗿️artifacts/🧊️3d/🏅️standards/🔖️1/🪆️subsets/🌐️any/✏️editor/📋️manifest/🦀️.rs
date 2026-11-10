@@ -27,7 +27,7 @@ pub fn create_fem3d_app() -> AppDefinition {
     Editor::builder(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::FEM3D_DIALECT)
             .document(["semio", "fem", "fem3d"])
             .terminology("reuse")
-            .terminology_document("reuse", ["Entwerfen mit Bestand", "Statik"])
+            .terminology_document("reuse", [LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::native("Statics", "Statik")])
             .artifact_kind(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::document_artifact_kind())
             .artifact_kind(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::computation_artifact_kind())
             .icon_id("fem-app")

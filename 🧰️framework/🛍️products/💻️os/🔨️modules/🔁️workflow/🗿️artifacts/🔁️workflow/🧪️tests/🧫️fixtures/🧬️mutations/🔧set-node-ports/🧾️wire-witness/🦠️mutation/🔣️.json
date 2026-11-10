@@ -8,7 +8,7 @@
           "id": "n1:in:in",
           "spec": {
             "id": "in",
-            "label": "In",
+            "label": { "native": { "de": "Ein", "en": "In" }, "reuse": { "de": "Ein", "en": "In" } },
             "direction": "in",
             "mediaType": {
               "class": "data",

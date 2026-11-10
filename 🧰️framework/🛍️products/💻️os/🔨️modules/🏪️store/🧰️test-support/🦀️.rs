@@ -10,6 +10,7 @@ use semio_os_store_canonical_json::ArtifactCanonicalJsonTree;
 use semio_os_store_space_schema::{ArtifactCommand, ArtifactEnvelope, HistoryLane};
 use pack::snapshot::{ArtifactDsl, ArtifactPack};
 use semio_os_store_operation_wire::{ArtifactOperationText, ArtifactOperationTextNode, ArtifactPreparedOperationError, ArtifactPreparedOperationSource};
+use semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, DslValue, ErasedSnapshotRetirement, FromValue, SnapshotRetirementFactory, ToValue, ValueError};
 use semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication;
 use semio_os_store_engine::lifted_store::ArtifactStore;
@@ -472,7 +473,7 @@ where
 pub fn retire_parsed_document<P, Mutation>(parsed: ParsedDocumentText<P, Mutation>)
 where
     P: Send + Sync + 'static,
-    Mutation: Send + 'static,
+    Mutation: Send + Sync + 'static,
 {
     let ParsedDocumentText { envelope, snapshot } = parsed;
     let mut retirement = ArtifactStoreEnvelopeRetirement::new(envelope, Arc::new(RoundTripValueRetirementFactory), Arc::new(RoundTripValueRetirementFactory));
@@ -569,25 +570,25 @@ where
 }
 
 impl<P: Send + Sync + 'static> SnapshotRetirementFactory<P> for RoundTripValueRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { size_of::<RoundTripValueRetirement<Arc<P>>>() }
+    fn retirement_birth_bytes(&self, _snapshot: &SharedOriginalStorage<P>) -> usize { size_of::<RoundTripValueRetirement<SharedOriginalStorage<P>>>() }
 
-    fn retire_demands(&self, _snapshot: &Arc<P>) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { capacity_bytes: size_of::<RoundTripValueRetirement<Arc<P>>>(), depth: 1, ..Default::default() }) }
+    fn retire_demands(&self, _snapshot: &SharedOriginalStorage<P>) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { capacity_bytes: size_of::<RoundTripValueRetirement<SharedOriginalStorage<P>>>(), depth: 1, ..Default::default() }) }
 
-    fn retire_work_demand(&self, _snapshot: &Arc<P>) -> Result<u64, ValueError> { Ok(1) }
+    fn retire_work_demand(&self, _snapshot: &SharedOriginalStorage<P>) -> Result<u64, ValueError> { Ok(1) }
 
-    fn retire<'reply>(&self, snapshot: &mut Option<Arc<P>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply:semio_framework_value::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure> {
+    fn retire<'reply>(&self, snapshot: &mut Option<SharedOriginalStorage<P>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply:semio_framework_value::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure> {
         semio_framework_value::factory_retire_framed(snapshot, effect, reply, |snapshot| RoundTripValueRetirement(Some(snapshot)))
     }
 
-    fn recover_retire<'reply>(&self, _: &mut Option<Arc<P>>, _: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply:semio_framework_value::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure> { reply.pending() }
+    fn recover_retire<'reply>(&self, _: &mut Option<SharedOriginalStorage<P>>, _: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply:semio_framework_value::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure> { reply.pending() }
 }
 
 /// 🧹️ One-value retirement used only by [`retire_parsed_document`] — a parsed comparison
 /// document owns no domain resources, so releasing a value is exactly one bounded step.
 struct RoundTripValueRetirement<T>(Option<T>);
 
-impl<T: Send> ErasedSnapshotRetirement for RoundTripValueRetirement<T> {
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
+impl<T: Send + Sync + 'static> ErasedSnapshotRetirement for RoundTripValueRetirement<T> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.0.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -605,7 +606,7 @@ impl<T: Send> ErasedSnapshotRetirement for RoundTripValueRetirement<T> {
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RoundTripValueRetirementFactory;
 
-impl<T: Send + 'static> ArtifactOwnedValueRetirementFactory<T> for RoundTripValueRetirementFactory {fn retire_owned_work_demand(&self,_:&T)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
+impl<T: Send + Sync + 'static> ArtifactOwnedValueRetirementFactory<T> for RoundTripValueRetirementFactory {fn retire_owned_work_demand(&self,_:&T)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self, _value: &T) -> usize { size_of::<RoundTripValueRetirement<T>>() }
 
     fn retire_owned_demands(&self, _value: &T) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { capacity_bytes: size_of::<RoundTripValueRetirement<T>>(), depth: 1, ..Default::default() }) }
@@ -624,8 +625,8 @@ pub fn drive_retirement(owner: &mut dyn ErasedSnapshotRetirement) -> Result<(), 
         if owner.terminal_is_empty() { return Ok(()); }
         let copy = owner.next_copy_byte_demand()?.max(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy)?, maximum_release_bytes: owner.next_release_byte_demand()?, maximum_depth: owner.next_depth_demand()?.max(1) };
-        let mut allocation = semio_framework_value::AuthoringWallet::new(grant, 64);
-        let Some((turn, _)) = allocation.run_settled(grant, 64, |effect| owner.close_step(effect))? else { continue };
+        let Some((poll, _)) = semio_framework_job::OriginalRetirementPump::new().turn(1 << 16, u64::MAX, || Some(0), grant)?.with_effect(|effect| owner.close_step(copy, effect))? else { continue };
+        let semio_framework_value::RetainedWorkPoll::Complete(turn) = poll else { continue };
         let step = turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;
         admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "driven test retirement")?;
         if matches!(step, RetainedCloneStep::Complete(_)) { return Ok(()); }

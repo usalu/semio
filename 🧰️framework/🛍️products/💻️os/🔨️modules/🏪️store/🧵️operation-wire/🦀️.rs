@@ -1,9 +1,8 @@
 //! 📦️ Prestage operation bytes from exact borrowed typed sources, with inline retained traversal.
 use semio_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor};
-use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::{RetainedAllocationEffect, ValueError, ValueRefusalKind};
-use semio_os_pack::record::{BorrowedProjectedPackCursor, BorrowedProjectedPackFailure};
+use semio_os_pack::record::BorrowedProjectedPackCursor;
 use semio_framework_dsl_record::{BorrowedRecordSpec,native_encoding::FieldProjectionSource};
 
 #[path = "📝️text/🦀️.rs"]
@@ -291,9 +290,6 @@ impl<P: 'static, M: 'static> semio_os_store_one_item_publication::ArtifactStoreO
 
 
 
-#[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 #[cfg(test)]
 #[path="🧪️effect/🦀️.rs"]
 mod effect_fixture;

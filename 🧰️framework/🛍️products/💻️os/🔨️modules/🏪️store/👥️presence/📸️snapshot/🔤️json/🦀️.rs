@@ -2,7 +2,7 @@
 use semio_framework_io_control::{native_snapshot_turn, NativeSnapshotBodyWallet, NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotFailure, NativeSnapshotWork};
 use semio_framework_pack_json::{JsonBorrowedWriteCursor, JsonError, JsonGrammarCursor, JsonMemberPolicy};
 use semio_framework_value::{retirement::RetireOwned, DslValue, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ToValue, ValueError, ValueRefusalKind};
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl, NativeReceivingEffect, NativeReceivingEffectPhase, NativeReceivingEffectPoll};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl, NativeReceivingEffect, NativeReceivingEffectPhase, NativeReceivingEffectPoll, NativeReceivingFailure, OriginalReceivingPrimary};
 
 const TURN_UNITS: usize = 1024;
 
@@ -32,6 +32,24 @@ fn effect_poll<E: Into<NativeSnapshotFailure>>(native: &mut NativeDecodeControl<
     })
 }
 
+/// 🧯️ A control-driven receiver failure keeps its complete native primary for the snapshot failure.
+fn primary_of(failure:NativeReceivingFailure)->OriginalReceivingPrimary{match failure{NativeReceivingFailure::Primary(primary)=>primary,NativeReceivingFailure::ValueEffect(effect)=>{let mut receiving=effect.receiving;receiving.allocation_refusal=effect.child;receiving.work_refusal=effect.work_refusal;receiving},NativeReceivingFailure::RetirementEffect(effect)=>{let mut receiving=effect.receiving;receiving.retirement_failure=effect.child;receiving.work_refusal=effect.work_refusal;receiving},NativeReceivingFailure::ReceivingEffect(effect)=>{let mut receiving=effect.receiving;receiving.work_refusal=effect.work_refusal;receiving}}}
+/// ♻️ Pays the receiver close start once, then closes it through its reply-shaped retirement cursor.
+fn receiver_close<P: semio_framework_value_native_owned::native_decoding::NativeReceive<DslValue>>(frame: &mut semio_framework_value_native_receiving_original::NativeReceivingOriginal<DslValue, P>, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkPoll<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+    use semio_framework_value::{retained_clone::OriginalEffectReply, retirement::{RetirementCursor, RetirementStep}};
+    let mut slot = None;
+    let ran = if !frame.is_closing() { OriginalEffectReply::borrow(&mut slot).and_then(|reply| frame.begin_close_into(effect, reply).map(drop)).map(|()| None) } else {
+        let mut stepped = None;
+        OriginalEffectReply::borrow(&mut stepped).and_then(|reply| RetirementCursor::close_into(frame, body, effect, reply).map(drop)).map(|()| stepped.take())
+    };
+    let work = effect.performed_work();
+    match (ran, slot.take()) {
+        (Err(error), _) => RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Err(error.into()), work }),
+        (Ok(_), Some(settled)) => RetainedWorkPoll::Complete(RetainedWorkOutcome { result: settled, work }),
+        (Ok(Some(settled)), None) => RetainedWorkPoll::Complete(RetainedWorkOutcome { result: settled.and_then(|step| match step { RetirementStep::Progress(progress, _) => Ok(RetainedCloneStep::Progress(progress)), RetirementStep::Failure(failure, _) => Err(failure), RetirementStep::Complete(_) | RetirementStep::Pending(_) | RetirementStep::BudgetExhausted | RetirementStep::Advanced => Ok(RetainedCloneStep::Progress(Default::default())), _ => Err(ValueError::invariant("presence receiver close produced a foreign child step").into()) }), work }),
+        (Ok(None), None) => RetainedWorkPoll::Pending { work },
+    }
+}
 fn admit_inline<T>(body: &NativeSnapshotBodyWallet) -> Result<(), ValueError> { body.admit_frontier(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<T>(), maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 }) }
 fn record_inline<T>(body: &mut NativeSnapshotBodyWallet) -> Result<(), ValueError> { body.record_progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<T>(), ..Default::default() }) }
 fn admit_turn(body: &NativeSnapshotBodyWallet, demand: RetirementDemand) -> Result<(), ValueError> { body.admit_frontier(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }) }
@@ -58,7 +76,7 @@ pub fn decode_presence_json<P: semio_framework_value_native_owned::native_decodi
         let mut admission=Source::admission_owned(tree.take().ok_or_else(||ValueError::invariant("tree absent"))?,());let mut original=None;
         let admitted=(||->Result<(),NativeSnapshotFailure>{
             let mut idle=0u8;while admission.phase()!="ready"{let phase=admission.phase();let demand=admission.next_demand()?;let step=effect_step(native,effects,work,body,demand,|_,effect|admission.advance(effect))?.ok_or_else(unfunded)?;body.record_progress(step.progress())?;idle=if step.progress()==RetainedCloneProgress::default()&&admission.phase()==phase{idle+1}else{0};if idle>=2{return Err(stalled())}}
-            admit_turn(body,admission.next_demand()?)?;let step=work.take(admission.take_output(&mut original,body.remaining_grant()))?;body.record_progress(step.progress())?;Ok(())
+            let step=effect_step(native,effects,work,body,admission.take_output_demand(),|_,effect|admission.take_output(&mut original,effect))?.ok_or_else(unfunded)?;body.record_progress(step.progress())?;Ok(())
         })();
         if let Err(error)=admitted{
             let mut back=None;
@@ -74,16 +92,15 @@ pub fn decode_presence_json<P: semio_framework_value_native_owned::native_decodi
         *receiving=Some(NativeReceivingOriginal::<DslValue,P>::new(source));let frame=receiving.as_mut().ok_or_else(||ValueError::invariant("receiving absent"))?;
         while !frame.output_ready(){
             let logical_body=body.remaining_grant().maximum_copy_bytes;admit_turn(body,frame.demands(logical_body,TURN_UNITS as u64)?)?;let grant=body.remaining_grant();let limit=ceiling(native.owned_bytes(),body)?;
-            let poll=native.scoped_maximum::<_,ValueError>(limit,|native|Ok(frame.advance(native,logical_body,TURN_UNITS as u64,grant)))?;
+            let witness=native.source_witness()?;let poll=native.scoped_maximum::<_,ValueError>(limit,|native|Ok(frame.advance(native,witness,logical_body,TURN_UNITS as u64,grant)))?;
             match poll{
                 RetainedWorkPoll::Pending{work:pending}=>{if pending==0{return Err(pending_refusal())}work.take(RetainedWorkOutcome{result:Ok::<(),ValueError>(()),work:pending})?;},
-                RetainedWorkPoll::Complete(turn)=>match work.take(turn){Ok(step)=>body.record_progress(step.progress())?,Err(failure)=>return Err(failure)},
+                RetainedWorkPoll::Complete(turn)=>match work.take(RetainedWorkOutcome{result:turn.result.map_err(|failure|NativeSnapshotFailure::from(primary_of(failure))),work:turn.work}){Ok(step)=>body.record_progress(step.progress())?,Err(failure)=>return Err(failure)},
             }
         }
         let demand=frame.take_demand()?;
         match effect_poll(native,effects,work,body,demand,|effect|frame.take(result,effect))?{Some(step)=>body.record_progress(step.progress())?,None=>return Err(unfunded())}
-        frame.begin_close();
-        while !frame.terminal_is_empty(){let demand=frame.close_demands(body.remaining_grant().maximum_copy_bytes)?;match effect_poll(native,effects,work,body,demand,|effect|frame.close_step(effect))?{Some(step)=>body.record_progress(step.progress())?,None=>return Err(unfunded())}}
+        while !frame.terminal_is_empty(){let copy=body.remaining_grant().maximum_copy_bytes;let demand=if frame.is_closing(){frame.close_demands(copy)?}else{frame.begin_close_demand()?};match effect_poll(native,effects,work,body,demand,|effect|receiver_close(frame,copy,effect))?{Some(step)=>body.record_progress(step.progress())?,None=>return Err(unfunded())}}
         Ok(())
     }));
     RetainedWorkOutcome{result:turn.result.and_then(|()|output.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"presence receiving produced no output").into())),work:turn.work}

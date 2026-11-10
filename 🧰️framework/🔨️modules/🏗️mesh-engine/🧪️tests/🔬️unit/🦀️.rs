@@ -328,7 +328,9 @@ fn polygon_obj_reader_keeps_polygons_and_resolves_every_index_form() {
 #[test]
 fn original_mesh_metadata_owns_controlled_birth_and_exact_physical_retirement() {
     use pack::value::{FromValue, ToValue, retirement::{RetireOwned, controlled::ControlledRetirement}, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
-    use crate::component_reference_custody_tests::observe_retirement_allocations;
+    use crate::component_reference_custody_tests::{drive,observe_retirement_allocations,warm};
+    fn settled(poll:pack::value::RetainedWorkPoll<RetainedCloneStep,pack::value::OriginalRetirementFailure>)->RetainedCloneStep{match poll{pack::value::RetainedWorkPoll::Complete(turn)=>turn.result.unwrap(),pack::value::RetainedWorkPoll::Pending{..}=>panic!("original mesh close stayed pending")}}
+    warm();
     let fixture: serde_json::Value = serde_json::from_str(crate::test_inputs::text("🧪️tests/🧫️fixtures/🧹️metadata/🔣️.json")).unwrap();
     let (mesh, source_heap) = observe_retirement_allocations(|| {
         let text = fixture["mesh"].to_string();
@@ -351,18 +353,18 @@ fn original_mesh_metadata_owns_controlled_birth_and_exact_physical_retirement() 
     for _ in 0..100_000 {
         if owner.terminal_is_empty() { break; }
         let release = owner.next_release_byte_demand().unwrap();
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: release, maximum_depth: owner.next_depth_demand().unwrap() };
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: owner.next_demand(copy).unwrap().copy_bytes, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: release, maximum_depth: owner.next_depth_demand().unwrap() };
         if release > release_probe {
             for _ in 0..fixture["repeatedRefusals"].as_u64().unwrap() {
                 let small = RetainedCloneGrant { maximum_release_bytes: release_probe, ..grant };
-                let (step, heap) = observe_retirement_allocations(|| owner.step(small).unwrap());
+                let (step, heap) = observe_retirement_allocations(|| settled(drive(small, |effect, reply, recover| if recover { owner.recover_step_into(copy, effect, reply) } else { owner.step_into(copy, effect, reply) })));
                 assert!(step.progress().fits(small));
                 assert_eq!(heap, (0, 0), "insufficient physical release grant changed original ownership");
                 assert_eq!(owner.next_release_byte_demand().unwrap(), release);
                 refusals += 1;
             }
         }
-        let (step, heap) = observe_retirement_allocations(|| owner.step(grant).unwrap());
+        let (step, heap) = observe_retirement_allocations(|| settled(drive(grant, |effect, reply, recover| if recover { owner.recover_step_into(copy, effect, reply) } else { owner.step_into(copy, effect, reply) })));
         let progress = step.progress();
         assert!(progress.fits(grant));
         assert_eq!(heap, (progress.retained_capacity_bytes, progress.released_bytes));

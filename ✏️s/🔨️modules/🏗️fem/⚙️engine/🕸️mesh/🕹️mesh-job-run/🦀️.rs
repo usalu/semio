@@ -303,11 +303,7 @@ impl MeshJob {
     fn retire_delivered<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         let lent = self.lent.as_mut().ok_or_else(|| ValueError::invariant("a delivered mesh publication is staged"))?;
         let demand = lent.payload.retirement_demands()?;
-        let grant = cx.retained_grant();
-        if mesh_covers(grant, demand) {
-            let turn = lent.payload.close_step(grant);
-            receive_original_retained_work(cx, turn).map_err(numerical_turn_error)?;
-        }
+        close_original_effect_step(cx, demand, |effect| RetainedWorkPoll::Complete(lent.payload.close_step(effect))).map_err(numerical_turn_error)?;
         if lent.payload.terminal_is_empty() {
             self.lent = None;
             self.lent_delivered = false;
@@ -340,13 +336,14 @@ impl InteractiveJob for MeshJob {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
         }
         let demand = self.retirement_demand()?;
-        let step = close_original_retained_step(cx, demand, |grant| {
-            let result = self.close_granted(grant).map(|step| match step {
+        let step = close_original_effect_step(cx, demand, |effect| {
+            let result = self.close_granted(effect).map(|step| match step {
                 InteractiveJobCloseStep::Complete { progress } => RetainedCloneStep::Complete(progress),
                 InteractiveJobCloseStep::Pending { progress } => RetainedCloneStep::Progress(progress),
                 InteractiveJobCloseStep::Blocked => RetainedCloneStep::Progress(RetainedCloneProgress::default()),
             });
-            RetainedWorkOutcome { result, work: 1 }
+            let charged = if effect.performed_work() == 0 { effect.performed(1).map(drop) } else { Ok(()) };
+            RetainedWorkPoll::Complete(RetainedWorkOutcome { result: result.and_then(|step| charged.map(|()| step)).map_err(OriginalRetirementFailure::from), work: effect.performed_work() })
         })?;
         Ok(if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
     }
@@ -476,21 +473,21 @@ impl MeshJob {
     }
 
     /// 🎟️ Releases the lent payload first, then the half-built publication writer, one page or ledger per granted turn.
-    fn close_publication(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    fn close_publication(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
         let step = if let Some(lent) = self.lent.as_mut() {
-            let step = lent.payload.close_step(grant).result;
+            let step = lent.payload.close_step(effect).result;
             if lent.payload.terminal_is_empty() {
                 self.lent = None;
                 self.lent_delivered = false;
             }
             step
         } else if let Some(payload) = self.finished_payload.as_mut() {
-            let step = payload.close_step(grant).result;
+            let step = payload.close_step(effect).result;
             if payload.terminal_is_empty() {
                 self.finished_payload = None;
             }
             step
-        } else if let Some(step) = numerical_writer_close(&mut self.publication_writer, grant) {
+        } else if let Some(step) = numerical_writer_close(&mut self.publication_writer, effect) {
             let step = step?;
             if self.publication_writer.is_none() {
                 self.publication_kind = None;
@@ -505,7 +502,8 @@ impl MeshJob {
 
     /// 🎟️ One close turn under an explicit grant, admitted against the job's own quote; the original-context
     /// `close_step` runs it under the caller's wallet.
-    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    pub fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
         let demand = self.retirement_demand()?;
         if grant.maximum_items == 0 { return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }); }
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "mesh close grant is shallower than its quoted depth")); }
@@ -513,7 +511,7 @@ impl MeshJob {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
         if self.lent.is_some() || self.finished_payload.is_some() || self.publication_writer.is_some() {
-            return self.close_publication(grant);
+            return self.close_publication(effect);
         }
         let (complete, items, bytes) = self.retire_owner_turn(grant.maximum_release_bytes);
         let progress = RetainedCloneProgress { copied_items: items, copied_bytes: if items != 0 { demand.copy_bytes } else { 0 }, released_bytes: bytes, ..RetainedCloneProgress::default() };

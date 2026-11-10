@@ -269,7 +269,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Some(::semio_framework_async::poll::resolve_ready(io.with_ports(vec![
             MediaPortSpec {
                 id: PUZZLE2D_IMPORT_PORT.into(),
-                label: "Kit Catalog".into(),
+                label: LocalizedLabel::native("Kit Catalog", "Kit-Katalog"),
                 direction: MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
                 kind_id: Some("kit.catalog".into()),
@@ -278,7 +278,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             },
             MediaPortSpec {
                 id: "design:out".into(),
-                label: "Puzzle Design".into(),
+                label: LocalizedLabel::native("Puzzle Design", "Puzzle-Entwurf"),
                 direction: MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Design },
                 kind_id: Some("2d.puzzle".into()),

@@ -2,7 +2,7 @@
 
 use super::*;
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: ArtifactCanonicalJsonTree + StoreMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_os_spr::ColdMutation<ParentP> + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -334,7 +334,7 @@ drop(self.prepared.take());
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> Drop for DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_os_spr::ColdMutation<ParentP> + semio_os_spr::OpBinary + semio_os_spr::OpText + Send + 'static + semio_os_spr::StoreMutationFor<ParentP>,
@@ -364,7 +364,7 @@ where
     }
 }
 
-impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
     pub fn begin_retained_commit(mut self) -> Result<DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, (DurableOwnedGroupDecisionError, Self)> {
         if self.decision_pack.is_none() {
             return Err((DurableOwnedGroupDecisionError::InvalidOutcome,self));

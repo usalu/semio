@@ -35,7 +35,7 @@
       ]
     },
     "payloadBytes": {
-      "const": 8
+      "const": 16
     },
     "depth": {
       "const": 1

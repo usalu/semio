@@ -300,7 +300,7 @@ impl RetainedTextEnvelope {
                 self.admit(1,demand)?;control.charge(demand.capacity_bytes)?;
                 let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quantum,..original};
                 let Some(owner)=self.retirement.as_mut()else{return Err(retained_source_missing())};
-                let poll=owner.step(&mut effect.nested(grant));
+                let poll=owner.step(quantum,&mut effect.nested(grant));
                 match poll{RetainedWorkPoll::Pending{..}=>return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"text envelope source retirement stayed pending on a synchronous recipient")),RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>self.record(step.progress())?,Err(failure)=>{let progress=failure.retained_progress();self.record(progress)?;return Err(failure_error(failure).with_retained_progress(progress))}}}
             }else if self.segment==8{
                 let copy=size_of::<RetainedTextEnvelopeSources>();self.admit(1,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()})?;

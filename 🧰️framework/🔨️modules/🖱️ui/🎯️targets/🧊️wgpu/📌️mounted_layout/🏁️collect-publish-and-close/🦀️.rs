@@ -146,11 +146,12 @@ impl MountedLayoutJob {
         quote_release!(results,lines,glyph_previews,glyphs,runs,walk,nodes);
         if !self.flex.close_is_empty(){return self.flex.next_close_depth_demand()}Ok(usize::from(!self.terminal_is_empty()))
     }
-    fn close_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
+    fn close_granted(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
+        let grant=effect.grant();
         let empty=RetainedCloneProgress::default();if !self.close_requested{return Ok(Step::Blocked)}if self.terminal_is_empty(){return Ok(Step::Complete{progress:empty})}
         if grant.maximum_items==0{return Ok(Step::Pending{progress:empty})}
-        if !self.fault_payload.terminal_is_empty(){return match self.fault_payload.close_step_granted(grant).result{Ok(step)=>Ok(Step::Pending{progress:step.progress()}),Err(error)=>Err(error)}}
+        if !self.fault_payload.terminal_is_empty(){return match self.fault_payload.close_step(effect).result{Ok(step)=>Ok(Step::Pending{progress:step.progress()}),Err(error)=>Err(error)}}
         let bytes=match self.next_close_release_bytes(){Ok(bytes)=>bytes,Err(error)=>return Err(error)};
         let depth=self.next_close_depth()?;if bytes>grant.maximum_release_bytes||grant.maximum_depth<depth{return Ok(Step::Pending{progress:empty})}
         if self.rejected_result.take().is_some()||self.rejected_line.take().is_some()||self.rejected_glyph.take().is_some()||self.rejected_preview.take().is_some()||self.rejected_run.take().is_some()||self.rejected_walk.take().is_some()||self.rejected_node.take().is_some(){return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
@@ -161,13 +162,15 @@ impl MountedLayoutJob {
             self.$field.take();return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})
         }}}
         close_list!(results);close_list!(lines);close_list!(glyph_previews);close_list!(glyphs);close_list!(runs);close_list!(walk);close_list!(nodes);
-        if !self.flex.close_is_empty(){return self.flex.close_granted(grant)}
+        if !self.flex.close_is_empty(){return self.flex.close_granted(effect)}
         if !self.atlas_candidate.is_empty(){self.atlas_candidate.close_one();return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})}
         Ok(if self.text_worker.terminal_is_empty(){Step::Complete{progress:empty}}else{Step::Blocked})
     }
     #[cfg(any(test, feature = "testkit"))]
-    pub fn close_one(&mut self,grant:semio_framework_job::RetainedCloneGrant)->Result<bool,semio_framework_value::ValueError>{
-        Ok(matches!(self.close_granted(grant)?,semio_framework_job::InteractiveJobCloseStep::Complete{..}))
+    pub fn close_one(&mut self)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let(mut preview,mut actual)=(0,semio_framework_job::RetainedCloneProgress::default());
+        let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(0),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),semio_framework_job::CancelToken::root_now(),||Some(0),&mut preview,&mut actual);
+        Ok(matches!(semio_framework_job::InteractiveJob::close_step(self,&mut cx)?,semio_framework_job::InteractiveJobCloseStep::Complete{..}))
     }
 
     pub fn terminal_is_empty(&self)->bool{
@@ -206,7 +209,7 @@ pub fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32
         if let Some(mut descriptor) = outcome {
             let failed = matches!(descriptor.kind(), semio_framework_job::JobOutcomeKind::Fault | semio_framework_job::JobOutcomeKind::Cancelled);
             descriptor.acknowledge(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-            if failed { job.begin_close(); while !job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap() {} return false; }
+            if failed { job.begin_close(); while !job.close_one().unwrap() {} return false; }
         }
     }
     while let Some(result) = job.take_preview_one() {
@@ -227,7 +230,7 @@ pub fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32
         }
     }
     job.begin_close();
-    while !job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap() {}
+    while !job.close_one().unwrap() {}
     true
 }
 
@@ -265,9 +268,9 @@ impl semio_framework_job::InteractiveJob for MountedLayoutJob {
         let grant=cx.retained_grant();
         if cx.should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
         if self.close_requested&&self.layout_is_empty(){return self.text_worker.close_step(cx)}
-        let step=self.close_granted(grant).and_then(|step|step.admit(grant,self.terminal_is_empty())).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
-        cx.consume_retained(step.progress()).map_err(semio_framework_job::OriginalTurnFailure::from)?;
-        if step.progress().copied_items!=0{cx.consume_fuel(1)}
+        let Some((closed,performed))=cx.with_original_effect(grant,|_,effect|self.close_granted(effect)).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? else { return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()}) };
+        let step=closed.and_then(|step|step.admit(grant,self.terminal_is_empty())).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+        semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result:Ok::<_,semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(step.progress())),work:performed})?;
         Ok(step)
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if self.fault_payload.terminal_is_empty(){Ok(0)}else{self.fault_payload.retirement_demands().map(|demand|demand.copy_bytes)}}

@@ -30,5 +30,6 @@ testkit = []
 [dev-dependencies]
 semio-framework-job={workspace=true,features=["testkit"]}
 semio-framework-trace={workspace=true}
+semio-framework-value-testing-effect-bank = { path = "../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 
 serde_json = { workspace = true }

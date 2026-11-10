@@ -56,12 +56,13 @@ impl PcgJob {
         Ok(self.close_frontier()?.unwrap_or_else(|| numerical_rung_demand(self.close_lane >= 8)))
     }
 
-    fn close_turn(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
-        if let Some(step) = self.desk.close_step(grant) {
+    fn close_turn(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
+        if let Some(step) = self.desk.close_step(effect) {
             return step;
         }
         if let Some(publication) = self.publication.as_mut() {
-            match numerical_writer_close(&mut publication.writer, grant) {
+            match numerical_writer_close(&mut publication.writer, effect) {
                 Some(step) => return step,
                 None => self.publication = None,
             }
@@ -71,7 +72,8 @@ impl PcgJob {
 
     /// 🎟️ One close turn under an explicit grant; the parents that own a job (construction, restore) and the
     /// original-context `close_step` both admit it through the job's own quote.
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
+        let grant = effect.grant();
         let frontier = self.close_frontier()?;
         if self.terminal_is_empty() {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
@@ -79,7 +81,7 @@ impl PcgJob {
         if !numerical_close_gate(grant, frontier) {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
-        self.close_turn(grant)?.admit(grant, self.terminal_is_empty())
+        self.close_turn(effect)?.admit(grant, self.terminal_is_empty())
     }
 }
 
@@ -101,7 +103,7 @@ impl InteractiveJob for PcgJob {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
         }
         let demand = self.close_demand()?;
-        numerical_close_original(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
+        numerical_close_effect(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.copy_bytes) }

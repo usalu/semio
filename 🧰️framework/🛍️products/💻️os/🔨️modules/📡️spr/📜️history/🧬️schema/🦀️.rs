@@ -230,7 +230,7 @@ impl HistoryLog {
             while !retirement.terminal_is_empty() {
                 let quote = |error:semio_framework_value::ValueError|cold("normalized history retirement quote",error.into_message());
                 let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: retirement.next_capacity_byte_demand(4096).map_err(quote)?, maximum_release_bytes: retirement.next_release_byte_demand().map_err(quote)?, maximum_depth: retirement.next_depth_demand().map_err(quote)? };
-                let done = wallet.run(grant, 1 << 16, |effect| retirement.step(effect)).map_err(quote)?.ok_or_else(|| cold("normalized history retirement work quote was not admitted", String::new()))?;
+                let done = wallet.run_invoked(grant, 1 << 16, |effect| retirement.step(grant.maximum_copy_bytes,effect)).map_err(quote)?.ok_or_else(|| cold("normalized history retirement work quote was not admitted", String::new()))?;
                 match done.output {
                     RetainedWorkPoll::Pending { .. } => return Err(cold("normalized history retirement stayed pending on a synchronous cold fold", String::new())),
                     RetainedWorkPoll::Complete(turn) => { let step = turn.result.map_err(|failure| cold("normalized cold fold owners have exact retirement", failure.to_string()))?; if !step.progress().fits(grant) { return Err(cold("normalized history retirement exceeded its grant", String::new())); } wallet.post(step.progress()).map_err(quote)?; }

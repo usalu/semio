@@ -177,7 +177,7 @@ impl OwnedOperationBytes {
 impl semio_framework_value::ErasedSnapshotRetirement for OwnedOperationBytes{
     fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:usize::from(!self.closed&&self.len()!=0),release_bytes:if self.closed||self.len()!=0||self.allocated_bytes()==0{0}else{self.next_close_byte_demand().map_err(|fault|semio_framework_value::ValueError::new(fault.kind,fault.reason))?},depth:usize::from(!self.closed),..Default::default()})}
     fn next_computational_work(&self,_:usize)->Result<u64,semio_framework_value::ValueError>{Ok(u64::from(!self.closed))}
-    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+    fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let grant=effect.grant();let empty=RetainedCloneProgress::default();
         let done=|result:Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>,work:u128|semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result,work});

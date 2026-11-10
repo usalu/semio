@@ -1,35 +1,56 @@
-//! 🧰️ Test kit of the neural engine producers: the observing system allocator and the nested ownership observation scope, registered as the global allocator by each test unit that measures heap custody.
+//! 🧰️ Test kit of the neural engine producers: the ownership observation scope over the one shared value test allocator.
 
-#[derive(Clone,Copy,Default)]
-pub struct ShellObservation { pub recording:bool,pub count:usize,pub addresses:[usize;8],pub sizes:[usize;8],pub released:usize }
-thread_local! {pub static SHELL_OBSERVATION:std::cell::Cell<ShellObservation>=const {std::cell::Cell::new(ShellObservation {recording:false,count:0,addresses:[0;8],sizes:[0;8],released:0})};}
-thread_local! {static OWNERSHIP_OBSERVATION:std::cell::Cell<Option<(usize,usize)>>=const {std::cell::Cell::new(None)};}
-struct OwnershipObservationScope {parent:Option<(usize,usize)>,active:bool}
-impl OwnershipObservationScope {
-    fn finish(&mut self)->(usize,usize) {
-        let result=OWNERSHIP_OBSERVATION.with(|state|{let result=state.replace(None).unwrap();state.set(self.parent.map(|(allocated,released)|(allocated+result.0,released+result.1)));result});
-        self.active=false;result
-    }
-}
-impl Drop for OwnershipObservationScope {fn drop(&mut self){if self.active {self.finish();}}}
+/// 🔭️ Observes the requested and released heap bytes of one operation; a scope inside an open scope measures by difference.
 pub fn observe_ownership<T>(operation:impl FnOnce()->T)->(T,usize,usize) {
-    let parent=OWNERSHIP_OBSERVATION.with(|state|state.replace(Some((0,0))));
-    let mut scope=OwnershipObservationScope {parent,active:true};
+    use semio_framework_value_testing_allocator::{observe_retirement_allocations,retirement_allocations_so_far};
+    let Some((allocated,released))=retirement_allocations_so_far() else {
+        let (value,(allocated,released))=observe_retirement_allocations(operation);
+        return (value,allocated,released);
+    };
     let value=operation();
-    let (allocated,released)=scope.finish();
-    (value,allocated,released)
+    let (after_allocated,after_released)=retirement_allocations_so_far().expect("the enclosing observation scope stays open");
+    (value,after_allocated-allocated,after_released-released)
 }
-pub struct ObservedSystem;
-unsafe impl std::alloc::GlobalAlloc for ObservedSystem {
-    unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8 {
-        let pointer=unsafe {std::alloc::GlobalAlloc::alloc(&semio_framework_trace::HeapWitness,layout)};
-        if !pointer.is_null(){let _=SHELL_OBSERVATION.try_with(|state|{let mut observed=state.get();if observed.recording&&observed.count<observed.addresses.len(){let index=observed.count;observed.addresses[index]=pointer as usize;observed.sizes[index]=layout.size();observed.count+=1;state.set(observed);}});}
-        if !pointer.is_null(){let _=OWNERSHIP_OBSERVATION.try_with(|state|{if let Some((allocated,released))=state.get(){state.set(Some((allocated+layout.size(),released)));}});}
-        pointer
+
+use semio_framework_job::{Generation,OperationId,OriginalJobFixtureCaller,StepContext};
+use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkPoll,ValueError,ValueRefusalKind};
+
+const CALLER_STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:64};
+
+/// 🏦️ Funds raw effect-shaped owner steps through genuine original caller turns, so turn-less suites never author a wallet.
+pub struct EffectCaller{inner:Option<OriginalJobFixtureCaller>}
+impl Default for EffectCaller{fn default()->Self{Self::new()}}
+impl EffectCaller{
+    pub fn new()->Self{Self{inner:Some(OriginalJobFixtureCaller::admit(OperationId(707),Generation(9),CALLER_STOCK,||Some(1),u64::MAX,1<<40))}}
+    /// 🧾️ Reports the physical receipt of the last turn this caller funded.
+    pub fn last(&self)->RetainedCloneProgress{self.inner.as_ref().expect("live caller").receipt()}
+    /// 🪙️ Runs one original step under a loan of exactly `work` fuel and takes its closure result.
+    pub fn turn<T>(&mut self,grant:RetainedCloneGrant,work:u64,step:impl FnOnce(&mut StepContext<'_>)->T)->T {
+        let caller=self.inner.as_mut().expect("live caller");let mut out=None;
+        caller.turn(grant,|cx|cx.with_original_work_loan(work,u64::MAX,|cx|{out=Some(step(cx));Ok(())})).unwrap_or_else(|_|panic!("original fixture turn"));
+        out.expect("original fixture step ran")
     }
-    unsafe fn dealloc(&self,pointer:*mut u8,layout:std::alloc::Layout) {
-        let _=OWNERSHIP_OBSERVATION.try_with(|state|{if let Some((allocated,released))=state.get(){state.set(Some((allocated,released+layout.size())));}});
-        let _=SHELL_OBSERVATION.try_with(|state|{let mut observed=state.get();if let Some(index)=observed.addresses.iter().position(|address|*address==pointer as usize){observed.addresses[index]=0;observed.released+=layout.size();state.set(observed);}});
-        unsafe {std::alloc::GlobalAlloc::dealloc(&semio_framework_trace::HeapWitness,pointer,layout)};
+    /// 🪙️ Runs one effect-shaped close or advance as the single original effect of a funded turn and charges its receipt to that turn.
+    pub fn poll(&mut self,grant:RetainedCloneGrant,work:u64,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->Result<RetainedCloneStep,ValueError> {
+        self.turn(grant,work,|cx|{
+            let Some((poll,_))=cx.with_original_effect(grant,|_,effect|operation(effect)).expect("original fixture effect")else{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"fixture work quote was not admitted"))};
+            match poll {
+                RetainedWorkPoll::Pending{..}=>panic!("synchronous fixture suspended"),
+                RetainedWorkPoll::Complete(turn)=>match turn.result {
+                    Ok(step)=>{cx.consume_retained(step.progress())?;Ok(step)},
+                    Err(failure)=>{let progress=failure.retained_progress();cx.consume_retained(progress)?;Err(failure.into_value_error())},
+                },
+            }
+        })
     }
 }
+impl EffectCaller {
+    /// 🪙️ Runs one effect-shaped result step as the single original effect of a funded turn and charges its receipt to that turn.
+    pub fn result(&mut self,grant:RetainedCloneGrant,work:u64,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>)->Result<RetainedCloneStep,ValueError> {
+        self.turn(grant,work,|cx|{
+            let Some((result,_))=cx.with_original_effect(grant,|_,effect|operation(effect)).expect("original fixture effect")else{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"fixture work quote was not admitted"))};
+            cx.consume_retained(match &result {Ok(step)=>step.progress(),Err(error)=>error.retained_progress()})?;result
+        })
+    }
+}
+impl Drop for EffectCaller{fn drop(&mut self){if let Some(caller)=self.inner.take(){caller.retire(CALLER_STOCK);}}}

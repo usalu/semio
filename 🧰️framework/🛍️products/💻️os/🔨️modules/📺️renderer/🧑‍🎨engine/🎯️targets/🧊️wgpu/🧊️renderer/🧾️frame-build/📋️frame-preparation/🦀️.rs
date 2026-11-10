@@ -145,7 +145,8 @@ use semio_framework_job_worker::{WorkerJobPoll};
         if let Some(original)=self.params_cancel_retirement.as_mut() {
             if !original.terminal_is_empty() {
                 let Some(witness)=witness else{return Ok(InteractiveJobCloseStep::Blocked)};
-                return frame_receive_close(match original.return_alias_step(witness,grant) {
+                let turn=cx.with_original_effect(grant,|_,effect|original.return_alias_step(witness,effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0},|(turn,_)|turn);
+                return frame_receive_close(match turn.result {
                     Ok(step)=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
                     Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(InteractiveJobCloseStep::Blocked),
                     Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error),
@@ -173,7 +174,7 @@ use semio_framework_job_worker::{WorkerJobPoll};
             }
             if let Some(witness)=witness {
                 match session.has_original_cancel_alias_witness(witness) {
-                    Ok(true)=>return frame_receive_close(match session.return_original_cancel_alias_step(witness,grant) {
+                    Ok(true)=>return frame_receive_close(match cx.with_original_effect(grant,|cx,effect|session.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn) {
                         Ok(Some(step))=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
                         Ok(None)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>Ok(InteractiveJobCloseStep::Blocked),
                         Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>Err(error),

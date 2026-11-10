@@ -1,7 +1,5 @@
 //! 🪙️ The context's effect provider settles one performed-work receipt per effect and debits nothing itself: the single fuel debit stays with the converted work outcome.
 use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation,OriginalTurnFailure};
-#[global_allocator]
-static EFFECT_PROVIDER_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 static NOW:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
 fn now()->Option<u64>{Some(NOW.load(std::sync::atomic::Ordering::SeqCst))}
 use semio_framework_value::RetainedCloneGrant;
@@ -41,6 +39,7 @@ fn an_unadmitted_quote_runs_nothing_and_charges_nothing(){
   assert!(outcome.is_none()&&!ran&&cx.fuel_remaining()==before);
   Ok::<_,OriginalTurnFailure>(())
  }).unwrap();
+ NOW.store(0,std::sync::atomic::Ordering::SeqCst);
  caller.retire(quantum());
 }
 
@@ -57,4 +56,33 @@ fn the_shared_corpus_settles_identically_through_the_job_provider(){
   }).unwrap();
   caller.retire(quantum());
  }
+}
+#[test]
+fn every_context_and_pump_effect_carries_its_original_producer_invocation(){
+ let mut caller=caller(7609,u64::MAX);
+ caller.turn(quantum(),|cx|{
+  let (plain,_)=cx.with_original_effect(quantum(),|_,effect|effect.invocation().is_some())?.expect("an admitted quote runs");
+  let (sourced,_)=cx.with_original_source_effect(quantum(),|_,effect|effect.invocation().map(|invocation|invocation.source_turn()))?.expect("an admitted quote runs");
+  assert!(plain);assert!(sourced.is_some());
+  Ok::<_,OriginalTurnFailure>(())
+ }).unwrap();
+ caller.retire(quantum());
+ let mut turn=semio_framework_job::OriginalRetirementPump::new().turn(8,u64::MAX,now,quantum()).unwrap();
+ let (carried,_)=turn.with_effect(|effect|effect.invocation().map(|invocation|invocation.source_turn())).unwrap().expect("an admitted quote runs");
+ assert_eq!(carried,Some(Some(turn.source_turn())));
+}
+#[test]
+fn a_one_fuel_turn_closes_through_its_effect_charging_each_unit_once(){
+ use semio_framework_value::retirement::controlled::ControlledRetirement;
+ let mut caller=caller(7610,u64::MAX);let mut owner=ControlledRetirement::retain(String::from("π"));
+ for _ in 0..64{
+  if owner.terminal_is_empty(){break}
+  caller.turn(quantum(),|cx|{
+   let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.selected_demand(body)?;let spent=cx.original_work_units_spent();
+   cx.with_original_work_loan(1,cx.deadline_us(),|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect)))?;
+   assert!(cx.original_work_units_spent()-spent<=1);
+   Ok::<_,OriginalTurnFailure>(())
+  }).unwrap();
+ }
+ assert!(owner.terminal_is_empty());caller.retire(quantum());
 }

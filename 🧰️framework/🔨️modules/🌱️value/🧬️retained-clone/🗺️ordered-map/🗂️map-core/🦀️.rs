@@ -7,8 +7,10 @@ pub const RETAINED_ORDERED_MAP_PAGE_CAPACITY: usize = 16;
 /// 🗺️ Stores strictly ordered entries in fixed-capacity native pages with resumable directory growth.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RetainedOrderedMap<K, V> {
-    pub(super) pages: Vec<Vec<(K, V)>>,
-    pub(super) len: usize,
+    #[doc(hidden)]
+    pub pages: Vec<Vec<(K, V)>>,
+    #[doc(hidden)]
+    pub len: usize,
 }
 
 impl<K, V> Default for RetainedOrderedMap<K, V> {
@@ -48,8 +50,8 @@ impl<K, V> RetainedOrderedMap<K, V> {
         self.pages.into_iter().flatten()
     }
 
-    #[cfg(test)]
-    pub(crate) fn from_sorted_entries_for_test(entries: Vec<(K, V)>) -> Result<Self, crate::ValueError>
+    /// 🧱️ Builds the exact fixed-page layout from strictly ordered entries and refuses any other order.
+    pub fn from_sorted_entries(entries: Vec<(K, V)>) -> Result<Self, crate::ValueError>
     where
         K: Ord,
     {

@@ -4,7 +4,7 @@ use super::{ WindowConfigOwner, WindowConfigPack, WindowConfigPartition, WindowR
 use crate::{protocol, store};
 use std::any::Any;
 use std::mem::ManuallyDrop;
-use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, retirement::{RetireOwned, RetirementCursor, controlled::ControlledRetirement}, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, retirement::{RetireOwned, controlled::ControlledRetirement}, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use super::PluginLifecycleStep;
 
 #[path = "🧩️pack-load-contract-and-value-frames/🦀️.rs"]

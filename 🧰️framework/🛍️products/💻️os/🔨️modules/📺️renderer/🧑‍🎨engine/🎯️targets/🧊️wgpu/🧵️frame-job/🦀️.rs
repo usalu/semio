@@ -194,7 +194,8 @@ fn retire_active_phase(phase: &mut ActiveFramePhase, cx: &mut StepContext<'_>, w
             }
             if let Some(original)=cancel_retirement.as_mut() {
                 if !original.terminal_is_empty() {
-                    return semio_renderer_wgpu_app_runtime::frame_receive_close(match original.return_alias_step(witness,grant) {
+                    let turn=cx.with_original_effect(grant,|_,effect|original.return_alias_step(witness,effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0},|(turn,_)|turn);
+                    return semio_renderer_wgpu_app_runtime::frame_receive_close(match turn.result {
                         Ok(step)=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
                         Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(InteractiveJobCloseStep::Blocked),
                         Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error),
@@ -219,7 +220,7 @@ fn retire_active_phase(phase: &mut ActiveFramePhase, cx: &mut StepContext<'_>, w
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
             }
             match session.has_original_cancel_alias_witness(witness) {
-                Ok(true)=>return semio_renderer_wgpu_app_runtime::frame_receive_close(match session.return_original_cancel_alias_step(witness,grant) {
+                Ok(true)=>return semio_renderer_wgpu_app_runtime::frame_receive_close(match cx.with_original_effect(grant,|cx,effect|session.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn) {
                     Ok(Some(step))=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
                     Ok(None)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>Ok(InteractiveJobCloseStep::Blocked),
                     Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>Err(error),
@@ -515,7 +516,7 @@ impl InteractiveJob for ActiveFrameBuild {
             self.cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(original));return semio_renderer_wgpu_app_runtime::frame_receive_close(semio_renderer_wgpu_app_runtime::frame_inline_progress(0),cx)
         }
         if let Some(original)=self.cancel_retirement.as_mut(){
-            if !original.terminal_is_empty(){return semio_renderer_wgpu_app_runtime::frame_receive_close(match original.return_alias_step(cx.original_cancel_token(),grant){Ok(step)=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(InteractiveJobCloseStep::Blocked),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)},cx)}
+            if !original.terminal_is_empty(){let turn=cx.with_original_effect(grant,|cx,effect|original.return_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0},|(turn,_)|turn);return semio_renderer_wgpu_app_runtime::frame_receive_close(match turn.result{Ok(step)=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(InteractiveJobCloseStep::Blocked),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)},cx)}
             if let Some(step)=semio_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
             self.cancel_retirement=None;return semio_renderer_wgpu_app_runtime::frame_receive_close(semio_renderer_wgpu_app_runtime::frame_inline_progress(0),cx)
         }
@@ -557,7 +558,7 @@ impl FrameBuildHandle {
                 },
                 semio_framework_job_worker::WorkerJobPoll::Closing=>{
                     let grant=cx.retained_grant();match session.has_original_cancel_alias_witness(cx.original_cancel_token()){
-                        Ok(true)=>match session.return_original_cancel_alias_step(cx.original_cancel_token(),grant){Ok(Some(step))=>{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64)},Ok(None)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))},
+                        Ok(true)=>match cx.with_original_effect(grant,|cx,effect|session.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn){Ok(Some(step))=>{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64)},Ok(None)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))},
                         Ok(false)=>{session.close_step(cx)?;},Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),
                     }
                 },
@@ -591,9 +592,9 @@ impl FrameBuildHandle {
         if !self.original_admission.terminal_is_empty(){self.original_admission.close_step(cx)?;return Ok(false)}
         if let Some(job)=self.original_job.as_mut(){if !job.terminal_is_empty(){job.close_step(cx)?;return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_job=None;return Ok(false)}
         if let Some(params)=self.original_params.take(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_params_cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));return Ok(false)}
-        if let Some(owner)=self.original_params_cancel_retirement.as_mut(){if !owner.terminal_is_empty(){match owner.return_alias_step(cx.original_cancel_token(),grant){Ok(step)=>{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64)},Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>{},Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))}return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_params_cancel_retirement=None;return Ok(false)}
+        if let Some(owner)=self.original_params_cancel_retirement.as_mut(){if !owner.terminal_is_empty(){let turn=cx.with_original_effect(grant,|cx,effect|owner.return_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0},|(turn,_)|turn);match turn.result{Ok(step)=>{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64)},Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>{},Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))}return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_params_cancel_retirement=None;return Ok(false)}
         if let Some(session)=self.session.as_mut(){let _=session.begin_close();if !session.terminal_is_empty(){match session.has_original_cancel_alias_witness(cx.original_cancel_token()){
-            Ok(true)=>match session.return_original_cancel_alias_step(cx.original_cancel_token(),grant){Ok(Some(step))=>{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64)},Ok(None)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))},
+            Ok(true)=>match cx.with_original_effect(grant,|cx,effect|session.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn){Ok(Some(step))=>{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64)},Ok(None)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))},
             Ok(false)=>{session.close_step(cx)?;},Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),
         }return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.session=None;self.ticket=None;return Ok(false)}
         if self.original_refused_receipt.is_some()||self.original_presentation_generation.is_some(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_refused_receipt=None;self.original_presentation_generation=None;return Ok(false)}

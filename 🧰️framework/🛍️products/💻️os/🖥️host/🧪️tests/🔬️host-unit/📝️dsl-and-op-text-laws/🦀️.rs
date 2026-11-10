@@ -22,7 +22,7 @@
                 id: "app-1:puzzle.out:out".into(),
                 spec: semio_framework::MediaPortSpec {
                     id: "puzzle.out".into(),
-                    label: "Out".into(),
+                    label: semio_ui_locale::LocalizedLabel::native("Out", "Ausgang"),
                     direction: semio_framework::MediaPortDirection::Out,
                     media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
                     kind_id: Some("board.ports.directed.v1".into()),
@@ -47,7 +47,7 @@
                 id: "app-2:draw.in:in".into(),
                 spec: semio_framework::MediaPortSpec {
                     id: "draw.in".into(),
-                    label: "In".into(),
+                    label: semio_ui_locale::LocalizedLabel::native("In", "Eingang"),
                     direction: semio_framework::MediaPortDirection::In,
                     media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
                     kind_id: Some("board.ports.directed.v1".into()),

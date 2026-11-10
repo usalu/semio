@@ -49,13 +49,25 @@
       "items": 1
     },
     {
-      "phase": "source-denied",
+      "phase": "source-prepare",
+      "admitted": true,
+      "ready": false,
+      "items": 1
+    },
+    {
+      "phase": "source-backing-denied",
       "admitted": false,
       "ready": false,
       "items": 0
     },
     {
-      "phase": "source",
+      "phase": "source-backing",
+      "admitted": true,
+      "ready": false,
+      "items": 1
+    },
+    {
+      "phase": "source-publish",
       "admitted": true,
       "ready": false,
       "items": 1

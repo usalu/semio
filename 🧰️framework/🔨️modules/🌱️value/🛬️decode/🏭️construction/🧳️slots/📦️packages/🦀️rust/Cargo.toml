@@ -22,6 +22,7 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-value-clone-source = { path = "../../../../../🧬️retained-clone/🔗️source/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-allocation-return = { path = "../../../../../♻️retirement/📦️allocation-return/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-decoding = { path = "../../../../📦️packages/🦀️rust" }

@@ -280,7 +280,7 @@ fn mesh_edge_authority_uses_completed_faces_and_closes_exact_backing() {
         assert_eq!(job.indexed_constraint_edges.as_ptr(), before.0);
         assert_eq!(observe_mesh_close(&mut job, mesh_release_grant(bytes)), (false, 1, bytes));
         assert_eq!(job.indexed_constraint_edges.capacity(), 0);
-        assert_eq!(job.close_granted(mesh_release_grant(0)).map_err(|error| error.kind), Err(ValueRefusalKind::InvariantViolated));
+        assert_eq!(semio_s_fem_test_support::granted(mesh_release_grant(0), |effect| job.close_granted(effect)).map_err(|error| error.kind), Err(ValueRefusalKind::InvariantViolated));
         job.close_lane = 0;
         let mut closed = false;
         for _ in 0..256 {
@@ -325,7 +325,7 @@ fn close_mesh_job(job: &mut MeshJob) {
         }
         let demand = job.retirement_demand().expect("a locally owned mesh quotes its close demand");
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        let step = job.close_granted(grant);
+        let step = semio_s_fem_test_support::granted(grant, |effect| job.close_granted(effect));
         assert!(matches!(step, Ok(InteractiveJobCloseStep::Pending { .. } | InteractiveJobCloseStep::Complete { .. })), "a locally owned mesh close has no external owner and no refusal");
     }
     panic!("the mesh close ladder never reached terminal-empty");
@@ -614,14 +614,14 @@ fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affect
         let before_cursor = (job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor, job.constraint_retire_adjacency_cursor);
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        assert_eq!(seen_of(job.step(&mut deadline)), Seen::Yield);
+        assert_eq!(seen_of(job.step_plain(&mut deadline)), Seen::Yield);
         assert_eq!((job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor, job.constraint_retire_adjacency_cursor), before_cursor);
         assert_eq!(job.triangulation.as_ref().expect("triangulation retained").triangles, before);
 
         let mut sequence_receipt = RetainedCloneProgress::default();
         drop(deadline);
         let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        assert!(matches!(seen_of(job.step(&mut stale)), Seen::Fault(_)));
+        assert!(matches!(seen_of(job.step_plain(&mut stale)), Seen::Fault(_)));
         assert_eq!((job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor, job.constraint_retire_adjacency_cursor), before_cursor);
 
         let token = root_cancel_token();
@@ -629,7 +629,7 @@ fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affect
         let mut sequence_receipt = RetainedCloneProgress::default();
         drop(stale);
         let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
-        assert_eq!(seen_of(job.step(&mut cancelled)), Seen::Cancelled);
+        assert_eq!(seen_of(job.step_plain(&mut cancelled)), Seen::Cancelled);
         assert_eq!((job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor, job.constraint_retire_adjacency_cursor), before_cursor);
 
         let started = Instant::now();
@@ -742,19 +742,19 @@ fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_repl
                 let before = snapshot(&job);
                 let mut sequence_receipt = RetainedCloneProgress::default();
                 let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                assert_eq!(seen_of(job.step(&mut deadline)), Seen::Yield);
+                assert_eq!(seen_of(job.step_plain(&mut deadline)), Seen::Yield);
                 assert_eq!(snapshot(&job), before);
                 let mut sequence_receipt = RetainedCloneProgress::default();
                 drop(deadline);
                 let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                assert!(matches!(seen_of(job.step(&mut stale)), Seen::Fault(_)));
+                assert!(matches!(seen_of(job.step_plain(&mut stale)), Seen::Fault(_)));
                 assert_eq!(snapshot(&job), before);
                 let token = root_cancel_token();
                 token.cancel_now();
                 let mut sequence_receipt = RetainedCloneProgress::default();
                 drop(stale);
                 let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
-                assert_eq!(seen_of(job.step(&mut cancelled)), Seen::Cancelled);
+                assert_eq!(seen_of(job.step_plain(&mut cancelled)), Seen::Cancelled);
                 assert_eq!(snapshot(&job), before);
             }
             let mut sequence_receipt = RetainedCloneProgress::default();
@@ -844,7 +844,7 @@ fn mesh_release_grant(release_bytes: usize) -> RetainedCloneGrant {
 }
 
 fn observe_mesh_close(job: &mut MeshJob, grant: RetainedCloneGrant) -> (bool, usize, usize) {
-    let step = job.close_granted(grant).expect("a locally owned mesh close has no refusal");
+    let step = semio_s_fem_test_support::granted(grant, |effect| job.close_granted(effect)).expect("a locally owned mesh close has no refusal");
     assert!(step.progress().fits(grant));
     assert!(!matches!(step, InteractiveJobCloseStep::Blocked));
     (matches!(step, InteractiveJobCloseStep::Complete { .. }), step.progress().copied_items, step.progress().released_bytes)

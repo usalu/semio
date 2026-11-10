@@ -56,7 +56,7 @@ impl JobPreviewDriver{
      if Self::metadata(cx)?{self.status=if cx.is_cancelled(){JobPreviewStatus::Cancelled}else{JobPreviewStatus::Budget};self.close_intent(session);}
      return Ok(JobPreviewStep::Pending);
     }
-    let poll=match session.step(grant){Ok(poll)=>poll,Err(_)=>return Ok(JobPreviewStep::Pending)};
+    let poll=session.step_on_original_caller(cx)?;
     if matches!(poll,WorkerJobPoll::Outcome|WorkerJobPoll::Terminal){
      if !session.checkout_outcome(){return Err(Self::invalid().into())}
      self.receipt=session.take_checked_out_retained_step_receipt();self.receive(cx,grant)?;
@@ -88,7 +88,7 @@ impl JobPreviewDriver{
    JobPreviewPhase::Close=>{
     if session.terminal_is_empty(){if Self::metadata(cx)?{self.phase=JobPreviewPhase::Complete;self.binding=None;return Ok(JobPreviewStep::Complete(self.verdict()))}return Ok(JobPreviewStep::Pending)}
     if session.has_original_cancel_alias_witness(cx.original_cancel_token()).unwrap_or(false){
-     let turn=session.return_original_cancel_alias_step(cx.original_cancel_token(),grant);let result=match turn.result{Ok(Some(step))=>Ok(step),Ok(None)|Err(WorkerJobDemandError::Contention(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(WorkerJobDemandError::Refused(error))=>Err(error)};receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})?;return Ok(JobPreviewStep::Pending)
+     let turn=cx.with_original_effect(grant,|cx,effect|session.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn);let result=match turn.result{Ok(Some(step))=>Ok(step),Ok(None)|Err(WorkerJobDemandError::Contention(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(WorkerJobDemandError::Refused(error))=>Err(error)};receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})?;return Ok(JobPreviewStep::Pending)
     }
     let step=session.close_step(cx)?;
     match step{WorkerJobCloseStep::Complete{..}=>if session.terminal_is_empty(){Ok(JobPreviewStep::Pending)}else{Err(Self::invalid().into())},WorkerJobCloseStep::Pending{..}|WorkerJobCloseStep::Blocked=>Ok(JobPreviewStep::Pending)}

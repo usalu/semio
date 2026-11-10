@@ -55,7 +55,7 @@ impl FlowHostRetirement {
         }
         if let Some(payload)=self.state.payload.as_mut(){
             if payload.terminal_is_empty(){self.state.payload=None;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}))}
-            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=payload.step(child)?;
+            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=crate::poll_close_step(payload.step(child.maximum_copy_bytes,&mut effect.nested(child)))?;
             let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,payload.terminal_is_empty(),"original host payload retirement")?;
             return Ok(RetainedCloneStep::Progress(step.progress()))
         }
@@ -74,9 +74,6 @@ impl FlowHostRetirement {
 impl Drop for FlowHostRetirement {
     fn drop(&mut self){if !self.terminal_is_empty(){assert!(std::thread::panicking(),"Flow host retirement abandoned its original source");return}unsafe{std::mem::ManuallyDrop::drop(&mut self.state)}}
 }
-
-/// ⛽️ Work one cold host close step may spend inside its own explicit authoring wallet.
-const FLOW_HOST_COLD_CLOSE_STEP_WORK:u64=64;
 
 impl FlowHost {
     /// 🧊️ Explicit cold-only disposal of a detached host — the twin of [`FlowHostSnapshot::retire_cold`].
@@ -162,18 +159,16 @@ impl FlowHostCloseSlot{
   let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let owner=self.owner.as_mut().unwrap();let step=owner.close_step(&mut effect.nested(child))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original command host close")?;Ok(RetainedCloneStep::Progress(step.progress()))
  }
  pub fn terminal_is_empty(&self)->bool{self.owner.is_none()}
- /// 🧊️ [`Self::close_step`] outside any Job turn under one explicit authoring wallet whose stock is `grant`.
+ /// 🧊️ [`Self::close_step`] outside any Job turn inside a host-pump retirement turn funded by `grant`.
  pub fn close_step_cold(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  let mut wallet=semio_framework_value::AuthoringWallet::new(grant,u128::from(FLOW_HOST_COLD_CLOSE_STEP_WORK));
-  match wallet.run(grant,FLOW_HOST_COLD_CLOSE_STEP_WORK,|effect|self.close_step(effect))?{Some(done)=>done.output,None=>Ok(RetainedCloneStep::Progress(Default::default()))}
+  match crate::cold_effect(grant,|effect|self.close_step(effect))?{Some(done)=>done,None=>Ok(RetainedCloneStep::Progress(Default::default()))}
  }
 }
 
 impl FlowHostRetirement{
- /// 🧊️ [`Self::close_step`] outside any Job turn under one explicit authoring wallet whose stock is `grant`.
+ /// 🧊️ [`Self::close_step`] outside any Job turn inside a host-pump retirement turn funded by `grant`.
  pub fn close_step_cold(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  let mut wallet=semio_framework_value::AuthoringWallet::new(grant,u128::from(FLOW_HOST_COLD_CLOSE_STEP_WORK));
-  match wallet.run(grant,FLOW_HOST_COLD_CLOSE_STEP_WORK,|effect|self.close_step(effect))?{Some(done)=>done.output,None=>Ok(RetainedCloneStep::Progress(Default::default()))}
+  match crate::cold_effect(grant,|effect|self.close_step(effect))?{Some(done)=>done,None=>Ok(RetainedCloneStep::Progress(Default::default()))}
  }
 }
 

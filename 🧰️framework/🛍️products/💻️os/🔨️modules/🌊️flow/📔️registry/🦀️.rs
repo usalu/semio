@@ -87,7 +87,11 @@ pub fn lock_flow_extension_registry_for_test() -> std::sync::MutexGuard<'static,
 /// moment the queue is empty or a faulted worker owns the cursor — neither is this helper's business
 /// to report.
 #[cfg(any(test, feature = "protocol-laws"))]
-pub fn test_flow_registry_retirement_step(items:usize,copy:usize)->Result<RetainedCloneStep,ValueError>{let demand=next_flow_extension_registry_retirement_demands(copy)?;retire_flow_extension_registries_step(RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth})}
+pub fn test_flow_registry_retirement_step(items:usize,copy:usize)->Result<RetainedCloneStep,ValueError>{
+ let demand=next_flow_extension_registry_retirement_demands(copy)?;let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+ match cold_turn(grant,|effect|retire_flow_extension_registries_step(copy,effect)){None|Some(Err(semio_framework_value::RetirementPollExit::Pending(_)))=>Ok(RetainedCloneStep::Progress(Default::default())),Some(Ok(step))=>Ok(step),Some(Err(semio_framework_value::RetirementPollExit::Failed(failure)))=>Err(failure.into_value_error())}
+}
+fn cold_turn<R>(grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->R)->Option<R>{semio_framework_job::OriginalRetirementPump::new().turn(1<<16,u64::MAX,||Some(0),grant).expect("cold registry retirement turn").with_effect(run).expect("cold registry retirement effect").map(|(output,_)|output)}
 #[cfg(any(test, feature = "protocol-laws"))]
 pub fn drain_flow_extension_registry_retirements()->usize{for _ in 0..1_000_000{match test_flow_registry_retirement_step(1,4096){Ok(RetainedCloneStep::Complete(_))=>break,Ok(step)if step.progress()==Default::default()=>break,Err(_)=>break,_=>{}}}FLOW_EXTENSION_STATE.get().map_or(0,|state|state.lock().map_or(0,|state|state.retired.len()))}
 
@@ -141,7 +145,7 @@ struct ContributedStubSource{metadata:Option<semio_framework_value_ordered::orde
 
 impl neural::Operator for ContributedExtensionStub {
     /// 🧊️ Keeps synchronous diagnostics on the same declared contribution closure.
-    fn retire_cold(mut self:Box<Self>){let mut values=neural::ValueRetirement::default();for _ in 0..1000000{if self.retirement_is_empty(){return}let copy=self.next_retire_copy_byte_demand().unwrap().max(4096);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_retire_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:self.next_retire_release_byte_demand().unwrap(),maximum_depth:self.next_retire_depth_demand().unwrap()};self.retire_step(grant,&mut values).unwrap();}assert!(self.retirement_is_empty(),"original cold contribution closure did not reach terminal ownership");}
+    fn retire_cold(mut self:Box<Self>){let mut values=neural::ValueRetirement::default();for _ in 0..1000000{if self.retirement_is_empty(){return}let copy=self.next_retire_copy_byte_demand().unwrap().max(4096);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_retire_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:self.next_retire_release_byte_demand().unwrap(),maximum_depth:self.next_retire_depth_demand().unwrap()};if let Some(Err(semio_framework_value::RetirementPollExit::Failed(failure)))=cold_turn(grant,|effect|self.retire_step(effect,&mut values)){panic!("original cold contribution closure failed: {}",failure.into_value_error())}}assert!(self.retirement_is_empty(),"original cold contribution closure did not reach terminal ownership");}
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let node_hash = neural::node_hash(&self.metadata.as_ref().unwrap().operator_id, input);
         Err(EvalError::PendingExtension { extension_id: self.metadata.as_ref().unwrap().extension_id.clone(), operator_id: self.metadata.as_ref().unwrap().operator_id.clone(), node_hash })
@@ -161,7 +165,7 @@ impl neural::Operator for ContributedExtensionStub {
         let grant=effect.grant();
         if self.retirement_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
         let retirement=self.retirement.get_mut();
-        if let Some(owner)=retirement.as_mut(){let step=semio_framework_value::RetirementPollExit::resume(owner.step(effect))?;if owner.terminal_is_empty(){*retirement=None}return Ok(if self.metadata.is_none()&&retirement.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+        if let Some(owner)=retirement.as_mut(){let step=semio_framework_value::RetirementPollExit::resume(owner.step(grant.maximum_copy_bytes,effect))?;if owner.terminal_is_empty(){*retirement=None}return Ok(if self.metadata.is_none()&&retirement.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
         if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original contributed stub handoff requires depth").into())}
         *retirement=Some(ControlledRetirement::retain(ContributedStubSource{metadata:self.metadata.take()}));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
@@ -262,8 +266,12 @@ pub fn next_flow_extension_registry_retirement_demands(copy:usize)->Result<Retir
  let Some(state)=FLOW_EXTENSION_STATE.get()else{return Ok(Default::default())};let state=state.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original registry retirement owner is busy"))?;let Some(owner)=state.retired.front()else{return Ok(Default::default())};if owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()})}Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})
 }
 /// 🧹️ Advances one actual front owner or transfers one empty slot under the incoming full wallet.
-pub fn retire_flow_extension_registries_step(grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
- let empty=RetainedCloneProgress::default();if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let Some(state)=FLOW_EXTENSION_STATE.get()else{return Ok(RetainedCloneStep::Complete(empty))};let mut state=match state.try_lock(){Ok(state)=>state,Err(TryLockError::WouldBlock)=>return Ok(RetainedCloneStep::Progress(empty)),Err(TryLockError::Poisoned(_))=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original registry retirement is poisoned"))};let Some(owner)=state.retired.front_mut()else{return Ok(RetainedCloneStep::Complete(empty))};if owner.terminal_is_empty(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original registry empty slot requires depth"))}drop(state.retired.pop_front());let progress=RetainedCloneProgress{copied_items:1,..empty};return Ok(if state.retired.is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})}let step=owner.close_step(grant)?;Ok(RetainedCloneStep::Progress(step.progress()))
+pub fn retire_flow_extension_registries_step(body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{
+ let grant=effect.grant();let empty=RetainedCloneProgress::default();if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let Some(state)=FLOW_EXTENSION_STATE.get()else{return Ok(RetainedCloneStep::Complete(empty))};
+ let mut state=match state.try_lock(){Ok(state)=>state,Err(TryLockError::WouldBlock)=>return Ok(RetainedCloneStep::Progress(empty)),Err(TryLockError::Poisoned(_))=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original registry retirement is poisoned").into())};
+ let Some(owner)=state.retired.front_mut()else{return Ok(RetainedCloneStep::Complete(empty))};
+ if owner.terminal_is_empty(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original registry empty slot requires depth").into())}drop(state.retired.pop_front());let progress=RetainedCloneProgress{copied_items:1,..empty};return Ok(if state.retired.is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})}
+ let step=semio_framework_value::RetirementPollExit::resume(owner.close_step(body,effect))?;Ok(RetainedCloneStep::Progress(step.progress()))
 }
 
 /// 🔌️ Installs a built-in extension spec (idempotent on `id`).
@@ -509,11 +517,13 @@ pub fn bootstrap_flow_operator_registry_source()->(neural::SharedRegistry,u64){l
 pub fn flow_operator_registry_source_demands()->RetirementDemand{RetirementDemand{copy_bytes:2*std::mem::size_of::<neural::SharedRegistry>()+std::mem::size_of::<u64>(),depth:1,..Default::default()}}
 /// 🪢️ One admitted nonblocking capture never initializes the process registry or rebuilds its catalogue.
 pub struct FlowRegistrySourceAdvance{pub source:Option<(neural::SharedRegistry,u64)>,pub progress:RetainedCloneProgress}
-pub fn flow_operator_registry_source(grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<FlowRegistrySourceAdvance>{
- let d=flow_operator_registry_source_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return semio_framework_value::RetainedWorkOutcome{result:Ok(FlowRegistrySourceAdvance{source:None,progress:Default::default()}),work:0}}
- let Some(original)=FLOW_EXTENSION_STATE.get()else{return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow registry must be born at bootstrap before job capture")),work:1}};
- let state=match original.try_lock(){Ok(state)=>state,Err(TryLockError::WouldBlock)=>return semio_framework_value::RetainedWorkOutcome{result:Ok(FlowRegistrySourceAdvance{source:None,progress:Default::default()}),work:1},Err(TryLockError::Poisoned(_))=>return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow registry source is poisoned")),work:1}};
- semio_framework_value::RetainedWorkOutcome{result:Ok(FlowRegistrySourceAdvance{source:Some((state.registry.clone(),state.generation)),progress:RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}}),work:1}
+pub fn flow_operator_registry_source(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<FlowRegistrySourceAdvance,ValueError>{
+ let d=flow_operator_registry_source_demands();let none=||Ok(FlowRegistrySourceAdvance{source:None,progress:Default::default()});
+ if !semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(),d)||effect.remaining_work_units()?<1{return none()}
+ let Some(original)=FLOW_EXTENSION_STATE.get()else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow registry must be born at bootstrap before job capture"))};
+ let state=match original.try_lock(){Ok(state)=>state,Err(TryLockError::WouldBlock)=>return none(),Err(TryLockError::Poisoned(_))=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow registry source is poisoned"))};
+ if !effect.performed(1)?{return none()}
+ Ok(FlowRegistrySourceAdvance{source:Some((state.registry.clone(),state.generation)),progress:RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}})
 }
 
 /// 🔢 Which replacement of the flow extension registry is installed right now. Bumped exactly once

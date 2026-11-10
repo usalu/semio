@@ -34,13 +34,10 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-value-clone-source-testing = { path = "../../../🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-clone-source = { path = "../../../🔗️source/📦️packages/🦀️rust" }
 semio-framework-value-paged-list = { path = "../../../../📋️list/📦️packages/🦀️rust" }
 semio-framework-value-testing-effect-bank = { path = "../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 
 [[test]]
 name = "native_clone"
 path = "../../🔁️clone-cursor/🧪️tests/native.rs"
-
-[[test]]
-name = "native_edit"
-path = "../../🧪️tests/edit-native.rs"

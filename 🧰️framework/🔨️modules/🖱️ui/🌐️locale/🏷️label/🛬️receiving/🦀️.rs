@@ -8,7 +8,7 @@ pub struct NativeLabelLanguages{en:String,de:String}
 #[derive(semio_framework_value::RetireOwned,semio_framework_value::NativeReceive)]
 pub struct NativeLabelTerminologies{native:NativeLabelLanguages,reuse:NativeLabelLanguages}
 impl NativeReceiveMap<NativeLabelTerminologies> for LocalizedLabel{
- fn from_native(value:NativeLabelTerminologies)->Self{Self{cells:[[Cow::Owned(value.native.en),Cow::Owned(value.native.de)],[Cow::Owned(value.reuse.en),Cow::Owned(value.reuse.de)]]}}
+ fn from_native(value:NativeLabelTerminologies)->Self{Self{cells:[LabelRow([Cow::Owned(value.native.en),Cow::Owned(value.native.de)]),LabelRow([Cow::Owned(value.reuse.en),Cow::Owned(value.reuse.de)])]}}
 }
 impl<I:NativeValueSource+?Sized> NativeReceive<I> for LocalizedLabel{
  type Receiver=NativeMappedReceiver<I,NativeLabelTerminologies,Self>;

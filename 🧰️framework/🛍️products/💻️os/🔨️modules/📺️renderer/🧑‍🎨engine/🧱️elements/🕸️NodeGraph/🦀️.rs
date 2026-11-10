@@ -600,15 +600,9 @@ impl GraphHostRetirement {
                 context.consume_fuel(1);
                 return false;
             }
-            let copy = dag.next_close_copy_byte_demand().expect("graph host DAG copy demand");
-            let grant = semio_framework_value::RetainedCloneGrant {
-                maximum_items: 1,
-                maximum_copy_bytes: copy,
-                maximum_capacity_bytes: dag.next_close_capacity_byte_demand(copy).expect("graph host DAG capacity demand"),
-                maximum_release_bytes: dag.next_close_release_byte_demand().expect("graph host DAG release demand"),
-                maximum_depth: dag.next_close_depth_demand().expect("graph host DAG depth demand"),
-            };
-            dag.close_step(grant).expect("graph host DAG retirement");
+            let bytes = context.retained_grant().maximum_copy_bytes;
+            let demand = dag.next_close_demand(bytes).expect("graph host DAG close demand");
+            semio_framework_job::close_original_effect_step(context, demand, |effect| dag.close_step(bytes, effect)).expect("graph host DAG retirement");
             context.consume_fuel(1);
             return false;
         }

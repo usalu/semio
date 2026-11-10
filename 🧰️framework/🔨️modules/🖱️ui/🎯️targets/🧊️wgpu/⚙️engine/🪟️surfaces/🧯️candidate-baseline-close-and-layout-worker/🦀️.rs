@@ -156,14 +156,10 @@ impl LayoutWorkerAdmission {
     fn parameter_retirement_demands(&self) -> semio_framework_value::RetirementDemand {
         semio_framework_value::RetirementDemand { copy_bytes: 0, depth: 1, ..Default::default() }
     }
-    /// 🪙️ One funded close step: the progress it retired plus the actual CPU work the cancellation retirement reported, which the enclosing turn must post.
-    pub fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant, witness: Option<&semio_framework_job::CancelToken>) -> semio_framework_value::RetainedWorkOutcome<Option<semio_framework_value::RetainedCloneProgress>, semio_framework_value::ValueError> {
-        let mut work = 0u64;
-        let result = self.close_step_result(grant, witness, &mut work);
-        semio_framework_value::RetainedWorkOutcome { result, work }
-    }
-    fn close_step_result(&mut self, grant: semio_framework_job::RetainedCloneGrant, witness: Option<&semio_framework_job::CancelToken>, work: &mut u64) -> Result<Option<semio_framework_value::RetainedCloneProgress>, semio_framework_value::ValueError> {
+    /// 🪙️ One funded close step run inside the calling turn's effect: the progress it retired, charged to that effect.
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, witness: Option<&semio_framework_job::CancelToken>) -> Result<Option<semio_framework_value::RetainedCloneProgress>, semio_framework_value::ValueError> {
         use semio_framework_value::RetainedCloneProgress;
+        let grant = effect.grant();
         if self.terminal_is_empty() { return Ok(Some(Default::default())); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Some(Default::default())); }
         if let Some(original) = self.failure_close.as_mut() {
@@ -175,7 +171,10 @@ impl LayoutWorkerAdmission {
                 || original.next_capacity_byte_demand(grant.maximum_copy_bytes)? > grant.maximum_capacity_bytes
                 || original.next_release_byte_demand()? > grant.maximum_release_bytes
                 || original.next_depth_demand()? > grant.maximum_depth { return Ok(Some(Default::default())); }
-            return original.step(grant).map(|step| Some(step.progress()));
+            return match original.step(grant.maximum_copy_bytes, effect) {
+                semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(Some(Default::default())),
+                semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map(|step| Some(step.progress())).map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
+            };
         }
         if let Some(original) = self.failure.take() {
             *self.failure_close = Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(original).ok().expect("ValueError has original controlled retirement"));
@@ -196,10 +195,9 @@ impl LayoutWorkerAdmission {
                 return Ok(Some(RetainedCloneProgress { copied_items: 1, copied_bytes, ..Default::default() }));
             }
             let step = match witness.filter(|original| cancel.is_original_alias_witness(original)) {
-                Some(original) => cancel.return_alias_step(original, grant),
-                None => cancel.close_step(grant),
+                Some(original) => cancel.return_alias_step(original, effect),
+                None => cancel.close_step(effect),
             };
-            *work = step.work;
             return match step.result {
                 Ok(step) => Ok(Some(step.progress())),
                 Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)) => Ok(None),
@@ -214,9 +212,9 @@ impl Drop for LayoutWorkerAdmission {
     fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "layout admission abandoned original parameters or cancellation"); }
 }
 
-/// 🧾️ Records one original worker close receipt before a child error crosses the layout boundary.
-pub fn consume_layout_retirement(context:&mut StepContext<'_>,outcome:semio_framework_value::RetainedWorkOutcome<Option<semio_framework_value::RetainedCloneProgress>,semio_framework_value::ValueError>)->Result<bool,semio_framework_value::ValueError>{
-    context.consume_fuel(outcome.work);
-    match outcome.result{Ok(Some(progress))=>{context.consume_retained(progress)?;Ok(true)},Ok(None)=>Ok(false),Err(error)=>{context.consume_retained(error.retained_progress())?;Err(error)}}
+/// 🧾️ Runs one original layout admission close in the calling turn and records its receipt before a child error crosses the layout boundary.
+pub fn close_layout_admission(context:&mut StepContext<'_>,admission:&mut LayoutWorkerAdmission,grant:semio_framework_job::RetainedCloneGrant,witnessed:bool)->Result<bool,semio_framework_value::ValueError>{
+    let outcome=context.with_original_effect(grant,|cx,effect|admission.close_step(effect,witnessed.then(||cx.original_cancel_token())))?.map_or(Ok(Some(Default::default())),|(outcome,_)|outcome);
+    match outcome{Ok(Some(progress))=>{context.consume_retained(progress)?;Ok(true)},Ok(None)=>Ok(false),Err(error)=>{context.consume_retained(error.retained_progress())?;Err(error)}}
 }
 //#endregion 🔖️UiWindow

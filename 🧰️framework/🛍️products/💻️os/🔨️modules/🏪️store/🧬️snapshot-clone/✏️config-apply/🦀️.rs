@@ -1,7 +1,7 @@
 //! ✏️ Field-set apply edit for small config records (window configs and document config lanes): clones the mutation payload under grants, exchanges it into the post record by move and keeps the displaced content as the inverse row, all through original custody.
 use semio_os_store_one_item_publication::native_source::pay;
-use semio_framework_value::{RetainedAllocationEffect, RetainedWorkPoll, retained_clone::OriginalEffectReply};
-use super::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep,RetainedClonePreparationFactory,custody::RetainedEditCustody};
+use semio_framework_value::{OriginalRetirementFailure, RetainedAllocationEffect, RetainedWorkPoll, retained_clone::OriginalEffectReply};
+use super::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep,RetainedClonePreparationFactory,ReplyStash,custody::RetainedEditCustody};
 use semio_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemFootprint};
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, SnapshotRetirementFactory};
@@ -43,6 +43,7 @@ pub struct ConfigApplyCursor<S, M: ConfigApplyMutation<S>> {
     pub cancelled: bool,
     pub validation_cursor:usize,
     pub clone: ManuallyDrop<Option<CloneCursor<M>>>,
+    clone_reply: ReplyStash<OriginalRetirementFailure>,
     pub custody: RetainedEditCustody<(Option<M>, Option<Vec<M>>)>,
     pub marker: PhantomData<fn() -> S>,
 }
@@ -61,7 +62,7 @@ where S: RetainedClone, M: ConfigApplyMutation<S> {
         let mut receipt = self.begin_demand().admit(grant)?;
         receipt.copied_bytes = size_of::<Self::Cursor>();
         if !receipt.fits(grant) { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "config apply cursor transfer exceeds grant")); }
-        Ok((ConfigApplyCursor { stage: ApplyStage::Validate, cancelled: false, validation_cursor:0, clone: ManuallyDrop::new(Some(M::retained_clone_cursor())), custody: RetainedEditCustody::new((None, None)), marker: PhantomData }, receipt))
+        Ok((ConfigApplyCursor { stage: ApplyStage::Validate, cancelled: false, validation_cursor:0, clone: ManuallyDrop::new(Some(M::retained_clone_cursor())), clone_reply: ReplyStash::default(), custody: RetainedEditCustody::new((None, None)), marker: PhantomData }, receipt))
     }
 }
 
@@ -96,7 +97,7 @@ impl<S, M: ConfigApplyMutation<S>> ConfigApplyCursor<S, M> {
             RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }
         } else {
             let child = RetainedCloneGrant { maximum_items:1,maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step=match cursor.close_step(&mut effect.nested(child)){RetainedWorkPoll::Pending{..}=>RetainedCloneStep::Progress(Default::default()),RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|failure|failure.into_value_error())?};
+            let step=match cursor.close_step(grant.maximum_copy_bytes,&mut effect.nested(child)){RetainedWorkPoll::Pending{..}=>RetainedCloneStep::Progress(Default::default()),RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|failure|failure.into_value_error())?};
             admit_retained_clone_close(child, step, cursor.terminal_is_empty(), "config apply mutation clone close")?.progress()
         };
         if cursor.terminal_is_empty() { *self.clone = None; }
@@ -137,7 +138,9 @@ where S: RetainedClone, M: ConfigApplyMutation<S> {
                 let child = RetainedCloneGrant { maximum_items:1,maximum_depth: grant.maximum_depth - 1, ..grant };
                 let cursor = self.clone.as_mut().ok_or_else(|| refusal("config apply lost its mutation clone cursor"))?;
                 let maximum = effect.remaining_work_units()?;
-                let step = cursor.advance(mutation,body,maximum,&mut effect.nested(child)).result.map_err(|failure| failure.into_value_error())?;
+                let nested = &mut effect.nested(child);
+                let Some(answer) = self.clone_reply.run(|reply, recover| if recover { cursor.recover_advance_into(mutation, body, maximum, nested, reply) } else { cursor.advance_into(mutation, body, maximum, nested, reply) }.map(drop))? else { return Ok(RetainedCloneEditStep::Progress(Default::default())) };
+                let step = answer.map_err(|failure| failure.into_value_error())?;
                 let progress = admit_retained_clone_progress(child, step.progress(), "config apply mutation clone")?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.stage = ApplyStage::Take; }
                 progress
@@ -204,7 +207,7 @@ where S: RetainedClone, M: ConfigApplyMutation<S> {
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.close_demand(body)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand(0)?.release_bytes) }
     fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand(0)?.depth) }
-    fn terminal_is_empty(&self) -> bool { self.clone.is_none() && self.custody.terminal_is_empty() }
+    fn terminal_is_empty(&self) -> bool { self.clone.is_none() && !self.clone_reply.pending() && self.custody.terminal_is_empty() }
 }
 
 impl<S, M: ConfigApplyMutation<S>> Drop for ConfigApplyCursor<S, M> {

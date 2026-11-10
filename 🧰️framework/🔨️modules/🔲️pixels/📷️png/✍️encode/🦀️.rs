@@ -16,7 +16,6 @@ pub struct PngEncodeOwners<S:PngRasterSource> {pub image:S,pub bytes:Vec<u8>,enc
 impl<S:PngRasterSource> semio_framework_value::retirement::RetireOwned for PngEncodeJob<S> {
     type RetirementCursor=<PngEncodeOwners<S> as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
     fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::RetireOwned::retirement_seed(PngEncodeOwners {image:self.image,bytes:self.bytes,encoder:self.encoder})}
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.image),deferred_birth_bytes_for(&self.bytes),deferred_birth_bytes_for(&self.encoder)])}
     fn controlled_retirement_supported()->bool{true}
 }
 
@@ -104,4 +103,5 @@ impl<S:PngRasterSource> PngEncodeJob<S> {
         self.cancelled=true;
     }
 }
-
+#[cfg(test)]#[path="🧪️tests/birth.rs"]
+mod birth_tests;

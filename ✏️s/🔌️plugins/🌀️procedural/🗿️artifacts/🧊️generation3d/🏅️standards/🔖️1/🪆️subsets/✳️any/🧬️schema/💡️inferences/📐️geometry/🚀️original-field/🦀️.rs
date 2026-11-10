@@ -2,6 +2,7 @@
 use super::*;
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputsConstruction;
+use semio_s_artifact_procedural_3d_geometry_inputs::construction::{insert_advance,insert_close,insert_take};
 use semio_s_artifact_procedural_3d_geometry_compute::original::OriginalFixedOutputJob;
 use semio_s_artifact_procedural_3d_geometry_value::Outputs;
 use semio_s_artifact_procedural_3d_geometry_value::SelectionValue;
@@ -9,7 +10,7 @@ use semio_s_artifact_procedural_3d_geometry_value::SelectionKind;
 use semio_s_artifact_procedural_3d_geometry_value::PlaneValue;
 use semio_s_artifact_procedural_3d_geometry_value::OriginalWidgetFaultProduction;
 use semio_framework_job::{OriginalTurnFailure,StepContext};
-use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneProgress, retained_clone::ordered_map::{BoundedOrdGrant, RetainedOrderedMapInsertCursor, RetainedOrderedMapInsertGrant, RetainedOrderedMapInsertProgress, RetainedOrderedMapInsertStep}, retirement::controlled::ControlledRetirement};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneProgress, retained_clone::ordered_map::RetainedOrderedMapInsertCursor, retirement::controlled::ControlledRetirement};
 use semio_framework_value_persistent::list::PagedList;
 use std::mem::{ManuallyDrop,size_of};
 
@@ -115,13 +116,13 @@ impl OriginalGeometryPending{
    }
    13=>{let port=&kind.inputs[state.port];if semio_s_artifact_procedural_3d_geometry_inputs::construction::text_event(&mut state.key,&port.name,&mut state.byte,&mut state.reserved,&mut state.text_source,cx)?{state.phase=14;}}
    14=>{
-    let grant=cx.retained_grant();if grant.maximum_copy_bytes<Insert::constructor_copy_bytes()||grant.maximum_capacity_bytes<Insert::constructor_capacity_bytes(){return Ok(())}let map=state.values.take().ok_or_else(||invalid("original geometry input dictionary workspace disappeared"))?;let key=std::mem::take(&mut state.key);let value=state.value.take().ok_or_else(||invalid("original geometry resolved input donor disappeared"))?;
-    match {let outcome=Insert::admit(map,key,value,grant);cx.consume_fuel(outcome.work);outcome.result}{Ok((insertion,receipt))=>{state.insertion=Some(insertion);state.phase=15;post(cx,receipt)?},Err((error,map,key,value))=>{state.values=Some(map);state.key=key;state.value=Some(value);return Err(OriginalTurnFailure::debit_original(error,cx))}}
+    let bytes=size_of::<Insert>();if cx.retained_grant().maximum_copy_bytes<bytes{return Ok(())}let map=state.values.take().ok_or_else(||invalid("original geometry input dictionary workspace disappeared"))?;let key=std::mem::take(&mut state.key);let value=state.value.take().ok_or_else(||invalid("original geometry resolved input donor disappeared"))?;
+    state.insertion=Some(Insert::new(map,key,value));state.phase=15;post(cx,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
    }
    15=>{
-    let insertion=state.insertion.as_mut().ok_or_else(||invalid("original geometry input insertion disappeared"))?;if insertion.output_ready(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.values=insertion.take();insertion.begin_close();state.phase=16;}else{let grant=cx.retained_grant();let step={let Some((outcome,performed))=cx.with_original_effect(grant,|_,effect|insertion.advance(RetainedOrderedMapInsertGrant{retirement:grant,comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:1},maximum_moved_items:grant.maximum_items,maximum_moved_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes},effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(())};cx.consume_fuel(outcome.work.saturating_sub(u64::try_from(performed).unwrap_or(u64::MAX)));outcome.result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?};let receipt=match step{RetainedOrderedMapInsertStep::Progress(receipt)|RetainedOrderedMapInsertStep::Complete{progress:receipt,..}=>receipt};post(cx,insert_receipt(receipt)?)?;}
+    let insertion=state.insertion.as_mut().ok_or_else(||invalid("original geometry input insertion disappeared"))?;if insertion.output_ready(){insert_take(insertion,&mut state.values,cx)?;if state.values.is_some(){state.phase=16;}}else{insert_advance(insertion,cx)?;}
    }
-   16=>{let insertion=state.insertion.as_mut().ok_or_else(||invalid("original geometry input insertion closure disappeared"))?;let receipt={let outcome=insertion.close_step(cx.retained_grant());cx.consume_fuel(outcome.work);outcome.result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?.progress()};post(cx,receipt)?;if insertion.terminal_is_empty(){state.insertion.take();next_port(state);}}
+   16=>{let insertion=state.insertion.as_mut().ok_or_else(||invalid("original geometry input insertion closure disappeared"))?;insert_close(insertion,cx)?;if insertion.terminal_is_empty(){state.insertion.take();next_port(state);}}
    17=>{if let Some(inputs)=WidgetInputs::new(key,kind,&mut state.values,&mut state.construction,cx)?{state.inputs=Some(inputs);state.phase=18;}}
    18=>{if let Some(job)=snapshot.computes.start_original(kind,&mut state.inputs,cx)?{state.job=Some(job);state.phase=19;}}
    19=>return step_job(state,&mut self.evaluation,cx),
@@ -136,7 +137,6 @@ fn source(snapshot:&GeometryInput<'_>,key:&str,cx:&mut StepContext<'_>)->Result<
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn open(cx:&StepContext<'_>)->bool{let grant=cx.retained_grant();!cx.should_yield()&&!cx.is_cancelled()&&grant.maximum_items>0&&grant.maximum_depth>0}
 fn post(cx:&mut StepContext<'_>,receipt:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{let result=cx.consume_retained(receipt);cx.consume_fuel(1);result.map_err(|error|error.with_retained_progress(receipt).into())}
-fn insert_receipt(receipt:RetainedOrderedMapInsertProgress)->Result<RetainedCloneProgress,ValueError>{receipt.retirement.checked_add(RetainedCloneProgress{copied_items:receipt.moved_items,copied_bytes:receipt.moved_bytes,retained_capacity_bytes:receipt.retained_capacity_bytes,..Default::default()})}
 fn close_owner<T:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<T>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;Ok(())}
 
 fn range(port:&Port,number:f64)->Result<(),ValueError>{if !number.is_finite()||port.min.is_some_and(|minimum|if port.exclusive_min{number<=minimum}else{number<minimum})||port.max.is_some_and(|maximum|number>maximum){return Err(invalid("original geometry input number is outside its declared range"))}Ok(())}

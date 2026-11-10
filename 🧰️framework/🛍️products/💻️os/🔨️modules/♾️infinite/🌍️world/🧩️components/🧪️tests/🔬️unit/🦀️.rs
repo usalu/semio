@@ -1,6 +1,6 @@
 //! 🧪️ components tests (🔬️unit): compiled against the `testkit` surface of the world crates.
 
-use semio_os_infinite_world_model::{world_mesh_ownership_grant, world_scene_raster_pool};
+use semio_os_infinite_world_model::{with_world_pump_effect, world_mesh_ownership_grant, world_scene_raster_pool};
 use semio_os_infinite_world_components::{WorldMeshBuffers, WorldMeshInput, WorldPlaceholderMeshCursor, WorldPlaceholderMeshStep};
 use semio_framework_test_fixtures::fixture_text;
 use ui_scene::math::{mesh3d_begin_close, mesh3d_close_step, Mesh3dField, Mesh3dLease};
@@ -31,6 +31,7 @@ fn close_oracle_mesh(lease:Mesh3dLease) {
 /// 🎨️ Native publication consumes the same indexed surface fixture as installed Three.js.
 #[test]
 fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancellation() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
     let text=law["mesh"].to_string();
     let mesh=semio_framework_pack_json::from_json_str::<WorldMeshBuffers>(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -43,7 +44,7 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
         turns+=1;assert!(turns<32768);
         phases.insert(format!("{:?}",cursor.phase));
         if let Some(phase)=texture_phase(&cursor){texture_phases.insert(phase);}
-        match cursor.step(){WorldPlaceholderMeshStep::Pending=>{},WorldPlaceholderMeshStep::Fault=>panic!("inline surface refused"),WorldPlaceholderMeshStep::Ready(_,lease,appearance)=>break(lease,appearance.unwrap())}
+        match with_world_pump_effect(|effect|cursor.step(effect)){WorldPlaceholderMeshStep::Pending=>{},WorldPlaceholderMeshStep::Fault=>panic!("inline surface refused"),WorldPlaceholderMeshStep::Ready(_,lease,appearance)=>break(lease,appearance.unwrap())}
     };
     assert_eq!(lease.schema().unwrap().vertices,6);
     for item in 0..6u32 {
@@ -74,14 +75,14 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
     assert_eq!(appearance.primitives()[1].material.alpha,SceneMaterialAlpha3d::Blend);
     for phase in phases {
         let mut canceled=WorldPlaceholderMeshCursor::inline("canceled",mesh.clone(),818,1).unwrap();
-        for _ in 0..32768 {if format!("{:?}",canceled.phase)==phase {break}assert!(matches!(canceled.step(),WorldPlaceholderMeshStep::Pending));}
-        let mut steps=0;while !canceled.close_step(){steps+=1;assert!(steps<32768)}assert!(canceled.terminal_is_empty());
+        for _ in 0..32768 {if format!("{:?}",canceled.phase)==phase {break}assert!(matches!(with_world_pump_effect(|effect|canceled.step(effect)),WorldPlaceholderMeshStep::Pending));}
+        let mut steps=0;while !with_world_pump_effect(|effect|canceled.close_step(effect)){steps+=1;assert!(steps<32768)}assert!(canceled.terminal_is_empty());
     }
     assert!(texture_phases.contains("retiring"));
     for phase in texture_phases{
         let mut canceled=WorldPlaceholderMeshCursor::inline("canceled-decoder",mesh.clone(),820,1).unwrap();
-        for turn in 0..32768{if texture_phase(&canceled)==Some(phase){break}assert!(turn<32767);assert!(matches!(canceled.step(),WorldPlaceholderMeshStep::Pending));}
-        let mut turns=0;while !canceled.close_step(){turns+=1;assert!(turns<32768)}assert!(canceled.terminal_is_empty());assert!(canceled.texture_job.is_none()&&canceled.texture_retirement.is_none());
+        for turn in 0..32768{if texture_phase(&canceled)==Some(phase){break}assert!(turn<32767);assert!(matches!(with_world_pump_effect(|effect|canceled.step(effect)),WorldPlaceholderMeshStep::Pending));}
+        let mut turns=0;while !with_world_pump_effect(|effect|canceled.close_step(effect)){turns+=1;assert!(turns<32768)}assert!(canceled.terminal_is_empty());assert!(canceled.texture_job.is_none()&&canceled.texture_retirement.is_none());
     }
     while !appearance.close_step() {}mesh3d_begin_close(lease).unwrap();close_oracle_mesh(lease);
     assert!(cursor.terminal_is_empty());
@@ -90,6 +91,7 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
 /// ♻️ Retains the exact authored source through independent copy, capacity, release and depth refusals.
 #[test]
 fn world_inline_source_retirement_preserves_original_owner_and_full_receipts() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/♻️inline-source-ownership/🔣️.json")).unwrap();
     for row in law["cases"].as_array().unwrap() {
@@ -102,20 +104,20 @@ fn world_inline_source_retirement_preserves_original_owner_and_full_receipts() {
         let pointers=|mesh:&Box<WorldMeshBuffers>|(mesh.as_ref() as *const WorldMeshBuffers,mesh.positions.as_ptr(),mesh.edge_positions.as_ptr(),mesh.indices.as_ptr());
         let original=match &cursor.source{WorldMeshInput::Inline(mesh)=>pointers(mesh),_=>panic!("inline source disappeared")};
         let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
-        assert!(matches!(cursor.retire_source_step(zero).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
+        assert!(matches!(with_world_pump_effect(|effect|cursor.retire_source_step(effect,zero)).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
         assert_eq!(match &cursor.source{WorldMeshInput::Inline(mesh)=>pointers(mesh),_=>panic!("denied source moved")},original);
         let shallow=RetainedCloneGrant{maximum_items:1,maximum_depth:0,..zero};
-        assert!(matches!(cursor.retire_source_step(shallow).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
+        assert!(matches!(with_world_pump_effect(|effect|cursor.retire_source_step(effect,shallow)).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
         assert_eq!(match &cursor.source{WorldMeshInput::Inline(mesh)=>pointers(mesh),_=>panic!("depth-denied source moved")},original);
         let grant=cursor.source_retirement_grant(4096).unwrap();
         assert_eq!(grant.maximum_capacity_bytes,law["ownership"]["inlineMoveCapacityBytes"].as_u64().unwrap() as usize);
-        let step=cursor.retire_source_step(grant).unwrap();
+        let step=with_world_pump_effect(|effect|cursor.retire_source_step(effect,grant)).unwrap();
         assert!(matches!(step,RetainedCloneStep::Progress(progress) if progress.copied_items==1 && progress.retained_capacity_bytes==0 && progress.fits(grant)));
         assert_eq!(pointers(cursor.source_retirement.as_ref().unwrap().original().unwrap()),original);
         let next=cursor.source_retirement_grant(4096).unwrap();
         assert!(next.maximum_capacity_bytes>0);
         let short=RetainedCloneGrant{maximum_capacity_bytes:next.maximum_capacity_bytes-1,..next};
-        assert!(matches!(cursor.retire_source_step(short).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
+        assert!(matches!(with_world_pump_effect(|effect|cursor.retire_source_step(effect,short)).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
         assert_eq!(pointers(cursor.source_retirement.as_ref().unwrap().original().unwrap()),original);
         let mut turns=0;
         let mut release_refusals=0;
@@ -124,16 +126,16 @@ fn world_inline_source_retirement_preserves_original_owner_and_full_receipts() {
             let grant=cursor.source_retirement_grant(4096).unwrap();
             if grant.maximum_release_bytes>0{
                 let short=RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant};
-                assert!(matches!(cursor.retire_source_step(short).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
+                assert!(matches!(with_world_pump_effect(|effect|cursor.retire_source_step(effect,short)).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
                 assert!(cursor.source_retirement.is_some());
                 release_refusals+=1;
             }
-            match cursor.retire_source_step(grant).unwrap(){RetainedCloneStep::Progress(progress)=>assert!(progress.fits(grant)),RetainedCloneStep::Complete(progress)=>{assert!(progress.fits(grant));break}}
+            match with_world_pump_effect(|effect|cursor.retire_source_step(effect,grant)).unwrap(){RetainedCloneStep::Progress(progress)=>assert!(progress.fits(grant)),RetainedCloneStep::Complete(progress)=>{assert!(progress.fits(grant));break}}
         }
         assert!(cursor.source_retirement.is_none());
         assert!(!matches!(cursor.source,WorldMeshInput::Inline(_)));
         assert!(release_refusals>0);
-        let mut close_turns=0;while !cursor.close_step(){close_turns+=1;assert!(close_turns<32768)}
+        let mut close_turns=0;while !with_world_pump_effect(|effect|cursor.close_step(effect)){close_turns+=1;assert!(close_turns<32768)}
         assert!(cursor.terminal_is_empty());
     }
 }
@@ -141,6 +143,7 @@ fn world_inline_source_retirement_preserves_original_owner_and_full_receipts() {
 /// 🖼️ JPEG authored textures use the same image, role raster, publication and retirement owners.
 #[test]
 fn authored_inline_jpeg_surface_publishes_owned_role_rasters() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
     let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
     let row = &law["jpegPublication"];
     let mut mesh = semio_framework_pack_json::from_json_str::<WorldMeshBuffers>(&law["mesh"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -156,7 +159,7 @@ fn authored_inline_jpeg_surface_publishes_owned_role_rasters() {
     let (lease, mut appearance) = loop {
         turns += 1;
         assert!(turns < 131072);
-        match cursor.step() {
+        match with_world_pump_effect(|effect|cursor.step(effect)) {
             WorldPlaceholderMeshStep::Pending => std::thread::yield_now(),
             WorldPlaceholderMeshStep::Fault => panic!("JPEG authored surface refused"),
             WorldPlaceholderMeshStep::Ready(_, lease, appearance) => break (lease, appearance.unwrap()),

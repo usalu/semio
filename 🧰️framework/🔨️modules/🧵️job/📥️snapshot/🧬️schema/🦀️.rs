@@ -1,5 +1,6 @@
 //! 📥️ A typed original snapshot owner retains its source through bounded intake and close.
-use crate::{OriginalTurnFailure,RetainedCloneGrant,RetainedCloneStep,RetirementDemand,StepContext};
+use crate::{OriginalTurnFailure,RetirementDemand,StepContext};
+use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect};
 use semio_framework_value_retained_clone::ValueError;
 
 /// 🎟️ Concrete producers retain source custody and publish only their admitted typed snapshot.
@@ -10,7 +11,7 @@ pub trait OriginalSnapshotIntake<S>:Send {
  fn take(&mut self)->Option<S>;
  fn begin_close(&mut self);
  fn next_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll;
  fn terminal_is_empty(&self)->bool;
 }
 

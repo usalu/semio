@@ -26,11 +26,14 @@ path = "🦀️.rs"
 testkit = ["semio-framework-value-read/testkit","dep:semio-framework-value-testing-effect-bank"]
 
 [dependencies]
+semio-framework-value-paged = { path = "../../📦️paged/📦️packages/🦀️rust" }
 semio-framework-value-retirement-contract = { path = "../../♻️retirement/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-equality = { path = "../../🌳️tree/🟰️equal/📦️packages/🦀️rust" }
 semio-framework-value-read = { path = "../../🔗️read/📦️packages/🦀️rust" }
+semio-framework-value-shared-utf8 = { path = "../../📝️shared-utf8/📦️packages/🦀️rust" }
 semio-framework-value-sort = { path = "../../📶️sort/📦️packages/🦀️rust" }
 semio-framework-value-retained-map = { path="../../🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust" }
+semio-framework-value-retained-map-edit = { path="../../🧬️retained-clone/🗺️ordered-map/✏️edit/📦️packages/🦀️rust" }
 semio-framework-value-retained-clone = { path="../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-intrinsic = { path="../../🌳️intrinsic/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../🛬️decode/🧳️owned/📦️packages/🦀️rust" }
@@ -77,14 +80,6 @@ path = "../../📦️paged/🛬️receive/🧪️tests/🦀️.rs"
 [[test]]
 name = "value-scratch"
 path = "../../🔑️hashed/🧮️scratch/🧪️tests/🦀️.rs"
-
-[[test]]
-name = "value-shared-utf8-native"
-path = "../../📝️shared-utf8/🎟️native/🧪️tests/🦀️.rs"
-
-[[test]]
-name = "value-shared-utf8-admission"
-path = "../../📝️shared-utf8/🎟️admission/🧪️tests/🦀️.rs"
 
 [[test]]
 name = "value-paged-append-work"

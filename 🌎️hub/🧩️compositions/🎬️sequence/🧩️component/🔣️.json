@@ -6429,7 +6429,16 @@
           "ports": [
             {
               "id": "steps:in",
-              "label": "Steps",
+              "label": {
+                "native": {
+                  "en": "Steps",
+                  "de": "Schritte"
+                },
+                "reuse": {
+                  "en": "Steps",
+                  "de": "Schritte"
+                }
+              },
               "direction": "in",
               "mediaType": {
                 "class": "computation",

@@ -31,6 +31,7 @@ semio-ui-runtime-exchange = { path = "../../../📡️exchange/📦️packages/�
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140" }
 semio-ui-runtime = { path = "../../../📦️packages/🦀️rust" }
 

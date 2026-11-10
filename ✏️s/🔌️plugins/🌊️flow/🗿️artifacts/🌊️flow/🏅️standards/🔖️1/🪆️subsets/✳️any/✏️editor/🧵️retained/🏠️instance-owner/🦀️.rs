@@ -66,7 +66,7 @@ impl semio_plugin::ArtifactInstanceOperationOwner for FlowInstanceOperationOwner
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original Flow instance session exceeds parent depth").into())}
         if (self.closing&&!self.catalogue.terminal_is_empty())||(!self.closing&&!self.catalogue.ready()){
             let before=cx.retained_progress();let child=semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-            cx.with_retained_loan(child,|same|{if self.closing{let turn=self.catalogue.close_step(same.retained_grant());semio_framework_job::receive_original_retained_work(same,turn)?;}else{self.catalogue.step(same)?;}Ok::<_,semio_framework_job::OriginalTurnFailure>(())})?;
+            cx.with_retained_loan(child,|same|{if self.closing{self.catalogue.close(same)?;}else{self.catalogue.step(same)?;}Ok::<_,semio_framework_job::OriginalTurnFailure>(())})?;
             let after=cx.retained_progress();let sub=|after:usize,before:usize|after.checked_sub(before).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original instance catalogue receipt moved backwards"));let progress=RetainedCloneProgress{copied_items:sub(after.copied_items,before.copied_items)?,copied_bytes:sub(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:sub(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:sub(after.released_bytes,before.released_bytes)?};return Ok(Step::Progress(progress))
         }
         if self.scene_cache.pending()||(self.closing&&!self.scene_cache.terminal_is_empty()){

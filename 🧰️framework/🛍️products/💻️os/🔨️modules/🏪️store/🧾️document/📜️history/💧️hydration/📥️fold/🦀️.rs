@@ -85,7 +85,7 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
     }
     let demand=job.next_original_close_demand(grant.maximum_copy_bytes)?;
     if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(false)}
-    let Some((poll,performed))=cx.with_original_effect(grant,|cx,effect|cx.with_native_retirement(|native|Ok::<_,ValueError>(job.close_original(native,effect))))? else{return Ok(false)};
+    let Some((poll,performed))=cx.with_original_effect(grant,|cx,effect|cx.with_native_retirement(|native|Ok::<_,ValueError>(job.close_original(native,grant.maximum_copy_bytes,effect))))? else{return Ok(false)};
     let turn=match poll?{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn,semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work}};
     let progress=match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
     cx.consume_fuel(u64::try_from(performed.max(turn.work)).unwrap_or(u64::MAX));let receipt=cx.consume_retained(progress);
@@ -93,7 +93,7 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
     receipt?;return Ok(false)
    }
    let demand=self.close_demands(grant.maximum_copy_bytes)?;
-   semio_framework_job::close_original_effect_step(cx,demand,|effect|self.close_step(effect))?;
+   semio_framework_job::close_original_effect_step(cx,demand,|effect|{let body=effect.grant().maximum_copy_bytes;self.close_step(body,effect)})?;
    Ok(self.terminal_is_empty_unbounded())
   })
  }

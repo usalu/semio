@@ -20,7 +20,7 @@ fn filled(rings:&[Vec<Vec2>],p:Vec2,rule:BooleanFillRule)->bool {
 }
 #[path="../../🛤️path/🎟️work/🧪️tests/🦀️.rs"]pub(super) mod funding;
 pub(super) fn wallet()->funding::Wallet{let data:Value=serde_json::from_str(include_str!("../🎟️work/📐️.json")).unwrap();let s=&data["stock"];funding::Wallet::from_grant(semio_framework_value::RetainedCloneGrant{maximum_items:s["items"].as_u64().unwrap()as usize,maximum_copy_bytes:s["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:s["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:s["release"].as_u64().unwrap()as usize,maximum_depth:s["depth"].as_u64().unwrap()as usize},data["maxTurns"].as_u64().unwrap()as usize)}
-fn turn(job:&mut BooleanJob,wallet:&mut funding::Wallet,items:usize)->Result<BooleanProgress,BooleanError>{wallet.turn(items,|work|job.advance(items,work,&mut None))}
+fn turn(job:&mut BooleanJob,wallet:&mut funding::Wallet,items:usize)->Result<BooleanProgress,BooleanError>{wallet.turn_effect(items,|work,effect|job.advance(items,work,effect))}
 pub(super) fn finish(input:BooleanInput,grant:usize)->(Vec<PathSegment>,BooleanProgress){let limit=input.max_work;let mut job=BooleanJob::new(input);let mut wallet=wallet();assert_eq!(job.result().unwrap_err(),BooleanError::Incomplete);let mut previous=0;loop{let p=turn(&mut job,&mut wallet,grant).unwrap();assert!(p.work-previous<=grant as u64);assert!(p.work<=limit);previous=p.work;if p.done{let output=job.result().unwrap().to_vec();wallet.close_owned(job);return(output,p);}assert_eq!(job.result().unwrap_err(),BooleanError::Incomplete);}}
 #[test]
 fn boolean_neutral_regions_with_identical_outputs_across_grants() {

@@ -1,8 +1,8 @@
 {
   "stock": {
     "items": 1000000,
-    "fuel": 1000000,
-    "copyBytes": 33554432,
+    "fuel": 2000000,
+    "copyBytes": 134217728,
     "capacityBytes": 33554432,
     "releaseBytes": 33554432,
     "depth": 64,

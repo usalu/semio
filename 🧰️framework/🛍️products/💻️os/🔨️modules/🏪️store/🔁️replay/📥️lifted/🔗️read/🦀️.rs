@@ -19,7 +19,7 @@ impl ArtifactStoreSupersessionRetirement {
 
 impl ErasedSnapshotRetirement for ArtifactStoreSupersessionRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owner.next_demand(body) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();semio_framework_value::RetirementPollExit::resume(self.owner.step(effect))})(); semio_framework_value::RetirementPollExit::settle(effect, result) }
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();semio_framework_value::RetirementPollExit::resume(self.owner.step(grant.maximum_copy_bytes,effect))})(); semio_framework_value::RetirementPollExit::settle(effect, result) }
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.owner.next_capacity_byte_demand(copy)}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_release_byte_demand()}
@@ -57,7 +57,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
         Ok(usize::from(self.values.is_some()))
     }
 
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -69,7 +69,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
             }
             let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = semio_framework_value::RetirementPollExit::resume(active.close_step(&mut effect.nested(child_grant)))?;
+            let step = semio_framework_value::RetirementPollExit::resume(active.close_step(child_grant.maximum_copy_bytes,&mut effect.nested(child_grant)))?;
             admit_retained_clone_close(child_grant, step, active.terminal_is_empty(), "Store string history child")?;
             return Ok(match step { RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => RetainedCloneStep::Progress(progress) });
         }

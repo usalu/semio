@@ -19,7 +19,7 @@ use semio_os_store_backbone::backbone_retirement::ArtifactStoreBackboneRetiremen
 /// 🔌️ What the owned disposers may ask of the store being closed: the close contract is base, the engine type behind it is not named below. The composer implements it by delegating to its components.
 pub trait ArtifactStoreCloseHost<P, Mutation>
 where
-    P: ToValue,
+    P: ToValue + Send + Sync + 'static,
     Mutation: ToValue + FromValue + self::Mutation<P>,
 {
     fn close_host_member_inbox_capacity(&self) -> usize;
@@ -38,7 +38,7 @@ where
 
 pub struct ArtifactStoreCloseView<'a, P, Mutation>
 where
-    P: ToValue,
+    P: ToValue + Send + Sync + 'static,
     Mutation: ToValue + FromValue + self::Mutation<P>,
 {
     pub store: &'a mut dyn ArtifactStoreCloseHost<P, Mutation>,
@@ -64,7 +64,7 @@ where
 
 pub trait ArtifactStoreOwnedDisposer<P, Mutation>: Send
 where
-    P: ToValue,
+    P: ToValue + Send + Sync + 'static,
     Mutation: ToValue + FromValue + self::Mutation<P>,
 {
     fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll;
@@ -118,7 +118,7 @@ where
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "installed cursor exceeds admitted owner depth").into()); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.started = true;
-        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, &mut effect.nested(RetainedCloneGrant { maximum_items: 1, ..grant }))).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, grant.maximum_copy_bytes, &mut effect.nested(RetainedCloneGrant { maximum_items: 1, ..grant }))).map(|step| RetainedCloneStep::Progress(step.progress())); }
         let store = &mut *view.store;
         match self.phase {
             ArtifactStoreCursorDisposerPhase::ReturnedReads => {

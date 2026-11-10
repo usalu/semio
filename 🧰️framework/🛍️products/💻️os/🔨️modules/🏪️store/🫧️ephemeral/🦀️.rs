@@ -4,7 +4,10 @@ use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotR
 use semio_framework_value_snapshot_read::*;
 use semio_framework_io_control::NativeSnapshotDecodeOwner;
 use semio_os_store_read::ArtifactStoreDisplacedSnapshotRetirement;
-use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_value::factory::ArcRootRetirement as ReturnedSnapshotReadRetirement;
+#[path = "🏛️displaced-owned-root/🦀️.rs"]
+mod displaced_owned_root;
+pub use displaced_owned_root::DisplacedOwnedRootRetirement;
 use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use semio_os_store_one_item::*;

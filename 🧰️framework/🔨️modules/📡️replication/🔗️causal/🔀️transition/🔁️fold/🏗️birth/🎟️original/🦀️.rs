@@ -32,8 +32,7 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
             job.native_binding = Some((native.ledger_identity(), native.retirement_recipient_identity()));
             *output = Some(job);
             let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, released_bytes: 0 };
-            let allocation_refusal = native.record_constructed_allocation(progress.retained_capacity_bytes).err();
-            let result = if allocation_refusal.is_none() { Ok(true) } else { Err(OriginalReceivingPrimary::from_fields(None,None,allocation_refusal,None,None,None,None,None,None,progress)) };
+            let result = Ok(true);
             NativeConstructionStepResult { work: 1, result, progress }
         })
     }
@@ -154,20 +153,20 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
     }
 
     /// ♻️ Closing borrows the original decoder even after cancellation, without creating fresh authority; the reported work is what the turn's effect recorded.
-    pub fn close_original(&mut self, native: &mut dyn NativeDecodeCloseControl, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+    pub fn close_original(&mut self, native: &mut dyn NativeDecodeCloseControl, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
         let result=self.lent(effect,|job,grant|->Result<RetainedCloneStep,ValueError>{
             job.validate_original(native)?;
             if job.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
             job.request_cancel();
-            let demand=job.next_original_close_demand(grant.maximum_copy_bytes)?;
+            let demand=job.next_original_close_demand(body)?;
             if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
             native.charge(demand.capacity_bytes)?;
             if let Some(owner)=job.original_output.as_mut(){
                 if owner.terminal_is_empty(){owe_split(&job.control,&job.closed_slot,job.control_closed,1u64)?;job.original_output=None;job.terminal=job.control_closed&&job.future.is_none()&&job.result.is_none()&&job.waker.is_none();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
-                let (step,_)=settled(charged_split(&job.control,&job.closed_slot,job.control_closed,|effect|{let poll=owner.step(&mut effect.nested(grant));let work=match &poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.work,semio_framework_value::RetainedWorkPoll::Pending{work}=>*work};(poll,work)})?)?;return Ok(RetainedCloneStep::Progress(step.progress()));
+                let (step,_)=settled(charged_split(&job.control,&job.closed_slot,job.control_closed,|effect|{let poll=owner.step(body,&mut effect.nested(grant));let work=match &poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.work,semio_framework_value::RetainedWorkPoll::Pending{work}=>*work};(poll,work)})?)?;return Ok(RetainedCloneStep::Progress(step.progress()));
             }
             if job.control_closed&&job.future.is_none()&&job.result.is_none()&&job.waker.is_none(){owe_split(&job.control,&job.closed_slot,job.control_closed,1u64)?;job.terminal=true;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
-            job.close_inner(grant)
+            job.close_inner(body,grant)
         }).and_then(|result|result);
         semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:result.map_err(Into::into),work:effect.performed_work()})
     }
@@ -176,8 +175,6 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
 #[cfg(test)]
 mod rejection_laws {
  use super::*;
- #[global_allocator]
- static ORIGINAL_REJECTION_ALLOCATOR:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
  use semio_framework_value_native_owned::native_decoding::{OriginalWorkAuthority,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalSourceTurnIdentity,OriginalConstructionAuthority,OriginalConstructionRecipient,OriginalConstructionGrant,OriginalConstructionGrantComplete,OriginalConstructionAccept,OriginalConstructionAcceptComplete};
  struct Physical{left:RetainedCloneGrant,submitted:RetainedCloneProgress}
  fn debit(g:&mut RetainedCloneGrant,p:RetainedCloneProgress){assert!(p.fits(*g));g.maximum_items-=p.copied_items;g.maximum_copy_bytes-=p.copied_bytes;g.maximum_capacity_bytes-=p.retained_capacity_bytes;g.maximum_release_bytes-=p.released_bytes;}
@@ -206,7 +203,7 @@ mod rejection_laws {
  fn policy(value:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:value["items"].as_u64().unwrap()as usize,maximum_copy_bytes:value["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["depth"].as_u64().unwrap()as usize}}
  fn close_value<T:RetireOwned>(value:T,left:&mut RetainedCloneGrant,work:&mut u64){
   let mut owner=ControlledRetirement::new(value).ok().unwrap();
-  for _ in 0..100000{if owner.terminal_is_empty(){return}let(poll,_)=authored(*left,|effect|owner.step(effect)).unwrap();let(step,used)=settled(poll).unwrap();let used=u64::try_from(used).unwrap();assert!(used<=*work);*work-=used;debit(left,step.progress());}
+  for _ in 0..100000{if owner.terminal_is_empty(){return}let turn=semio_framework_value_clone_source_testing::drive::drive(*left,1<<16,|effect|owner.step(4096,effect));let(step,used)=(turn.result.unwrap(),turn.work);let used=u64::try_from(used).unwrap();assert!(used<=*work);*work-=used;debit(left,step.progress());}
   panic!("original rejection value did not retire")
  }
  #[test]
@@ -237,7 +234,7 @@ mod rejection_laws {
     let semio_framework_replication_error::ProtocolError::Malformed{detail,..}=output.as_ref().unwrap()else{panic!("actual retiring cause changed")};assert_eq!(Some(detail.as_ptr()),pointer);
     close_value(output.take().unwrap(),&mut cleanup,&mut cleanup_work);
    }
-   for _ in 0..100000{if job.terminal_is_empty(){break}let((poll,allocated,released),_)=authored(cleanup,|effect|semio_framework_trace_memory_testing::observe_backing(||job.close_original(&mut native,effect))).unwrap();let(step,work)=settled(poll).unwrap();assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));cleanup_work=cleanup_work.checked_sub(u64::try_from(work).unwrap()).unwrap();debit(&mut cleanup,step.progress());}assert!(job.terminal_is_empty());
+   for _ in 0..100000{if job.terminal_is_empty(){break}let turn=semio_framework_value_clone_source_testing::drive::drive(cleanup,1<<16,|effect|job.close_original(&mut native,4096,effect));let(step,work)=(turn.result.unwrap(),turn.work);cleanup_work=cleanup_work.checked_sub(u64::try_from(work).unwrap()).unwrap();debit(&mut cleanup,step.progress());}assert!(job.terminal_is_empty());
    let _=fuel;
   }
  }

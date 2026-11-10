@@ -1,7 +1,7 @@
 //! 📥️ Native receiving of the untagged neural vocabulary: an object is a dictionary, any other scalar is an atom, with no intermediate wire owner.
 use super::*;
 use semio_framework_value::{RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,retained_clone::{RetainedCloneBinding,RetainedCloneRef,retained_clone_grant_admits}};
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeReceive,NativeReceiver,OriginalEffectReply,OriginalEffectReplyComplete,OriginalReceivingPrimary,owned::{NativeAdvanceSelection,NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,NativeMappedReceiver,NativeReceiveMap,tree::{NativeReceiveSlot,NativeScalarReceiver,NativeScalarValue,NativeValueSource,add_receipt,child_grant,fixed,invalid,nested,receipt}}};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeReceive,NativeReceiver,OriginalEffectReply,OriginalEffectReplyComplete,OriginalReceivingPrimary,NativeReceivingFailure,owned::{OriginalSourceTurnWitness,native_receiver_close_start,NativeAdvanceSelection,NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,NativeMappedReceiver,NativeReceiveMap,tree::{NativeReceiveSlot,NativeScalarReceiver,NativeScalarValue,NativeValueSource,add_receipt,child_grant,fixed,invalid,nested,receipt}}};
 use std::mem::size_of;
 
 /// ⚛️ A scalar source selects its atom kind by its actual original type; integers beyond `i64` are refused.
@@ -28,12 +28,13 @@ impl<I:NativeValueSource+?Sized> NativeReceive<I> for Dictionary{
 impl NativeDefaultValue for Dictionary{
  fn default_demand()->RetirementDemand{fixed(2*size_of::<Self>())}
  fn default_work_demand()->Result<u64,ValueError>{Ok(1)}
- fn default_allocates()->bool{false}
- fn admit_default(output:&mut Option<Self>,grant:RetainedCloneGrant,_actual:Option<&mut Option<usize>>)->RetainedWorkOutcome{
-  if output.is_some(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
-  let demand=Self::default_demand();if !retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  *output=Some(Self::new());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(demand))),work:1}
+ fn admit_default<'reply>(output:&mut Option<Self>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{
+  if output.is_some(){return Ok(reply.complete(Err(invalid().into())))}
+  let demand=Self::default_demand();if !retained_clone_grant_admits(effect.grant(),demand)||effect.maximum_work_units()==0{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
+  if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"neural dictionary default exceeded its work authority").into())))}
+  *output=Some(Self::new());Ok(reply.complete(Ok(RetainedCloneStep::Complete(receipt(demand)))))
  }
+ fn recover_default<'reply>(_:&mut Option<Self>,_:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{Ok(reply.pending())}
 }
 impl NativeDefault for Dictionary{type Cursor=NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{NativeDefaultValueCursor::new()}}
 
@@ -56,9 +57,9 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,Value> for NativeValueReceiver
   if !bound{return Ok(NativeAdvanceSelection::Local{work:input.binding_work_demand(&self.binding)?})}
   Ok(if self.phase==0{NativeAdvanceSelection::Local{work:1}}else{NativeAdvanceSelection::Nested})
  }
- fn advance_nested(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<RetainedCloneStep,OriginalReceivingPrimary>{
+ fn advance_nested(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure>{
   let inner=body.saturating_sub(size_of::<u8>());let child=child_grant(grant,size_of::<u8>());
-  let poll=match self.phase{1=>self.atom.advance(input,control,inner,maximum_work_units,child),2=>self.dictionary.advance(input,control,inner,maximum_work_units,child),_=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})};
+  let poll=match self.phase{1=>self.atom.advance(input,control,witness,inner,maximum_work_units,child),2=>self.dictionary.advance(input,control,witness,inner,maximum_work_units,child),_=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})};
   match poll{
    RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},
    RetainedWorkPoll::Complete(turn)=>{
@@ -106,22 +107,29 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,Value> for NativeValueReceiver
   })();
   Ok(match turn{RetainedWorkPoll::Pending{..}=>reply.pending(),RetainedWorkPoll::Complete(turn)=>reply.complete(turn.result)})
  }
- fn begin_close(&mut self){self.atom.begin_close();self.dictionary.begin_close();self.closing=true}
+ fn advance_pending(&self)->bool{self.atom.advance_pending()||self.dictionary.advance_pending()}
+ native_receiver_close_start!(closing);
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if !self.atom.terminal_is_empty(){return nested(self.atom.close_demands(body)?,0)}
-  if !self.dictionary.terminal_is_empty(){return nested(self.dictionary.close_demands(body)?,0)}
+  if !self.closing{return Err(invalid())}
+  if !self.atom.terminal_is_empty(){return nested(if self.atom.is_closing(){self.atom.close_demands(body)?}else{self.atom.begin_close_demand()?},0)}
+  if !self.dictionary.terminal_is_empty(){return nested(if self.dictionary.is_closing(){self.dictionary.close_demands(body)?}else{self.dictionary.begin_close_demand()?},0)}
   RetainedCloneBinding::close_demand(&self.binding,body)
  }
- fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.atom.terminal_is_empty(){return self.atom.close_work_demand(body)}if !self.dictionary.terminal_is_empty(){return self.dictionary.close_work_demand(body)}RetainedCloneBinding::close_work_demand(&self.binding,body)}
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
-  use RetainedWorkPoll::Complete;let g=effect.grant();
-  let complete=|result:Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>|Complete(RetainedWorkOutcome{result,work:0});
-  if self.terminal_is_empty(){return complete(Ok(RetainedCloneStep::Complete(Default::default())))}
-  let demand=match self.close_demands(g.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return complete(Err(error.into()))};
-  if !retained_clone_grant_admits(g,demand){return complete(Ok(RetainedCloneStep::Progress(Default::default())))}
-  if !self.atom.terminal_is_empty(){return self.atom.close_step(&mut effect.nested(child_grant(g,0))).map(|step|RetainedCloneStep::Progress(step.progress()))}
-  if !self.dictionary.terminal_is_empty(){return self.dictionary.close_step(&mut effect.nested(child_grant(g,0))).map(|step|RetainedCloneStep::Progress(step.progress()))}
-  RetainedCloneBinding::close_one(&mut self.binding,effect)
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(invalid())}if !self.atom.terminal_is_empty(){return if self.atom.is_closing(){self.atom.close_work_demand(body)}else{self.atom.begin_close_work_demand()}}if !self.dictionary.terminal_is_empty(){return if self.dictionary.is_closing(){self.dictionary.close_work_demand(body)}else{self.dictionary.begin_close_work_demand()}}RetainedCloneBinding::close_work_demand(&self.binding,body)}
+ fn close_step<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>,ValueError>{
+  let g=effect.grant();
+  if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}
+  let demand=self.close_demands(body)?;
+  if !retained_clone_grant_admits(g,demand){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
+  macro_rules! relay{($slot:ident)=>{if !self.$slot.terminal_is_empty(){return if self.$slot.is_closing(){self.$slot.close_into(body,&mut effect.nested(child_grant(g,0)),reply.progress())}else{self.$slot.begin_close_into(effect,reply.progress())}}}}
+  relay!(atom);relay!(dictionary);
+  Ok(match RetainedCloneBinding::close_one(&mut self.binding,body,effect){RetainedWorkPoll::Pending{..}=>reply.pending(),RetainedWorkPoll::Complete(turn)=>reply.complete(turn.result)})
+ }
+ fn recover_close_step<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>,ValueError>{
+  let g=effect.grant();
+  macro_rules! relay{($slot:ident)=>{if !self.$slot.terminal_is_empty(){return if self.$slot.is_closing(){self.$slot.recover_close_into(body,&mut effect.nested(child_grant(g,0)),reply.progress())}else{self.$slot.recover_begin_close_into(effect,reply.progress())}}}}
+  relay!(atom);relay!(dictionary);
+  Ok(reply.pending())
  }
  fn requires_original_birth(&self)->bool{if !self.atom.terminal_is_empty(){return self.atom.requires_original_birth()}!self.dictionary.terminal_is_empty()&&self.dictionary.requires_original_birth()}
  fn close_original_birth_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementPoll{
@@ -131,11 +139,18 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,Value> for NativeValueReceiver
   RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native value receiver has no original birth to settle").into()),work:0})
  }
  fn requires_original_control(&self)->bool{if !self.atom.terminal_is_empty(){return self.atom.requires_original_control()}!self.dictionary.terminal_is_empty()&&self.dictionary.requires_original_control()}
- fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+ fn close_original_step<'reply>(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>,ValueError>{
   let g=effect.grant();
-  if !self.atom.terminal_is_empty()&&self.atom.requires_original_control(){if g.maximum_items==0||g.maximum_depth==0{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}return self.atom.close_original_step(original,&mut effect.nested(child_grant(g,0)))}
-  if !self.dictionary.terminal_is_empty()&&self.dictionary.requires_original_control(){if g.maximum_items==0||g.maximum_depth==0{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}return self.dictionary.close_original_step(original,&mut effect.nested(child_grant(g,0)))}
-  self.close_step(effect)
+  if g.maximum_items==0||g.maximum_depth==0{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
+  macro_rules! relay{($slot:ident)=>{if !self.$slot.terminal_is_empty()&&self.$slot.is_closing()&&self.$slot.requires_original_control(){return self.$slot.close_original_into(original,body,&mut effect.nested(child_grant(g,0)),reply.progress())}}}
+  relay!(atom);relay!(dictionary);
+  self.close_step(body,effect,reply)
+ }
+ fn recover_close_original_step<'reply>(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>,ValueError>{
+  let g=effect.grant();
+  macro_rules! relay{($slot:ident)=>{if !self.$slot.terminal_is_empty()&&self.$slot.is_closing()&&self.$slot.requires_original_control(){return self.$slot.recover_close_original_into(original,body,&mut effect.nested(child_grant(g,0)),reply.progress())}}}
+  relay!(atom);relay!(dictionary);
+  self.recover_close_step(body,effect,reply)
  }
  fn terminal_is_empty(&self)->bool{self.atom.terminal_is_empty()&&self.dictionary.terminal_is_empty()&&self.binding.is_none()}
 }

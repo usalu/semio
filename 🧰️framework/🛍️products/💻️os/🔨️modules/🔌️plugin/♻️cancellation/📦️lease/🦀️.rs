@@ -27,13 +27,13 @@ impl CancellationLeaseParts {
   Ok(u64::from(self.aliases.is_some()))
  }
  #[doc(hidden)]
- pub fn close_step(&mut self,canonical:&ToolCancellationHandle,original_parent:&semio_framework_job::CancelToken,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{
-  let mut work=0;let result=(||{
+ pub fn close_step(&mut self,canonical:&ToolCancellationHandle,original_parent:&semio_framework_job::CancelToken,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+  use semio_framework_value::RetirementPollExit as Exit;let grant=effect.grant();let result=(||->Result<RetainedCloneStep,Exit>{
    let demand=self.retirement_demands(canonical,original_parent,grant.maximum_copy_bytes)?;if !plugin_grant_funds(demand,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-   for index in 0..4{if self.tokens[index].is_some()||self.token_retirements[index].is_some(){let turn=self.token_step(index,canonical,Some(original_parent),grant);work=turn.work;return turn.result}}
-   for index in 0..5{if self.claims[index].is_some()||self.claim_retirements[index].is_some(){let turn=plugin_typed_owner_original(&mut self.claims[index],&mut self.claim_retirements[index],grant);work=turn.work;return turn.result}}
-   if self.aliases.is_some(){self.aliases.take();work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}Ok(RetainedCloneStep::Complete(Default::default()))
-  })();semio_framework_value::RetainedWorkOutcome{result,work}
+   for index in 0..4{if self.tokens[index].is_some()||self.token_retirements[index].is_some(){return self.token_step(index,canonical,Some(original_parent),effect)}}
+   for index in 0..5{if self.claims[index].is_some()||self.claim_retirements[index].is_some(){return Exit::resume(plugin_typed_owner_original(&mut self.claims[index],&mut self.claim_retirements[index],effect))}}
+   if self.aliases.is_some(){self.aliases.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}Ok(RetainedCloneStep::Complete(Default::default()))
+  })();Exit::settle(effect,result)
  }
  fn token_demands(&self,index:usize,_canonical:&ToolCancellationHandle,_original_parent:Option<&semio_framework_job::CancelToken>)->Result<RetirementDemand,ValueError>{
    let one=RetirementDemand{depth:1,..Default::default()};
@@ -44,26 +44,26 @@ impl CancellationLeaseParts {
   fn token_work_demand(&self,index:usize)->u64{
    if self.tokens[index].is_some()||self.token_retirements[index].as_ref().is_some_and(|owner|owner.terminal_is_empty()){1}else{match self.token_witness[index]{TokenWitness::Local|TokenWitness::Keyed|TokenWitness::Close=>2,_=>1}}
   }
-  fn token_step(&mut self,index:usize,canonical:&ToolCancellationHandle,original_parent:Option<&semio_framework_job::CancelToken>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
-   let empty=RetainedCloneProgress::default();let mut work=0;
-   let result=(||{
-    if let Some(token)=self.tokens[index].take(){self.token_retirements[index]=Some(semio_framework_async::CancelTokenRetirement::from_token(token));work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+  fn token_step(&mut self,index:usize,canonical:&ToolCancellationHandle,original_parent:Option<&semio_framework_job::CancelToken>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{
+   let empty=RetainedCloneProgress::default();
+   {
+    if let Some(token)=self.tokens[index].take(){self.token_retirements[index]=Some(semio_framework_async::CancelTokenRetirement::from_token(token));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
     let owner=self.token_retirements[index].as_mut().expect("original cancellation token remains retained");
-    if owner.terminal_is_empty(){self.token_retirements[index]=None;self.token_witness[index]=TokenWitness::Select;work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+    if owner.terminal_is_empty(){self.token_retirements[index]=None;self.token_witness[index]=TokenWitness::Select;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
     if self.token_witness[index]==TokenWitness::Select{
-     witness_lookup_observed();work=1;
+     witness_lookup_observed();
      if self.tokens.iter().flatten().chain(std::iter::once(&canonical.app_scope)).chain(original_parent).any(|token|owner.is_original_alias_witness(token)){self.token_witness[index]=TokenWitness::Local}
      else{self.token_witness[index]=if self.document_id.is_some(){TokenWitness::FindKeyed}else{TokenWitness::Close}}
      return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
     }
-    if self.token_witness[index]==TokenWitness::FindKeyed{work=1;witness_lookup_observed();let state=match canonical.state.try_lock(){Ok(state)=>state,Err(_)=>return Ok(RetainedCloneStep::Progress(empty))};let id=self.document_id.expect("keyed selection retains its original id");self.token_witness[index]=if state.keyed_documents.get(id).is_some_and(|scope|owner.is_original_alias_witness(&scope.token)){TokenWitness::Keyed}else{TokenWitness::Close};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+    if self.token_witness[index]==TokenWitness::FindKeyed{witness_lookup_observed();let state=match canonical.state.try_lock(){Ok(state)=>state,Err(_)=>return Ok(RetainedCloneStep::Progress(empty))};let id=self.document_id.expect("keyed selection retains its original id");self.token_witness[index]=if state.keyed_documents.get(id).is_some_and(|scope|owner.is_original_alias_witness(&scope.token)){TokenWitness::Keyed}else{TokenWitness::Close};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
     let turn=match self.token_witness[index]{
-     TokenWitness::Local=>{work=1;let witness=self.tokens.iter().flatten().chain(std::iter::once(&canonical.app_scope)).chain(original_parent).find(|token|owner.is_original_alias_witness(token));match witness{Some(witness)=>owner.return_alias_step(witness,grant),None=>{self.token_witness[index]=TokenWitness::Select;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}}}
-     TokenWitness::Keyed=>{work=1;witness_lookup_observed();let state=match canonical.state.try_lock(){Ok(state)=>state,Err(_)=>return Ok(RetainedCloneStep::Progress(empty))};let witness=state.keyed_documents.get(self.document_id.expect("keyed witness retains its original id")).filter(|scope|owner.is_original_alias_witness(&scope.token));match witness{Some(scope)=>owner.return_alias_step(&scope.token,grant),None=>{self.token_witness[index]=TokenWitness::Select;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}}}
-     _=>owner.close_step(grant)
+     TokenWitness::Local=>{let witness=self.tokens.iter().flatten().chain(std::iter::once(&canonical.app_scope)).chain(original_parent).find(|token|owner.is_original_alias_witness(token));match witness{Some(witness)=>owner.return_alias_step(witness,effect),None=>{self.token_witness[index]=TokenWitness::Select;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}}}
+     TokenWitness::Keyed=>{witness_lookup_observed();let state=match canonical.state.try_lock(){Ok(state)=>state,Err(_)=>return Ok(RetainedCloneStep::Progress(empty))};let witness=state.keyed_documents.get(self.document_id.expect("keyed witness retains its original id")).filter(|scope|owner.is_original_alias_witness(&scope.token));match witness{Some(scope)=>owner.return_alias_step(&scope.token,effect),None=>{self.token_witness[index]=TokenWitness::Select;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}}}
+     _=>owner.close_step(effect)
     };
-    work+=turn.work;match turn.result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>{self.token_witness[index]=TokenWitness::Select;work+=1;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))},Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error.into())}
-   })();semio_framework_value::RetainedWorkOutcome{result,work}
+    match turn.result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>{self.token_witness[index]=TokenWitness::Select;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))},Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error.into())}
+   }
   }
 
 }
@@ -94,12 +94,12 @@ impl ToolCancellationLeaseRetirement {
   Ok(1)
  }
  #[doc(hidden)]
- pub fn close_step(&mut self,canonical:&ToolCancellationHandle,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{
-  let mut work=0;let result=(||->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
+ pub fn close_step(&mut self,canonical:&ToolCancellationHandle,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+  use semio_framework_value::RetirementPollExit as Exit;let grant=effect.grant();let result=(||->Result<RetainedCloneStep,Exit>{
   let demand=self.retirement_demands(canonical,grant.maximum_copy_bytes)?;
   if !plugin_grant_funds(demand,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
   if !self.detached{
-   let original=self.original.as_mut().unwrap();work=1;let mut state=match original.handle.state.try_lock(){Ok(state)=>state,Err(_)=>return Ok(RetainedCloneStep::Progress(Default::default()))};
+   let original=self.original.as_mut().unwrap();let mut state=match original.handle.state.try_lock(){Ok(state)=>state,Err(_)=>return Ok(RetainedCloneStep::Progress(Default::default()))};
    original.publication_claim.finish();let mut copied=0;
    if original.keyed{
     if state.keyed_operations.get(original.key.operation_id.0).is_some_and(|scope|scope.operation==original.key&&PublicationClaimHandle::same_original(&scope.publication_claim,&original.publication_claim)){
@@ -113,7 +113,7 @@ impl ToolCancellationLeaseRetirement {
    }
    drop(state);original.finished=true;self.detached=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}));
   }
-  if let Some(original)=self.original.take(){work=1;
+  if let Some(original)=self.original.take(){
    let crate::ToolCancellationLeaseOriginal{handle,token,publication_claim:claim,document_claim,keyed,document,..}=ManuallyDrop::into_inner(original).into_retirement_source();
    let ToolCancellationHandle{state,app_scope,publication_scope,app_generation,active}=handle;
    let mut parts=CancellationLeaseParts{aliases:Some(CancellationHandleAliases{state,generation:app_generation,active}),tokens:[Some(token),None,None,Some(app_scope)],claims:[Some(claim),document_claim,None,None,Some(publication_scope)],token_retirements:std::array::from_fn(|_|None),document_id:keyed.then(||u64::from(document.0)),claim_retirements:std::array::from_fn(|_|None),token_witness:[TokenWitness::Select;4]};
@@ -122,11 +122,11 @@ impl ToolCancellationLeaseRetirement {
    *self.parts=Some(parts);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));
   }
   let Some(parts)=self.parts.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};
-  for index in 0..4{if parts.tokens[index].is_some()||parts.token_retirements[index].is_some(){let turn=parts.token_step(index,canonical,None,grant);work=turn.work;return turn.result;}}
-  for index in 0..5{if parts.claims[index].is_some()||parts.claim_retirements[index].is_some(){let turn=plugin_typed_owner_original(&mut parts.claims[index],&mut parts.claim_retirements[index],grant);work=turn.work;return turn.result;}}
-  if let Some(original)=parts.aliases.take(){work=1;drop(original);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-  self.parts.take();work=1;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
-  })();semio_framework_value::RetainedWorkOutcome{result,work}
+  for index in 0..4{if parts.tokens[index].is_some()||parts.token_retirements[index].is_some(){return parts.token_step(index,canonical,None,effect);}}
+  for index in 0..5{if parts.claims[index].is_some()||parts.claim_retirements[index].is_some(){return Exit::resume(plugin_typed_owner_original(&mut parts.claims[index],&mut parts.claim_retirements[index],effect));}}
+  if let Some(original)=parts.aliases.take(){drop(original);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+  self.parts.take();Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
+  })();Exit::settle(effect,result)
  }
 }
 impl Drop for ToolCancellationLeaseRetirement{fn drop(&mut self){assert!(self.terminal_is_empty(),"original cancellation lease retirement retains all refused owners");}}

@@ -67,7 +67,7 @@
       "const": 2
     },
     "freeWork": {
-      "const": 1
+      "const": 2
     },
     "deniedWork": {
       "const": 0
@@ -76,7 +76,7 @@
       "const": 0
     },
     "poisonDropCalls": {
-      "const": 0
+      "const": 1
     },
     "freshBoxAllocations": {
       "const": 0
@@ -85,11 +85,11 @@
       "const": [
         {
           "pointerBytes": 4,
-          "copyBytes": 13
+          "copyBytes": 9
         },
         {
           "pointerBytes": 8,
-          "copyBytes": 25
+          "copyBytes": 17
         }
       ]
     }

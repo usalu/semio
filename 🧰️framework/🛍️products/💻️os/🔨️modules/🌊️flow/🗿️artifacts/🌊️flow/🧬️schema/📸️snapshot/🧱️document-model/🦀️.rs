@@ -47,7 +47,7 @@ pub(super) fn export_widget_display_meta(format: &str) -> (String, String, Strin
 }
 
 /// 📍️ Persisted node position on the canvas.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct WidgetLayout {
     pub x: f64,
@@ -55,7 +55,7 @@ pub struct WidgetLayout {
 }
 
 /// 📍️ One layout assignment; absent or null layout removes the existing entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -100,7 +100,7 @@ pub struct FlowNodeGui {
 }
 
 /// 🪟️ GUI-only node chrome.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase")]
@@ -173,13 +173,9 @@ pub struct CameraJson {
 /// 📷️ A record that omits its camera receives the identity camera: origin at the centre and unit zoom.
 impl NativeDefaultValue for CameraJson {
     fn default_demand() -> RetirementDemand { native_tree::fixed(2 * size_of::<Self>()) }
-    fn admit_default(output: &mut Option<Self>, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
-        if output.is_some() { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }; }
-        let demand = <Self as NativeDefaultValue>::default_demand();
-        if !retained_clone_grant_admits(grant, demand) { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }; }
-        *output = Some(Self { x: 0.0, y: 0.0, zoom: 1.0 });
-        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(native_tree::receipt(demand))), work: 1 }
-    }
+    fn default_work_demand()->Result<u64,::semio_framework_value::ValueError>{Ok(1)}
+fn admit_default<'reply>(output:&mut Option<Self>,effect:&mut ::semio_framework_value::RetainedAllocationEffect<'_>,reply: ::semio_framework_value_native_owned::native_decoding::OriginalEffectReply<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>)->Result<::semio_framework_value_native_owned::native_decoding::OriginalEffectReplyComplete<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>,::semio_framework_value::ValueError>{::semio_framework_value_native_owned::native_decoding::owned::native_admit_default(output,<Self as ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue>::default_demand(),||Self { x: 0.0, y: 0.0, zoom: 1.0 },effect,reply)}
+fn recover_default<'reply>(_:&mut Option<Self>,_:&mut ::semio_framework_value::RetainedAllocationEffect<'_>,reply: ::semio_framework_value_native_owned::native_decoding::OriginalEffectReply<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>)->Result<::semio_framework_value_native_owned::native_decoding::OriginalEffectReplyComplete<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>,::semio_framework_value::ValueError>{Ok(reply.pending())}
 }
 impl NativeDefault for CameraJson {
     type Cursor = NativeDefaultValueCursor<Self>;
@@ -194,7 +190,7 @@ fn default_to_port() -> String {
     String::new()
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -211,7 +207,7 @@ pub struct SynapseSpec {
 }
 
 /// 🎛️ Flow widget discriminant encoded through the first-party value contract.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Widget {
@@ -346,15 +342,13 @@ impl semio_framework_dsl_record::DslField for FlowUi {
     fn retire_decoded(self) { semio_framework_value::FromValue::retire_decoded(self) }
 }
 
+semio_framework_dsl_record::native_field_receiving!(FlowUi);
+
 impl NativeDefaultValue for FlowUi {
     fn default_demand() -> RetirementDemand { native_tree::fixed(2 * size_of::<Self>()) }
-    fn admit_default(output: &mut Option<Self>, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
-        if output.is_some() { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }; }
-        let demand = <Self as NativeDefaultValue>::default_demand();
-        if !retained_clone_grant_admits(grant, demand) { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }; }
-        *output = Some(Self::default());
-        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(native_tree::receipt(demand))), work: 1 }
-    }
+    fn default_work_demand()->Result<u64,::semio_framework_value::ValueError>{Ok(1)}
+fn admit_default<'reply>(output:&mut Option<Self>,effect:&mut ::semio_framework_value::RetainedAllocationEffect<'_>,reply: ::semio_framework_value_native_owned::native_decoding::OriginalEffectReply<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>)->Result<::semio_framework_value_native_owned::native_decoding::OriginalEffectReplyComplete<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>,::semio_framework_value::ValueError>{::semio_framework_value_native_owned::native_decoding::owned::native_admit_default(output,<Self as ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue>::default_demand(),||Self::default(),effect,reply)}
+fn recover_default<'reply>(_:&mut Option<Self>,_:&mut ::semio_framework_value::RetainedAllocationEffect<'_>,reply: ::semio_framework_value_native_owned::native_decoding::OriginalEffectReply<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>)->Result<::semio_framework_value_native_owned::native_decoding::OriginalEffectReplyComplete<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>,::semio_framework_value::ValueError>{Ok(reply.pending())}
 }
 impl NativeDefault for FlowUi {
     type Cursor = NativeDefaultValueCursor<Self>;

@@ -5,12 +5,24 @@ use semio_os_store_engine_live::lifted_store::{StoreParts, StorePartsRef};
 use semio_os_store_ledger::{ArtifactStorePendingReportRetirement, CursorRevisionAccumulator, PendingCommandReport};
 use semio_os_store_read::{ArtifactStoreCursorDisposerPhase, ArtifactStoreMutationDagRetirement, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement, retire_document_envelope};
 use semio_os_store_replay::{EffectiveSupersessions, PrefixSnapshot};
-use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_value::factory::ArcRootRetirement as ReturnedSnapshotReadRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use semio_framework_value::{ErasedSnapshotRetirement, FromValue, ToValue, ValueError};
 use std::sync::Arc;
 
+/// 🌳️ Admits one resident snapshot root and its snapshot issuer as a returned retirement frame through the caller's effect.
+fn admit_snapshot_root<P: Send + Sync + 'static>(factory: &Arc<dyn semio_framework_value::SnapshotRetirementFactory<P>>, snapshot: &mut Option<Arc<P>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress)> {
+    let mut issuer = Some(Arc::clone(factory));
+    let mut output = None;
+    match semio_framework_value::factory::ArcRootRetirement::admit_snapshot(snapshot, &mut issuer, &mut output, effect) {
+        semio_framework_value::RetainedWorkPoll::Pending { work } => semio_framework_value::RetainedWorkPoll::Pending { work },
+        semio_framework_value::RetainedWorkPoll::Complete(turn) => semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome {
+            result: turn.result.and_then(|step| output.map(|owner| (owner, step.progress())).ok_or_else(|| semio_framework_value::OriginalRetirementFailure::from(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "snapshot root admission was not funded")))),
+            work: turn.work,
+        }),
+    }
+}
 /// 🏁️ Settles one snapshot-factory turn: a pending turn keeps its resident snapshot and retries on the next close turn.
 fn settle_snapshot_factory(poll: semio_framework_value::OriginalRetirementPoll<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress)>) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), semio_framework_value::RetirementPollExit> {
     semio_framework_value::RetirementPollExit::resume(poll)
@@ -130,7 +142,7 @@ where
                 let entry = self.live.prefix_ring.pop().expect("observed original prefix owner");
                 if Arc::strong_count(&entry.snapshot) > 1 { drop(entry); return Ok((None, structural)); }
                 let mut snapshot = Some(entry.snapshot);
-                match settle_snapshot_factory(semio_framework_value::factory::factory_retire_snapshot(&**factory, &mut snapshot, effect)) {
+                match settle_snapshot_factory(admit_snapshot_root(factory, &mut snapshot, effect)) {
                     Ok((owner, receipt)) => Ok((Some(owner), receipt)),
                     Err(exit) => { self.live.prefix_ring.push(PrefixSnapshot { snapshot: snapshot.take().expect("a refused factory keeps its snapshot"), ..entry }); Err(exit) }
                 }
@@ -142,7 +154,7 @@ where
                 let (id, snapshot) = self.live.tail_undo_cache.take().expect("observed original tail owner");
                 if Arc::strong_count(&snapshot) > 1 { drop((id, snapshot)); return Ok((None, structural)); }
                 let mut snapshot = Some(snapshot);
-                match settle_snapshot_factory(semio_framework_value::factory::factory_retire_snapshot(&**factory, &mut snapshot, effect)) {
+                match settle_snapshot_factory(admit_snapshot_root(factory, &mut snapshot, effect)) {
                     Ok((owner, receipt)) => Ok((Some(owner), receipt)),
                     Err(exit) => { *self.live.tail_undo_cache = Some((id, snapshot.take().expect("a refused factory keeps its snapshot"))); Err(exit) }
                 }
@@ -159,7 +171,7 @@ where
                     let factory = self.owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "current snapshot requires exact factory"))?;
                     let original = unsafe { std::mem::ManuallyDrop::take(&mut self.live.current) };
                     let mut snapshot = Some(original);
-                    match settle_snapshot_factory(semio_framework_value::factory::factory_retire_snapshot(&**factory, &mut snapshot, effect)) {
+                    match settle_snapshot_factory(admit_snapshot_root(factory, &mut snapshot, effect)) {
                         Ok(admitted) => Ok(admitted),
                         Err(exit) => Err((exit, snapshot.take().expect("a refused factory keeps its snapshot"))),
                     }

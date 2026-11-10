@@ -517,10 +517,11 @@ async fn resolve_layout_for_mode_prefers_named_then_default_then_none() {
 #[semio_framework_async_macros::async_test]
 async fn resolve_app_label_uses_terminology_override_else_falls_back_to_native_label() {
     let mut app = app_with(vec![], vec![]).await;
-    app.terminology_breadcrumbs.insert("de".into(), vec!["semio".into(), "a-de".into()]);
-    assert_eq!(resolve_app_breadcrumb(&app, "de"), ["semio".to_string(), "a-de".to_string()]);
-    assert_eq!(resolve_app_breadcrumb(&app, "native"), app.breadcrumb.as_slice());
-    assert_eq!(resolve_app_breadcrumb(&app, "unregistered"), app.breadcrumb.as_slice());
+    app.terminology_breadcrumbs.insert("reuse".into(), vec![LocalizedLabel::data("semio"), LocalizedLabel::native("a-en", "a-de")]);
+    assert_eq!(resolve_app_breadcrumb(&app, "reuse", Locale::De), ["semio".to_string(), "a-de".to_string()]);
+    assert_eq!(resolve_app_breadcrumb(&app, "reuse", Locale::En), ["semio".to_string(), "a-en".to_string()]);
+    assert_eq!(resolve_app_breadcrumb(&app, "native", Locale::En), app.breadcrumb);
+    assert_eq!(resolve_app_breadcrumb(&app, "unregistered", Locale::De), app.breadcrumb);
 }
 
 #[semio_framework_async_macros::async_test]

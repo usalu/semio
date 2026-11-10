@@ -198,7 +198,11 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
                 return World3dSceneBridgeStep::Pending;
             }
             if state.scene.placeholder_build.is_some() {
-                step_world_placeholder_mesh_batch(&mut state.session, &mut state.interaction, &mut state.authority, &mut state.scene, WORLD3D_BRIDGE_MESH_WRITES_PER_STEP);
+                let grant = context.retained_grant();
+                let (session, interaction, authority, scene) = (&mut state.session, &mut state.interaction, &mut state.authority, &mut state.scene);
+                if context.with_original_effect(grant, |_, effect| step_world_placeholder_mesh_batch(session, interaction, authority, scene, WORLD3D_BRIDGE_MESH_WRITES_PER_STEP, effect)).is_err() {
+                    state.session.snapshot_fault = Some(World3dSnapshotFault::Unavailable);
+                }
                 state.bridge.scene_bridge = Some(cursor);
                 return World3dSceneBridgeStep::Pending;
             }
@@ -313,7 +317,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         return;
     }
     if state.bridge.snapshot_apply.is_some() {
-        state.session.snapshot_fault = Some(World3dSnapshotFault::Closing);
+        state.session.snapshot_fault = Some(World3dSnapshotFault::Unavailable);
         return;
     }
     state.bridge.snapshot_apply = Some(World3dSnapshotApplyCursor::new(lease));

@@ -51,6 +51,8 @@ use semio_s_fem_model::FemError;
 use semio_s_fem_model::Node;
 use semio_s_fem_static::Elements;
 use semio_s_fem_sparse::numerical_close_original;
+use semio_s_fem_sparse::numerical_close_effect;
+use semio_framework_value::RetainedAllocationEffect;
 use semio_s_fem_payload_turns::NumericalBytesPublication;
 use semio_s_fem_sparse::numerical_close_gate;
 use semio_s_fem_sparse::numerical_ladder_turn;

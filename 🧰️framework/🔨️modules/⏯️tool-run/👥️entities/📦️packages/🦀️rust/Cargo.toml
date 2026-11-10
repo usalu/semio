@@ -24,8 +24,10 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-value-shared-issuance = { path = "../../../../🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
+semio-framework-value-source-hold = { path = "../../../../🌱️value/🔗️source-hold/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

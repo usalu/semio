@@ -3,11 +3,13 @@ use semio_os_store_operation_wire::*;
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::RetainedCloneGrant};
 use semio_framework_pack_json::ArtifactCanonicalJsonNode;
 use semio_os_store_canonical_json::ArtifactCanonicalJson;
+#[path="../🧪️effect/🦀️.rs"]
+mod effect_fixture;
 
 fn original_codec(source:ArtifactPreparedOperationSource<'_>)->ArtifactPreparedOperationCursor{
     let(mut cursor,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(ArtifactPreparedOperationCursor::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     let copied_bytes=cursor.next_minimum_copy_bytes();assert_eq!(copied_bytes,cursor.codec_birth_copy_bytes());assert!(copied_bytes<=4096);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copied_bytes,maximum_depth:1,..Default::default()};
-    let mut output=[0;64];let denied=RetainedCloneGrant{maximum_copy_bytes:copied_bytes-1,..grant};assert_eq!(cursor.advance(source,&mut output,denied).unwrap(),ArtifactPreparedOperationProgress::default());let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(source,&mut output,grant).unwrap());assert_eq!(step.written_bytes,0);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.copied_bytes,copied_bytes);assert_eq!(step.processed_items,1);cursor
+    let mut output=[0;64];let denied=RetainedCloneGrant{maximum_copy_bytes:copied_bytes-1,..grant};assert_eq!(effect_fixture::fx(denied,|e|cursor.advance(source,&mut output,e)).unwrap(),ArtifactPreparedOperationProgress::default());let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(grant,|e|cursor.advance(source,&mut output,e)).unwrap());assert_eq!(step.written_bytes,0);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.copied_bytes,copied_bytes);assert_eq!(step.processed_items,1);cursor
 }
 
 struct OracleSource(serde_json::Value);
@@ -79,10 +81,10 @@ fn prepared_operation_wire_borrowed_text_matches_neutral_ordered_tuple_and_hex()
             for _ in 0..expected.len() * 4 + 64 {
                 let mut output = [0; 256];
                 let wire = || ArtifactPreparedOperationSource::Text { header, body: &source };
-                let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(wire(), &mut output, RetainedCloneGrant::default()).unwrap());
+                let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| effect_fixture::fx(RetainedCloneGrant::default(),|e|cursor.advance(wire(),&mut output,e)).unwrap());
                 assert_eq!(denied, ArtifactPreparedOperationProgress::default());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-                let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(wire(), &mut output, RetainedCloneGrant::one_payload_turn(maximum, 64)).unwrap());
+                let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| effect_fixture::fx(RetainedCloneGrant::one_payload_turn(maximum, 64),|e|cursor.advance(wire(),&mut output,e)).unwrap());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 assert_eq!(progress.processed_items, 1);
                 assert!(progress.written_bytes <= maximum.min(64));
@@ -93,8 +95,8 @@ fn prepared_operation_wire_borrowed_text_matches_neutral_ordered_tuple_and_hex()
         }
         for stop in fixture["cancelStops"].as_array().unwrap() {
             let mut cursor=original_codec(ArtifactPreparedOperationSource::Text{header,body:&source});
-            for _ in 0..stop.as_u64().unwrap() { cursor.advance(ArtifactPreparedOperationSource::Text { header, body: &source }, &mut [0; 64], RetainedCloneGrant::one_payload_turn(64, 64)).unwrap(); }
-            let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close(RetainedCloneGrant { maximum_items: 1, maximum_depth: 8, ..Default::default() }).unwrap());
+            for _ in 0..stop.as_u64().unwrap() { effect_fixture::fx(RetainedCloneGrant::one_payload_turn(64, 64),|e|cursor.advance(ArtifactPreparedOperationSource::Text { header, body: &source },&mut [0; 64],e)).unwrap(); }
+            let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| effect_fixture::fx(RetainedCloneGrant { maximum_items: 1, maximum_depth: 8, ..Default::default() },|e|cursor.close(e)).unwrap());
             assert!(progress.complete);
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
@@ -141,11 +143,11 @@ fn prepared_operation_wire_borrowed_json_matches_serde_without_birth_or_owner_co
             for _ in 0..expected.len() * 2 + 8 {
                 let mut output = [0; 256];
                 for grant in [RetainedCloneGrant::default(), RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: maximum, ..Default::default() }] {
-                    let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(wire_source(), &mut output, grant).unwrap());
+                    let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| effect_fixture::fx(grant,|e|cursor.advance(wire_source(),&mut output,e)).unwrap());
                     assert_eq!(progress, ArtifactPreparedOperationProgress::default());
                     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 }
-                let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(wire_source(), &mut output[..maximum.min(64)], original_json_policy(&fixture)).unwrap());
+                let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| effect_fixture::fx(original_json_policy(&fixture),|e|cursor.advance(wire_source(),&mut output[..maximum.min(64)],e)).unwrap());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0), "row={row_index} hex={hex} maximum={maximum} progress={progress:?}");
                 assert!(progress.processed_items <= 1);
                 assert!(progress.written_bytes <= maximum.min(64));
@@ -156,14 +158,14 @@ fn prepared_operation_wire_borrowed_json_matches_serde_without_birth_or_owner_co
             if !hex { assert_eq!(serde_json::from_slice::<serde_json::Value>(&actual[header.len()..]).unwrap(), source.0); }
             assert_eq!(cursor.next_minimum_copy_bytes(), 0);
             assert_eq!((cursor.next_capacity_byte_demand().unwrap(), cursor.next_close_byte_demand().unwrap()), (0, 0));
-            let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close(RetainedCloneGrant { maximum_items: 1, maximum_depth: 8, ..Default::default() }).unwrap());
+            let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| effect_fixture::fx(RetainedCloneGrant { maximum_items: 1, maximum_depth: 8, ..Default::default() },|e|cursor.close(e)).unwrap());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
         for stop in fixture["cancelStops"].as_array().unwrap() {
             let mut cursor = ArtifactPreparedOperationCursor::default();
-            for _ in 0..stop.as_u64().unwrap() { cursor.advance(wire_source(), &mut [0; 64], original_json_policy(&fixture)).unwrap(); }
+            for _ in 0..stop.as_u64().unwrap() { effect_fixture::fx(original_json_policy(&fixture),|e|cursor.advance(wire_source(),&mut [0; 64],e)).unwrap(); }
             let before = &source.0 as *const serde_json::Value;
-            let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close(RetainedCloneGrant { maximum_items: 1, maximum_depth: 8, ..Default::default() }).unwrap());
+            let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| effect_fixture::fx(RetainedCloneGrant { maximum_items: 1, maximum_depth: 8, ..Default::default() },|e|cursor.close(e)).unwrap());
             assert!(progress.complete);
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert_eq!(&source.0 as *const serde_json::Value, before);
@@ -186,13 +188,13 @@ fn prepared_operation_output_preserves_every_original_prefix_and_physical_cancel
             for _ in 0..cut.min(10000){
                 if offset==source.len(){break;}
                 let end=(offset+64).min(source.len());
-                let(zero,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.append(&source.as_bytes()[offset..end],RetainedCloneGrant{maximum_items:0,..policy}).unwrap());assert_eq!(zero,RetainedCloneProgress::default());assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
-                let(progress,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.append(&source.as_bytes()[offset..end],policy).unwrap());assert!(progress.fits(policy));assert_eq!(event.requested_bytes,progress.retained_capacity_bytes);assert_eq!(event.released_bytes,0);retained+=event.requested_bytes;offset+=progress.copied_bytes;assert_eq!(owner.len(),offset);for index in 0..offset{assert_eq!(owner.byte_at(index),Some(source.as_bytes()[index]));}
+                let(zero,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(RetainedCloneGrant{maximum_items:0,..policy},|e|owner.append(&source.as_bytes()[offset..end],e)).unwrap());assert_eq!(zero,RetainedCloneProgress::default());assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
+                let(progress,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(policy,|e|owner.append(&source.as_bytes()[offset..end],e)).unwrap());assert!(progress.fits(policy));assert_eq!(event.requested_bytes,progress.retained_capacity_bytes);assert_eq!(event.released_bytes,0);retained+=event.requested_bytes;offset+=progress.copied_bytes;assert_eq!(owner.len(),offset);for index in 0..offset{assert_eq!(owner.byte_at(index),Some(source.as_bytes()[index]));}
             }
             assert_eq!(source.as_ptr(),original);assert_eq!(owner.allocated_bytes(),retained);
             let mut released=0;owner.begin_close();
             for _ in 0..10000{
-                let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(policy).result.unwrap());let progress=step.progress();assert!(progress.fits(policy));assert_eq!(event.requested_bytes,progress.retained_capacity_bytes);assert_eq!(event.released_bytes,progress.released_bytes);released+=event.released_bytes;if owner.terminal_is_empty(){break;}
+                let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::settled(effect_fixture::fx(policy,|e|owner.close_step(policy.maximum_copy_bytes,e))).result.unwrap());let progress=step.progress();assert!(progress.fits(policy));assert_eq!(event.requested_bytes,progress.retained_capacity_bytes);assert_eq!(event.released_bytes,progress.released_bytes);released+=event.released_bytes;if owner.terminal_is_empty(){break;}
             }
             assert!(owner.terminal_is_empty());assert_eq!(released,retained);
         }
@@ -212,11 +214,11 @@ fn original_text_failure_preserves_initialized_prefix_and_real_system_receipt() 
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let row=&fixture["textFailure"];let p=&row["policy"];
     let grant=RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:p["maximumDepth"].as_u64().unwrap()as usize};
     let original=OriginalScalar("Tür🚪".as_bytes());let pointer=original.0.as_ptr();let mut cursor=original_codec(ArtifactPreparedOperationSource::Text{header:&[1,5],body:&original});let mut output=[0xa5;64];
-    let (first,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(ArtifactPreparedOperationSource::Text{header:&[1,5],body:&original},&mut output,grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!((first.written_bytes,first.copied_bytes),(2,2));let header=[output[0],output[1]];
-    output.fill(0xa5);let (failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(ArtifactPreparedOperationSource::Text{header:&[1,5],body:&original},&mut output,grant).unwrap_err());
+    let (first,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(grant,|e|cursor.advance(ArtifactPreparedOperationSource::Text{header:&[1,5],body:&original},&mut output,e)).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!((first.written_bytes,first.copied_bytes),(2,2));let header=[output[0],output[1]];
+    output.fill(0xa5);let (failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(grant,|e|cursor.advance(ArtifactPreparedOperationSource::Text{header:&[1,5],body:&original},&mut output,e)).unwrap_err());
     assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(failure.written_bytes,2);assert_eq!(failure.reason.retained_progress().copied_items,1);assert_eq!(failure.reason.retained_progress().copied_bytes,2);assert!(failure.reason.retained_progress().fits(grant));assert_eq!(&output[2..],&[0xa5;62]);assert_eq!(original.0.as_ptr(),pointer);
     let expected:Vec<u8>=row["expectedPrefix"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect();assert_eq!([&header[..],&output[..failure.written_bytes]].concat(),expected);assert_eq!(first.copied_bytes+failure.reason.retained_progress().copied_bytes,row["expectedCopiedBytes"].as_u64().unwrap()as usize);
-    let (closed,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close(grant).unwrap());assert!(closed.complete);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    let (closed,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(grant,|e|cursor.close(e)).unwrap());assert!(closed.complete);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
 
 #[test]
@@ -226,12 +228,12 @@ fn original_text_frontier_uses_supplied_depth_and_zero_system_birth() {
   let source=TextOracle(row["node"].clone());let pointer=&source.0 as *const _;let mut actual=Vec::new();let mut cursor=original_codec(ArtifactPreparedOperationSource::Text{header:&[],body:&source});
   let grant=RetainedCloneGrant{maximum_items:policy["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize};let mut refused=false;let mut complete=false;
   for _ in 0..128{
-   let mut output=[0xa5;64];let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(ArtifactPreparedOperationSource::Text{header:&[],body:&source},&mut output,grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+   let mut output=[0xa5;64];let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(grant,|e|cursor.advance(ArtifactPreparedOperationSource::Text{header:&[],body:&source},&mut output,e)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
    match result{Ok(step)=>{assert!(step.written_bytes<=grant.maximum_copy_bytes);assert_eq!(step.copied_bytes,step.written_bytes);assert!(output[step.written_bytes..].iter().all(|v|*v==0xa5));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{complete=true;break;}},Err(error)=>{assert_eq!(error.reason.kind,semio_framework_value::ValueRefusalKind::DepthLimit);assert!(error.reason.retained_progress().fits(grant));assert_eq!(error.written_bytes,0);assert!(output.iter().all(|v|*v==0xa5));refused=true;break;}}
   }
-  if refused{let mut output=[0xa5;64];let(failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(ArtifactPreparedOperationSource::Text{header:&[],body:&source},&mut output,grant).unwrap_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(failure.written_bytes,0);assert_eq!(failure.reason.retained_progress(),Default::default());assert!(output.iter().all(|v|*v==0xa5));}
+  if refused{let mut output=[0xa5;64];let(failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(grant,|e|cursor.advance(ArtifactPreparedOperationSource::Text{header:&[],body:&source},&mut output,e)).unwrap_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(failure.written_bytes,0);assert_eq!(failure.reason.retained_progress(),Default::default());assert!(output.iter().all(|v|*v==0xa5));}
   assert_eq!(&source.0 as *const _,pointer);if row["refused"].as_bool()==Some(true){assert!(refused&&!complete);assert_eq!(actual,row["expectedPrefix"].as_str().unwrap().as_bytes());}else{assert!(complete&&!refused);assert_eq!(actual,row["expectedText"].as_str().unwrap().as_bytes());}
-  let(closed,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close(grant).unwrap());assert!(closed.complete);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+  let(closed,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(grant,|e|cursor.close(e)).unwrap());assert!(closed.complete);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }
 }
 
@@ -244,17 +246,17 @@ fn original_operation_contiguous_handoff_conserves_supplied_birth_copy_and_cance
  for row in rows["examples"].as_array().unwrap(){let original=row["text"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap_or(1)as usize);let pointer=original.as_ptr();
   for cut in rows["cancelStops"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as usize).chain(std::iter::once(12000)){
    let mut owner=ArtifactPreparedOperationOutput::empty(maximum,capacity).unwrap();let mut live=0;let mut offset=0;
-   for _ in 0..10000{if offset==original.len(){break;}let end=(offset+64).min(original.len());let(progress,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.append(&original.as_bytes()[offset..end],policy).unwrap());assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;offset+=progress.copied_bytes;}
+   for _ in 0..10000{if offset==original.len(){break;}let end=(offset+64).min(original.len());let(progress,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(policy,|e|owner.append(&original.as_bytes()[offset..end],e)).unwrap());assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;offset+=progress.copied_bytes;}
    assert_eq!(offset,original.len());let mut transferred=None;
    for _ in 0..cut{
     let(prefix,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.contiguous_prefix().map(|value|(value.as_ptr(),value.len())));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.prepare_contiguous(RetainedCloneGrant{maximum_items:0,..policy}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.contiguous_prefix().map(|value|(value.as_ptr(),value.len())),prefix);
-    if owner.contiguous_prefix().is_none()&&!original.is_empty(){let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.prepare_contiguous(RetainedCloneGrant{maximum_capacity_bytes:original.len()-1,..policy}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(owner.contiguous_prefix().is_none());assert_eq!(owner.len(),original.len());}
-    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.prepare_contiguous(policy).unwrap());let progress=step.progress();assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;
+    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(RetainedCloneGrant{maximum_items:0,..policy},|e|owner.prepare_contiguous(e)).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.contiguous_prefix().map(|value|(value.as_ptr(),value.len())),prefix);
+    if owner.contiguous_prefix().is_none()&&!original.is_empty(){let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(RetainedCloneGrant{maximum_capacity_bytes:original.len()-1,..policy},|e|owner.prepare_contiguous(e)).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(owner.contiguous_prefix().is_none());assert_eq!(owner.len(),original.len());}
+    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(policy,|e|owner.prepare_contiguous(e)).unwrap());let progress=step.progress();assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;
     if let Some(prefix)=owner.contiguous_prefix(){assert_eq!(prefix,&original.as_bytes()[..prefix.len()]);}
     let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_contiguous(policy).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if let Some((bytes,progress))=result{assert!(progress.fits(policy));assert_eq!(bytes.as_slice(),original.as_bytes());transferred=Some(bytes);break;}
    }
-   assert_eq!(original.as_ptr(),pointer);owner.begin_close();for _ in 0..12000{if owner.terminal_is_empty(){break;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(policy).result.unwrap());assert!(step.progress().fits(policy));assert_eq!(heap.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(heap.released_bytes,step.progress().released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;}
+   assert_eq!(original.as_ptr(),pointer);owner.begin_close();for _ in 0..12000{if owner.terminal_is_empty(){break;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::settled(effect_fixture::fx(policy,|e|owner.close_step(policy.maximum_copy_bytes,e))).result.unwrap());assert!(step.progress().fits(policy));assert_eq!(heap.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(heap.released_bytes,step.progress().released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;}
    assert!(owner.terminal_is_empty());if let Some(bytes)=transferred{assert!(bytes.capacity()<=policy.maximum_release_bytes);assert!(policy.maximum_items>0&&policy.maximum_depth>0);let capacity=bytes.capacity();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(bytes));assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,capacity);live-=heap.released_bytes;}assert_eq!(live,0);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   }
  }
@@ -270,18 +272,18 @@ fn original_operation_rows_preserve_each_buffer_and_paid_collection_cancel_cut()
   for cut in (0..24).chain(std::iter::once(200)){
    let mut owner=ArtifactPreparedOperationsOwner::empty(maximum,capacity).unwrap();let mut live=0;let mut pointers=Vec::new();
    for value in example["values"].as_array().unwrap(){let original_values:Vec<u8>=serde_json::from_value(value.clone()).unwrap();let(original,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original_values.as_slice().to_vec());live+=heap.requested_bytes;live-=heap.released_bytes;let pointer=original.as_ptr();pointers.push(pointer);
-    let((returned,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.append_original(original,RetainedCloneGrant{maximum_items:0,..policy}).unwrap());assert_eq!(progress,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut pending=returned;
-    for _ in 0..20{let Some(original)=pending.take()else{break};assert_eq!(original.as_ptr(),pointer);let((returned,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.append_original(original,policy).unwrap());assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;pending=returned;}
+    let((returned,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(RetainedCloneGrant{maximum_items:0,..policy},|e|owner.append_original(original,e)).unwrap());assert_eq!(progress,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut pending=returned;
+    for _ in 0..20{let Some(original)=pending.take()else{break};assert_eq!(original.as_ptr(),pointer);let((returned,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(policy,|e|owner.append_original(original,e)).unwrap());assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;pending=returned;}
     assert!(pending.is_none());assert_eq!(owner.row_at(owner.len()-1).unwrap().as_ptr(),pointer);
    }
    let mut transferred=None;
    for _ in 0..cut{
-    let prefix=owner.prepared_prefix().map(|values|(values.as_ptr(),values.len()));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.prepare_handoff(RetainedCloneGrant{maximum_items:0,..policy}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.prepared_prefix().map(|values|(values.as_ptr(),values.len())),prefix);
-    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.prepare_handoff(policy).unwrap());let progress=step.progress();assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;
+    let prefix=owner.prepared_prefix().map(|values|(values.as_ptr(),values.len()));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(RetainedCloneGrant{maximum_items:0,..policy},|e|owner.prepare_handoff(e)).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.prepared_prefix().map(|values|(values.as_ptr(),values.len())),prefix);
+    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(policy,|e|owner.prepare_handoff(e)).unwrap());let progress=step.progress();assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;
     if let Some(prefix)=owner.prepared_prefix(){for(index,value)in prefix.iter().enumerate(){assert_eq!(value,&expected[index]);assert_eq!(value.as_ptr(),pointers[index]);}}
     let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_prepared(policy).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if let Some((values,progress))=result{assert!(progress.fits(policy));assert_eq!(values,expected);for(index,value)in values.iter().enumerate(){assert_eq!(value.as_ptr(),pointers[index]);}transferred=Some(values);break;}
    }
-   owner.begin_close();for _ in 0..200{if owner.terminal_is_empty(){break;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(policy).result.unwrap());let progress=step.progress();assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;}
+   owner.begin_close();for _ in 0..200{if owner.terminal_is_empty(){break;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::settled(effect_fixture::fx(policy,|e|owner.close_step(policy.maximum_copy_bytes,e))).result.unwrap());let progress=step.progress();assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);live+=heap.requested_bytes;live-=heap.released_bytes;}
    assert!(owner.terminal_is_empty());if let Some(mut values)=transferred{for value in &mut values{let capacity=value.capacity();assert!(capacity<=policy.maximum_release_bytes&&policy.maximum_copy_bytes>=std::mem::size_of::<Vec<u8>>()*2);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(std::mem::take(value)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,capacity));live-=heap.released_bytes;}let capacity=values.capacity()*std::mem::size_of::<Vec<u8>>();assert!(capacity<=policy.maximum_release_bytes&&policy.maximum_copy_bytes>=std::mem::size_of::<Vec<Vec<u8>>>());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(values));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,capacity));live-=heap.released_bytes;}
    assert_eq!(live,0);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   }
@@ -302,7 +304,7 @@ fn the_operation_text_is_the_exact_default_authoring_wire_of_its_bytes() {
             let mut actual = Vec::with_capacity(expected.len());
             for _ in 0..expected.len() * 4 + 64 {
                 let mut output = [0; 64];
-                let progress = cursor.advance(ArtifactPreparedOperationSource::Text { header, body: &image }, &mut output, RetainedCloneGrant::one_payload_turn(maximum, 64)).unwrap();
+                let progress = effect_fixture::fx(RetainedCloneGrant::one_payload_turn(maximum, 64),|e|cursor.advance(ArtifactPreparedOperationSource::Text { header, body: &image },&mut output,e)).unwrap();
                 actual.extend_from_slice(&output[..progress.written_bytes]);
                 if progress.complete { break; }
             }
@@ -327,7 +329,7 @@ fn canonical_json_reuses_original_frontier_for_neutral_source_batches() {
                 assert!(demand.copy_bytes<=grant.maximum_copy_bytes);
                 assert!(demand.depth<=grant.maximum_depth);
                 let mut output=[0;64];
-                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(ArtifactPreparedOperationSource::CanonicalJson{header:&[1,6],body:&source},&mut output,grant).unwrap());
+                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||effect_fixture::fx(grant,|e|cursor.advance(ArtifactPreparedOperationSource::CanonicalJson{header:&[1,6],body:&source},&mut output,e)).unwrap());
                 assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
                 bytes.extend_from_slice(&output[..step.written_bytes]);
                 if step.complete {break}
@@ -336,7 +338,7 @@ fn canonical_json_reuses_original_frontier_for_neutral_source_batches() {
             let expected:Vec<u8>=serde_json::from_value(batch["expected"][index].clone()).unwrap();
             assert_eq!(bytes,expected);
             assert_eq!(&bytes[2..],serde_json::to_vec(&source.0).unwrap());
-            assert!(cursor.close(grant).unwrap().complete);
+            assert!(effect_fixture::fx(grant,|e|cursor.close(e)).unwrap().complete);
             let demand=cursor.canonical_json_restart_demands();
             assert!(demand.copy_bytes<std::mem::size_of::<ArtifactPreparedOperationCursor>());
             let denied=RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant};
@@ -352,5 +354,3 @@ fn canonical_json_reuses_original_frontier_for_neutral_source_batches() {
     }
 }
 
-#[global_allocator]
-static TEST_REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

@@ -38,6 +38,7 @@ semio-framework-replication-ids = { path = "../../../../🆔️ids/📦️packag
 semio-framework-replication-wire-core = { path = "../../../../🧾️wire/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
 semio-framework-value-persistent.workspace = true
+semio-framework-job-context = { workspace = true }
 semio-framework-value-native-owned.workspace = true
 
 [dev-dependencies]
@@ -46,4 +47,5 @@ semio-framework-replication-conflict = { path = "../../../../⚔️conflict/📦
 semio-framework-replication-mutation = { path = "../../../../🎮️mutation/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../../🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 serde_json = "1.0.140"

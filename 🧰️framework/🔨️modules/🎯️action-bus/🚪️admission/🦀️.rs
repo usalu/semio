@@ -84,16 +84,16 @@ pub fn admit_original_tool_construction_scoped<O>(context:&mut StepContext<'_>,a
         let identity=OriginalToolJobIdentity{source};
         let mut scope=OriginalToolConstructionScope::loan(control,identity,demand.physical());
         let result=construct(&mut scope);
-        if let Ok((_,progress))=&result{if progress.retained_capacity_bytes!=0&&actual.is_none(){*actual=Some(progress.retained_capacity_bytes)}}
+        let progress=match &result{Ok((_,progress))=>*progress,Err(error)=>error.retained_progress()};if progress.retained_capacity_bytes!=0&&actual.is_none(){*actual=Some(progress.retained_capacity_bytes)}
         semio_framework_value::RetainedWorkOutcome{work:u128::from(result.is_ok()),result}
     })
 }
 
-/// 🧭️ Drives bind, construct and settle as far as this turn allows over the caller's resident admission and output: `Ok(true)` when settled, `Ok(false)` when the next turn must continue with the same admission and output; a quote above the operation ceiling is a typed refusal. The scope claims at most half of the items, copy bytes and fuel, so a turn commits only with twice the quote and the constructor and its settle then finish in the same turn.
+/// 🧭️ Drives bind, construct and settle as far as this turn allows over the caller's resident admission and output: `Ok(true)` when settled, `Ok(false)` when the next turn must continue with the same admission and output; a quote above the operation ceiling is a typed refusal. A turn commits only when it funds the exact quote of the constructor plus its settle metadata, so both then finish in the same turn.
 pub fn admit_original_construction_settled<O>(context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,work:u64,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_,'_>,&mut Option<usize>)->semio_framework_value::RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<bool,OriginalTurnFailure>{
     let mut construct=Some(construct);
     let(complete,total)=semio_framework_job::original_construction_reserve::<O>(demand,work)?;
-    let settle=semio_framework_job::OriginalConstructionDemand{items:2*(complete.items+3),copy_bytes:2*(complete.copy_bytes+64*size_of::<usize>()),capacity_bytes:2*complete.capacity_bytes,release_bytes:2*complete.release_bytes,..complete};let fuel_floor=2*(total+3)+8;
+    let(overhead_items,overhead_copy,overhead_fuel)=semio_framework_job::original_construction_settle_overhead();let settle=semio_framework_job::OriginalConstructionDemand{items:complete.items+overhead_items,copy_bytes:complete.copy_bytes+overhead_copy,..complete};let fuel_floor=total+overhead_fuel;
     let(ceiling,ceiling_fuel)=context.original_turn_ceiling();
     if !settle.fits(ceiling)||fuel_floor>ceiling_fuel{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original construction quote exceeds the largest grant any turn can have").into())}
     let mut committed=false;
@@ -140,7 +140,7 @@ pub fn admit_original_tool_construction_settled<O>(context:&mut StepContext<'_>,
         let identity=OriginalToolJobIdentity{source};
         let mut scope=OriginalToolConstructionScope::loan(control,identity,demand.physical());
         let result=construct(&mut scope);
-        if let Ok((_,progress))=&result{if progress.retained_capacity_bytes!=0&&actual.is_none(){*actual=Some(progress.retained_capacity_bytes)}}
+        let progress=match &result{Ok((_,progress))=>*progress,Err(error)=>error.retained_progress()};if progress.retained_capacity_bytes!=0&&actual.is_none(){*actual=Some(progress.retained_capacity_bytes)}
         semio_framework_value::RetainedWorkOutcome{work:u128::from(result.is_ok()),result}
     })
 }

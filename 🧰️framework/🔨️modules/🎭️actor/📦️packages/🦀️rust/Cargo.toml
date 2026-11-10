@@ -52,6 +52,7 @@ semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-job-native-decode = { path = "../../../🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 # 🧪️ `#[cfg_attr(test, derive(Serialize, Deserialize))]` oracle: this crate's real wire stays
 # `pack_encode`/`pack_decode` (see the module doc's "opaque seam" note) — serde only proves the
 # `ToValue`/`FromValue` derive against serde's own independent shape inside `#[cfg(test)]`, so it

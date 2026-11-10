@@ -965,6 +965,7 @@ semio-framework-job-return-escrow-publication = { path = "🧰️framework/🔨�
 semio-framework-tool-run = { path = "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust" }
 semio-framework-tool-run-tick-wire = { path = "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/📦️packages/🦀️rust" }
 semio-framework-tool-run-entities = { path = "🧰️framework/🔨️modules/⏯️tool-run/👥️entities/📦️packages/🦀️rust" }
+semio-framework-value-source-hold = { path = "🧰️framework/🔨️modules/🌱️value/🔗️source-hold/📦️packages/🦀️rust" }
 semio-framework-tool-run-presentation = { path = "🧰️framework/🔨️modules/⏯️tool-run/📊️progress/🪟️presentation/📦️packages/🦀️rust" }
 semio-framework-time-travel = { path = "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { path = "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust" }

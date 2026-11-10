@@ -3,6 +3,7 @@
 /// 🔄️ Changing a nonactive exact face invalidates the original overlay without changing active projections.
 #[test]
 fn world_face_selection_overlay_invalidates_nonactive_source_changes() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture:serde_json::Value=serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let row=&fixture["overlayLifecycle"];
     let mut mesh=fixture["mesh"].clone();mesh["faceIds"]=serde_json::json!([0,1]);mesh["componentReferences"]=serde_json::json!({"face":row["labels"]});
@@ -43,6 +44,7 @@ fn world_face_selection_overlay_invalidates_nonactive_source_changes() {
 /// 🧽️ A fresh empty original selection snapshot clears each component and hover projection.
 #[test]
 fn world_scene_selection_snapshot_clears_empty_components_and_hover() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let mut state = World3dState::new("surface".into(),"controller".into());
     let original = serde_json::json!({"ids":[fixture["objects"][0]],"gumballSelectionIds":[fixture["targets"][0]],"granularity":"face","componentIds":[0],"activeObjectId":fixture["objects"][0],"hoveredComponent":{"id":0,"objectId":fixture["objects"][0],"mode":"face"}}).to_string();
@@ -63,6 +65,7 @@ fn world_scene_selection_snapshot_clears_empty_components_and_hover() {
 /// 📍️ The published Scene pivot belongs to the existing gumball target owner and clears with it.
 #[test]
 fn world_native_component_gumball_retains_delivered_pivot() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture:serde_json::Value=serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let mut state=World3dState::new("surface".into(),"controller".into());
     for row in fixture["gumball"]["pivotCases"].as_array().unwrap() {
@@ -76,6 +79,7 @@ fn world_native_component_gumball_retains_delivered_pivot() {
 /// 🛠️ Original component gumball capture and publication retain the guest source target lane.
 #[test]
 fn world_native_component_gumball_retains_original_source_targets() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let row = &fixture["gumball"];let object = &fixture["objects"][row["object"].as_u64().unwrap() as usize];
     let expected = serde_json::Value::Array(row["ids"].as_array().unwrap().iter().map(|index|fixture["targets"][index.as_u64().unwrap() as usize].clone()).collect());
@@ -133,6 +137,7 @@ fn world_native_component_gumball_retains_original_source_targets() {
 /// 🕹️ Component gumballs use the original event authority through capture, motion, release and cancellation.
 #[test]
 fn world_native_component_gumball_uses_original_event_authority() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture:serde_json::Value=serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let row=&fixture["gumball"];let object=&fixture["objects"][row["object"].as_u64().unwrap() as usize];
     let targets:Vec<String>=row["ids"].as_array().unwrap().iter().map(|index|fixture["targets"][index.as_u64().unwrap() as usize].as_str().unwrap().to_string()).collect();
@@ -176,6 +181,7 @@ fn world_native_component_gumball_uses_original_event_authority() {
 /// 🧮️ One object's source components consume original action credits rather than an arbitrary sixty-four object limit.
 #[test]
 fn world_native_component_gumball_captures_wide_source_selection() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture:serde_json::Value=serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();let row=&fixture["gumball"];
     let count=row["wideSelection"]["count"].as_u64().unwrap() as usize;let first=row["wideSelection"]["labelStart"].as_str().unwrap().parse::<u64>().unwrap();let object=fixture["objects"][0].as_str().unwrap();
     let labels:Vec<String>=(0..count).map(|index|(first+index as u64).to_string()).collect();let targets:Vec<String>=labels.iter().enumerate().map(|(index,label)|format!("{object}.face.{index}~{}~{label}~{}",fixture["source"]["handle"].as_str().unwrap(),fixture["source"]["revision"].as_str().unwrap())).collect();
@@ -192,6 +198,7 @@ fn world_native_component_gumball_captures_wide_source_selection() {
 /// 🌊️ A live component gesture keeps its captured targets across a real guest mesh/source refresh.
 #[test]
 fn world_native_component_gumball_survives_live_guest_source_refresh() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let row = &fixture["gumball"];
     let refresh = &row["liveRefresh"];
@@ -274,6 +281,7 @@ fn world_native_component_gumball_survives_live_guest_source_refresh() {
 /// 🖱️ Primary points and wires remain selectable and hoverable in the original object domain.
 #[test]
 fn world_native_primary_geometry_object_pick_uses_original_domain() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let wire: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
     let points: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
     let point = &points["cases"].as_array().unwrap().iter().find(|row|row["kind"] == "point").unwrap()["points"][0];
@@ -330,6 +338,7 @@ fn world_native_primary_geometry_object_pick_uses_original_domain() {
 /// 🪡️ Original object picking orders overlapping sloping wires by their actual closest point.
 #[test]
 fn world_native_overlapping_wires_pick_original_closest_depth() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let law = &fixture["gumball"]["overlappingWirePick"];
     let cases = fixture["gumball"]["raySegmentClosestCases"].as_array().unwrap();
@@ -362,6 +371,8 @@ fn world_native_overlapping_wires_pick_original_closest_depth() {
     }
     state.selection.granularity = "edge".into();
     state.selection.selection_targets.edge = true;
+    let mut registry = WorldInteractionRegistryBuildCursor::new(state.session.interaction_revision);
+    for turn in 0..4096 { match with_world_step_context(1, |context| registry.step(&mut state.session, &mut state.interaction, &mut state.scene, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original overlapping component registry {step:?}") } }
     for purpose in [WorldComponentPickPurpose::Select, WorldComponentPickPurpose::Hover] {
         let mut cursor = WorldComponentPickCursor::new(&state.session, &state.camera, &state.selection, 10, purpose, law["pointer"][0].as_f64().unwrap() as f32, law["pointer"][1].as_f64().unwrap() as f32).unwrap();
         for turn in 0..4096 { match with_world_step_context(1, |context| cursor.step(&state.session, &state.selection, &state.interaction, &state.scene, 10, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original overlapping component pick {step:?}") } }
@@ -387,6 +398,7 @@ fn world_native_overlapping_wires_pick_original_closest_depth() {
 /// 🪟️ Original object and component cursors pick the visible portion of an authored clipped edge.
 #[test]
 fn world_native_clipped_wire_pick_preserves_original_visible_depth() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let law = &fixture["gumball"]["clippedWirePick"];
     let mut scene = scene_with_selection_and_domain("{}", Some(("geometry", "object")));
@@ -407,7 +419,7 @@ fn world_native_clipped_wire_pick_preserves_original_visible_depth() {
     for purpose in [WorldRayPickPurpose::Instance, WorldRayPickPurpose::Hover] {
         let mut cursor = WorldRayPickCursor::new(&state.session, &state.camera, 10, purpose, pointer[0], pointer[1]).unwrap();
         for turn in 0..4096 { match with_world_step_context(1, |context| cursor.step(&state.session, &state.selection, &state.interaction, &state.scene, 10, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original clipped object pick {step:?}") } }
-        assert!((cursor.best.unwrap().distance - law["closestDepth"].as_f64().unwrap() as f32).abs() < 1e-5);
+        assert!((cursor.best.unwrap().distance - law["closestDepth"].as_f64().unwrap() as f32).abs() < 1e-5, "{purpose:?} closest visible depth {} expected {}", cursor.best.unwrap().distance, law["closestDepth"]);
         let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene, 10).unwrap().unwrap();
         let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         for turn in 0..256 { if with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 10, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; } assert!(turn < 255); }
@@ -419,6 +431,8 @@ fn world_native_clipped_wire_pick_preserves_original_visible_depth() {
         assert!(input.terminal_is_empty());
     }
     state.selection.granularity = "edge".into();
+    let mut registry = WorldInteractionRegistryBuildCursor::new(state.session.interaction_revision);
+    for turn in 0..4096 { match with_world_step_context(1, |context| registry.step(&mut state.session, &mut state.interaction, &mut state.scene, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original clipped component registry {step:?}") } }
     for purpose in [WorldComponentPickPurpose::Select, WorldComponentPickPurpose::Hover] {
         let mut cursor = WorldComponentPickCursor::new(&state.session, &state.camera, &state.selection, 10, purpose, pointer[0], pointer[1]).unwrap();
         for turn in 0..4096 { match with_world_step_context(1, |context| cursor.step(&state.session, &state.selection, &state.interaction, &state.scene, 10, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original clipped component pick {step:?}") } }
@@ -436,6 +450,8 @@ fn world_native_clipped_wire_pick_preserves_original_visible_depth() {
         while !cursor.close_step() {}
     }
     for rectangle in law["marquees"].as_array().unwrap() {
+        let mut registry = WorldInteractionRegistryBuildCursor::new(state.session.interaction_revision);
+        for turn in 0..4096 { match with_world_step_context(1, |context| registry.step(&mut state.session, &mut state.interaction, &mut state.scene, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original clipped marquee registry {step:?}") } }
         let point = |value: &serde_json::Value| [value[0].as_f64().unwrap() as f32, value[1].as_f64().unwrap() as f32];
         let mut gesture = WorldMarqueeGesture::new(state.session.interaction_revision, 11, point(&rectangle["points"][0]));
         assert!(gesture.push(point(&rectangle["points"][1])));
@@ -457,6 +473,7 @@ fn world_native_clipped_wire_pick_preserves_original_visible_depth() {
 /// 🎨️ Primary analytic geometry follows the original object-style and live-theme authority.
 #[test]
 fn world_native_primary_geometry_paint_uses_original_style_tokens() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🎨️primary-geometry-style/🔣️.json")).unwrap();
     let geometry: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
     let mut custom = semio_ui_theme::Theme::default();
@@ -492,6 +509,7 @@ fn world_native_primary_geometry_paint_uses_original_style_tokens() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn world_native_primary_geometry_gpu_upload_preserves_original_zero_indices() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut gpu = match semio_framework_async::block_on(ui_gpu::GpuContext::headless(1, 1)) {
         Ok(gpu) => gpu,
         Err(error) if error.starts_with("offscreen adapter:") => {  return; }

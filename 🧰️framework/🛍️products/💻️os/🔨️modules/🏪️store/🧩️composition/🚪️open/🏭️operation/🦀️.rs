@@ -164,7 +164,7 @@ where
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "initial member close exceeds admitted depth")); }
         self.phase = Phase::Rejected;
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
-        if self.active.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, effect)); }
+        if self.active.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)); }
         if self.constructor_error.is_some() { return semio_os_store_read::artifact_retirement_admit_owned(&mut self.constructor_error, &mut self.active, effect).result; }
         if self.genesis_request.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.genesis_request, effect)); }
         if self.genesis_pack.is_some() { return semio_os_store_read::artifact_retirement_admit_owned(&mut self.genesis_pack, &mut self.active, effect).result; }
@@ -361,7 +361,7 @@ where
         if self.active.is_none() { return Ok(false); }
         if cx.should_yield() { return Ok(true); }
         let child = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-        let Some((step, performed)) = cx.with_original_effect(child, |_, effect| semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, effect))).map_err(|_| MemberOpenDiagnostic::Initialization)? else { return Ok(true) };
+        let Some((step, performed)) = cx.with_original_effect(child, |_, effect| semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect))).map_err(|_| MemberOpenDiagnostic::Initialization)? else { return Ok(true) };
         let step = step.map_err(|_| MemberOpenDiagnostic::Initialization)?;
         let progress = match step { RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => progress };
         semio_framework_os_store_member_open::record_member_step_performed(cx, progress, performed)?;

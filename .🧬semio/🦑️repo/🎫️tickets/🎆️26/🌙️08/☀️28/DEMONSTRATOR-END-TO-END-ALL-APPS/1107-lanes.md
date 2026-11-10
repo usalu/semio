@@ -68,3 +68,15 @@ store3 a3146a18ceb893eb7, actinfra2 a8fe652572e917223, opendebt adbe668da5b40e2f
 ## 11-08 restart (goal re-set)
 resumed: rootfix a5186f6bab39b899d, construct a3deec444c49999e9, reviewfix5 a092a097657e16d15, groupcallers a237d1658ad55d47c, toolsplit a0f2dcf37f7438503, hosts2 a69e720ee4364afc5, reviewfix9 a76d9874e75a7462e, store7 a5ee6df3f8e02ed90, editors a63e4bf71564bf390, reviewfix3 aa90738b9311444ac
 new: jobcapture a527feb2469448900, gateway a44b0602954f4b952, engineinit a673227e04e97aa3c, durablegroup a2a9c025c318995eb, packdebt afa85dba87ca21e05, valueedit af5d969eac54589a7, observer a956078bd48f83a7b, review-14 a93e9c65d5e39dd86, frame ad5e68d19b90c727c, debugcensus2 a324a9624fd8176a4
+
+## 11-08 evening (weekly reset, new coordinator session; brief 1108-brief.md, results 1108-result-<lane>.md)
+wincfg ab560dbf1b740f079, operation a67cd7a99cdc0ae86, declint a0f26ea23d9b655bb, instance-a a4a26e3467612c643, instance-b a5aba4f9c119b36af, escrow a4a646d5ad2433ae2, nested a8bd607af4a1a9a18, construct a28749a390035d55b, toolrun a702ad7a20c082c52, packjson a07811d14364908ea (Sonnet); runway a4c01a0cf3cf2dfb5 (Haiku audit)
+receivers2 a8c3373ff32307c05 (NativeReceiver implementors outside value)
+macros ab33dab99cc1fa0b1 (protocol close macros, macro-driven impls, tree-engine root); refusal2 aef2ec7291495ee27 (value owned ⚠️refusal)
+matcher aa79eabc4a777dd04; edit-a a19f9954059e0b069 (value-edit named-index+transfer, pattern first), edit-b adf630f1807d3bf95 (root+root/receive), edit-c a358f95391eb0b069 (named+commit+edit root)
+snapread a19ed347811d5f4dc; entities (tool-run-entities redesign)
+iocontrol a70b6efeacc216555; retfield a2a52774e540ffbd7; entities a2d03b6e66ac7e648; ownedfix (value owned runtime faults)
+bridge a81da9b7bb37bc72c; twod a91f4794d8175def1; ownedfix a63a3c19730cd2af3; birth (job-context birth protocol)
+valuebugs ae7304c059928fd2a; repl a5b908ff338779ac4; birth ab4a560562e509ee1; driver ae91f65b22412daf6; jobs a0a301d4fdea9e260; retained a71d0c387aebabdf6; mutation af6ca351d2dd26c96; osvcs a91c7b06a0d650731; ownedtests a620b422a9facd68c; mutapply a14719832ec894423; plugins a35a95ed1b0df4d91; ackfix a4f4d99c6af14043a; instance2 a8f58ebc34fe4f0b5. Retired: declint, instance-b, iocontrol, ownedfix, entities, retfield, snapread, edit-a/b/c, packjson, matcher, nested, macros, receivers2, refusal2.
+handoff abf38d5c56e313ed0; toolrun2 a6ecfc17a95a1bc63; actor aa260c191d4026a92; kernelui afc0895ac02750572; retired toolrun, valuebugs, retained
+geom a2dafb74b20ab1c9e; packout a66ee685ee7db3e49; neural a83be35ee2cf4f64c; fem aebeeb0381788f4e1; misc a44f813a4e377a71e

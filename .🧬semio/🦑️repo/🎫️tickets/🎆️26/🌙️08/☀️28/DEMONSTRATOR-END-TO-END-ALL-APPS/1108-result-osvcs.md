@@ -1,0 +1,25 @@
+# osvcs result
+- step1 (EDITED-unverified; chk blocked by peer dbg_push in native-schema-engine): semio-os-vcs ported.
+  - vcs/♻️retirement: HistoryPageRetirement + GroupVisibilityRetirement inherent close_step(body,effect) + native_retirement_reply!, ControlledRetirement::step(body,..).
+  - vcs/🗃️history-ledger: ArtifactHistorySlot holds RetainedOriginalSlot<T> (value+read removed); 🔗️read reply-shaped API (advance_/recover_advance_/return_/recover_return_retained_read_into, retain_read_into, retained_read_demands(key,body), complete_in_action helper); LedgerRetirement inherent close_step(body) + macro; value/original-slot gained read_issuer accessor.
+  - group-visibility FactoryPayloadRetirement prepare_close_state_step/close_state_step take body; commit-facts close_step(body).
+- Rerun: chk.sh W-osvcs-<n> 🌎️hub/Cargo.toml native -p semio-os-vcs -p semio-os-history-schema -p semio-os-store-message-ledger
+STATUS: BLOCKED in-progress
+## Update
+- Native lib FIXED-verified W-osvcs-6: os-vcs, os-history-schema, os-store-message-ledger. Wasm W-osvcs-8 same three rc0. os-channel native W-osvcs-9 (command-decode close_controlled step(body)). time-travel + os-history native W-osvcs-12, wasm W-osvcs-13 (+channel) rc0.
+- History source: OriginalHistorySource holds SharedOriginalStorage<HistoryLog> from birth (admit_from); fold alias = HistoryAlias retiring on drop; source waits for physically_unique before SharedControlledRetirement::step_into. Birth quote now source_admission_demand()+2*size_of::<Self>(), work 5.
+- Debts: store replay native test (history-source-birth) + spr/history 🧪️tests/🔬️unit/history-source-birth.json/.schema/.test.ts still pin old quote (3 work, old copy formula); vcs 🔗️read tests and ledger cfg(test) use pre-733 grant API; store callers of ledger read API (store/🔗️read, tool-machine OriginalToolLedgerSource, replay history source) must move to *_into API.
+- Rerun: chk.sh W-osvcs-<n> 🌎️hub/Cargo.toml native|wasm -p semio-os-vcs -p semio-os-history-schema -p semio-os-store-message-ledger -p semio-os-channel -p semio-framework-time-travel -p semio-os-history
+STATUS: FIXED-verified W-osvcs-6/8/9/12/13 (libs); tests not run
+## Tests (os-history, root Cargo.toml)
+- Test call sites ported (testing-retirement, native-fold-law close_step(body)); W-osvcs-18 retained_history_source filter: 1 pass, 2 FAIL with "retirement field requires its original producer invocation" (test harness wallet/effected path has no producer invocation; needs EffectBank-style port, not a production fault). Full run W-osvcs-17 aborts (SIGABRT) in the fold test helper ("fold close was refused", replication fold test harness, stale grant path). 60/60 NOT confirmed.
+- Rerun: tst.sh W-osvcs-<n> Cargo.toml native -p semio-os-history
+STATUS: FIXED-verified W-osvcs-6/8/9/12/13 (libs native+wasm); tests BLOCKED (stale effect harness)
+## Round 2: os-history tests
+- os-history lib tests 60/60 native: W-osvcs-32 (tst.sh Cargo.toml native -p semio-os-history --lib). Wasm libs W-osvcs-33 rc0 (os-history, os-vcs, control-contract, native-decoding, os-channel).
+- SIGABRT root cause: cold fold (`authored()` and schema AuthoringWallet.run) ran reply-shaped retirement owners on an effect without an original producer invocation; the destructor then panicked. Fix at the source: control-contract `invoke_original`/`invocation_extent`/`ORIGINAL_INVOCATION_WORK`, `AuthoringWallet::run_invoked` (also used by run_settled), decode `with_effect`/`with_allocated_effect` run their closure as a real producer invocation. The handoff costs 1 native work only when the operation worked; the operation sees its exact caller grant (decode) or the widened extent (authoring).
+- Test harness: testing-retirement closes via clone-source-testing `drive`; dropped trace-memory-testing (global allocator conflict), `observe_backing` now lives in testing-retirement over semio_framework_trace. LOCK NEEDED logged; Cargo.lock hand-edited.
+- Birth quotes: law json/schema/ts + store native test updated to the issued-storage birth (quoteWork 5, refusedWork 1, quote = admission + 2*size_of Self). NOT run (store tests blocked by the unported ledger read callers).
+- NOT DONE: store callers of the reply-shaped ledger read API (store replay native history source `OriginalHistorySource<T>`, ~5 call-site files). Blocker: that source still holds the legacy closure-based `RetainedOwnedProjection` (`project(projection, |t| &t.field, effect)`); the new ledger exposes `retain_read_into(key, &mut RetainedOwnedProjectionAdmission<T>, effect, reply)` and field selection moves to `RetainedNativeFieldProjection::admit_into`. Needs a per-caller design (metadata, command, report, lifted store, native tests) -- not a call-site fix. Wrap each reply-shaped ledger call with `semio_os_vcs` `complete_in_action` for native sync owners. demands/root_demands need a `body` argument.
+- tool-machine OriginalToolLedgerSource: toolrun2 notified via claims log.
+STATUS: FIXED-verified W-osvcs-32 (os-history 60/60), W-osvcs-33 (wasm); store callers BLOCKED (design)

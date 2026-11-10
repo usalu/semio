@@ -69,7 +69,7 @@ impl DictionaryOwners {
 }
 impl ErasedSnapshotRetirement for DictionaryOwners {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if self.index.is_some() {
             let step = semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.index, effect))?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
@@ -440,7 +440,7 @@ impl MemberHistoryDictionaryOwner {
 }
 impl ErasedSnapshotRetirement for MemberHistoryDictionaryOwner {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -536,7 +536,7 @@ impl VerifiedMemberHistoryDictionary {
 
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryDictionary {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_os_store_read::retirement_owner_demands(&self.owners, body) }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let grant = effect.grant(); let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; }
         semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.owners, effect))
     })(); let work = effect.performed_work().max(u128::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()))); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work }) }

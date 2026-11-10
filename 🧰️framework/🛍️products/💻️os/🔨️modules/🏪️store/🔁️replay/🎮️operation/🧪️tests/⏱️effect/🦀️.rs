@@ -2,6 +2,7 @@
 use semio_framework_value::retained_clone::{RetainedCloneStep,OriginalSourceTurnIdentity,OriginalWork,OriginalWorkAuthority,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkRecipient,OriginalWorkSink};
 use semio_framework_value::{OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedCloneGrant,RetainedWorkOutcome,RetainedWorkPoll,ValueError};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_testing_admission::{EffectBank,Wallet,driven};
 struct Producer{maximum:u64}
 impl OriginalWorkRecipient for Producer{
  type Context<'turn,'source>=() where 'source:'turn;
@@ -11,18 +12,23 @@ impl OriginalWorkRecipient for Producer{
  fn settle_partial<'reply,'turn,'source>(&mut self,context:&mut (),check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply>where 'source:'turn{check.complete(self.validate_context(context))}
  fn recover_partial<'reply,'turn,'source>(&mut self,context:&mut (),check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply>where 'source:'turn{check.complete(self.validate_context(context))}
 }
-/// 🪢️ Runs one operation inside one actual original effect over the caller's allocation marker and returns the performed work the effect recorded.
-pub(crate) fn with_effect<R>(grant:RetainedCloneGrant,maximum:u64,actual:&mut Option<usize>,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->(R,u128){
- let mut authority=OriginalWorkAuthority::new(Producer{maximum});
- let result=authority.with_loan(&mut (),|loan|{let mut loan=loan.reborrow();let mut work=OriginalWork::empty();work.recipient=Some(&mut loan);let mut action=None;let mut proof=None;assert_eq!(work.prepare_for_action(maximum,&mut action).unwrap(),Some(true));let mut receipt=None;work.issue_performed_for_action(action,&mut receipt).unwrap();let output={let mut effect=RetainedAllocationEffect::new(grant,maximum,actual,receipt.as_mut().unwrap());operation(&mut effect)};let performed=OriginalWorkSink::observed_work(receipt.as_ref().unwrap());work.claim_performed_for_action(action,&mut receipt).unwrap();if performed==0{work.cancel_for_action(&mut action).unwrap()}else{let mut partial=None;assert!(work.settle_partial_for_action_into(action,&mut partial).unwrap());let partial=partial.take().expect("original fixture Work partial outcome");assert_eq!(partial.total(),performed);assert!(partial.source_refusal().is_none());assert!(work.commit_for_action(performed,action,&mut proof).unwrap());work.finish_for_action(&mut proof,&mut action).unwrap()}(output,performed)}).unwrap();
- assert!(!authority.has_live_actions());result
+/// 🏦️ Opens the test's one funded Source bank; every turn of the test runs inside it.
+pub(crate) fn bank()->EffectBank{EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:1<<24,maximum_copy_bytes:1<<40,maximum_capacity_bytes:1<<40,maximum_release_bytes:1<<40,maximum_depth:1<<10},1<<40))}
+/// 🔒️ Closes the test's bank for real: a live action, partial Work check or unsettled verdict fails the test.
+pub(crate) fn finish(bank:EffectBank){if bank.into_wallet().is_err(){panic!("fixture bank closed with a live original action")}}
+/// 🪢️ Runs one operation as a genuine original producer invocation inside the bank's Source and returns the performed work the effect recorded.
+pub(crate) fn with_effect<R>(bank:&mut EffectBank,grant:RetainedCloneGrant,maximum:u64,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->(R,u128){
+ let(mut operation,mut output,mut work)=(Some(operation),None,0u128);
+ let(poll,_)=driven::<ValueError>(bank,grant,maximum,|effect,reply,_|{let before=effect.performed_work();let run=operation.take().ok_or_else(||ValueError::invariant("fixture operation runs once"))?;output=Some(run(effect));work=effect.performed_work()-before;Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))});
+ if !matches!(poll,RetainedWorkPoll::Complete(ref turn)if turn.result.is_ok()){panic!("fixture effect turn did not complete")}
+ (output.take().expect("fixture operation ran"),work)
 }
 /// 🏁️ A fixture drives every retirement turn to completion, so a suspended poll is a fixture fault.
 pub(crate) fn settled<T,E>(poll:RetainedWorkPoll<T,E>)->RetainedWorkOutcome<T,E>{match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{..}=>panic!("original fixture turn stayed pending")}}
 /// ♻️ Settles one granted retirement turn inside its own original effect.
-pub(crate) fn drive(grant:RetainedCloneGrant,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->Result<RetainedCloneStep,OriginalRetirementFailure>{settled(with_effect(grant,1<<20,&mut None,run).0).result}
+pub(crate) fn drive(bank:&mut EffectBank,grant:RetainedCloneGrant,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->Result<RetainedCloneStep,OriginalRetirementFailure>{settled(with_effect(bank,grant,1<<20,run).0).result}
 /// 🔎️ Settles one granted retirement turn and reports its exact physical allocations.
-pub(crate) fn drive_observed(grant:RetainedCloneGrant,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->(Result<RetainedCloneStep,OriginalRetirementFailure>,semio_framework_trace::HeapAllocationObservation){let((poll,heap),_)=with_effect(grant,1<<20,&mut None,|effect|semio_framework_trace::observe_heap_allocations_on_this_thread(||run(effect)));(settled(poll).result,heap)}
+pub(crate) fn drive_observed(bank:&mut EffectBank,grant:RetainedCloneGrant,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->(Result<RetainedCloneStep,OriginalRetirementFailure>,semio_framework_trace::HeapAllocationObservation){let((poll,heap),_)=with_effect(bank,grant,1<<20,|effect|semio_framework_trace::observe_heap_allocations_on_this_thread(||run(effect)));(settled(poll).result,heap)}
 /// 🎟️ Lends the decoder one independent original work loan for the duration of the operation.
 pub(crate) fn with_work<R>(maximum:u64,control:&mut NativeDecodeControl<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>)->R)->R{
  let mut authority=OriginalWorkAuthority::new(Producer{maximum});

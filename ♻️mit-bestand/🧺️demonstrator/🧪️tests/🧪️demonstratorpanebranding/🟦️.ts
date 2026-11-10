@@ -5,16 +5,16 @@ import { appBreadcrumb, resolveAppBreadcrumb } from "@semio-tech/framework-rende
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 
-/** 🏷️ Demonstrator pane shells must resolve reuse terminology to Entwerfen-mit-Bestand chrome, never `semio`. */
-const DEMONSTRATOR_PANE_NAVBAR_LABELS: Record<string, string> = {
-  "s.procedural.generation3d@1/*#editor": "Entwerfen mit Bestand · Generator",
-  "s.cad.cad@1/*#editor": "Entwerfen mit Bestand · Koordinator",
-  "s.puzzle.puzzle3d@1/*#editor": "Entwerfen mit Bestand · Aggregator",
-  "s.energy.model@1/*#editor": "Entwerfen mit Bestand · Energie",
-  "s.sourcing.curation@1/*#editor": "Entwerfen mit Bestand · Aussuchen",
-  "s.process.process3d@1/*#editor": "Entwerfen mit Bestand · Bearbeiten",
-  "s.gis.gismap@1/*#editor": "Entwerfen mit Bestand · Verfolgen",
-  "s.fem.fem3d@1/*#editor": "Entwerfen mit Bestand · Statik",
+/** 🏷️ Demonstrator pane shells must resolve reuse terminology to Entwerfen-mit-Bestand chrome in every locale, never `semio`. */
+const DEMONSTRATOR_PANE_NAVBAR_LABELS: Record<string, Readonly<Record<"en" | "de", string>>> = {
+  "s.procedural.generation3d@1/*#editor": { en: "Designing with Existing Stock · Generator", de: "Entwerfen mit Bestand · Generator" },
+  "s.cad.cad@1/*#editor": { en: "Designing with Existing Stock · Coordinator", de: "Entwerfen mit Bestand · Koordinator" },
+  "s.puzzle.puzzle3d@1/*#editor": { en: "Designing with Existing Stock · Aggregator", de: "Entwerfen mit Bestand · Aggregator" },
+  "s.energy.model@1/*#editor": { en: "Designing with Existing Stock · Energy", de: "Entwerfen mit Bestand · Energie" },
+  "s.sourcing.curation@1/*#editor": { en: "Designing with Existing Stock · Select", de: "Entwerfen mit Bestand · Aussuchen" },
+  "s.process.process3d@1/*#editor": { en: "Designing with Existing Stock · Edit", de: "Entwerfen mit Bestand · Bearbeiten" },
+  "s.gis.gismap@1/*#editor": { en: "Designing with Existing Stock · Trace", de: "Entwerfen mit Bestand · Verfolgen" },
+  "s.fem.fem3d@1/*#editor": { en: "Designing with Existing Stock · Statics", de: "Entwerfen mit Bestand · Statik" },
 };
 
 const MANIFEST_SOURCES: Record<string, string> = {
@@ -32,7 +32,7 @@ type ManifestApp = {
   readonly controllerId?: string;
   readonly id?: string;
   readonly breadcrumb?: readonly string[];
-  readonly terminologyBreadcrumbs?: Readonly<Record<string, readonly string[]>>;
+  readonly terminologyBreadcrumbs?: Readonly<Record<string, readonly unknown[]>>;
 };
 
 function loadApps(manifestPath: string): readonly ManifestApp[] {
@@ -51,15 +51,17 @@ export async function registerDemonstratorPaneBrandingTests(vitest: NonNullable<
   const { describe, expect, it } = vitest;
 
   describe("demonstrator pane navbar labels (reuse terminology)", () => {
-    for (const [controllerId, expectedLabel] of Object.entries(DEMONSTRATOR_PANE_NAVBAR_LABELS)) {
-      it(`${controllerId} → ${expectedLabel}`, () => {
-        const manifestPath = MANIFEST_SOURCES[controllerId];
-        const app = findApp(loadApps(manifestPath), controllerId);
-        expect(app, `missing app in ${manifestPath}`).toBeTruthy();
-        const resolved = appBreadcrumb(resolveAppBreadcrumb({ breadcrumb: [...(app!.breadcrumb ?? [])], terminologyBreadcrumbs: Object.fromEntries(Object.entries(app!.terminologyBreadcrumbs ?? {}).map(([terminology, labels]) => [terminology, [...labels]])) }, "reuse"));
-        expect(resolved).toBe(expectedLabel);
-        expect(resolved.toLowerCase()).not.toContain("semio");
-      });
+    for (const [controllerId, expectedLabels] of Object.entries(DEMONSTRATOR_PANE_NAVBAR_LABELS)) {
+      for (const [locale, expectedLabel] of Object.entries(expectedLabels)) {
+        it(`${controllerId} ${locale} → ${expectedLabel}`, () => {
+          const manifestPath = MANIFEST_SOURCES[controllerId];
+          const app = findApp(loadApps(manifestPath), controllerId);
+          expect(app, `missing app in ${manifestPath}`).toBeTruthy();
+          const resolved = appBreadcrumb(resolveAppBreadcrumb({ breadcrumb: [...(app!.breadcrumb ?? [])], terminologyBreadcrumbs: Object.fromEntries(Object.entries(app!.terminologyBreadcrumbs ?? {}).map(([terminology, labels]) => [terminology, [...labels]])) }, "reuse", locale));
+          expect(resolved).toBe(expectedLabel);
+          expect(resolved.toLowerCase()).not.toContain("semio");
+        });
+      }
     }
   });
 }

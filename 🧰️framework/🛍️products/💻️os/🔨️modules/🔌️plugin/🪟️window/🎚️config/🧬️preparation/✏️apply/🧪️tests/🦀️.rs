@@ -2,7 +2,8 @@
 extern crate semio_os_kernel as store;
 use semio_plugin_window_config::{WindowConfigApplyEdit,WindowConfigApplyMutation};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-use semio_framework_value::{ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,RetainedCloneStep}};
+use semio_framework_value::{RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedClone,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
+use semio_framework_value_clone_source_testing::{FixtureCloseStep,FixtureSource,observe_fixture_source_allocations,drive::{drive,warm}};
 use serde_json::{Value,json};
 use std::panic::{AssertUnwindSafe,catch_unwind};
 use store::snapshot_clone_preparation::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep};
@@ -80,7 +81,6 @@ impl WindowConfigApplyMutation<TextState> for TextMutation {
     }
 }
 
-const SETUP: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
 const IDLE_TURNS: usize = 8;
 
 struct Stall;
@@ -119,47 +119,57 @@ impl Idle {
     }
 }
 
-fn admit<T: RetireOwned + Sync>(value: T) -> (RetainedCloneSource<T, T>, RetainedCloneProgress) {
-    RetainedCloneSource::admit_owned(value, (), SETUP).map(|(source, progress)| (source, progress)).unwrap_or_else(|(error, _, _)| panic!("source admission {error}"))
-}
-
 fn exact(copy: usize, capacity: usize, release: usize, depth: usize) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: depth }
 }
 
-fn drain_source<T: RetireOwned + Sync>(ledger: &mut Ledger, source: &mut RetainedCloneSource<T, T>) {
+fn quote_of(demand: semio_framework_value::RetirementDemand) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
+}
+
+fn born<T: RetireOwned + Sync + 'static>(ledger: &mut Ledger, owner: T) -> FixtureSource<T> {
+    let (source, heap) = observe_fixture_source_allocations(|| FixtureSource::from_owner(owner));
+    ledger.born += heap.0;
+    ledger.released += heap.1;
+    source
+}
+
+fn drain_source<T: RetireOwned + Sync + 'static>(ledger: &mut Ledger, source: &mut FixtureSource<T>) {
+    let mut heap = (0usize, 0usize);
     for _ in 0..4096 {
         if source.terminal_is_empty() { return; }
-        let copy = source.next_close_copy_byte_demand().unwrap();
-        let grant = exact(copy, source.next_close_capacity_byte_demand(copy).unwrap(), source.next_close_release_byte_demand().unwrap(), source.next_close_depth_demand().unwrap());
-        ledger.watch(grant, || { let step = source.close_step(grant).unwrap(); (step, step.progress()) });
+        let grant = quote_of(source.next_close_demand(65536).unwrap());
+        let (state, observed) = observe_fixture_source_allocations(|| source.close_with(65536, grant).unwrap_or_else(|failure| panic!("source close {failure:?}")));
+        heap.0 += observed.0;
+        heap.1 += observed.1;
+        let progress = match state { FixtureCloseStep::Pending => continue, FixtureCloseStep::Progress(progress) => progress, FixtureCloseStep::Complete => Default::default(), _ => panic!("source close was refused") };
+        assert!(progress.fits(grant), "receipt {progress:?} exceeds grant {grant:?}");
+        assert_eq!(heap, (progress.retained_capacity_bytes, progress.released_bytes), "allocation accounting disagrees with receipt {progress:?}");
+        ledger.born += heap.0;
+        ledger.released += heap.1;
+        heap = (0, 0);
     }
     panic!("source did not close");
 }
 
-fn drain_clone_cursor<T: RetainedClone>(ledger: &mut Ledger, cursor: &mut T::Cursor) {
-    for _ in 0..4096 {
-        if cursor.terminal_is_empty() { return; }
-        let copy = cursor.next_close_copy_byte_demand().unwrap();
-        let grant = exact(copy, cursor.next_close_capacity_byte_demand(copy).unwrap(), cursor.next_close_release_byte_demand().unwrap(), cursor.next_close_depth_demand().unwrap().max(1));
-        ledger.watch(grant, || { let step = cursor.close_step(grant).unwrap(); (step, step.progress()) });
-    }
-    panic!("clone cursor did not close");
+fn effected<S: RetireOwned + Sync + 'static, T>(base: &mut FixtureSource<S>, grant: RetainedCloneGrant, run: impl FnOnce(RetainedCloneRef<'_, S>, &mut RetainedAllocationEffect<'_>) -> Result<T, ValueError>, progress: impl FnOnce(&Result<T, ValueError>) -> RetainedCloneProgress) -> (Result<T, ValueError>, (usize, usize)) {
+    base.with_bank(|original, bank| {
+        let ((poll, _), heap) = observe(|| bank.run(grant, 4096, |effect| {
+            let start = effect.performed_boundary();
+            let result = run(original, effect);
+            let work = effect.performed_since(start).unwrap();
+            RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work })
+        }));
+        let RetainedWorkPoll::Complete(turn) = poll else { panic!("fixture turn pending") };
+        assert_ne!(bank.take_admitted(), Some(false));
+        let heap = (heap.requested_bytes, heap.released_bytes);
+        bank.post(progress(&turn.result), grant, heap);
+        (turn.result, heap)
+    }).expect("fixture Source bank is idle")
 }
 
-fn clone_owner<S: RetainedClone>(ledger: &mut Ledger, source: &RetainedCloneSource<S, S>, body:usize, grant: RetainedCloneGrant) -> S {
-    let mut cursor = S::retained_clone_cursor();
-    let mut idle = Idle::default();
-    let owned = loop {
-        let (step, progress) = ledger.watch(grant, || { let step = limited(cursor.advance(source.borrow(), body, grant)); (step, step.progress()) });
-        if matches!(step, RetainedCloneStep::Complete(_)) { break cursor.take().expect("clone completes with its owner"); }
-        idle.note(progress);
-    };
-    let _ = cursor.begin_close();
-    drain_clone_cursor::<S>(ledger, &mut cursor);
-    assert_eq!(observe(|| drop(cursor)).1.released_bytes, 0);
-    owned
-}
+fn edit_progress(result: &Result<RetainedCloneEditStep, ValueError>) -> RetainedCloneProgress { result.as_ref().map_or_else(|error| error.retained_progress(), |step| step.progress()) }
+fn close_progress(result: &Result<RetainedCloneStep, ValueError>) -> RetainedCloneProgress { result.as_ref().map_or_else(|error| error.retained_progress(), |step| step.progress()) }
 
 #[derive(Debug)]
 struct Run { post: Value, inverse: Value, turns: usize }
@@ -169,11 +179,11 @@ fn from_json<M: serde::de::DeserializeOwned>(json: &Value) -> impl Fn() -> M + '
 fn drive<S, M>(base_json: &Value, build: &dyn Fn() -> M, body:usize, grant: RetainedCloneGrant, cancel_at: Option<usize>) -> Result<Option<Run>, ValueError>
 where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: WindowConfigApplyMutation<S> + serde::Serialize {
     let mut ledger = Ledger::default();
-    let ((base, mutation), heap) = observe(|| (serde_json::from_value::<S>(base_json.clone()).unwrap(), build()));
+    let ((base, mutation, mut post), heap) = observe(|| (serde_json::from_value::<S>(base_json.clone()).unwrap(), build(), serde_json::from_value::<S>(base_json.clone()).unwrap()));
     let held = heap.requested_bytes - heap.released_bytes;
-    let (mut base_source, _) = ledger.watch(SETUP, || admit(base));
-    let (mut mutation_source, _) = ledger.watch(SETUP, || admit(mutation));
-    let mut post = clone_owner(&mut ledger, &base_source, body, grant);
+    let mut base_source = born(&mut ledger, base);
+    let mut mutation_source = born(&mut ledger, mutation);
+    warm();
     let edit = WindowConfigApplyEdit::<S, M>::new();
     let (mut cursor, _) = ledger.watch(grant, || limited(edit.begin(grant)));
     let (mut turns, mut idle, mut complete, mut failure) = (0, Idle::default(), false, None);
@@ -181,18 +191,19 @@ where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: Wind
         if cancel_at == Some(turns) { cursor.cancel(); break; }
         let before = serde_json::to_value(&post).unwrap();
         for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: 1, ..grant }] {
-            let (result, heap) = observe(|| cursor.advance(base_source.borrow(), &mut post, mutation_source.borrow(), body, denied));
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            let (result, heap) = effected(&mut base_source, denied, |original, effect| cursor.advance(original, &mut post, mutation_source.borrow(), body, effect), edit_progress);
+            assert_eq!(heap, (0, 0));
             assert_eq!(result.unwrap(), RetainedCloneEditStep::Progress(Default::default()));
             assert_eq!(serde_json::to_value(&post).unwrap(), before);
         }
-        let (result, heap) = observe(|| cursor.advance(base_source.borrow(), &mut post, mutation_source.borrow(), body, grant));
-        ledger.record(heap);
+        let (result, heap) = effected(&mut base_source, grant, |original, effect| cursor.advance(original, &mut post, mutation_source.borrow(), body, effect), edit_progress);
+        ledger.born += heap.0;
+        ledger.released += heap.1;
         match result {
             Ok(step) => {
                 let progress = step.progress();
                 assert!(progress.fits(grant), "receipt {progress:?} exceeds grant {grant:?}");
-                assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes), "allocation accounting disagrees with receipt {progress:?}");
+                assert_eq!(heap, (progress.retained_capacity_bytes, progress.released_bytes), "allocation accounting disagrees with receipt {progress:?}");
                 turns += 1;
                 if matches!(step, RetainedCloneEditStep::Complete(_)) { complete = true; break; }
                 idle.note(progress);
@@ -205,8 +216,8 @@ where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: Wind
     assert!(cursor.take_inverse().is_none());
     let run = complete.then(|| Run { post: serde_json::to_value(&post).unwrap(), inverse: Value::Array(rows.iter().flatten().map(|row| serde_json::to_value(row).unwrap()).collect()), turns });
     if !complete {
-        let (result, heap) = observe(|| cursor.advance(base_source.borrow(), &mut post, mutation_source.borrow(), body, grant));
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        let (result, heap) = effected(&mut base_source, grant, |original, effect| cursor.advance(original, &mut post, mutation_source.borrow(), body, effect), edit_progress);
+        assert_eq!(heap, (0, 0));
         assert_eq!(result.unwrap(), RetainedCloneEditStep::Progress(Default::default()));
     }
     let _ = cursor.begin_close();
@@ -215,11 +226,16 @@ where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: Wind
         let copy = cursor.next_close_copy_byte_demand().unwrap();
         let quote = exact(copy, cursor.next_close_capacity_byte_demand(copy).unwrap(), cursor.next_close_release_byte_demand().unwrap(), cursor.next_close_depth_demand().unwrap());
         if quote.maximum_depth > 1 {
-            let (result, heap) = observe(|| cursor.close_step(RetainedCloneGrant { maximum_depth: quote.maximum_depth - 1, ..quote }));
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            let (result, heap) = effected(&mut base_source, RetainedCloneGrant { maximum_depth: quote.maximum_depth - 1, ..quote }, |_, effect| cursor.close_step(effect), close_progress);
+            assert_eq!(heap, (0, 0));
             assert!(result.is_err());
         }
-        ledger.watch(quote, || { let step = cursor.close_step(quote).unwrap(); (step, step.progress()) });
+        let (result, heap) = effected(&mut base_source, quote, |_, effect| cursor.close_step(effect), close_progress);
+        let progress = result.unwrap().progress();
+        assert!(progress.fits(quote), "receipt {progress:?} exceeds grant {quote:?}");
+        assert_eq!(heap, (progress.retained_capacity_bytes, progress.released_bytes), "allocation accounting disagrees with receipt {progress:?}");
+        ledger.born += heap.0;
+        ledger.released += heap.1;
     }
     assert!(cursor.terminal_is_empty());
     assert_eq!(observe(|| drop(cursor)).1.released_bytes, 0);
@@ -228,13 +244,16 @@ where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: Wind
     let mut remaining = ControlledRetirement::new((post, rows)).unwrap_or_else(|(error, _)| panic!("post and inverse custody {error}"));
     for _ in 0..4096 {
         if remaining.terminal_is_empty() { break; }
-        let copy = remaining.next_copy_byte_demand().unwrap();
-        let quote = exact(copy, remaining.next_capacity_byte_demand(copy).unwrap(), remaining.next_release_byte_demand().unwrap(), remaining.next_depth_demand().unwrap());
-        ledger.watch(quote, || { let step = remaining.step(quote).unwrap(); (step, step.progress()) });
+        let quote = quote_of(remaining.next_demand(0).unwrap());
+        let (turn, heap) = observe(|| drive(quote, 64, |effect| remaining.step(0, effect)));
+        let progress = turn.result.unwrap().progress();
+        assert!(progress.fits(quote), "receipt {progress:?} exceeds grant {quote:?}");
+        ledger.record(heap);
     }
     assert!(remaining.terminal_is_empty());
     assert_eq!(ledger.released, held + ledger.born, "every byte born or held is released through admitted turns");
-    assert_eq!(observe(|| drop((base_source, mutation_source, remaining))).1.released_bytes, 0);
+    drop((base_source, mutation_source));
+    assert_eq!(observe(|| drop(remaining)).1.released_bytes, 0);
     match failure { Some(error) => Err(error), None => Ok(run) }
 }
 

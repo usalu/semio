@@ -366,7 +366,7 @@ pub fn modeling<J: Stepper + 'static>(kind: &Kind, make: impl FnOnce() -> Result
     run(kind, move || Ok(Box::new(Modeling(make()?)) as Box<dyn Machine>))
 }
 /// 🔎️ Reads a polygon source in bounded slices: it answers `None` until the whole text is read.
-pub type Parse = Box<dyn FnMut(usize) -> Result<Option<PolygonMeshSource>, WidgetFault> + Send>;
+pub type Parse = Box<dyn FnMut(usize, &mut StepContext<'_>) -> Result<Option<PolygonMeshSource>, WidgetFault> + Send>;
 
 struct FromSource {
     parse: Parse,
@@ -377,7 +377,7 @@ impl Machine for FromSource {
     fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
         let fuel = fuel_budget(cx);
         if self.job.is_none() {
-            match (self.parse)(fuel)? {
+            match (self.parse)(fuel, cx)? {
                 Some(source) => self.job = Some(HalfedgeMesh::polygon_source_job(source).kernel()?),
                 None => return Ok(Flow::Working(0.05)),
             }

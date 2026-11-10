@@ -121,13 +121,13 @@ impl ArtifactPreparedOperationsOwner {
 }
 
 impl ErasedSnapshotRetirement for ArtifactPreparedOperationsOwner {
-    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.retirement_demands()}
+    fn next_demand(&self, _body:usize)->Result<RetirementDemand,ValueError>{self.retirement_demands()}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement_demands()?.copy_bytes)}
  fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement_demands()?.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.retirement_demands()?.depth)}
  fn terminal_is_empty(&self)->bool{self.closed&&self.values.terminal_is_empty()&&self.contiguous.is_none()}
- fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
+ fn close_step(&mut self, _body: usize, effect: &mut RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
   if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.retirement_demands()?;
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}

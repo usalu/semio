@@ -66,10 +66,13 @@ fn trace_owned_masks_match_neutral_vectors_and_release_at_every_cancel_phase(){
  struct MaskDrop(std::sync::Arc<std::sync::atomic::AtomicUsize>);
  impl Drop for MaskDrop{fn drop(&mut self){self.0.fetch_add(1,std::sync::atomic::Ordering::SeqCst);}}
  struct MaskCursor(Option<MaskDrop>);
+ impl MaskCursor{
+  pub fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{let grant=effect.grant();if grant.maximum_items==0||grant.maximum_depth==0||effect.maximum_work_units()==0{return semio_framework_value::retirement::RetirementStep::BudgetExhausted;}let work=match semio_framework_value::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return semio_framework_value::retirement::RetirementStep::Failure(error.into(),work)};semio_framework_value::retirement::RetirementStep::Complete(if self.0.take().is_some(){work}else{0})}
+ }
  impl semio_framework_value::retirement::RetirementCursor for MaskCursor{
+  semio_framework_value::native_retirement_reply!();
   fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{depth:usize::from(self.0.is_some()),..Default::default()})}
   fn next_computational_work(&self,_:usize)->Result<u64,semio_framework_value::ValueError>{Ok(u64::from(self.0.is_some()))}
-  fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::retirement::RetirementStep{let grant=effect.grant();if grant.maximum_items==0||grant.maximum_depth==0||effect.maximum_work_units()==0{return semio_framework_value::retirement::RetirementStep::BudgetExhausted;}let work=match semio_framework_value::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return semio_framework_value::retirement::RetirementStep::Failure(error.into(),work)};semio_framework_value::retirement::RetirementStep::Complete(if self.0.take().is_some(){work}else{0})}
   fn terminal_is_empty(&self)->bool{self.0.is_none()}
   fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
   fn next_close_byte_demand(&self)->Option<usize>{Some(0)}

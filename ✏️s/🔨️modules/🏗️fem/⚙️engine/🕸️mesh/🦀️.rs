@@ -36,7 +36,8 @@ use semio_s_fem_sparse::write_numerical_entry;
 
 use semio_framework_job::StepContext;
 use std::collections::BTreeMap;
-use semio_framework_job::close_original_retained_step;
+use semio_framework_job::close_original_effect_step;
+use semio_framework_value::{OriginalRetirementFailure, RetainedAllocationEffect, RetainedWorkPoll};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_job::OriginalTurnFailure;
 use semio_framework_job::RetainedCloneGrant;

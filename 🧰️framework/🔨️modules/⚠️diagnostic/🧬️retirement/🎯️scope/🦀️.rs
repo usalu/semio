@@ -8,7 +8,15 @@ impl ScopeBoxRetirement{
 }
 impl RetirementCursor for ScopeBoxRetirement{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(self.demand())}
- fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+ semio_framework_value_retirement::native_retirement_reply!();
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
+ fn terminal_is_empty(&self)->bool{self.source.is_none()}
+ fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+ fn next_close_byte_demand(&self)->Option<usize>{Some(self.demand().release_bytes)}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl ScopeBoxRetirement{
+ fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
   let grant=effect.grant();
   if self.source.is_none(){return RetirementStep::Complete(0)}
   let demand=self.demand();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
@@ -18,10 +26,6 @@ impl RetirementCursor for ScopeBoxRetirement{
   }else if let Some(source)=self.source.as_mut().filter(|source|!source.terminal_is_empty()){unsafe{source.release_empty(grant)}}else{self.source=None;P{copied_items:1,..Default::default()}};
   RetirementStep::Progress(progress,1)
  }
- fn terminal_is_empty(&self)->bool{self.source.is_none()}
- fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
- fn next_close_byte_demand(&self)->Option<usize>{Some(self.demand().release_bytes)}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl Drop for ScopeBoxRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"diagnostic scope cursor retains its original allocation")}}
 pub(super) fn demands()->RetirementDemand{RetirementDemand{capacity_bytes:size_of::<ScopeBoxRetirement>(),depth:1,..Default::default()}}

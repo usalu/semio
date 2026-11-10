@@ -55,7 +55,7 @@ fn numerical_page_subspace_work_persists_solver_state_without_physical_retiremen
     for index in 0..13 { bytes.extend_from_slice(&(if index == 12 { 11u64 } else { 0 }).to_le_bytes()); }
     let page = parse_numerical_page(&bytes, b"FEMSCP1\0").unwrap();
     let mut work = SubspaceWork::empty();
-    work.rhs.data=PagedList::empty();while work.rhs.data.capacity()<4{work.rhs.data.reserve_capacity_one(4,4096).unwrap();}
+    work.rhs.data=PagedList::empty();while work.rhs.data.capacity()<4{semio_s_fem_test_support::granted(TEST_GRANT,|effect|work.rhs.data.reserve_capacity_one(4,effect)).result.unwrap();}
     let allocated=work.rhs.data.allocated_bytes();let next_backing=work.rhs.data.next_release_allocation_bytes().unwrap();
     let mut cursor = NumericalOwnerRestoreCursor::default();
     let mut entry = 0;
@@ -97,8 +97,8 @@ fn numerical_page_subspace_restore_close_preserves_every_ungranted_backing() {
     for row in corpus["closeCases"].as_array().unwrap() {
         let operation = test_operation(493);
         let mut factor = LdltFactor { n: 0, columns: SparseColumns::default(), d: PagedList::empty() };
-        while factor.columns.entries.capacity()<4{let owner=&mut factor.columns.entries;let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:owner.next_allocation_bytes().unwrap(),maximum_copy_bytes:owner.next_reserve_copy_byte_demand().unwrap(),maximum_depth:owner.next_reserve_depth_demand().unwrap(),..TEST_GRANT};owner.reserve_capacity_one_funded(4,grant).unwrap();}
-        while factor.d.capacity()<4{let owner=&mut factor.d;let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:owner.next_allocation_bytes().unwrap(),maximum_copy_bytes:owner.next_reserve_copy_byte_demand().unwrap(),maximum_depth:owner.next_reserve_depth_demand().unwrap(),..TEST_GRANT};owner.reserve_capacity_one_funded(4,grant).unwrap();}
+        while factor.columns.entries.capacity()<4{let owner=&mut factor.columns.entries;let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:owner.next_allocation_bytes().unwrap(),maximum_copy_bytes:owner.next_reserve_copy_byte_demand().unwrap(),maximum_depth:owner.next_reserve_depth_demand().unwrap(),..TEST_GRANT};semio_s_fem_test_support::granted(grant,|effect|owner.reserve_capacity_one_funded(4,effect)).result.unwrap();}
+        while factor.d.capacity()<4{let owner=&mut factor.d;let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:owner.next_allocation_bytes().unwrap(),maximum_copy_bytes:owner.next_reserve_copy_byte_demand().unwrap(),maximum_depth:owner.next_reserve_depth_demand().unwrap(),..TEST_GRANT};semio_s_fem_test_support::granted(grant,|effect|owner.reserve_capacity_one_funded(4,effect)).result.unwrap();}
         let next = factor.columns.entries.next_release_allocation_bytes().unwrap();
         let scalar = factor.d.next_release_allocation_bytes().unwrap();        let grant = match row["grant"].as_str().unwrap() { "zero" => 0, "subexact" => next.min(scalar) - 1, "exact" => next.max(scalar), _ => unreachable!() };
         let job = SubspaceIterationJob::new(operation, factor, Csr::from_owned_parts(0, Vec::new(), Vec::new(), Vec::new()), 0, 0, 1);
@@ -145,11 +145,11 @@ fn numerical_page_restore_fault_is_sticky_before_later_input_or_allocation() {
     for _ in 0..2 {
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        let left = ldlt.step_plain(&mut context).err();
+        let left = ldlt.step(&mut context).err();
         let mut sequence_receipt = RetainedCloneProgress::default();
         drop(context);
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        let right = subspace.step_plain(&mut context).err();
+        let right = subspace.step(&mut context).err();
         observations.push((left, right, ldlt.page_slot, ldlt.page_entry, subspace.page_slot, subspace.page_entry));
     }
     for _ in 0..16 {
@@ -418,12 +418,12 @@ fn restore_subspace(original: &mut OriginalNumericalFixture, operation: Operatio
     Err(NumericalCheckpointFault::Truncated)
 }
 
-fn step_job(original: &mut OriginalNumericalFixture, job: &mut impl InteractiveJob, fuel: u64, deadline: u64) -> Seen {
+fn step_job(original: &mut OriginalNumericalFixture, job: &mut (impl InteractiveJob + semio_s_fem_payload_turns::NumericalStep), fuel: u64, deadline: u64) -> Seen {
     original.turn(TEST_GRANT, fuel, deadline, |cx| Ok(seen_of(job.step_plain(cx)))).expect("same original subspace job step")
 }
 
 #[track_caller]
-fn next_checkpoint(original: &mut OriginalNumericalFixture, job: &mut impl InteractiveJob) -> Vec<Vec<u8>> {
+fn next_checkpoint(original: &mut OriginalNumericalFixture, job: &mut (impl InteractiveJob + semio_s_fem_payload_turns::NumericalStep)) -> Vec<Vec<u8>> {
     let mut last = None;
     for _ in 0..5_000_000 {
         match step_job(original, job, 1, u64::MAX) {
@@ -657,7 +657,7 @@ fn test_funded_restore<T>(step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
 
 fn empty_paged_backing<T>(count: usize) -> PagedList<T, SPARSE_INDEX_SPACE> {
     let mut owner = PagedList::empty();
-    while owner.capacity() < count { owner.reserve_capacity_one(count, SPARSE_PAGE_BYTES).expect("original fixture backing"); }
+    while owner.capacity() < count { semio_s_fem_test_support::granted(TEST_GRANT, |effect| owner.reserve_capacity_one(count, effect)).result.expect("original fixture backing"); }
     owner
 }
 
