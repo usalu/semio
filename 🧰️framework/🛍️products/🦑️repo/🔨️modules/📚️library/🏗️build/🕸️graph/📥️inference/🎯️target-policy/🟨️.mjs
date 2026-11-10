@@ -1,4 +1,5 @@
 /** 🎯️ Admits target execution contracts and decides which generated targets are cached, continuous or side-effecting. */
+import { createBoundedCacheV1 } from "../../../🧊️bounded/🟨️.mjs";
 import { conformsOwnerContractV1 } from "../../../📤️arguments/🟨️.mjs";
 
 /** 🏷️ Names this component as its roster entry does. */
@@ -52,7 +53,7 @@ function declaredCacheDecisionV1(value) {
   return decision;
 }
 
-const cacheDecisions = new Map();
+const cacheDecisions = createBoundedCacheV1({ name: "inference:cache-decisions", maxEntries: 1024, maxBytes: 1024 });
 
 /** 💾️ Admits one cache decision against the closed schema once and shares the frozen record between every target that carries it.
  * @see ../../../../🏗️build/🏃️execution/🧬️schema/💾️cache.json */

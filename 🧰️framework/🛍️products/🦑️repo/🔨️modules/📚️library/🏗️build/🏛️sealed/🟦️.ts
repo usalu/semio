@@ -1,4 +1,3 @@
-import{selectPackageManagerV1}from"../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{createHash}from"node:crypto";
 import{chmodSync,closeSync,fstatSync,fsyncSync,lstatSync,mkdirSync,openSync,readFileSync,readSync,readdirSync,renameSync,rmSync,writeSync}from"node:fs";
@@ -17,8 +16,18 @@ export interface SealedPolicyV1{readonly version:1;readonly modeVariable:string;
 
 /** 📜️ The closed policy of the store. */
 export const sealedPolicyV1:SealedPolicyV1=policyData as unknown as SealedPolicyV1;
+/** 📇️ The selected manager's lock or scope file names, read as data so no manager module loads. */
+function managerFilesV1(ecosystem:string,role:"locks"|"scope",environment:Readonly<Record<string,string|undefined>>):readonly string[]{
+ const directory=new URL("../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/",import.meta.url),read=(path:string)=>JSON.parse(readFileSync(new URL(path,directory),"utf8")),catalog=read("🔣️catalog.json").adapters as Record<string,string>,selection=read("🔣️policy.json").selection as Record<string,string>,protocol=read("🧬️schema/🔣️.json")["$defs"].Protocol.const as {selectionEnvironment:string};
+ const id=environment[protocol.selectionEnvironment.replace("{ECOSYSTEM}",ecosystem.toUpperCase().replace(/-/gu,"_"))]||selection[ecosystem];
+ if(!id)throw Error("Selected package manager required: "+ecosystem);
+ const folder=catalog[id];if(folder===undefined)throw Error("Registered package manager required: "+id);
+ const descriptor=read(folder+"/🔣️.json") as {ecosystem:string;locks:{name:string}[];configurations:Record<string,string[]>};
+ if(descriptor.ecosystem!==ecosystem)throw Error("Package manager of the selected ecosystem required: "+ecosystem+" "+id);
+ return role==="locks"?descriptor.locks.map(lock=>lock.name):descriptor.configurations.scope!;
+}
 /** 🏷️ Resolves semantic manager roles through the defining accessor, retaining every selected file. */
-export function sealedStampedFilesV1(policy:SealedPolicyV1=sealedPolicyV1,environment:Readonly<Record<string,string|undefined>>=process.env):readonly string[]{const files:string[]=[];for(const entry of policy.stampedFiles){if(typeof entry==="string"){files.push(entry);continue;}const manager=selectPackageManagerV1(entry.ecosystem,environment);if(entry.role!=="locks"&&entry.role!=="scope")throw Error("Closed selected manager file role required");const names=entry.role==="locks"?manager.lockFileNames():manager.configurationNames("scope");for(const name of names){if(!name||name.includes("\\")||/[!*?{}]/u.test(name)||name.split("/").some(part=>!part||part==="."||part===".."))throw Error("Relative selected manager file required");files.push(name);}}return Object.freeze([...new Set(files)]);}
+export function sealedStampedFilesV1(policy:SealedPolicyV1=sealedPolicyV1,environment:Readonly<Record<string,string|undefined>>=process.env):readonly string[]{const files:string[]=[];for(const entry of policy.stampedFiles){if(typeof entry==="string"){files.push(entry);continue;}if(entry.role!=="locks"&&entry.role!=="scope")throw Error("Closed selected manager file role required");const names=managerFilesV1(entry.ecosystem,entry.role,environment);for(const name of names){if(!name||name.includes("\\")||/[!*?{}]/u.test(name)||name.split("/").some(part=>!part||part==="."||part===".."))throw Error("Relative selected manager file required");files.push(name);}}return Object.freeze([...new Set(files)]);}
 
 
 /** 🧬️ One captured file of the live tree: its repository path, content digest and the stat stamp it had when it was captured. */

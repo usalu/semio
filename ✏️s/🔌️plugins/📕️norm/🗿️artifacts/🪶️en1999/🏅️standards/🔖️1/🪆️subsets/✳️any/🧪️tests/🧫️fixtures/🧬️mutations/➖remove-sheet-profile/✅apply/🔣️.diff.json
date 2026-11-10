@@ -19,8 +19,6 @@
     "moved": [],
     "modified": []
   },
-  "transverseStiffeners": null,
-  "reliabilityClass": null,
   "sheetProfiles": {
     "removed": [
       {
@@ -32,5 +30,7 @@
     "moved": [],
     "modified": []
   },
-  "fireInsulations": null
+  "fireInsulations": null,
+  "transverseStiffeners": null,
+  "reliabilityClass": null
 }

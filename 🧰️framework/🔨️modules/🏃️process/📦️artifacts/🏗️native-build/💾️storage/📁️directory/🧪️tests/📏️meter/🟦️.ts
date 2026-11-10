@@ -37,3 +37,19 @@ test("older refresh completion cannot replace newer measured usage",async()=>{
 test("exact admission counters survive a long lifetime and unsafe scalar requests are refused",async()=>{
  const row=corpus.lifetime,meter=createNativeDirectoryMeterV1({root:"/unused",filesystemBytes:row.request,maximumPhysicalBytes:row.request,now:()=>0,measure:()=>0});for(let index=0;index<row.cycles;index++){await meter.admit({mode:"reserve",requestBytes:row.request});await meter.admit({mode:"commit",requestBytes:0});}const total=sql.query("select cast(?1 as integer)*?2 total").get(String(row.request),row.cycles)as{total:number};expect(total.total).toBeGreaterThan(Number.MAX_SAFE_INTEGER);await expect(meter.admit({mode:"reserve",requestBytes:row.request})).resolves.toBeUndefined();for(const bytes of corpus.unsafe){await expect(meter.admit({mode:"reserve",requestBytes:bytes})).rejects.toThrow("Closed directory meter request");expect(()=>createNativeDirectoryMeterV1({root:"/unused",filesystemBytes:bytes,maximumPhysicalBytes:bytes,measure:()=>0})).toThrow("Closed directory meter limits");}
 });
+
+test("a measurement is kept between processes: a fresh cell starts from the record, a status answers from it without walking, and a damaged record is ignored",async()=>{
+ const {mkdtempSync,rmSync,writeFileSync}=await import("node:fs"),{tmpdir}=await import("node:os"),{join}=await import("node:path"),{nativeDirectoryUsageFileV1}=await import("../../📏️usage/🟦️.ts");
+ const directory=mkdtempSync(join(tmpdir(),"usage-record-")),file=join(directory,"usage.json");
+ try{
+  let walks=0;const input={root:"/unused",maximumEntries:10,measure:async()=>{walks++;return 4096;},record:nativeDirectoryUsageFileV1(file)};
+  const first=createNativeDirectoryUsageV1({...input,now:()=>1000});
+  expect(await first.recent(0)).toBe(4096);expect(walks).toBe(1);
+  const second=createNativeDirectoryUsageV1({...input,now:()=>5000});
+  expect(await second.recent(10_000),"a status process answers from the record").toBe(4096);expect(walks,"without a walk").toBe(1);
+  expect(await second.recent(1000),"an older record than the bound is measured again").toBe(4096);expect(walks).toBe(2);
+  writeFileSync(file,"{damaged");
+  const third=createNativeDirectoryUsageV1({...input,now:()=>9000});
+  expect(third.peek(),"a damaged record starts empty").toBeUndefined();
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});

@@ -116,6 +116,7 @@ impl Din4108Snapshot {
                     delta_u_r: 0.0,
                     layers: vec![
                         LayerDocument { id: "gypsum".into(), material_id: "gypsum_plaster".into(), thickness_m: 0.0125, lambda: 0.25, mu: 8.0, density: 900.0, application_type: String::new(), compressive_class: String::new(), water_class: String::new(), tensile_class: String::new(), acoustic_class: String::new(), segments: vec![] },
+                        LayerDocument { id: "vapour-control".into(), material_id: "pe_foil".into(), thickness_m: 0.0002, lambda: 0.50, mu: 500000.0, density: 950.0, application_type: String::new(), compressive_class: String::new(), water_class: String::new(), tensile_class: String::new(), acoustic_class: String::new(), segments: vec![] },
                         LayerDocument { id: "mineral-wool".into(), material_id: "mineral_wool".into(), thickness_m: 0.20, lambda: 0.035, mu: 1.3, density: 30.0, application_type: "DAD".into(), compressive_class: "dm".into(), water_class: "wk".into(), tensile_class: "tk".into(), acoustic_class: "sh".into(), segments: vec![] },
                         LayerDocument { id: "concrete".into(), material_id: "concrete".into(), thickness_m: 0.16, lambda: 2.1, mu: 80.0, density: 2300.0, application_type: String::new(), compressive_class: String::new(), water_class: String::new(), tensile_class: String::new(), acoustic_class: String::new(), segments: vec![] },
                     ],

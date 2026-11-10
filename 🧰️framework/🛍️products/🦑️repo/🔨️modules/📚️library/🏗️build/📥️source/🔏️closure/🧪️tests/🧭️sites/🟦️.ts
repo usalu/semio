@@ -73,3 +73,11 @@ test("the real loader names a refusal raised before authentication by its code",
  const child=spawn(process.execPath,["--eval",buildSourceClosureStreamLoaderV1,"--"],{stdio:["ignore","pipe","pipe","pipe"]});let err="";child.stderr!.on("data",data=>err+=data);(child.stdio[3] as NodeJS.WritableStream).end("");
  await new Promise(resolve=>child.on("close",resolve));expect(err).toContain("digest-required: {}");expect(err).not.toContain("Fix:");
 },60000);
+
+/** 🧩️ The sealed loader owns every resolution of the implementation it runs; modules of a plan's capture namespace are plan data (pinned by the plan's revision), so it hands their resolution and loading to the hooks of the plan loader and refuses nothing about them. */
+test("the sealed loader delegates the plan capture namespace to the plan loader instead of refusing it as an uncaptured implementation import",()=>{
+ const resolve=buildSourceClosureStreamLoaderV1.indexOf("build.onResolve({filter:/.*/},item=>{if(item.path.startsWith('semio-capture/')||item.importer?.startsWith('semio-capture:'))return globalThis.__semioPlanResolveV1?.(item);");
+ expect(resolve,"the plan namespace is handled before any implementation image check").toBeGreaterThan(-1);
+ expect(buildSourceClosureStreamLoaderV1.indexOf("build.onLoad({filter:/.*/,namespace:'semio-capture'},item=>globalThis.__semioPlanLoadV1(item))")).toBeGreaterThan(resolve);
+ expect(buildSourceClosureStreamLoaderV1.indexOf("sourceImportRefusal('import'",resolve)).toBeGreaterThan(resolve);
+});

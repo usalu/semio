@@ -26,9 +26,9 @@ test("the closed insert corpus covers all fifteen cohorts and every declared bin
   expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   expect(validate({ ...fixture, extra: true })).toBe(false);
   expect(actual.length).toBe(fixture.rules.length);
-  expect(new Set(fixture.rules.map(row => row.family)).size).toBe(14);
+  expect(new Set(fixture.rules.map(row => row.family)).size).toBe(15);
   expect(fixture.families).toBe(15);
-  expect(new Set(fixture.rules.map(row => row.source + ":" + row.path)).size).toBe(227);
+  expect(new Set(fixture.rules.map(row => row.source + ":" + row.path)).size).toBe(234);
 });
 
 const payloads = new Map<string, any>();

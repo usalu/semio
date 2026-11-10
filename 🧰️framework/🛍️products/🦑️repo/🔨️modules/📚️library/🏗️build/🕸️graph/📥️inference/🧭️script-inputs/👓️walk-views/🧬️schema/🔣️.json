@@ -5,9 +5,10 @@
   "description": "The views through which a project reads a command walk. A view names the scheduling prefixes its consumers leave out of every roster they derive from the walk; the derived fact a project holds for the walk is the answer seen through that view, so a change of the walk that only moves files the view leaves out keeps the fact. The recipes table maps each closure recipe to the view all of its consumers read through; a recipe the table does not name reads the whole walk (fail closed).",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "views", "recipes", "closures"],
+  "required": ["version", "verdictEntries", "views", "recipes", "closures"],
   "properties": {
     "version": {"const": 1},
+    "verdictEntries": {"type": "integer", "minimum": 1, "description": "EN: The most names whose verdict one view remembers; over it the view starts again, so the names of a long-lived workspace never accumulate. DE: Die meisten Namen, deren Urteil eine Sicht merkt; darüber beginnt die Sicht neu, sodass sich die Namen eines langlebigen Arbeitsbereichs nie ansammeln."},
     "views": {
       "type": "object",
       "additionalProperties": false,

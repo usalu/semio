@@ -1,7 +1,7 @@
 /** 🔶 `change-element-orientation-deg` wire twin: the leaf payload `ChangeElementOrientationDeg`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { type NormWireReader, normWireLiteral, normWireNumber, normWireObject, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
+import { type NormWireReader, normWireLiteral, normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeElementOrientationDeg {
   mutation: "changeelementorientationdeg";
@@ -9,4 +9,4 @@ export interface ChangeElementOrientationDeg {
   newOrientationDeg: number;
 }
 
-export const parseChangeElementOrientationDeg: NormWireReader<ChangeElementOrientationDeg> = normWireObject<ChangeElementOrientationDeg>({ mutation: normWireRequired(normWireLiteral("changeelementorientationdeg")), elementId: normWireRequired(normWireString), newOrientationDeg: normWireRequired(normWireNumber) });
+export const parseChangeElementOrientationDeg: NormWireReader<ChangeElementOrientationDeg> = normWireObject<ChangeElementOrientationDeg>({ mutation: normWireRequired(normWireLiteral("changeelementorientationdeg")), elementId: normWireRequired(normWireString), newOrientationDeg: normWireRequired(normWireRange(normWireNumber, {"minimum":0.0,"maximum":360.0})) });

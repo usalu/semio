@@ -120,6 +120,13 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("geometry.objects.*.spaces[].bounds.max", FieldSpec::quantity("Maximum", "Maximum", UnitId::Metre)),
     ("geometry.objects.*.surfaces", FieldSpec::new("Surfaces", "Flächen")),
     ("geometry.objects.*.surfaces[]", FieldSpec::new("Surface", "Fläche")),
+    ("geometry.objects.*.shape", FieldSpec::new("Shape", "Form")),
+    ("geometry.objects.*.shape.parameters.width", FieldSpec::quantity("Width", "Breite", UnitId::Metre)),
+    ("geometry.objects.*.shape.parameters.height", FieldSpec::quantity("Height", "Höhe", UnitId::Metre)),
+    ("geometry.objects.*.shape.parameters.depth", FieldSpec::quantity("Depth", "Tiefe", UnitId::Metre)),
+    ("geometry.objects.*.shape.parameters.radius", FieldSpec::quantity("Radius", "Radius", UnitId::Metre)),
+    ("geometry.objects.*.shape.translation[]", FieldSpec::quantity("Translation", "Verschiebung", UnitId::Metre)),
+    ("geometry.objects.*.shape.rotationDeg[]", FieldSpec::quantity("Rotation", "Drehung", UnitId::Degree)),
     ("geometry.objects.*.parameterBindings", FieldSpec::new("Parameter bindings", "Parameterbindungen")),
     ("geometry.objects.*.parameterBindings.*", FieldSpec::new("Parameter binding", "Parameterbindung")),
     ("selection.classId", FieldSpec::new("Class id", "Klassen-Id")),
@@ -289,6 +296,20 @@ const TABLE: &[(&str, FieldSpec)] = &[
 
 ];
 
+/// 🌳️ The tail of a shape path without its tree descent: `shape.child.children[1].parameters.width` is `shape.parameters.width` and `translation[2]` is `translation[]`, so one meta row serves every node of the CSG tree.
+fn shape_tail(tail: &str) -> String {
+    if !(tail.starts_with("shape") || tail.starts_with("symbolic")) {
+        return tail.into();
+    }
+    let kept: Vec<&str> = tail.split('.').filter(|segment| *segment != "child" && !segment.starts_with("children[")).collect();
+    let joined = kept.join(".");
+    let joined = joined.strip_prefix("symbolic").map_or(joined.clone(), |rest| format!("shape{rest}"));
+    match joined.rfind('[') {
+        Some(at) if joined.ends_with(']') && joined[at + 1..joined.len() - 1].chars().all(|c| c.is_ascii_digit()) => format!("{}[]", &joined[..at]),
+        _ => joined,
+    }
+}
+
 /// 🏷️ Exact / `[]` / `*` template lookup for the ISO 16757 catalogue subject.
 fn describe_iso16757_field(path: &str) -> Option<FieldSpec> {
     if let Some(rest) = path.strip_prefix("catalogue.compositions.") {
@@ -310,7 +331,7 @@ fn describe_iso16757_field(path: &str) -> Option<FieldSpec> {
     if let Some(rest) = path.strip_prefix("geometry.objects.") {
         let templated = if let Some((id, tail)) = rest.split_once('.') {
             if id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
-                format!("geometry.objects.*.{tail}")
+                format!("geometry.objects.*.{}", shape_tail(tail))
             } else {
                 String::new()
             }
@@ -341,7 +362,7 @@ pub fn iso16757_field_meta(path: &str) -> Option<FieldSpec> {
     semio_s_plugin_norm_app_surface::admit_list_meta(
         semio_s_plugin_norm_app_surface::admit_field_meta(
         describe_iso16757_field(path),
-        semio_s_artifact_norm_iso16757_mutations::EDIT_RULES.can_set_field(path),
+        semio_s_artifact_norm_iso16757_mutations::can_set_field(path),
         ),
         semio_s_artifact_norm_iso16757_mutations::EDIT_RULES.can_insert_item(path),
         semio_s_artifact_norm_iso16757_mutations::EDIT_RULES.can_remove_item(path, semio_s_artifact_norm_iso16757_mutations::ID_REMOVALS.iter().map(|rule| rule.path)),

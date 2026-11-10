@@ -9,6 +9,7 @@ import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️pro
 import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 
+import {createClosureSettlerV1} from "../../../🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs";
 const inference = await import("../../🟨️.mjs"), {createScriptInputCache, libraryBootstrap} = inference as any;
 await libraryBootstrap;
 const observation = await import("../../../../👁️observation/🟨️.mjs") as any, scriptInputs = await import("../../🧭️script-inputs/🟨️.mjs") as any, engine = await import("../../../../📥️inputs/🎯️precision/🟦️.ts") as any;
@@ -39,6 +40,11 @@ function inPlace(root: string) {
 
 const recipeOf = (name: string) => name === "crates" ? {fn: "crate-index", skip} : {fn: "source-roots", question: questions[name]};
 const askDerived = (root: string, name: string) => observation.observeInferenceSnapshotV1(async () => scriptInputs.deriveClosureFactV1({kind: "derived", path: JSON.stringify({derive: 1, workspaceRoot: root, recipe: recipeOf(name)}), fact: "none"}, createScriptInputCache({workspaceRoot: root}))) as Promise<{fact: string; rows: unknown[]}>;
+const questionOf = (root: string, name: string) => JSON.stringify({derive: 1, workspaceRoot: root, recipe: recipeOf(name)});
+const askSettled = async (settler: ReturnType<typeof createClosureSettlerV1>, root: string, name: string, before?: {fact: string}) => {
+  const row = {kind: "derived", path: questionOf(root, name), fact: before?.fact ?? "none"}, settled = await settler.settle({pseudoRows: new Map([[name, row]]), derive: (asked: {path: string}) => observation.observeInferenceSnapshotV1(async () => scriptInputs.deriveClosureFactV1(asked, createScriptInputCache({workspaceRoot: root}))), hold: (rows: unknown[]) => stillHolds(rows), answers: true} as never);
+  return {answer: settled.answers.get(name) as {fact: string; rows: unknown[]}, failed: settled.failed, reused: settled.reused};
+};
 const stillHolds = (rows: unknown[]) => observation.observeInferenceSnapshotV1(async () => observation.observationRowsHoldV1(rows)) as Promise<boolean>;
 const digestOf = (expected: any, name: string) => scriptInputs.derivedWalkAnswerV1(name === "crates" ? expected.crates : expected.sources[name]);
 
@@ -91,8 +97,8 @@ test("the recipes of the walks are closed: a question or recipe the schema does 
 });
 
 /** 🧪️ Replays one sequence against the three answers: the in-place walk, the derived fact asked again and the oracle. */
-async function replay(sequence: {files: Record<string, string>; steps: {ops: Op[]}[]}, expected: any[], changes?: readonly Record<string, 1>[]) {
-  const root = build(sequence.files), names = ["crates", ...Object.keys(questions)], held = new Map<string, {fact: string; rows: unknown[]}>();
+async function replay(sequence: {files: Record<string, string>; steps: {ops: Op[]}[]}, expected: any[], changes?: readonly Record<string, 1>[], settled = false) {
+  const root = build(sequence.files), settler = createClosureSettlerV1(), names = ["crates", ...Object.keys(questions)], held = new Map<string, {fact: string; rows: unknown[]}>();
   const tally = {steps: 0, asked: 0, kept: 0, moved: 0, retained: 0};
   for (let step = 0; step <= sequence.steps.length; step++) {
     if (step > 0) for (const op of sequence.steps[step - 1]!.ops) apply(root, op);
@@ -103,7 +109,7 @@ async function replay(sequence: {files: Record<string, string>; steps: {ops: Op[
       const wanted = digestOf(now, name), before = held.get(name);
       const holds = before === undefined ? false : await stillHolds(before.rows);
       if (before !== undefined && holds) { expect(wanted, `step ${step}: ${name} moved although every supporting row holds`).toBe(before.fact); tally.retained++; }
-      const answer = await askDerived(root, name);
+      const answer = settled ? (await askSettled(settler, root, name, before)).answer : await askDerived(root, name);
       expect(answer.fact, `step ${step}: ${name} asked again`).toBe(wanted);
       expect(answer.rows.length, `step ${step}: ${name} support`).toBeGreaterThan(0);
       if (before !== undefined) { tally.asked++; if (!holds && answer.fact === before.fact) tally.kept++; if (answer.fact !== before.fact) tally.moved++; if (changes) expect(answer.fact !== before.fact, `step ${step} (${name})`).toBe(changes[step - 1]![name] === 1); }
@@ -171,4 +177,17 @@ test("a derived question that no walk answers is refused", async () => {
   const root = build(fixture.files as Record<string, string>);
   for (const recipe of [{fn: "unknown"}, {fn: "crate-index"}]) await expect(scriptInputs.deriveClosureFactV1({kind: "derived", path: JSON.stringify({derive: 1, workspaceRoot: root, recipe}), fact: "x"}, createScriptInputCache({workspaceRoot: root}))).rejects.toBeDefined();
   expect(lstatSync(root).isDirectory()).toBe(true);
+});
+
+test("the closure settler answers the same walks as asking them again: equal to the oracle at every step of the recorded and seeded edits, and an answer whose rows hold is taken without a new walk", async () => {
+  const sequence = {files: fixture.files as Record<string, string>, steps: fixture.steps as {ops: Op[]}[]};
+  const tally = await replay(sequence, oracle([sequence])[0]!, fixture.steps.map((step) => step.changes as Record<string, 1>), true);
+  expect(tally.moved).toBeGreaterThan(10);expect(tally.kept).toBeGreaterThan(5);expect(tally.retained).toBeGreaterThan(20);
+  const sequences = seeded(fixture.random.seed, fixture.random.sequences, fixture.random.steps), expected = oracle(sequences);
+  let moved = 0;
+  for (const [index, random] of sequences.entries()) moved += (await replay(random, expected[index]!, undefined, true)).moved;
+  expect(moved).toBeGreaterThan(50);
+  const root = build(sequence.files), settler = createClosureSettlerV1(), first = await askSettled(settler, root, "crates");
+  const again = await askSettled(settler, root, "crates", first.answer);
+  expect(again.answer.fact).toBe(first.answer.fact);expect(again.reused, "unchanged support: no new walk").toBe(1);
 });

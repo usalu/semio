@@ -207,7 +207,7 @@
   ],
   "coldImports": [
     {
-      "module": "🏗️build/🕸️graph/🟦️.ts",
+      "module": "🏗️build/🕸️graph/📥️load/🟦️.ts",
       "method": "loadBuildGraphV1"
     },
     {
@@ -241,7 +241,7 @@
       "schemaMaximumBytes": 65536
     },
     {
-      "module": "🏗️build/🕸️graph/🟦️.ts",
+      "module": "🏗️build/🕸️graph/🔐️authority/🟦️.ts",
       "sourceMaximumBytes": 8388608,
       "schemaMaximumBytes": 65536
     },

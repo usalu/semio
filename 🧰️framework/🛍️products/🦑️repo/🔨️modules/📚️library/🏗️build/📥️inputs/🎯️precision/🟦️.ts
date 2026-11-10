@@ -210,10 +210,15 @@ export function crateIndexV1(host: Pick<InputPrecisionHostV1, "readText" | "carg
 
 /** 📊️ Maps the crate names of the Cargo manifest directories (in the order given, the first directory of a name wins) to their directory; hidden trees never own a crate. */
 export function crateNamesV1(directories: readonly string[], readText: (path: string) => string | undefined): Map<string, string> {
+  return crateNamesOfV1(directories, (path) => packageNameV1(readText(path) ?? ""));
+}
+
+/** 📊️ The same index from a reader of the crate name of one manifest path (`undefined` when it has none), so a caller can record only that name as the fact it read. */
+export function crateNamesOfV1(directories: readonly string[], readName: (path: string) => string | undefined): Map<string, string> {
   const index = new Map<string, string>();
   for (const directory of directories) {
     if (directory.split("/").some((part) => part.startsWith("."))) continue;
-    const name = packageNameV1(readText(directory ? `${directory}/Cargo.toml` : "Cargo.toml") ?? "");
+    const name = readName(directory ? `${directory}/Cargo.toml` : "Cargo.toml");
     if (name && !index.has(name)) index.set(name, directory);
   }
   return index;
@@ -230,6 +235,22 @@ export function cargoManifestDirectoriesV1(list: (directory: string) => readonly
     }
   };
   walk("");
+  return found.sort();
+}
+
+/** 🏗️ The same directories as {@link cargoManifestDirectoriesV1}, walked with `step` awaited between directories so a walk of the whole repository gives the event loop its turns and stops at cancellation. */
+export async function cargoManifestDirectoriesAsyncV1(list: (directory: string) => readonly {readonly name: string; readonly directory: boolean; readonly file: boolean; readonly link: boolean}[], skip: ManifestWalkSkipV1, step: () => Promise<void>): Promise<string[]> {
+  const found: string[] = [], paths = new Set(skip.paths), names = new Set(skip.names), pending = [""];
+  while (pending.length) {
+    const directory = pending.pop()!;
+    await step();
+    for (const entry of list(directory)) {
+      const path = directory ? `${directory}/${entry.name}` : entry.name;
+      if (entry.link || isOpaqueSourcePathV1(path) || paths.has(path) || names.has(entry.name)) continue;
+      if (entry.directory) pending.push(path);
+      else if (entry.file && entry.name === "Cargo.toml") found.push(directory);
+    }
+  }
   return found.sort();
 }
 

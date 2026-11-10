@@ -27,6 +27,10 @@ message ThermalZone {
   double internal_gains_wm2 = 10;
   // @state artifact
   double lighting_power_wm2 = 11;
+  // @state artifact
+  string thermal_mass_class = 12;
+  // @state artifact
+  double c_wirk_wh_m2k = 13;
 }
 
 message EnvelopeElement {

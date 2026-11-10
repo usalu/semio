@@ -1,4 +1,5 @@
 /** 🚧️ Contract: a test project whose native sources name a project the graph snapshot does not hold is withheld alone, with a bilingual diagnostic naming its declaring file, the missing projects and the fix; the graph is still built, every other project stays, and the next run that holds the project brings the test project back. The model is the fixture, derived independently in Python by `🐍️.py`. */
+import {graphSourcePathV1,graphSourceV1} from "../../../../🧪️tests/📖️source/🟦️.ts";
 import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdtempSync,readFileSync,realpathSync,rmSync} from "node:fs";
@@ -16,8 +17,8 @@ import {danglingTestDependenciesV1} from "../../../../../../../🧪️test/📦�
 import {announceWithheldProjectsV1,describeUnavailableProjectV1,loadGenerationGraphV1,withholdDanglingTestProjectsV1} from "../../🟨️.mjs";
 import {applyOps,createMockHost,ringFiles,seed} from "../../../🧪️tests/🏃️world/🟦️.ts";
 
-const source=readFileSync(new URL("../../../../🟦️.ts",import.meta.url),"utf8");
-const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️.py"),fixturePath=join(here,"🔣️.json"),schemaPath=join(here,"..","..","..","🧬️schema","🔣️.json"),sourcePath=fileURLToPath(new URL("../../../../🟦️.ts",import.meta.url));
+const source=graphSourceV1();
+const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️.py"),fixturePath=join(here,"🔣️.json"),schemaPath=join(here,"..","..","..","🧬️schema","🔣️.json"),sourcePath=graphSourcePathV1();
 const scratch=()=>mkdtempSync(join(realpathSync(tmpdir()),"graph-withheld-"));
 const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
 const graphRow=new Ajv2020({strict:false}).addSchema(graphSchema,"graph").compile({$ref:"graph#/$defs/UnavailableProject"});
@@ -89,26 +90,26 @@ test("a graph build completes with the withheld test project, says why in the la
   }};
   const announced:string[]=[];
   const loud={...host,say:(key:never,fields:Record<string,string|number>)=>{announced.push(String(key)+":"+Object.values(fields).join("|"));host.say(key,fields);}};
-  const cold=await loadGenerationGraphV1(loud as never) as any;
+  const cold=(await loadGenerationGraphV1(loud as never)).graph as any;
   expect(Object.keys(cold.projects).sort()).toEqual(["p0","p1","p2","p3","p4"]);
   expect(cold.unavailable).toEqual([row]);
   expect(announced.some(line=>line.startsWith("withheldDependency:test-p3|pkg/p3/tests/case/spec.feature|ghost-crate"))).toBe(true);
   expect(mock.said.some(entry=>entry.key==="withheldDependency"&&entry.text.startsWith("Graph: test-p3 wird zurückgehalten")&&entry.text.includes("ghost-crate"))).toBe(true);
-  const warm=await loadGenerationGraphV1(loud as never) as any;
+  const warm=(await loadGenerationGraphV1(loud as never)).graph as any;
   expect(warm.unavailable).toEqual([row]);
   mode="project";
   await applyOps(dir,[{op:"write",path:"pkg/p2/src/index.ts",content:'import "@syn/p4";\nexport const v=2;\n'}]);
-  const repaired=await loadGenerationGraphV1(loud as never) as any;
+  const repaired=(await loadGenerationGraphV1(loud as never)).graph as any;
   expect(Object.keys(repaired.projects).sort()).toEqual(["p0","p1","p2","p3","p4","test-p3"]);
   expect(repaired.unavailable).toBeUndefined();
   mode="withheld";
   await applyOps(dir,[{op:"write",path:"pkg/p2/src/index.ts",content:'import "@syn/p4";\nexport const v=3;\n'}]);
-  const withheldAgain=await loadGenerationGraphV1(loud as never) as any;
+  const withheldAgain=(await loadGenerationGraphV1(loud as never)).graph as any;
   expect(Object.keys(withheldAgain.projects).sort()).toEqual(["p0","p1","p2","p3","p4"]);
   expect(withheldAgain.unavailable).toEqual([row]);
   mode="dropped";
   await applyOps(dir,[{op:"write",path:"pkg/p2/src/index.ts",content:'import "@syn/p4";\nexport const v=4;\n'}]);
-  const dropped=await loadGenerationGraphV1(loud as never) as any;
+  const dropped=(await loadGenerationGraphV1(loud as never)).graph as any;
   expect(Object.keys(dropped.projects).sort()).toEqual(["p0","p1","p2","p3","p4"]);
   expect(dropped.unavailable).toBeUndefined();
   const said:string[]=[];

@@ -301,6 +301,14 @@ impl<'ctx> PointerCtx<'ctx> {
     /// the three doors to the verb cannot diverge. Before this wave the wgpu shell had NO undo chord
     /// at all: undo was reachable only by opening the palette and typing "undo".
     pub async fn handle_keyboard_async(&mut self, action: semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
+        if action == semio_ui_wgpu_input::KeyAction::Escape && self.surfaces.world3d_states.values().any(|state| state.authority.handle_drag_armed()) {
+            for state in self.surfaces.world3d_states.values_mut().filter(|state| state.authority.handle_drag_armed()) {
+                if infinite_world::world::enqueue_world3d_events(&mut state.authority, [infinite_world::world::WorldInteractionIntent::cancel(infinite_world::world::WorldCancelReason::Blur)]).is_err() {
+                    return Err("world3d handle drag cancel refused: the intent queue is full".into());
+                }
+            }
+            return Ok(());
+        }
         if self.chrome.chrome_build.dialog_open() {
             self.handle_keyboard(action, modifiers, input);
             self.settle.owe_settle();

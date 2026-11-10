@@ -74,7 +74,7 @@
             ]
           },
           "script-inputs": {
-            "stamp": "semio.graph-inferrer.script-inputs/2",
+            "stamp": "semio.graph-inferrer.script-inputs/3",
             "scope": "project",
             "sources": [
               "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/",
@@ -150,6 +150,19 @@
             "scope": "all",
             "sources": [
               "🏗️build/🕸️graph/🟦️.ts",
+              "🏗️build/🕸️graph/🔐️authority/",
+              "🏗️build/🕸️graph/📜️contract/",
+              "🏗️build/🕸️graph/🛑️custody/",
+              "🏗️build/🕸️graph/🕊️release/",
+              "🏗️build/🕸️graph/📁️workspace/",
+              "🏗️build/🕸️graph/🧭️discovery/",
+              "🏗️build/🕸️graph/📍️pin/",
+              "🏗️build/🕸️graph/🏷️retention/",
+              "🏗️build/🕸️graph/🕰️host/",
+              "🏗️build/🕸️graph/🤝️prefetch/",
+              "🏗️build/🕸️graph/📥️load/",
+              "🏗️build/🕸️graph/🎯️resolve/",
+              "🏗️build/🕸️graph/🧭️roster/",
               "🏗️build/🕸️graph/🚪️admission/",
               "🏗️build/🕸️graph/🧭️file-owner/",
               "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs",

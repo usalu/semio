@@ -320,48 +320,48 @@ message En1998Mutation {
     ChangeTieBeamDisplacementLimit change_tie_beam_displacement_limit = 316;
     ChangeTieBeamRelativeDisplacement change_tie_beam_relative_displacement = 317;
     ChangeTieBeamSpan change_tie_beam_span = 318;
-    ChangeTieBeamSteelArea change_tie_beam_steel_area = 319;
-    ChangeTieBeamSteelDesignStrength change_tie_beam_steel_design_strength = 320;
-    ChangeTieBeamWidth change_tie_beam_width = 321;
-    InsertIsolationSystem insert_isolation_system = 322;
-    RemoveIsolationSystem remove_isolation_system = 323;
-    ChangeIsolationSystemBridgeId change_isolation_system_bridge_id = 324;
-    ChangeIsolationSystemBuildingId change_isolation_system_building_id = 325;
-    ChangeIsolationSystemStrengthN change_isolation_system_strength_n = 326;
-    ChangeIsolationSystemStiffnessNPerM change_isolation_system_stiffness = 327;
-    ChangeIsolationSystemYieldDisplacementM change_isolation_system_yield_disp_m = 328;
-    ChangeIsolationSystemCapacityM change_isolation_system_capacity_m = 329;
-    InsertPierBase insert_pier_base = 330;
-    RemovePierBase remove_pier_base = 331;
-    ChangePierBaseBridgeId change_pier_base_bridge_id = 332;
-    ChangePierBasePierId change_pier_base_pier_id = 333;
-    ChangePierBaseRadiusM change_pier_base_radius_m = 334;
-    ChangePierBaseSoilVsMS change_pier_base_soil_vs_m_s = 335;
-    ChangePierBaseSoilUnitWeightNM3 change_pier_base_soil_unit_weight_n_m3 = 336;
-    ChangePierBasePoissonRatio change_pier_base_poisson_ratio = 337;
-    InsertCriticalRegion insert_critical_region = 338;
-    RemoveCriticalRegion remove_critical_region = 339;
-    ChangeCriticalRegionBuildingId change_critical_region_building_id = 340;
-    ChangeCriticalRegionMemberId change_critical_region_member_id = 341;
-    ChangeCriticalRegionSectionWidthM change_critical_region_section_width_m = 342;
-    ChangeCriticalRegionSectionDepthM change_critical_region_section_depth_m = 343;
-    ChangeCriticalRegionClearLengthM change_critical_region_clear_length_m = 344;
-    ChangeCriticalRegionHoopedLengthM change_critical_region_hooped_length_m = 345;
-    ChangeCriticalRegionCoreWidthM change_critical_region_core_width_m = 346;
-    ChangeCriticalRegionCoreDepthM change_critical_region_core_depth_m = 347;
-    ChangeCriticalRegionAxialForceN change_critical_region_axial_force_n = 348;
-    ChangeCriticalRegionConcreteDesignStrengthMpa change_critical_region_concrete_fcd = 349;
-    ChangeCriticalRegionSteelDesignYieldMpa change_critical_region_steel_fyd = 350;
-    ChangeCriticalRegionHoopDesignYieldMpa change_critical_region_hoop_fywd = 351;
-    ChangeCriticalRegionLongitudinalSteelAreaM2 change_critical_region_long_steel_area = 352;
-    ChangeCriticalRegionLongitudinalBarDiameterM change_critical_region_long_bar_dia = 353;
-    ChangeCriticalRegionLongitudinalBarMaxDiameterM change_critical_region_long_bar_max = 354;
-    ChangeCriticalRegionHoopDiameterM change_critical_region_hoop_diameter_m = 355;
-    ChangeCriticalRegionHoopSpacingM change_critical_region_hoop_spacing_m = 356;
-    ChangeCriticalRegionHoopLegsX change_critical_region_hoop_legs_x = 357;
-    ChangeCriticalRegionHoopLegsY change_critical_region_hoop_legs_y = 358;
-    ChangeCriticalRegionRestrainedBarCount change_critical_region_restr_bar_count = 359;
-    ChangeCriticalRegionRestrainedBarSpacingM change_critical_region_restr_bar_space = 360;
+    InsertIsolationSystem insert_isolation_system = 319;
+    RemoveIsolationSystem remove_isolation_system = 320;
+    ChangeIsolationSystemBridgeId change_isolation_system_bridge_id = 321;
+    ChangeIsolationSystemBuildingId change_isolation_system_building_id = 322;
+    ChangeIsolationSystemStrengthN change_isolation_system_strength_n = 323;
+    ChangeIsolationSystemStiffnessNPerM change_isolation_system_stiffness_n_per_m = 324;
+    ChangeIsolationSystemYieldDisplacementM change_isolation_system_yield_displacement_m = 325;
+    ChangeIsolationSystemCapacityM change_isolation_system_capacity_m = 326;
+    InsertPierBase insert_pier_base = 327;
+    RemovePierBase remove_pier_base = 328;
+    ChangePierBaseBridgeId change_pier_base_bridge_id = 329;
+    ChangePierBasePierId change_pier_base_pier_id = 330;
+    ChangePierBaseRadiusM change_pier_base_radius_m = 331;
+    ChangePierBaseSoilVsMS change_pier_base_soil_vs_m_s = 332;
+    ChangePierBaseSoilUnitWeightNM3 change_pier_base_soil_unit_weight_n_m3 = 333;
+    ChangePierBasePoissonRatio change_pier_base_poisson_ratio = 334;
+    InsertCriticalRegion insert_critical_region = 335;
+    RemoveCriticalRegion remove_critical_region = 336;
+    ChangeCriticalRegionBuildingId change_critical_region_building_id = 337;
+    ChangeCriticalRegionMemberId change_critical_region_member_id = 338;
+    ChangeCriticalRegionSectionWidthM change_critical_region_section_width_m = 339;
+    ChangeCriticalRegionSectionDepthM change_critical_region_section_depth_m = 340;
+    ChangeCriticalRegionClearLengthM change_critical_region_clear_length_m = 341;
+    ChangeCriticalRegionHoopedLengthM change_critical_region_hooped_length_m = 342;
+    ChangeCriticalRegionCoreWidthM change_critical_region_core_width_m = 343;
+    ChangeCriticalRegionCoreDepthM change_critical_region_core_depth_m = 344;
+    ChangeCriticalRegionAxialForceN change_critical_region_axial_force_n = 345;
+    ChangeCriticalRegionConcreteDesignStrengthMpa change_critical_region_concrete_design_strength_mpa = 346;
+    ChangeCriticalRegionSteelDesignYieldMpa change_critical_region_steel_design_yield_mpa = 347;
+    ChangeCriticalRegionHoopDesignYieldMpa change_critical_region_hoop_design_yield_mpa = 348;
+    ChangeCriticalRegionLongitudinalSteelAreaM2 change_critical_region_longitudinal_steel_area_m2 = 349;
+    ChangeCriticalRegionLongitudinalBarDiameterM change_critical_region_longitudinal_bar_diameter_m = 350;
+    ChangeCriticalRegionLongitudinalBarMaxDiameterM change_critical_region_longitudinal_bar_max_diameter_m = 351;
+    ChangeCriticalRegionHoopDiameterM change_critical_region_hoop_diameter_m = 352;
+    ChangeCriticalRegionHoopSpacingM change_critical_region_hoop_spacing_m = 353;
+    ChangeCriticalRegionHoopLegsX change_critical_region_hoop_legs_x = 354;
+    ChangeCriticalRegionHoopLegsY change_critical_region_hoop_legs_y = 355;
+    ChangeCriticalRegionRestrainedBarCount change_critical_region_restrained_bar_count = 356;
+    ChangeCriticalRegionRestrainedBarSpacingM change_critical_region_restrained_bar_spacing_m = 357;
+    ChangeTieBeamSteelArea change_tie_beam_steel_area = 358;
+    ChangeTieBeamSteelDesignStrength change_tie_beam_steel_design_strength = 359;
+    ChangeTieBeamWidth change_tie_beam_width = 360;
   }
 }
 message ChangeAnnex {
@@ -1659,18 +1659,6 @@ message ChangeTieBeamSpan {
   string id = 1;
   double new_span = 2;
 }
-message ChangeTieBeamSteelArea {
-  string id = 1;
-  double new_steel_area = 2;
-}
-message ChangeTieBeamSteelDesignStrength {
-  string id = 1;
-  double new_steel_design_strength = 2;
-}
-message ChangeTieBeamWidth {
-  string id = 1;
-  double new_width = 2;
-}
 message InsertIsolationSystem {
   optional uint64 index = 1;
   En1998IsolationSystem isolation_system = 2;
@@ -1823,4 +1811,16 @@ message ChangeCriticalRegionRestrainedBarCount {
 message ChangeCriticalRegionRestrainedBarSpacingM {
   string id = 1;
   double new_restrained_bar_spacing_m = 2;
+}
+message ChangeTieBeamSteelArea {
+  string id = 1;
+  double new_steel_area = 2;
+}
+message ChangeTieBeamSteelDesignStrength {
+  string id = 1;
+  double new_steel_design_strength = 2;
+}
+message ChangeTieBeamWidth {
+  string id = 1;
+  double new_width = 2;
 }

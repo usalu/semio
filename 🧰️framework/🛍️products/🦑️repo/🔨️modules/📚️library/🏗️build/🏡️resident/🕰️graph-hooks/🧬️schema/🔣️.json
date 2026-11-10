@@ -1,0 +1,320 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/repo/build/resident/graph-hooks",
+  "title": "Journal-driven invalidation of the build graph: dirty sets, cursors, notices and policy (v1)",
+  "description": "The watcher journal answers which paths may have moved since the cursor at which a generation was last verified. A dirty set is the only input of the membership advance and of the fact checks: rows it does not name are trusted without a stat. Whatever the journal cannot vouch for (no cursor for the generation, restart, loss, overflow, untrusted watcher) is one announced verify epoch: a single bounded scan, after which the journal is trusted again. All documents are closed. Texts exist per language; no language is a default.",
+  "definitions": {
+    "Path": {
+      "type": "string",
+      "maxLength": 4096,
+      "not": {
+        "pattern": "^/|(^|/)\\.\\.?(/|$)|\\u0000|\\\\"
+      }
+    },
+    "JournalCursorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instance",
+        "seq"
+      ],
+      "properties": {
+        "instance": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DirtySetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cursor",
+        "complete",
+        "exact",
+        "subtrees",
+        "overflow"
+      ],
+      "properties": {
+        "cursor": {
+          "$ref": "#/definitions/JournalCursorV1"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "exact": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Path"
+          },
+          "description": "Every changed path and the directory that holds it (\"\" is the workspace root), sorted by code point."
+        },
+        "subtrees": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Path"
+          },
+          "description": "Directories added, removed or renamed: everything below them may have moved, sorted by code point."
+        },
+        "overflow": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Notice": {
+      "type": "string",
+      "enum": [
+        "unrecorded",
+        "disabled",
+        "no-service",
+        "starting",
+        "stale",
+        "untrusted",
+        "excluded",
+        "epoch",
+        "floor",
+        "gap",
+        "lost",
+        "fence-timeout",
+        "overflow",
+        "remote-file-system",
+        "cancelled",
+        "outside"
+      ],
+      "description": "Why one verify epoch runs. unrecorded: no verified cursor is recorded for this generation; outside: the advance found a change its parents do not explain. The others are the refusals of the change journal."
+    },
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumCursors": 32,
+        "cursorFile": "frontier-cursors.json",
+        "trustedKinds": [
+          "file",
+          "exists",
+          "stat",
+          "lstat",
+          "fileExists",
+          "directoryExists",
+          "readdir",
+          "readdirNames",
+          "typescriptText",
+          "analysis",
+          "realpath",
+          "realpathNative",
+          "typescriptRealpath"
+        ],
+        "texts": {
+          "en": {
+            "unrecorded": "No verified change journal cursor is recorded for generation {generation}; verifying the tree once.",
+            "outside": "The change journal advance found a change its parents do not explain; verifying the tree once."
+          },
+          "de": {
+            "unrecorded": "Für Generation {generation} ist kein geprüfter Änderungsjournal-Zeiger gespeichert; der Baum wird einmal geprüft.",
+            "outside": "Der Journal-Vorlauf fand eine Änderung, die seine Elternverzeichnisse nicht erklären; der Baum wird einmal geprüft."
+          }
+        },
+        "resolveKind": "resolve",
+        "maximumCarry": 20000,
+        "installStore": ".cache/b/d/m/j/",
+        "lockfile": "bun.lock"
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "rows",
+        "dirty"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "dirty": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "exact",
+            "subtrees"
+          ],
+          "properties": {
+            "exact": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "subtrees": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "trusted": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "doubtful": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "JournalQueryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sinceCursor"
+      ],
+      "properties": {
+        "sinceCursor": {
+          "$ref": "#/definitions/JournalCursorV1"
+        }
+      }
+    },
+    "JournalReplyV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "complete",
+            "cursor",
+            "rows"
+          ],
+          "properties": {
+            "complete": {
+              "const": true
+            },
+            "cursor": {
+              "$ref": "#/definitions/JournalCursorV1"
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": [
+                  {
+                    "enum": [
+                      "a",
+                      "m",
+                      "r",
+                      "n"
+                    ]
+                  },
+                  {
+                    "enum": [
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "$ref": "#/definitions/Path"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "complete",
+            "reason"
+          ],
+          "properties": {
+            "complete": {
+              "const": false
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "detail": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "path": {
+              "type": "string",
+              "maxLength": 4096
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "JournalOpenV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "excludes",
+        "exclusionVersion"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "excludes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rooted",
+            "names"
+          ],
+          "properties": {
+            "rooted": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Path"
+              }
+            },
+            "names": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              }
+            }
+          }
+        },
+        "exclusionVersion": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "description": "Contract for one watcher process serving every workspace of a host: one open per root with its exclusion set; a changed set bumps the version and the reader treats every cursor of an older version as a verify epoch. The watcher binary serves one root today; the direct reader opens one journal per root."
+    }
+  }
+}

@@ -465,6 +465,10 @@ use authority_core::*;
 mod plan_and_publish;
 pub use plan_and_publish::*;
 
+#[path = "🧲️handle-drag/🦀️.rs"]
+mod handle_drag;
+pub use handle_drag::*;
+
 pub fn step_world3d_draw_rebuild(session_state: &mut WorldSessionState, authority_state: &mut WorldAuthorityState, scene_state: &mut WorldSceneState, context: &mut semio_framework_job::StepContext<'_>) -> WorldDrawRebuildStep {
     if context.should_yield() {
         return WorldDrawRebuildStep::Pending;

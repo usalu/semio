@@ -97,6 +97,22 @@
     "moved": [],
     "modified": []
   },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "bldg-office",
+        "patch": {
+          "x": 2.0,
+          "y": null,
+          "z": null,
+          "yaw": null
+        }
+      }
+    ]
+  },
   "isolationSystems": {
     "removed": [],
     "inserted": [],
@@ -114,21 +130,5 @@
     "inserted": [],
     "moved": [],
     "modified": []
-  },
-  "placements": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": [
-      {
-        "id": "bldg-office",
-        "patch": {
-          "x": 2.0,
-          "y": null,
-          "z": null,
-          "yaw": null
-        }
-      }
-    ]
   }
 }

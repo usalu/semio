@@ -1,4 +1,5 @@
 /** 🔼️ Contract: a run that was forecast quiet asks for its full capacity before the graph builder custody is taken, never while holding it, from every process of the run (one that only inherits the grant included, since inheriting grows nothing); the phase mark inside the custody is bookkeeping and waits for nothing. */
+import {graphSourceV1} from "../📖️source/🟦️.ts";
 import{expect,test}from"bun:test";
 import{existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
@@ -6,7 +7,7 @@ import{join}from"node:path";
 import{hostBootAtV1,hostUpgradePathV1,newHostCapacityIdV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import{markBuildCapacityPhaseV1,upgradeBuildCapacityBeforeRebuildV1}from"../../../🌡️host-capacity/🚏️marks/🟦️.ts";
 
-const source=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8");
+const source=graphSourceV1();
 const builder=source.indexOf("withBuilder:async<T>");
 
 test("the capacity upgrade of a rebuild is asked before the builder custody is taken",()=>{

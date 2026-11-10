@@ -1,7 +1,8 @@
 import {createHash,randomUUID} from "node:crypto";
-import {link,mkdir,open,readdir,readFile,rename,rm,stat,unlink,utimes} from "node:fs/promises";
+import {link,mkdir,open,readdir,readFile,rename,rm,stat,unlink,utimes,writeFile} from "node:fs/promises";
 import {join} from "node:path";
 import {requireRemoteCacheShapeV1} from "../🟦️.ts";
+import type {CasStoreV1} from "../../🗄️cas/🗃️store/🟦️.ts";
 import {planRemoteCacheCollectionV1,scanRemoteCacheDirectoryV1} from "../🧹️collector/🟦️.ts";
 
 /** 🗂️ Names the three keyspaces one store partitions: Bazel action results, Bazel content blobs and Nx task archives. */
@@ -14,7 +15,7 @@ export type RemoteCachePutOutcomeV1="created"|"replaced"|"exists"|"digest-mismat
 export type RemoteCacheStoreEventV1=Readonly<{stage:"scan";entries:number;bytes:number}>|Readonly<{stage:"evict";entries:number;bytes:number}>|Readonly<{stage:"ready";entries:number;bytes:number}>;
 
 /** 🧱️ Authors the finite bounds of one store: total bytes, bytes per entry and the idle age after which an entry is dropped (0 keeps entries until space is needed). */
-export type RemoteCacheStoreOptionsV1=Readonly<{directory:string;maximumBytes:number;maximumEntryBytes:number;maximumAgeMilliseconds:number;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1)=>void}>;
+export type RemoteCacheStoreOptionsV1=Readonly<{directory:string;maximumBytes:number;maximumEntryBytes:number;maximumAgeMilliseconds:number;host?:CasStoreV1;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1)=>void}>;
 
 /** 📏️ Describes the current fill of one store. */
 export type RemoteCacheStoreUsageV1=Readonly<{entries:number;bytes:number;reservedBytes:number;maximumBytes:number;maximumEntryBytes:number}>;
@@ -64,6 +65,22 @@ export class RemoteCacheStoreV1{
  private checkpoint():void{this.options.signal?.throwIfAborted();}
  private tick():number{return this.clock=Math.max(Date.now(),this.clock+1);}
 
+
+ private referenced(namespace:string,kind:RemoteCacheKindV1):boolean{return kind==="nx"&&this.options.host!==undefined;}
+ private async reference(relative:string):Promise<string|undefined>{
+  const path=this.path(relative);let text;try{text=await readFile(path,"utf8");}catch{return undefined;}
+  try{const row=JSON.parse(text) as {hash?:unknown};if(typeof row.hash==="string"&&/^[0-9a-f]{64}$/u.test(row.hash))return row.hash;}catch{}
+  await unlink(path).catch(()=>undefined);return undefined;
+ }
+ private async resolve(namespace:string,kind:RemoteCacheKindV1,key:string):Promise<RemoteCacheEntryV1|undefined>{
+  const relative=this.relative(namespace,kind,key),hash=await this.reference(relative);
+  if(hash===undefined)return undefined;
+  const entry=await this.options.host!.get(hash);
+  if(entry===undefined){await unlink(this.path(relative)).catch(()=>undefined);return undefined;}
+  const now=this.tick()/1000;void utimes(this.path(relative),now,now).catch(()=>{});
+  return Object.freeze({path:entry.path,size:entry.size});
+ }
+
  /** 🔄️ Rebuilds the index from the files on disk, so values collected or removed by another process stop counting, then collects what exceeds the bounds. */
  async refresh():Promise<void>{
   const found=await scanRemoteCacheDirectoryV1(this.root,{...this.options.signal?{signal:this.options.signal}:{},onProgress:(_stage,entries,bytes)=>this.options.onEvent?.({stage:"scan",entries,bytes})});
@@ -78,6 +95,8 @@ export class RemoteCacheStoreV1{
  /** 🔍️ Looks one value up on disk and marks it recently used; a value another process removed is forgotten. */
  async read(namespace:string,kind:RemoteCacheKindV1,key:string):Promise<RemoteCacheEntryV1|undefined>{
   requireRemoteCacheAddressV1(namespace,kind,key);
+  if(kind==="cas"&&this.options.host)return this.options.host.get(key);
+  if(this.referenced(namespace,kind))return this.resolve(namespace,kind,key);
   const relative=this.relative(namespace,kind,key),path=this.path(relative);let info;
   try{info=await stat(path);}catch(error){
    if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;
@@ -93,17 +112,29 @@ export class RemoteCacheStoreV1{
 
  /** 📖️ Reads one small value completely and marks it recently used; `undefined` when it is absent or larger than the limit. */
  async readBytes(namespace:string,kind:RemoteCacheKindV1,key:string,limit:number):Promise<Uint8Array|undefined>{
+  if(kind==="cas"&&this.options.host){const entry=await this.options.host.get(key);return entry&&entry.size<=limit?this.options.host.read(key).then(bytes=>bytes):undefined;}
   const entry=await this.read(namespace,kind,key);
   if(!entry||entry.size>limit)return undefined;
   try{return await readFile(entry.path);}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;}
  }
 
- /** 🧪️ Tells whether a value exists without touching it. */
- has(namespace:string,kind:RemoteCacheKindV1,key:string):boolean{requireRemoteCacheAddressV1(namespace,kind,key);return this.index.has(this.relative(namespace,kind,key));}
+ /** 🧪️ Tells whether a value exists without touching it; a value another process or the host collector removed reads as absent and is forgotten. */
+ async has(namespace:string,kind:RemoteCacheKindV1,key:string):Promise<boolean>{
+  requireRemoteCacheAddressV1(namespace,kind,key);
+  if(kind==="cas"&&this.options.host)return (await this.options.host.has([key]))[0]===true;
+  if(this.referenced(namespace,kind))return (await this.resolve(namespace,kind,key))!==undefined;
+  const relative=this.relative(namespace,kind,key);
+  try{await stat(this.path(relative));return true;}catch(error){
+   if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;
+   const gone=this.index.get(relative);if(gone){this.index.delete(relative);this.bytes-=gone.size;}
+   return false;
+  }
+ }
 
  /** 🗑️ Removes one value; a missing value is not an error. */
  async remove(namespace:string,kind:RemoteCacheKindV1,key:string):Promise<void>{
   requireRemoteCacheAddressV1(namespace,kind,key);
+  if(kind==="cas"&&this.options.host)return;
   const relative=this.relative(namespace,kind,key),row=this.index.get(relative);
   try{await unlink(this.path(relative));}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
   if(row){this.index.delete(relative);this.bytes-=row.size;}
@@ -130,7 +161,23 @@ export class RemoteCacheStoreV1{
  async put(namespace:string,kind:RemoteCacheKindV1,key:string,body:AsyncIterable<Uint8Array>|null,input:Readonly<{mode:RemoteCachePutModeV1;verify?:boolean;declaredLength?:number|undefined}>):Promise<RemoteCachePutOutcomeV1>{
   requireRemoteCacheAddressV1(namespace,kind,key);
   const relative=this.relative(namespace,kind,key),declared=input.declaredLength;
-  if(input.mode!=="replace"&&this.index.has(relative))return "exists";
+  if(kind==="cas"&&this.options.host){
+   if(declared!==undefined&&declared>this.options.maximumEntryBytes)return "too-large";
+   const result=await this.options.host.putChecked(body??[],{hash:key,maxBytes:this.options.maximumEntryBytes,...(declared===undefined?{}:{size:declared})},this.options.signal);
+   return result.outcome==="exists"?"exists":result.outcome;
+  }
+  if(this.referenced(namespace,kind)){
+   const known=input.mode!=="replace"&&await this.has(namespace,kind,key);
+   if(known)return "exists";
+   if(declared!==undefined&&declared>this.options.maximumEntryBytes)return "too-large";
+   const result=await this.options.host!.putChecked(body??[],{maxBytes:this.options.maximumEntryBytes,...(declared===undefined?{}:{size:declared})},this.options.signal);
+   if(!result.digest)return result.outcome as RemoteCachePutOutcomeV1;
+   const target=this.path(relative),temporary=join(this.temporary,randomUUID());
+   await mkdir(this.path(`${namespace}/${kind}/${key.slice(0,2)}`),{recursive:true});
+   await writeFile(temporary,JSON.stringify({version:1,hash:result.digest.hash,size:result.digest.size}));await rename(temporary,target);
+   return "created";
+  }
+  if(input.mode!=="replace"&&await this.has(namespace,kind,key))return "exists";
   if(declared!==undefined&&declared>this.options.maximumEntryBytes)return "too-large";
   const temporary=join(this.temporary,randomUUID()),hash=input.verify?createHash("sha256"):undefined;let held=0,written=0,handle;
   const reserve=async(extra:number):Promise<boolean>=>{

@@ -1,0 +1,925 @@
+{
+ "version": 1,
+ "scenarios": [
+  {
+   "id": "shared-crate-first",
+   "policy": {
+    "heartbeatTimeoutMs": 1000000000,
+    "maxConcurrent": 1
+   },
+   "budgetMegabytes": 8192,
+   "jobs": [
+    {
+     "ticket": "leaf",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "leaf",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "mid",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 2,
+     "key": "mid",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "core",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 5,
+     "key": "core",
+     "peakMegabytes": 512
+    }
+   ],
+   "starts": [
+    [
+     "core",
+     0
+    ],
+    [
+     "mid",
+     1000
+    ],
+    [
+     "leaf",
+     2000
+    ]
+   ]
+  },
+  {
+   "id": "two-agents-round-robin",
+   "policy": {
+    "heartbeatTimeoutMs": 1000000000,
+    "maxConcurrent": 1,
+    "maxPerAgent": 1
+   },
+   "budgetMegabytes": 8192,
+   "jobs": [
+    {
+     "ticket": "a0",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "a0",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "a1",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "a1",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "a2",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "a2",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "a3",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "a3",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "a4",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "a4",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "b0",
+     "at": 0,
+     "agent": "b",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "b0",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "b1",
+     "at": 0,
+     "agent": "b",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "b1",
+     "peakMegabytes": 512
+    }
+   ],
+   "starts": [
+    [
+     "a0",
+     0
+    ],
+    [
+     "b0",
+     1000
+    ],
+    [
+     "a1",
+     2000
+    ],
+    [
+     "b1",
+     3000
+    ],
+    [
+     "a2",
+     4000
+    ],
+    [
+     "a3",
+     5000
+    ],
+    [
+     "a4",
+     6000
+    ]
+   ]
+  },
+  {
+   "id": "dedupe-same-target",
+   "policy": {
+    "heartbeatTimeoutMs": 1000000000,
+    "maxConcurrent": 4
+   },
+   "budgetMegabytes": 8192,
+   "jobs": [
+    {
+     "ticket": "x1",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "core:build",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "x2",
+     "at": 10,
+     "agent": "b",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "core:build",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "x3",
+     "at": 20,
+     "agent": "c",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "core:build",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "y1",
+     "at": 0,
+     "agent": "c",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "y1",
+     "peakMegabytes": 512
+    }
+   ],
+   "starts": [
+    [
+     "x1",
+     0
+    ],
+    [
+     "y1",
+     0
+    ]
+   ]
+  },
+  {
+   "id": "aging-lifts-background",
+   "policy": {
+    "heartbeatTimeoutMs": 1000000000,
+    "maxConcurrent": 1,
+    "agingMs": 1000
+   },
+   "budgetMegabytes": 8192,
+   "jobs": [
+    {
+     "ticket": "old",
+     "at": 0,
+     "agent": "z",
+     "durationMs": 1000,
+     "priority": "background",
+     "depth": 0,
+     "key": "old",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "i0",
+     "at": 0,
+     "agent": "w0",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 0,
+     "key": "i0",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "i1",
+     "at": 200,
+     "agent": "w1",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 0,
+     "key": "i1",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "i2",
+     "at": 400,
+     "agent": "w2",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 0,
+     "key": "i2",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "i3",
+     "at": 600,
+     "agent": "w3",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 0,
+     "key": "i3",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "i4",
+     "at": 800,
+     "agent": "w4",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 0,
+     "key": "i4",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "i5",
+     "at": 1000,
+     "agent": "w5",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 0,
+     "key": "i5",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "i6",
+     "at": 1200,
+     "agent": "w6",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 0,
+     "key": "i6",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "i7",
+     "at": 1400,
+     "agent": "w7",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 0,
+     "key": "i7",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "i8",
+     "at": 1600,
+     "agent": "w8",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 0,
+     "key": "i8",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "i9",
+     "at": 1800,
+     "agent": "w9",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 0,
+     "key": "i9",
+     "peakMegabytes": 512
+    }
+   ],
+   "starts": [
+    [
+     "i0",
+     0
+    ],
+    [
+     "i1",
+     1000
+    ],
+    [
+     "old",
+     2000
+    ],
+    [
+     "i2",
+     3000
+    ],
+    [
+     "i3",
+     4000
+    ],
+    [
+     "i4",
+     5000
+    ],
+    [
+     "i5",
+     6000
+    ],
+    [
+     "i6",
+     7000
+    ],
+    [
+     "i7",
+     8000
+    ],
+    [
+     "i8",
+     9000
+    ],
+    [
+     "i9",
+     10000
+    ]
+   ]
+  },
+  {
+   "id": "backfill-and-drain",
+   "policy": {
+    "heartbeatTimeoutMs": 1000000000,
+    "agingMs": 100
+   },
+   "budgetMegabytes": 4000,
+   "jobs": [
+    {
+     "ticket": "run",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 5000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "run",
+     "peakMegabytes": 3000
+    },
+    {
+     "ticket": "big",
+     "at": 100,
+     "agent": "b",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "big",
+     "peakMegabytes": 3000
+    },
+    {
+     "ticket": "small",
+     "at": 200,
+     "agent": "c",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "small",
+     "peakMegabytes": 500
+    }
+   ],
+   "starts": [
+    [
+     "run",
+     0
+    ],
+    [
+     "big",
+     5000
+    ],
+    [
+     "small",
+     5000
+    ]
+   ]
+  },
+  {
+   "id": "oversized-runs-alone",
+   "policy": {
+    "heartbeatTimeoutMs": 1000000000
+   },
+   "budgetMegabytes": 4096,
+   "jobs": [
+    {
+     "ticket": "huge",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "huge",
+     "peakMegabytes": 20000
+    },
+    {
+     "ticket": "next",
+     "at": 10,
+     "agent": "b",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "next",
+     "peakMegabytes": 512
+    }
+   ],
+   "starts": [
+    [
+     "huge",
+     0
+    ],
+    [
+     "next",
+     1000
+    ]
+   ]
+  },
+  {
+   "id": "compiler-lanes",
+   "policy": {
+    "heartbeatTimeoutMs": 1000000000,
+    "sharedCompilerLanes": {
+     "rustc": 1,
+     "tsc": 2
+    }
+   },
+   "budgetMegabytes": 99999,
+   "jobs": [
+    {
+     "ticket": "r0",
+     "at": 0,
+     "agent": "a0",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "r0",
+     "peakMegabytes": 512,
+     "lane": "rustc"
+    },
+    {
+     "ticket": "r1",
+     "at": 0,
+     "agent": "a1",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "r1",
+     "peakMegabytes": 512,
+     "lane": "rustc"
+    },
+    {
+     "ticket": "r2",
+     "at": 0,
+     "agent": "a2",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "r2",
+     "peakMegabytes": 512,
+     "lane": "rustc"
+    },
+    {
+     "ticket": "t0",
+     "at": 0,
+     "agent": "a0",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "t0",
+     "peakMegabytes": 512,
+     "lane": "tsc"
+    },
+    {
+     "ticket": "t1",
+     "at": 0,
+     "agent": "a1",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "t1",
+     "peakMegabytes": 512,
+     "lane": "tsc"
+    },
+    {
+     "ticket": "t2",
+     "at": 0,
+     "agent": "a2",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "t2",
+     "peakMegabytes": 512,
+     "lane": "tsc"
+    }
+   ],
+   "starts": [
+    [
+     "r0",
+     0
+    ],
+    [
+     "t1",
+     0
+    ],
+    [
+     "t2",
+     0
+    ],
+    [
+     "r1",
+     1000
+    ],
+    [
+     "t0",
+     1000
+    ],
+    [
+     "r2",
+     2000
+    ]
+   ]
+  },
+  {
+   "id": "cancel-queued-and-running",
+   "policy": {
+    "heartbeatTimeoutMs": 1000000000,
+    "maxConcurrent": 1
+   },
+   "budgetMegabytes": 8192,
+   "jobs": [
+    {
+     "ticket": "c1",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "c1",
+     "peakMegabytes": 512,
+     "cancelAt": 500
+    },
+    {
+     "ticket": "c2",
+     "at": 0,
+     "agent": "b",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "c2",
+     "peakMegabytes": 512,
+     "cancelAt": 200
+    },
+    {
+     "ticket": "c3",
+     "at": 0,
+     "agent": "c",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "c3",
+     "peakMegabytes": 512
+    }
+   ],
+   "starts": [
+    [
+     "c1",
+     0
+    ],
+    [
+     "c3",
+     500
+    ]
+   ]
+  },
+  {
+   "id": "mixed-agents",
+   "policy": {
+    "heartbeatTimeoutMs": 1000000000,
+    "maxConcurrent": 3,
+    "maxPerAgent": 2
+   },
+   "budgetMegabytes": 6000,
+   "jobs": [
+    {
+     "ticket": "m0",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "m0",
+     "peakMegabytes": 256
+    },
+    {
+     "ticket": "m1",
+     "at": 0,
+     "agent": "b",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 5,
+     "key": "m1",
+     "peakMegabytes": 1024
+    },
+    {
+     "ticket": "m2",
+     "at": 0,
+     "agent": "c",
+     "durationMs": 1000,
+     "priority": "background",
+     "depth": 3,
+     "key": "m2",
+     "peakMegabytes": 2048
+    },
+    {
+     "ticket": "m3",
+     "at": 0,
+     "agent": "d",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 1,
+     "key": "m3",
+     "peakMegabytes": 256
+    },
+    {
+     "ticket": "m4",
+     "at": 300,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 6,
+     "key": "m4",
+     "peakMegabytes": 1024
+    },
+    {
+     "ticket": "m5",
+     "at": 300,
+     "agent": "b",
+     "durationMs": 1000,
+     "priority": "background",
+     "depth": 4,
+     "key": "m5",
+     "peakMegabytes": 2048
+    },
+    {
+     "ticket": "m6",
+     "at": 300,
+     "agent": "c",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 2,
+     "key": "m6",
+     "peakMegabytes": 256
+    },
+    {
+     "ticket": "m7",
+     "at": 300,
+     "agent": "d",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 0,
+     "key": "m7",
+     "peakMegabytes": 1024
+    },
+    {
+     "ticket": "m8",
+     "at": 600,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "background",
+     "depth": 5,
+     "key": "m8",
+     "peakMegabytes": 2048
+    },
+    {
+     "ticket": "m9",
+     "at": 600,
+     "agent": "b",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 3,
+     "key": "m0",
+     "peakMegabytes": 256
+    },
+    {
+     "ticket": "m10",
+     "at": 600,
+     "agent": "c",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 1,
+     "key": "m1",
+     "peakMegabytes": 1024
+    },
+    {
+     "ticket": "m11",
+     "at": 600,
+     "agent": "d",
+     "durationMs": 1000,
+     "priority": "background",
+     "depth": 6,
+     "key": "m2",
+     "peakMegabytes": 2048
+    },
+    {
+     "ticket": "m12",
+     "at": 900,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 4,
+     "key": "m3",
+     "peakMegabytes": 256
+    },
+    {
+     "ticket": "m13",
+     "at": 900,
+     "agent": "b",
+     "durationMs": 1000,
+     "priority": "interactive",
+     "depth": 2,
+     "key": "m4",
+     "peakMegabytes": 1024
+    },
+    {
+     "ticket": "m14",
+     "at": 900,
+     "agent": "c",
+     "durationMs": 1000,
+     "priority": "background",
+     "depth": 0,
+     "key": "m5",
+     "peakMegabytes": 2048
+    },
+    {
+     "ticket": "m15",
+     "at": 900,
+     "agent": "d",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 5,
+     "key": "m6",
+     "peakMegabytes": 256
+    }
+   ],
+   "starts": [
+    [
+     "m1",
+     0
+    ],
+    [
+     "m3",
+     0
+    ],
+    [
+     "m0",
+     0
+    ],
+    [
+     "m4",
+     1000
+    ],
+    [
+     "m7",
+     1000
+    ],
+    [
+     "m6",
+     1000
+    ],
+    [
+     "m2",
+     2000
+    ],
+    [
+     "m5",
+     2000
+    ],
+    [
+     "m8",
+     3000
+    ]
+   ]
+  },
+  {
+   "id": "idle-agent-pruned-then-returns",
+   "policy": {
+    "heartbeatTimeoutMs": 1000000000,
+    "maxConcurrent": 1,
+    "agingMs": 100
+   },
+   "budgetMegabytes": 8192,
+   "jobs": [
+    {
+     "ticket": "p1",
+     "at": 0,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "p1",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "p2",
+     "at": 100,
+     "agent": "b",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "p2",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "p3",
+     "at": 5000,
+     "agent": "a",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "p3",
+     "peakMegabytes": 512
+    },
+    {
+     "ticket": "p4",
+     "at": 5000,
+     "agent": "b",
+     "durationMs": 1000,
+     "priority": "agent",
+     "depth": 0,
+     "key": "p4",
+     "peakMegabytes": 512
+    }
+   ],
+   "starts": [
+    [
+     "p1",
+     0
+    ],
+    [
+     "p2",
+     1000
+    ],
+    [
+     "p3",
+     5000
+    ],
+    [
+     "p4",
+     6000
+    ]
+   ]
+  }
+ ]
+}

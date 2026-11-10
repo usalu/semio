@@ -24,10 +24,11 @@ def contradicting_notes(rows):
 def foreign_sources(rows):
     bad = []
     for x in rows:
-        number = x["code"].replace("EN ", "")
+        number = x["code"].replace("EN ", "", 1) if re.fullmatch(r"EN \d+", x["code"]) else x["code"]
         document = x["source"]["document"]
-        own = re.search(rf"(?<!\d){number}(?!\d)", document) or document.startswith(PRODUCT_STANDARDS.get(x["code"], ("\0",)))
-        if x["id"].split(".")[1] != "en" + number or not own:
+        own = re.search(rf"(?<!\d){re.escape(number)}(?!\d)", document) or document.startswith(PRODUCT_STANDARDS.get(x["code"], ("\0",)))
+        family = re.sub(r"[ -]", "", x["code"]).lower() if not re.fullmatch(r"EN \d+", x["code"]) else "en" + number
+        if re.sub(r"[ -]", "", x["id"].split(".")[1]) != family or not own:
             bad.append((x["id"], x["code"], document))
     return bad
 

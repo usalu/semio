@@ -25,7 +25,9 @@
           "thetaICoolC": null,
           "occupants": null,
           "internalGainsWM2": null,
-          "lightingPowerWM2": 7.5
+          "lightingPowerWM2": 7.5,
+          "thermalMassClass": "Medium",
+          "cWirkWhM2k": 90.0
         }
       }
     ]

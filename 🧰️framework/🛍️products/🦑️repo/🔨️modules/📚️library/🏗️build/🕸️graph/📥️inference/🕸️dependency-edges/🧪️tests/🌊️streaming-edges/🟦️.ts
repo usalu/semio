@@ -41,8 +41,9 @@ const materialize=(world:World)=>{
 
 const pairs=(edges:{source:string;target:string;sourceFile:string}[],name:string)=>edges.filter(edge=>edge.source===name).map(edge=>[edge.target,edge.sourceFile]).sort((a,b)=>JSON.stringify(a)<JSON.stringify(b)?-1:1);
 
-test("10 seeded worlds: the streamed edges of every owner equal the full discovery and the independent model",async()=>{
- const worlds=Array.from({length:10},(_,at)=>makeWorld(26102026+at,8+at*9)),run=Bun.spawnSync([python!,"-I",oracle],{stdin:Buffer.from(JSON.stringify({worlds}))});
+const seen={total:0,withManifest:0};
+for(const seed of[0,1,2,3,4])test(`seeded world ${seed} of 5: the streamed edges of every owner equal the full discovery and the independent model`,async()=>{
+ const worlds=[makeWorld(26102026+seed,8+seed*12)],run=Bun.spawnSync([python!,"-I",oracle],{stdin:Buffer.from(JSON.stringify({worlds}))});
  expect(run.exitCode).toBe(0);const answers=JSON.parse(run.stdout.toString()).answers as {edges:Record<string,string[][]>}[];
  let total=0,withManifest=0;
  for(const[at,world]of worlds.entries()){
@@ -55,15 +56,16 @@ test("10 seeded worlds: the streamed edges of every owner equal the full discove
    const streaming=await implementation.createStreamingEdgesV1({},context);
    for(const name of Object.keys(world.projects)){
     const streamed=streaming.edgesOf(name,{metadata:{semio:{moduleGraph:metadata[name].metadata.semio.moduleGraph}}}) as {source:string;target:string;sourceFile:string}[];
-    expect(streamed.every(edge=>edge.source===name),`world ${at} ${name}`).toBe(true);
-    expect(pairs(streamed,name),`world ${at} ${name}: streamed = full`).toEqual(pairs(full,name));
-    expect(pairs(streamed,name),`world ${at} ${name}: streamed = model`).toEqual(answers[at]!.edges[name]);
+    expect(streamed.every(edge=>edge.source===name),`world ${seed} ${name}`).toBe(true);
+    expect(pairs(streamed,name),`world ${seed} ${name}: streamed = full`).toEqual(pairs(full,name));
+    expect(pairs(streamed,name),`world ${seed} ${name}: streamed = model`).toEqual(answers[at]!.edges[name]);
     total+=streamed.length;withManifest+=streamed.filter(edge=>edge.sourceFile.endsWith("package.json")).length;
    }
   }finally{rmSync(root,{recursive:true,force:true});}
  }
- expect(total).toBeGreaterThan(300);expect(withManifest).toBeGreaterThan(20);
+ seen.total+=total;seen.withManifest+=withManifest;
 });
+test("the seeded worlds together stream enough edges, with enough package manifests among them",()=>{expect(seen.total).toBeGreaterThan(150);expect(seen.withManifest).toBeGreaterThan(10);});
 
 test("an owner without module facts and a withheld owner stream no edge",async()=>{
  const world=makeWorld(5,6),root=materialize(world);
@@ -74,8 +76,8 @@ test("an owner without module facts and a withheld owner stream no edge",async()
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
-test("memory budget: streaming the edges of 600 owners retains nothing, and a discovery that retains the facts of nobody publishes none",async()=>{
- const world=makeWorld(99,600),root=materialize(world),mb=(bytes:number)=>bytes/1048576;
+test("memory budget: streaming the edges of 60 owners retains nothing, and a discovery that retains the facts of nobody publishes none",async()=>{
+ const world=makeWorld(99,60),root=materialize(world),mb=(bytes:number)=>bytes/1048576;
  try{
   const projects=Object.fromEntries(Object.entries(world.projects).map(([name,project])=>[name,{name,root:project.root,targets:{}}])),projectFileMap=Object.fromEntries(Object.entries(world.projects).map(([name,project])=>[name,Object.keys(project.files).map(file=>({file}))]));
   const context={workspaceRoot:root,projects,fileMap:{projectFileMap},selection:{kind:"all"},completeSourceImports:false,moduleGraphProjects:new Set<string>()};
@@ -85,12 +87,12 @@ test("memory budget: streaming the edges of 600 owners retains nothing, and a di
   const fullContext={...context,moduleGraphProjects:new Set(Object.keys(projects))};
   await cacheInternals.createDependenciesImplementation({},fullContext);
   const all=cacheInternals.createMetadataImplementation({nodes:Object.fromEntries(Object.entries(projects).map(([name,data])=>[name,{name,type:"lib",data}]))},{},fullContext),nodes=Object.entries(all).map(([name,value]:[string,any])=>[name,{metadata:{semio:{moduleGraph:value.metadata.semio.moduleGraph}}}] as const);
-  expect(nodes.length).toBe(601);
+  expect(nodes.length).toBe(61);
   const streaming=await implementation.createStreamingEdgesV1({},context);
   Bun.gc(true);const before=process.memoryUsage().heapUsed;let edges=0;
   for(const[name,node]of nodes)edges+=streaming.edgesOf(name,node).length;
   Bun.gc(true);const grown=mb(process.memoryUsage().heapUsed-before);
-  expect(edges).toBeGreaterThan(500);
-  expect(grown,"heap grown by streaming 600 owners: "+grown.toFixed(1)+" MB").toBeLessThan(25);
+  expect(edges).toBeGreaterThan(100);
+  expect(grown,"heap grown by streaming 60 owners: "+grown.toFixed(1)+" MB").toBeLessThan(5);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

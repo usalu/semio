@@ -1,0 +1,10 @@
+{
+ "version": 1,
+ "branches": 40,
+ "directoriesPerBranch": 800,
+ "cratesPerBranch": 8,
+ "maximumTurnMilliseconds": 500,
+ "cancelWithinMilliseconds": 1000,
+ "cancelAfterMilliseconds": 20,
+ "owners": 10
+}

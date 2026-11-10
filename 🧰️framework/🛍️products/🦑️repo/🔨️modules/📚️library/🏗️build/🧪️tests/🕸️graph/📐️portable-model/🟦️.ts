@@ -46,7 +46,7 @@ test("canonical graph refuses competing identities at one physical root",()=>{
 test("portable relative GUI declarations survive Windows and POSIX JSON path serialization",()=>{
  const validate=new(require("ajv").default)({strict:true}).compile(initialAuthoringSchema);
  for(const row of fixture.initialAuthoring.paths){
-  const path=row.platform==="win32"?win32:posix,source=fixture.initialAuthoring.cases[0]!,request=["repo",...source.arguments],declared={workspaceRoot:source.workspaceRoot,tool:source.tool,arguments:request,selection:request,launches:[request],buildMode:source.buildMode,native:source.native},serialized=JSON.stringify({SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(declared),CARGO_TARGET_DIR:row.artifact}),environment=JSON.parse(serialized),parsed=JSON.parse(environment.SEMIO_SCRIPT_CAPABILITIES);
+  const path=row.platform==="win32"?win32:posix,source=fixture.initialAuthoring.cases[0]!,request=["repo",...source.arguments],declared={workspaceRoot:source.workspaceRoot,codeRoot:source.codeRoot,tool:source.tool,arguments:request,selection:request,launches:[request],buildMode:source.buildMode,native:source.native},serialized=JSON.stringify({SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(declared),CARGO_TARGET_DIR:row.artifact}),environment=JSON.parse(serialized),parsed=JSON.parse(environment.SEMIO_SCRIPT_CAPABILITIES);
   expect(validate(parsed)).toBe(true);
   expect(parsed.workspaceRoot).toBe(".");expect(path.resolve(row.root,parsed.workspaceRoot)).toBe(row.root);expect(path.resolve(row.root,parsed.native.artifactDirectory)).toBe(row.artifact);expect(environment.CARGO_TARGET_DIR).toBe(row.artifact);expect(environment.SEMIO_SCRIPT_CAPABILITIES).not.toContain("${workspaceFolder}");
  }

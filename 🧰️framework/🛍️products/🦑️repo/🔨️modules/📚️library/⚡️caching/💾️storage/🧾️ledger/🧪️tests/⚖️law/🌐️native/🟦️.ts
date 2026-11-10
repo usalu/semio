@@ -10,7 +10,7 @@ function workspace():string{
  for(let path=import.meta.dir;;path=dirname(path)){if(existsSync(join(path,"bunfig.toml"))&&existsSync(join(path,"bun.lock")))return path;if(dirname(path)===path)throw Error("Repository root not found");}
 }
 const root=workspace(),ledger=cacheLedgerV1(),sources=/\.(ts|tsx|mjs|js|json|rs|go|py|sh|toml|yml|yaml)$/u,exempt=/(^|\/)(🧪️tests|🧫️fixtures|node_modules|target|dist)\/|(^|\/)🗑️generated\/|^\.🧬semio\/|^🌎️hub\/|💾️storage\/🧾️ledger\//u;
-const literal=/(?<![A-Za-z0-9_])\.cache(?:\/|["'`]\s*,\s*["'`])([A-Za-z0-9_-]+)/gu,reading=/new Set\(|SKIP|[Ss]kip|[Ee]xclude|[Ii]gnore|IGNORE|[Aa]mbient|readdir|isIgnored/u,foreign=/node_modules|~|HOME|XDG|home/u;
+const literal=/(?<![A-Za-z0-9_])\.cache(?:\/|["'`]\s*,\s*["'`])([A-Za-z0-9_-]+)/gu,reading=/new Set\(|[Oo]paque|SKIP|[Ss]kip|[Ee]xclude|[Ii]gnore|IGNORE|[Aa]mbient|readdir|isIgnored/u,foreign=/node_modules|~|HOME|XDG|home/u;
 
 function candidates():string[]{
  if(process.env.SEMIO_CACHE_NATIVE_LAW_FILES)return readFileSync(process.env.SEMIO_CACHE_NATIVE_LAW_FILES,"utf8").split("\n").filter(Boolean);

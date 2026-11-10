@@ -9,7 +9,8 @@ import policy from "../../🔣️policy.json" with {type:"json"};
 import catalog from "../../⚙️operations/🔣️catalog.json" with {type:"json"};
 import conformance from "../../📐️conformance/📋️scenarios/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {buildBackendDefaultIdV1,backendMissingOperationsV1,buildBackendAlternationV1,buildBackendBootstrapV1,buildBackendNativeNamespacesV1,buildBackendIdsV1,buildBackendRowV1,buildBackendRowsV1,buildNativeSnapshotProtocolV1,loadBuildBackendV1,readBackendRegistryV1,requireBuildBackendIdV1} from "../🟦️.ts";
+import {buildBackendPlansScopedV1,buildBackendDefaultIdV1,backendMissingOperationsV1,buildBackendAlternationV1,buildBackendBootstrapV1,buildBackendNativeNamespacesV1,buildBackendIdsV1,buildBackendRowV1,buildBackendRowsV1,buildNativeSnapshotProtocolV1,loadBuildBackendV1,requireBuildBackendIdV1} from "../🟦️.ts";
+import {readBackendRegistryV1} from "../📜️registry/🟦️.ts";
 import {renderBuildHelpV1,type BuildHelpCatalogV1} from "../../⚙️operations/📖️help/🟦️.ts";
 
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),build=join(import.meta.dir,"../..");
@@ -55,6 +56,12 @@ test("the policy default, the catalogue and the help derive from the registry",(
  expect(()=>requireBuildBackendIdV1("")).toThrow("Unbekanntes Build-Werkzeug");
 });
 
+test("every backend declares that it plans from a target-scoped graph and a missing declaration is refused",()=>{
+ for(const id of buildBackendIdsV1())expect(buildBackendPlansScopedV1(id),id).toBe(true);
+ expect(()=>readBackendRegistryV1(mutated(c=>{delete c.backends[0].plansScoped;}))).toThrow();
+ expect(()=>readBackendRegistryV1(mutated(c=>{c.backends[0].plansScoped="yes";}))).toThrow();
+});
+
 test("the native-snapshot protocol is declared by exactly one backend and carries its variable and environment",()=>{
  const owners=buildBackendRowsV1().filter(row=>row.nativeSnapshot);
  expect(owners.length).toBe(1);
@@ -97,7 +104,7 @@ test("every module and driver a row names exists, and the in-house backend loads
 });
 
 const NEUTRAL_CLEAN=["🔌️backends/🟦️.ts","⚙️operations/🟦️.ts","🌐️remote-cache/⌨️command/🟦️.ts","🌐️remote-cache/🟦️.ts","🔧️tools/💾️storage/🟦️.ts","📥️inputs/🎯️selected/📦️snapshot/🟦️.ts","📥️inputs/🎯️selected/🦀️rust/🟦️.ts","⚙️operations/📖️help/🟦️.ts","⚙️operations/🔣️catalog.json","🧬️schema/🔣️.json","⚙️operations/🧬️schema/🔣️.json","📏️incremental/⌨️command/🟦️.ts","📏️incremental/🤝️concurrent/⌨️command/🟦️.ts","📐️conformance/🟦️.ts","📐️conformance/🏃️runner/🟦️.ts","📐️conformance/⌨️command/🟦️.ts","🧮️task-model/🟦️.ts","🧭️invocation/🟦️.ts","📥️caller/🟦️.ts","📥️caller/📤️orchestration/🟨️.mjs","📥️caller/📤️child/🟦️.ts","🧾️ci-report/🟦️.ts","🧾️ci-report/📜️script.ts","🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs"];
-const KNOWN_LEAKS:Record<string,number>={"🏃️execution/🧬️schema/🌐️remote-cache.json":2,"🌐️remote-cache/💾️store/🟦️.ts":1,"🌐️remote-cache/🖥️server/🟦️.ts":3,"🚀️bootstrap/⌨️cli/🟦️.ts":3,"📜️script.ts":1,"🏃️execution/🔒️hermetic/🚪️entry/🟦️.ts":1,"📏️incremental/🟦️.ts":2,"📏️incremental/🏃️runner/🟦️.ts":3,"📏️incremental/👁️observers/🟦️.ts":2,"📏️incremental/🤝️concurrent/🟦️.ts":4,"📏️incremental/🤝️concurrent/🏃️runner/🟦️.ts":3,"🪞️parity/🟦️.ts":16,"🪞️parity/🏃️collect/🟦️.ts":3};
+const KNOWN_LEAKS:Record<string,number>={"🏃️execution/🧬️schema/🌐️remote-cache.json":2,"🌐️remote-cache/💾️store/🟦️.ts":2,"🌐️remote-cache/🖥️server/🟦️.ts":3,"🚀️bootstrap/⌨️cli/🟦️.ts":3,"📜️script.ts":1,"🏃️execution/🔒️hermetic/🚪️entry/🟦️.ts":1,"📏️incremental/🟦️.ts":2,"📏️incremental/🏃️runner/🟦️.ts":3,"📏️incremental/👁️observers/🟦️.ts":2,"📏️incremental/🤝️concurrent/🟦️.ts":4,"📏️incremental/🤝️concurrent/🏃️runner/🟦️.ts":3,"🪞️parity/🟦️.ts":16,"🪞️parity/🏃️collect/🟦️.ts":3};
 const literal=/(["'`])(nx|bazel)\1|\b(?:tool|selected\.tool)\s*[!=]==\s*["'](nx|bazel)["']/gu;
 test("neutral files never name a backend: the cleaned ones stay clean and the remaining ones may not grow",()=>{
  for(const path of NEUTRAL_CLEAN){
@@ -145,3 +152,16 @@ test("backend process defaults reach startup and preserve explicit environment",
   if(row.backend==="nx")expect(nxChildEnvironment(row.environment,["run","workspace:components"],false).NX_DAEMON,row.id).toBe(row.expected.NX_DAEMON);
  }
 });
+
+test("the lazily validated registry loads through the plan capture: the backend door is imported and validated inside a captured plan",async()=>{
+ const {mkdtempSync,rmSync}=await import("node:fs"),{tmpdir}=await import("node:os"),{join}=await import("node:path"),{fileURLToPath}=await import("node:url");
+ const {withCapturedPlanV1}=await import("../../🧊️revision/🗂️fs/🟦️.ts"),{importObservedModuleV1}=await import("../../👁️observation/🟨️.mjs"),{createCasStoreV1}=await import("../../🗄️cas/🗃️store/🟦️.ts");
+ const area=mkdtempSync(join(tmpdir(),"backends-capture-")),door=fileURLToPath(new URL("../🟦️.ts",import.meta.url)),workspace=fileURLToPath(new URL("../../../",import.meta.url));
+ try{
+  const outcome=await withCapturedPlanV1({cas:createCasStoreV1({root:area}),root:workspace,workspace:"w",holder:"p",journalCursor:"c"},async()=>{
+   const captured=await importObservedModuleV1(door) as {loadBuildBackendV1:(id:string)=>Promise<{id:string}>;buildBackendIdsV1:()=>readonly string[]};
+   return{ids:captured.buildBackendIdsV1(),backend:(await captured.loadBuildBackendV1("semio")).id};
+  });
+  expect(outcome.result).toEqual({ids:["nx","bazel","semio"],backend:"semio"});
+ }finally{rmSync(area,{recursive:true,force:true});}
+},120000);

@@ -34,6 +34,8 @@ pub struct SceneSlot<'tree> {
     pub component_generation: u64,
     pub rect: Rect,
     pub content: SlotContent<'tree>,
+    /// 🧷️ The dispatch contract of the leaf's document node: the actions (and authored arguments) it binds per trigger, for a host that dispatches them from its own pointer pipeline.
+    pub intent: Option<&'tree semio_ui_retained_tree::UiIntentBindings>,
 }
 
 /// 🎞️ Retained producer-consumer cursor for one scene or image leaf.
@@ -218,8 +220,8 @@ pub fn scene_slot_for_node<'tree>(tree: &'tree UiTree, id: NodeId, origin_x: f32
     let layout = tree.accepted_layout(id)?;
     let rect = Rect::new(origin_x + layout.x, origin_y + layout.y, layout.width, layout.height);
     match &node.spec.0 {
-        UiNode::ComponentScene(scene) => Some(SceneSlot { node: id, document_id: tree.document_id(id), key: &node.key, component_generation: node.component_generation(), rect, content: SlotContent::Scene(scene) }),
-        UiNode::Image(image) => Some(SceneSlot { node: id, document_id: tree.document_id(id), key: &node.key, component_generation: 0, rect, content: SlotContent::Image(image) }),
+        UiNode::ComponentScene(scene) => Some(SceneSlot { node: id, document_id: tree.document_id(id), key: &node.key, component_generation: node.component_generation(), rect, content: SlotContent::Scene(scene), intent: node.intent.as_ref() }),
+        UiNode::Image(image) => Some(SceneSlot { node: id, document_id: tree.document_id(id), key: &node.key, component_generation: 0, rect, content: SlotContent::Image(image), intent: node.intent.as_ref() }),
         _ => None,
     }
 }
@@ -232,8 +234,8 @@ fn collect_scene_slots_node<'tree>(tree: &'tree UiTree, id: NodeId, origin_x: f3
     let abs_y = origin_y + layout.y;
     let rect = Rect::new(abs_x, abs_y, layout.width, layout.height);
     match &node.spec.0 {
-        UiNode::ComponentScene(scene) => out.push(SceneSlot { node: id, document_id: tree.document_id(id), key: &node.key, component_generation: node.component_generation(), rect, content: SlotContent::Scene(scene) }),
-        UiNode::Image(image) => out.push(SceneSlot { node: id, document_id: tree.document_id(id), key: &node.key, component_generation: 0, rect, content: SlotContent::Image(image) }),
+        UiNode::ComponentScene(scene) => out.push(SceneSlot { node: id, document_id: tree.document_id(id), key: &node.key, component_generation: node.component_generation(), rect, content: SlotContent::Scene(scene), intent: node.intent.as_ref() }),
+        UiNode::Image(image) => out.push(SceneSlot { node: id, document_id: tree.document_id(id), key: &node.key, component_generation: 0, rect, content: SlotContent::Image(image), intent: node.intent.as_ref() }),
         _ => {}
     }
     for child in tree.children(id) {

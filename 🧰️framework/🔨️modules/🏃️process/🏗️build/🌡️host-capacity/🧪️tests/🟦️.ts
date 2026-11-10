@@ -173,7 +173,7 @@ test("Every refusal has an English and a German message with the same placeholde
  }
  expect(hostCapacityErrorV1("planJobs",{},{SEMIO_LANGUAGE:"de"}).message).toBe(german.planJobs);
  expect(hostCapacityErrorV1("planJobs",{},{SEMIO_LANGUAGE:"en",LANG:"de_DE.UTF-8"}).message).toBe(english.planJobs);
- expect(hostCapacityErrorV1("definitionRequired",{definition:"Grant",detail:"missing id"},{}).message).toBe("Closed host capacity Grant required: missing id");
+ expect(hostCapacityErrorV1("definitionRequired",{definition:"Grant",detail:"missing id"},{LANG:"en_US.UTF-8"}).message).toBe("Closed host capacity Grant required: missing id");
 });
 
 const fair=(availableMegabytes:number,load:number|null=0):HostSampleV1=>({version:1,atMs:0,platform:"darwin",cores:8,totalMegabytes:32768,availableMegabytes,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load,openFiles:null,openFilesMaximum:null,attachedImages:null});

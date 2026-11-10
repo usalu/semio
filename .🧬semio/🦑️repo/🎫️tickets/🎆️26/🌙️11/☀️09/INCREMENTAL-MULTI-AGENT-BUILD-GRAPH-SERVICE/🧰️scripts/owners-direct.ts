@@ -1,0 +1,24 @@
+import{appendFileSync,mkdirSync}from"node:fs";
+import{heapStats}from"bun:jsc";
+const R=process.env.SEMIO_PRIVATE_REPOSITORY!,B=R+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/",OUT=process.env.OWNERS_OUT!,CRATE=process.env.OWNERS_CRATE??"🧰️framework/📦️packages/🦀️rust";
+mkdirSync(OUT,{recursive:true});
+let baseHeap=0,snapped=false;
+const log=(row:object)=>appendFileSync(OUT+"/timeline.jsonl",JSON.stringify({t:Math.round(performance.now()/100)/10,...row})+"\n");
+const mb=(n:number)=>Math.round(n/1048576),state=()=>({rss:mb(process.memoryUsage().rss)});
+let lastTick=performance.now(),maxGap=0;
+setInterval(()=>{const now=performance.now();maxGap=Math.max(maxGap,now-lastTick-250);lastTick=now;},250);
+setInterval(()=>{const s=state(),heap=mb(process.memoryUsage().heapUsed);if(baseHeap>0&&!snapped&&heap-baseHeap>Number(process.env.OWNERS_SNAPSHOT_GROWTH??500)){snapped=true;log({event:"snapshot-start",heap,baseHeap});require("node:fs").writeFileSync(OUT+"/grow.heapsnapshot",Bun.generateHeapSnapshot("v8") as unknown as string);log({event:"snapshot-done"});}log({event:"tick",...s,loopGapMs:Math.round(maxGap)});maxGap=0;if(s.rss>Number(process.env.OWNERS_RSS_GUARD??4000)){log({event:"guard-exit",...s});process.exit(3);}},1000).unref?.();
+const{privateRepositoryWorkspaceV1}=await import(R+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/🟦️.ts");
+const repository=await privateRepositoryWorkspaceV1("graph");
+const routing=await import(R+"/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
+await repository.prepare("graph");
+await repository.invoke(async(original:any)=>{
+ const control=routing.createIssuedResourceControlV1(original,"graph:slice",1800000);
+ const{discoverBuildGraphPartV1}=await import(B+"🕸️graph/🧭️discovery/🟦️.ts"),{workspaceBuildFilesV1,buildGraphMembersV1}=await import(B+"🕸️graph/📁️workspace/🟦️.ts"),{readBuildOwnerRegistryV1}=await import(B+"🕸️graph/🚪️admission/🟦️.ts"),producer=await import(B+"🕸️graph/📥️inference/🟨️.mjs");
+ await producer.libraryBootstrap;producer.prepareSourceAnalysesV1();
+ const registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(R))),files=buildGraphMembersV1(await workspaceBuildFilesV1(R,original));
+ baseHeap=mb(process.memoryUsage().heapUsed);log({event:"start",files:files.length,baseHeap,...state()});const started=performance.now();
+ const part:any=await discoverBuildGraphPartV1(R,registry,original,control,files,{cold:false,roots:new Set([CRATE]),stubs:{},previousEnv:null});
+ log({event:"done",ms:Math.round(performance.now()-started),owners:part.owners.map((o:any)=>[o.name,o.nodeRows?.length]),...state()});
+},{owner:"owners-direct",maximumElapsedMilliseconds:1800000});
+process.exit(0);

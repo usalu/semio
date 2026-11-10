@@ -36,8 +36,15 @@ SAMPLES = {
         {"t": "request", "id": 4294967295, "command": "run-many", "args": [], "cwd": "/w"},
         {"t": "cancel", "id": 3},
         {"t": "ping", "n": 0},
+        {"t": "hello", "v": 1, "client": {"name": "repo", "pid": 12, "lane": "a"}, "languages": ["en", "de"], "implementation": "a" * 64},
+        {"t": "plan", "id": 2, "workspace": "0123456789ab", "root": "/w", "targets": ["p:build", "q:test"], "agent": "agent-1", "priority": 3, "language": "de", "revision": "b" * 64, "parent": "a" * 64, "dirty": {"paths": ["src/a.ts"], "overflow": False, "cursor": "c7"}, "deadlineMs": 5000},
+        {"t": "plan", "id": 2, "workspace": "0123456789ab", "root": "/w", "targets": ["p:build"], "agent": "a", "priority": 0, "language": "en"},
+        {"t": "plan", "id": 3, "workspace": "0123456789ab", "root": "/w", "targets": ["p:build"], "agent": "a", "priority": 1, "language": "en", "arguments": ["run", "p:build", "--dry-run"], "tool": "nx", "graphPolicy": "current"},
+        {"t": "plan", "id": 4, "workspace": "0123456789ab", "root": "/w", "targets": ["*:*"], "agent": "a", "priority": 1, "language": "de", "arguments": ["run-many", "--all"]},
+        {"t": "host-status", "id": 9},
     ],
     "ServiceFrame": [
+        {"t": "plan-reply", "id": 3, "revision": "c" * 64, "slice": {"hash": "d" * 64, "size": 1024}, "plan": {"tasks": [{"id": "p:build", "dependsOn": [], "cacheable": True, "outputs": [], "stale": True}]}, "progress": [], "cacheHits": 0},
         {"t": "welcome", "v": 1, "service": {"pid": 5, "instance": "0123456789abcdef", "startedAt": 1, "implementation": "0" * 64, "generation": None, "watcher": {"backend": "fsevents", "trust": "exact", "cursor": "12"}}, "limits": {"maximumFrameBytes": 1048576, "maximumInFlight": 8}},
         {"t": "accepted", "id": 1, "queue": 0},
         {"t": "progress", "id": 1, "phase": "plan", "done": 1, "total": 2, "message": {"en": "x", "de": "y"}},
@@ -48,6 +55,12 @@ SAMPLES = {
         {"t": "refused", "code": "capability", "message": {"en": "a", "de": "b"}, "retry": "never"},
         {"t": "notice", "kind": "draining", "message": {"de": "x"}},
         {"t": "pong", "n": 3},
+        {"t": "welcome", "v": 1, "features": ["plan", "host-status"], "service": {"pid": 5, "instance": "0123456789abcdef", "startedAt": 1, "implementation": "0" * 64, "generation": None, "watcher": {"backend": "none", "trust": "none", "cursor": "0"}}, "limits": {"maximumFrameBytes": 4096, "maximumInFlight": 2}},
+        {"t": "plan-reply", "id": 2, "revision": "c" * 64, "plan": {"tasks": [{"id": "p:build", "dependsOn": [], "cacheable": True, "outputs": ["dist/p"], "stale": False}]}, "progress": [{"phase": "load", "ms": 1.5}], "cacheHits": 1},
+        {"t": "plan-reply", "id": 2, "revision": "c" * 64, "manifest": "e" * 64, "pin": {"version": 1, "revision": "c" * 64, "holder": "agent-1-cccccccccccc-x1", "expiresMs": 5}, "plan": {"tasks": []}, "progress": [], "cacheHits": 0},
+        {"t": "plan-reply", "id": 2, "revision": "c" * 64, "plan": {"ref": {"hash": "d" * 64, "size": 10}}, "progress": [], "cacheHits": 0},
+        {"t": "service-status", "id": 9, "pid": 5, "instance": "0123456789abcdef", "implementation": "e" * 64, "startedAt": 1, "rssMb": 120.5, "indexBytes": 1000, "indexes": 1, "workspaces": [{"id": "0123456789ab", "root": "/w", "indexKey": "f" * 64, "lastUsedAt": 2, "plans": 3}], "clients": 2, "queue": 0, "inFlight": 1},
+        {"t": "progress", "id": 1, "phase": "load", "done": 0, "total": 1, "message": {"en": "x"}},
     ],
     "WatcherFrame": [
         {"v": 1, "t": "ready", "backend": "fsevents", "root": "/w", "cursor": "1", "uuid": "U", "replay": False, "latencyMs": 5, "native": True},
@@ -62,6 +75,10 @@ SAMPLES = {
         {"v": 1, "pid": 4, "instance": "0123456789abcdef", "startedAt": 5, "endpoint": "/s", "protocol": 1, "implementation": "f" * 64, "root": "/w"},
         {"v": 1, "pid": 4, "instance": "0123456789abcdef", "startedAt": 5, "endpoint": "/s", "protocol": 1, "implementation": "f" * 64, "root": "/w", "stopping": True},
     ],
+    "HostDescriptor": [
+        {"v": 1, "pid": 4, "instance": "0123456789abcdef", "startedAt": 5, "endpoint": "/s", "protocol": 1, "implementation": "f" * 64},
+        {"v": 1, "pid": 4, "instance": "0123456789abcdef", "startedAt": 5, "endpoint": "\\\\.\\pipe\\x", "protocol": 1, "implementation": "f" * 64, "stopping": True},
+    ],
     "Caveat": [{"k": "scope", "v": ["run"]}, {"k": "projects", "v": ["a*"]}, {"k": "notAfter", "v": 5}, {"k": "cwd", "v": "/w"}],
 }
 ALTERNATES = [None, "", "x", -1, 0, 1, 2 ** 40, 1.5, True, [], {}, [1], {"a": 1}, "a" * 300]
@@ -73,9 +90,9 @@ def mutations(value, rng):
     def walk(node, path):
         if isinstance(node, dict):
             for key in list(node):
-                out.append(("drop " + "/".join(path + [key]), path, key, "drop"))
+                out.append(("drop " + "/".join(map(str, path + [key])), path, key, "drop"))
                 walk(node[key], path + [key])
-            out.append(("extra " + "/".join(path), path, "zz_unexpected", "extra"))
+            out.append(("extra " + "/".join(map(str, path)), path, "zz_unexpected", "extra"))
         elif isinstance(node, list):
             for index in range(len(node)):
                 walk(node[index], path + [index])
@@ -144,8 +161,40 @@ def digest(root, paths):
     print(hashlib.sha256("".join(lines).encode("utf-8")).hexdigest())
 
 
+def plan(graph_path, targets):
+    """Independent closure of task ids over the neutral graph: [(id, sorted dependsOn)] for the closure, plus the dependency-first validity is checked by the caller."""
+    graph = json.load(open(graph_path, encoding="utf-8"))
+    deps = {}
+    for edge in graph.get("dependencies", []):
+        if edge["source"] != edge["target"]:
+            deps.setdefault(edge["source"], [])
+            if edge["target"] not in deps[edge["source"]]:
+                deps[edge["source"]].append(edge["target"])
+    def exists(project, target):
+        return target in graph["projects"].get(project, {}).get("targets", {})
+    def depends(project, target):
+        out = set()
+        for entry in graph["projects"][project]["targets"][target].get("dependsOn", []):
+            if entry.startswith("^"):
+                out.update(d + ":" + entry[1:] for d in deps.get(project, []) if exists(d, entry[1:]))
+            elif exists(project, entry) and entry != target:
+                out.add(project + ":" + entry)
+        return sorted(out)
+    closure, pending = {}, list(targets)
+    while pending:
+        task = pending.pop()
+        if task in closure:
+            continue
+        project, target = task.split(":")
+        closure[task] = depends(project, target)
+        pending.extend(closure[task])
+    print(canonical({task: closure[task] for task in sorted(closure)}))
+
+
 if __name__ == "__main__":
     if sys.argv[1] == "fixtures":
         fixtures(sys.argv[2])
     elif sys.argv[1] == "digest":
         digest(sys.argv[2], sys.argv[3:])
+    elif sys.argv[1] == "plan":
+        plan(sys.argv[2], sys.argv[3:])

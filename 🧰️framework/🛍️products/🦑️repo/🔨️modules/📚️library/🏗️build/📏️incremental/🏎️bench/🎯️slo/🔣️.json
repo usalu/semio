@@ -581,6 +581,28 @@
     "en": "Peer edit of a scheduling file of the build library",
     "de": "Fremdänderung: Scheduling-Datei der Build-Bibliothek"
    }
+  },
+  {
+   "id": "norm-leaf",
+   "language": "rs",
+   "target": "@semio-tech/norm-en1990-rs:build",
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+   "op": "comment",
+   "title": {
+    "en": "One-line edit of a leaf source of the EN 1990 artifact",
+    "de": "Einzeilige Änderung einer Blattquelle des EN-1990-Artefakts"
+   }
+  },
+  {
+   "id": "framework-manifest",
+   "language": "rs",
+   "target": "@semio-tech/norm-en1990-rs:build",
+   "file": "🧰️framework/Cargo.toml",
+   "op": "comment",
+   "title": {
+    "en": "One-line edit of the shared framework Cargo manifest",
+    "de": "Einzeilige Änderung des geteilten Framework-Cargo-Manifests"
+   }
   }
  ],
  "probes": [
@@ -1050,6 +1072,68 @@
    "sessions": 3,
    "runs": 1,
    "warmup": 0
+  },
+  {
+   "id": "planning-cold",
+   "kind": "planning",
+   "title": {
+    "en": "Cold graph plan of one artifact project",
+    "de": "Kalter Graphplan eines Artefaktprojekts"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/norm-en1990-rs:build",
+   "runs": 1,
+   "warmup": 0,
+   "cold": true
+  },
+  {
+   "id": "planning-warm",
+   "kind": "planning",
+   "title": {
+    "en": "Warm no-op graph plan",
+    "de": "Warmer Graphplan ohne Änderung"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/norm-en1990-rs:build",
+   "runs": 5,
+   "warmup": 1
+  },
+  {
+   "id": "planning-leaf-edit",
+   "kind": "planning",
+   "title": {
+    "en": "Graph plan after a one-line edit of a leaf source",
+    "de": "Graphplan nach Einzeilen-Änderung einer Blattquelle"
+   },
+   "lane": "oneshot",
+   "unit": "norm-leaf",
+   "runs": 5,
+   "warmup": 1
+  },
+  {
+   "id": "planning-manifest-edit",
+   "kind": "planning",
+   "title": {
+    "en": "Graph plan after an edit of the shared framework manifest",
+    "de": "Graphplan nach Änderung des geteilten Framework-Manifests"
+   },
+   "lane": "oneshot",
+   "unit": "framework-manifest",
+   "runs": 3,
+   "warmup": 1
+  },
+  {
+   "id": "planning-two",
+   "kind": "planning",
+   "title": {
+    "en": "Two concurrent graph plans of different projects",
+    "de": "Zwei gleichzeitige Graphpläne verschiedener Projekte"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/norm-en1990-rs:build",
+   "peer": "@semio-tech/norm-din16798-rs:build",
+   "runs": 3,
+   "warmup": 1
   }
  ],
  "slos": [
@@ -3395,6 +3479,292 @@
     "absolute": 0.1
    },
    "source": "provisional"
+  },
+  {
+   "id": "planning-cold-wall-max",
+   "title": {
+    "en": "Cold plan of one artifact project, bounded by its closure",
+    "de": "Kalter Plan eines Artefaktprojekts, durch seine Hülle begrenzt"
+   },
+   "probe": "planning-cold",
+   "metric": "wallMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": 120000,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 5000
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "planning-cold-inferred-max",
+   "title": {
+    "en": "Projects a cold plan of one artifact re-infers",
+    "de": "Projekte, die ein kalter Plan eines Artefakts neu ableitet"
+   },
+   "probe": "planning-cold",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": 500,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 10
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "planning-warm-wall-p50",
+   "title": {
+    "en": "Warm no-op re-plan, median",
+    "de": "Warmer Neuplan ohne Änderung, Median"
+   },
+   "probe": "planning-warm",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 2000,
+   "gate": 10000,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 500
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "planning-leaf-edit-wall-p50",
+   "title": {
+    "en": "Re-plan after a one-file edit, median",
+    "de": "Neuplan nach Änderung einer Datei, Median"
+   },
+   "probe": "planning-leaf-edit",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 3000,
+   "gate": 10000,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 500
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "planning-leaf-edit-closures-max",
+   "title": {
+    "en": "Closures verified after a one-file edit",
+    "de": "Nach einer Dateiänderung geprüfte Hüllen"
+   },
+   "probe": "planning-leaf-edit",
+   "metric": "closuresVerified",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": 200,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 10
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "planning-manifest-edit-wall-p50",
+   "title": {
+    "en": "Re-plan after an edit of the shared manifest, median",
+    "de": "Neuplan nach Änderung des geteilten Manifests, Median"
+   },
+   "probe": "planning-manifest-edit",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 10000,
+   "gate": 60000,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 1000
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "planning-two-wall-max",
+   "title": {
+    "en": "Two concurrent planners, slowest",
+    "de": "Zwei gleichzeitige Planer, der langsamere"
+   },
+   "probe": "planning-two",
+   "metric": "wallMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": 30000,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 1000
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "planning-two-rss-max",
+   "title": {
+    "en": "Resident memory of all repo processes during two plans",
+    "de": "Speicher aller repo-Prozesse während zweier Pläne"
+   },
+   "probe": "planning-two",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 3221225472,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.1,
+    "absolute": 67108864
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "planning-warm-rss-max",
+   "title": {
+    "en": "Resident memory of all repo processes during a warm plan",
+    "de": "Speicher aller repo-Prozesse während eines warmen Plans"
+   },
+   "probe": "planning-warm",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 3221225472,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.1,
+    "absolute": 67108864
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "planning-two-oom-max",
+   "title": {
+    "en": "OOM kills during two plans",
+    "de": "OOM-Kills während zweier Pläne"
+   },
+   "probe": "planning-two",
+   "metric": "oomKills",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "planning-warm-oom-max",
+   "title": {
+    "en": "OOM kills during a warm plan",
+    "de": "OOM-Kills während eines warmen Plans"
+   },
+   "probe": "planning-warm",
+   "metric": "oomKills",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "planning-warm-swap-max",
+   "title": {
+    "en": "Swap in use during a warm plan",
+    "de": "Genutzter Swap während eines warmen Plans"
+   },
+   "probe": "planning-warm",
+   "metric": "swapBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 2147483648,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.1,
+    "absolute": 67108864
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "planning-warm-store-max",
+   "title": {
+    "en": "Disk use of store and cache homes",
+    "de": "Plattenbedarf der Store- und Cache-Verzeichnisse"
+   },
+   "probe": "planning-warm",
+   "metric": "storeBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 21474836480,
+   "gate": 53687091200,
+   "tools": [
+    "nx"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.1,
+    "absolute": 1073741824
+   },
+   "source": "user-goal"
   }
  ]
 }

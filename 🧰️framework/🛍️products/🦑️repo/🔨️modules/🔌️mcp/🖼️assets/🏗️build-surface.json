@@ -44,7 +44,9 @@
     "--cpu": { "type": "integer", "minimum": 1, "maximum": 256 },
     "--jobs": { "type": "integer", "minimum": 1, "maximum": 256 },
     "--violations": { "type": "integer", "minimum": 0, "maximum": 100000 },
-    "--weight": { "type": "integer", "minimum": 1, "maximum": 16 }
+    "--weight": { "type": "integer", "minimum": 1, "maximum": 16 },
+    "--depth": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+    "--peak-mb": { "type": "integer", "minimum": 1, "maximum": 1048576 }
   },
   "environment": {
     "test_level": {
@@ -191,7 +193,10 @@
     { "operation": "session", "subcommand": "open", "kind": "maintain", "flags": ["--weight", "--json"], "bind": { "--json": true } },
     { "operation": "session", "subcommand": "status", "kind": "query", "flags": ["--json"], "bind": { "--json": true }, "positional": [{ "name": "id", "optional": true, "pattern": "^[a-z][a-z0-9]{0,11}$", "description": { "en": "Agent session identifier (default: the session of this call).", "de": "Kennung der Agent-Sitzung (Standard: die Sitzung dieses Aufrufs)." } }] },
     { "operation": "session", "subcommand": "list", "kind": "query", "flags": ["--all", "--json"], "bind": { "--json": true } },
-    { "operation": "session", "subcommand": "close", "kind": "maintain", "flags": ["--dead", "--force", "--json"], "bind": { "--json": true }, "positional": [{ "name": "id", "optional": true, "pattern": "^[a-z][a-z0-9]{0,11}$", "description": { "en": "Agent session identifier to close; leave empty together with dead=true.", "de": "Kennung der zu schließenden Agent-Sitzung; zusammen mit dead=true leer lassen." } }] }
+    { "operation": "session", "subcommand": "close", "kind": "maintain", "flags": ["--dead", "--force", "--json"], "bind": { "--json": true }, "positional": [{ "name": "id", "optional": true, "pattern": "^[a-z][a-z0-9]{0,11}$", "description": { "en": "Agent session identifier to close; leave empty together with dead=true.", "de": "Kennung der zu schließenden Agent-Sitzung; zusammen mit dead=true leer lassen." } }] },
+    { "operation": "scheduler", "subcommand": "status", "kind": "query", "flags": ["--json"], "bind": { "--json": true } },
+    { "operation": "scheduler", "subcommand": "cancel", "kind": "maintain", "positional": [{ "name": "ticket", "pattern": "^[^\\s-][^\\s]*$", "description": { "en": "Ticket of the queued or running job to cancel, as scheduler status prints it.", "de": "Ticket des wartenden oder laufenden Auftrags, der abgebrochen wird, wie scheduler status es ausgibt." } }] },
+    { "operation": "scheduler", "subcommand": "run", "kind": "execute", "flags": ["--key", "--priority", "--depth", "--peak-mb", "--lane", "--class"], "positional": [{ "name": "command", "argv": true, "description": { "en": "Command and arguments as an array, run without a shell once the fair global queue admits it.", "de": "Befehl und Argumente als Array, ohne Shell ausgeführt, sobald die faire globale Warteschlange ihn zulässt." } }], "annotations": { "destructiveHint": true, "idempotentHint": false, "openWorldHint": true } }
   ],
   "excluded": [
     { "operation": "watch", "reason": { "en": "Never ends by itself; an agent starts reruns with run.", "de": "Endet nie von selbst; ein Agent startet Wiederholungen mit run." } },

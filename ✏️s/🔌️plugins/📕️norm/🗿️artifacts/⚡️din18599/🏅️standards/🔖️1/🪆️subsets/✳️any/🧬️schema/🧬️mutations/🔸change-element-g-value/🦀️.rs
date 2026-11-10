@@ -24,7 +24,7 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for ChangeElementGValue wh
     };
 
     fn label(&self) -> semio_ui_locale::LocalizedLabel {
-        semio_ui_locale::LocalizedLabel::native("Change element g-value", "g-Wert des Bauteils ändern")
+        semio_ui_locale::LocalizedLabel::native("Change element g-value", "Solarer Energiedurchlassgrad des Bauteils ändern")
     }
 }
 

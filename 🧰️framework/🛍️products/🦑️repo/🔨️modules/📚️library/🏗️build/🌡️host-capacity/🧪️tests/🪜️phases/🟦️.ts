@@ -4,7 +4,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {setTimeout as sleep} from "node:timers/promises";
 import buildPolicy from "../../../🔣️policy.json";
-import {hostFloorMegabytesV1,readHostCapacityPolicyV1,readHostEstimateStoreV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {hostFloorMegabytesV1,readHostCapacityPolicyV1,readHostEstimateStoreV1,recordHostPhasesV1,updateHostEstimateStoreV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import protocolSchema from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json";
 import {runCapacityCommandV1} from "../../⌨️command/🟦️.ts";
 import {buildRebuildSlotsV1,withBuildCapacityV1} from "../../🟦️.ts";
@@ -20,14 +20,14 @@ const args=["run","@x/y:typecheck","--parallel=1"];
 test("Phases close the loop: the graph build of some runs teaches the global rebuild class and never the class of the task, so the next request of that class reserves its execution while a run that never marks phases keeps the contaminated size",async()=>{
  const phased=fresh(),plain=fresh(),reservedPhased:number[]=[],reservedPlain:number[]=[],lines:string[]=[];
  const scenario=async(directory:string,marked:boolean,index:number,reserved:number[],level:{value:number})=>{
-  const environment:Record<string,string|undefined>={SEMIO_HOST_CAPACITY_DIRECTORY:directory},rebuild=index%3===0;
+  const environment:Record<string,string|undefined>={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},rebuild=index%3===0;
   await withBuildCapacityV1(args,environment,async granted=>{
    reserved.push(granted.handle!.reservedMegabytes);
    const mark=async(phase:"plan"|"rebuild"|"execution")=>{if(marked){await markBuildCapacityPhaseV1(phase,environment);await sleep(50);}};
    await mark("plan");level.value=900;await sleep(70);
    if(rebuild){await mark("rebuild");level.value=6500;await sleep(110);await mark("plan");level.value=700;await sleep(70);}
    await mark("execution");level.value=1100;await sleep(110);
-  },{directory,policy:learning,strip,write:line=>{if(marked)lines.push(line);},sample:async()=>({host:host(),swappedOutMegabytes:0}),observe:async()=>level.value});
+  },{directory,policy:learning,strip,plannedByService:false,write:line=>{if(marked)lines.push(line);},sample:async()=>({host:host(),swappedOutMegabytes:0}),observe:async()=>level.value});
  };
  const levelA={value:400},levelB={value:400};
  for(let index=0;index<10;index++){levelA.value=400;levelB.value=400;await scenario(phased,true,index,reservedPhased,levelA);await scenario(plain,false,index,reservedPlain,levelB);}
@@ -43,9 +43,9 @@ test("Phases close the loop: the graph build of some runs teaches the global reb
 
 test("repo capacity status names the phase a grant is in, in English, in German and in the JSON snapshot",async()=>{
  const directory=fresh(),english:string[]=[],german:string[]=[],json:string[]=[],sample=async()=>({host:host(),swappedOutMegabytes:0}),context=(environment:NodeJS.ProcessEnv,write:(line:string)=>void)=>({environment,write,directory,policy:learning,sample});
- await withBuildCapacityV1(args,{},async()=>{
+ await withBuildCapacityV1(args,{LANG:"en_US.UTF-8"},async()=>{
   const file=join(directory,"grants",readdirSync(join(directory,"grants")).find(name=>name.endsWith(".json"))!);writeFileSync(file,JSON.stringify({...JSON.parse(readFileSync(file,"utf8")),phase:"rebuild"}));
-  await runCapacityCommandV1(["status"],context({LANG:"en_US.UTF-8"},line=>english.push(line)));await runCapacityCommandV1(["status"],context({LANG:"de_DE.UTF-8"},line=>german.push(line)));await runCapacityCommandV1(["status","--json"],context({},line=>json.push(line)));
+  await runCapacityCommandV1(["status"],context({LANG:"en_US.UTF-8"},line=>english.push(line)));await runCapacityCommandV1(["status"],context({LANG:"de_DE.UTF-8"},line=>german.push(line)));await runCapacityCommandV1(["status","--json"],context({LANG:"en_US.UTF-8"},line=>json.push(line)));
  },{directory,policy:learning,strip,sample,pid:process.pid});
  expect(english[1]).toMatch(/pid \d+, since \d+s \[rebuild\]$/u);expect(german[1]).toMatch(/\[rebuild\]$/u);expect(JSON.parse(json.join("\n")).grants[0].phase).toBe("rebuild");
 });
@@ -59,4 +59,25 @@ test("The compute slots of a rebuild follow the learned rebuild size, a forced c
  expect(await markBuildCapacityPhaseV1("plan",{SEMIO_HOST_CAPACITY_GRANT:"aaaaaaaa1",SEMIO_HOST_CAPACITY_PHASE_MARKS:"off",SEMIO_HOST_CAPACITY_DIRECTORY:directory})).toBe(false);
  expect(await markBuildCapacityPhaseV1("plan",{})).toBe(false);
  expect(await markBuildCapacityPhaseV1("plan",{SEMIO_HOST_CAPACITY_GRANT:"aaaaaaaa1",SEMIO_HOST_CAPACITY_DIRECTORY:directory})).toBe(false);
+});
+
+test("a client of the host service never reserves for a planner: planner phase classes learned earlier are ignored",async()=>{
+ const directory=fresh();
+ await updateHostEstimateStoreV1(directory,learning,store=>{let next=store;for(let index=0;index<8;index++)next=recordHostPhasesV1(learning,next,["run"],"run",1024,{jobs:1,peakMegabytes:9000,activeMilliseconds:1000,peakAtMilliseconds:100,endedAtMs:Date.now(),phases:[{phase:"plan",peakMegabytes:9000,startMilliseconds:0,activeMilliseconds:1000,peakAtMilliseconds:100},{phase:"execution",peakMegabytes:900,startMilliseconds:1000,activeMilliseconds:1000,peakAtMilliseconds:1100}],keepPeak:true});return next;});
+ expect(readHostEstimateStoreV1(directory).classes["phase:plan"]).toBeDefined();
+ const reserved:number[]=[];
+ for(const planned of [false,true])await withBuildCapacityV1(args,{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},async granted=>{reserved.push(granted.handle!.reservedMegabytes);},{directory,policy:learning,strip,plannedByService:planned,sample:async()=>({host:host(),swappedOutMegabytes:0}),observe:async()=>800});
+ expect(reserved[0]!,"an invocation that plans itself inherits the learned plan floor").toBeGreaterThan(reserved[1]!);
+});
+
+test("a dry run that plans itself executes nothing: it reserves the fixed part only",async()=>{
+ const directory=fresh(),reserved:number[]=[];
+ for(const extra of [[],["--dry-run"]])await withBuildCapacityV1([...args,...extra],{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},async granted=>{reserved.push(granted.handle!.reservedMegabytes);await sleep(120);},{directory,policy:learning,strip,plannedByService:false,sample:async()=>({host:host(),swappedOutMegabytes:0}),observe:async()=>600});
+ expect(reserved[1]!).toBeLessThan(reserved[0]!);expect(reserved[1]!).toBeLessThanOrEqual(4096);
+});
+
+test("a dry run that the host service plans reserves nothing; the same dry run that plans itself does",async()=>{
+ const directory=fresh(),dry=[...args,"--dry-run"],granted:(boolean)[]=[];
+ for(const planned of [false,true])await withBuildCapacityV1(dry,{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},async capacity=>{granted.push(capacity.handle!==undefined);},{directory,policy:learning,strip,plannedByService:planned,sample:async()=>({host:host(),swappedOutMegabytes:0}),observe:async()=>800});
+ expect(granted).toEqual([true,false]);
 });

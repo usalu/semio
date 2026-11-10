@@ -1,7 +1,7 @@
 /** 🦀️ Resolves Cargo and Go manifests, native dependency closures, mounted Rust Source and native generator preparation. */
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, sep, join, relative, resolve } from "node:path";
-import { memoizedObservedComputationV1, memoizedFileRecord, observedSourceAnalysisV1, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { memoizedObservedComputationV1, memoizedFileRecord, observedSourceAnalysisV1, observedFs, jsonPointerValueV1, registerFieldExtractorV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { INFERENCE_LIMITS_V1 } from "../🧬️schema/🟨️.mjs";
 import { runtimeParseTomlV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import {runtimeKeyV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
@@ -141,6 +141,9 @@ export function cargoSourcesOrRefuseV1(root, workspaceRoot, facts, includeTests 
 }
 
 let tomlParsing;
+
+/** 🔌️ A TOML key path as a JSON pointer into the parsed record: the field a walker reads of a manifest, so an edit of any other key moves nothing. */
+registerFieldExtractorV1("toml", (text, pointer) => jsonPointerValueV1(runtimeParseTomlV1(text), pointer));
 
 /** 📏️ The tooling TOML boundary exposes only repository-owned plain records, memoized per parser version (resolved on first use). */
 export function readToml(path) {

@@ -23,15 +23,21 @@ const origin = (port: number) => `http://127.0.0.1:${port}/?plugin=${row.variant
 const pin = row.pin;
 const witness = { variant: row.variant, windows: matrix.windows.map(role => `norm-${row.variant}-${role}`), serves: { react: origin(row.ports.react), wgpu: origin(row.ports.wgpu) }, field: pin?.field ?? { path: "", key: "", owner: "", ownerWindow: `norm-${row.variant}-outliner`, argument: "", label: { en: "", de: "" }, limit: 1, unit: "" }, check: pin?.check ?? "", states: pin?.states ?? { before: { value: 0, utilization: 0 }, after: { value: 0, utilization: 0 } } };
 
-const number = (value: string | null): number => value === null ? NaN : Number(value.replace(/\s/gu, "").replace(",", "."));
+const number = (value: string | null): number => {
+  if (value === null) return NaN;
+  const text = value.replace(/[\s\u00a0\u202f]/gu, "");
+  if (/^-?[1-9]\d{0,2}([.,]\d{3})+$/u.test(text)) return Number(text.replace(/[.,]/gu, ""));
+  const decimal = Math.max(text.lastIndexOf("."), text.lastIndexOf(","));
+  return Number(decimal < 0 ? text : `${text.slice(0, decimal).replace(/[.,]/gu, "")}.${text.slice(decimal + 1)}`);
+};
 const same = (actual: number, expected: number): boolean => Number.isFinite(actual) && Math.abs(actual - expected) < 1e-8;
-const relevant = (key: string): boolean => key.endsWith(witness.field.owner) || key.includes(witness.field.key) || key.includes(witness.check);
+const relevant = (key: string): boolean => (witness.field.owner !== "" && key.endsWith(witness.field.owner)) || key.includes(witness.field.key) || key.includes(witness.check);
 
 /** 🪞️ Reads the actual DOM or accessibility mirror without accessing the guest's document store. */
 async function surfaces(): Promise<Surface[]> {
   if (renderer === "wgpu") return (await mirror()).filter(node => relevant(node.key)).map(node => ({ key: node.key, window: node.window, label: `${node.label} ${node.description}`, value: node.value ?? node.valueNow, role: node.role, inputType: node.inputType }));
   return evalSafe((fixture) => {
-    const nodes = Array.from(document.querySelectorAll<HTMLElement>("[id]")).filter(node => node.id.endsWith(fixture.owner) || node.id.includes(fixture.key) || node.id.includes(fixture.check));
+    const nodes = Array.from(document.querySelectorAll<HTMLElement>("[id]")).filter(node => (fixture.owner !== "" && node.id.endsWith(fixture.owner)) || node.id.includes(fixture.key) || node.id.includes(fixture.check));
     return nodes.map(node => {
       const input = node instanceof HTMLInputElement ? node : node.querySelector<HTMLInputElement>("input");
       return { key: node.id, window: node.closest('[data-slot="window"]')?.id ?? "", label: `${node.getAttribute("aria-label") ?? ""} ${node.innerText} ${node.getAttribute("title") ?? ""}`, value: input?.value ?? node.getAttribute("aria-valuenow"), role: node.getAttribute("role") ?? node.tagName.toLowerCase(), inputType: input?.type ?? null };
@@ -53,6 +59,7 @@ async function target(node: Surface, input = false) {
 
 /** 👆️ Selects the SLS entity owning the field and its check through its authored outliner identity. */
 async function selectOwner(): Promise<boolean> {
+  if (witness.field.owner === "") return true;
   const shown = await waitUntil(async () => (await surfaces()).filter(node => node.key.endsWith(witness.field.owner) && (node.window === witness.field.ownerWindow || node.window.endsWith(`::${witness.field.ownerWindow}`))).sort((a, b) => a.key.length - b.key.length)[0] ?? null, node => node !== null, 30000, 500);
   if (!shown.value) return false;
   if (renderer === "wgpu") return mirrorActivate(shown.value.key, shown.value.window);
@@ -70,7 +77,7 @@ async function stateIs(name: string, expected: State): Promise<boolean> {
     const checks = nodes.filter(node => node.key.includes(witness.check));
     const value = fields.map(node => number(node.value)).find(value => same(value, expected.value));
     const percentage = expected.utilization * 100;
-    const check = checks.find(node => Array.from(node.label.matchAll(/(-?\d+(?:[.,]\d+)?)\s*%/gu)).some(match => Math.abs(number(match[1]) - percentage) < 0.51));
+    const check = checks.find(node => Array.from(node.label.matchAll(/(-?[1-9]\d{0,2}(?:[.,  ]\d{3})+(?:[.,]\d+)?|-?\d+(?:[.,]\d+)?)\s*%/gu)).some(match => Math.abs(number(match[1]) - percentage) < 0.51));
     return { value: value ?? null, check: check?.label.slice(0, 400) ?? null, fields: fields.map(node => ({ key: node.key, value: node.value })), checks: checks.map(node => node.label.slice(0, 200)) };
   }, value => value.value !== null && value.check !== null, 45000, 500);
   verdict(name, observed.ok, { expected, observed: observed.value, waitedMs: observed.waitedMs, locale: currentLocale });

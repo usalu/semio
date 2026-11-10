@@ -1,0 +1,23 @@
+{
+  "fixtures": [
+    {
+      "name": "mixed tree with emoji, astral and nested names",
+      "files": {
+        "package.json": {"text": "{\"name\":\"a\"}\n"},
+        "src/main.ts": {"text": "export const a=1;\n"},
+        "src/🧊️/x.ts": {"text": "export const x=2;\n"},
+        "src/𠀀.ts": {"text": "astral\n"},
+        "src/ｚ.ts": {"text": "fullwidth\n"},
+        "bin/run.sh": {"text": "#!/bin/sh\n", "executable": true},
+        "empty.txt": {"text": ""}
+      },
+      "paths": ["package.json", "src/main.ts", "src/🧊️/x.ts", "src/𠀀.ts", "src/ｚ.ts", "bin/run.sh", "empty.txt", "gone/missing.ts"],
+      "absent": ["gone/missing.ts"]
+    },
+    {
+      "name": "single file",
+      "files": {"a.txt": {"text": "hello\n"}},
+      "paths": ["a.txt"]
+    }
+  ]
+}

@@ -465,11 +465,22 @@ impl semio_ui_wgpu_hosting::scene_slots::SceneHost for FrameworkSceneHost<'_> {
                         return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
                     }
                 }
-                render_component_scene_step(scene, slot.rect, &mut ctx, cursor, &mut hosts, self.driver_drag, self.window_generation)
+                let step = render_component_scene_step(scene, slot.rect, &mut ctx, cursor, &mut hosts, self.driver_drag, self.window_generation);
+                if scene.component_kind == semio_ui_declaration::ui::SurfaceKind::World3d {
+                    stage_world3d_handle_drag_bindings(self.world3d_states, &scene.host_id, slot.intent);
+                }
+                step
             }
             semio_ui_wgpu_hosting::scene_slots::SlotContent::Image(image) => render_ui_image_step(image, slot.rect, &mut ctx, cursor),
         }
     }
+}
+
+/// 🧲️ Hands a World3d surface the `delta`, `commit` and `abort` bindings of its document node — the actions, with their authored arguments, a handle drag dispatches — so the surface's own pointer authority can fire them, which it cannot reach through the retained tree. A node binding none of the three clears them.
+fn stage_world3d_handle_drag_bindings(states: &mut semio_renderer_wgpu_contracts::AdmittedSurfaceMap<infinite_world::world::World3dState>, host_id: &str, intent: Option<&semio_ui_retained_tree::UiIntentBindings>) {
+    let Some(state) = states.get_mut(host_id) else { return };
+    let of = |trigger: ui_contract::Trigger| intent.and_then(|bindings| bindings.descriptor_for(trigger, None));
+    state.set_handle_drag_bindings(of(ui_contract::Trigger::Delta), of(ui_contract::Trigger::Commit), of(ui_contract::Trigger::Abort));
 }
 
 /// ⏱️ Whether one layout scheduling call was `window_id`'s own work: a step of its own job (or an `Idle` stall of a dirty layout)

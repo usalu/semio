@@ -100,6 +100,18 @@ pub enum UsageProfile {
     School,
 }
 
+/// 🧱 DIN V 18599-2 thermal mass class of a zone: the effective heat storage capacity C_wirk per net floor area is 50 (light), 90 (medium) or 130 (heavy) Wh/(m²·K); `Custom` takes the explicit value of the zone.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+pub enum ThermalMassClass {
+    Light,
+    #[default]
+    Medium,
+    Heavy,
+    Custom,
+}
+
 /// 🏠️ Residential vs non-residential GEG path (H′T Anlage 2 vs mean-U Anlage 3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -181,6 +193,12 @@ pub struct ThermalZone {
     pub occupants: u32,
     pub internal_gains_w_m2: f64,
     pub lighting_power_w_m2: f64,
+    #[value(default)]
+    #[cfg_attr(any(test, feature = "test-support"), serde(default))]
+    pub thermal_mass_class: ThermalMassClass,
+    #[value(default)]
+    #[cfg_attr(any(test, feature = "test-support"), serde(default))]
+    pub c_wirk_wh_m2k: f64,
 }
 
 /// 🧱 Envelope element (area, U, orientation, g, Fc, adjacency).
@@ -427,6 +445,8 @@ pub mod subjects {
                 occupants: 4,
                 internal_gains_w_m2: 3.5,
                 lighting_power_w_m2: if compliant { 6.0 } else { 12.0 },
+                thermal_mass_class: ThermalMassClass::Medium,
+                c_wirk_wh_m2k: 90.0,
             }],
             elements: vec![
                 EnvelopeElement { id: "wall-n".into(), label_en: "North wall".into(), label_de: "Nordwand".into(), kind: ElementKind::Wall, zone_id: "zone-living".into(), area_m2: 42.0, u_value_w_m2k: wall_u, orientation_deg: 0.0, tilt_deg: 90.0, g_value: 0.6, fc: 1.0, adjacency: Adjacency::Outdoor },
@@ -493,6 +513,8 @@ pub mod subjects {
                 occupants: 3,
                 internal_gains_w_m2: 3.5,
                 lighting_power_w_m2: 6.0,
+                thermal_mass_class: ThermalMassClass::Medium,
+                c_wirk_wh_m2k: 90.0,
             },
             ThermalZone {
                 id: "zone-office".into(),
@@ -506,6 +528,8 @@ pub mod subjects {
                 occupants: 1,
                 internal_gains_w_m2: 5.0,
                 lighting_power_w_m2: 10.0,
+                thermal_mass_class: ThermalMassClass::Medium,
+                c_wirk_wh_m2k: 90.0,
             },
         ];
         for el in &mut doc.elements {

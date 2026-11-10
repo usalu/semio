@@ -113,8 +113,9 @@ export async function serveRemoteCacheV1(args:readonly string[],context:RemoteCa
  if(!loopback&&tokens.read===undefined&&tokens.write===undefined)throw Error(both("error.token"));
  const directory=where(context.root,flags["--directory"]??policy.directory),maximumBytes=flags["--max-bytes"]===undefined?policy.maximumBytes:whole("--max-bytes",flags["--max-bytes"],1048576,Number.MAX_SAFE_INTEGER);
  await context.progress("remote-cache:open");say("serve.open",{directory});
+ const{createCasStoreV1,casRootV1}=await import("../../🗄️cas/🗃️store/🟦️.ts"),hostStore=createCasStoreV1({root:casRootV1(context.environment)});
  const server=await startRemoteCacheServerV1({
-  directory,host,
+  hostStore,directory,host,
   port:flags["--port"]===undefined?policy.port:whole("--port",flags["--port"],0,65535),
   maximumBytes,
   maximumEntryBytes:Math.min(policy.maximumEntryBytes,Math.floor(maximumBytes/2)),

@@ -443,8 +443,8 @@ pub fn check_minimum_r(element: &EnvelopeElement, usage: &str, t_int_c: f64) -> 
     builder.build()
 }
 
-/// ✅️ Interior surface temperature factor f_Rsi ≥ 0.70 (DIN 4108-2 mould criterion).
-pub fn check_f_rsi(element: &EnvelopeElement, t_int_c: f64, t_ext_c: f64) -> CheckResult {
+/// ✅️ Interior surface temperature factor f_Rsi = 1 − R_si/R_T ≥ 0.70 with R_si = 0.25 m²K/W at θ_i = 20 °C and θ_e = −5 °C (DIN 4108-2 §6.2 mould criterion).
+pub fn check_f_rsi(element: &EnvelopeElement) -> CheckResult {
     let subject = SubjectRef::new(
         &element.id,
         entity_path("elements", &element.id),
@@ -462,13 +462,12 @@ pub fn check_f_rsi(element: &EnvelopeElement, t_int_c: f64, t_ext_c: f64) -> Che
         .annex(AnnexChoice::De)
         .build();
     }
-    let (r_si, r_se) = surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
+    let (_, r_se) = surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
+    let r_si = R_SI_MOULD;
+    let (t_int_c, t_ext_c) = (MOULD_T_INT_C, MOULD_T_EXT_C);
     let r_t = total_resistance(&element.layers, r_si, r_se);
-    let f_rsi = if (t_int_c - t_ext_c).abs() < f64::EPSILON {
-        1.0
-    } else {
-        1.0 - r_si / r_t
-    };
+    let f_rsi = 1.0 - r_si / r_t;
+    let theta_si = t_ext_c + f_rsi * (t_int_c - t_ext_c);
     let mut builder = CheckResult::assess(
         format!("din4108-2.frsi.{}", element.id),
         "DIN 4108-2",
@@ -479,8 +478,8 @@ pub fn check_f_rsi(element: &EnvelopeElement, t_int_c: f64, t_ext_c: f64) -> Che
     .minimum(Quantity::new(QuantityKind::Dimensionless, f_rsi), Quantity::new(QuantityKind::Dimensionless, F_RSI_MINIMUM))
     .annex(AnnexChoice::De)
     .explanation(loc(
-        &format!("f_Rsi = 1 − R_si/R_T = {f_rsi:.3} (θ_i={t_int_c:.1} °C, θ_e={t_ext_c:.1} °C)."),
-        &format!("f_Rsi = 1 − R_si/R_T = {f_rsi:.3} (θ_i={t_int_c:.1} °C, θ_e={t_ext_c:.1} °C, Innen-/Außentemperatur)."),
+        &format!("f_Rsi = 1 − R_si/R_T = {f_rsi:.3} with R_si = {r_si:.2} m²K/W (θ_i={t_int_c:.1} °C, θ_e={t_ext_c:.1} °C, θ_si={theta_si:.1} °C)."),
+        &format!("f_Rsi = 1 − R_si/R_T = {f_rsi:.3} mit R_si = {r_si:.2} m²K/W (θ_i={t_int_c:.1} °C, θ_e={t_ext_c:.1} °C, θ_si={theta_si:.1} °C)."),
     ));
     if f_rsi < F_RSI_MINIMUM {
         let r_needed = r_si / (1.0 - F_RSI_MINIMUM);

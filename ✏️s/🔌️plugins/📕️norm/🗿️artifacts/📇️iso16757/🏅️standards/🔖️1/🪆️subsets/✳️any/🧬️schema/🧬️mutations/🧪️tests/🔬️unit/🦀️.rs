@@ -269,3 +269,20 @@ async fn geometry_objects_insert_and_remove_by_collection_path() {
     assert_eq!(removed, base);
 }
 
+
+#[semio_framework_async_macros::async_test]
+async fn primitive_dimension_and_placement_leaves_are_editable_atomic_pairs() {
+    let base = Iso16757Snapshot::reference_fixture();
+    for path in ["geometry.objects.geom-valve-50.shape.parameters.width", "geometry.objects.geom-valve-50.spaces[id=installation].bounds.min[2]", "geometry.objects.geom-valve-50.ports[id=port-in].position[1]"] {
+        assert!(crate::can_set_field(path), "{path}");
+    }
+    for path in ["geometry.objects.geom-valve-50.shape", "geometry.objects.geom-valve-50.id", "geometry.objects.geom-valve-50.shape.kind"] {
+        assert!(!crate::can_set_field(path), "{path}");
+    }
+    let after = applied(&base, &semio_s_plugin_norm_app_surface::NormEdit::SetField { path: "geometry.objects.geom-valve-50.shape.parameters.width".into(), value: semio_framework_value::DslValue::float(0.3) });
+    let mut expected = base.clone();
+    if let Some(semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { parameters, .. }) = expected.geometry.objects.get_mut("geom-valve-50").and_then(|o| o.shape.as_mut()) {
+        parameters.insert("width".into(), 0.3);
+    }
+    assert_eq!(after, expected);
+}

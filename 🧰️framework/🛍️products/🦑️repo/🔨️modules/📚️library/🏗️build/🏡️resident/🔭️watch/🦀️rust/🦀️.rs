@@ -6,16 +6,62 @@
 //! https://learn.microsoft.com/windows/win32/api/winbase/nf-winbase-readdirectorychangesw
 #![allow(clippy::missing_safety_doc)]
 
-use std::collections::BTreeMap;
+use std::cell::RefCell;
+use std::collections::{BTreeMap, HashMap};
 use std::io::{BufRead, Write};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::mpsc::{channel, Sender, TryRecvError};
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// 📮 Frames queued for the writer thread but not yet written; batches beyond `QUEUED_LIMIT` are replaced by one `overflow` loss so memory stays bounded when the consumer stalls.
 static QUEUED: AtomicUsize = AtomicUsize::new(0);
-static OVERFLOWED: AtomicBool = AtomicBool::new(false);
+
+thread_local! {
+    static TAG: RefCell<Option<String>> = const { RefCell::new(None) };
+}
+
+/// 🏷 Names the root a thread (or a native callback) works for: every frame it emits carries `"r":tag`, so one process serves many roots.
+fn set_tag(tag: Option<String>) {
+    TAG.with(|slot| *slot.borrow_mut() = tag);
+}
+
+fn current_tag() -> Option<String> {
+    TAG.with(|slot| slot.borrow().clone())
+}
+
+/// 🚪 Roots closed by the host: their frames are dropped even where a native backend cannot be stopped, and their overflow state is kept per root.
+fn closed() -> &'static Mutex<HashMap<String, bool>> {
+    static CLOSED: OnceLock<Mutex<HashMap<String, bool>>> = OnceLock::new();
+    CLOSED.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn overflow_of() -> &'static Mutex<HashMap<String, bool>> {
+    static OVERFLOW: OnceLock<Mutex<HashMap<String, bool>>> = OnceLock::new();
+    OVERFLOW.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// 🧷 Stop flags of the roots a host opened; a backend that can stop (inotify) polls its flag.
+fn stops() -> &'static Mutex<HashMap<String, Arc<AtomicBool>>> {
+    static STOPS: OnceLock<Mutex<HashMap<String, Arc<AtomicBool>>>> = OnceLock::new();
+    STOPS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// ✍ The frame with the root tag after the version, or nothing when the root was closed.
+fn tagged(line: &str) -> Option<String> {
+    match current_tag() {
+        None => Some(line.to_string()),
+        Some(tag) => {
+            if closed().lock().unwrap().get(&tag).copied().unwrap_or(false) {
+                return None;
+            }
+            match line.strip_prefix("{\"v\":1,") {
+                Some(rest) => Some(format!("{{\"v\":1,\"r\":{},{}", quote(&tag), rest)),
+                None => Some(line.to_string()),
+            }
+        }
+    }
+}
 const QUEUED_LIMIT: usize = 64 << 20;
 
 enum Out {
@@ -61,8 +107,9 @@ fn writer() -> &'static Sender<Out> {
 }
 
 fn emit(line: &str) {
+    let Some(line) = tagged(line) else { return };
     QUEUED.fetch_add(line.len(), Ordering::Relaxed);
-    let _ = writer().send(Out::Line(line.to_string()));
+    let _ = writer().send(Out::Line(line));
 }
 
 /// 🚦 What to do with a batch of `bytes` while `queued` bytes wait: `(emit an overflow loss first, emit the batch, overflowed afterwards)`. Once over the limit every batch is dropped until the queue has drained to half, and the first batch after that is preceded by the loss, so no later fence can be answered without the loss.
@@ -77,8 +124,10 @@ fn admit(queued: usize, overflowed: bool, bytes: usize, limit: usize) -> (bool, 
 }
 
 fn emit_rows(line: &str) {
-    let (loss, batch, overflowed) = admit(QUEUED.load(Ordering::Relaxed), OVERFLOWED.load(Ordering::Relaxed), line.len(), QUEUED_LIMIT);
-    OVERFLOWED.store(overflowed, Ordering::Relaxed);
+    let key = current_tag().unwrap_or_default();
+    let before = overflow_of().lock().unwrap().get(&key).copied().unwrap_or(false);
+    let (loss, batch, overflowed) = admit(QUEUED.load(Ordering::Relaxed), before, line.len(), QUEUED_LIMIT);
+    overflow_of().lock().unwrap().insert(key, overflowed);
     if loss {
         lost("overflow", "");
     }
@@ -129,6 +178,9 @@ fn quote(text: &str) -> String {
 
 fn fail(code: &str, message: &str) -> ! {
     emit(&format!("{{\"v\":1,\"t\":\"error\",\"code\":{},\"message\":{}}}", quote(code), quote(message)));
+    if current_tag().is_some() {
+        std::panic::resume_unwind(Box::new(()));
+    }
     finish(2);
 }
 
@@ -136,13 +188,11 @@ fn fail(code: &str, message: &str) -> ! {
 struct Filter {
     rooted: Vec<String>,
     names: Vec<String>,
-    hex_names: Vec<(String, usize)>,
-    private_fence: Option<String>,
 }
 
 impl Filter {
     fn observable(&self, rel: &str) -> bool {
-        !self.excluded(rel) || self.private_fence.as_ref().is_some_and(|root| rel.strip_prefix(&(root.clone() + "/")).is_some_and(|name| !name.is_empty() && !name.contains('/')))
+        !self.excluded(rel)
     }
 
     fn excluded(&self, rel: &str) -> bool {
@@ -154,9 +204,9 @@ impl Filter {
                 return true;
             }
         }
-        if !self.names.is_empty() || !self.hex_names.is_empty() {
+        if !self.names.is_empty() {
             for part in rel.split('/') {
-                if self.names.iter().any(|name| name == part) || self.hex_names.iter().any(|(prefix, width)| part.strip_prefix(prefix.as_str()).is_some_and(|suffix| suffix.len() == *width && suffix.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)))) {
+                if self.names.iter().any(|name| name == part) {
                     return true;
                 }
             }
@@ -172,10 +222,11 @@ struct Config {
     since: Option<String>,
     uuid: Option<String>,
     threads: usize,
+    stop: Arc<AtomicBool>,
 }
 
 fn parse(arguments: &[String]) -> (String, Config) {
-    let mut config = Config { root: String::new(), filter: Filter::default(), latency_ms: 5, since: None, uuid: None, threads: 8 };
+    let mut config = Config { root: String::new(), filter: Filter::default(), latency_ms: 5, since: None, uuid: None, threads: 8, stop: Arc::new(AtomicBool::new(false)) };
     let mut command = String::new();
     let mut at = 0;
     while at < arguments.len() {
@@ -191,22 +242,6 @@ fn parse(arguments: &[String]) -> (String, Config) {
             "--root" => config.root = value(),
             "--exclude" => config.filter.rooted.push(value().trim_matches('/').to_string()),
             "--exclude-name" => config.filter.names.push(value()),
-            "--exclude-hex-basename" => {
-                let rule = value();
-                let (prefix, width) = rule.rsplit_once(':').unwrap_or_else(|| fail("argument", "hex basename prefix and width required"));
-                let width = width.parse::<usize>().unwrap_or_else(|_| fail("argument", "hex basename width"));
-                if prefix.is_empty() || prefix.len() > 16 || !prefix.is_ascii() || prefix.contains(['/', '\\', ':', '\0']) || width == 0 || width > 64 {
-                    fail("argument", "bounded hex basename rule required");
-                }
-                config.filter.hex_names.push((prefix.to_string(), width));
-            }
-            "--private-fence-directory" => {
-                let path = value();
-                if path.is_empty() || path.starts_with('/') || path.contains(['\\', ':', '\0']) || path.split('/').any(|part| part.is_empty() || part == "." || part == "..") {
-                    fail("argument", "relative private fence directory required");
-                }
-                config.filter.private_fence = Some(path);
-            }
             "--latency-ms" => config.latency_ms = value().parse().unwrap_or_else(|_| fail("argument", "latency")),
             "--since" => config.since = Some(value()),
             "--uuid" => config.uuid = Some(value()),
@@ -370,6 +405,9 @@ fn lost(reason: &str, scope: &str) {
 }
 
 fn stdin_guard() {
+    if current_tag().is_some() {
+        return;
+    }
     std::thread::spawn(|| {
         let stdin = std::io::stdin();
         for line in stdin.lock().lines() {
@@ -560,6 +598,7 @@ mod backend {
     /// 🗄 Everything the streams of one watch share. Callbacks and restarts all run on one serial dispatch queue; the generation retires the callbacks of a replaced stream.
     /// `pending` holds the rows of a stream that replays history: fseventsd delivers a replay out of event-id order, so its rows leave as ONE batch when `HistoryDone` arrives (a fence row never precedes an earlier change), and `replayed` is that batch's cursor.
     struct State {
+        tag: Option<String>,
         root: String,
         filter: Filter,
         paths: Ref,
@@ -668,6 +707,7 @@ mod backend {
     extern "C" fn restart(context: *mut c_void) {
         let job = unsafe { Box::from_raw(context as *mut Restart) };
         let state = unsafe { &*job.state };
+        set_tag(state.tag.clone());
         if job.old != 0 {
             unsafe {
                 FSEventStreamStop(job.old as Ref);
@@ -697,6 +737,7 @@ mod backend {
     extern "C" fn callback(_stream: Ref, info: *mut c_void, count: usize, paths: *mut c_void, flags: *const u32, ids: *const u64) {
         let tag = unsafe { &*(info as *const Tag) };
         let state = unsafe { &*tag.state };
+        set_tag(state.tag.clone());
         if state.generation.load(Ordering::SeqCst) != tag.generation {
             return;
         }
@@ -764,6 +805,7 @@ mod backend {
         let label = CString::new("semio.repo.watch").unwrap();
         let queue = unsafe { dispatch_queue_create(label.as_ptr(), dispatch_queue_attr_make_with_qos_class(std::ptr::null(), QOS_CLASS_USER_INITIATED, 0)) };
         let state: &'static State = Box::leak(Box::new(State {
+            tag: current_tag(),
             root: root.clone(),
             filter: config.filter.clone(),
             paths: cf_array(&[cf_string(&root)]),
@@ -814,6 +856,7 @@ mod backend {
         fn inotify_init1(flags: c_int) -> c_int;
         fn inotify_add_watch(fd: c_int, path: *const c_char, mask: u32) -> c_int;
         fn inotify_rm_watch(fd: c_int, wd: c_int) -> c_int;
+        fn close(fd: c_int) -> c_int;
         fn read(fd: c_int, buffer: *mut c_void, count: usize) -> isize;
         fn poll(fds: *mut PollFd, count: u64, timeout: c_int) -> c_int;
     }
@@ -909,11 +952,6 @@ mod backend {
         }
         let mut watches = Watches { fd, by_wd: HashMap::new(), filter: config.filter.clone(), root: root.clone(), refused: false };
         watches.tree("", false, &mut |_, _| {});
-        if let Some(fence) = &config.filter.private_fence {
-            if !watches.add(fence) {
-                fail("private-fence", "private directory subscription refused");
-            }
-        }
         emit(&format!("{{\"v\":1,\"t\":\"ready\",\"backend\":\"inotify\",\"root\":{},\"cursor\":\"\",\"uuid\":\"\",\"replay\":false,\"latencyMs\":{},\"native\":true,\"watches\":{}}}", quote(&root), config.latency_ms, watches.by_wd.len()));
         stdin_guard();
         let mut buffer = vec![0u8; 1 << 16];
@@ -922,6 +960,10 @@ mod backend {
         let latency = std::time::Duration::from_millis(config.latency_ms.max(1));
         let mut pending: Option<std::time::Instant> = None;
         loop {
+            if config.stop.load(Ordering::Relaxed) {
+                unsafe { close(fd) };
+                return;
+            }
             if let Some(since) = pending {
                 if due(changes.len(), since.elapsed(), latency, BATCH_ROWS) {
                     emit_batch(&mut sequence, "", &mut changes);
@@ -929,7 +971,7 @@ mod backend {
                 }
             }
             let mut poller = PollFd { fd, events: POLLIN, revents: 0 };
-            let timeout = if changes.is_empty() { -1 } else { config.latency_ms.max(1) as c_int };
+            let timeout = if changes.is_empty() { 1000 } else { config.latency_ms.max(1) as c_int };
             let ready = unsafe { poll(&mut poller, 1, timeout) };
             if ready == 0 {
                 emit_batch(&mut sequence, "", &mut changes);
@@ -1103,14 +1145,84 @@ mod backend {
     }
 }
 
+/// 🧩 Opens one root of a host: `open <tag> <root> <latencyMs> <exclusionVersion> <rooted> <names> <since> <uuid>` (tab separated, lists joined by 0x1f). The root runs its backend on its own thread; its frames carry `"r":tag`.
+fn open_root(parts: &[&str]) {
+    let tag = parts[1].to_string();
+    if tag.is_empty() || tag.len() > 64 || !tag.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"_.-".contains(&byte)) || parts[3].parse::<u64>().is_err() || parts[2].is_empty() || stops().lock().unwrap().contains_key(&tag) {
+        set_tag(Some(tag));
+        emit(&format!("{{\"v\":1,\"t\":\"error\",\"code\":\"open\",\"message\":{}}}", quote("bounded unused root tag, numeric latency and a root required")));
+        set_tag(None);
+        return;
+    }
+    let list = |text: &str| -> Vec<String> { text.split('\u{1f}').filter(|item| !item.is_empty()).map(|item| item.to_string()).collect() };
+    let mut arguments: Vec<String> = vec!["--root".into(), parts[2].into(), "--latency-ms".into(), parts[3].into()];
+    for item in list(parts[5]) {
+        arguments.push("--exclude".into());
+        arguments.push(item);
+    }
+    for item in list(parts[6]) {
+        arguments.push("--exclude-name".into());
+        arguments.push(item);
+    }
+    if !parts[7].is_empty() && !parts[8].is_empty() {
+        arguments.push("--since".into());
+        arguments.push(parts[7].into());
+        arguments.push("--uuid".into());
+        arguments.push(parts[8].into());
+    }
+    let (_, config) = parse(&arguments);
+    let version = parts[4].to_string();
+    stops().lock().unwrap().insert(tag.clone(), config.stop.clone());
+    closed().lock().unwrap().insert(tag.clone(), false);
+    overflow_of().lock().unwrap().insert(tag.clone(), false);
+    std::thread::spawn(move || {
+        set_tag(Some(tag.clone()));
+        emit(&format!("{{\"v\":1,\"t\":\"open\",\"xv\":{}}}", quote(&version)));
+        let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| backend::run(&config)));
+        closed().lock().unwrap().insert(tag.clone(), false);
+        stops().lock().unwrap().remove(&tag);
+        emit(&format!("{{\"v\":1,\"t\":\"closed\",\"requested\":{}}}", config.stop.load(Ordering::Relaxed) && outcome.is_ok()));
+        closed().lock().unwrap().remove(&tag);
+    });
+}
+
+/// 🚪 Closes one root of a host: its backend stops where it can, and its frames are dropped from now on.
+fn close_root(tag: &str) {
+    if let Some(stop) = stops().lock().unwrap().get(tag) {
+        stop.store(true, Ordering::Relaxed);
+    }
+    if stops().lock().unwrap().contains_key(tag) {
+        closed().lock().unwrap().insert(tag.to_string(), true);
+    }
+}
+
+/// 🌐 One process for every root of a host: roots open and close on stdin, EOF or `stop` ends the process.
+fn serve() {
+    emit(&format!("{{\"v\":1,\"t\":\"hub\",\"protocol\":1,\"os\":{}}}", quote(std::env::consts::OS)));
+    let stdin = std::io::stdin();
+    for line in stdin.lock().lines() {
+        let Ok(text) = line else { break };
+        let parts: Vec<&str> = text.split('\t').collect();
+        match parts.first().copied() {
+            Some("stop") => break,
+            Some("close") if parts.len() == 2 => close_root(parts[1]),
+            Some("open") if parts.len() == 9 => open_root(&parts),
+            _ => emit(&format!("{{\"v\":1,\"t\":\"error\",\"code\":\"command\",\"message\":{}}}", quote("expected open, close or stop"))),
+        }
+    }
+    emit("{\"v\":1,\"t\":\"bye\"}");
+    finish(0);
+}
+
 fn main() {
     let arguments: Vec<String> = std::env::args().skip(1).collect();
     let (command, config) = parse(&arguments);
     match command.as_str() {
         "watch" => backend::run(&config),
         "scan" => scan(&config),
+        "serve" => serve(),
         "version" => emit(&format!("{{\"v\":1,\"t\":\"version\",\"name\":\"semio-repo-watch\",\"protocol\":1,\"os\":{}}}", quote(std::env::consts::OS))),
-        _ => fail("argument", "expected one of: watch, scan, version"),
+        _ => fail("argument", "expected one of: watch, scan, serve, version"),
     }
     finish(0);
 }
@@ -1120,7 +1232,26 @@ mod tests {
     use super::*;
 
     fn filter() -> Filter {
-        Filter { rooted: vec![".git".into(), "a/b".into()], names: vec!["node_modules".into()], hex_names: Vec::new(), private_fence: None }
+        Filter { rooted: vec![".git".into(), "a/b".into()], names: vec!["node_modules".into()] }
+    }
+
+    #[test]
+    fn frames_carry_the_root_tag_and_closed_roots_are_silent() {
+        set_tag(None);
+        assert_eq!(tagged("{\"v\":1,\"t\":\"lost\"}").unwrap(), "{\"v\":1,\"t\":\"lost\"}");
+        set_tag(Some("w1".into()));
+        assert_eq!(tagged("{\"v\":1,\"t\":\"lost\"}").unwrap(), "{\"v\":1,\"r\":\"w1\",\"t\":\"lost\"}");
+        closed().lock().unwrap().insert("w1".into(), true);
+        assert!(tagged("{\"v\":1,\"t\":\"lost\"}").is_none());
+        closed().lock().unwrap().insert("w1".into(), false);
+        set_tag(None);
+    }
+
+    #[test]
+    fn overflow_is_remembered_per_root() {
+        overflow_of().lock().unwrap().insert("a".into(), true);
+        assert!(overflow_of().lock().unwrap().get("b").copied().unwrap_or(false) == false);
+        assert!(overflow_of().lock().unwrap().get("a").copied().unwrap_or(false));
     }
 
     #[test]
@@ -1129,17 +1260,6 @@ mod tests {
         assert!(f.excluded(".git") && f.excluded(".git/x") && !f.excluded(".github/x"));
         assert!(f.excluded("a/b/c") && !f.excluded("a/bc") && !f.excluded("a"));
         assert!(f.excluded("x/node_modules/y") && !f.excluded("x/node_modules2") && !f.excluded(""));
-    }
-
-    #[test]
-    fn private_fence_never_changes_source_exclusion_or_opens_siblings() {
-        let mut f = filter();
-        f.private_fence = Some(".git/funded/fence".into());
-        assert!(f.excluded(".git/funded/fence/nonce"));
-        assert!(f.observable(".git/funded/fence/nonce"));
-        assert!(!f.observable(".git/funded/sibling"));
-        assert!(!f.observable(".git/funded/fence/subdir/nonce"));
-        assert!(!f.observable(".git/funded/fence"));
     }
 
     #[test]

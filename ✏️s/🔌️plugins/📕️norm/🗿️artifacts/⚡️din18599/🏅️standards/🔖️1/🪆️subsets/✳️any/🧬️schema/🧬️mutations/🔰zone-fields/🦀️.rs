@@ -21,4 +21,6 @@ pub mod change_zone_theta_i_cool_c;
 pub mod change_zone_internal_gains_w_m2;
 #[path = "../🟨change-zone-lighting-power-w-m2/🦀️.rs"]
 pub mod change_zone_lighting_power_w_m2;
+#[path = "../🧊change-zone-thermal-mass/🦀️.rs"]
+pub mod change_zone_thermal_mass;
 //#endregion 🪢️Mounts

@@ -1,0 +1,81 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Planning Benchmark Scenarios and Reports",
+ "description": "Scenarios that measure the graph-plan phase of `repo run --dry-run` (cold, warm, leaf edit, shared-manifest edit, concurrent planners, host memory, store disk) and the report one run of them leaves.",
+ "type": "object",
+ "required": ["version"],
+ "properties": {"version": {"const": 1}},
+ "definitions": {
+  "Id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"},
+  "Path": {"type": "string", "minLength": 1, "maxLength": 255},
+  "Text": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}},
+  "Phase": {"enum": ["facts", "verification", "inference", "planning"]},
+  "Kind": {"enum": ["cold", "warm", "edit", "concurrent", "host", "store"]},
+  "Marker": {"type": "object", "additionalProperties": false, "required": ["phase", "pattern"], "properties": {"phase": {"$ref": "#/definitions/Phase"}, "pattern": {"type": "string", "minLength": 1}}},
+  "Counter": {"type": "object", "additionalProperties": false, "required": ["name", "pattern", "group"], "properties": {"name": {"enum": ["facts", "staleFacts", "closuresVerified", "closuresReused", "closuresChanged", "projectsStale", "projectsInferred", "workerRestartMb", "tasksStale", "tasksUpToDate"]}, "pattern": {"type": "string", "minLength": 1}, "group": {"type": "integer", "minimum": 1}}},
+  "Edit": {"type": "object", "additionalProperties": false, "required": ["file", "comment"], "properties": {"file": {"$ref": "#/definitions/Path"}, "comment": {"type": "string", "minLength": 1}}},
+  "Scenario": {
+   "type": "object", "additionalProperties": false,
+   "required": ["id", "kind", "title", "projects", "runs", "metrics"],
+   "properties": {
+    "id": {"$ref": "#/definitions/Id"},
+    "kind": {"$ref": "#/definitions/Kind"},
+    "title": {"$ref": "#/definitions/Text"},
+    "projects": {"type": "array", "minItems": 0, "items": {"type": "string", "pattern": "^\\S+:\\S+$"}},
+    "dryRun": {"type": "boolean"},
+    "runs": {"type": "integer", "minimum": 1},
+    "edit": {"$ref": "#/definitions/Edit"},
+    "primes": {"type": "integer", "minimum": 0},
+    "intervalMs": {"type": "integer", "minimum": 100},
+    "metrics": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["wallMs", "phaseMs", "closures", "peakRssMb", "swapMb", "oomKills", "memAvailableMb", "storeMb"]}}
+   }
+  },
+  "Scenarios": {
+   "type": "object", "additionalProperties": false,
+   "required": ["version", "markers", "counters", "scenarios", "stores"],
+   "properties": {
+    "version": {"const": 1},
+    "markers": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Marker"}},
+    "counters": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Counter"}},
+    "stores": {"type": "array", "items": {"$ref": "#/definitions/Path"}},
+    "scenarios": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Scenario"}}
+   }
+  },
+  "Sample": {
+   "type": "object", "additionalProperties": false,
+   "required": ["run", "exit", "wallMs", "phaseMs", "closures", "peakRssMb", "swapMb", "oomKills", "minAvailableMb", "storeMb"],
+   "properties": {
+    "run": {"type": "integer", "minimum": 1},
+    "exit": {"type": ["integer", "null"]},
+    "wallMs": {"type": "integer", "minimum": 0},
+    "phaseMs": {"type": "object", "additionalProperties": false, "required": ["facts", "verification", "inference", "planning"], "properties": {"facts": {"type": "integer", "minimum": 0}, "verification": {"type": "integer", "minimum": 0}, "inference": {"type": "integer", "minimum": 0}, "planning": {"type": "integer", "minimum": 0}}},
+    "closures": {"type": "object", "additionalProperties": false, "required": ["verified", "reused", "changed"], "properties": {"verified": {"type": ["integer", "null"], "minimum": 0}, "reused": {"type": ["integer", "null"], "minimum": 0}, "changed": {"type": ["integer", "null"], "minimum": 0}}},
+    "peakRssMb": {"type": ["number", "null"], "minimum": 0},
+    "swapMb": {"type": ["number", "null"], "minimum": 0},
+    "oomKills": {"type": ["integer", "null"], "minimum": 0},
+    "minAvailableMb": {"type": ["number", "null"], "minimum": 0},
+    "storeMb": {"type": ["number", "null"], "minimum": 0}
+   }
+  },
+  "Result": {
+   "type": "object", "additionalProperties": false,
+   "required": ["scenario", "status", "samples"],
+   "properties": {
+    "scenario": {"$ref": "#/definitions/Id"},
+    "status": {"enum": ["ran", "skipped", "failed"]},
+    "reason": {"type": "string"},
+    "samples": {"type": "array", "items": {"$ref": "#/definitions/Sample"}}
+   }
+  },
+  "Report": {
+   "type": "object", "additionalProperties": false,
+   "required": ["version", "started", "host", "results"],
+   "properties": {
+    "version": {"const": 1},
+    "started": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}"},
+    "host": {"type": "object", "additionalProperties": false, "required": ["cpus", "memoryMb", "swapMb", "loadPerCore"], "properties": {"cpus": {"type": "integer", "minimum": 1}, "memoryMb": {"type": "integer", "minimum": 1}, "swapMb": {"type": ["integer", "null"]}, "loadPerCore": {"type": ["number", "null"]}}},
+    "results": {"type": "array", "items": {"$ref": "#/definitions/Result"}}
+   }
+  }
+ }
+}

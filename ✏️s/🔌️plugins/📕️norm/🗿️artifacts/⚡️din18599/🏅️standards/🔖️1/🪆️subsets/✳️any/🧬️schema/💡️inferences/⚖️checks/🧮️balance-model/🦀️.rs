@@ -2,7 +2,6 @@
 
 use super::*;
 
-const HOURS_PER_MONTH: f64 = DIN_V_18599_1_HOURS_PER_MONTH;
 const RHO_CA: f64 = DIN_V_18599_1_RHO_CA;
 
 /// ⚡️ GEG Annex 4 / DIN V 18599-10 primary energy factors f_p (non-renewable).
@@ -183,23 +182,25 @@ pub struct HeatingMonth {
 
 /// 📅 The twelve monthly balances of `zone` against `climate`.
 pub fn heating_months(zone: &ThermalZone, z_elems: &[&EnvelopeElement], climate: &MonthlyClimate, h_t: f64, h_v: f64) -> Vec<HeatingMonth> {
+    let a = utilization_parameter(zone, h_t + h_v);
     (0..12)
         .map(|m| {
+            let hours = 24.0 * DIN_V_18599_1_DAYS_PER_MONTH[m];
             let te = climate.theta_e_c[m];
             let dt = (zone.theta_i_heat_c - te).max(0.0);
-            let q_t = h_t * dt * HOURS_PER_MONTH / 1000.0;
-            let q_v = h_v * dt * HOURS_PER_MONTH / 1000.0;
-            let q_i = zone.internal_gains_w_m2 * zone.area_m2 * HOURS_PER_MONTH / 1000.0;
+            let q_t = h_t * dt * hours / 1000.0;
+            let q_v = h_v * dt * hours / 1000.0;
+            let q_i = zone.internal_gains_w_m2 * zone.area_m2 * hours / 1000.0;
             let g_h = climate.g_h_w_m2[m];
-            let q_s: f64 = z_elems.iter().filter(|e| e.g_value > 0.0).map(|e| g_h * orientation_solar_factor(e.orientation_deg, e.tilt_deg) * e.area_m2 * e.g_value * e.fc.clamp(0.0, 1.0) * HOURS_PER_MONTH / 1000.0).sum();
+            let q_s: f64 = z_elems.iter().filter(|e| e.g_value > 0.0).map(|e| g_h * orientation_solar_factor(e.orientation_deg, e.tilt_deg) * e.area_m2 * e.g_value * e.fc.clamp(0.0, 1.0) * hours / 1000.0).sum();
             let loss = q_t + q_v;
             let gain = q_i + q_s;
             let gamma = if loss <= 1e-9 { 1e9 } else { gain / loss };
-            let eta = utilization_factor(gamma);
-            let loss_c = (h_t + h_v) * (zone.theta_i_cool_c - te).max(0.0) * HOURS_PER_MONTH / 1000.0;
-            let over_c = (h_t + h_v) * (te - zone.theta_i_cool_c).max(0.0) * HOURS_PER_MONTH / 1000.0;
+            let eta = heating_utilization(gamma, a);
+            let loss_c = (h_t + h_v) * (zone.theta_i_cool_c - te).max(0.0) * hours / 1000.0;
+            let over_c = (h_t + h_v) * (te - zone.theta_i_cool_c).max(0.0) * hours / 1000.0;
             let gamma_c = if loss_c <= 1e-9 { 1e9 } else { gain / loss_c };
-            let q_c = (gain - utilization_factor(gamma_c) * loss_c).max(0.0) + over_c;
+            let q_c = (gain - cooling_utilization(gamma_c, a) * loss_c).max(0.0) + over_c;
             HeatingMonth { q_t_kwh: q_t, q_v_kwh: q_v, q_i_kwh: q_i, q_s_kwh: q_s, eta_utilisation: eta, q_h_kwh: (loss - eta * gain).max(0.0), q_c_kwh: q_c }
         })
         .collect()
@@ -260,18 +261,51 @@ pub fn solar_gains_month_kwh(doc: &Din18599Snapshot, climate: &MonthlyClimate, m
     doc.elements
         .iter()
         .filter(|e| e.g_value > 0.0)
-        .map(|e| irr * orientation_solar_factor(e.orientation_deg, e.tilt_deg) * e.area_m2 * e.g_value * e.fc.clamp(0.0, 1.0) * HOURS_PER_MONTH / 1000.0)
+        .map(|e| irr * orientation_solar_factor(e.orientation_deg, e.tilt_deg) * e.area_m2 * e.g_value * e.fc.clamp(0.0, 1.0) * 24.0 * DIN_V_18599_1_DAYS_PER_MONTH[month] / 1000.0)
         .sum()
 }
 
-fn utilization_factor(gamma: f64) -> f64 {
-    let a = DIN_V_18599_2_UTILIZATION_A;
+/// 🧱 Effective heat storage capacity C_wirk [Wh/K] of a zone: the class value of DIN V 18599-2 per net floor area, or the explicit value for the custom class.
+pub fn zone_heat_capacity_wh_k(zone: &ThermalZone) -> f64 {
+    use din_v_18599_2_c_wirk_wh_m2k as c;
+    zone.area_m2 * match zone.thermal_mass_class {
+        ThermalMassClass::Light => c::LIGHT,
+        ThermalMassClass::Medium => c::MEDIUM,
+        ThermalMassClass::Heavy => c::HEAVY,
+        ThermalMassClass::Custom if zone.c_wirk_wh_m2k > 0.0 => zone.c_wirk_wh_m2k,
+        ThermalMassClass::Custom => c::MEDIUM,
+    }
+}
+
+/// ⏲️ Numerical parameter a = a0 + τ/τ0 of the utilisation factor, with the time constant τ = C_wirk / H [h] (DIN V 18599-2, EN ISO 13790 12.2.1.1).
+pub fn utilization_parameter(zone: &ThermalZone, h_w_k: f64) -> f64 {
+    let tau_h = zone_heat_capacity_wh_k(zone) / h_w_k.max(1e-9);
+    DIN_V_18599_2_UTILIZATION_A0 + tau_h / DIN_V_18599_2_UTILIZATION_TAU0_H
+}
+
+/// 🔥 Gain utilisation factor of the heating balance, η = (1 − γ^a) / (1 − γ^(a+1)), a/(a+1) at γ = 1 (EN ISO 13790 12.2.1.1).
+pub fn heating_utilization(gamma: f64, a: f64) -> f64 {
     if gamma.abs() < 1e-9 {
         1.0
     } else if (gamma - 1.0).abs() < 1e-9 {
         a / (a + 1.0)
+    } else if gamma < 1.0 {
+        (1.0 - gamma.powf(a)) / (1.0 - gamma.powf(a + 1.0))
     } else {
+        (1.0 / gamma - gamma.powf(-(a + 1.0))) / (1.0 - gamma.powf(-(a + 1.0)))
+    }
+}
+
+/// ❄️ Loss utilisation factor of the cooling balance, η = (1 − γ^−a) / (1 − γ^−(a+1)), a/(a+1) at γ = 1 (EN ISO 13790 12.2.2).
+pub fn cooling_utilization(gamma: f64, a: f64) -> f64 {
+    if gamma.abs() < 1e-9 {
+        1.0
+    } else if (gamma - 1.0).abs() < 1e-9 {
+        a / (a + 1.0)
+    } else if gamma > 1.0 {
         (1.0 - gamma.powf(-a)) / (1.0 - gamma.powf(-(a + 1.0)))
+    } else {
+        (gamma - gamma.powf(a + 1.0)) / (1.0 - gamma.powf(a + 1.0))
     }
 }
 

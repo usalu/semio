@@ -30,8 +30,8 @@
       }
     ]
   },
-  "transverseStiffeners": null,
   "sheetProfiles": null,
   "fireInsulations": null,
+  "transverseStiffeners": null,
   "reliabilityClass": "RC2"
 }

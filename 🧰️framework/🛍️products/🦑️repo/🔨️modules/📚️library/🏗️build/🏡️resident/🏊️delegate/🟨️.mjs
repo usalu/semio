@@ -70,7 +70,7 @@ export function createWarmPoolV1({command,environment,cwd,size,idleMilliseconds,
   run(worker,request,{onOutput,signal}){
    return new Promise((resolve,reject)=>{
     const child=worker.child;let started=false;
-    const kill=()=>{child.kill("SIGINT");const hard=setTimeout(()=>child.kill("SIGKILL"),5000);hard.unref?.();};
+    const kill=()=>{child.kill("SIGINT");const hard=setTimeout(()=>child.kill("SIGKILL"),2000);hard.unref?.();};
     if(signal?.aborted){kill();}else signal?.addEventListener("abort",kill,{once:true});
     child.stdout.removeAllListeners("data");child.stderr.removeAllListeners("data");
     child.stdout.on("data",chunk=>{void onOutput("stdout",chunk.toString("utf8"));});
@@ -107,7 +107,7 @@ export function createDelegatedExecutionPortV1({pool,executors,executorArguments
    return new Promise((resolve,reject)=>{
     const child=spawn(coldCommand[0],[...coldCommand.slice(1),...request.argv],{cwd,env:{...environment,...request.env},stdio:["ignore","pipe","pipe"]});
     onSpawn?.();
-    const kill=()=>child.kill("SIGINT");signal?.addEventListener("abort",kill,{once:true});
+    const kill=()=>{child.kill("SIGINT");const hard=setTimeout(()=>child.kill("SIGKILL"),2000);hard.unref?.();};signal?.addEventListener("abort",kill,{once:true});
     child.stdout.on("data",chunk=>{void onOutput("stdout",chunk.toString("utf8"));});child.stderr.on("data",chunk=>{void onOutput("stderr",chunk.toString("utf8"));});
     child.once("error",reject);child.once("exit",(code,sig)=>{signal?.removeEventListener("abort",kill);resolve({exit:code??1,signal:sig});});
    });

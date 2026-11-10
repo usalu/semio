@@ -30,18 +30,18 @@
    "project-assembly/runs-tests": "cd0aa4f54dec36ee96e0d25d98494412f06c51ee9fea469e4b752711e82ebd99",
    "project-assembly/target-inputs": "327f97781fb71290cd3d328742dd4482285cb0aa5ee2ba7b118d6cd77d43e5ff"
   },
-  "semio.graph-inferrer.script-inputs/2": {
+  "semio.graph-inferrer.script-inputs/3": {
    "script-inputs/lock-inputs": "b6e1492f95cc621afa833d5d937e6d7c409ff6421fd2f858510dc77672a683f7",
    "script-inputs/target-sources-owner-wrapped": "46b340c976d1fd622f6e2d2fcb9aee9c424aa282c95fe204a3f11d3a986a6fd3",
    "script-inputs/target-sources-plain": "46b340c976d1fd622f6e2d2fcb9aee9c424aa282c95fe204a3f11d3a986a6fd3",
    "script-inputs/target-sources-router-slice": "c7dd52459526a9191eb85d3f29e36a9e3f35ecb80ef03b1e201c5e9c2a060e63",
    "script-inputs/target-sources-tsconfig-paths": "64abd4b1f0e978e2f8c5d924073621d7e2ce8d51bc4a0c19acccdd24419a81b0"
   },
-  "semio.graph-inferrer.source-analyses/1": {
+  "semio.graph-inferrer.source-analyses/3": {
    "source-analyses/command": "4a72265d7a8b13793a8cc3632a817c66cd2461279de4a64fcf78ec254b0bd26d",
    "source-analyses/module": "a678e71c3511a0d275e05e7168e3e4b4c0ac954e37b090819fb0495260d30056",
    "source-analyses/native-script": "bb0683d88e970eae30b17fe45110496ce827a2c88870d8b7d5f114d7219548e5",
-   "source-analyses/references": "910ac20c368ff810ed99b25b2103ec155be1da74568379d3a88927f76e5e44c0",
+   "source-analyses/references": "83cce5c011a5f86ade57966fe8733f08cee64ee730760a164ed7657fa2fce093",
    "source-analyses/rust": "c7c2871ccf7ee619552b43dd1650294cb8800e943eada0a3a88069ba1c02c239",
    "source-analyses/script": "f0319cb8915d5c68d0ac7c9b829b37b414da85263a7738ce0da0c0a15da8cdb0"
   },

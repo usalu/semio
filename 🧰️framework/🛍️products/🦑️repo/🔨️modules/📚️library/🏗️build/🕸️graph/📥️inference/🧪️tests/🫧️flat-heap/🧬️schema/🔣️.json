@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Flat heap across owners / Flacher Heap über Eigner",
+  "description": "EN: A generated workspace of independent owners, each with its own module closure; after the warmup owners the managed heap after a collection may grow by at most the declared megabytes over the remaining owners and by at most the declared slope per owner. DE: Ein erzeugter Arbeitsbereich unabhängiger Eigner mit je eigener Modul-Closure; nach den Aufwärm-Eignern darf der verwaltete Heap nach einer Sammlung über die übrigen Eigner höchstens um die genannten Megabyte und höchstens um die genannte Steigung je Eigner wachsen.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owners",
+    "modulesPerOwner",
+    "bytesPerModule",
+    "warmup",
+    "maximumGrowthMegabytes",
+    "maximumSlopeKilobytesPerOwner"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owners": {
+      "type": "integer",
+      "minimum": 8
+    },
+    "modulesPerOwner": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "bytesPerModule": {
+      "type": "integer",
+      "minimum": 64
+    },
+    "warmup": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumGrowthMegabytes": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "maximumSlopeKilobytesPerOwner": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  }
+}

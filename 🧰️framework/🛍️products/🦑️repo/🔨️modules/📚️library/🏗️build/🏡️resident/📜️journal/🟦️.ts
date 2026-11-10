@@ -1,8 +1,8 @@
 import {execFile,spawn} from "node:child_process";
 import {randomBytes} from "node:crypto";
-import {existsSync,mkdirSync,readFileSync,readdirSync,realpathSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,readFileSync,readdirSync,realpathSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {readFile} from "node:fs/promises";
-import {join} from "node:path";
+import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {canonicalRootV1,stateDirectoryV1} from "../📨️protocol/📍️endpoint/🟨️.mjs";
 import {createChangeJournalClientV1,type ChangeJournalClientV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧭️client/🟦️.ts";
@@ -45,7 +45,7 @@ export function changeLockHeldV1(facts:Readonly<{pid:unknown;alive:boolean;heart
  return facts.alive&&(facts.heartbeatAgeMilliseconds<policy.heartbeatStaleMilliseconds||facts.ageMilliseconds<policy.startTimeoutMilliseconds);
 }
 
-function takeLock(directory:string,policy:ChangeJournalPolicyV1,now:number):void{
+export function takeChangeLockV1(directory:string,policy:ChangeJournalPolicyV1,now:number):void{
  const lock=join(directory,CHANGE_JOURNAL_FILES_V1.lock);
  for(let attempt=0;attempt<2;attempt++){
   try{mkdirSync(lock,{mode:0o700});writeFileSync(join(lock,"owner.json"),JSON.stringify({pid:process.pid,at:now}),{mode:0o600});return;}
@@ -66,7 +66,7 @@ function takeLock(directory:string,policy:ChangeJournalPolicyV1,now:number):void
 export async function runChangeJournalServiceV1(options:ChangeJournalServiceOptionsV1):Promise<Readonly<{epoch:string;stop(reason:string):Promise<void>;closed:Promise<string>}>>{
  const {root,directory,fence,exclude,binary,watcherPolicy,createSupervisor,policy=CHANGE_JOURNAL_POLICY_V1,now=Date.now,log=()=>{},residentBytes=()=>process.memoryUsage().rss}=options;
  mkdirSync(directory,{recursive:true,mode:0o700});
- takeLock(directory,policy,now());
+ takeChangeLockV1(directory,policy,now());
  try{const swept=sweepAbandonedJournalStatesV1(directory,now());if(swept.removed.length)log("sweep",formatJournalSweepV1(swept,"en")+" / "+formatJournalSweepV1(swept,"de"));}catch{}
  const epoch=randomBytes(8).toString("hex"),instance=randomBytes(4).toString("hex"),startedAt=now(),excluded=excludedBy(exclude),rootIdentity=directoryIdentityV1(root);
  rmSync(join(directory,CHANGE_JOURNAL_FILES_V1.unavailable),{force:true});rmSync(join(directory,CHANGE_JOURNAL_FILES_V1.heartbeat),{force:true});rmSync(join(directory,CHANGE_JOURNAL_FILES_V1.state),{force:true});
@@ -130,36 +130,115 @@ export async function runChangeJournalServiceV1(options:ChangeJournalServiceOpti
  return{epoch,stop,closed};
 }
 
-/** 🚀️ Starts the service detached when none is live and waits until its state is ready; resolves quietly when it cannot (the client then walks the tree). */
+/** 🏠️ The directory of the host process of this user: one detached process serves the change journals of every workspace, requests arrive as files below `requests`. */
+export function changeJournalHostDirectoryV1(root:string,environment:Readonly<Record<string,string|undefined>>=process.env):string{
+ return join(dirname(stateDirectoryV1(canonicalRootV1(root),environment)),"journal-host");
+}
+
+/** 📨️ One request to open the journal of a workspace in the host. */
+export type ChangeJournalOpenRequestV1=Readonly<{root:string;directory:string}>;
+
+/** 🏠️ Everything one host run needs: the services it opens share one watcher factory (and so one native watcher process). */
+export type ChangeJournalHostOptionsV1=Readonly<{
+ directory:string;fence:string;exclude:ChangeJournalServiceOptionsV1["exclude"];binary?:string;watcherPolicy:Record<string,unknown>;createSupervisor:ChangeWatchFactoryV1;
+ policy?:ChangeJournalPolicyV1;now?:()=>number;log?:(kind:string,detail:string)=>void;maximumRoots?:number;idleHostMilliseconds?:number;pollMilliseconds?:number;residentBytes?:()=>number;
+}>;
+
+const readOpenRequest=(file:string):ChangeJournalOpenRequestV1|undefined=>{
+ try{
+  const value=JSON.parse(readFileSync(file,"utf8")) as Partial<ChangeJournalOpenRequestV1>;
+  return typeof value.root==="string"&&typeof value.directory==="string"&&value.root.length>0&&value.directory.length>0&&!value.root.includes("\0")&&!value.directory.includes("\0")?{root:value.root,directory:value.directory}:undefined;
+ }catch{return undefined;}
+};
+
+/** 📨️ Asks the host to open the journal of a workspace; the file appears atomically. */
+export function requestChangeJournalV1(hostDirectory:string,request:ChangeJournalOpenRequestV1):void{
+ const requests=join(hostDirectory,"requests");
+ mkdirSync(requests,{recursive:true,mode:0o700});
+ const name=randomBytes(6).toString("hex"),temporary=join(requests,name+".tmp");
+ writeFileSync(temporary,JSON.stringify(request),{mode:0o600});renameSync(temporary,join(requests,name+".json"));
+}
+
+/** 🏠️ Runs the host: one lock, one heartbeat, and a journal service per requested workspace, all in this process and sharing the native watcher of the supplied factory. The host ends after a quiet period without any workspace. */
+export async function runChangeJournalHostV1(options:ChangeJournalHostOptionsV1):Promise<Readonly<{stop(reason:string):Promise<void>;closed:Promise<string>;services:ReadonlyMap<string,unknown>}>>{
+ const {directory,policy=CHANGE_JOURNAL_POLICY_V1,now=Date.now,log=()=>{},maximumRoots=64,idleHostMilliseconds=60000,pollMilliseconds=100}=options;
+ mkdirSync(directory,{recursive:true,mode:0o700});
+ takeChangeLockV1(directory,policy,now());
+ rmSync(join(directory,CHANGE_JOURNAL_FILES_V1.heartbeat),{force:true});
+ const requests=join(directory,"requests"),services=new Map<string,Awaited<ReturnType<typeof runChangeJournalServiceV1>>>();
+ mkdirSync(requests,{recursive:true,mode:0o700});
+ let closeResolve!:(reason:string)=>void,stopping:Promise<void>|undefined,timer:ReturnType<typeof setInterval>|undefined,quietSince=now(),busy=false;
+ const closed=new Promise<string>(resolve=>{closeResolve=resolve;});
+ const stop=(reason:string):Promise<void>=>stopping??=(async()=>{
+  if(timer)clearInterval(timer);
+  await Promise.allSettled([...services.values()].map(service=>service.stop(reason)));
+  rmSync(join(directory,CHANGE_JOURNAL_FILES_V1.heartbeat),{force:true});rmSync(join(directory,CHANGE_JOURNAL_FILES_V1.lock),{recursive:true,force:true});
+  closeResolve(reason);
+ })();
+ const open=async(request:ChangeJournalOpenRequestV1)=>{
+  if(services.has(request.directory)||services.size>=maximumRoots)return;
+  try{
+   const service=await runChangeJournalServiceV1({root:request.root,directory:request.directory,fence:options.fence,exclude:options.exclude,binary:options.binary,watcherPolicy:options.watcherPolicy,createSupervisor:options.createSupervisor,policy,now,log,...(options.residentBytes?{residentBytes:options.residentBytes}:{residentBytes:()=>0})});
+   services.set(request.directory,service);
+   void service.closed.then(()=>{services.delete(request.directory);});
+  }catch(error){if(!(error instanceof ChangeJournalRunningErrorV1))log("open-failed",request.root+": "+String((error as Error).message));}
+ };
+ const poll=async()=>{
+  if(busy||stopping)return;busy=true;
+  try{
+   const at=now();touchChangeFileV1(directory,CHANGE_JOURNAL_FILES_V1.heartbeat,at);
+   let names:string[]=[];try{names=readdirSync(requests).filter(name=>name.endsWith(".json")).sort();}catch{}
+   for(const name of names){
+    const file=join(requests,name),request=readOpenRequest(file);
+    rmSync(file,{force:true});
+    if(request)await open(request);
+   }
+   if(services.size>0)quietSince=at;
+   else if(at-quietSince>idleHostMilliseconds)void stop("idle");
+  }finally{busy=false;}
+ };
+ touchChangeFileV1(directory,CHANGE_JOURNAL_FILES_V1.heartbeat,now());
+ timer=setInterval(()=>{void poll();},pollMilliseconds);timer.unref?.();
+ await poll();
+ log("host-ready",directory);
+ return{stop,closed,services};
+}
+
+/** 🚀️ Makes the journal of a workspace run: asks the live host to open it, or starts the detached host first, and waits until its state is ready; resolves quietly when it cannot (the client then walks the tree). */
 export async function startChangeJournalServiceV1(options:Readonly<{directory:string;root:string;execPath?:string;script?:string;arguments?:readonly string[];policy?:ChangeJournalPolicyV1;now?:()=>number;environment?:Readonly<Record<string,string|undefined>>}>):Promise<void>{
  const {directory,root,execPath=process.execPath,script=fileURLToPath(new URL("./⌨️main/🟦️.ts",import.meta.url)),policy=CHANGE_JOURNAL_POLICY_V1,now=Date.now,environment=process.env}=options;
  const live=():boolean=>{const state=readChangeStateV1(directory);return !!state&&changeHeartbeatAgeV1(directory,now())<policy.heartbeatStaleMilliseconds&&state.ready;};
  if(live())return;
+ const hostDirectory=changeJournalHostDirectoryV1(root,environment);
  mkdirSync(directory,{recursive:true,mode:0o700});
- const child=spawn(execPath,[script,"--root",root,"--directory",directory,...(options.arguments??[])],{cwd:root,env:{...environment},stdio:"ignore",detached:true,windowsHide:true});
- child.unref();
- let exited=false;child.once("exit",()=>{exited=true;});
+ const hostLive=():boolean=>changeHeartbeatAgeV1(hostDirectory,now())<policy.heartbeatStaleMilliseconds;
+ requestChangeJournalV1(hostDirectory,{root,directory});
+ let exited=false;
+ if(!hostLive()){
+  const child=spawn(execPath,[script,"--host",hostDirectory,...(options.arguments??[])],{cwd:root,env:{...environment},stdio:"ignore",detached:true,windowsHide:true});
+  child.unref();child.once("exit",()=>{exited=true;});
+ }
  const deadline=now()+policy.startTimeoutMilliseconds;
- while(now()<deadline&&!exited){
+ while(now()<deadline&&!(exited&&!hostLive())){
   if(live())return;
   await new Promise(resolve=>setTimeout(resolve,policy.startPollMilliseconds));
  }
 }
 
-/** 🏁️ The command line of the detached service process: `--root <workspace> --directory <journal directory> [--binary <watcher>]`. */
-export async function runChangeJournalMainV1(argv:readonly string[],dependencies:Readonly<{createSupervisor:ChangeWatchFactoryV1;watcherPolicy:Record<string,unknown>;exclude:ChangeJournalServiceOptionsV1["exclude"];fence:string;locate:()=>Promise<string|undefined>}>):Promise<number>{
+/** 🏁️ The command line of the detached host process: `--host <host directory> [--binary <watcher>]`. */
+export async function runChangeJournalMainV1(argv:readonly string[],dependencies:Readonly<{createSupervisor:ChangeWatchFactoryV1;watcherPolicy:Record<string,unknown>;exclude:ChangeJournalServiceOptionsV1["exclude"];fence:string;locate:()=>Promise<string|undefined>;release?:()=>Promise<void>}>):Promise<number>{
  const value=(name:string):string|undefined=>{const at=argv.indexOf(name);return at<0?undefined:argv[at+1];};
- const root=value("--root"),directory=value("--directory");
- if(!root||!directory)throw refuseBuildV1("usage","journal.arguments-required");
+ const directory=value("--host");
+ if(!directory)throw refuseBuildV1("usage","journal.arguments-required");
  const binary=value("--binary")??await dependencies.locate();
- let service;
- try{service=await runChangeJournalServiceV1({root,directory,fence:dependencies.fence,exclude:dependencies.exclude,binary,watcherPolicy:dependencies.watcherPolicy,createSupervisor:dependencies.createSupervisor});}
+ let host;
+ try{host=await runChangeJournalHostV1({directory,fence:dependencies.fence,exclude:dependencies.exclude,binary,watcherPolicy:dependencies.watcherPolicy,createSupervisor:dependencies.createSupervisor,residentBytes:()=>process.memoryUsage().rss});}
  catch(error){return error instanceof ChangeJournalRunningErrorV1?0:1;}
- for(const signal of["SIGTERM","SIGINT"] as const)process.once(signal,()=>{void service.stop(signal);setTimeout(()=>process.exit(1),CHANGE_JOURNAL_POLICY_V1.stopWaitMilliseconds*3).unref();});
- await service.closed;
+ for(const signal of["SIGTERM","SIGINT"] as const)process.once(signal,()=>{void host.stop(signal);setTimeout(()=>process.exit(1),CHANGE_JOURNAL_POLICY_V1.stopWaitMilliseconds*3).unref();});
+ await host.closed;
+ await dependencies.release?.();
  return 0;
 }
-
 
 /** 📍️ The journal directory of a workspace: below the private state directory of the worktree and user, which no `TMPDIR` moves, so a nested build action reaches the journal of its parent. */
 export function changeJournalDirectoryV1(root:string,environment:Readonly<Record<string,string|undefined>>=process.env):string{

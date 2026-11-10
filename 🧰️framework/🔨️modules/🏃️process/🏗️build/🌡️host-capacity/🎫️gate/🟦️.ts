@@ -7,22 +7,16 @@ import {homedir,uptime} from "node:os";
 import {isAbsolute,join} from "node:path";
 import {beginAdmissionWaitV1,liveChildPidsV1,onScriptProcessWaitEdgeV1,scriptProcessWaitEpisodeV1,waitingDelayV1 as delay} from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../🔒️leases/🎛️control/🟦️.ts";
-import {decideHostHandoverV1,describeHostBlockersV1,hostBlockersV1,hostBootAnchorV1,type HostBootAnchorV1,describeHostHandoverRefusalV1,describeHostReasonV1,evaluateHostCapacityV1,followHostGrantPlanV1,formatHostCapacityV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,planHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,softHostReasonV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostGrowthSettleV1,type HostHandoverV1,type HostPlanV1,type HostReasonV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1} from "../📏️decision/🟦️.ts";
+import {decideHostHandoverV1,describeHostBlockersV1,hostBlockersV1,hostBootAnchorV1,type HostBootAnchorV1,describeHostHandoverRefusalV1,describeHostReasonV1,evaluateHostCapacityV1,withUnmanagedHostV1,followHostGrantPlanV1,formatHostCapacityV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,planHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,softHostReasonV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostGrowthSettleV1,type HostHandoverV1,type HostPlanV1,type HostReasonV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1} from "../📏️decision/🟦️.ts";
 import {currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,type HostSampleRecordV1} from "../📡️sampling/🟦️.ts";
 import {systemAncestryV1,WINDOWS_PROCESS_LISTING_V1} from "../../../🪪️agent-sessions/🧭️ancestry/🟦️.ts";
 import {hostDeclarationKeyV1} from "../🪞️profile/🟦️.ts";
 import {HOST_PHASES_V1,hostPhaseSegmentsV1,type HostPhaseTransitionV1,type HostPhaseV1} from "../🪜️phases/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import {absentV1,alive,currentSample,hostBootAtV1,hostCapacityDirectoryV1,modified,names,prepare,readGrants,readJson,readWaiters,remove,writeJson,type HostCapacityStatusV1} from "./📖️status/🟦️.ts";
+export {hostBootAtV1,hostCapacityDirectoryV1,readHostCapacityStatusV1,type HostCapacityStatusV1} from "./📖️status/🟦️.ts";
 
 const protocol=schema.definitions.Protocol.const,limits=schema.definitions.Limits.const;
-
-/** 🗂️ The machine-wide gate directory: one per user and shared by every checkout, so the whole machine is one admission domain. */
-export function hostCapacityDirectoryV1(environment:Readonly<Record<string,string|undefined>>=process.env,platform:NodeJS.Platform=process.platform,home:string=homedir()):string{
- const override=environment[protocol.directoryEnvironment];
- if(override)return requireMaterializedPathV1(override);
- const base=platform==="darwin"?join(home,"Library","Caches"):platform==="win32"?environment.LOCALAPPDATA??join(home,"AppData","Local"):isAbsolute(environment.XDG_CACHE_HOME??"")?environment.XDG_CACHE_HOME!:join(home,".cache");
- return requireMaterializedPathV1(join(base,"semio","host-capacity"));
-}
 
 /** 🆔️ Mints one unguessable request id. */
 export function newHostCapacityIdV1():string{return randomBytes(16).toString("base64url");}
@@ -32,8 +26,6 @@ export type HostCapacityHandleV1=Readonly<{id:string;jobs:number;cpu:number;rese
 
 import type {HostCapacityOptionsV1,HostCapacityPortsV1,HostLedgerPrimitivesV1,HostProcessIdentityV1} from "./📋️contract/🟦️.ts";
 export type {HostCapacityOptionsV1,HostCapacityPortsV1,HostLedgerPrimitivesV1,HostProcessIdentityV1,HostRunV1} from "./📋️contract/🟦️.ts";
-/** 📋️ What the gate currently knows. */
-export type HostCapacityStatusV1=Readonly<{host:HostSampleV1;grants:readonly HostGrantV1[];waiters:readonly HostWaiterV1[];evaluation:HostEvaluationV1}>;
 
 /** 📥️ Reads the plan an enclosing grant carried into the environment, or undefined when the process runs under none. */
 export function readHostCapacityPlanV1(environment:Readonly<Record<string,string|undefined>>):HostPlanV1|undefined{
@@ -47,34 +39,16 @@ export function readHostCapacityPlanV1(environment:Readonly<Record<string,string
 export function readLiveHostCapacityPlanV1(environment:Readonly<Record<string,string|undefined>>):HostPlanV1|undefined{
  const plan=readHostCapacityPlanV1(environment);
  if(plan===undefined)return undefined;
- let row:unknown;try{row=readJson(grantPath(hostCapacityDirectoryV1(environment),plan.id));}catch{return plan;}
+ const row=readJson(grantPath(hostCapacityDirectoryV1(environment),plan.id));
  return isHostCapacityV1("Grant",row)?followHostGrantPlanV1(plan,row as HostGrantV1):plan;
 }
 
 /** 🧾️ Reads actual same-id ledger reservation DATA; the larger tool envelope never attests resident capacity. */
-export function readLiveHostCapacityReservationV1(environment:Readonly<Record<string,string|undefined>>,policy:HostCapacityPolicyV1):Readonly<Pick<HostGrantV1,"id"|"jobs"|"cpu"|"reservedMegabytes">>|undefined{const plan=readHostCapacityPlanV1(environment);if(!plan)return undefined;const directory=hostCapacityDirectoryV1(environment),path=grantPath(directory,plan.id);let row:unknown;try{row=readJson(path);}catch{return undefined;}if(!isHostCapacityV1("Grant",row))return undefined;const grant=row as HostGrantV1,at=Date.now(),anchor=readBootAnchor(readJson(join(directory,protocol.bootFile)))??bootAnchors.get(directory),boot=hostBootAnchorV1(anchor,at,uptime()*1000).bootAtMs;if(!isCurrentHostGrantV1({grant,expectedId:plan.id,pidAlive:alive(grant.pid),nowMs:at,bootAtMs:boot,modifiedAtMs:modified(path)},policy))return undefined;return requireHostCapacityV1("Reservation",Object.freeze({id:grant.id,jobs:grant.jobs,cpu:grant.cpu,reservedMegabytes:grant.quiet?0:grant.reservedMegabytes}));}
+export function readLiveHostCapacityReservationV1(environment:Readonly<Record<string,string|undefined>>,policy:HostCapacityPolicyV1):Readonly<Pick<HostGrantV1,"id"|"jobs"|"cpu"|"reservedMegabytes">>|undefined{const plan=readHostCapacityPlanV1(environment);if(!plan)return undefined;const directory=hostCapacityDirectoryV1(environment),path=grantPath(directory,plan.id);const row=readJson(path);if(!isHostCapacityV1("Grant",row))return undefined;const grant=row as HostGrantV1,at=Date.now(),boot=hostBootAtV1(directory,at);if(!isCurrentHostGrantV1({grant,expectedId:plan.id,pidAlive:alive(grant.pid),nowMs:at,bootAtMs:boot,modifiedAtMs:modified(path)},policy))return undefined;return requireHostCapacityV1("Reservation",Object.freeze({id:grant.id,jobs:grant.jobs,cpu:grant.cpu,reservedMegabytes:grant.quiet?0:grant.reservedMegabytes}));}
 
-const bootAnchors=new Map<string,HostBootAnchorV1>();
-const readBootAnchor=(value:unknown):HostBootAnchorV1|undefined=>{const row=value as Partial<HostBootAnchorV1>|undefined;return Number.isSafeInteger(row?.bootAtMs)&&Number.isSafeInteger(row?.uptimeMs)?{bootAtMs:row!.bootAtMs!,uptimeMs:row!.uptimeMs!}:undefined;};
-/** ⚓️ The boot instant of the grants in `directory`: read from the anchor of the boot (see `hostBootAnchorV1`), written when this is the first process of the boot, and kept for the life of this process, so the wall clock is read once and never moves it. */
-export function hostBootAtV1(directory:string,nowMs:number,uptimeMs:number=Math.floor(uptime()*1000)):number{
- let anchor=bootAnchors.get(directory);
- if(anchor===undefined){
-  const path=join(directory,protocol.bootFile),stored=readBootAnchor(readJson(path));
-  anchor=hostBootAnchorV1(stored,nowMs,uptimeMs);
-  if(anchor!==stored)try{writeJson(path,anchor);}catch{}
-  bootAnchors.set(directory,anchor);
- }
- return anchor.bootAtMs;
-}
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
-const readJson=(path:string):unknown=>{try{return JSON.parse(readFileSync(path,"utf8"));}catch{return undefined;}};
-const remove=(path:string):void=>{try{unlinkSync(path);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}};
-const modified=(path:string):number=>{try{return statSync(path).mtimeMs;}catch{return 0;}};
-const names=(directory:string,child:string):string[]=>readdirSync(join(directory,child)).filter(file=>file.endsWith(".json"));
 const grantPath=(directory:string,id:string)=>join(directory,"grants",`${id}.json`);
 const attachedPath=(directory:string,id:string)=>join(directory,"grants",`${id}.attached`);
-const readAttached=(path:string):number[]=>{try{return readFileSync(path,"utf8").split("\n").map(Number).filter(pid=>Number.isSafeInteger(pid)&&pid>0);}catch{return [];}};
+const readAttached=(path:string):number[]=>{try{return readFileSync(path,"utf8").split("\n").map(Number).filter(pid=>Number.isSafeInteger(pid)&&pid>0);}catch(error){if(absentV1(error))return [];throw error;}};
 /** 📎️ Lets a process attach a process it started outside its own tree (a persistent build server is not a descendant of the run that uses it) to the grant its environment carries, so the heartbeat counts the memory of the attached tree too and the learned peak of the operation includes it; false when the environment carries no grant. */
 export function attachHostCapacityProcessV1(environment:Readonly<Record<string,string|undefined>>,pid:number):boolean{
  const id=environment[protocol.grantEnvironment];if(!id||!Number.isSafeInteger(pid)||pid<1)return false;
@@ -100,7 +74,7 @@ export function processStartV1(pid:number,now:()=>number=Date.now):string|undefi
  let start:string|undefined;
  try{
   if(process.platform==="linux")start=systemAncestryV1("linux",pid,1)[0]?.started;
-  else{const result=spawnSync(process.platform==="win32"?"powershell.exe":"ps",process.platform==="win32"?["-NoLogo","-NoProfile","-Command",`(Get-Process -Id ${pid}).StartTime.ToUniversalTime().ToString('o')`]:["-o","lstart=","-p",String(pid)],{encoding:"utf8",timeout:5000,windowsHide:true,env:{...process.env,TZ:"UTC",LC_ALL:"C"}}),text=(result.stdout??"").trim();start=result.status===0&&text?text:undefined;}
+  else{const result=spawnSync(process.platform==="win32"?"powershell.exe":"ps",process.platform==="win32"?["-NoLogo","-NoProfile","-Command",`(Get-Process -Id ${pid}).StartTime.ToUniversalTime().ToString('o')`]:["-o","lstart=","-p",String(pid)],{encoding:"utf8",timeout:limits.commandTimeoutMilliseconds,windowsHide:true,env:{...process.env,TZ:"UTC",LC_ALL:"C"}}),text=(result.stdout??"").trim();start=result.status===0&&text?text:undefined;}
  }catch{start=undefined;}
  if(startCache.size>=protocol.maximumWaitMarkers*4)startCache.clear();
  startCache.set(pid,{start,at});return start;
@@ -150,7 +124,7 @@ export function processChildrenTableV1():ReadonlyMap<number,readonly number[]>|u
    const rows=JSON.parse(result.stdout) as unknown,list=Array.isArray(rows)?rows:[rows];for(const row of list as {pid?:number;ppid?:number}[])add(row.pid!,row.ppid!);
    return table;
   }
-  const result=spawnSync("ps",["-axo","pid=,ppid="],{encoding:"utf8",timeout:3000,env:{...process.env,LC_ALL:"C"}});if(result.status!==0)return undefined;
+  const result=spawnSync("ps",["-axo","pid=,ppid="],{encoding:"utf8",timeout:limits.commandTimeoutMilliseconds,env:{...process.env,LC_ALL:"C"}});if(result.status!==0)return undefined;
   for(const line of result.stdout.split("\n")){const [pid,parent]=line.trim().split(/\s+/u).map(Number);add(pid!,parent!);}
   return table;
  }catch{return undefined;}
@@ -167,37 +141,6 @@ export function hostTreeWaitsV1(children:ReadonlyMap<number,readonly number[]>|u
 }
 const queuePath=(directory:string,arrivedAtMs:number,id:string)=>join(directory,"queue",`${String(arrivedAtMs).padStart(15,"0")}-${id}.json`);
 
-function writeJson(path:string,value:unknown):void{
- const text=JSON.stringify(value);if(text.length>protocol.maximumFileBytes)throw hostCapacityErrorV1("recordTooLarge");
- const temporary=`${path}.${process.pid}.tmp`;writeFileSync(temporary,text);renameSync(temporary,path);
-}
-
-function prepare(directory:string):string{
- const root=requireMaterializedPathV1(directory);for(const name of ["grants","queue"])mkdirSync(join(root,name),{recursive:true,mode:0o700});
- return root;
-}
-
-function readGrants(directory:string,now:number,policy:HostCapacityPolicyV1):HostGrantV1[]{
- const rows:HostGrantV1[]=[],boot=hostBootAtV1(directory,now);
- for(const name of names(directory,"grants")){
-  const path=join(directory,"grants",name),value=readJson(path);
-  if(!isHostCapacityV1("Grant",value)){if(now-modified(path)>policy.wait.lockStaleMilliseconds)remove(path);continue;}
-  const grant=value as HostGrantV1;
-  if(!isCurrentHostGrantV1({grant,expectedId:name.slice(0,-5),pidAlive:alive(grant.pid),nowMs:now,bootAtMs:boot,modifiedAtMs:modified(path)},policy))remove(path);else rows.push(grant);
- }
- return rows;
-}
-
-function readWaiters(directory:string,now:number,policy:HostCapacityPolicyV1):HostWaiterV1[]{
- const rows:HostWaiterV1[]=[],stale=policy.wait.pollMilliseconds*30;
- for(const name of names(directory,"queue")){
-  const path=join(directory,"queue",name),value=readJson(path);
-  if(!isHostCapacityV1("Waiter",value)){if(now-modified(path)>policy.wait.lockStaleMilliseconds)remove(path);continue;}
-  const waiter=value as HostWaiterV1;
-  if(!alive(waiter.pid)||now-modified(path)>stale)remove(path);else rows.push(waiter);
- }
- return rows;
-}
 
 /** 🔒️ Takes the machine-wide ledger lock (a directory with an owner file) once: `false` when another process holds it, when the lock was lost to a stale-lock breaker between creation and the owner write (the caller simply asks again), or after this call broke a lock whose owner is gone or too old; a stale verdict is acted on only while the owner text is still the one it was based on, so a breaker never removes the lock a newer taker just wrote. `afterCreate` lets a law pause between creation and the owner write. */
 const lockOwners=new Map<string,string>(),lockKey=(lock:string,pid:number):string=>lock+"\n"+pid,ownerText=(lock:string):string|undefined=>{try{return readFileSync(join(lock,"owner"),"utf8");}catch{return undefined;}};
@@ -234,14 +177,6 @@ export const releaseHostLockV1=releaseLock;
 /** 🧿️ The ownership check of the ledger lock (`holdsLock`), for laws. */
 export const holdsHostLockV1=holdsLock;
 
-async function currentSample(directory:string,policy:HostCapacityPolicyV1,control:ResourceLeaseControl,ports:HostCapacityPortsV1,environment:Readonly<Record<string,string|undefined>>=process.env):Promise<HostSampleV1>{
- const now=ports.now??Date.now,path=join(directory,"sample.json"),prior=readJson(path) as HostSampleRecordV1|undefined,cached=isHostCapacityV1("Host",prior?.host)?prior!.host:undefined,declared=hostDeclarationKeyV1(environment);
- if(cached&&(prior!.declared??"")===declared&&now()>=cached.atMs&&now()-cached.atMs<=policy.wait.sampleMaximumAgeMilliseconds)return cached;
- const previous=cached?{atMs:cached.atMs,swappedOutMegabytes:prior!.swappedOutMegabytes}:undefined,record=await(ports.sample?ports.sample(previous):readHostSampleV1(policy,currentHostProbeV1(control.signal),previous,now,environment));
- requireHostCapacityV1<HostSampleV1>("Host",record.host);
- try{writeJson(path,{...record,declared});}catch{}
- return record.host;
-}
 
 /** ⏳️ The progress line of a waiting request, naming what it stands behind (`hostBlockersV1`). */
 function waitingLine(language:"en"|"de",request:HostRequestV1,host:HostSampleV1,evaluation:HostEvaluationV1,running:number,seconds:number,policy:HostCapacityPolicyV1,ledger:readonly HostGrantV1[],waiters:readonly HostWaiterV1[],nowMs:number):string{
@@ -283,7 +218,7 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
     try{
      const at=now(),ledger=readGrants(directory,at,policy),waiters=readWaiters(directory,at,policy);
      if(!waiters.some(row=>row.request.id===request.id)){writeJson(waiterPath,record);waiters.push(record);}
-     const evaluation=evaluateHostCapacityV1(policy,host,ledger,waiters,at),mine=evaluation.decisions.find(row=>row.id===request.id)!;
+     const evaluation=evaluateHostCapacityV1(policy,withUnmanagedHostV1(host,ledger),ledger,waiters,at),mine=evaluation.decisions.find(row=>row.id===request.id)!;
      if(mine.verdict==="admit"){
       if(!holdsLock(directory,pid))continue;
       grant=requireHostCapacityV1<HostGrantV1>("Grant",{id:request.id,operation:request.operation,jobs:mine.jobs,cpu:mine.jobs*request.cpuPerJob,reservedMegabytes:mine.reservedMegabytes,admittedAtMs:at,observedMegabytes:null,pid,bootAtMs:hostBootAtV1(directory,at),...options.session===undefined?{}:{session:options.session.address},...request.label===undefined?{}:{label:request.label},...request.rampMilliseconds===undefined?{}:{rampMilliseconds:request.rampMilliseconds},...request.rampSlot===undefined?{}:{rampSlot:request.rampSlot},...request.quiet===true?{quiet:true,arrivedAtMs}:{}});
@@ -380,8 +315,3 @@ async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1
  }
 }
 
-/** 🚥️ Reads the gate without joining its queue: the sample, the live grants, the waiters and what the next request would get. */
-export async function readHostCapacityStatusV1(options:HostCapacityPortsV1&Readonly<{directory:string;policy:HostCapacityPolicyV1;control:ResourceLeaseControl;environment?:Readonly<Record<string,string|undefined>>}>):Promise<HostCapacityStatusV1>{
- const now=options.now??Date.now,directory=prepare(options.directory),host=await currentSample(directory,options.policy,options.control,options,options.environment),grants=readGrants(directory,now(),options.policy),waiters=readWaiters(directory,now(),options.policy);
- return Object.freeze({host,grants,waiters,evaluation:evaluateHostCapacityV1(options.policy,host,grants,waiters,now())});
-}

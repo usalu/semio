@@ -9,11 +9,11 @@ export type BenchToolV1="nx"|"bazel";
 /** 🌳️ What an objective is measured with: one implementation, or `neutral` for a command that does not depend on it. */
 export type BenchSloToolV1=BenchToolV1|"neutral";
 /** 🌰️ The kinds of probe. */
-export type BenchKindV1="cli-help"|"noop"|"edit"|"peer"|"graph"|"cache"|"concurrency";
+export type BenchKindV1="cli-help"|"noop"|"edit"|"peer"|"graph"|"cache"|"concurrency"|"planning";
 /** 🌴️ The path a command takes: one process per command, or the resident service. */
 export type BenchLaneV1="oneshot"|"resident";
 /** 🌵️ What a probe measures. */
-export type BenchMetricV1="wallMs"|"startMs"|"greenMs"|"peakRssBytes"|"hitRatio"|"makespanMs"|"maxUnrelatedWaitMs"|"speedup"|"queueMs"|"graphMs"|"executeMs"|"executedActions"|"inferredProjects";
+export type BenchMetricV1="wallMs"|"startMs"|"greenMs"|"peakRssBytes"|"hitRatio"|"makespanMs"|"maxUnrelatedWaitMs"|"speedup"|"queueMs"|"graphMs"|"executeMs"|"executedActions"|"inferredProjects"|"closuresVerified"|"closuresReused"|"staleFacts"|"swapBytes"|"availableBytes"|"oomKills"|"storeBytes";
 /** 🌲️ The unit a metric is measured in. */
 export type BenchUnitNameV1="ms"|"bytes"|"ratio"|"count";
 /** 🌶️ How the samples of a series are condensed to one number. */
@@ -31,7 +31,7 @@ export type BenchStartKindV1="marker"|"first-output"|"exit";
 /** 🌼️ A source file edit that makes one language unit rebuild: the file, the kind of edit and the target that must follow it. */
 export type BenchUnitV1=Readonly<{id:string;language:"ts"|"rs"|"go"|"py";target:string;file:string;op:"comment"|"private-body"|"public-api";title:BenchTextV1}>;
 /** 🌽️ One measurement: a kind, the target or unit it works on, how often it runs and how it starts. */
-export type BenchProbeV1=Readonly<{id:string;kind:BenchKindV1;title:BenchTextV1;lane?:BenchLaneV1;target?:string;unit?:string;workload?:string;sessions?:number;runs:number;warmup:number;cold?:boolean;memory?:boolean}>;
+export type BenchProbeV1=Readonly<{id:string;kind:BenchKindV1;title:BenchTextV1;lane?:BenchLaneV1;target?:string;peer?:string;unit?:string;workload?:string;sessions?:number;runs:number;warmup:number;cold?:boolean;memory?:boolean}>;
 /** 🌾️ The allowed drift against a baseline: a share of the baseline value plus an absolute margin in the unit of the metric. */
 export type BenchToleranceV1=Readonly<{relative:number;absolute:number}>;
 /** 🌿️ One objective: the statistic of a metric of a probe, its goal and its gate, who enforces it and how far it may drift. */
@@ -61,7 +61,7 @@ export type BenchReportV1=Readonly<{version:1;kind:"bench-report";startedAt:stri
 /** 🍋️ A probe with one implementation and the objectives that read its samples. */
 export type BenchPairV1=Readonly<{probe:BenchProbeV1;tool:BenchSloToolV1;slos:readonly BenchSloV1[]}>;
 /** 🔭️ What the output of one command tells: wall time per phase (queues, graph, execution), the actions the tool executed (`null` when the tool printed no summary) and the projects the graph re-inferred. */
-export type BenchObservationV1=Readonly<{phases:Readonly<Record<string,number>>;executed:number|null;inferred:number}>;
+export type BenchObservationV1=Readonly<{phases:Readonly<Record<string,number>>;executed:number|null;inferred:number;closures?:Readonly<{asked:number;stale:number;unchanged:number;changed:number}>}>;
 /** 🔬️ Reads the output lines of a command one by one (with the elapsed milliseconds when each arrived) and keeps only counters, never a line. */
 export type BenchObserverV1=Readonly<{feed(at:number,line:string):void;finish(wallMs:number):BenchObservationV1}>;
 
@@ -190,10 +190,10 @@ export function benchSloIssuesV1(value:unknown):string[]{
  }
  for(const probe of set.probes){
   const need=(field:keyof BenchProbeV1,wanted:boolean)=>{if((probe[field]!==undefined)!==wanted)found.push(`${probe.id}: ${field} ${wanted?"is required":"is not allowed"} for ${probe.kind}`);};
-  need("target",probe.kind==="noop"||probe.kind==="graph"||probe.kind==="cache"||probe.kind==="peer");need("unit",probe.kind==="edit"||probe.kind==="peer");need("workload",probe.kind==="concurrency");need("sessions",probe.kind==="concurrency");need("lane",probe.kind==="noop"||probe.kind==="edit"||probe.kind==="peer"||probe.kind==="graph");
+  const planning=probe.kind==="planning";need("target",probe.kind==="noop"||probe.kind==="graph"||probe.kind==="cache"||probe.kind==="peer"||planning&&probe.unit===undefined);need("unit",probe.kind==="edit"||probe.kind==="peer"||planning&&probe.target===undefined);if(probe.peer!==undefined&&!planning)found.push(`${probe.id}: peer is only allowed for planning`);need("workload",probe.kind==="concurrency");need("sessions",probe.kind==="concurrency");need("lane",probe.kind==="noop"||probe.kind==="edit"||probe.kind==="peer"||probe.kind==="graph"||planning);
   if(probe.unit!==undefined&&!units.has(probe.unit))found.push(`${probe.id}: unknown unit ${probe.unit}`);
-  if(probe.lane==="resident"&&probe.kind==="graph")found.push(`${probe.id}: a graph probe has no resident lane`);
-  if(probe.cold&&probe.kind!=="graph"&&probe.kind!=="noop")found.push(`${probe.id}: only a graph or a no-op probe can be cold`);
+  if(probe.lane==="resident"&&(probe.kind==="graph"||probe.kind==="planning"))found.push(`${probe.id}: a ${probe.kind} probe has no resident lane`);
+  if(probe.cold&&probe.kind!=="graph"&&probe.kind!=="noop"&&probe.kind!=="planning")found.push(`${probe.id}: only a graph, planning or no-op probe can be cold`);
   if(probe.cold&&probe.runs!==1)found.push(`${probe.id}: a cold probe runs once`);
   if(probe.memory&&probe.kind!=="noop"&&probe.kind!=="edit"&&probe.kind!=="peer")found.push(`${probe.id}: only noop, edit and peer probes measure memory`);
  }
@@ -216,8 +216,8 @@ export function benchSloIssuesV1(value:unknown):string[]{
 export function benchSelectV1(set:BenchSloSetV1,ids:readonly string[]|"all",tools:readonly BenchToolV1[]):BenchPairV1[]{
  const chosen=new Set<string>();
  if(ids==="all")for(const slo of set.slos)chosen.add(slo.id);
- else for(const id of ids){
-  const matches=id.startsWith("kind:")?set.slos.filter(slo=>set.probes.find(probe=>probe.id===slo.probe)?.kind===id.slice(5)):id.startsWith("probe:")?set.slos.filter(slo=>slo.probe===id.slice(6)):set.slos.filter(slo=>slo.id===id);
+ else for(const name of ids){
+  const id=name.startsWith("planning/")?`probe:planning-${name.slice(9)}`:name,matches=id.startsWith("kind:")?set.slos.filter(slo=>set.probes.find(probe=>probe.id===slo.probe)?.kind===id.slice(5)):id.startsWith("probe:")?set.slos.filter(slo=>slo.probe===id.slice(6)):set.slos.filter(slo=>slo.id===id);
   if(!matches.length)throw Error(both(`Unknown objective: ${id} (an id, probe:<id>, kind:<${policy.kinds.join("|")}> or all)`,`Unbekanntes Ziel: ${id} (eine Kennung, probe:<id>, kind:<${policy.kinds.join("|")}> oder all)`));
   for(const slo of matches)chosen.add(slo.id);
  }
@@ -247,9 +247,9 @@ const trim=(value:number,digits:number)=>String(Number(value.toFixed(digits)));
 export function benchFormatV1(metric:BenchMetricV1,value:number|null):string{
  if(value===null)return "-";
  if(metric==="hitRatio")return `${trim(value*100,1)} %`;
- if(metric==="peakRssBytes")return `${trim(value/1048576,1)} MiB`;
+ if(metric==="peakRssBytes"||metric==="swapBytes"||metric==="availableBytes"||metric==="storeBytes")return `${trim(value/1048576,1)} MiB`;
  if(metric==="speedup")return trim(value,2);
- if(metric==="executedActions"||metric==="inferredProjects")return String(Math.round(value));
+ if(metric==="executedActions"||metric==="inferredProjects"||metric==="closuresVerified"||metric==="closuresReused"||metric==="staleFacts"||metric==="oomKills")return String(Math.round(value));
  return trim(value,value<10?2:1);
 }
 
@@ -300,7 +300,7 @@ export function renderBenchListV1(set:BenchSloSetV1,language:"en"|"de",format:"t
 }
 
 const phaseRules=policy.phases.rules.map(rule=>({id:rule.id,patterns:rule.patterns.map(pattern=>new RegExp(pattern,"u"))})),scriptRow=new RegExp(policy.scriptRow,"u");
-const observed=Object.freeze({refreshing:new RegExp(policy.observation.graphRefreshing,"u"),inferring:new RegExp(policy.observation.graphInferring,"u"),processes:new RegExp(policy.observation.bazelProcesses,"u"),idle:policy.observation.bazelIdle.map(pattern=>new RegExp(pattern,"u")),task:new RegExp(policy.observation.nxTask,"u"),cached:new RegExp(policy.observation.nxCached,"u")});
+const observed=Object.freeze({refreshing:new RegExp(policy.observation.graphRefreshing,"u"),inferring:new RegExp(policy.observation.graphInferring,"u"),processes:new RegExp(policy.observation.bazelProcesses,"u"),closures:new RegExp(policy.observation.graphClosures,"u"),idle:policy.observation.bazelIdle.map(pattern=>new RegExp(pattern,"u")),task:new RegExp(policy.observation.nxTask,"u"),cached:new RegExp(policy.observation.nxCached,"u")});
 
 /** 🥜️ Turns a structured progress row `[script] {json}` into `script:<command>:<stage>:<resource>`; any other line is its own key. */
 export function benchLineKeyV1(line:string):string{
@@ -311,7 +311,7 @@ export function benchLineKeyV1(line:string):string{
 
 /** 🌰️ Reads the output of one command line by line: every line that a phase rule matches opens that phase until the next line of another phase (lines no rule matches belong to the phase before; the time before the first match is `boot`), a Bazel summary line adds its executed processes (everything but internal ones and cache hits), every `> nx run` line adds a task unless it was restored, and the largest project count the graph announced is the inference. Lines longer than the policy limit are cut; no line is kept. */
 export function benchObserverV1():BenchObserverV1{
- let current:string=policy.phases.initial,since=0,bazel:number|null=null,tasks=0,restored=0,inferred=0;
+ let current:string=policy.phases.initial,since=0,bazel:number|null=null,tasks=0,restored=0,inferred=0,closures:{asked:number;stale:number;unchanged:number;changed:number}|null=null;
  const totals:Record<string,number>={};
  return Object.freeze({
   feed(at:number,line:string):void{
@@ -319,6 +319,8 @@ export function benchObserverV1():BenchObserverV1{
    if(phase!==undefined&&phase!==current){totals[current]=(totals[current]??0)+Math.max(0,at-since);current=phase;since=at;}
    const summary=observed.processes.exec(text);
    if(summary){let sum=0;for(const part of summary[2]!.split(", ")){const cell=/^(\d+) (.+)$/u.exec(part.trim());if(cell&&!observed.idle.some(pattern=>pattern.test(cell[2]!)))sum+=Number(cell[1]);}bazel=(bazel??0)+sum;}
+   const asked=observed.closures.exec(text);
+   if(asked)closures={asked:(closures?.asked??0)+Number(asked[1]),stale:(closures?.stale??0)+Number(asked[2]),unchanged:(closures?.unchanged??0)+Number(asked[3]),changed:(closures?.changed??0)+Number(asked[4])};
    if(observed.task.test(text)){tasks++;if(observed.cached.test(text))restored++;}
    for(const found of [observed.refreshing.exec(text),observed.inferring.exec(text)])if(found)inferred=Math.max(inferred,Number(found[1]));
   },
@@ -326,7 +328,7 @@ export function benchObserverV1():BenchObserverV1{
    const phases:Record<string,number>={...totals};
    phases[current]=(phases[current]??0)+Math.max(0,wallMs-since);
    for(const id of Object.keys(phases))if(!(phases[id]!>0))delete phases[id];
-   return Object.freeze({phases:Object.freeze(phases),executed:bazel===null&&tasks===0?null:(bazel??0)+(tasks-restored),inferred});
+   return Object.freeze({phases:Object.freeze(phases),executed:bazel===null&&tasks===0?null:(bazel??0)+(tasks-restored),inferred,...(closures?{closures:Object.freeze(closures)}:{})});
   }
  });
 }
@@ -335,6 +337,7 @@ export function benchObserverV1():BenchObserverV1{
 export function benchObservedValuesV1(observation:BenchObservationV1):Partial<Record<BenchMetricV1,number>>{
  const sum=(ids:readonly string[])=>ids.reduce((total,id)=>total+(observation.phases[id]??0),0),values:Partial<Record<BenchMetricV1,number>>={queueMs:sum(policy.phases.metrics.queueMs),graphMs:sum(policy.phases.metrics.graphMs),executeMs:sum(policy.phases.metrics.executeMs),inferredProjects:observation.inferred};
  if(observation.executed!==null)values.executedActions=observation.executed;
+ if(observation.closures)Object.assign(values,{closuresVerified:observation.closures.asked,closuresReused:observation.closures.unchanged,staleFacts:observation.closures.stale});
  return values;
 }
 

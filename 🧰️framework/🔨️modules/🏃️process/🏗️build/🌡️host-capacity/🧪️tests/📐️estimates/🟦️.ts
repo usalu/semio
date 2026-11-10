@@ -161,8 +161,8 @@ test("A store another run holds open (a Windows sharing violation) is replaced a
   const pauses:number[]=[];let failures=2;
   const done=await updateHostEstimateStoreV1(directory,policy,update,{platform:"win32",sleepSync:ms=>{pauses.push(ms);},rename:(from,to)=>{if(failures-->0)throw busy("EPERM");renameSync(from,to);}});
   expect(done).toBe(true);expect(pauses).toEqual(churnProtocolV1().profiles.read.backoffMs.slice(0,2));expect(readHostEstimateStoreV1(directory).classes["run"]!.samples.length).toBe(1);
-  const written:string[]=[],original=process.stderr.write.bind(process.stderr);(process.stderr as {write:unknown}).write=(chunk:string)=>{written.push(String(chunk));return true;};
-  let kept:boolean;try{kept=await updateHostEstimateStoreV1(directory,policy,update,{platform:"win32",sleepSync:()=>undefined,rename:()=>{throw busy("EBUSY");}});}finally{(process.stderr as {write:unknown}).write=original;}
+  const written:string[]=[],original=process.stderr.write.bind(process.stderr),languageKeys=["SEMIO_LANGUAGE","LANGUAGE","LC_ALL","LC_MESSAGES","LANG"],savedLanguage=languageKeys.map(key=>[key,process.env[key]] as const);for(const key of languageKeys)delete process.env[key];(process.stderr as {write:unknown}).write=(chunk:string)=>{written.push(String(chunk));return true;};
+  let kept:boolean;try{kept=await updateHostEstimateStoreV1(directory,policy,update,{platform:"win32",sleepSync:()=>undefined,rename:()=>{throw busy("EBUSY");}});}finally{(process.stderr as {write:unknown}).write=original;for(const [key,value] of savedLanguage)if(value===undefined)delete process.env[key];else process.env[key]=value;}
   expect(kept).toBe(false);expect(readdirSync(directory).filter(name=>name.endsWith(".tmp")),"no temporary file stays behind").toEqual([]);
   expect(written.join("").split("\n").filter(Boolean).length,"one line per declared language").toBe(churnProtocolV1().languages.length);expect(written.join("")).toContain(schemaFile());
   expect(readHostEstimateStoreV1(directory).classes["run"]!.samples.length,"the stored samples are untouched").toBe(1);

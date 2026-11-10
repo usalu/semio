@@ -25,8 +25,8 @@ export function splitStaleConsumersV1(index:FactIndexV1,classes:readonly number[
 export function holdersOfDerivedV1(index:FactIndexV1,pseudoOwners:Iterable<string>):Map<string,Set<string>>;
 /** ✅️ The suspects a verification scoped to `names` asks again: the pseudo owners whose derived fact one of those projects holds; the others stay stale for the verification that selects their holders. */
 export function suspectsWithinV1(index:FactIndexV1,suspects:Iterable<string>,names:ReadonlySet<string>):Set<string>;
-/** ❓️ Asks every suspect question again: an equal answer holds, a different answer or a failing computation changes the fact. */
-export function settleSuspectsV1(options:{index:FactIndexV1;suspects:ReadonlySet<string>;derive?:(row:GenerationRowV1,signal?:AbortSignal)=>Promise<DerivedAnswerV1>;signal?:AbortSignal;progress?:(event:{phase:"verification";done:number;total:number})=>Promise<void>|void;memo?:Map<string,DerivedAnswerV1>;hold?:(rows:readonly GenerationRowV1[],signal?:AbortSignal)=>Promise<boolean>}):Promise<{held:Map<string,GenerationRowV1[]>;changed:Map<string,GenerationRowV1>;failed:number;reused:number}>;
+/** 🧾️ The derived row of each suspect pseudo owner. */
+export function suspectRowsV1(index:FactIndexV1,suspects:Iterable<string>):Map<string,GenerationRowV1>;
 /** 🧱️ The rows of the pseudo owners a build writes: the fresh facts with their support and the supports of the questions that still held. */
 export function derivedUpsertsV1(derived:readonly DerivedFactV1[],held?:ReadonlyMap<string,readonly GenerationRowV1[]>):Map<string,GenerationRowV1[]>;
 /** 🧹️ The pseudo owners whose derived fact no project holds any more. */

@@ -1,13 +1,14 @@
 import {test,expect} from "bun:test";
 import {resolve} from "node:path";
 import {loadGenerationGraphV1} from "../../🟨️.mjs";
+const graphOfV1=async(...input:Parameters<typeof loadGenerationGraphV1>)=>(await loadGenerationGraphV1(...input)).graph;
 
 const caching=resolve(import.meta.dirname,"../../../../../../⚡️caching");
 
 test("a refusing preflight stops the graph load before any identity or verification work",async()=>{
  let reached=false;
  const host={preflight:async()=>{throw new Error("stale aggregate");},identity:async()=>{reached=true;return {};}};
- await expect(loadGenerationGraphV1(host as never)).rejects.toThrow("stale aggregate");
+ await expect(graphOfV1(host as never)).rejects.toThrow("stale aggregate");
  expect(reached).toBe(false);
 });
 

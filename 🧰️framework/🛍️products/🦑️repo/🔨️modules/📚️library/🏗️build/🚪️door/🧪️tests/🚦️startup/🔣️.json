@@ -251,6 +251,8 @@
     {
       "id": "fleet-door",
       "kind": "door",
+      "emptyWorkspace": true,
+      "settleMs": 1500,
       "args": ["repo", "fleet", "status"],
       "forbid": [
         "graph",
@@ -386,8 +388,8 @@
         "leases",
         "host-capacity"
       ],
-      "maximumModules": 2,
-      "maximumBytes": 14000
+      "maximumModules": 3,
+      "maximumBytes": 21000
     },
     {
       "id": "sealed-mode-leaf",

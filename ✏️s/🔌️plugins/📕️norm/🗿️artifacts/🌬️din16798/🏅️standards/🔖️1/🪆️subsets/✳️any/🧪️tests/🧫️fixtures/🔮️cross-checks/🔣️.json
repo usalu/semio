@@ -1,0 +1,976 @@
+{
+  "oracle": "scipy brentq (PMV, inversion), scipy solve_ivp (CO2), IAPWS-IF97 vapour pressure",
+  "pmv": [
+    {
+      "t_op": 24.5,
+      "rh": 45,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "pmvIapwsVapour": -0.10016867034502765,
+      "pmvIso7730Vapour": -0.10040264163845568,
+      "ppd": 5.208769299539142,
+      "vapourModelDelta": 0.00023397129342803136
+    },
+    {
+      "t_op": 22.0,
+      "rh": 60,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "pmvIapwsVapour": -0.7527690979702366,
+      "pmvIso7730Vapour": -0.7530506493006323,
+      "ppd": 16.9430730166781,
+      "vapourModelDelta": 0.0002815513303956463
+    },
+    {
+      "t_op": 27.0,
+      "rh": 60,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "pmvIapwsVapour": 0.7642702016949445,
+      "pmvIso7730Vapour": 0.7639114176153292,
+      "ppd": 17.293299784237703,
+      "vapourModelDelta": 0.0003587840796153152
+    },
+    {
+      "t_op": 19.0,
+      "rh": 40,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.0,
+      "pmvIapwsVapour": -0.6004508887690655,
+      "pmvIso7730Vapour": -0.600625856209165,
+      "ppd": 12.564138777600164,
+      "vapourModelDelta": 0.00017496744009948273
+    },
+    {
+      "t_op": 23.5,
+      "rh": 60,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "pmvIapwsVapour": -0.29766880650922917,
+      "pmvIso7730Vapour": -0.29796680578705326,
+      "ppd": 6.844838530531305,
+      "vapourModelDelta": 0.0002979992778240903
+    },
+    {
+      "t_op": 30.0,
+      "rh": 80,
+      "v": 0.3,
+      "met": 1.0,
+      "clo": 0.3,
+      "pmvIapwsVapour": 1.2121098414750306,
+      "pmvIso7730Vapour": 1.2114132534088153,
+      "ppd": 35.80708031210369,
+      "vapourModelDelta": 0.000696588066215309
+    },
+    {
+      "t_op": 16.0,
+      "rh": 30,
+      "v": 0.05,
+      "met": 1.2,
+      "clo": 1.0,
+      "pmvIapwsVapour": -1.2846814309297183,
+      "pmvIso7730Vapour": -1.284810220862498,
+      "ppd": 39.48966311764808,
+      "vapourModelDelta": 0.00012878993277976036
+    },
+    {
+      "t_op": 21.0,
+      "rh": 50,
+      "v": 0.15,
+      "met": 1.6,
+      "clo": 0.9,
+      "pmvIapwsVapour": 0.2730401334558096,
+      "pmvIso7730Vapour": 0.2728571347341762,
+      "ppd": 6.54610996207542,
+      "vapourModelDelta": 0.00018299872163335396
+    }
+  ],
+  "inversion": [
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "category": 1,
+      "side": "upper",
+      "referenceC": 25.39106311643527,
+      "rustTranscriptC": 25.391972102146923,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "category": 1,
+      "side": "lower",
+      "referenceC": 24.048358571806514,
+      "rustTranscriptC": 24.049217112915613,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "category": 2,
+      "side": "upper",
+      "referenceC": 26.38906010136211,
+      "rustTranscriptC": 26.390014683034103,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "category": 2,
+      "side": "lower",
+      "referenceC": 23.032303943033824,
+      "rustTranscriptC": 23.033132129642986,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "category": 3,
+      "side": "upper",
+      "referenceC": 27.05008942210244,
+      "rustTranscriptC": 27.051078197224207,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "category": 3,
+      "side": "lower",
+      "referenceC": 22.35838536114683,
+      "rustTranscriptC": 22.359147495827408,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "category": 4,
+      "side": "upper",
+      "referenceC": 28.035179895927993,
+      "rustTranscriptC": 28.036225757709452,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "category": 4,
+      "side": "lower",
+      "referenceC": 21.395508832206012,
+      "rustTranscriptC": 21.39624814251195,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.0,
+      "category": 1,
+      "side": "upper",
+      "referenceC": 22.472494352109006,
+      "rustTranscriptC": 22.473582407921477,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.0,
+      "category": 1,
+      "side": "lower",
+      "referenceC": 20.635104219770728,
+      "rustTranscriptC": 20.636147807905267,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.0,
+      "category": 2,
+      "side": "upper",
+      "referenceC": 23.834078904372618,
+      "rustTranscriptC": 23.835216670981396,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.0,
+      "category": 2,
+      "side": "lower",
+      "referenceC": 19.24073783503574,
+      "rustTranscriptC": 19.241763123798883,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.0,
+      "category": 3,
+      "side": "upper",
+      "referenceC": 24.733911818796166,
+      "rustTranscriptC": 24.7350909968878,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.0,
+      "category": 3,
+      "side": "lower",
+      "referenceC": 18.30344876466708,
+      "rustTranscriptC": 18.304468389741515,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.0,
+      "category": 4,
+      "side": "upper",
+      "referenceC": 26.071762013262703,
+      "rustTranscriptC": 26.073016235897292,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.0,
+      "category": 4,
+      "side": "lower",
+      "referenceC": 16.92324103148354,
+      "rustTranscriptC": 16.92421368492623,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 40,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.5,
+      "category": 1,
+      "side": "upper",
+      "referenceC": 19.981359514496518,
+      "rustTranscriptC": 19.982402263404985,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 40,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.5,
+      "category": 1,
+      "side": "lower",
+      "referenceC": 17.619285772930162,
+      "rustTranscriptC": 17.620312027048087,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 40,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.5,
+      "category": 2,
+      "side": "upper",
+      "referenceC": 21.729239583259602,
+      "rustTranscriptC": 21.730317370533527,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 40,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.5,
+      "category": 2,
+      "side": "lower",
+      "referenceC": 15.824502020488767,
+      "rustTranscriptC": 15.825535189734563,
+      "referenceInBracket": false
+    },
+    {
+      "rh": 40,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.5,
+      "category": 3,
+      "side": "upper",
+      "referenceC": 22.883036012539872,
+      "rustTranscriptC": 22.88414926014866,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 40,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.5,
+      "category": 3,
+      "side": "lower",
+      "referenceC": 14.617116682297473,
+      "rustTranscriptC": 14.618162094284777,
+      "referenceInBracket": false
+    },
+    {
+      "rh": 40,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.5,
+      "category": 4,
+      "side": "upper",
+      "referenceC": 24.596314683334146,
+      "rustTranscriptC": 24.59750077513526,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 40,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.5,
+      "category": 4,
+      "side": "lower",
+      "referenceC": 12.790219422100105,
+      "rustTranscriptC": 12.791254846211114,
+      "referenceInBracket": false
+    },
+    {
+      "rh": 60,
+      "v": 0.2,
+      "met": 1.6,
+      "clo": 0.5,
+      "category": 1,
+      "side": "upper",
+      "referenceC": 23.621650430965058,
+      "rustTranscriptC": 23.622631825650075,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 60,
+      "v": 0.2,
+      "met": 1.6,
+      "clo": 0.5,
+      "category": 1,
+      "side": "lower",
+      "referenceC": 21.981289985239382,
+      "rustTranscriptC": 21.98222255489125,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 60,
+      "v": 0.2,
+      "met": 1.6,
+      "clo": 0.5,
+      "category": 2,
+      "side": "upper",
+      "referenceC": 24.839374232865907,
+      "rustTranscriptC": 24.840404522922434,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 60,
+      "v": 0.2,
+      "met": 1.6,
+      "clo": 0.5,
+      "category": 2,
+      "side": "lower",
+      "referenceC": 20.738571814460812,
+      "rustTranscriptC": 20.73947926591333,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 60,
+      "v": 0.2,
+      "met": 1.6,
+      "clo": 0.5,
+      "category": 3,
+      "side": "upper",
+      "referenceC": 25.64517601020951,
+      "rustTranscriptC": 25.646245027385497,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 60,
+      "v": 0.2,
+      "met": 1.6,
+      "clo": 0.5,
+      "category": 3,
+      "side": "lower",
+      "referenceC": 19.904210351090455,
+      "rustTranscriptC": 19.905106157609836,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 60,
+      "v": 0.2,
+      "met": 1.6,
+      "clo": 0.5,
+      "category": 4,
+      "side": "upper",
+      "referenceC": 26.844808717312972,
+      "rustTranscriptC": 26.845945328816157,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 60,
+      "v": 0.2,
+      "met": 1.6,
+      "clo": 0.5,
+      "category": 4,
+      "side": "lower",
+      "referenceC": 18.64390707464899,
+      "rustTranscriptC": 18.644792513045637,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.05,
+      "met": 1.0,
+      "clo": 0.3,
+      "category": 1,
+      "side": "upper",
+      "referenceC": 27.45839324999686,
+      "rustTranscriptC": 27.459200196052407,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.05,
+      "met": 1.0,
+      "clo": 0.3,
+      "category": 1,
+      "side": "lower",
+      "referenceC": 26.575305024817684,
+      "rustTranscriptC": 26.57606574423655,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.05,
+      "met": 1.0,
+      "clo": 0.3,
+      "category": 2,
+      "side": "upper",
+      "referenceC": 28.12312926488107,
+      "rustTranscriptC": 28.123975384671695,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.05,
+      "met": 1.0,
+      "clo": 0.3,
+      "category": 2,
+      "side": "lower",
+      "referenceC": 25.91495643681854,
+      "rustTranscriptC": 25.915686562389254,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.05,
+      "met": 1.0,
+      "clo": 0.3,
+      "category": 3,
+      "side": "upper",
+      "referenceC": 28.56768091472411,
+      "rustTranscriptC": 28.56855552048168,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.05,
+      "met": 1.0,
+      "clo": 0.3,
+      "category": 3,
+      "side": "lower",
+      "referenceC": 25.47550355444728,
+      "rustTranscriptC": 25.476215071754297,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.05,
+      "met": 1.0,
+      "clo": 0.3,
+      "category": 4,
+      "side": "upper",
+      "referenceC": 29.237011746788788,
+      "rustTranscriptC": 29.23793302239779,
+      "referenceInBracket": true
+    },
+    {
+      "rh": 50,
+      "v": 0.05,
+      "met": 1.0,
+      "clo": 0.3,
+      "category": 4,
+      "side": "lower",
+      "referenceC": 24.817320360966963,
+      "rustTranscriptC": 24.818006471036725,
+      "referenceInBracket": true
+    }
+  ],
+  "bandEdges": [
+    {
+      "season": "winter",
+      "category": 1,
+      "edge": "lower",
+      "t_op": 21.0,
+      "clo": 1.0,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": -0.12099270891650225,
+      "pmvLimit": 0.2
+    },
+    {
+      "season": "winter",
+      "category": 1,
+      "edge": "upper",
+      "t_op": 23.0,
+      "clo": 1.0,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": 0.31585626179691234,
+      "pmvLimit": 0.2
+    },
+    {
+      "season": "winter",
+      "category": 2,
+      "edge": "lower",
+      "t_op": 20.0,
+      "clo": 1.0,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": -0.3370153562514045,
+      "pmvLimit": 0.5
+    },
+    {
+      "season": "winter",
+      "category": 2,
+      "edge": "upper",
+      "t_op": 24.0,
+      "clo": 1.0,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": 0.5367726899491391,
+      "pmvLimit": 0.5
+    },
+    {
+      "season": "winter",
+      "category": 3,
+      "edge": "lower",
+      "t_op": 19.0,
+      "clo": 1.0,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": -0.5514943869451411,
+      "pmvLimit": 0.7
+    },
+    {
+      "season": "winter",
+      "category": 3,
+      "edge": "upper",
+      "t_op": 25.0,
+      "clo": 1.0,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": 0.759413017720681,
+      "pmvLimit": 0.7
+    },
+    {
+      "season": "winter",
+      "category": 4,
+      "edge": "lower",
+      "t_op": 18.0,
+      "clo": 1.0,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": -0.7644712162460742,
+      "pmvLimit": 1.0
+    },
+    {
+      "season": "winter",
+      "category": 4,
+      "edge": "upper",
+      "t_op": 25.0,
+      "clo": 1.0,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": 0.759413017720681,
+      "pmvLimit": 1.0
+    },
+    {
+      "season": "summer",
+      "category": 1,
+      "edge": "lower",
+      "t_op": 23.5,
+      "clo": 0.5,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": -0.3621917356110125,
+      "pmvLimit": 0.2
+    },
+    {
+      "season": "summer",
+      "category": 1,
+      "edge": "upper",
+      "t_op": 25.5,
+      "clo": 0.5,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": 0.23263383731395113,
+      "pmvLimit": 0.2
+    },
+    {
+      "season": "summer",
+      "category": 2,
+      "edge": "lower",
+      "t_op": 23.0,
+      "clo": 0.5,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": -0.5095007559358856,
+      "pmvLimit": 0.5
+    },
+    {
+      "season": "summer",
+      "category": 2,
+      "edge": "upper",
+      "t_op": 26.0,
+      "clo": 0.5,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": 0.38277065200517657,
+      "pmvLimit": 0.5
+    },
+    {
+      "season": "summer",
+      "category": 3,
+      "edge": "lower",
+      "t_op": 22.0,
+      "clo": 0.5,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": -0.8116814885920559,
+      "pmvLimit": 0.7
+    },
+    {
+      "season": "summer",
+      "category": 3,
+      "edge": "upper",
+      "t_op": 27.0,
+      "clo": 0.5,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": 0.6848084767887203,
+      "pmvLimit": 0.7
+    },
+    {
+      "season": "summer",
+      "category": 4,
+      "edge": "lower",
+      "t_op": 21.0,
+      "clo": 0.5,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": -1.1231700434429974,
+      "pmvLimit": 1.0
+    },
+    {
+      "season": "summer",
+      "category": 4,
+      "edge": "upper",
+      "t_op": 28.0,
+      "clo": 0.5,
+      "rh": 50,
+      "v": 0.1,
+      "met": 1.2,
+      "pmv": 0.9892455390616641,
+      "pmvLimit": 1.0
+    }
+  ],
+  "co2": [
+    {
+      "occupants": 1,
+      "volumeM3": 30.0,
+      "flowM3H": 25.0,
+      "outdoorPpm": 400.0,
+      "generationLs": 0.005,
+      "steadyAboveOutdoorPpm": 719.9999999812135,
+      "closedFormPpm": 720.0,
+      "rustMethod2OutdoorAirM3H": 25.0
+    },
+    {
+      "occupants": 20,
+      "volumeM3": 200.0,
+      "flowM3H": 180.0,
+      "outdoorPpm": 400.0,
+      "generationLs": 0.005,
+      "steadyAboveOutdoorPpm": 1999.999999974386,
+      "closedFormPpm": 2000.0,
+      "rustMethod2OutdoorAirM3H": 180.0
+    },
+    {
+      "occupants": 30,
+      "volumeM3": 150.0,
+      "flowM3H": 400.0,
+      "outdoorPpm": 400.0,
+      "generationLs": 0.005,
+      "steadyAboveOutdoorPpm": 1349.9999999599188,
+      "closedFormPpm": 1350.0,
+      "rustMethod2OutdoorAirM3H": 400.0
+    }
+  ],
+  "saturation": [
+    {
+      "tC": 10,
+      "iapwsPa": 1228.1838693402192,
+      "iso7730Pa": 1226.1429990161591,
+      "iso7730Relative": -0.001661697710747867
+    },
+    {
+      "tC": 15,
+      "iapwsPa": 1705.7448743923737,
+      "iso7730Pa": 1703.8118403835363,
+      "iso7730Relative": -0.001133249196792141
+    },
+    {
+      "tC": 18,
+      "iapwsPa": 2064.6565276744873,
+      "iso7730Pa": 2062.714687876403,
+      "iso7730Relative": -0.0009405146919384544
+    },
+    {
+      "tC": 20,
+      "iapwsPa": 2339.214766776897,
+      "iso7730Pa": 2337.2167171529236,
+      "iso7730Relative": -0.0008541539889157512
+    },
+    {
+      "tC": 22,
+      "iapwsPa": 2645.2112465822524,
+      "iso7730Pa": 2643.1042683563614,
+      "iso7730Relative": -0.0007965255057089671
+    },
+    {
+      "tC": 24,
+      "iapwsPa": 2985.6330659539453,
+      "iso7730Pa": 2983.3531213394763,
+      "iso7730Relative": -0.0007636385865590345
+    },
+    {
+      "tC": 26,
+      "iapwsPa": 3363.6874849924084,
+      "iso7730Pa": 3361.1588950705864,
+      "iso7730Relative": -0.0007517315247339562
+    },
+    {
+      "tC": 28,
+      "iapwsPa": 3782.8126309269446,
+      "iso7730Pa": 3779.948050033587,
+      "iso7730Relative": -0.0007572621678212377
+    },
+    {
+      "tC": 30,
+      "iapwsPa": 4246.688340548065,
+      "iso7730Pa": 4243.389092159399,
+      "iso7730Relative": -0.0007768991091632316
+    }
+  ],
+  "adaptive": [
+    {
+      "thetaRm": 10.0,
+      "comfort": 22.1,
+      "rustLower": {
+        "1": 20.1,
+        "2": 19.1,
+        "3": 18.1,
+        "4": 17.1
+      },
+      "rustUpper": {
+        "1": 24.1,
+        "2": 25.1,
+        "3": 26.1,
+        "4": 27.1
+      }
+    },
+    {
+      "thetaRm": 20.0,
+      "comfort": 25.400000000000002,
+      "rustLower": {
+        "1": 23.400000000000002,
+        "2": 22.400000000000002,
+        "3": 21.400000000000002,
+        "4": 20.400000000000002
+      },
+      "rustUpper": {
+        "1": 27.400000000000002,
+        "2": 28.400000000000002,
+        "3": 29.400000000000002,
+        "4": 30.400000000000002
+      }
+    },
+    {
+      "thetaRm": 30.0,
+      "comfort": 28.700000000000003,
+      "rustLower": {
+        "1": 26.700000000000003,
+        "2": 25.700000000000003,
+        "3": 24.700000000000003,
+        "4": 23.700000000000003
+      },
+      "rustUpper": {
+        "1": 30.700000000000003,
+        "2": 31.700000000000003,
+        "3": 32.7,
+        "4": 33.7
+      }
+    }
+  ],
+  "draught": [
+    {
+      "ta": 20,
+      "v": 0.15,
+      "tu": 40,
+      "dr": 18.000842224322255
+    },
+    {
+      "ta": 22,
+      "v": 0.3,
+      "tu": 40,
+      "dr": 38.509976806247735
+    },
+    {
+      "ta": 24,
+      "v": 0.1,
+      "tu": 20,
+      "dr": 6.056101262560107
+    },
+    {
+      "ta": 20,
+      "v": 0.05,
+      "tu": 40,
+      "dr": 0.0
+    }
+  ],
+  "divergences": [
+    {
+      "id": "din16798.band-pmv.winter.cat1.upper",
+      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
+      "inputs": "t_op 23.0 C, 50 % rh, 0.1 m/s, 1.2 met, 1.0 clo",
+      "rust": 23.0,
+      "reference": 0.31585626179691234,
+      "relative": null,
+      "note": "informational: PMV at the tabulated band edge is 0.316 against limit +-0.2"
+    },
+    {
+      "id": "din16798.band-pmv.winter.cat2.upper",
+      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
+      "inputs": "t_op 24.0 C, 50 % rh, 0.1 m/s, 1.2 met, 1.0 clo",
+      "rust": 24.0,
+      "reference": 0.5367726899491391,
+      "relative": null,
+      "note": "informational: PMV at the tabulated band edge is 0.537 against limit +-0.5"
+    },
+    {
+      "id": "din16798.band-pmv.winter.cat3.upper",
+      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
+      "inputs": "t_op 25.0 C, 50 % rh, 0.1 m/s, 1.2 met, 1.0 clo",
+      "rust": 25.0,
+      "reference": 0.759413017720681,
+      "relative": null,
+      "note": "informational: PMV at the tabulated band edge is 0.759 against limit +-0.7"
+    },
+    {
+      "id": "din16798.band-pmv.summer.cat1.lower",
+      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
+      "inputs": "t_op 23.5 C, 50 % rh, 0.1 m/s, 1.2 met, 0.5 clo",
+      "rust": 23.5,
+      "reference": -0.3621917356110125,
+      "relative": null,
+      "note": "informational: PMV at the tabulated band edge is -0.362 against limit +-0.2"
+    },
+    {
+      "id": "din16798.band-pmv.summer.cat1.upper",
+      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
+      "inputs": "t_op 25.5 C, 50 % rh, 0.1 m/s, 1.2 met, 0.5 clo",
+      "rust": 25.5,
+      "reference": 0.23263383731395113,
+      "relative": null,
+      "note": "informational: PMV at the tabulated band edge is 0.233 against limit +-0.2"
+    },
+    {
+      "id": "din16798.band-pmv.summer.cat2.lower",
+      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
+      "inputs": "t_op 23.0 C, 50 % rh, 0.1 m/s, 1.2 met, 0.5 clo",
+      "rust": 23.0,
+      "reference": -0.5095007559358856,
+      "relative": null,
+      "note": "informational: PMV at the tabulated band edge is -0.510 against limit +-0.5"
+    },
+    {
+      "id": "din16798.band-pmv.summer.cat3.lower",
+      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
+      "inputs": "t_op 22.0 C, 50 % rh, 0.1 m/s, 1.2 met, 0.5 clo",
+      "rust": 22.0,
+      "reference": -0.8116814885920559,
+      "relative": null,
+      "note": "informational: PMV at the tabulated band edge is -0.812 against limit +-0.7"
+    },
+    {
+      "id": "din16798.band-pmv.summer.cat4.lower",
+      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
+      "inputs": "t_op 21.0 C, 50 % rh, 0.1 m/s, 1.2 met, 0.5 clo",
+      "rust": 21.0,
+      "reference": -1.1231700434429974,
+      "relative": null,
+      "note": "informational: PMV at the tabulated band edge is -1.123 against limit +-1.0"
+    },
+    {
+      "id": "din16798.adaptive.lower-limits",
+      "clause": "EN 16798-1 Annex B adaptive model (to verify against the clause text)",
+      "inputs": "theta_rm 20 C, category II",
+      "rust": "theta_c - 3.0 K",
+      "reference": "theta_c - 4.0 K (EN 16798-1 Figure B.? asymmetric lower limits -3/-4/-5 K, unverified)",
+      "relative": null,
+      "note": "the Rust band is symmetric +-2/3/4/5 K as in EN 15251; verify before changing"
+    }
+  ]
+}

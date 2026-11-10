@@ -1,4 +1,5 @@
 import{afterAll,expect,test}from"bun:test";
+import {graphSourceV1} from "../../../../../../../../../../🏗️build/🕸️graph/🧪️tests/📖️source/🟦️.ts";
 import{lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync,utimesSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
@@ -46,7 +47,7 @@ test("a cancelled scan touches nothing",async()=>{
 });
 
 test("the build removes superseded blocks after, never inside, its builder custody, and the collector removes them first",()=>{
- const host=readFileSync(fileURLToPath(new URL("../../../../../../../../../../🏗️build/🕸️graph/🟦️.ts",import.meta.url)),"utf8"),build=host.indexOf("markBuildCapacityPhaseV1(\"plan\");\n      if(image!==undefined)await sweepSupersededBlocksV1("),sweep=host.indexOf("minimumBlocks:GRAPH_LIMITS_V1.sweepMinimumBlocks,blocksPerHeader:GRAPH_LIMITS_V1.sweepBlocksPerHeader");
+ const host=graphSourceV1(),build=host.indexOf("markBuildCapacityPhaseV1(\"plan\");\n      if(image!==undefined)await sweepSupersededBlocksV1("),sweep=host.indexOf("minimumBlocks:GRAPH_LIMITS_V1.sweepMinimumBlocks,blocksPerHeader:GRAPH_LIMITS_V1.sweepBlocksPerHeader");
  expect(build).toBeGreaterThan(0);expect(sweep).toBeGreaterThan(0);expect(host).toContain("catch(error){if(invocation.control.signal.aborted)throw error;process.stderr.write(\"graph: sweep");
  const reclaim=readFileSync(fileURLToPath(new URL("../../../../../../../../../../🏗️build/🧹️cache-gc/🚰️reclaim/🟦️.ts",import.meta.url)),"utf8");
  expect(reclaim.indexOf("ports.supersede")).toBeGreaterThan(0);expect(reclaim.indexOf("ports.supersede")).toBeLessThan(reclaim.indexOf("ports.index(image)"));

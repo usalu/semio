@@ -15,7 +15,7 @@ use semio_framework_value::{DslValue, Number};
 #[path = "🧭️intent-address-and-sequencer/🦀️.rs"]
 mod intent_address_and_sequencer;
 pub use intent_address_and_sequencer::{
-    intent_is_stale, UiIntentAddress, UiIntentBindings, UiIntentCommand, UiIntentSequencer,
+    intent_is_stale, intent_payload, UiIntentAddress, UiIntentBindings, UiIntentCommand, UiIntentSequencer,
     ACTION_BATCH_ITEM_CAPACITY, ACTION_CLAIM_BATCH_CAPACITY, ACTION_CLAIM_CAPACITY,
     ACTION_DEPTH_CAPACITY, ACTION_ITEM_BYTE_CAPACITY, ACTION_NODE_CAPACITY,
     ACTION_QUEUE_BYTE_CAPACITY, ACTION_QUEUE_ITEM_CAPACITY, ACTION_STRING_BYTE_CAPACITY,

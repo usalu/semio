@@ -135,7 +135,7 @@ export function cacheRootDirectoryV1(workspace:string,ledger:CacheLedgerV1,root:
 /** 🚧️ Refuses a cache path whose first segments name no declared home of `root` (the repository cache root by default, `native` for `.cache`); the one runtime door every TypeScript writer of the repository root passes and the test of the native law. */
 export function requireDeclaredCacheSegmentsV1(path:readonly string[],ledger:CacheLedgerV1=cacheLedgerV1(),root:CacheRootIdV1="repository"):void{
  if(!path.length)return;
- const parts=path.flatMap(part=>part.split("/")),declared=ledger.areas.filter(area=>area.root===root&&area.kind!=="nested");
+ const parts=path.flatMap(part=>part.split("/")),declared=ledger.areas.filter(area=>area.root===root);
  if(declared.some(area=>area.directory!==undefined&&(inside(segments(area.directory),parts)||inside(parts,segments(area.directory)))||area.pattern!==undefined&&new RegExp(area.pattern,"u").test(parts[0]!)))return;
  throw Error(cacheTextV1("en","error.undeclared",{segment:parts.join("/")})+"\n"+cacheTextV1("de","error.undeclared",{segment:parts.join("/")}));
 }

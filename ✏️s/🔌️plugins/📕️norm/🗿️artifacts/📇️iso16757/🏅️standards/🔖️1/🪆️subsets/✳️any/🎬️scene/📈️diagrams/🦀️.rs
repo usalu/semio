@@ -1,4 +1,4 @@
-//! 📈️ Diagrams: per geometry object a plan (x–y) and an elevation (x–z) of the body primitives, space envelopes and ports, plus the space table; each with a table twin whose columns list every envelope corner.
+//! 📈️ Diagrams: per geometry object a plan (width x, depth z) and an elevation (width x, height y) of the body primitives, space envelopes and ports, plus the space table; each with a table twin whose columns list every envelope corner.
 
 use super::kit::{base_id, object_ref};
 use super::layout::{extent, leaf_extent, leaves};
@@ -25,10 +25,7 @@ fn view(document: &Iso16757Snapshot, report: &CheckReport, id: &str, object: &Ge
     let bounds = extent(document, object);
     let pad = 0.05 * (bounds.max[axes.0] - bounds.min[axes.0]).max(bounds.max[axes.1] - bounds.min[axes.1]).max(0.1);
     let mut series = Vec::new();
-    let mut found = Vec::new();
-    if let Some(shape) = &object.shape {
-        leaves(document, shape, [0.0; 3], 0, &mut found);
-    }
+    let found = object.shape.as_ref().map(|shape| leaves(document, shape)).unwrap_or_default();
     for (index, leaf) in found.iter().enumerate() {
         let (lo, hi) = leaf_extent(leaf);
         series.push(Series::Polyline { id: format!("body-{index}"), label: loc(&format!("Body primitive {} ({})", index + 1, leaf.kind), &format!("Grundkörper {} ({})", index + 1, leaf.kind)), points: ring(lo, hi, axes), style: stroke(Tone::Info, 2.0, Dash::Solid) });
@@ -57,7 +54,7 @@ fn view(document: &Iso16757Snapshot, report: &CheckReport, id: &str, object: &Ge
         id: format!("{key}:{id}"),
         title: loc(&format!("{} – {id}", names.0.0), &format!("{} – {id}", names.0.1)),
         description: loc(&format!("{} of the body primitives, space envelopes and ports of the geometry object (ISO 16757-2).", names.1.0), &format!("{} der Grundkörper, Raumhüllen und Anschlüsse des Geometrieobjekts (ISO 16757-2).", names.1.1)),
-        axes: vec![axis(names.2, axes.0), axis(if axes.1 == 1 { ("Depth y", "Tiefe y") } else { ("Height z", "Höhe z") }, axes.1)],
+        axes: vec![axis(names.2, axes.0), axis(if axes.1 == 2 { ("Depth z", "Tiefe z") } else { ("Height y", "Höhe y") }, axes.1)],
         series,
         markers,
         annotations: Vec::new(),
@@ -71,8 +68,8 @@ fn view(document: &Iso16757Snapshot, report: &CheckReport, id: &str, object: &Ge
 pub fn diagrams(document: &Iso16757Snapshot, report: &CheckReport, focus: Option<&str>) -> Vec<Diagram2d> {
     let mut out = Vec::new();
     for (id, object) in document.geometry.objects.iter().filter(|(id, _)| focus.is_none_or(|f| base_id(f) == id.as_str())) {
-        out.push(view(document, report, id, object, (0, 1), "plan", (("Plan view", "Grundriss"), ("Plan view", "Grundriss"), ("Width x", "Breite x"))));
-        out.push(view(document, report, id, object, (0, 2), "elevation", (("Elevation", "Ansicht"), ("Elevation", "Ansicht"), ("Width x", "Breite x"))));
+        out.push(view(document, report, id, object, (0, 2), "plan", (("Plan view", "Grundriss"), ("Plan view", "Grundriss"), ("Width x", "Breite x"))));
+        out.push(view(document, report, id, object, (0, 1), "elevation", (("Elevation", "Ansicht"), ("Elevation", "Ansicht"), ("Width x", "Breite x"))));
     }
     out
 }

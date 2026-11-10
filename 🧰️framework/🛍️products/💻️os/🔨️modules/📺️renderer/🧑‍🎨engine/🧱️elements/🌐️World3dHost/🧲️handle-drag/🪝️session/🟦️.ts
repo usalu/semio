@@ -3,7 +3,7 @@
  * @see ../🟦️.ts — the pure gesture the session drives; the sequences in `../../🧪️tests/🧫️fixtures/🧲️handle-drag.json` pin it.
  */
 import * as React from "../../../⚛️react-port/🟦️.ts";
-import { useCallback, useEffect, useRef } from "../../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
 import { axisDragParam } from "../../🪟️window-view-store/🟦️.tsx";
 import { raycastGroundPoint } from "../../🎯️marquee-and-bridges/🟦️.tsx";
 import type { WorldCore5 } from "../../🔀️paint-and-projection/🟦️.ts";
@@ -18,6 +18,7 @@ const modifiersOf = (event: React.PointerEvent<HTMLDivElement>): WorldHandleModi
 export function useWorldHandleDrag(core: WorldCore5) {
   const { annotationLayer, annotationStore, cameraRef, hostRef, onTrigger } = core;
   const sessionRef = useRef<HandleSession | null>(null);
+  const [handleDragActive, setHandleDragActive] = useState(false);
   const chainRef = useRef<Promise<unknown>>(Promise.resolve());
 
   const fire = useCallback(
@@ -64,6 +65,7 @@ export function useWorldHandleDrag(core: WorldCore5) {
       const s = parameterAt(event, session);
       if (s === null) return false;
       sessionRef.current = session;
+      setHandleDragActive(true);
       stepSession(session, { kind: "press", handle: item.id, s });
       event.currentTarget.setPointerCapture?.(event.pointerId);
       return true;
@@ -96,6 +98,7 @@ export function useWorldHandleDrag(core: WorldCore5) {
       const session = sessionRef.current;
       if (!session) return false;
       sessionRef.current = null;
+      setHandleDragActive(false);
       const modifiers = event ? modifiersOf(event) : { shift: false, alt: false, ctrl: false };
       const at = event ? pointerAt(event) : session.position;
       const s = event && event.type !== "pointercancel" ? parameterAt(event, session) : null;
@@ -113,5 +116,5 @@ export function useWorldHandleDrag(core: WorldCore5) {
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [endHandleDrag]);
 
-  return { beginHandleDrag, endHandleDrag, updateHandleDrag };
+  return { beginHandleDrag, endHandleDrag, handleDragActive, updateHandleDrag };
 }

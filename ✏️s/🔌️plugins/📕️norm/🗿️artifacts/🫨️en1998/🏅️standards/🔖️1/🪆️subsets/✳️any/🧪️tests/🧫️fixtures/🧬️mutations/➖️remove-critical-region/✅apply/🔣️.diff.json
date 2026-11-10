@@ -97,6 +97,12 @@
     "moved": [],
     "modified": []
   },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "isolationSystems": {
     "removed": [],
     "inserted": [],
@@ -116,12 +122,6 @@
         "index": 0
       }
     ],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "placements": {
-    "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []

@@ -1,0 +1,525 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Fine-grained derived-fact DAG with early cutoff",
+ "description": "A node is the pure answer of a rule over raw reads (a file digest, a glob roster digest) and other nodes. Its identity is the key (kind, subject, digest of the declared params), its value is a small canonical JSON document and its valueDigest the sha256 of that document. A node records the digest of every node it read and every raw read it made, never the raw rows of the nodes below it. A raw read that changed re-runs only the nodes that made it; a node whose new valueDigest equals the old one stops the propagation (early cutoff), so its dependents are neither invalidated nor recomputed. Kinds: manifest (parsed dependency set of one manifest), project (targets, named inputs and dependency names of one project), named-input (digest of the resolved glob roster of one named input), target-inputs (declared input set of one target), action-key (digest of command and inputs), closure (digest of member node digests).",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "kinds": [
+     "manifest",
+     "project",
+     "named-input",
+     "target-inputs",
+     "action-key",
+     "closure",
+     "directory-names",
+     "project-config",
+     "project-set",
+     "task-key"
+    ],
+    "deriveConcurrency": 8,
+    "maximumNodes": 262144,
+    "maximumTrace": 65536,
+    "verifyParallelNodes": 16,
+    "storeDelayMilliseconds": 250,
+    "storeParallelWrites": 8,
+    "heavyMaximum": 8,
+    "heavyBytes": 268435456,
+    "heavyReserveBytes": 2147483648,
+    "releaseRssBytes": 1073741824,
+    "releaseMinimumMilliseconds": 2000,
+    "releaseMinimumGain": 0.05,
+    "releasePauseMilliseconds": 60000,
+    "maximumListedPaths": 1000000,
+    "retainedFileBytes": 16384,
+    "retainedBytesPerOperation": 33554432,
+    "statIndex": {
+     "directory": "d",
+     "racyMilliseconds": 2000,
+     "maximumEntries": 2000000,
+     "maximumRecords": 262144,
+     "maximumRecordBytes": 16777216,
+     "retainMilliseconds": 604800000
+    },
+    "store": {
+     "directory": "n",
+     "maximumRecords": 262144,
+     "maximumRecordBytes": 1048576,
+     "maximumChunkBytes": 67108864,
+     "chunkEntries": 2048,
+     "compressionQuality": 4,
+     "retainMilliseconds": 604800000
+    }
+   }
+  },
+  "Digest": {
+   "type": "string",
+   "pattern": "^[a-f0-9]{64}$"
+  },
+  "NodeKey": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "kind",
+    "subject",
+    "params"
+   ],
+   "properties": {
+    "kind": {
+     "enum": [
+      "manifest",
+      "project",
+      "named-input",
+      "target-inputs",
+      "action-key",
+      "closure",
+      "directory-names"
+     ]
+    },
+    "subject": {
+     "type": "string",
+     "minLength": 1
+    },
+    "params": {
+     "$ref": "#/definitions/Digest"
+    }
+   }
+  },
+  "RowRef": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "kind",
+    "path",
+    "digest"
+   ],
+   "properties": {
+    "kind": {
+     "enum": [
+      "file",
+      "glob",
+      "observed"
+     ]
+    },
+    "path": {
+     "type": "string"
+    },
+    "patterns": {
+     "type": "array",
+     "items": {}
+    },
+    "bases": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "acc": {
+     "type": "string"
+    },
+    "stamps": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "rows": {},
+    "paths": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "digests": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "count": {
+     "type": "integer"
+    },
+    "digest": {
+     "type": "string"
+    }
+   }
+  },
+  "DirtySet": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "paths"
+   ],
+   "properties": {
+    "revision": {
+     "type": "string"
+    },
+    "paths": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "directories": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "overflow": {
+     "type": "boolean"
+    }
+   }
+  },
+  "DerivedNode": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "key",
+    "valueDigest",
+    "deps",
+    "rawReads",
+    "computedAtRev"
+   ],
+   "properties": {
+    "key": {
+     "$ref": "#/definitions/NodeKey"
+    },
+    "valueDigest": {
+     "$ref": "#/definitions/Digest"
+    },
+    "value": {},
+    "deps": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "key",
+       "digest"
+      ],
+      "properties": {
+       "key": {
+        "$ref": "#/definitions/NodeKey"
+       },
+       "digest": {
+        "$ref": "#/definitions/Digest"
+       }
+      }
+     }
+    },
+    "rawReads": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/RowRef"
+     }
+    },
+    "computedAtRev": {
+     "type": "string"
+    }
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "scenarios"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "scenarios": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/definitions/Scenario"
+     }
+    }
+   }
+  },
+  "Scenario": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "files",
+    "projects",
+    "requests",
+    "steps"
+   ],
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "files": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "projects": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "manifests"
+      ],
+      "properties": {
+       "manifests": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    "actions": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "env": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    "closures": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "members"
+      ],
+      "properties": {
+       "members": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    "requests": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "steps": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Step"
+     }
+    }
+   }
+  },
+  "Step": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "edit"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "edit": {
+     "type": "object",
+     "additionalProperties": {
+      "type": [
+       "string",
+       "null"
+      ]
+     }
+    },
+    "touch": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "expect": {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "recomputedByKind": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+       }
+      },
+      "changedByKind": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+       }
+      }
+     }
+    }
+   }
+  },
+  "ProjectConfigEntry": {
+   "description": "One parsed configuration file of a project root: the full parse (json for project.json and package.json, toml for Cargo.toml, go for go.mod), or the digest of the bytes and the parse error. A valid file carries no digest, so an edit that parses to the same value stops at this node.",
+   "oneOf": [
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "ok"
+     ],
+     "properties": {
+      "ok": {
+       "const": true
+      },
+      "json": {},
+      "toml": {
+       "type": "object"
+      },
+      "go": {
+       "type": "object"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "ok",
+      "sha256",
+      "error"
+     ],
+     "properties": {
+      "ok": {
+       "const": false
+      },
+      "sha256": {
+       "$ref": "#/definitions/Digest"
+      },
+      "error": {
+       "type": "string"
+      }
+     }
+    }
+   ]
+  },
+  "ProjectConfigValue": {
+   "description": "The value of a project-config node: the files of one root by name, null where absent.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "root",
+    "files"
+   ],
+   "properties": {
+    "root": {
+     "type": "string"
+    },
+    "files": {
+     "type": "object",
+     "additionalProperties": {
+      "oneOf": [
+       {
+        "type": "null"
+       },
+       {
+        "$ref": "#/definitions/ProjectConfigEntry"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "ProjectSetValue": {
+   "description": "The value of the project-set node: every project root of the workspace that inference considers, with its declared name (null where none), whether its configuration does not parse, and its present files; the name to root table and the names two roots declare.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "projects",
+    "names",
+    "duplicates"
+   ],
+   "properties": {
+    "projects": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "root",
+       "name",
+       "unavailable",
+       "files"
+      ],
+      "properties": {
+       "root": {
+        "type": "string"
+       },
+       "name": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "files": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "unavailable": {
+        "type": "boolean"
+       }
+      }
+     }
+    },
+    "names": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "duplicates": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "TaskKeyValue": {
+   "description": "The value of a task-key node: the digest of the complete target declaration, the digests of its resolved inputs and its environment; null where the target does not exist.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "key"
+   ],
+   "properties": {
+    "key": {
+     "oneOf": [
+      {
+       "$ref": "#/definitions/Digest"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  }
+ }
+}

@@ -26,12 +26,15 @@ CREATE TABLE din18599_zone (
   area_m2 REAL, volume_m3 REAL, theta_i_heat_c REAL, theta_i_cool_c REAL,
   occupants INTEGER NOT NULL CHECK (occupants BETWEEN 0 AND 4294967295),
   internal_gains_w_m2 REAL, lighting_power_w_m2 REAL,
+  thermal_mass_class TEXT NOT NULL CHECK (thermal_mass_class IN ('Light','Medium','Heavy','Custom')),
+  c_wirk_wh_m2k REAL,
   area_m2_ieee754_bits INTEGER NOT NULL, area_m2_ieee754_class TEXT NOT NULL,
   volume_m3_ieee754_bits INTEGER NOT NULL, volume_m3_ieee754_class TEXT NOT NULL,
   theta_i_heat_c_ieee754_bits INTEGER NOT NULL, theta_i_heat_c_ieee754_class TEXT NOT NULL,
   theta_i_cool_c_ieee754_bits INTEGER NOT NULL, theta_i_cool_c_ieee754_class TEXT NOT NULL,
   internal_gains_w_m2_ieee754_bits INTEGER NOT NULL, internal_gains_w_m2_ieee754_class TEXT NOT NULL,
-  lighting_power_w_m2_ieee754_bits INTEGER NOT NULL, lighting_power_w_m2_ieee754_class TEXT NOT NULL
+  lighting_power_w_m2_ieee754_bits INTEGER NOT NULL, lighting_power_w_m2_ieee754_class TEXT NOT NULL,
+  c_wirk_wh_m2k_ieee754_bits INTEGER NOT NULL, c_wirk_wh_m2k_ieee754_class TEXT NOT NULL
 );
 CREATE TABLE din18599_element (
   id INTEGER PRIMARY KEY,

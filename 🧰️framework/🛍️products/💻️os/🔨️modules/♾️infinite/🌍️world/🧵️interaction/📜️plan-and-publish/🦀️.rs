@@ -175,10 +175,11 @@ pub fn plan_world3d_paint_release(session_state: &WorldSessionState, selection_s
 }
 
 /// 🧯️ Whether a host cancel of this surface would abort anything — a live gumball gesture that streamed into the guest's
-/// open tool transaction, or an open paint stroke — so a closing shell defers retirement only when a cancel is owed.
+/// open tool transaction, a handle drag in flight, or an open paint stroke — so a closing shell defers retirement only when a cancel is owed.
 pub fn world3d_cancel_owed(selection_state: &WorldSelectionState, authority_state: &WorldAuthorityState) -> bool {
     let gumball = authority_state.interaction_authority.as_ref().and_then(|authority| authority.gumball.as_ref()).is_some_and(|gesture| gesture.live && gesture.streamed);
-    gumball || (selection_state.interaction_mode == "paint" && selection_state.paint_stroke_active)
+    let handle = authority_state.interaction_authority.as_ref().is_some_and(|authority| authority.handles.is_armed());
+    gumball || handle || (selection_state.interaction_mode == "paint" && selection_state.paint_stroke_active)
 }
 
 /// 🧯️ A host cancel of an open paint stroke: ONE `paintAt` with `phase: "abort"` and the `reason`, clearing
@@ -564,6 +565,8 @@ pub struct WorldInteractionAuthority {
     pub(crate) right_dragged: bool,
     pub marquee: Option<WorldMarqueeGesture>,
     pub gumball: Option<WorldGumballGesture>,
+    /// 🧲️ The handle drag of this surface: its pickable handles, the bindings of its node and the drag in flight.
+    pub handles: WorldHandleDrag,
     /// 🧯️ A cancelled live gumball drag: its remaining moves and its release are swallowed.
     pub(crate) gumball_swallow: bool,
     pub next_generation: u64,
@@ -573,7 +576,7 @@ pub struct WorldInteractionAuthority {
 
 impl Default for WorldInteractionAuthority {
     fn default() -> Self {
-        Self { queue: WorldInteractionIntentQueue::default(), blocked: None, registry: None, active: None, right_press: None, right_dragged: false, marquee: None, gumball: None, gumball_swallow: false, next_generation: 1, faulted: false, closing: false }
+        Self { queue: WorldInteractionIntentQueue::default(), blocked: None, registry: None, active: None, right_press: None, right_dragged: false, marquee: None, gumball: None, handles: WorldHandleDrag::default(), gumball_swallow: false, next_generation: 1, faulted: false, closing: false }
     }
 }
 //#endregion 🧵️WorldInteractionTransaction

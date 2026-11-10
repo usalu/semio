@@ -610,6 +610,11 @@
         },
         "counters": {
           "const": "partial"
+        },
+        "unmanagedMegabytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The memory held by everything the gate did not grant (agent CLIs, editors, watchers, tool daemons): what the machine uses beyond the free memory minus what its grants observe. The budget of the gate is what is left of the machine after it."
         }
       }
     },
@@ -919,6 +924,10 @@
           "items": {
             "$ref": "#/definitions/Decision"
           }
+        },
+        "unmanagedMegabytes": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -2001,6 +2010,52 @@
         "reservedMegabytes": {
           "type": "integer",
           "minimum": 0
+        }
+      }
+    },
+    "Unmanaged": {
+      "description": "The classes the unmanaged processes of a host census are counted in, first match wins; `ps -A -o pid=,ppid=,rss=,comm=` names them on Linux and macOS.",
+      "const": {
+        "classes": [
+          {
+            "name": "agent",
+            "pattern": "^(claude|codex|droid|kiro-cli|copilot|windsurf|cursor|antigravity)"
+          },
+          {
+            "name": "editor",
+            "pattern": "^(code|code-oss|idea|zed|nvim|vim|emacs|sublime_text)"
+          },
+          {
+            "name": "watcher",
+            "pattern": "^(semio-repo-watch|watchman|fswatch|inotifywait)"
+          },
+          {
+            "name": "tool",
+            "pattern": "^(bun|node|deno|python[0-9.]*|cargo|rustc|tsc|esbuild)$"
+          },
+          {
+            "name": "other",
+            "pattern": ".*"
+          }
+        ],
+        "table": {
+          "unix": {
+            "command": "ps",
+            "arguments": [
+              "-A",
+              "-o",
+              "pid=,ppid=,rss=,comm="
+            ]
+          },
+          "win32": {
+            "command": "powershell.exe",
+            "arguments": [
+              "-NoProfile",
+              "-NonInteractive",
+              "-Command",
+              "Get-CimInstance Win32_Process|ForEach-Object{'{0} {1} {2} {3}' -f $_.ProcessId,$_.ParentProcessId,[int64]($_.WorkingSetSize/1024),$_.Name}"
+            ]
+          }
         }
       }
     }

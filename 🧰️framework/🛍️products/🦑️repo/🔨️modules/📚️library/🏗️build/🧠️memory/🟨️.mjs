@@ -2,6 +2,9 @@ import{BUILD_HOST_CAPACITY_POLICY_V1}from"../🌡️host-capacity/🎛️control
 import{readLiveHostCapacityReservationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{totalmem,freemem}from"node:os";
+import{mkdirSync,readFileSync,renameSync,writeFileSync}from"node:fs";
+import{dirname}from"node:path";
+import{cgroupMemoryHeadroomV1}from"../🧱️job-limits/🐧️cgroup/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {runtimeCollectGarbageV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
@@ -38,40 +41,27 @@ export function hostMemoryMegabytesV1(){
 
 /** 🎫️ Partitions the qualified live reservation between the graph parent, fixed overhead and owned workers; an enlarged carried tool envelope cannot fund additional memory. */
 export function graphMemoryAllocationV1(environment,policy=P,hostMegabytes=hostMemoryMegabytesV1()){
- let reservation;try{reservation=readLiveHostCapacityReservationV1(environment,BUILD_HOST_CAPACITY_POLICY_V1);}catch{}
+ const reservation=readLiveHostCapacityReservationV1(environment,BUILD_HOST_CAPACITY_POLICY_V1);
  const carried=environment[policy.planEnvironment]!==undefined&&environment[policy.planEnvironment]!=="",part=value=>typeof value==="number"&&Number.isFinite(value)&&value>0?value:0;
  if(reservation!==undefined&&reservation.reservedMegabytes===0)throw Error("Active graph parent memory reservation required");
  const derived=reservation!==undefined?Math.floor(reservation.reservedMegabytes*policy.grantShare):carried?policy.minimumBudgetMegabytes:Math.floor(part(hostMegabytes)*policy.hostShare);
  let parent=Math.min(reservation?.reservedMegabytes??Infinity,Math.max(policy.minimumBudgetMegabytes,Math.min(policy.maximumBudgetMegabytes,derived))),text=environment[policy.budgetEnvironment];
  if(text!==undefined){const explicit=Number(text);if(!Number.isFinite(explicit)||explicit<policy.minimumBudgetMegabytes)throw Error("Graph memory budget of at least "+policy.minimumBudgetMegabytes+" MB required: "+policy.budgetEnvironment);parent=Math.min(Math.floor(explicit),parent);}
- let plan;try{plan=JSON.parse(environment[policy.planEnvironment]??"null");}catch{}
+ const plan=JSON.parse(environment[policy.planEnvironment]||"null");
  const total=reservation?.reservedMegabytes??0,fixed=reservation===undefined?0:Math.min(Math.floor(part(plan?.fixedMegabytes)),Math.max(0,total-parent));
  return Object.freeze({qualified:reservation!==undefined,reservedMegabytes:total,parentMegabytes:parent,fixedMegabytes:fixed,workerMegabytes:Math.max(0,total-parent-fixed),jobs:reservation?.jobs??0});
 }
-/** 📐️ Charges only the qualified current reservation, never an enlarged tool scheduling envelope. */
-export function graphMemoryBudgetBytesV1(environment,policy=P,hostMegabytes=hostMemoryMegabytesV1()){return graphMemoryAllocationV1(environment,policy,hostMegabytes).parentMegabytes*MEGABYTE;}
-
 /** 🧒️ The memory JavaScriptCore is told the graph child process may use (`BUN_JSC_forceRAMSize`), which sets how far its heap grows before it collects: the declared child size, never the capacity grant of the run, because the grant pays for every process of the run and a larger size only lets the child keep more garbage (36 refreshed projects in one process: 2 GiB peaks at 5.5 GB resident and 2.0 GB footprint, 8 GiB at 7.5 GB and 2.8 GB, with identical rows and wall time).
  * @see ./🧬️schema/🔣️.json */
 export function graphChildHeapBytesV1(policy=P){return policy.childHeapMegabytes*MEGABYTE;}
 
-/**
- * ⚖️ Decides whether the next project may start: never beyond the worker count, otherwise while the managed memory is within the budget (within `resumeRatio` of it after it was exceeded, so admission does not flap).
- * Memory above the budget is answered with one collection (the caller collects and decides again with `collected` set); what a collection cannot release is retained data, which degrades the run to one project at a time (`forced` while nothing runs) and never deadlocks.
- * @param {typeof GRAPH_MEMORY_POLICY_V1} policy
- * @param {{used:number;budget:number;running:number;workers:number;blocked:boolean;collected:boolean}} state
- * @returns {{admit:boolean;collect:boolean;reason:"workers"|"within"|"collect"|"over"|"forced"}}
- */
-export function decideMemoryAdmissionV1(policy,{used,budget,running,workers,blocked,collected}){
- if(running>=workers)return{admit:false,collect:false,reason:"workers"};
- if(used<=(blocked?budget*policy.resumeRatio:budget))return{admit:true,collect:false,reason:"within"};
- if(!collected)return{admit:false,collect:true,reason:"collect"};
- return running===0?{admit:true,collect:false,reason:"forced"}:{admit:false,collect:false,reason:"over"};
-}
+/** 🛰️ The memory JavaScriptCore is told the host graph service may keep (`BUN_JSC_forceRAMSize`): the service holds the resident graph and plans in process, so its collector target is larger than a one-shot child's but still declared, never the host's RAM.
+ * @see ./🧬️schema/🔣️.json */
+export function graphServiceHeapBytesV1(policy=P){return policy.serviceHeapMegabytes*MEGABYTE;}
 
 /** 🔌️ The charged resident bytes of the process and the collection that releases them; both are ports so every platform and every test supplies its own. The sample reads the runtime counters (constant time): a heap walk costs time proportional to the heap and ran every few milliseconds. */
-/** 📏️ Charges all resident pages and managed bytes, including the parent baseline. */
-export function graphMemoryPressureBytesV1(counters){if(![counters.rss,counters.heapUsed,counters.external].every(value=>Number.isSafeInteger(value)&&value>=0))throw Error("Actual graph parent memory counters required");return Math.max(counters.rss,counters.heapUsed+counters.external);}
+/** 📏️ Charges the managed bytes (heap in use plus external buffers), never the resident pages: with a small collector target the pages hold freed memory the allocator has not returned yet, which no admission can release; the host free-memory floor still guards the machine. */
+export function graphMemoryPressureBytesV1(counters){if(![counters.rss,counters.heapUsed,counters.external].every(value=>Number.isSafeInteger(value)&&value>=0))throw Error("Actual graph parent memory counters required");return counters.heapUsed+counters.external;}
 export function createMemoryPortsV1(){
  return Object.freeze({
   sample:()=>graphMemoryPressureBytesV1(process.memoryUsage()),
@@ -79,13 +69,13 @@ export function createMemoryPortsV1(){
  });
 }
 
-/** 📐️ The managed bytes that stay live after one collection: the fixed working set of the process (discovery results, parsers, caches) that no admission can influence, so a governor charges only what grows beyond it. */
-export function measureMemoryBaselineV1(ports=createMemoryPortsV1()){
- ports.collect();return ports.sample();
+/** 📏️ The bytes the service process and its pool may still take: where the environment declares a memory limit (`SEMIO_GRAPH_MEMORY_LIMIT_MB`, a private harness or a platform without cgroups) that limit less the resident memory of this process, otherwise the headroom of the cgroup they share (`memory.max` of the smallest enclosing limit minus `memory.current`) less the safety margin, a declared share of the limit; where no cgroup is readable the host answers with its total and free memory under the same margin. */
+export function serviceMemoryHeadroomBytesV1({ports,policy=P,cgroup=cgroupMemoryHeadroomV1,free=freemem,total=totalmem,environment=process.env,usage=()=>process.memoryUsage().rss}={}){
+ const declared=Number(environment[policy.limitEnvironment]);
+ if(Number.isFinite(declared)&&declared>0){const limit=declared*MEGABYTE;return Math.floor(limit-usage()-limit*policy.safetyMarginBasisPoints/10000);}
+ const reading=cgroup(ports),limit=reading!==undefined&&Number.isFinite(reading.limitBytes)?reading.limitBytes:total(),current=reading!==undefined?reading.currentBytes:total()-free();
+ return Math.floor(limit-current-limit*policy.safetyMarginBasisPoints/10000);
 }
-
-/** 🛂️ Charges only what the graph parent grows beyond its working set at the start of the inference (the fact index of thousands of projects, measured after one collection) and refreshes the actual ledger reservation before each admission; the measured cost of one project and the free memory of the host bound the parallelism (see {@link createMemoryGovernorV1}). */
-export function createGraphParentMemoryGovernorV1(options){if("baselineBytes"in options||"budgetBytes"in options||"readBudgetBytes"in options)throw Error("Owned graph parent memory policy required");const environment=options.environment??process.env,ports=createMemoryPortsV1(),sample=options.sample??ports.sample,collect=options.collect??ports.collect;return createMemoryGovernorV1({...options,environment,sample,collect,baselineBytes:measureMemoryBaselineV1({sample,collect}),budgetBytes:graphMemoryBudgetBytesV1(environment),readBudgetBytes:()=>graphMemoryBudgetBytesV1(environment)});}
 
 const defaultSleep=(milliseconds,signal)=>new Promise((resolve,reject)=>{
  if(signal?.aborted){reject(signal.reason);return;}
@@ -93,46 +83,66 @@ const defaultSleep=(milliseconds,signal)=>new Promise((resolve,reject)=>{
  signal?.addEventListener("abort",onAbort,{once:true});
 });
 
+/** 💾️ The durable learned owner peaks in one JSON file (atomic replace, a missing or damaged file reads as nothing learned). */
+export function createGraphOwnerPeaksFileV1(path){
+ return Object.freeze({
+  read:()=>{try{const value=JSON.parse(readFileSync(path,"utf8"));return value!==null&&typeof value==="object"&&!Array.isArray(value)?value:{};}catch{return{};}},
+  write:peaks=>{try{mkdirSync(dirname(path),{recursive:true});const temporary=path+"."+process.pid+".tmp";writeFileSync(temporary,JSON.stringify(peaks));renameSync(temporary,path);}catch{}},
+ });
+}
+
 /**
- * 🚦️ Gates the start of concurrent project inferences by the managed memory above `baselineBytes` (the fixed working set that no admission can influence, see {@link measureMemoryBaselineV1}): at most `workers` run, a new one starts only while the heap is within `budgetBytes` (after one rate limited collection), waiters start in arrival order, progress is reported at most every `progressMilliseconds` and an abort rejects every waiter.
- * @param {{budgetBytes:number;workers:number;baselineBytes?:number;sample?:()=>number;collect?:()=>void;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;now?:()=>number;signal?:AbortSignal;report?:(line:string)=>void;environment?:Record<string,string|undefined>;policy?:typeof GRAPH_MEMORY_POLICY_V1}} options
+ * 🧮️ The admission law of one more owner: the first owner always runs, an owner of a kind without a learned peak runs alone, otherwise the measured headroom (usage and safety margin already taken off), less what every in-flight owner is still expected to take (its estimate, never below what it has taken so far, less what it has taken), must cover the estimate of the new owner.
+ * @param {{headroom:number;running:number;inflight:readonly {estimate:number;taken:number}[];estimate:number;learned:boolean}} state
  */
-export function createMemoryGovernorV1({budgetBytes,workers,baselineBytes=0,readBudgetBytes=()=>budgetBytes,sample,collect,available=()=>freemem(),sleep=defaultSleep,now=()=>performance.now(),signal,report,environment={},policy=P}){
- if(!Number.isSafeInteger(workers)||workers<1||!(budgetBytes>0)||!(baselineBytes>=0))throw Error("Positive worker count and memory budget required");
- const defaults=createMemoryPortsV1(),read=sample??defaults.sample,collectNow=collect??defaults.collect;
- const queue=[],stats={waits:0,waitedMilliseconds:0,collections:0,peakBytes:0},cost={bytes:0,start:0,peak:0,solo:false},floorBytes=policy.hostAvailableFloorMegabytes*MEGABYTE;
- let currentBudget=budgetBytes,running=0,blocked=false,pumping=false,serialSaid=false,retained=false,lastCollect=-Infinity,lastReport=-Infinity,lastSampleAt=-Infinity,lastAdmit=-Infinity,lastRelease=0,lastUsed=0;
- const say=(key,fields)=>{for(const line of renderGraphMemoryMessagesV1(key,{budget:Math.round(currentBudget/MEGABYTE),running,...fields},environment))report?.(line);};
- const observe=fresh=>{const at=now();if(fresh||at-lastSampleAt>=policy.sampleMilliseconds){lastUsed=Math.max(0,read()-baselineBytes);lastSampleAt=at;if(lastUsed>stats.peakBytes)stats.peakBytes=lastUsed;}return lastUsed;};
- const settled=()=>lastCollect>=lastRelease||retained&&now()-lastCollect<policy.retainedMilliseconds;
- const mayCollect=()=>now()-lastCollect>=policy.collectMinimumMilliseconds&&!settled();
+export function graphOwnerAdmissionV1({headroom,running,inflight,estimate,learned}){
+ if(running===0)return true;
+ if(!learned)return false;
+ const remaining=inflight.reduce((sum,owner)=>sum+Math.max(0,owner.estimate-owner.taken),0);
+ return headroom-remaining>=estimate;
+}
+
+/**
+ * 🚦️ Admits project inferences against the headroom the service has left, soundly before any cost is learned: the estimate of an in-flight owner is the larger of the learned peak of its kind (else the declared guess) and the growth observed since it started (the measured growth of the headroom split between the running owners in proportion to what each is still expected to take); one more owner starts only when the measured headroom less the remaining estimates covers its own estimate; an owner of a kind without a learned peak runs alone until one of that kind completes; the peak of a kind is learned when an owner completes and persists through the `peaks` port; one owner always runs, so nothing deadlocks.
+ * @param {{workers:number;headroom:()=>number;estimateBytes?:number;decide?:(decision:{key:string;used:number;budget:number;kind?:string})=>void;peaks?:{read:()=>Record<string,number>;write:(peaks:Record<string,number>)=>void};sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;now?:()=>number;signal?:AbortSignal;report?:(line:string)=>void;environment?:Record<string,string|undefined>;policy?:typeof GRAPH_MEMORY_POLICY_V1}} options
+ */
+export function createMemoryGovernorV1({workers,headroom,estimateBytes=P.initialOwnerMegabytes*MEGABYTE,peaks,sleep=defaultSleep,now=()=>performance.now(),signal,report,decide,environment={},policy=P}){
+ if(!Number.isSafeInteger(workers)||workers<1||typeof headroom!=="function"||!(estimateBytes>0))throw Error("Positive worker count, headroom reading and owner estimate required");
+ const queue=[],owners=new Set(),stats={waits:0,waitedMilliseconds:0,peakOwners:0},learned=new Map(Object.entries(peaks?.read()??{}).filter(([,bytes])=>Number.isFinite(bytes)&&bytes>=0));
+ let last=headroom(),timer,pumping=false,serialSaid=false,lastReport=-Infinity,lastAdmit=-Infinity;
+  const say=(key,fields)=>{decide?.({key,used:fields.used,budget:fields.budget,kind:fields.kind});for(const line of renderGraphMemoryMessagesV1(key,{running:owners.size,kind:"",...fields},environment))report?.(line);};
+ const megabytes=bytes=>Math.round(bytes/MEGABYTE),peakOf=kind=>learned.has(kind)?learned.get(kind):estimateBytes;
+ const sample=()=>{
+  const free=headroom();
+  if(owners.size===0){last=free;return free;}
+  const delta=last-free;last=free;
+  const room=[...owners].map(owner=>Math.max(0,peakOf(owner.kind)-owner.taken)),open=room.reduce((sum,value)=>sum+value,0);
+  [...owners].forEach((owner,index)=>{owner.net=Math.max(0,owner.net+(delta>0&&open>0?delta*room[index]/open:delta/owners.size));owner.taken=Math.max(owner.taken,owner.net);});
+  return free;
+ };
+ const inflight=()=>[...owners].map(owner=>({estimate:peakOf(owner.kind),taken:owner.taken}));
  const fail=error=>{for(const waiter of queue.splice(0))waiter.reject(error);};
  const pump=async()=>{
   if(pumping)return;pumping=true;
   try{
-   while(queue.length){
+   while(queue.length&&owners.size<workers){
     signal?.throwIfAborted();
     const spacing=lastAdmit+policy.admitMinimumMilliseconds-now();
-    if(running>0&&spacing>0){await sleep(spacing,signal);continue;}
-    currentBudget=readBudgetBytes();if(!Number.isFinite(currentBudget)||currentBudget<=0)throw Error("Current positive graph memory budget required");
-    const hostLow=running>0&&floorBytes>0&&available()<floorBytes;
-    let used=observe(false)+(running>0?cost.bytes:0),verdict=hostLow?{admit:false,collect:false,reason:"over"}:decideMemoryAdmissionV1(policy,{used,budget:currentBudget,running,workers,blocked,collected:false});
-    if(verdict.collect){
-     if(mayCollect()){collectNow();lastCollect=now();stats.collections++;retained=running===0&&observe(true)>budgetBytes;}
-     used=observe(true)+(running>0?cost.bytes:0);verdict=decideMemoryAdmissionV1(policy,{used,budget:currentBudget,running,workers,blocked,collected:settled()});
-     if(verdict.collect)verdict={admit:false,collect:false,reason:"over"};
+    if(owners.size>0&&spacing>0){await sleep(spacing,signal);continue;}
+    const free=sample(),next=queue[0],known=learned.has(next.kind),estimate=peakOf(next.kind),state={headroom:free,running:owners.size,inflight:inflight(),estimate,learned:known};
+    if(graphOwnerAdmissionV1(state)){
+     if(owners.size===0&&free<estimate){if(!serialSaid){serialSaid=true;say("serial",{used:megabytes(estimate),budget:megabytes(free)});}}
+     else if(serialSaid){serialSaid=false;say("resumed",{used:megabytes(estimate),budget:megabytes(free)});}
+     queue.shift();const owner={kind:next.kind,taken:0,net:0};owners.add(owner);next.owner=owner;stats.peakOwners=Math.max(stats.peakOwners,owners.size);lastAdmit=now();
+     if(next.waited){stats.waits++;stats.waitedMilliseconds+=now()-next.since;}
+     next.resolve(owner);continue;
     }
-    if(verdict.admit){
-     if(verdict.reason==="within"){if(blocked){blocked=false;say("resumed",{used:Math.round(used/MEGABYTE)});}serialSaid=false;}
-     else{blocked=true;if(!serialSaid){serialSaid=true;say("serial",{used:Math.round(used/MEGABYTE)});}}
-     const waiter=queue.shift();if(running===0){cost.start=observe(true);cost.peak=cost.start;cost.solo=true;}else cost.solo=false;running++;lastAdmit=now();
-     if(waiter.waited){stats.waits++;stats.waitedMilliseconds+=now()-waiter.since;}
-     waiter.resolve();
-     continue;
+    for(const waiter of queue)waiter.waited=true;
+    if(now()-lastReport>=policy.progressMilliseconds){
+     lastReport=now();
+     if(!known)say("learning",{kind:next.kind,used:megabytes(estimate),budget:megabytes(free)});
+     else say("waiting",{used:megabytes(state.inflight.reduce((sum,row)=>sum+Math.max(row.estimate,row.taken),0)),budget:megabytes(free+state.inflight.reduce((sum,row)=>sum+row.taken,0))});
     }
-    if(verdict.reason==="workers")return;
-    blocked=true;for(const waiter of queue)waiter.waited=true;
-    if(now()-lastReport>=policy.progressMilliseconds){lastReport=now();say("waiting",{used:Math.round(used/MEGABYTE)});}
     await sleep(policy.pollMilliseconds,signal);
    }
   }catch(error){fail(error);}
@@ -141,16 +151,26 @@ export function createMemoryGovernorV1({budgetBytes,workers,baselineBytes=0,read
  const onAbort=()=>fail(signal.reason);
  signal?.addEventListener("abort",onAbort,{once:true});
  return Object.freeze({
-  async run(task){
+  async run(task,{kind="owner"}={}){
    signal?.throwIfAborted();
-   await new Promise((resolve,reject)=>{queue.push({resolve,reject,since:now(),waited:false});pump();});
+   const owner=await new Promise((resolve,reject)=>{queue.push({kind,resolve,reject,since:now(),waited:false});pump();});
+   if(timer===undefined){timer=setInterval(sample,policy.pollMilliseconds);timer.unref?.();}
    try{return await task();}
-   finally{cost.peak=Math.max(cost.peak,observe(true));running--;if(running===0&&cost.solo&&cost.peak>cost.start)cost.bytes=cost.peak-cost.start;lastRelease=now();if(queue.length)pump();}
+   finally{
+    sample();
+    const known=learned.get(owner.kind);
+    if(known===undefined||owner.taken>known){learned.set(owner.kind,Math.max(owner.taken,known??0));peaks?.write(Object.fromEntries(learned));}
+    owners.delete(owner);if(owners.size===0&&timer!==undefined){clearInterval(timer);timer=undefined;}if(queue.length)pump();
+   }
   },
-  stats:()=>({waits:stats.waits,waitedMilliseconds:Math.round(stats.waitedMilliseconds),collections:stats.collections,peakMegabytes:Math.round(stats.peakBytes/MEGABYTE),projectCostMegabytes:Math.round(cost.bytes/MEGABYTE)}),
-  dispose:()=>{signal?.removeEventListener("abort",onAbort);},
+  pressure:()=>headroom()<Math.max(estimateBytes*(learned.size===0?1:0),...learned.values()),
+  stats:()=>({waits:stats.waits,waitedMilliseconds:Math.round(stats.waitedMilliseconds),peakOwners:stats.peakOwners,ownerCostMegabytes:megabytes(Math.max(estimateBytes*(learned.size===0?1:0),...learned.values())),kinds:Object.fromEntries([...learned].map(([kind,bytes])=>[kind,megabytes(bytes)]))}),
+  dispose:()=>{signal?.removeEventListener("abort",onAbort);clearInterval(timer);timer=undefined;},
  });
 }
+
+/** 🛂️ The governor of the project inference of the service: the headroom is the cgroup headroom of the service (see {@link serviceMemoryHeadroomBytesV1}), shared by the process and its pool. */
+export function createGraphParentMemoryGovernorV1(options){return createMemoryGovernorV1({...options,headroom:options.headroom??(()=>serviceMemoryHeadroomBytesV1({policy:options.policy??P}))});}
 
 /**
  * 🧶️ Creates a bounded table that makes equal long strings one instance: equal paths, input lists and keys of thousands of projects cost memory once. A table over its character bound is cleared, never grown.

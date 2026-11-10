@@ -44,7 +44,7 @@ test("the gate learns the peak of a Windows tree through the process table, and 
  const control={signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined};
  const fast=readHostCapacityPolicyV1({...decisionFixture.policy,wait:{...decisionFixture.policy.wait,pollMilliseconds:10,progressMilliseconds:20,heartbeatMilliseconds:20}});
  const run=async(runner:HostCommandRunnerV1,lines:string[])=>{const learned:{peakMegabytes:number}[]=[],notify=(line:string)=>{lines.push(line);};
-  await withHostCapacityV1({directory,policy:fast,request:{id:newHostCapacityIdV1(),operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:100,perJobMegabytes:0,cpuPerJob:1},control,environment:{},write:()=>undefined,sample,observe:pid=>observeTreeMegabytesV1(pid,runner,"win32",undefined,notify),learn:row=>{learned.push(row);}},async()=>{await new Promise(done=>setTimeout(done,150));});
+  await withHostCapacityV1({directory,policy:fast,request:{id:newHostCapacityIdV1(),operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:100,perJobMegabytes:0,cpuPerJob:1},control,environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample,observe:pid=>observeTreeMegabytesV1(pid,runner,"win32",undefined,notify),learn:row=>{learned.push(row);}},async()=>{await new Promise(done=>setTimeout(done,150));});
   return learned;};
  try{
   const seen:string[]=[],ok=await run(async()=>tree(process.pid),seen);

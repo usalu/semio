@@ -10,7 +10,7 @@ export type RemoteCacheActionResultV1=Readonly<{references:readonly RemoteCacheD
 export type RemoteCacheValidationV1="off"|"structure"|"complete";
 
 /** 🗃️ The content store as the validator sees it: a cheap presence test and a read of one small blob. */
-export interface RemoteCacheBlobsV1{has(hash:string):boolean;read(hash:string):Promise<Uint8Array|undefined>}
+export interface RemoteCacheBlobsV1{has(hash:string):boolean|Promise<boolean>;read(hash:string):Promise<Uint8Array|undefined>}
 
 /** ⚖️ The verdict on one action result. */
 export type RemoteCacheActionVerdictV1=Readonly<{valid:true}>|Readonly<{valid:false;kind:"malformed"|"missing";reason:string}>;
@@ -130,13 +130,13 @@ export async function validateRemoteCacheActionResultV1(bytes:Uint8Array,level:R
  let parsed:RemoteCacheActionResultV1;
  try{parsed=parseRemoteCacheActionResultV1(bytes);}catch(error){return {valid:false,kind:"malformed",reason:(error as Error).message};}
  if(level==="structure")return {valid:true};
- for(const value of parsed.references)if(!blobs.has(value.hash))return {valid:false,kind:"missing",reason:`blob ${value.hash} is not in the content store`};
+ for(const value of parsed.references)if(!await blobs.has(value.hash))return {valid:false,kind:"missing",reason:`blob ${value.hash} is not in the content store`};
  for(const value of parsed.trees){
-  const data=blobs.has(value.hash)?await blobs.read(value.hash):undefined;
+  const data=await blobs.has(value.hash)?await blobs.read(value.hash):undefined;
   if(data===undefined)return {valid:false,kind:"missing",reason:`tree ${value.hash} is not in the content store`};
   let files:readonly RemoteCacheDigestV1[];
   try{files=parseRemoteCacheTreeV1(data);}catch(error){return {valid:false,kind:"malformed",reason:`tree ${value.hash}: ${(error as Error).message}`};}
-  for(const file of files)if(!blobs.has(file.hash))return {valid:false,kind:"missing",reason:`blob ${file.hash} of tree ${value.hash} is not in the content store`};
+  for(const file of files)if(!await blobs.has(file.hash))return {valid:false,kind:"missing",reason:`blob ${file.hash} of tree ${value.hash} is not in the content store`};
  }
  return {valid:true};
 }

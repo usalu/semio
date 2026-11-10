@@ -4,7 +4,7 @@ use semio_s_plugin_norm_app_surface::{get_value_at_path, parse_path, set_value_a
 use semio_framework_value::ToValue;
 
 use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus};
-use crate::{derive_balance, evaluate_document, geg_ht_prime_limit, h_t_prime, primary_energy_factor, required_u_for_ht_prime, transmission_loss_coefficient, usage_profile_row, ventilation_loss_coefficient, zone_balances, DIN_V_18599_1_RHO_CA, DIN_V_18599_2_INFILTRATION_N_INF};
+use crate::{cooling_utilization, derive_balance, heating_utilization, evaluate_document, geg_ht_prime_limit, h_t_prime, primary_energy_factor, required_u_for_ht_prime, transmission_loss_coefficient, usage_profile_row, ventilation_loss_coefficient, zone_balances, DIN_V_18599_1_RHO_CA, DIN_V_18599_2_INFILTRATION_N_INF};
 use semio_s_artifact_norm_din18599_examples as examples;
 use semio_s_artifact_norm_din18599_model::{Attachment, AutomationClass, ElementKind, UsageProfile};
 
@@ -292,7 +292,7 @@ fn dhw_remedy_inverts_profile_limit() {
 #[test]
 fn norm_table_rows_match_cited_sources() {
     use crate::{
-        din_v_18599_10_dhw_specific, din_v_18599_10_fan_hours, din_v_18599_10_zone_defaults, din_v_18599_11_automation_factor, din_v_18599_12_tabelle5_qp_specific, din_v_18599_2_adjacency_fx, din_v_18599_2_solar_geometry_factors, din_v_18599_4_lighting_power_density, DIN_V_18599_1_HOURS_PER_MONTH, DIN_V_18599_1_RHO_CA, DIN_V_18599_2_UTILIZATION_A, DIN_V_18599_5_ETA_SYS_FLOOR, DIN_V_18599_5_ETA_SYS_MIN, DIN_V_18599_7_COOLING_TO_HEATING_RATIO, din_v_18599_7_g_remedy, din_v_18599_8_dhw_loss_fractions, geg_anlage1_tabelle1_heating_eta, geg_anlage2_ht_prime_limits, geg_anlage2_reference_u, geg_anlage3_mean_u, geg_anlage4_primary_energy_factors, GEG_ANLAGE1_DELTA_U_WB_REF, GEG_ANLAGE1_TABELLE1_ETA_WRG_REF, GEG_ANLAGE1_WINDOW_G_REF, GEG_SECTION10_QP_FACTOR_DEFAULT,
+        din_v_18599_10_dhw_specific, din_v_18599_10_fan_hours, din_v_18599_10_zone_defaults, din_v_18599_11_automation_factor, din_v_18599_12_tabelle5_qp_specific, din_v_18599_2_adjacency_fx, din_v_18599_2_solar_geometry_factors, din_v_18599_4_lighting_power_density, DIN_V_18599_1_DAYS_PER_MONTH, DIN_V_18599_1_RHO_CA, din_v_18599_2_c_wirk_wh_m2k, zone_heat_capacity_wh_k, DIN_V_18599_2_UTILIZATION_A0, DIN_V_18599_2_UTILIZATION_TAU0_H, DIN_V_18599_5_ETA_SYS_FLOOR, DIN_V_18599_5_ETA_SYS_MIN, DIN_V_18599_7_COOLING_TO_HEATING_RATIO, din_v_18599_7_g_remedy, din_v_18599_8_dhw_loss_fractions, geg_anlage1_tabelle1_heating_eta, geg_anlage2_ht_prime_limits, geg_anlage2_reference_u, geg_anlage3_mean_u, geg_anlage4_primary_energy_factors, GEG_ANLAGE1_DELTA_U_WB_REF, GEG_ANLAGE1_TABELLE1_ETA_WRG_REF, GEG_ANLAGE1_WINDOW_G_REF, GEG_SECTION10_QP_FACTOR_DEFAULT,
     };
     assert!((geg_anlage4_primary_energy_factors::NATURAL_GAS - 1.1).abs() < 1e-12);
     assert!((geg_anlage4_primary_energy_factors::ELECTRICITY_GRID - 1.8).abs() < 1e-12);
@@ -318,9 +318,13 @@ fn norm_table_rows_match_cited_sources() {
     assert!((din_v_18599_2_adjacency_fx::GROUND - 0.6).abs() < 1e-12);
     assert!((din_v_18599_10_zone_defaults::THETA_I_HEAT_C - 20.0).abs() < 1e-12);
     assert!((din_v_18599_2_solar_geometry_factors::SOUTH_HORIZ - 1.0).abs() < 1e-12);
-    assert!((DIN_V_18599_2_UTILIZATION_A - 0.95).abs() < 1e-12);
+    assert!((DIN_V_18599_2_UTILIZATION_A0 - 1.0).abs() < 1e-12);
+    assert!((DIN_V_18599_2_UTILIZATION_TAU0_H - 16.0).abs() < 1e-12);
+    assert!((din_v_18599_2_c_wirk_wh_m2k::LIGHT - 50.0).abs() < 1e-12);
+    assert!((din_v_18599_2_c_wirk_wh_m2k::MEDIUM - 90.0).abs() < 1e-12);
+    assert!((din_v_18599_2_c_wirk_wh_m2k::HEAVY - 130.0).abs() < 1e-12);
     assert!((DIN_V_18599_1_RHO_CA - 0.34).abs() < 1e-12);
-    assert!((DIN_V_18599_1_HOURS_PER_MONTH - 730.0).abs() < 1e-12);
+    assert!((DIN_V_18599_1_DAYS_PER_MONTH.iter().sum::<f64>() - 365.0).abs() < 1e-12);
     assert!((DIN_V_18599_5_ETA_SYS_FLOOR - 0.05).abs() < 1e-12);
     assert!((GEG_SECTION10_QP_FACTOR_DEFAULT - 0.55).abs() < 1e-12);
 }
@@ -727,4 +731,36 @@ fn resolve_json_path_mut<'a>(root: &'a mut serde_json::Value, path: &str) -> Opt
         }
     }
     Some(cur)
+}
+
+#[test]
+fn the_utilisation_factors_reproduce_the_independent_mpmath_vectors() {
+    let doc: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔮️cross-checks/🔣️.json")).expect("cross-check vectors");
+    let near = |a: f64, b: f64| (a - b).abs() <= 1e-9 * a.abs().max(b.abs());
+    for row in doc["utilisationFactor"].as_array().expect("rows") {
+        let (a, gamma) = (row["a"].as_f64().expect("a"), row["gamma"].as_f64().expect("gamma"));
+        assert!(near(heating_utilization(gamma, a), row["etaHeating"].as_f64().expect("heating")), "heating a {a} gamma {gamma}");
+        assert!(near(cooling_utilization(gamma, a), row["etaCooling"].as_f64().expect("cooling")), "cooling a {a} gamma {gamma}");
+    }
+    assert!((heating_utilization(1e300, 60.0) - 1e-300).abs() < 1e-290);
+    assert!((cooling_utilization(1e-3, 60.0) - 1e-3).abs() < 1e-12);
+}
+
+#[test]
+fn the_zone_heat_capacity_follows_the_thermal_mass_class_or_the_explicit_value_of_the_oracle_vectors() {
+    use semio_s_artifact_norm_din18599_model::ThermalMassClass;
+    let doc: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔮️cross-checks/🔣️.json")).expect("cross-check vectors");
+    let mut zone = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house().zones[0].clone();
+    for row in doc["heatCapacity"].as_array().expect("rows") {
+        zone.thermal_mass_class = match row["thermalMassClass"].as_str().expect("class") {
+            "Light" => ThermalMassClass::Light,
+            "Medium" => ThermalMassClass::Medium,
+            "Heavy" => ThermalMassClass::Heavy,
+            _ => ThermalMassClass::Custom,
+        };
+        zone.area_m2 = row["areaM2"].as_f64().expect("area");
+        zone.c_wirk_wh_m2k = row["cWirkWhM2k"].as_f64().expect("c_wirk");
+        let expected = row["capacityWhK"].as_f64().expect("capacity");
+        assert!((zone_heat_capacity_wh_k(&zone) - expected).abs() <= 1e-12 * expected, "{row}");
+    }
 }

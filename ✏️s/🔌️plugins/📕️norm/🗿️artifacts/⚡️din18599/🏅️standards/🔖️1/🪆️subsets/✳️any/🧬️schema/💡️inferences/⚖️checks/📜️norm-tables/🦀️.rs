@@ -139,14 +139,24 @@ pub mod din_v_18599_2_solar_geometry_factors {
     pub const MID_TILT: f64 = 0.95;
 }
 
-/// 📊 DIN V 18599-2 — Ausnutzungsgrad der Gewinne (Zeitkonstante-Parameter a).
-pub const DIN_V_18599_2_UTILIZATION_A: f64 = 0.95;
+/// 📊 DIN V 18599-2 (EN ISO 13790 12.2.1.1) — Ausnutzungsgrad, Zahlenparameter a = a0 + τ/τ0 mit a0 = 1.
+pub const DIN_V_18599_2_UTILIZATION_A0: f64 = 1.0;
+
+/// ⏲️ DIN V 18599-2 — Bezugs-Zeitkonstante τ0 [h] des Ausnutzungsgrads.
+pub const DIN_V_18599_2_UTILIZATION_TAU0_H: f64 = 16.0;
+
+/// 🧱 DIN V 18599-2 — wirksame Wärmespeicherfähigkeit C_wirk je Nettogrundfläche [Wh/(m²·K)] nach Bauartklasse.
+pub mod din_v_18599_2_c_wirk_wh_m2k {
+    pub const LIGHT: f64 = 50.0;
+    pub const MEDIUM: f64 = 90.0;
+    pub const HEAVY: f64 = 130.0;
+}
 
 /// 🌬️ DIN V 18599-1 — ρ·c_a Volumenstrom-Kennwert [Wh/(m³·K)] ≡ [W/(m³/h·K)].
 pub const DIN_V_18599_1_RHO_CA: f64 = 0.34;
 
-/// ⏱️ Mittlere Monatsstunden für die Monatsbilanz [h].
-pub const DIN_V_18599_1_HOURS_PER_MONTH: f64 = 730.0;
+/// 🗓️ DIN V 18599-1 — Tage je Monat d_m der Monatsbilanz (Nicht-Schaltjahr), Monatsstunden = 24 · d_m.
+pub const DIN_V_18599_1_DAYS_PER_MONTH: [f64; 12] = [31.0, 28.0, 31.0, 30.0, 31.0, 30.0, 31.0, 31.0, 30.0, 31.0, 30.0, 31.0];
 
 /// 🔥 Numerische Untergrenze für η_sys (Schutz vor Division durch 0) [-].
 pub const DIN_V_18599_5_ETA_SYS_FLOOR: f64 = 0.05;

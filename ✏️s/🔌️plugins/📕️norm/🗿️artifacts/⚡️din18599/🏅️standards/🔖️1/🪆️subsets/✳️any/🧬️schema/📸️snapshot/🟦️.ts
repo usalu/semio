@@ -76,6 +76,8 @@ export interface ThermalZone {
   occupants: number;
   internalGainsWM2: number;
   lightingPowerWM2: number;
+  thermalMassClass: Din18599ThermalMassClass;
+  cWirkWhM2k: number;
 }
 
 export interface DhwSystem {
@@ -109,6 +111,8 @@ export interface CoolingPlant {
   energyCarrier: string;
 }
 
+export type Din18599ThermalMassClass = "Light" | "Medium" | "Heavy" | "Custom";
+
 export type Din18599UsageProfile = "WFH" | "Office" | "School";
 
 export type Din18599ElementKind = "Wall" | "Roof" | "Floor" | "Door" | "Window";
@@ -125,12 +129,14 @@ export const parseDin18599BuildingCategory: NormWireReader<Din18599BuildingCateg
 export const parseDin18599UseClass: NormWireReader<Din18599UseClass> = normWireLiteral("Residential", "Office", "School");
 export const parseLightingSystem: NormWireReader<LightingSystem> = normWireObject<LightingSystem>({ controlFactor: normWireRequired(normWireNumber) });
 export const parseHeatingSystem: NormWireReader<HeatingSystem> = normWireObject<HeatingSystem>({ generationEfficiency: normWireRequired(normWireNumber), distributionEfficiency: normWireRequired(normWireNumber), storageEfficiency: normWireRequired(normWireNumber), transferEfficiency: normWireRequired(normWireNumber), energyCarrier: normWireRequired(normWireString) });
-export const parseThermalZone: NormWireReader<ThermalZone> = normWireObject<ThermalZone>({ id: normWireRequired(normWireString), labelEn: normWireRequired(normWireString), labelDe: normWireRequired(normWireString), usageProfile: normWireRequired(normWireRef(() => parseDin18599UsageProfile)), areaM2: normWireRequired(normWireNumber), volumeM3: normWireRequired(normWireNumber), thetaIHeatC: normWireRequired(normWireNumber), thetaICoolC: normWireRequired(normWireNumber), occupants: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), internalGainsWM2: normWireRequired(normWireNumber), lightingPowerWM2: normWireRequired(normWireNumber) });
+export const parseThermalZone: NormWireReader<ThermalZone> = normWireObject<ThermalZone>({ id: normWireRequired(normWireString), labelEn: normWireRequired(normWireString), labelDe: normWireRequired(normWireString), usageProfile: normWireRequired(normWireRef(() => parseDin18599UsageProfile)), areaM2: normWireRequired(normWireNumber), volumeM3: normWireRequired(normWireNumber), thetaIHeatC: normWireRequired(normWireNumber), thetaICoolC: normWireRequired(normWireNumber), occupants: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), internalGainsWM2: normWireRequired(normWireNumber), lightingPowerWM2: normWireRequired(normWireNumber), thermalMassClass: normWireDefault(normWireRef(() => parseDin18599ThermalMassClass), () => "Medium"), cWirkWhM2k: normWireDefault(normWireNumber, () => 0) });
 export const parseDhwSystem: NormWireReader<DhwSystem> = normWireObject<DhwSystem>({ specificDemandKwhPersonA: normWireRequired(normWireNumber), storageLossKwhA: normWireRequired(normWireNumber), distributionLossKwhA: normWireRequired(normWireNumber), energyCarrier: normWireRequired(normWireString) });
 export const parseEnvelopeElement: NormWireReader<EnvelopeElement> = normWireObject<EnvelopeElement>({ id: normWireRequired(normWireString), labelEn: normWireRequired(normWireString), labelDe: normWireRequired(normWireString), kind: normWireRequired(normWireRef(() => parseDin18599ElementKind)), zoneId: normWireRequired(normWireString), areaM2: normWireRequired(normWireNumber), uValueWM2k: normWireRequired(normWireNumber), orientationDeg: normWireRequired(normWireNumber), tiltDeg: normWireRequired(normWireNumber), gValue: normWireRequired(normWireNumber), fc: normWireRequired(normWireNumber), adjacency: normWireRequired(normWireRef(() => parseDin18599Adjacency)) });
 export const parseDin18599CalculationMethod: NormWireReader<Din18599CalculationMethod> = normWireLiteral("DetailedMonthly", "Tabular");
 export const parseDin18599Attachment: NormWireReader<Din18599Attachment> = normWireLiteral("Detached", "SemiDetached", "EndTerrace", "MidTerrace");
 export const parseCoolingPlant: NormWireReader<CoolingPlant> = normWireObject<CoolingPlant>({ eer: normWireRequired(normWireNumber), energyCarrier: normWireRequired(normWireString) });
+export const parseDin18599ThermalMassClass: NormWireReader<Din18599ThermalMassClass> = normWireLiteral("Light", "Medium", "Heavy", "Custom");
+
 export const parseDin18599UsageProfile: NormWireReader<Din18599UsageProfile> = normWireLiteral("WFH", "Office", "School");
 export const parseDin18599ElementKind: NormWireReader<Din18599ElementKind> = normWireLiteral("Wall", "Roof", "Floor", "Door", "Window");
 export const parseDin18599Adjacency: NormWireReader<Din18599Adjacency> = normWireLiteral("Outdoor", "Ground", "Unheated", "Heated");

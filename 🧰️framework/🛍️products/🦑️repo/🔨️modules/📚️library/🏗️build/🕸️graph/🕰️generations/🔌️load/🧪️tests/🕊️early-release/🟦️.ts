@@ -16,7 +16,7 @@ test("the inference caches are released before the shaping reads the part", asyn
       discoverPart: async (...args: Parameters<typeof mock.host.discoverPart>) => { const part = await mock.host.discoverPart(...args); order.push("discover"); return new Proxy(part, { get: (target, key, receiver) => { if (key === "edgeOnly") order.push("shape"); return Reflect.get(target, key, receiver); } }); },
       release: async () => { order.push("release"); },
     };
-    await loadGenerationGraphV1(host as never);
+    (await loadGenerationGraphV1(host as never)).graph;
     expect(order.indexOf("shape")).toBeGreaterThan(order.indexOf("discover"));
     expect(order.indexOf("release")).toBeGreaterThan(order.indexOf("discover"));
     expect(order.indexOf("release")).toBeLessThan(order.indexOf("shape"));
@@ -34,7 +34,7 @@ test("the inference caches are released after the discovery and before the gener
       say: (key: string, fields: Record<string, string | number>) => { order.push("say:" + key); mock.host.say(key, fields); },
       release: async () => { order.push("release"); },
     };
-    await loadGenerationGraphV1(host as never);
+    (await loadGenerationGraphV1(host as never)).graph;
     const at = (name: string) => order.indexOf(name);
     expect(at("discover")).toBeGreaterThanOrEqual(0);
     expect(at("release")).toBeGreaterThan(at("discover"));

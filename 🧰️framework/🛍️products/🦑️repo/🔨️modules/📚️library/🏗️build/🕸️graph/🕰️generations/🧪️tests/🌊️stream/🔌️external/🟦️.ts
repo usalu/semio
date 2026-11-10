@@ -10,6 +10,7 @@ import ts from"typescript";
 import{Database}from"bun:sqlite";
 import{createGenerationStoreV1,createFrontierV1,readGenerationExternalInputsV1}from"../../../🟨️.mjs";
 import{loadGenerationGraphV1}from"../../../🔌️load/🟨️.mjs";
+const graphOfV1=async(...input:Parameters<typeof loadGenerationGraphV1>)=>(await loadGenerationGraphV1(...input)).graph;
 import{createMemoryFilePort}from"../../🏃️world/🟦️.ts";
 import{createGraphPhaseClockV1}from"../../../../⏱️phases/🟨️.mjs";
 import{bunLockGraph}from"../../../../📥️inference/🧶️bun-lock/🟨️.mjs";
@@ -25,7 +26,7 @@ async function publish(externalNodes:Record<string,unknown>,edges:unknown[],inpu
  const result=await store.refresh({identity,implementation,membership,compute:async()=>({owners:[{name:owner,root:"assets",kind:"project",node,edges:request.dependencyProject?[{source:owner,target:request.dependencyProject,type:"implicit"}]:[],targets:Object.keys(node.targets),rows:[]},...request.dependencyProject?[{name:request.dependencyProject,root:"dependency",kind:"project",node:{name:request.dependencyProject,root:"dependency",targets:{[request.prerequisite]:build}},edges:[],targets:[request.prerequisite],rows:[]}]:[]],env:{digest:sha("environment"),rows:[]},global:{version:1,externalNodes,edges,unavailable:[]}})});
  const host={workspaceRoot:"/workspace",namedInputs:{default:[]},registryDigest:sha("registry"),signal:undefined,identity:async()=>identity,implementationRows:async()=>[],withShared:async(body:Function)=>body({},{}),withBuilder:async()=>{throw Error("A sealed test reader does not build");},storeOptions:()=>options,membership,discoverPart:async()=>{throw Error("No discovery in a sealed view");},expand:async(value:unknown)=>value,readGraph:readBuildGraphV1,readLean:(value:unknown)=>value,clock:()=>createGraphPhaseClockV1({publish:()=>{}}),say:()=>{}};
  const selection={kind:"tasks",tasks:[{project:owner,target:request.target}]};
- return{store,current:result.current,selected:async(externalInputs:readonly string[])=>loadGenerationGraphV1(host as never,{policy:"current",selection,slice:{selection,roots:[owner]},externalInputs} as never) as Promise<any>};
+ return{store,current:result.current,selected:async(externalInputs:readonly string[])=>graphOfV1(host as never,{policy:"current",selection,slice:{selection,roots:[owner]},externalInputs} as never) as Promise<any>};
 }
 test("external input references preserve canonical sealed nodes and transitive pruning",async()=>{
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);const db=new Database(":memory:");

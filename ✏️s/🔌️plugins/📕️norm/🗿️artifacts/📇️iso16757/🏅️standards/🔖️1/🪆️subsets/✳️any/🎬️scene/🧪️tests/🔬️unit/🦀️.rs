@@ -40,7 +40,16 @@ fn handles_exist_for_the_selected_object_and_are_unique() {
     let document = Iso16757Snapshot::reference_fixture();
     let selection = entities_of(&document);
     let grips = handles(&document, &[], &selection);
-    assert_eq!(grips.len(), 3 * document.geometry.objects.values().map(|o| o.spaces.len()).sum::<usize>());
+    let spaces = 3 * document.geometry.objects.values().map(|o| o.spaces.len()).sum::<usize>();
+    let shape: Vec<_> = grips.iter().filter(|h| h.id.contains(":shape-")).collect();
+    assert!(!shape.is_empty() && grips.len() == spaces + shape.len(), "primitive dimension grips come on top of the envelope grips");
+    let width = grips.iter().find(|h| h.id == "geom-valve-50:shape-width").expect("width grip");
+    assert_eq!(width.writes[0].path, "geometry.objects.geom-valve-50.shape.parameters.width");
+    let stored = match document.geometry.objects["geom-valve-50"].shape.as_ref() {
+        Some(model::part_2::GeometryNode::Primitive { parameters, .. }) => parameters["width"],
+        other => panic!("expected a primitive, got {other:?}"),
+    };
+    assert!((width.writes[0].map.apply(stored) - stored).abs() < 1e-12);
     let mut ids: Vec<&str> = grips.iter().map(|h| h.id.as_str()).collect();
     ids.sort_unstable();
     ids.dedup();
@@ -107,6 +116,31 @@ fn the_plan_diagram_matches_the_shapely_oracle() {
         }
         let extent = crate::layout::extent(&document, &document.geometry.objects[id]);
         assert!((extent.min[0] - num(&expected["extentX"][0])).abs() < 1e-12 && (extent.max[0] - num(&expected["extentX"][1])).abs() < 1e-12, "{id} extent x");
-        assert!((extent.min[1] - num(&expected["extentY"][0])).abs() < 1e-12 && (extent.max[1] - num(&expected["extentY"][1])).abs() < 1e-12, "{id} extent y");
+        assert!((extent.min[2] - num(&expected["extentZ"][0])).abs() < 1e-12 && (extent.max[2] - num(&expected["extentZ"][1])).abs() < 1e-12, "{id} extent z");
     }
+}
+
+#[test]
+fn scene_bounds_equal_check_bounds_for_a_rotated_primitive() {
+    let mut document = Iso16757Snapshot::reference_fixture();
+    let mut object = document.geometry.objects["geom-valve-50"].clone();
+    object.spaces.clear();
+    object.ports.clear();
+    object.surfaces.clear();
+    let primitive = model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: [("width".to_string(), 2.0), ("height".to_string(), 1.0), ("depth".to_string(), 0.5)].into_iter().collect() };
+    object.shape = Some(model::part_2::GeometryNode::Transform { translation: [0.3, 0.0, 0.0], rotation_deg: [0.0, 0.0, 45.0], child: Box::new(primitive) });
+    document.geometry.objects.clear();
+    document.geometry.objects.insert(object.id.clone(), object.clone());
+    let check = model::part_2::solid::bounding_box(object.shape.as_ref().expect("shape"), &document.geometry).expect("check bounds");
+    let extent = crate::layout::extent(&document, &object);
+    for axis in 0..3 {
+        assert!((extent.min[axis] - check.min[axis]).abs() < 1e-12 && (extent.max[axis] - check.max[axis]).abs() < 1e-12, "extent axis {axis}");
+    }
+    assert!((check.max[0] - check.min[0] - (2.0 + 1.0) * std::f64::consts::FRAC_1_SQRT_2).abs() < 1e-12, "rotation widens the width extent");
+    let scene = project(&input(&document, &report_of(&document)));
+    let body = scene.entities.iter().find(|e| e.entity.id == object.id).expect("body");
+    let scene::Geometry::Solid(scene::SolidGeometry { shape: scene::SolidShape::Mesh { vertices, .. } }) = &body.geometry else { panic!("the body is no mesh") };
+    let span = |pick: &dyn Fn(&scene::Vec3) -> f64| vertices.iter().map(pick).fold(f64::MIN, f64::max) - vertices.iter().map(pick).fold(f64::MAX, f64::min);
+    let size = [check.max[0] - check.min[0], check.max[1] - check.min[1], check.max[2] - check.min[2]];
+    assert!((span(&|v| v.y) - size[0]).abs() < 1e-9 && (span(&|v| v.z) - size[1]).abs() < 1e-9 && (span(&|v| v.x) - size[2]).abs() < 1e-9, "world Y, Z, X span the width, height, depth of the check bounds");
 }

@@ -1,6 +1,7 @@
 //! 🧰️ Scene kit: the mesh builder, the entity spec, the append-only accumulator, the entity-kind registry and the global scene parts.
 
 use super::layout::Pose;
+use super::model::part_2::solid::{Primitive, Shape};
 use super::scene::*;
 pub(crate) use scene::projection_kit::{self, base_id, loc, v3, binding_of_subjects as binding};
 use super::*;
@@ -101,11 +102,15 @@ pub(crate) struct MeshBuilder {
 
 impl MeshBuilder {
     pub(crate) fn cuboid(&mut self, pose: &Pose, min: [f64; 3], max: [f64; 3]) {
+        self.cuboid_with(&|q| pose.at(q[0], q[1], q[2]), min, max);
+    }
+
+    fn cuboid_with(&mut self, at: &dyn Fn([f64; 3]) -> Vec3, min: [f64; 3], max: [f64; 3]) {
         const QUADS: [[u32; 4]; 6] = [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]];
         let base = self.vertices.len() as u32;
         for z in [min[2], max[2]] {
             for (x, y) in [(min[0], min[1]), (max[0], min[1]), (max[0], max[1]), (min[0], max[1])] {
-                self.vertices.push(pose.at(x, y, z));
+                self.vertices.push(at([x, y, z]));
             }
         }
         for q in QUADS {
@@ -114,13 +119,26 @@ impl MeshBuilder {
         }
     }
 
-    pub(crate) fn cylinder(&mut self, pose: &Pose, centre: [f64; 2], radius: f64, z: (f64, f64)) {
+    /// 🧱️ One primitive in its world frame (rotation about the local origin, then translation), drawn with the shared axis convention of [`model::part_2::solid`].
+    pub(crate) fn primitive(&mut self, pose: &Pose, p: &Primitive) {
+        let at = |q: [f64; 3]| {
+            let w = [0, 1, 2].map(|i| p.rot[i][0] * q[0] + p.rot[i][1] * q[1] + p.rot[i][2] * q[2] + p.origin[i]);
+            pose.at(w[0], w[1], w[2])
+        };
+        match p.shape {
+            Shape::Box(size) => self.cuboid_with(&at, [0.0; 3], size),
+            Shape::Cylinder(radius, height) => self.cylinder_with(&|u, v, level| at([u, level, 2.0 * radius - v]), [radius, radius], radius, (0.0, height)),
+            Shape::Sphere(radius) => self.sphere_with(&at, [radius; 3], radius),
+        }
+    }
+
+    fn cylinder_with(&mut self, at: &dyn Fn(f64, f64, f64) -> Vec3, centre: [f64; 2], radius: f64, z: (f64, f64)) {
         const SIDES: u32 = 16;
         let base = self.vertices.len() as u32;
         for level in [z.0, z.1] {
             for k in 0..SIDES {
                 let a = std::f64::consts::TAU * f64::from(k) / f64::from(SIDES);
-                self.vertices.push(pose.at(centre[0] + radius * a.cos(), centre[1] + radius * a.sin(), level));
+                self.vertices.push(at(centre[0] + radius * a.cos(), centre[1] + radius * a.sin(), level));
             }
         }
         for k in 0..SIDES {
@@ -134,7 +152,7 @@ impl MeshBuilder {
         }
     }
 
-    pub(crate) fn sphere(&mut self, pose: &Pose, centre: [f64; 3], radius: f64) {
+    fn sphere_with(&mut self, at: &dyn Fn([f64; 3]) -> Vec3, centre: [f64; 3], radius: f64) {
         const RINGS: u32 = 6;
         const SIDES: u32 = 12;
         let base = self.vertices.len() as u32;
@@ -142,7 +160,7 @@ impl MeshBuilder {
             let phi = std::f64::consts::PI * f64::from(r) / f64::from(RINGS);
             for k in 0..SIDES {
                 let a = std::f64::consts::TAU * f64::from(k) / f64::from(SIDES);
-                self.vertices.push(pose.at(centre[0] + radius * phi.sin() * a.cos(), centre[1] + radius * phi.sin() * a.sin(), centre[2] + radius * phi.cos()));
+                self.vertices.push(at([centre[0] + radius * phi.sin() * a.cos(), centre[1] + radius * phi.sin() * a.sin(), centre[2] + radius * phi.cos()]));
             }
         }
         for r in 0..RINGS {

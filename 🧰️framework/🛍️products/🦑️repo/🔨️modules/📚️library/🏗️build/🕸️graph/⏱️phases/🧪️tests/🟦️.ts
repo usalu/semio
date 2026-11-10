@@ -7,10 +7,10 @@ import {createGraphPhaseClockV1} from "../🟨️.mjs";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {fileURLToPath} from "node:url";
 
-type PhaseStepV1={readonly op:string;readonly phase:string;readonly at:number;readonly total?:number;readonly done?:number;readonly running?:{name:string;seconds:number}[]};
+type PhaseStepV1={readonly op:string;readonly phase:string;readonly at:number;readonly total?:number;readonly done?:number;readonly running?:{name:string;seconds:number;kind?:string;rows?:number}[];readonly decision?:{key:"waiting"|"serial"|"resumed"|"learning";used:number;budget:number;kind?:string}};
 const replay=async(steps:readonly PhaseStepV1[],minimumMilliseconds:number,options:Record<string,number>={})=>{
  let at=0;const published:string[]=[],written:unknown[]=[],clock=createGraphPhaseClockV1({...options,now:()=>at,minimumMilliseconds,publish:resource=>{published.push(resource);},write:row=>{written.push(row);}}),rows:unknown[]=[];
- for(const step of steps){at=step.at;if(step.op==="begin")await clock.begin(step.phase,step.total!);else if(step.op==="advance")await clock.advance(step.phase,step.done!);else if(step.op==="running")await clock.running(step.phase,step.running!);else rows.push(await clock.end(step.phase));}
+ for(const step of steps){at=step.at;if(step.op==="begin")await clock.begin(step.phase,step.total!);else if(step.op==="advance")await clock.advance(step.phase,step.done!);else if(step.op==="running")await clock.running(step.phase,step.running!,step.decision);else rows.push(await clock.end(step.phase));}
  return {published,rows,written,clock};
 };
 
@@ -32,4 +32,10 @@ test("the independent python model publishes the same resources as the clock for
  const python=testPythonV1();if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",fileURLToPath(new URL("./🐍️model.py",import.meta.url)),fileURLToPath(new URL("./🔣️.json",import.meta.url))]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual(fixture.cases.map(row=>row.published));
+});
+
+test("a clock keeps at most maximumRows timing rows, the newest ones",async()=>{
+ const clock=createGraphPhaseClockV1({maximumRows:3});
+ for(let at=0;at<7;at++){await clock.begin("round",1);await clock.end("round",{at});}
+ expect(clock.rows().map(row=>(row as unknown as {at:number}).at)).toEqual([4,5,6]);
 });

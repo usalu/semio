@@ -9,4 +9,4 @@ export interface ChangeZoneOccupants {
   newOccupants: number;
 }
 
-export const parseChangeZoneOccupants: NormWireReader<ChangeZoneOccupants> = normWireObject<ChangeZoneOccupants>({ mutation: normWireRequired(normWireLiteral("changezoneoccupants")), zoneId: normWireRequired(normWireString), newOccupants: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseChangeZoneOccupants: NormWireReader<ChangeZoneOccupants> = normWireObject<ChangeZoneOccupants>({ mutation: normWireRequired(normWireLiteral("changezoneoccupants")), zoneId: normWireRequired(normWireString), newOccupants: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":10000})) });

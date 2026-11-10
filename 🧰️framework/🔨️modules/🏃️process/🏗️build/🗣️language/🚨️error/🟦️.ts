@@ -5,7 +5,7 @@ import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 export const REPO_ERROR_CODES_V1: readonly string[] = Object.freeze(schema.properties.code.enum);
 
 /** 🏷️ One refusal class. */
-export type RepoErrorCodeV1 = "usage" | "invalid" | "missing" | "refused" | "failed" | "breach" | "stale" | "unsupported" | "cancelled";
+export type RepoErrorCodeV1 = "usage" | "invalid" | "missing" | "refused" | "failed" | "breach" | "stale" | "unsupported" | "cancelled" | "stalled";
 
 /**
  * 📦️ The wire form of a refusal.

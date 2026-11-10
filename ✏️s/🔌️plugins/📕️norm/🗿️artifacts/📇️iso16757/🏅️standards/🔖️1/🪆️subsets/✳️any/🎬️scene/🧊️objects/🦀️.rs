@@ -1,7 +1,7 @@
 //! 🧊️ Objects: every geometry object stands in the scene as its product body (the primitives of its shape tree), its space envelopes as translucent boxes, its ports as small markers and its semantic surfaces as thin sheets; coloured by the utilisation of the checks that name the object.
 
 use super::kit::*;
-use super::layout::{leaf_extent, leaves, Layout, Pose};
+use super::layout::{leaves, Layout, Pose};
 use super::model::part_2::{BoundingBox, GeometryObject, PortDefinition, SpaceKind};
 use super::scene::*;
 use super::SceneInput;
@@ -25,17 +25,10 @@ fn corners(bounds: &BoundingBox, pose: &Pose) -> Vec<Vec3> {
 
 fn body(input: &SceneInput, id: &str, object: &GeometryObject, pose: &Pose) -> Option<(Spec, Vec<Vec3>)> {
     let shape = object.shape.as_ref().or(object.symbolic.as_ref())?;
-    let mut found = Vec::new();
-    leaves(input.document, shape, [0.0; 3], 0, &mut found);
+    let found = leaves(input.document, shape);
     let mut mesh = MeshBuilder::default();
     for leaf in &found {
-        let p = |name: &str| leaf.parameters.get(name).copied().unwrap_or(0.0).max(0.0);
-        let (lo, hi) = leaf_extent(leaf);
-        match leaf.kind.as_str() {
-            "cylinder" => mesh.cylinder(pose, [leaf.offset[0], leaf.offset[1]], p("radius"), (lo[2], hi[2])),
-            "sphere" => mesh.sphere(pose, leaf.offset, p("radius")),
-            _ => mesh.cuboid(pose, lo, hi),
-        }
+        mesh.primitive(pose, leaf);
     }
     if mesh.is_empty() {
         return None;

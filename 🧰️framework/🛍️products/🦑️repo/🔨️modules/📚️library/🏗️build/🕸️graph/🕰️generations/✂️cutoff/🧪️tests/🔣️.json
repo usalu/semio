@@ -11630,28 +11630,5 @@
         "changed": []
       }
     }
-  ],
-  "memoBounds": [
-    {
-      "id": "last free entry",
-      "fill": "below",
-      "known": false,
-      "queries": 1,
-      "cached": true
-    },
-    {
-      "id": "full cache computes without retaining",
-      "fill": "full",
-      "known": false,
-      "queries": 2,
-      "cached": false
-    },
-    {
-      "id": "full cache replaces known answer",
-      "fill": "full",
-      "known": true,
-      "queries": 1,
-      "cached": true
-    }
   ]
 }

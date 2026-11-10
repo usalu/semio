@@ -12,6 +12,8 @@ type ThermalZone {
   occupants: Int! @state(class: ARTIFACT)
   internalGainsWM2: Float! @state(class: ARTIFACT)
   lightingPowerWM2: Float! @state(class: ARTIFACT)
+  thermalMassClass: String! @state(class: ARTIFACT)
+  cWirkWhM2k: Float! @state(class: ARTIFACT)
 }
 
 type EnvelopeElement {

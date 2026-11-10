@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "familyCounts": {
-    "din16798": 39,
-    "din18599": 19,
+    "din16798": 48,
+    "din18599": 43,
     "din4108": 42,
     "en1990": 134,
     "en1991": 324,
@@ -12,12 +12,32 @@
     "en1995": 206,
     "en1996": 143,
     "en1997": 207,
-    "en1998": 321,
-    "en1999": 205,
-    "iso16757": 24,
+    "en1998": 360,
+    "en1999": 219,
+    "iso16757": 27,
     "vdi3805": 8
   },
   "arguments": [
+    {
+      "family": "din18599",
+      "path": "zones[].thermalMassClass",
+      "kind": "change-zone-thermal-mass",
+      "argument": "newCWirkWhM2k",
+      "source": {
+        "type": "sibling",
+        "path": "cWirkWhM2k"
+      }
+    },
+    {
+      "family": "din18599",
+      "path": "zones[].cWirkWhM2k",
+      "kind": "change-zone-thermal-mass",
+      "argument": "newThermalMassClass",
+      "source": {
+        "type": "sibling",
+        "path": "thermalMassClass"
+      }
+    },
     {
       "family": "en1999",
       "path": "members[].bucklingLengthZ",
@@ -36,6 +56,66 @@
       "source": {
         "type": "sibling",
         "path": "boltsPerRow"
+      }
+    },
+    {
+      "family": "iso16757",
+      "path": "scriptLimits.maxSteps",
+      "kind": "change-script-limits",
+      "argument": "newMaxRecursion",
+      "source": {
+        "type": "sibling",
+        "path": "maxRecursion"
+      }
+    },
+    {
+      "family": "iso16757",
+      "path": "scriptLimits.maxSteps",
+      "kind": "change-script-limits",
+      "argument": "newTimeoutMs",
+      "source": {
+        "type": "sibling",
+        "path": "timeoutMs"
+      }
+    },
+    {
+      "family": "iso16757",
+      "path": "scriptLimits.maxRecursion",
+      "kind": "change-script-limits",
+      "argument": "newMaxSteps",
+      "source": {
+        "type": "sibling",
+        "path": "maxSteps"
+      }
+    },
+    {
+      "family": "iso16757",
+      "path": "scriptLimits.maxRecursion",
+      "kind": "change-script-limits",
+      "argument": "newTimeoutMs",
+      "source": {
+        "type": "sibling",
+        "path": "timeoutMs"
+      }
+    },
+    {
+      "family": "iso16757",
+      "path": "scriptLimits.timeoutMs",
+      "kind": "change-script-limits",
+      "argument": "newMaxSteps",
+      "source": {
+        "type": "sibling",
+        "path": "maxSteps"
+      }
+    },
+    {
+      "family": "iso16757",
+      "path": "scriptLimits.timeoutMs",
+      "kind": "change-script-limits",
+      "argument": "newMaxRecursion",
+      "source": {
+        "type": "sibling",
+        "path": "maxRecursion"
       }
     }
   ],

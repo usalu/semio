@@ -87,7 +87,7 @@ export function memoReachV1(row:MemoRowV1,root:string,excluded:(relative:string)
   const relative=memoRelativeV1(root,path);
   if(relative===undefined||excluded(relative))recheck=true;else mentions.push(relative);
  };
- if(how==="path"||how==="analysis"||how==="link"){take(row.path);return{mentions,recheck};}
+ if(how==="path"||how==="analysis"||how==="link"){take(row.path);const paths=row.kind==="field"?(row.fact as {paths?:unknown}|null)?.paths:undefined;if(Array.isArray(paths))for(const other of paths)take(other);return{mentions,recheck};}
  if(how==="resolve"){
   let parsed:unknown;try{parsed=JSON.parse(row.path);}catch{return{mentions:[],recheck:true};}
   if(!Array.isArray(parsed)||typeof parsed[0]!=="string"||typeof parsed[1]!=="string")return{mentions:[],recheck:true};

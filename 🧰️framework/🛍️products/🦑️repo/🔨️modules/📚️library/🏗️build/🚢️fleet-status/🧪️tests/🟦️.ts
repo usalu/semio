@@ -141,10 +141,10 @@ test("a reader that fails or hangs leaves only its own section out; the rest of 
   leases:async()=>({leases:good.leases!}),
   capacity:async()=>{throw Error("capacity probe broke");},
   bazel:()=>new Promise(()=>{}),
-  storage:async()=>({}),sealed:async()=>({}),generation:async()=>({}),
+  storage:async()=>({}),sealed:async()=>({}),generation:async()=>({}),scheduler:async()=>({}),
  };
  const facts=await collectFleetFactsV1({root:"/w",environment:{SEMIO_LANGUAGE:"en"},language:"en",now:()=>1_793_000_000_000},readers,50);
- expect(facts.sources.map(row=>[row.id,row.ok])).toEqual([["leases",true],["capacity",false],["bazel",false],["storage",true],["sealed",true],["generation",true]]);
+ expect(facts.sources.map(row=>[row.id,row.ok])).toEqual([["leases",true],["capacity",false],["bazel",false],["storage",true],["sealed",true],["generation",true],["scheduler",true]]);
  expect(facts.sources[1]!.error).toBe("capacity probe broke");
  expect(facts.sources[2]!.error).toContain("did not answer");
  const summary=summarizeFleetV1(facts,"en");
@@ -155,7 +155,7 @@ test("a reader that fails or hangs leaves only its own section out; the rest of 
 
 test("the command prints text or schema-valid JSON, refuses unknown options in both languages and exits 0",async()=>{
  const good=cases.find(row=>row.id==="graph-custody")!.facts;
- const readers:FleetReadersV1={leases:async()=>({leases:good.leases!}),capacity:async()=>({}),bazel:async()=>({}),storage:async()=>({}),sealed:async()=>({}),generation:async()=>({})};
+ const readers:FleetReadersV1={leases:async()=>({leases:good.leases!}),capacity:async()=>({}),bazel:async()=>({}),storage:async()=>({}),sealed:async()=>({}),generation:async()=>({}),scheduler:async()=>({})};
  const run=async(args:string[],language="en")=>{const lines:string[]=[];const code=await runFleetCliV1("/w",args,{SEMIO_LANGUAGE:language},line=>lines.push(line),{readers,now:()=>1_793_000_000_000});return {code,lines};};
  const json=await run(["status","--json"]);
  expect(json.code).toBe(0);expect(json.lines.length).toBe(1);
@@ -192,3 +192,11 @@ test("the plain-file readers parse the Bazel slot files, the generation pointer 
   expect(sealed.entries).toEqual([]);expect(["sealed","live","promote"]).toContain(sealed.mode);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test("the storage reader answers from the recorded usage of the cache partitions: after one measurement it never walks the machine cache again",async()=>{
+ const {readFleetStorageV1}=await import("../📥️readers/🟦️.ts"),context={root:process.cwd(),environment:process.env,language:"en" as const,now:Date.now};
+ await readFleetStorageV1(context);
+ const started=performance.now(),facts=await readFleetStorageV1(context),elapsed=performance.now()-started;
+ expect(facts.storage?.images.length).toBeGreaterThan(0);
+ expect(elapsed,"the second read of the storage in milliseconds").toBeLessThan(1000);
+},120000);

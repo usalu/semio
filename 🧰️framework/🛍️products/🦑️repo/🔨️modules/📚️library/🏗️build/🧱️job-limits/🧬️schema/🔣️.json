@@ -1,0 +1,241 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/repo/build/job-limits/v1",
+  "title": "Job limits: hard per-job memory limits so an overrun fails one job and never the host",
+  "definitions": {
+    "Rules": {
+      "description": "The authored constants of the limiter: the share of the limit at which the kernel starts to throttle, the headroom over the learned peak, the growth a killed job teaches the estimate, the polling intervals and the platform choice.",
+      "const": {
+        "softRatioBasisPoints": 9000,
+        "headroomBasisPoints": 12500,
+        "breachGrowthBasisPoints": 12500,
+        "minimumLimitMegabytes": 64,
+        "watchdogPollMilliseconds": 100,
+        "cgroupPollMilliseconds": 20,
+        "graceMilliseconds": 2000,
+        "cgroupDirectoryName": "semio-jobs",
+        "controllers": [
+          "memory",
+          "pids"
+        ],
+        "enforcement": {
+          "linux": [
+            "cgroup-v2",
+            "watchdog"
+          ],
+          "win32": [
+            "job-object",
+            "watchdog"
+          ],
+          "darwin": [
+            "watchdog"
+          ]
+        }
+      }
+    },
+    "Policy": {
+      "description": "JobLimitPolicyV1: what one job may hold. swapMegabytes is always 0, so an overrun fails at the limit instead of thrashing the host. kind job is killed at the limit with no throttling (a kernel memory.high stall would delay the kill by seconds); kind service (the resident daemon) is throttled at the soft ratio first, so it can shed caches or restart before the kill.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "memoryMegabytes",
+        "swapMegabytes",
+        "cpuShares",
+        "pids",
+        "softRatioBasisPoints",
+        "enforcement"
+      ],
+      "properties": {
+        "memoryMegabytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "swapMegabytes": {
+          "const": 0
+        },
+        "cpuShares": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "pids": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "softRatioBasisPoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "enforcement": {
+          "enum": [
+            "hard",
+            "watchdog"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "job",
+            "service"
+          ]
+        }
+      }
+    },
+    "Estimate": {
+      "description": "JobEstimateV1: the limit of a class is max(1.25 x learned peak, floor), never below the minimum limit. A class that has learned nothing is limited by its floor.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "class",
+        "floorMegabytes",
+        "limitMegabytes"
+      ],
+      "properties": {
+        "class": {
+          "type": "string",
+          "minLength": 1
+        },
+        "floorMegabytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "learnedPeakMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "limitMegabytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "Outcome": {
+      "description": "JobOutcomeV1: how one limited job ended. memory-exceeded is the typed failure that replaces a SIGKILL of the kernel out-of-memory killer; the peak is recorded for every kind.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "enforcement",
+        "limitMegabytes",
+        "peakMegabytes",
+        "exitCode",
+        "signal",
+        "durationMilliseconds"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "ok",
+            "failed",
+            "memory-exceeded",
+            "cancelled"
+          ]
+        },
+        "enforcement": {
+          "enum": [
+            "cgroup-v2",
+            "job-object",
+            "watchdog",
+            "fake"
+          ]
+        },
+        "limitMegabytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "peakMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exitCode": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "signal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "durationMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fixture": {
+      "description": "One language-agnostic case: a policy and an allocation script the allocator child runs; the case states how the job must end.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "policy",
+        "allocate",
+        "expect"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "policy": {
+          "$ref": "#/definitions/Policy"
+        },
+        "allocate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "megabytes",
+            "stepMegabytes",
+            "holdMilliseconds"
+          ],
+          "properties": {
+            "megabytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "stepMegabytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "holdMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "expect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "ok",
+                "failed",
+                "memory-exceeded",
+                "cancelled"
+              ]
+            },
+            "killedWithinMilliseconds": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "required": [
+    "rules"
+  ],
+  "properties": {
+    "rules": {
+      "$ref": "#/definitions/Rules"
+    }
+  }
+}

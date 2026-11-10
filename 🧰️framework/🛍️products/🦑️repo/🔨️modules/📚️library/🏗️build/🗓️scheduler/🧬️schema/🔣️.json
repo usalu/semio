@@ -1,0 +1,961 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/build/scheduler/v1",
+ "title": "Fair global build scheduler: job requests, tickets, events, snapshot, policy and EN+DE texts",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "fairness": "weighted-round-robin",
+    "priorityBands": [
+     "background",
+     "agent",
+     "interactive"
+    ],
+    "agingMs": 120000,
+    "maxConcurrent": 8,
+    "maxPerAgent": 2,
+    "maxQueued": 512,
+    "maxAttached": 64,
+    "maxFinished": 256,
+    "maxAgents": 256,
+    "heartbeatTimeoutMs": 30000,
+    "pollMs": 500,
+    "referenceMegabytes": 1024,
+    "fairnessSlack": 1,
+    "defaultWeight": 1,
+    "hostBudgetMegabytes": 12288,
+    "daemonReserveMegabytes": 3072,
+    "systemReserveMegabytes": 2048,
+    "availableHeadroomMegabytes": 512,
+    "sharedCompilerLanes": {
+     "rustc": 2,
+     "tsc": 2
+    },
+    "compactEveryEvents": 512,
+    "lockStaleMs": 15000,
+    "minimumCostMilli": 100
+   }
+  },
+  "PolicySchema": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "fairness",
+    "priorityBands",
+    "agingMs",
+    "maxConcurrent",
+    "maxPerAgent",
+    "maxQueued",
+    "maxAttached",
+    "maxFinished",
+    "maxAgents",
+    "heartbeatTimeoutMs",
+    "pollMs",
+    "referenceMegabytes",
+    "fairnessSlack",
+    "defaultWeight",
+    "hostBudgetMegabytes",
+    "daemonReserveMegabytes",
+    "systemReserveMegabytes",
+    "availableHeadroomMegabytes",
+    "sharedCompilerLanes",
+    "compactEveryEvents",
+    "lockStaleMs",
+    "minimumCostMilli"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "fairness": {
+     "const": "weighted-round-robin"
+    },
+    "priorityBands": {
+     "type": "array",
+     "minItems": 1,
+     "uniqueItems": true,
+     "items": {
+      "$ref": "#/definitions/Priority"
+     }
+    },
+    "agingMs": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maxConcurrent": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maxPerAgent": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maxQueued": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maxAttached": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maxFinished": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maxAgents": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "heartbeatTimeoutMs": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "pollMs": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "referenceMegabytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "fairnessSlack": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "defaultWeight": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "hostBudgetMegabytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "daemonReserveMegabytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "systemReserveMegabytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "availableHeadroomMegabytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "sharedCompilerLanes": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "integer",
+      "minimum": 1
+     }
+    },
+    "compactEveryEvents": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "lockStaleMs": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "minimumCostMilli": {
+     "type": "integer",
+     "minimum": 1
+    }
+   }
+  },
+  "Priority": {
+   "enum": [
+    "background",
+    "agent",
+    "interactive"
+   ]
+  },
+  "JobClass": {
+   "enum": [
+    "plan",
+    "compile",
+    "test",
+    "generate"
+   ]
+  },
+  "Estimate": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "class",
+    "floorMegabytes",
+    "limitMegabytes"
+   ],
+   "properties": {
+    "class": {
+     "type": "string",
+     "minLength": 1
+    },
+    "floorMegabytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "learnedPeakMegabytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "limitMegabytes": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "JobRequest": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "agent",
+    "workspace",
+    "class",
+    "priority",
+    "depth",
+    "key",
+    "estimate"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 128
+    },
+    "agent": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 128
+    },
+    "workspace": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 512
+    },
+    "class": {
+     "$ref": "#/definitions/JobClass"
+    },
+    "priority": {
+     "$ref": "#/definitions/Priority"
+    },
+    "depth": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "key": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 512
+    },
+    "lane": {
+     "type": "string",
+     "minLength": 1
+    },
+    "weight": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "estimate": {
+     "$ref": "#/definitions/Estimate"
+    },
+    "deadlineMs": {
+     "type": "integer",
+     "minimum": 1
+    }
+   }
+  },
+  "Progress": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "phase",
+    "done",
+    "total"
+   ],
+   "properties": {
+    "phase": {
+     "type": "string"
+    },
+    "done": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "total": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "Exit": {
+   "enum": [
+    "ok",
+    "failed",
+    "cancelled",
+    "memory-exceeded",
+    "runner-lost",
+    "expired"
+   ]
+  },
+  "Subscriber": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "ticket",
+    "agent",
+    "workspace",
+    "priority",
+    "depth"
+   ],
+   "properties": {
+    "ticket": {
+     "type": "string",
+     "minLength": 1
+    },
+    "agent": {
+     "type": "string",
+     "minLength": 1
+    },
+    "workspace": {
+     "type": "string",
+     "minLength": 1
+    },
+    "priority": {
+     "$ref": "#/definitions/Priority"
+    },
+    "depth": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "Event": {
+   "oneOf": [
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "type",
+      "at",
+      "jobId",
+      "request"
+     ],
+     "properties": {
+      "type": {
+       "const": "submitted"
+      },
+      "at": {
+       "type": "integer"
+      },
+      "jobId": {
+       "type": "string"
+      },
+      "request": {
+       "$ref": "#/definitions/JobRequest"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "type",
+      "at",
+      "jobId",
+      "subscriber"
+     ],
+     "properties": {
+      "type": {
+       "const": "attached"
+      },
+      "at": {
+       "type": "integer"
+      },
+      "jobId": {
+       "type": "string"
+      },
+      "subscriber": {
+       "$ref": "#/definitions/Subscriber"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "type",
+      "at",
+      "jobId",
+      "runner",
+      "reserveMegabytes"
+     ],
+     "properties": {
+      "type": {
+       "const": "started"
+      },
+      "at": {
+       "type": "integer"
+      },
+      "jobId": {
+       "type": "string"
+      },
+      "runner": {
+       "type": "string"
+      },
+      "reserveMegabytes": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "type",
+      "at",
+      "ticket"
+     ],
+     "properties": {
+      "type": {
+       "const": "heartbeat"
+      },
+      "at": {
+       "type": "integer"
+      },
+      "ticket": {
+       "type": "string"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "type",
+      "at",
+      "ticket",
+      "progress"
+     ],
+     "properties": {
+      "type": {
+       "const": "progressed"
+      },
+      "at": {
+       "type": "integer"
+      },
+      "ticket": {
+       "type": "string"
+      },
+      "progress": {
+       "$ref": "#/definitions/Progress"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "type",
+      "at",
+      "ticket"
+     ],
+     "properties": {
+      "type": {
+       "const": "cancelled"
+      },
+      "at": {
+       "type": "integer"
+      },
+      "ticket": {
+       "type": "string"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "type",
+      "at",
+      "ticket"
+     ],
+     "properties": {
+      "type": {
+       "const": "lost"
+      },
+      "at": {
+       "type": "integer"
+      },
+      "ticket": {
+       "type": "string"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "type",
+      "at",
+      "jobId"
+     ],
+     "properties": {
+      "type": {
+       "const": "expired"
+      },
+      "at": {
+       "type": "integer"
+      },
+      "jobId": {
+       "type": "string"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "type",
+      "at",
+      "jobId",
+      "exit"
+     ],
+     "properties": {
+      "type": {
+       "const": "completed"
+      },
+      "at": {
+       "type": "integer"
+      },
+      "jobId": {
+       "type": "string"
+      },
+      "exit": {
+       "$ref": "#/definitions/Exit"
+      },
+      "observedPeakMegabytes": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "type",
+      "at"
+     ],
+     "properties": {
+      "type": {
+       "const": "pruned"
+      },
+      "at": {
+       "type": "integer"
+      }
+     }
+    }
+   ]
+  },
+  "Snapshot": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "atMs",
+    "hostBudgetMegabytes",
+    "reservedMegabytes",
+    "running",
+    "queued",
+    "perAgentShare",
+    "finished"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "atMs": {
+     "type": "integer"
+    },
+    "hostBudgetMegabytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "reservedMegabytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "running": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/SnapshotJob"
+     }
+    },
+    "queued": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/SnapshotJob"
+     }
+    },
+    "perAgentShare": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/definitions/AgentShare"
+     }
+    },
+    "finished": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "jobId",
+       "key",
+       "exit",
+       "atMs",
+       "tickets",
+       "estimateClass"
+      ],
+      "properties": {
+       "jobId": {
+        "type": "string"
+       },
+       "key": {
+        "type": "string"
+       },
+       "exit": {
+        "$ref": "#/definitions/Exit"
+       },
+       "atMs": {
+        "type": "integer"
+       },
+       "tickets": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "estimateClass": {
+        "type": "string"
+       },
+       "observedPeakMegabytes": {
+        "type": "integer",
+        "minimum": 0
+       }
+      }
+     }
+    }
+   }
+  },
+  "SnapshotJob": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "jobId",
+    "key",
+    "class",
+    "priority",
+    "depth",
+    "owner",
+    "agents",
+    "tickets",
+    "reserveMegabytes",
+    "waitedMs"
+   ],
+   "properties": {
+    "jobId": {
+     "type": "string"
+    },
+    "key": {
+     "type": "string"
+    },
+    "class": {
+     "$ref": "#/definitions/JobClass"
+    },
+    "priority": {
+     "$ref": "#/definitions/Priority"
+    },
+    "depth": {
+     "type": "integer"
+    },
+    "owner": {
+     "type": "string"
+    },
+    "agents": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "tickets": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "reserveMegabytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "waitedMs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "position": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "runMs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "progress": {
+     "$ref": "#/definitions/Progress"
+    },
+    "stopping": {
+     "type": "boolean"
+    }
+   }
+  },
+  "AgentShare": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "running",
+    "queued",
+    "served",
+    "share"
+   ],
+   "properties": {
+    "running": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "queued": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "served": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "share": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    }
+   }
+  },
+  "Scenario": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "policy",
+    "budgetMegabytes",
+    "jobs",
+    "starts"
+   ],
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "policy": {
+     "type": "object"
+    },
+    "budgetMegabytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "availableMegabytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "jobs": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "ticket",
+       "at",
+       "agent",
+       "durationMs",
+       "priority",
+       "depth",
+       "key",
+       "peakMegabytes"
+      ],
+      "properties": {
+       "ticket": {
+        "type": "string"
+       },
+       "at": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "agent": {
+        "type": "string"
+       },
+       "durationMs": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "priority": {
+        "$ref": "#/definitions/Priority"
+       },
+       "depth": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "key": {
+        "type": "string"
+       },
+       "peakMegabytes": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "lane": {
+        "type": "string"
+       },
+       "cancelAt": {
+        "type": "integer",
+        "minimum": 0
+       }
+      }
+     }
+    },
+    "starts": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "integer"
+       }
+      ]
+     }
+    }
+   }
+  },
+  "Corpus": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "scenarios"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "scenarios": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Scenario"
+     }
+    }
+   }
+  },
+  "Messages": {
+   "const": {
+    "header": {
+     "en": "Scheduler: {running} running, {queued} queued, {reserved} of {budget} MB reserved",
+     "de": "Planer: {running} laufen, {queued} warten, {reserved} von {budget} MB reserviert"
+    },
+    "runningRow": {
+     "en": "  run {key} [{agents}] {reserve} MB {class}, {seconds}s{progress}{stopping}",
+     "de": "  läuft {key} [{agents}] {reserve} MB {class}, {seconds}s{progress}{stopping}"
+    },
+    "queuedRow": {
+     "en": "  #{position} {key} [{agents}] {reserve} MB {class} {priority} depth {depth}, waiting {seconds}s",
+     "de": "  #{position} {key} [{agents}] {reserve} MB {class} {priority} Tiefe {depth}, wartet {seconds}s"
+    },
+    "progress": {
+     "en": " ({phase} {done}/{total})",
+     "de": " ({phase} {done}/{total})"
+    },
+    "stopping": {
+     "en": ", stopping",
+     "de": ", wird gestoppt"
+    },
+    "share": {
+     "en": "  agent {agent}: {running} running, {queued} queued, {served} served, {percent}%",
+     "de": "  Agent {agent}: {running} laufen, {queued} warten, {served} bedient, {percent}%"
+    },
+    "idle": {
+     "en": "Scheduler: idle",
+     "de": "Planer: untätig"
+    },
+    "cancelled": {
+     "en": "Ticket {ticket} cancelled",
+     "de": "Ticket {ticket} abgebrochen"
+    },
+    "cancelUnknown": {
+     "en": "Ticket {ticket} is unknown or already finished",
+     "de": "Ticket {ticket} ist unbekannt oder bereits beendet"
+    },
+    "error.syntax": {
+     "en": "usage: repo scheduler status [--json] | repo scheduler cancel <ticket> | repo scheduler run [--key=<k>] [--priority=<p>] [--depth=<n>] [--peak-mb=<n>] -- <command...>",
+     "de": "Verwendung: repo scheduler status [--json] | repo scheduler cancel <Ticket> | repo scheduler run [--key=<k>] [--priority=<p>] [--depth=<n>] [--peak-mb=<n>] -- <Befehl...>"
+    },
+    "error.busy": {
+     "en": "scheduler queue is full ({queued} waiting); retry later",
+     "de": "Warteschlange des Planers ist voll ({queued} wartend); später erneut versuchen"
+    },
+    "error.invalid": {
+     "en": "invalid job request: {details}",
+     "de": "Ungültige Auftragsanfrage: {details}"
+    },
+    "error.duplicate": {
+     "en": "ticket {ticket} already exists",
+     "de": "Ticket {ticket} existiert bereits"
+    },
+    "error.cancelled": {
+     "en": "job cancelled while waiting",
+     "de": "Auftrag beim Warten abgebrochen"
+    },
+    "error.lost": {
+     "en": "scheduler lost the job runner; resubmit",
+     "de": "Der Planer hat den Ausführenden verloren; erneut einreichen"
+    },
+    "error.lock": {
+     "en": "scheduler lock not acquired within {seconds}s",
+     "de": "Sperre des Planers nicht innerhalb von {seconds}s erhalten"
+    },
+    "queuedAt": {
+     "en": "Waiting in the scheduler queue at position {position}",
+     "de": "Wartet in der Warteschlange des Planers auf Position {position}"
+    }
+   }
+  },
+  "LearnedPeak": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "class",
+    "peakMegabytes",
+    "exit"
+   ],
+   "properties": {
+    "class": {
+     "type": "string"
+    },
+    "peakMegabytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "exit": {
+     "$ref": "#/definitions/Exit"
+    }
+   }
+  }
+ }
+}

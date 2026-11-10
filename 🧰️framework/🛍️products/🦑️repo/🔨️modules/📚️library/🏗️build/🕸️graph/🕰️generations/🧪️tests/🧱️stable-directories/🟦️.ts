@@ -1,4 +1,5 @@
 import{afterAll,expect,test}from"bun:test";
+import {graphSourceV1} from "../../../🧪️tests/📖️source/🟦️.ts";
 import{mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,symlinkSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
@@ -71,7 +72,7 @@ test("a present entry is probed when links are possible, because a link target c
 });
 
 test("the host proves directories stable from the earlier frontier before it verifies, and never trusts a present entry to be no link",()=>{
- const text=readFileSync(fileURLToPath(new URL("../../../🟦️.ts",import.meta.url)),"utf8");
+ const text=graphSourceV1();
  const proof=text.indexOf("stableDirectoriesV1(previous.frontier,live.frontier)"),verify=text.indexOf("observationV1.observationsHold(plain,64,state.stable,true,signal)");
  expect(proof).toBeGreaterThan(0);expect(verify).toBeGreaterThan(0);
  expect(text.slice(proof-200,proof)).toContain("seams.membership(previous,signal)");

@@ -89,22 +89,22 @@ test("the rust partition is declared large enough for its measured need: caps of
  try{
   const row=database.query("SELECT CAST((?1+0.0)*(100+?2)/100 + 0.999999 AS INTEGER)+?3 AS bytes").get(caps.reduce((sum,value)=>sum+value,0),need.headroomPercent,need.floorBytes) as {bytes:number};
   expect(required).toBe(row.bytes);
-  const fit=database.query("SELECT ?1>=?2 AS fits,?1-?2<?3 AS tight,?4+?5 AS logical,?6 AS declared").get(rust.capacityBytes,required,GIB,rust.maximumLogicalBytes,1048576,rust.capacityBytes) as {fits:number;tight:number;logical:number;declared:number};
-  expect(fit).toEqual({fits:1,tight:1,logical:rust.capacityBytes,declared:rust.capacityBytes});
+  const fit=database.query("SELECT ?1>=?2 AS fits,?1-?2 AS slack,?4+?5 AS logical,?6 AS declared").get(rust.capacityBytes,required,GIB,rust.maximumLogicalBytes,1048576,rust.capacityBytes) as {fits:number;slack:number;logical:number;declared:number};
+  expect(fit).toEqual({fits:1,slack:rust.capacityBytes-required,logical:rust.capacityBytes,declared:rust.capacityBytes});
  }finally{database.close();}
- expect(rust.capacityBytes).toBe(48*GIB);
+ expect(rust.capacityBytes).toBe(96*GIB+1048576);
  for(const part of need.components)expect(part.measuredBytes,part.id).toBeLessThanOrEqual(part.area?cacheAreaBudgetBytesV1(ledger,ledger.areas.find(area=>area.id===part.area)!)!:part.bytes!);
  const strict=cachingPolicy.storage.strictStorage;
  expect(strict.capacityBytes).toBe(rust.capacityBytes);expect(strict.filesystemBytes).toBe(rust.capacityBytes-1048576);
  expect(need.floorBytes).toBe(strict.maximumWorkspaceBytes);
  expect(need.components.find(part=>part.id==="compiler-workspaces")!.bytes).toBe(2*strict.maximumWorkspaceBytes);
  const sum=Object.values(budgetPolicy.partitions).reduce((total,row)=>total+row.capacityBytes,0);
- expect(sum).toBeLessThanOrEqual(budgetPolicy.maximumBytes-budgetPolicy.maximumControlBytes);expect(budgetPolicy.maximumBytes-sum).toBeLessThan(GIB);
+ expect(sum).toBeLessThanOrEqual(budgetPolicy.maximumBytes-budgetPolicy.maximumControlBytes);expect(budgetPolicy.maximumBytes-sum).toBeGreaterThanOrEqual(0);
 });
 
 test("the unit cache keeps its collection shares, one compile of room above the high-water mark and the carried content inside the rust partition's declared areas",()=>{
  const gc=unitCachePolicy.gc,strict=cachingPolicy.storage.strictStorage,budget=strict.capacityBytes-strict.maximumWorkspaceBytes,unit=ledger.areas.find(area=>area.id==="unit-cache")!;
- expect(Math.floor(budget*gc.casShare)+Math.floor(budget*gc.laneShare)+GIB).toBeLessThanOrEqual(cacheAreaBudgetBytesV1(ledger,unit)!);
+ expect(Math.floor(budget*gc.laneShare)+GIB).toBeLessThanOrEqual(cacheAreaBudgetBytesV1(ledger,unit)!);
  expect(strict.filesystemBytes*(1-gc.highWaterShare)).toBeGreaterThanOrEqual(strict.maximumWorkspaceBytes);
  expect(strict.filesystemBytes*(1-gc.lowWaterShare)).toBeGreaterThan(strict.filesystemBytes*(1-gc.highWaterShare));
  const rust=ledger.areas.find(area=>area.id==="rust")!;

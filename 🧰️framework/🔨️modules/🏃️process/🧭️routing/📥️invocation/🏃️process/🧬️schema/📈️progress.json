@@ -256,9 +256,25 @@
               "label": "Expanding input closures",
               "units": "closures"
             },
+            "membership": {
+              "label": "Verifying workspace membership",
+              "units": "entries"
+            },
             "facts": {
               "label": "Verifying graph facts",
               "units": "facts"
+            },
+            "doubt": {
+              "label": "Classifying graph facts",
+              "units": "facts"
+            },
+            "directories": {
+              "label": "Checking directory stamps",
+              "units": "directories"
+            },
+            "files": {
+              "label": "Checking file stamps",
+              "units": "files"
             },
             "assembly": {
               "label": "Assembling the graph",
@@ -268,6 +284,14 @@
               "label": "Preparing stale projects",
               "units": "projects"
             }
+          },
+          "owner": "{name} ({kind}, {seconds} s, {rows} rows)",
+          "decisionSeparator": " · ",
+          "decisions": {
+            "learning": "no memory peak learned for {kind} projects yet ({used} MB assumed, {budget} MB headroom), one at a time",
+            "waiting": "waiting for memory headroom ({used} of {budget} MB reserved)",
+            "serial": "headroom of {budget} MB is below one project ({used} MB), one at a time",
+            "resumed": "headroom of {budget} MB again ({used} MB taken), resuming"
           }
         },
         "de": {
@@ -286,9 +310,25 @@
               "label": "Eingabeabschlüsse auflösen",
               "units": "Abschlüsse"
             },
+            "membership": {
+              "label": "Arbeitsbereich-Zugehörigkeit prüfen",
+              "units": "Einträge"
+            },
             "facts": {
               "label": "Graph-Fakten prüfen",
               "units": "Fakten"
+            },
+            "doubt": {
+              "label": "Graph-Fakten einstufen",
+              "units": "Fakten"
+            },
+            "directories": {
+              "label": "Verzeichnisstempel prüfen",
+              "units": "Verzeichnisse"
+            },
+            "files": {
+              "label": "Dateistempel prüfen",
+              "units": "Dateien"
             },
             "assembly": {
               "label": "Graph zusammensetzen",
@@ -298,6 +338,14 @@
               "label": "Veraltete Projekte vorbereiten",
               "units": "Projekte"
             }
+          },
+          "owner": "{name} ({kind}, {seconds} s, {rows} Zeilen)",
+          "decisionSeparator": " · ",
+          "decisions": {
+            "learning": "für {kind}-Projekte ist noch kein Speicherbedarf gelernt ({used} MB angenommen, {budget} MB Reserve), einzeln",
+            "waiting": "wartet auf Speicherreserve ({used} von {budget} MB reserviert)",
+            "serial": "Reserve von {budget} MB unter einem Projekt ({used} MB), einzeln",
+            "resumed": "Reserve von {budget} MB wieder da ({used} MB belegt), es geht weiter"
           }
         }
       }

@@ -21,6 +21,15 @@ describe("schema sync", () => {
     expect(JSON.parse(result.stdout)).toEqual(enumVectors);
   }, 30000);
 
+  test("the sync fixer only writes JSON schemas and never degrades generator-owned twins", async () => {
+    const sync = join(import.meta.dir, "🐍️sync.py");
+    const code = "import runpy,sys; m=runpy.run_path(sys.argv[1],run_name='sync'); ok=False\ntry: m['write_text']('x.proto','new','old')\nexcept ValueError: ok=True\nprint(ok, m['write_text']('x.json','same','same'), 'phase_b' in m)";
+    const guarded = await runToolV1("python", ["-I", "-c", code, sync], { root: join(import.meta.dir, "../../../../.."), capture: true, check: false });
+    expect(guarded.stdout.trim()).toBe("True False False");
+    const refused = await runToolV1("python", ["-I", sync, "--phase", "b"], { root: join(import.meta.dir, "../../../../.."), capture: true, check: false });
+    expect(refused.status).not.toBe(0);
+  }, 30000);
+
   test("every JSON schema, its Rust model and its TypeScript, proto and GraphQL twins agree", async () => {
     const result = await run(["--limit", "40"]);
     expect(result.stdout + result.stderr).toContain("mismatches=0");

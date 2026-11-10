@@ -6,7 +6,7 @@ import {cacheAreaDirectoryV1,cacheLedgerV1,cacheRootDirectoryV1,cacheTextV1,form
 import type {MemberScanControlV1,MemberVerifyReportV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts";
 import {formatMachinePlanV1,machinePolicyV1,planMachineBudgetV1,resolveMachineTotalV1,type MachinePolicyV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import {dedupeTreeV1} from "../👯️dedupe/🟦️.ts";
-import {cacheRunnerPortsV1,collectCacheV1,machineHostFreeBytesV1,machineUsesV1,reportCacheLedgerV1,type CacheRunnerPortsV1} from "../🏃️runner/🟦️.ts";
+import {cacheRunnerPortsV1,collectCacheV1,loadCacheSizesV1,machineHostFreeBytesV1,machineUsesV1,reportCacheLedgerV1,type CacheRunnerPortsV1} from "../🏃️runner/🟦️.ts";
 import type {MachinePlanV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
@@ -14,14 +14,13 @@ import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️proc
 import {nativeFreeSpaceSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 /** 📝️ The closed arguments of `repo cache status|gc|verify`. */
-export type CacheArgumentsV1=Readonly<{operation:"status"|"gc"|"verify"|"dedupe"|"grow";json:boolean;deep:boolean;dryRun:boolean;only:ReadonlySet<string>|undefined;language:string|undefined;budget:string|undefined}>;
+export type CacheArgumentsV1=Readonly<{operation:"status"|"gc"|"verify"|"dedupe";json:boolean;deep:boolean;dryRun:boolean;only:ReadonlySet<string>|undefined;language:string|undefined;budget:string|undefined}>;
 const both=(key:string,variables:Readonly<Record<string,string|number>>={}):string=>cacheTextV1("en",key,variables)+"\n"+cacheTextV1("de",key,variables);
 const valued=Object.freeze(["--area","--lang","--budget"]),plain=Object.freeze(["--json","--dry-run","--deep"]);
 
 /** 🧷️ Reads `status|gc|verify` with its options; every unknown or repeated option is refused in both languages. */
 export function cacheArgumentsV1(args:readonly string[],ledger:CacheLedgerV1=cacheLedgerV1(),declared:MachinePolicyV1=machinePolicyV1()):CacheArgumentsV1{
- const operation=args[0];if(operation!=="status"&&operation!=="gc"&&operation!=="verify"&&operation!=="dedupe"&&operation!=="grow")throw Error(both("error.syntax"));
- if(operation==="grow")return Object.freeze({operation,json:false,deep:false,dryRun:args.includes("--dry-run"),only:undefined,language:args.find(argument=>argument.startsWith("--lang="))?.slice(7),budget:undefined});
+ const operation=args[0];if(operation!=="status"&&operation!=="gc"&&operation!=="verify"&&operation!=="dedupe")throw Error(both("error.syntax"));
  const seen=new Set<string>(),values:Record<string,string>={};let json=false,dryRun=false,deep=false;
  for(let index=1;index<args.length;index++){
   const argument=args[index]!,cut=argument.indexOf("="),name=cut<0?argument:argument.slice(0,cut);
@@ -38,7 +37,7 @@ export function cacheArgumentsV1(args:readonly string[],ledger:CacheLedgerV1=cac
 }
 
 /** 🎛️ What the command needs besides the runner ports: the workspace, the environment, the output and the ledger. */
-export type CacheCommandContextV1=Readonly<{workspace:string;environment:Readonly<Record<string,string|undefined>>;write(line:string):void;ledger?:CacheLedgerV1;partitions?:CachePartitionBudgetsV1;verify?(control:MemberScanControlV1):Promise<MemberVerifyReportV1>;grow?(args:readonly string[],language:CacheLanguageV1):Promise<number>;machinePolicy?:MachinePolicyV1;freeBytes?(path:string):number|undefined;clone?(source:string,destination:string):Promise<boolean>}>;
+export type CacheCommandContextV1=Readonly<{workspace:string;environment:Readonly<Record<string,string|undefined>>;write(line:string):void;ledger?:CacheLedgerV1;partitions?:CachePartitionBudgetsV1;verify?(control:MemberScanControlV1):Promise<MemberVerifyReportV1>;machinePolicy?:MachinePolicyV1;freeBytes?(path:string):number|undefined;clone?(source:string,destination:string):Promise<boolean>}>;
 
 /** 💰️ Resolves the disk budget of this machine from `--budget`, the environment and the machine file inside the repository cache root, in that order, falling back to the declared default. */
 async function machineTotalV1(context:CacheCommandContextV1,parsed:CacheArgumentsV1,ledger:CacheLedgerV1){
@@ -72,6 +71,7 @@ async function runDedupeV1(context:CacheCommandContextV1,parsed:CacheArgumentsV1
 
 /** 🚀️ Runs `repo cache status|gc|verify|dedupe`: status reads the ledger without any lease and without walking a tree (statfs of the partitions plus the size ledger; `--deep` walks everything with progress and cancellation and records the sizes); gc collects retired roots, undeclared entries and over-budget areas under the lease-aware runner; `verify --deep` reads every indexed optional graph leaf and every content-addressed closure inventory again and reports what disagrees with its recorded hash or name, with progress and cancellation. Returns the process exit code. */
 export async function runCacheLedgerCommandV1(args:readonly string[],context:CacheCommandContextV1,ports:CacheRunnerPortsV1):Promise<number>{
+ if(args[0]==="cas"){const{runCasCommandV1}=await import("../../🗄️cas/⌨️command/🟦️.ts");return runCasCommandV1(args.slice(1),context,ports);}
  const ledger=context.ledger??cacheLedgerV1(),parsed=cacheArgumentsV1(args,ledger,context.machinePolicy),language:CacheLanguageV1=resolveLanguageV1(CATALOG_LANGUAGES_V1,args,context.environment).language;
  try{
   if(parsed.operation==="status"){
@@ -89,15 +89,24 @@ export async function runCacheLedgerCommandV1(args:readonly string[],context:Cac
    return report.mismatches||report.closureMismatches?1:0;
   }
   if(parsed.operation==="dedupe")return runDedupeV1(context,parsed,language,ports);
-  if(parsed.operation==="grow"){if(!context.grow){context.write(cacheTextV1(language,"verify.unavailable"));return 1;}return context.grow(args,language);}
   const total=await machineTotalV1(context,parsed,ledger),result=await collectCacheV1(context.workspace,ledger,{dryRun:parsed.dryRun,only:parsed.only,machine:{totalBytes:total.bytes,source:total.source}},ports,{language,write:parsed.json?()=>{}:context.write},context.partitions);
-  if(parsed.json)context.write(JSON.stringify({version:1,dryRun:result.dryRun,freedBytes:result.freedBytes,kept:result.kept,removed:result.removed,failed:result.failed,delegated:result.delegated,machine:result.machine,plans:result.plans},null,2));
-  else for(const failure of result.failed)context.write(failure.target+"/"+failure.name+": "+failure.message);
+  const host=parsed.only===undefined?await collectHostStoreV1(context,language,parsed,ports):undefined;
+  if(parsed.json)context.write(JSON.stringify({version:1,dryRun:result.dryRun,freedBytes:result.freedBytes,kept:result.kept,removed:result.removed,failed:result.failed,delegated:result.delegated,machine:result.machine,plans:result.plans,hostStore:host},null,2));
+  else{for(const failure of result.failed)context.write(failure.target+"/"+failure.name+": "+failure.message);if(host)context.write(host.line);}
   return result.failed.length?1:0;
  }catch(error){
   if(ports.signal.aborted){context.write(cacheTextV1(language,"error.cancelled"));return 130;}
   throw error;
  }
+}
+
+/** 🗄️ Applies the host-wide store policy after the per-workspace collection: the shared store, the graph memo of every worktree and the build-input closures are aged and cut oldest-first down to the low watermark of the host cap, with the recorded sizes of the workspace's fixed images counted as external bytes. */
+async function collectHostStoreV1(context:CacheCommandContextV1,language:CacheLanguageV1,parsed:CacheArgumentsV1,ports:CacheRunnerPortsV1):Promise<{line:string;result:unknown}|undefined>{
+ const{collectCasV1,formatCasCollectionV1}=await import("../../🗄️cas/🧹️collector/🟦️.ts"),{adoptCasV1,casPlacesOfWorkspaceV1}=await import("../../🗄️cas/🧲️adopt/🟦️.ts"),{casAreasOfWorkspaceV1,casHomeOfV1,formatCasAdoptionV1}=await import("../../🗄️cas/⌨️command/🟦️.ts"),{CAS_POLICY_V1}=await import("../../🗄️cas/🧬️schema/🟦️.ts"),{casRootV1}=await import("../../🗄️cas/🗃️store/🟦️.ts"),home=casHomeOfV1(context.environment);
+ if(home===undefined)return undefined;
+ const ledger=context.ledger??cacheLedgerV1(),sizes=await loadCacheSizesV1(context.workspace,ledger),external=Object.values(sizes.records).reduce((sum,record)=>sum+record.usedBytes,0);
+ const root=casRootV1(context.environment,process.platform,home),adoption=await adoptCasV1({root,places:casPlacesOfWorkspaceV1(context.workspace),signal:ports.signal,dryRun:parsed.dryRun}),result=await collectCasV1({root,policy:CAS_POLICY_V1,areas:await casAreasOfWorkspaceV1(context.workspace,home),externalBytes:external,signal:ports.signal,dryRun:parsed.dryRun});
+ return{line:formatCasAdoptionV1(adoption,language)+"\n"+formatCasCollectionV1(result,CAS_POLICY_V1,language),result:{adoption,collection:result}};
 }
 
 /** 🚰️ Binds the graph reclaim to the real retained graph partition, its free space and the two shared scoped recoveries. */
@@ -179,7 +188,6 @@ export async function runCacheLedgerV1(root:string,args:readonly string[],invoca
   }
  });
  const verify=async(control:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts").MemberScanControlV1)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),image=await partitions.openRepositoryCachePartitionV1(root,"graph",phaseControl);try{return await scan.verifyBuildGraphMembersDeepV1(image.root,control);}finally{await image.close();}};
- const grow=async(growArgs:readonly string[],language:CacheLanguageV1)=>{const{runCacheGrowV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📏️grow/⌨️command/🟦️.ts"),{randomBytes}=await import("node:crypto");return runCacheGrowV1(growArgs,{workspace:root,write:writeResultLineV1,freeBytes:path=>nativeFreeSpaceSyncV1(path)?.availableBytes,signal:invocation.control.signal,lease:imageDirectory=>leases.acquireQueuedResourceLease({directory,resource:"native-fixed-image:"+imageDirectory,mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:phaseControl.signal,control:phaseControl})},language);};
- const code=await runCacheLedgerCommandV1(args,{workspace:root,environment:process.env,write:writeResultLineV1,verify,grow},ports);
+ const code=await runCacheLedgerCommandV1(args,{workspace:root,environment:process.env,write:writeResultLineV1,verify},ports);
  if(code!==0)process.exitCode=code;
 }

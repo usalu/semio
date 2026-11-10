@@ -20,7 +20,13 @@ def replay(case):
         state["lastResource"] = resource(phase, state, done)
         published.append(state["lastResource"])
 
-    def detail(phase, total, running):
+    def token(row):
+        name = quote(row["name"][: options["maximumNameCharacters"]])
+        if "kind" not in row:
+            return name
+        return "%s|%s|%d|%d" % (name, quote(row["kind"]), int(max(0, row["seconds"]) // options["secondsStep"]) * options["secondsStep"], max(0, int(row.get("rows", 0))))
+
+    def detail(phase, total, running, decision=None):
         if not running:
             return ""
         size = len("build:graph-phase:%s:%d:%d" % (phase, total, total))
@@ -28,13 +34,14 @@ def replay(case):
         size += len(":%d:%d:" % (len(running), seconds))
         names = []
         for row in running[: options["maximumNames"]]:
-            text = quote(row["name"][: options["maximumNameCharacters"]])
+            text = token(row)
             extra = len(text) + (1 if names else 0)
             if size + extra > options["maximumResourceCharacters"]:
                 break
             names.append(text)
             size += extra
-        return ":%d:%d:%s" % (len(running), seconds, ",".join(names))
+        note = "" if decision is None else ":%s|%d|%d|%s" % (decision["key"], max(0, int(decision["used"])), max(0, int(decision["budget"])), quote(decision.get("kind", ""))[:48])
+        return ":%d:%d:%s%s" % (len(running), seconds, ",".join(names), note if size + len(note) <= options["maximumResourceCharacters"] else "")
 
     for step in case["steps"]:
         at, phase = step["at"], step["phase"]
@@ -50,7 +57,7 @@ def replay(case):
             emit(phase, state, state["done"], at)
         elif step["op"] == "running":
             state = phases[phase]
-            state["detail"] = detail(phase, state["total"], step["running"])
+            state["detail"] = detail(phase, state["total"], step["running"], step.get("decision"))
             if resource(phase, state, state["done"]) == state["lastResource"] or at - state["lastAt"] < minimum:
                 continue
             emit(phase, state, state["done"], at)

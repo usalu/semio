@@ -26,7 +26,8 @@
           "peer",
           "graph",
           "cache",
-          "concurrency"
+          "concurrency",
+          "planning"
         ],
         "order": [
           "cli-help",
@@ -35,7 +36,8 @@
           "peer",
           "graph",
           "cache",
-          "concurrency"
+          "concurrency",
+          "planning"
         ],
         "metrics": {
           "cli-help": {
@@ -103,6 +105,24 @@
               "speedup"
             ],
             "memory": []
+          },
+          "planning": {
+            "plain": [
+              "wallMs",
+              "queueMs",
+              "graphMs",
+              "executeMs",
+              "inferredProjects",
+              "closuresVerified",
+              "closuresReused",
+              "staleFacts",
+              "swapBytes",
+              "availableBytes",
+              "oomKills",
+              "storeBytes",
+              "peakRssBytes"
+            ],
+            "memory": []
           }
         },
         "units": {
@@ -118,7 +138,14 @@
           "graphMs": "ms",
           "executeMs": "ms",
           "executedActions": "count",
-          "inferredProjects": "count"
+          "inferredProjects": "count",
+          "closuresVerified": "count",
+          "closuresReused": "count",
+          "staleFacts": "count",
+          "swapBytes": "bytes",
+          "availableBytes": "bytes",
+          "oomKills": "count",
+          "storeBytes": "bytes"
         },
         "statistics": [
           "min",
@@ -162,8 +189,6 @@
           "relative": 0.15,
           "absolute": 25
         },
-        "oneshotFlag": "--service=off",
-        "residentFlag": "--service=require",
         "serviceOperation": "service",
         "sources": [
           "user-goal",
@@ -303,7 +328,8 @@
             "cache hit$"
           ],
           "nxTask": "^> nx run ",
-          "nxCached": "^> nx run .*\\[(local cache|remote cache|existing outputs match the cache)"
+          "nxCached": "^> nx run .*\\[(local cache|remote cache|existing outputs match the cache)",
+          "graphClosures": "^graph: (\\d+) derived results asked again after (\\d+) stale facts: (\\d+) unchanged, (\\d+) changed"
         },
         "history": {
           "name": "^([0-9]{8}T[0-9]{6}Z)-(.+)\\.json$",
@@ -363,7 +389,8 @@
         "peer",
         "graph",
         "cache",
-        "concurrency"
+        "concurrency",
+        "planning"
       ]
     },
     "Lane": {
@@ -386,7 +413,14 @@
         "graphMs",
         "executeMs",
         "executedActions",
-        "inferredProjects"
+        "inferredProjects",
+        "closuresVerified",
+        "closuresReused",
+        "staleFacts",
+        "swapBytes",
+        "availableBytes",
+        "oomKills",
+        "storeBytes"
       ]
     },
     "Statistic": {
@@ -580,6 +614,9 @@
         },
         "memory": {
           "type": "boolean"
+        },
+        "peer": {
+          "$ref": "#/definitions/TaskId"
         }
       }
     },
@@ -1258,6 +1295,34 @@
           "minimum": 0
         },
         "inferredProjects": {
+          "type": "number",
+          "minimum": 0
+        },
+        "closuresVerified": {
+          "type": "number",
+          "minimum": 0
+        },
+        "closuresReused": {
+          "type": "number",
+          "minimum": 0
+        },
+        "staleFacts": {
+          "type": "number",
+          "minimum": 0
+        },
+        "swapBytes": {
+          "type": "number",
+          "minimum": 0
+        },
+        "availableBytes": {
+          "type": "number",
+          "minimum": 0
+        },
+        "oomKills": {
+          "type": "number",
+          "minimum": 0
+        },
+        "storeBytes": {
           "type": "number",
           "minimum": 0
         }

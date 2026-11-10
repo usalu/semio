@@ -107,10 +107,10 @@ fn the_radiator_curve_follows_the_en_442_closed_form() {
     let Series::Polyline { points, .. } = &output.series[0] else { panic!("polyline") };
     assert_eq!(points.len(), diagrams::SAMPLES);
     for point in points {
-        let expected = 1200.0 * (point.x / diagrams::DELTA_T_NOMINAL_K).powf(1.3);
+        let expected = 1200.0 * (point.x / diagrams::delta_t_nominal_k()).powf(1.3);
         assert!((point.y - expected).abs() < 1e-9 * expected.max(1.0), "{point:?}");
     }
-    assert!((diagrams::radiator_output_w(1200.0, 1.3, diagrams::DELTA_T_NOMINAL_K) - 1200.0).abs() < 1e-9);
+    assert!((diagrams::radiator_output_w(1200.0, 1.3, diagrams::delta_t_nominal_k()) - 1200.0).abs() < 1e-9);
     assert!(points.windows(2).all(|w| w[0].y < w[1].y), "the output grows with the excess temperature");
 }
 
@@ -120,8 +120,11 @@ fn the_valve_drop_follows_the_square_law() {
     let report = inferences::evaluate(&document);
     let all = diagrams(&document, &report, Some("VLV-50-001"));
     let drop = all.iter().find(|d| d.id == "drop:VLV-50-001").expect("drop curve");
-    assert!((diagrams::valve_pressure_drop_bar(4.5, 4.5) - 1.0).abs() < 1e-12);
-    assert!((diagrams::valve_pressure_drop_bar(4.5, 9.0) - 4.0).abs() < 1e-12);
+    let rho = diagrams::water_density_kg_m3(diagrams::HEATING_WATER_C) / diagrams::KVS_REFERENCE_DENSITY_KG_M3;
+    assert!((rho - 0.977_76).abs() < 2e-5, "70 °C water is 977.76 kg/m³");
+    assert!((diagrams::valve_pressure_drop_bar(4.5, 4.5, 20.0) - diagrams::water_density_kg_m3(20.0) / 1000.0).abs() < 1e-12);
+    assert!((diagrams::valve_pressure_drop_bar(4.5, 9.0, 4.0) - 4.0 * diagrams::water_density_kg_m3(4.0) / 1000.0).abs() < 1e-12);
+    assert!((diagrams::delta_t_nominal_k() - 49.832_887).abs() < 1e-6);
     assert_eq!(drop.table_twin.columns.len(), 2);
 }
 
@@ -198,7 +201,7 @@ fn the_independent_oracle_agrees() {
     }).collect();
     let input = serde_json::json!({
         "radiator": {"standardOutputW": 1200.0, "exponent": 1.3, "deltaT": columns[0], "outputW": columns[1]},
-        "valve": {"kvs": 4.5, "flowM3H": drop_columns[0], "dropBar": drop_columns[1]},
+        "valve": {"kvs": 4.5, "waterC": diagrams::HEATING_WATER_C, "flowM3H": drop_columns[0], "dropBar": drop_columns[1]},
         "grips": grips,
     });
     let script = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔮️oracles/🐍️.py");
@@ -253,5 +256,22 @@ fn attribute_grips_rest_at_the_stored_values() {
         let read = grip.writes[0].map.apply(rest);
         assert!((read - stored).abs() <= 1e-6 * stored.abs().max(1.0), "{id}:{tag} reads {read}, stored {stored}");
         assert!(grip.writes[0].path.contains(&format!("catalog.products[id={id}].configuration.attributes.")));
+    }
+}
+
+#[test]
+fn the_radiator_and_valve_laws_match_the_cross_check_vectors() {
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔮️cross-checks/🔣️.json")).expect("vectors");
+    let nominal = vectors["deltaTNominalK"].as_f64().expect("nominal");
+    assert!((diagrams::delta_t_nominal_k() - nominal).abs() < 1e-12 * nominal);
+    for row in vectors["radiators"].as_array().expect("radiators") {
+        let got = diagrams::radiator_output_w(row["standardOutputW"].as_f64().unwrap(), row["n"].as_f64().unwrap(), row["deltaTLogK"].as_f64().unwrap());
+        let want = row["outputW"].as_f64().unwrap();
+        assert!((got - want).abs() <= 1e-9 * want, "{row}");
+    }
+    for row in vectors["valves"].as_array().expect("valves") {
+        let got = diagrams::valve_pressure_drop_bar(row["kvsM3H"].as_f64().unwrap(), row["flowM3H"].as_f64().unwrap(), row["waterC"].as_f64().unwrap());
+        let want = row["dropBar"].as_f64().unwrap();
+        assert!((got - want).abs() <= 3e-5 * want, "{row}");
     }
 }

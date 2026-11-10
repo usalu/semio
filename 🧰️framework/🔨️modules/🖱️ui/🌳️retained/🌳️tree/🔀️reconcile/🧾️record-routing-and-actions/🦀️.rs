@@ -193,6 +193,7 @@ pub(super) fn record_intent_bindings(record: &UiNodeRecord, surface: &str, revis
             .map(|binding| (binding.trigger, binding.action.clone()))
             .chain(row_target(record).and_then(|target| target.activation.as_ref().map(|verb| (ui_contract::Trigger::Activate, ui_contract::ActionId::new(target.scope.clone(), verb.clone(), target.version)))))
             .collect(),
+        args: record.bindings.iter().filter_map(|binding| binding.args.as_ref().and_then(ui_value_to_dsl).map(|args| (binding.trigger, args))).collect(),
     }
 }
 

@@ -1,0 +1,74 @@
+{
+  "$comment": "🗄️ Authored eviction traces: policy, entries (area, id, access, size, protected) and the expected victims with the reason. Scan order is area order, then id. Read by the TypeScript planner test and by the independent Python oracle.",
+  "cases": [
+    {
+      "name": "below the high watermark nothing goes",
+      "policy": {"capBytes": 1000, "highWatermark": 0.9, "lowWatermark": 0.5},
+      "externalBytes": 100, "nowMs": 10000,
+      "areas": [{"id": "store", "capBytes": null, "maxAgeMs": null}],
+      "entries": [
+        {"area": "store", "id": "a", "access": 1, "size": 300, "protected": false},
+        {"area": "store", "id": "b", "access": 2, "size": 400, "protected": false}
+      ],
+      "victims": {}
+    },
+    {
+      "name": "above the high watermark the oldest go until the low watermark",
+      "policy": {"capBytes": 1000, "highWatermark": 0.9, "lowWatermark": 0.5},
+      "externalBytes": 0, "nowMs": 10000,
+      "areas": [{"id": "store", "capBytes": null, "maxAgeMs": null}],
+      "entries": [
+        {"area": "store", "id": "a", "access": 5, "size": 300, "protected": false},
+        {"area": "store", "id": "b", "access": 1, "size": 300, "protected": false},
+        {"area": "store", "id": "c", "access": 3, "size": 300, "protected": false},
+        {"area": "store", "id": "d", "access": 9, "size": 100, "protected": false}
+      ],
+      "victims": {"b": "host", "c": "host"}
+    },
+    {
+      "name": "pinned entries stay and a shortfall remains",
+      "policy": {"capBytes": 1000, "highWatermark": 0.9, "lowWatermark": 0.5},
+      "externalBytes": 0, "nowMs": 10000,
+      "areas": [{"id": "store", "capBytes": null, "maxAgeMs": null}],
+      "entries": [
+        {"area": "store", "id": "a", "access": 1, "size": 600, "protected": true},
+        {"area": "store", "id": "b", "access": 2, "size": 200, "protected": false},
+        {"area": "store", "id": "c", "access": 3, "size": 200, "protected": false}
+      ],
+      "victims": {"b": "host", "c": "host"}
+    },
+    {
+      "name": "ties on the access time go in scan order",
+      "policy": {"capBytes": 1000, "highWatermark": 0.9, "lowWatermark": 0.5},
+      "externalBytes": 0, "nowMs": 10000,
+      "areas": [{"id": "store", "capBytes": null, "maxAgeMs": null}],
+      "entries": [
+        {"area": "store", "id": "a", "access": 4, "size": 250, "protected": false},
+        {"area": "store", "id": "b", "access": 4, "size": 250, "protected": false},
+        {"area": "store", "id": "c", "access": 4, "size": 250, "protected": false},
+        {"area": "store", "id": "d", "access": 4, "size": 250, "protected": false}
+      ],
+      "victims": {"a": "host", "b": "host"}
+    },
+    {
+      "name": "area age, area cap and host cap compose, the memo areas count against the host",
+      "policy": {"capBytes": 1000, "highWatermark": 0.9, "lowWatermark": 0.5},
+      "externalBytes": 100, "nowMs": 10000,
+      "areas": [
+        {"id": "store", "capBytes": null, "maxAgeMs": null},
+        {"id": "graph-memo", "capBytes": 300, "maxAgeMs": 5000},
+        {"id": "build-input-closures", "capBytes": null, "maxAgeMs": 5000}
+      ],
+      "entries": [
+        {"area": "store", "id": "s1", "access": 100, "size": 200, "protected": false},
+        {"area": "store", "id": "s2", "access": 9000, "size": 200, "protected": false},
+        {"area": "graph-memo", "id": "m1", "access": 1000, "size": 100, "protected": false},
+        {"area": "graph-memo", "id": "m2", "access": 6000, "size": 200, "protected": false},
+        {"area": "graph-memo", "id": "m3", "access": 7000, "size": 200, "protected": false},
+        {"area": "build-input-closures", "id": "c1", "access": 4000, "size": 50, "protected": false},
+        {"area": "build-input-closures", "id": "c2", "access": 9500, "size": 100, "protected": false}
+      ],
+      "victims": {"m1": "age", "c1": "age", "m2": "area", "m3": "area"}
+    }
+  ]
+}

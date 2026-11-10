@@ -154,6 +154,9 @@ impl WorldInteractionAuthority {
             self.faulted = true;
             return WorldInteractionAuthorityStep::Fault;
         }
+        if let Some(step) = self.step_handle_drag(session_state, camera_state, &intent, input, context) {
+            return step;
+        }
         if intent.phase == WorldInteractionPhase::Cancel {
             let reason = WorldCancelReason::from_button(intent.button);
             if let Some((phase, motion)) = self.gumball.as_ref().and_then(|gesture| gesture.cancel(reason)) {

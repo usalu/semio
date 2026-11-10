@@ -87,7 +87,7 @@ test("A run admitted with fewer jobs grows while it runs once memory frees up, i
   expect([grown.jobs,grown.cpu,grown.reservedMegabytes>=1536+8*2048,typeof grown.grownAtMs]).toEqual([8,8,true,"number"]);
   expect(readLiveHostCapacityPlanV1(environment)!.jobs,"a process started before the growth reads the grant as it is now").toBe(8);
   expect(readLiveHostCapacityPlanV1(environment)!.memoryMegabytes).toBe(8*2048);
-  await withHostCapacityV1({directory,policy:live,request:full(newHostCapacityIdV1()),control:control(),environment:{...environment},write:()=>undefined},async nested=>{expect([nested.inherited,nested.jobs,nested.plan.jobs],"a nested invocation that inherits the grant carries the grown plan to its children").toEqual([true,8,8]);});
+  await withHostCapacityV1({directory,policy:live,request:full(newHostCapacityIdV1()),control:control(),environment:{LANG:"en_US.UTF-8",...environment},write:()=>undefined},async nested=>{expect([nested.inherited,nested.jobs,nested.plan.jobs],"a nested invocation that inherits the grant carries the grown plan to its children").toEqual([true,8,8]);});
   expect(adoptUpgradedHostPlanV1(environment),"the process takes the grown plan over").toBe(true);
   expect([JSON.parse(environment.SEMIO_HOST_CAPACITY_PLAN!).jobs,environment.SEMIO_BUILD_PARALLEL]).toEqual([8,"8"]);
   await sleep(200);expect((await row(directory,handle.id)).jobs,"it never shrinks back").toBe(8);
@@ -109,7 +109,7 @@ test("Memory that frees up only for a moment never grows a run, and the growth i
 test("A run grows only while nothing else of ours waits for memory: the waiting run is served first",async()=>{
  let waited=false;
  await run("en_US.UTF-8",call=>call===0?floor+4000:floor+30000,async(handle,directory)=>{
-  const cancel=new AbortController(),other=withHostCapacityV1({directory,policy:live,request:{...full(newHostCapacityIdV1()),preferredJobs:1,fixedMegabytes:31000,perJobMegabytes:0},control:control(cancel.signal),environment:{},write:()=>undefined,sample:async()=>({host:{...sample(floor+30000),atMs:Date.now()},swappedOutMegabytes:0}),observe:async()=>null,waited:()=>0,children:()=>[1]},async()=>{waited=true;}).catch(()=>undefined);
+  const cancel=new AbortController(),other=withHostCapacityV1({directory,policy:live,request:{...full(newHostCapacityIdV1()),preferredJobs:1,fixedMegabytes:31000,perJobMegabytes:0},control:control(cancel.signal),environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample:async()=>({host:{...sample(floor+30000),atMs:Date.now()},swappedOutMegabytes:0}),observe:async()=>null,waited:()=>0,children:()=>[1]},async()=>{waited=true;}).catch(()=>undefined);
   await sleep(600);expect((await row(directory,handle.id)).jobs,"the growth waits behind the waiting run").toBe(1);
   cancel.abort();await other;
   expect(await until(async()=>(await row(directory,handle.id)).jobs===8,3000),"once nothing waits it grows").toBe(true);

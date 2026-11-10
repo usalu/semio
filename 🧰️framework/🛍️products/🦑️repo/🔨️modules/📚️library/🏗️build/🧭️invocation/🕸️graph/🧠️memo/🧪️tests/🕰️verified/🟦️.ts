@@ -39,7 +39,7 @@ function child(dir:string,journal:ExactJournal,doorAtMs:number){
   try{
    const mock=createMockHost(dir,{stamp:true});let pin:string|undefined;
    Object.assign(mock.host,{sealed:(record:{generation:number;manifest:string;owners:string[];covered:ReadonlySet<string>|undefined;atMs:number})=>{pin=encodeGenerationPinV1({owner:1,...record});}});
-   const graph=await loadGenerationGraphV1(mock.host,{closure:["a"]});
+   const graph=(await loadGenerationGraphV1(mock.host,{closure:["a"]})).graph;
    const out=environment[GRAPH_MEMO_POLICY_V1.sidecar];
    if(out!==undefined)await writeGraphMemoSliceSidecarV1({root:dir,generations:join(dir,".gen"),exclude,pin,stem:out.replace(/\.json$/u,""),expected:environment[GRAPH_MEMO_POLICY_V1.expect],client:journal,insensitive,verifiedAfter:Number(environment[REQUESTED])} as Parameters<typeof writeGraphMemoSliceSidecarV1>[0]);
    return{plan:JSON.stringify(graph),pin,said:mock.said.map(row=>row.key)};
@@ -61,7 +61,7 @@ async function workspace(){
  const dir=join(sandbox,"w"+counter++);
  await seed(dir,{"pkg/a/project.json":JSON.stringify({name:"a",package:"@syn/a",uses:[]}),"pkg/a/src/index.ts":"export const v=1;\n"});
  const doorAtMs=Date.now();await sleep(5);
- await loadGenerationGraphV1(createMockHost(dir,{stamp:true}).host,{closure:["a"]});
+ (await loadGenerationGraphV1(createMockHost(dir,{stamp:true}).host,{closure:["a"]})).graph;
  return{dir,doorAtMs};
 }
 
@@ -73,12 +73,12 @@ test("a slice a peer's stamp covered is not sealed: an edit after the peer's ver
  await applyOps(dir,[{op:"write",path:"pkg/a/src/index.ts",content:"export const v=2;\n"}]);await sleep(5);
  await request(dir,journal,doorAtMs);
  const served=await request(dir,journal,Date.now());
- if(served.served)expect(served.graph,"oracle: the planner serves a fresh request of the same closure this graph").toEqual(JSON.parse(JSON.stringify(await loadGenerationGraphV1(createMockHost(dir,{stamp:true}).host,{closure:["a"]}))));
+ if(served.served)expect(served.graph,"oracle: the planner serves a fresh request of the same closure this graph").toEqual(JSON.parse(JSON.stringify((await loadGenerationGraphV1(createMockHost(dir,{stamp:true}).host,{closure:["a"]})).graph)));
  expect(served.served,"the memo must not vouch for the edit it never saw").toBe(false);
  expect(served.marks["graph.memo-seal"],"liveness: a request that verified after its cursor seals").toBe("sealed");
  const hit=await request(dir,journal,Date.now());
  expect(hit.served).toBe(true);
- expect(hit.graph,"oracle: the served slice equals the planner's").toEqual(JSON.parse(JSON.stringify(await loadGenerationGraphV1(createMockHost(dir,{stamp:true}).host,{closure:["a"]}))));
+ expect(hit.graph,"oracle: the served slice equals the planner's").toEqual(JSON.parse(JSON.stringify((await loadGenerationGraphV1(createMockHost(dir,{stamp:true}).host,{closure:["a"]})).graph)));
 },60000);
 
 test("a slice served from a pin older than the memo cursor (a nested command bound to its outer invocation) is unsealable",async()=>{

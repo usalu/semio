@@ -125,9 +125,7 @@
           "timeoutMilliseconds": 5000
         },
         "gc": {
-          "casShare": 0.125,
-          "casProtectedShare": 0.1,
-          "laneShare": 0.109375,
+          "laneShare": 0.234375,
           "incrementalShare": 0.1,
           "admissionShare": 0.015,
           "admissionRetentionMilliseconds": 604800000,
@@ -207,8 +205,8 @@
           "de": "[repo cargo] Alle {live} aktiven Lanes sind belegt (Maximum {maximum}); warte auf eine freie Lane"
         },
         "collected": {
-          "en": "[repo cargo] unit cache cleanup removed {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s), {units} build unit(s) and {objects} object(s)",
-          "de": "[repo cargo] Unit-Cache-Bereinigung entfernte {lanes} Lane(s), {incremental} Inkrementsatz/-sätze, {sessions} Inkrementsitzung(en), {units} Build-Einheit(en) und {objects} Objekt(e)"
+          "en": "[repo cargo] unit cache cleanup removed {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s) and {units} build unit(s)",
+          "de": "[repo cargo] Unit-Cache-Bereinigung entfernte {lanes} Lane(s), {incremental} Inkrementsatz/-sätze, {sessions} Inkrementsitzung(en) und {units} Build-Einheit(en)"
         },
         "collector": {
           "en": "[repo cargo] the compiler image is {usedPercent} % full (high-water mark {highPercent} %); a low-priority unit cache collector was started in the background",
@@ -227,8 +225,8 @@
           "de": "[repo cargo] Der in {variable} genannte Job-Token-Pool ist für diesen Prozess nicht erreichbar ({reason}); der Befehl läuft auf seinem eigenen einzelnen Job-Slot, statt mehr Jobs zu starten als zugelassen wurden"
         },
         "outOfSpace": {
-          "en": "[repo cargo] the compiler image ran out of space ({freeGib} GiB free of {volumeGib} GiB); cleaned up {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s), {units} build unit(s) and {objects} object(s) and retrying the command once",
-          "de": "[repo cargo] Im Compiler-Image ist der Platz ausgegangen ({freeGib} GiB frei von {volumeGib} GiB); {lanes} Lane(s), {incremental} Inkrementsatz/-sätze, {sessions} Inkrementsitzung(en), {units} Build-Einheit(en) und {objects} Objekt(e) bereinigt, der Befehl wird einmal wiederholt"
+          "en": "[repo cargo] the compiler image ran out of space ({freeGib} GiB free of {volumeGib} GiB); cleaned up {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s) and {units} build unit(s) and retrying the command once",
+          "de": "[repo cargo] Im Compiler-Image ist der Platz ausgegangen ({freeGib} GiB frei von {volumeGib} GiB); {lanes} Lane(s), {incremental} Inkrementsatz/-sätze, {sessions} Inkrementsitzung(en) und {units} Build-Einheit(en) bereinigt, der Befehl wird einmal wiederholt"
         },
         "stillFull": {
           "en": "[repo cargo] the compiler image is still full after the cleanup ({freeGib} GiB free of {volumeGib} GiB): the running lanes of other commands hold the space; wait for them or raise the rust partition in the budget policy",
@@ -822,28 +820,6 @@
         }
       }
     },
-    "GcObject": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "digest",
-        "bytes",
-        "lastUsedMs"
-      ],
-      "properties": {
-        "digest": {
-          "$ref": "#/definitions/Digest"
-        },
-        "bytes": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "lastUsedMs": {
-          "type": "integer",
-          "minimum": 0
-        }
-      }
-    },
     "GcInput": {
       "type": "object",
       "additionalProperties": false,
@@ -852,8 +828,7 @@
         "volumeBytes",
         "freeBytes",
         "nowMs",
-        "lanes",
-        "objects"
+        "lanes"
       ],
       "properties": {
         "capacityBytes": {
@@ -876,12 +851,6 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/GcLane"
-          }
-        },
-        "objects": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/GcObject"
           }
         }
       }
@@ -972,8 +941,7 @@
       "additionalProperties": false,
       "required": [
         "removeLanes",
-        "removeIncremental",
-        "removeObjects"
+        "removeIncremental"
       ],
       "properties": {
         "removeLanes": {
@@ -986,12 +954,6 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/LaneId"
-          }
-        },
-        "removeObjects": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Digest"
           }
         }
       }

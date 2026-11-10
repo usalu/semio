@@ -72,8 +72,8 @@ test("the authored SLO table is admitted and every inconsistency is found",()=>{
  has(mutate(copy=>{copy.probes.find((row:any)=>row.kind==="edit").unit="ghost";}),"unknown unit");
  has(mutate(copy=>{delete copy.probes.find((row:any)=>row.kind==="concurrency").workload;}),"workload is required");
  has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="graph-scope-cold").runs=2;}),"a cold probe runs once");
- has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="cli-help").cold=true;}),"only a graph or a no-op probe can be cold");
- has(mutate(copy=>{copy.probes.find((row:any)=>row.kind==="peer").cold=true;}),"only a graph or a no-op probe can be cold");
+ has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="cli-help").cold=true;}),"only a graph, planning or no-op probe can be cold");
+ has(mutate(copy=>{copy.probes.find((row:any)=>row.kind==="peer").cold=true;}),"only a graph, planning or no-op probe can be cold");
  has(mutate(copy=>{delete copy.probes.find((row:any)=>row.kind==="peer").unit;}),"unit is required for peer");
  has(mutate(copy=>{delete copy.probes.find((row:any)=>row.kind==="peer").target;}),"target is required for peer");
  has(mutate(copy=>{copy.probes.find((row:any)=>row.kind==="peer").unit="ghost";}),"unknown unit");
@@ -95,19 +95,19 @@ test("the objectives the user asked for are in the table, enforced where they ar
   const oneshot=by.get(`noop-${verb}-oneshot-p50`)!;
   expect([oneshot.goal,oneshot.gate,oneshot.enforcement]).toEqual([300,1000,"advisory"]);
  }
- for(const unit of set.units.filter(row=>!row.id.startsWith("product-")&&!row.id.startsWith("peer-"))){
+ for(const unit of set.units.filter(row=>!row.id.startsWith("product-")&&!row.id.startsWith("peer-")&&!row.id.startsWith("norm-")&&!row.id!.startsWith("framework-"))){
   const start=by.get(`edit-${unit.id}-resident-start-p95`)!;
   expect([start.goal,start.gate,start.statistic,start.metric,start.enforcement,start.source]).toEqual([500,500,"p95","startMs","blocking","user-goal"]);
   expect(by.get(`edit-${unit.id}-oneshot-start-p50`)!.goal).toBe(500);
   for(const lane of ["oneshot","resident"]){const green=by.get(`edit-${unit.id}-${lane}-green-p50`)!;expect([green.goal,green.gate,green.metric]).toEqual([null,null,"greenMs"]);}
   expect(probes.get(`edit-${unit.id}-resident`)!.runs).toBeGreaterThanOrEqual(policy.minimumSamples.p95);
  }
- expect(set.units.filter(row=>!row.id.startsWith("product-")&&!row.id.startsWith("peer-")).map(row=>row.language).sort()).toEqual(["go","py","rs","ts"]);
+ expect(set.units.filter(row=>!row.id.startsWith("product-")&&!row.id.startsWith("peer-")&&!row.id.startsWith("norm-")&&!row.id.startsWith("framework-")).map(row=>row.language).sort()).toEqual(["go","py","rs","ts"]);
  for(const verb of ["build","test"]){const hit=by.get(`cache-second-run-${verb}-min`)!;expect([hit.goal,hit.gate,hit.direction,hit.statistic,hit.metric,hit.enforcement,hit.tolerance.relative,hit.tolerance.absolute]).toEqual([1,1,"higher","min","hitRatio","blocking",0,0]);}
  expect(by.get("cli-help-p95")!.goal).toBe(200);
  expect(by.get("graph-scope-cold-max")!.gate).toBe(300000);
  expect(probes.get("graph-scope-cold")!.cold).toBe(true);
- expect(set.slos.filter(row=>row.metric==="peakRssBytes"&&!row.id.startsWith("product-")).length).toBe(2);
+ expect(set.slos.filter(row=>row.metric==="peakRssBytes"&&!row.id.startsWith("product-")&&!row.id.startsWith("planning-")).length).toBe(2);
  for(const slo of set.slos)expect(policy.sources).toContain(slo.source);
 });
 
@@ -211,7 +211,8 @@ test("objectives are selected by id, probe, kind or all, probes are paired with 
  const all=benchSelectV1(set,"all",["nx","bazel"]);
  expect(all[0]!.probe.cold).toBe(true);
  expect(all.filter(pair=>pair.tool==="neutral").length).toBe(1);
- expect(all.length).toBe(set.probes.length*2-1);
+ const single=set.probes.filter(row=>row.kind==="planning").length;
+ expect(all.length).toBe((set.probes.length-single)*2-1+single);
  expect(benchSelectV1(set,["kind:cache"],["nx"]).map(pair=>pair.probe.id)).toEqual(["cache-second-run-build","cache-second-run-test"]);
  expect(()=>benchSelectV1(set,["kind:cache"],[])).toThrow(/Implementierungen/u);
  expect(()=>benchSelectV1(set,["nope"],["nx"])).toThrow(/Unbekanntes Ziel/u);
@@ -239,11 +240,11 @@ test("the resident memory of a process tree is summed from a process table of ei
  if(live.status===0){const mine=benchTreeRssV1(live.stdout,process.pid,process.platform);expect(mine).not.toBeNull();expect(mine!).toBeGreaterThan(10*1024*1024);}
 });
 
-test("a run of a probe is built from the exact commands: the lanes differ only by the service flag",()=>{
+test("a run of a probe is built from the exact commands: no lane adds a flag",()=>{
  expect(benchRunArgumentsV1("a:b","oneshot",false)).toEqual(["run","a:b"]);
- expect(benchRunArgumentsV1("a:b","oneshot",true)).toEqual(["run","a:b",policy.oneshotFlag]);
- expect(benchRunArgumentsV1("a:b","resident",true)).toEqual(["run","a:b",policy.residentFlag]);
- expect(benchRunArgumentsV1("a:b",null,true,["--dry-run"])).toEqual(["run","a:b","--dry-run",policy.oneshotFlag]);
+ expect(benchRunArgumentsV1("a:b","oneshot",true)).toEqual(["run","a:b"]);
+ expect(benchRunArgumentsV1("a:b","resident",true)).toEqual(["run","a:b"]);
+ expect(benchRunArgumentsV1("a:b",null,true,["--dry-run"])).toEqual(["run","a:b","--dry-run"]);
 });
 
 const title=text({en:"x",de:"x"});
@@ -292,7 +293,7 @@ test("a warm no-op primes once, then measures; a failing prime makes the probe u
  expect(first.series.samples.map(row=>row.values.wallMs)).toEqual([20,30,40,50]);
  expect(first.world.log.filter(line=>line.startsWith("write:")).length).toBe(0);
  const withService=await runProbe(probe({id:"n",kind:"noop",lane:"oneshot",target:"@x/y:build",runs:1,warmup:0}),{service:true});
- expect(withService.world.calls.every(call=>call.args.includes(policy.oneshotFlag))).toBe(true);
+ expect(withService.world.calls.every(call=>call.args[0]==="run"&&call.args.length===2)).toBe(true);
  const bad=await runProbe(probe({id:"n",kind:"noop",lane:"oneshot",target:"@x/y:build"}),{spawn:()=>finished({exit:1})});
  expect([bad.world.calls.length,bad.series.samples.length,bad.series.failed]).toEqual([1,1,1]);
  const row=benchJudgeV1(slo({id:"s",probe:"n"}),"nx",bad.series);
@@ -305,7 +306,7 @@ test("the resident lane needs the service: it is unavailable without it, started
  expect([absent.series.status,absent.series.reason,absent.world.calls.length]).toEqual(["unavailable","service-unavailable",0]);
  expect(benchJudgeV1(slo({id:"s",probe:"r"}),"nx",absent.series)).toMatchObject({status:"unproven",reason:"service-unavailable"});
  const present=await runProbe(resident,{service:true});
- expect(present.world.log.filter(line=>line.startsWith("service:")||line.startsWith("spawn:"))).toEqual(["service:start","spawn:run @x/y:build --service=require","spawn:run @x/y:build --service=require","spawn:run @x/y:build --service=require","service:stop"]);
+ expect(present.world.log.filter(line=>line.startsWith("service:")||line.startsWith("spawn:"))).toEqual(["service:start","spawn:run @x/y:build","spawn:run @x/y:build","spawn:run @x/y:build","service:stop"]);
  const failing=scripted({service:true,spawn:(_,call)=>call===1?Error("tool crashed"):finished(),load:0.1});
  const series=await benchRunProbeV1(mini([resident]),resident,"nx",{override:null,service:true},failing.ports);
  expect(series.failed).toBe(1);
@@ -630,7 +631,7 @@ test("real ports find the resident service in the operations catalogue of the co
   expect(await ports.service.available()).toBe(true);
   await ports.service.start();expect(existsSync(flag)).toBe(true);
   await ports.service.stop();expect(existsSync(flag)).toBe(false);
-  expect(calls).toEqual(["service start","service stop"]);
+  expect(calls).toEqual(["service host start","service host stop"]);
   writeFileSync(join(base,catalogPath),"not json");
   expect(await ports.service.available()).toBe(false);
  }finally{rmSync(base,{recursive:true,force:true});}
@@ -896,3 +897,32 @@ test("the command stores every run in the history, compares the next run with th
   expect(benchBudgetV1(report)).toEqual({rows:[],blocking:0});
  }finally{rmSync(base,{recursive:true,force:true});rmSync(live,{recursive:true,force:true});}
 },120000);
+
+test("planning objectives are admitted, selectable as planning/<scenario> and judged on host resources",()=>{
+ const by=new Map(set.slos.map(row=>[row.id,row]));
+ expect(benchSloIssuesV1(set)).toEqual([]);
+ expect(benchSelectV1(set,["planning/leaf-edit"],["nx","bazel"]).map(pair=>pair.probe.id)).toEqual(["planning-leaf-edit","planning-leaf-edit"].slice(0,1));
+ expect(benchSelectV1(set,["kind:planning"],["nx"]).map(pair=>pair.probe.id).sort()).toEqual(["planning-cold","planning-leaf-edit","planning-manifest-edit","planning-two","planning-warm"]);
+ expect(()=>benchSelectV1(set,["planning/none"],["nx"])).toThrow();
+ const leaf=by.get("planning-leaf-edit-wall-p50")!;
+ expect([leaf.gate,leaf.enforcement,leaf.metric,leaf.statistic]).toEqual([10000,"blocking","wallMs","p50"]);
+ expect([by.get("planning-two-rss-max")!.gate,by.get("planning-two-oom-max")!.gate,by.get("planning-warm-store-max")!.enforcement]).toEqual([3221225472,0,"blocking"]);
+ const text=`graph: refreshing 5 projects (generation 1)\ngraph: 2 stale facts (file 2) leave 5 projects stale\ngraph: 12 derived results asked again after 2 stale facts: 11 unchanged, 1 changed\n`.split("\n"),observer=benchObserverV1();
+ text.forEach((line,at)=>observer.feed(at,line));
+ expect(benchObservedValuesV1(observer.finish(10))).toMatchObject({closuresVerified:12,closuresReused:11,staleFacts:2,inferredProjects:5});
+});
+
+test("planning probes run the dry-run, plan a peer at the same time, restore the edit and carry host resources",async()=>{
+ const two=set.probes.find(row=>row.id==="planning-two")!,leaf=set.probes.find(row=>row.id==="planning-leaf-edit")!,file=set.units.find(row=>row.id==="norm-leaf")!.file,end={peakRssBytes:2e9,oomKills:0,swapBytes:1e9};
+ const finishedRun=(wallMs:number,line:string)=>({exit:0,wallMs,startedMs:0,firstOutputMs:1,markerMs:null,peakRssBytes:null,observation:(()=>{const observer=benchObserverV1();observer.feed(1,line);return observer.finish(wallMs);})()});
+ const line="graph: 12 derived results asked again after 2 stale facts: 11 unchanged, 1 changed";
+ const world=scripted({files:{[file]:"pub fn a(){}\n"},spawn:(spec,at)=>finishedRun(at%2===0?100:300,line)}),ports={...world.ports,resources:()=>({end:()=>end})};
+ const series=await benchRunProbeV1(set,{...two,runs:1,warmup:0},"nx",{override:null,service:false},ports);
+ expect(world.calls.every(call=>call.args.includes("--dry-run"))).toBe(true);
+ expect(world.calls.some(call=>call.args.includes("@semio-tech/norm-din16798-rs:build"))).toBe(true);
+ expect(series.samples[0]!.values).toMatchObject({wallMs:300,closuresVerified:12,closuresReused:11,peakRssBytes:2e9,oomKills:0,swapBytes:1e9});
+ const edited=scripted({files:{[file]:"pub fn a(){}\n"},spawn:()=>finishedRun(50,line)}),done=await benchRunProbeV1(set,{...leaf,runs:1,warmup:0},"nx",{override:null,service:false},{...edited.ports,resources:()=>({end:()=>end})});
+ expect(done.samples[0]!.ok).toBe(true);
+ expect(edited.files.get(file)).toBe("pub fn a(){}\n");
+ expect(edited.log.filter(row=>row.startsWith("write:"))).toHaveLength(2);
+});

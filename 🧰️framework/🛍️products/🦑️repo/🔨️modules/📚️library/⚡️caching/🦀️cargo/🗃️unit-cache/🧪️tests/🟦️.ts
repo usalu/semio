@@ -1,4 +1,5 @@
 import {expect,test} from "bun:test";
+import {casObjectPathV1} from "../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
@@ -12,7 +13,7 @@ import {expandRustcArgumentsV1,keyEnvironmentV1,normalizeRustcArgumentsV1,parseD
 import {planGcV1,type GcInputV1} from "../🧹️gc/🟦️.ts";
 import {enterLaneV1,lanePathsV1,readLaneV1} from "../🧵️lane/🟦️.ts";
 import {acquirePooledLaneV1} from "../🧵️lane/🏊️pool/🟦️.ts";
-import {listObjectsV1,lookupBuildRunV1,pruneEntriesV1,publishBuildRunV1} from "../💾️store/🟦️.ts";
+import {lookupBuildRunV1,pruneEntriesV1,publishBuildRunV1} from "../💾️store/🟦️.ts";
 import {admissionMemoKeyV1,recallAdmissionV1,rememberAdmissionV1,unitAdmissionMemoV1} from "../📖️admission/🟦️.ts";
 import {ensureUnitCacheShimV1,focusFromCargoArgumentsV1,laneMessageV1,unitCacheEnvironmentV1,unitCacheRootV1,unitCacheShimPathV1,unitCacheShimSourceV1} from "../🚪️launch/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
@@ -22,7 +23,8 @@ import {CATALOG_LANGUAGES_V1} from "../../../../../../../../🔨️modules/🏃�
 /** 🏁️ Every Cargo child runs in a scratch workspace below `cargoScratchBaseV1`, outside every enclosing Cargo configuration, workspace manifest and toolchain file, so no repository `.cargo/config.toml` can leak in even when the test artifact directory lies inside a checkout. Separate OS processes prove the claims, the slot queue and the cache: three sessions build disjoint crates of one workspace at once and compile each shared unit exactly once, a fourth session gets only hits, and no wait exceeds its bound. sccache (hit/miss counts; it keys on the output directory, so its runs reuse one wiped directory while ours cross lanes) and a plain Cargo build (artifact bytes) are the independent oracles; the key, dependency-file, lane and cleanup vectors are language-agnostic JSON. */
 const here=fileURLToPath(new URL(".",import.meta.url)),script=resolve(here,"../📜️script.ts"),worker=resolve(here,"📥️worker/🟦️.ts"),slow=resolve(here,"⏳️slow/🟦️.ts"),policy=UNIT_CACHE_POLICY_V1;
 const base=cargoScratchBaseV1();
-const scratch=()=>mkdtempSync(join(base,"uc-"));
+const toolchainEnvironment=Object.fromEntries(["RUSTUP_HOME","CARGO_HOME","RUSTUP_TOOLCHAIN"].filter(name=>process.env[name]!==undefined).map(name=>[name,process.env[name]!]));
+const scratch=()=>{const directory=mkdtempSync(join(base,"uc-"));process.env.SEMIO_CAS_ROOT=join(directory,"cas");return directory;};
 const ajv=new Ajv({strict:true});ajv.addSchema(schema);
 const validator=(name:string)=>{const validate=ajv.getSchema(`${schema.$id}#/definitions/${name}`);if(!validate)throw Error("Missing schema definition "+name);return validate;};
 
@@ -74,16 +76,14 @@ test("lane identifiers are validated, and a lane records the session and agent t
 
 function oracleShares(input:GcInputV1,rules:typeof policy.gc){
  const db=new Database(":memory:"),cap=(share:number)=>Math.floor(input.capacityBytes*share);
- db.run("create table lanes(id text,bytes integer,inc integer,last integer,live integer)");db.run("create table objects(digest text,bytes integer,last integer)");
+ db.run("create table lanes(id text,bytes integer,inc integer,last integer,live integer)");
  for(const row of input.lanes)db.run("insert into lanes values(?,?,?,?,?)",[row.id,row.bytes,row.incrementalBytes,row.lastUsedMs,row.live?1:0]);
- for(const row of input.objects)db.run("insert into objects values(?,?,?)",[row.digest,row.bytes,row.lastUsedMs]);
  const liveBytes=(db.query("select coalesce(sum(bytes),0) as v from lanes where live=1").get() as {v:number}).v,liveInc=(db.query("select coalesce(sum(inc),0) as v from lanes where live=1").get() as {v:number}).v;
  const lanes=(db.query("select id from (select id,sum(bytes) over (order by last desc,id asc rows between unbounded preceding and current row) as run from lanes where live=0) where run>?").all(Math.max(0,cap(rules.laneShare)-liveBytes)) as {id:string}[]).map(row=>row.id).sort();
  const kept=db.query("select id,inc,last from lanes where live=0").all() as {id:string;inc:number;last:number}[];
  db.run("create table rest(id text,inc integer,last integer)");for(const row of kept)if(!lanes.includes(row.id))db.run("insert into rest values(?,?,?)",[row.id,row.inc,row.last]);
  const incremental=(db.query("select id from (select id,inc,sum(inc) over (order by last desc,id asc rows between unbounded preceding and current row) as run from rest) where run>? and inc>0").all(Math.max(0,cap(rules.incrementalShare)-liveInc)) as {id:string}[]).map(row=>row.id).sort();
- const objects=(db.query("select digest from (select digest,sum(bytes) over (order by last desc,digest asc rows between unbounded preceding and current row) as run from objects) where run>?").all(cap(rules.casShare)) as {digest:string}[]).map(row=>row.digest).sort();
- return{removeLanes:lanes,removeIncremental:incremental,removeObjects:objects};
+ return{removeLanes:lanes,removeIncremental:incremental};
 }
 
 function seeded(seed:number){let state=seed>>>0;return()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};}
@@ -94,15 +94,13 @@ test("cleanup plans follow the vectors, agree with a SQLite window oracle on the
  for(let round=0;round<300;round++){
   const capacityBytes=1_000_000+Math.floor(random()*9_000_000),now=1_000_000_000,pick=(limit:number)=>Math.floor(random()*limit);
   const lanes=Array.from({length:pick(12)},(_,index)=>{const bytes=pick(400_000);return{id:"l"+index.toString(36),bytes,incrementalBytes:pick(bytes+1),lastUsedMs:now-pick(3_000_000),live:random()<0.25};});
-  const objects=Array.from({length:pick(40)},(_,index)=>({digest:index.toString(16).padStart(64,"0"),bytes:pick(300_000),lastUsedMs:now-pick(3_000_000)}));
-  const calm:GcInputV1={capacityBytes,volumeBytes:capacityBytes,freeBytes:capacityBytes,nowMs:now,lanes,objects},plan=planGcV1(calm),oracle=oracleShares(calm,rules);
-  expect(plan.removeLanes,"lanes "+round).toEqual(oracle.removeLanes);expect(plan.removeIncremental.filter(id=>!oracle.removeLanes.includes(id)),"incremental "+round).toEqual(oracle.removeIncremental.filter(id=>!oracle.removeLanes.includes(id)));expect(plan.removeObjects,"objects "+round).toEqual(oracle.removeObjects);
+  const calm:GcInputV1={capacityBytes,volumeBytes:capacityBytes,freeBytes:capacityBytes,nowMs:now,lanes},plan=planGcV1(calm),oracle=oracleShares(calm,rules);
+  expect(plan.removeLanes,"lanes "+round).toEqual(oracle.removeLanes);expect(plan.removeIncremental.filter(id=>!oracle.removeLanes.includes(id)),"incremental "+round).toEqual(oracle.removeIncremental.filter(id=>!oracle.removeLanes.includes(id)));
   const pressured:GcInputV1={...calm,freeBytes:pick(Math.floor(capacityBytes*0.05)),lanes:lanes.map((lane,index)=>index%3===0?{...lane,lastUsedMs:0}:lane)},hard=planGcV1(pressured),live=new Set(lanes.filter(row=>row.live).map(row=>row.id));
   for(const id of[...hard.removeLanes,...hard.removeIncremental])expect(live.has(id),"live lane removed "+round).toBe(false);
   expect(planGcV1(pressured)).toEqual(hard);
   const left=lanes.filter(row=>!hard.removeLanes.includes(row.id)).reduce((sum,row)=>sum+row.bytes-(hard.removeIncremental.includes(row.id)?row.incrementalBytes:0),0),liveSum=lanes.filter(row=>row.live).reduce((sum,row)=>sum+row.bytes,0);
   expect(left<=Math.max(liveSum,Math.floor(capacityBytes*rules.laneShare)),"lane bound "+round).toBe(true);
-  expect(objects.filter(row=>!hard.removeObjects.includes(row.digest)).reduce((sum,row)=>sum+row.bytes,0)<=Math.floor(capacityBytes*rules.casShare),"object bound "+round).toBe(true);
  }
 });
 
@@ -248,14 +246,14 @@ test("cleanup removes by recency inside its bounds, keeps a lane with a live mar
  expect((await session(workspace,cache,"g1",["-p","l1"],inner)).code).toBe(0);expect((await session(workspace,cache,"g2",["-p","l1"],inner)).code).toBe(0);
  const live=enterLaneV1(cache,"g2");
  try{
-  expect(listObjectsV1(cache).length).toBeGreaterThan(0);
+  expect((await import("../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts")).casUsageV1(join(directory,"cas"))).resolves.toMatchObject({objects:expect.any(Number)});
   const run=spawnSync(process.execPath,[script,"--semio-unit-cache","gc","--root",cache,"--capacity","4000"],{encoding:"utf8"});expect(run.status,run.stderr).toBe(0);
-  const result=JSON.parse(run.stdout) as {plan:{removeLanes:string[];removeObjects:string[]};applied:{lanes:number;objects:number}};
+  const result=JSON.parse(run.stdout) as {plan:{removeLanes:string[]};applied:{lanes:number}};
   expect(result.plan.removeLanes).toContain("g1");expect(result.plan.removeLanes).not.toContain("g2");
   expect(existsSync(join(cache,"l","g2","t"))).toBe(true);expect(existsSync(join(cache,"l","g1"))).toBe(false);
-  expect(listObjectsV1(cache).reduce((sum,row)=>sum+row.bytes,0)).toBeLessThanOrEqual(Math.floor(4000*policy.gc.casShare));
   const stats=JSON.parse(spawnSync(process.execPath,[script,"--semio-unit-cache","stats","--root",cache],{encoding:"utf8"}).stdout) as {totals:Record<string,number>};expect(stats.totals.publish).toBeGreaterThan(0);
  }finally{live.release();}
+ rmSync(join(directory,"cas","v1","o"),{recursive:true,force:true});
  const again=await session(workspace,cache,"g3",["-p","l1"],inner);expect(again.code,again.output).toBe(0);
  expect(count(events(cache,"g3"),"miss")).toBeGreaterThan(0);
 },180000);
@@ -376,7 +374,7 @@ test("a build script run that lost the object of a stream it replays is a miss a
  const key="ab"+"c".repeat(62),context={cwd,laneRoot:undefined,environment:{},stampDirectory:undefined};
  const entry=publishBuildRunV1(root,{key,package:"fixture",cwd,laneRoot:undefined,directives:{files:[],variables:[]},environment:{},outDir,stdout:'cargo:rustc-cfg=fast_arithmetic="64"\n',stderr:"",stampDirectory:undefined});
  expect(typeof entry?.stdout).toBe("string");expect(lookupBuildRunV1(root,key,context)?.stdout).toBe(entry!.stdout);
- rmSync(join(root,"o",entry!.stdout!.slice(0,2),entry!.stdout!),{force:true});
+ rmSync(casObjectPathV1(join(root,"cas"),entry!.stdout!),{force:true});
  expect(lookupBuildRunV1(root,key,context),"an empty replay would drop every cargo: directive").toBeUndefined();
  expect(pruneEntriesV1(root,Date.now()).entries).toBe(1);expect(existsSync(join(root,"r",key.slice(0,2),key))).toBe(false);
 });
@@ -426,7 +424,7 @@ fn main() {
  for(const lane of["x1","x2"]){
   const laneRoot=join(cache,"l",lane);mkdirSync(laneRoot,{recursive:true});lanes.push(lane);
   const block=unitCacheEnvironmentV1({cacheRoot:cache,lane,laneRoot,scheduler:"unused",compiler:"rustc",toolchain:"tc",focus:[],slots:2,features:{buildScripts:true}});
-  const run=await new Promise<{code:number;output:string}>(done=>{const child=spawn(cargo,["build"],{cwd:workspace,env:{HOME:process.env.HOME,PATH:bare,...block,SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_INCREMENTAL:"0"} as NodeJS.ProcessEnv,stdio:["ignore","pipe","pipe"]});let output="";child.stdout.on("data",chunk=>{output+=chunk;});child.stderr.on("data",chunk=>{output+=chunk;});child.on("close",code=>done({code:code??1,output}));});
+  const run=await new Promise<{code:number;output:string}>(done=>{const child=spawn(cargo,["build"],{cwd:workspace,env:{HOME:process.env.HOME,...toolchainEnvironment,PATH:bare,...block,SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_INCREMENTAL:"0"} as NodeJS.ProcessEnv,stdio:["ignore","pipe","pipe"]});let output="";child.stdout.on("data",chunk=>{output+=chunk;});child.stderr.on("data",chunk=>{output+=chunk;});child.on("close",code=>done({code:code??1,output}));});
   expect(run.code,run.output).toBe(0);
  }
  const second=events(cache,"x2");expect(count(second,"miss")+count(second,"failed")).toBe(0);expect(count(second,"hit")).toBeGreaterThan(0);
@@ -450,7 +448,7 @@ fn main() {
  writeFileSync(join(workspace,"src","lib.rs"),"pub fn f() {}\n");
  const laneRoot=join(cache,"l","w1");mkdirSync(laneRoot,{recursive:true});
  const block=unitCacheEnvironmentV1({cacheRoot:cache,lane:"w1",laneRoot,scheduler:"unused",compiler:"rustc",toolchain:"tc",focus:[],slots:2,features:{buildScripts:true}});
- const run=await new Promise<{code:number;output:string}>(done=>{const child=spawn(cargo,["build"],{cwd:workspace,env:{HOME:process.env.HOME,PATH:`${process.env.HOME}/.cargo/bin:/usr/bin:/bin`,...block,SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_INCREMENTAL:"0"} as NodeJS.ProcessEnv,stdio:["ignore","pipe","pipe"]});let output="";child.stdout.on("data",chunk=>{output+=chunk;});child.stderr.on("data",chunk=>{output+=chunk;});child.on("close",code=>done({code:code??1,output}));});
+ const run=await new Promise<{code:number;output:string}>(done=>{const child=spawn(cargo,["build"],{cwd:workspace,env:{HOME:process.env.HOME,...toolchainEnvironment,PATH:`${process.env.HOME}/.cargo/bin:/usr/bin:/bin`,...block,SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_INCREMENTAL:"0"} as NodeJS.ProcessEnv,stdio:["ignore","pipe","pipe"]});let output="";child.stdout.on("data",chunk=>{output+=chunk;});child.stderr.on("data",chunk=>{output+=chunk;});child.on("close",code=>done({code:code??1,output}));});
  expect(run.code,run.output).toBe(0);
 },120000);
 

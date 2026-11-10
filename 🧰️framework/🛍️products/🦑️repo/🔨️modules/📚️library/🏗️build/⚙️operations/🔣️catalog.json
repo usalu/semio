@@ -34,12 +34,7 @@
         "de": "Führt Aktionen in persistenten Workern (on) oder je in einem eigenen Prozess (off) aus; sonst SEMIO_BUILD_WORKERS, dann die Worker-Richtlinie der Build-Richtlinie."
       }
     },
-    {"name": "--service", "value": "required", "valueName": "auto|off|require", "description": {"en": "Use the resident service (auto: when one answers), never use it (off), or fail when none answers (require); otherwise SEMIO_BUILD_SERVICE, then auto.", "de": "Nutzt den residenten Dienst (auto: wenn einer antwortet), nutzt ihn nie (off) oder schlägt fehl, wenn keiner antwortet (require); sonst SEMIO_BUILD_SERVICE, dann auto."}},
-    {"name": "--foreground", "value": "none", "operations": ["service"], "description": {"en": "service start: run the service in this terminal instead of detached.", "de": "service start: führt den Dienst in diesem Terminal statt losgelöst aus."}},
     {"name": "--agent", "value": "required", "valueName": "id", "operations": ["service", "session"], "description": {"en": "service issue: the agent the token is issued to; service revoke: revoke every session of this agent.", "de": "service issue: der Agent, dem die Berechtigung ausgestellt wird; service revoke: widerruft alle Sitzungen dieses Agenten."}},
-    {"name": "--classes", "value": "required", "valueName": "classes", "operations": ["service"], "description": {"en": "service issue: comma separated command classes the token allows (status, query, run, watch, admin).", "de": "service issue: kommagetrennte Befehlsklassen, die die Berechtigung erlaubt (status, query, run, watch, admin)."}},
-    {"name": "--for", "value": "required", "valueName": "names", "operations": ["service"], "description": {"en": "service issue: comma separated project names or prefixes ending in * the token is limited to.", "de": "service issue: kommagetrennte Projektnamen oder Präfixe mit * am Ende, auf die die Berechtigung beschränkt ist."}},
-    {"name": "--ttl", "value": "required", "valueName": "seconds", "operations": ["service"], "description": {"en": "service issue: lifetime of the token in seconds (default 3600, at most 86400).", "de": "service issue: Lebensdauer der Berechtigung in Sekunden (Standard 3600, höchstens 86400)."}},
     { "name": "--help", "aliases": ["-h"], "value": "none", "description": { "en": "Print the usage of the command and stop.", "de": "Gibt die Verwendung des Befehls aus und endet." } },
     {
       "name": "--lang",
@@ -176,7 +171,7 @@
     {
       "name": "--json",
       "value": "none",
-      "operations": ["graph", "show", "incremental", "concurrency", "bench", "capacity", "fleet", "leases", "cache", "remote-cache", "doctor", "tools", "conformance", "units", "service", "session"],
+      "operations": ["graph", "show", "incremental", "concurrency", "bench", "capacity", "fleet", "scheduler", "leases", "cache", "remote-cache", "doctor", "tools", "conformance", "units", "service", "session"],
       "description": { "en": "Print lists as JSON instead of one entry per line.", "de": "Gibt Listen als JSON statt eines Eintrags je Zeile aus." }
     },
     {
@@ -192,26 +187,6 @@
       "valueName": "size",
       "operations": ["cache"],
       "description": { "en": "cache status|gc: the disk budget of this machine for this call (an integer or a number with KiB, MiB, GiB, TiB, e.g. 40GiB); it beats the SEMIO_CACHE_BUDGET_BYTES variable, which beats the machine file in the repository cache root, which beats the declared default.", "de": "cache status|gc: das Platzbudget dieses Rechners für diesen Aufruf (eine ganze Zahl oder eine Zahl mit KiB, MiB, GiB, TiB, z. B. 40GiB); es schlägt die Variable SEMIO_CACHE_BUDGET_BYTES, diese die Rechnerdatei im Repository-Cache-Wurzelordner, diese den deklarierten Standard." }
-    },
-    {
-      "name": "--partition",
-      "value": "required",
-      "valueName": "id",
-      "operations": ["cache"],
-      "description": { "en": "cache grow (required): the cache partition whose image grows; only rust is declared.", "de": "cache grow (erforderlich): die Cache-Partition, deren Image wächst; nur rust ist deklariert." }
-    },
-    {
-      "name": "--stop-collectors",
-      "value": "none",
-      "operations": ["cache"],
-      "description": { "en": "cache grow: after the exclusive image lease is held, ask the background unit-cache collector of that image to stop (SIGTERM, its documented cancel); without it a collector that keeps files open in the image makes the growth refuse after ten minutes.", "de": "cache grow: bittet, sobald die exklusive Image-Lease gehalten wird, den Hintergrund-Sammler des Unit-Caches dieses Images, sich zu beenden (SIGTERM, sein dokumentierter Abbruch); ohne dies lehnt die Vergrößerung nach zehn Minuten ab, wenn ein Sammler Dateien im Image offen hält." }
-    },
-    {
-      "name": "--bytes",
-      "value": "required",
-      "valueName": "n",
-      "operations": ["cache"],
-      "description": { "en": "cache grow: an exact target size in bytes (a whole number of MiB at most the declared size); without it the image grows as far as the policy and the host reserve allow.", "de": "cache grow: eine genaue Zielgröße in Bytes (eine ganze Zahl von MiB, höchstens die deklarierte Größe); ohne sie wächst das Image so weit, wie Richtlinie und Host-Reserve erlauben." }
     },
     {
       "name": "--deep",
@@ -301,7 +276,7 @@
       "value": "required",
       "valueName": "ids|all",
       "operations": ["bench"],
-      "description": { "en": "bench run: comma list of objective ids, probe:<id>, kind:<cli-help|noop|edit|graph|cache|concurrency>, or all.", "de": "bench run: Kommaliste von Ziel-IDs, probe:<id>, kind:<cli-help|noop|edit|graph|cache|concurrency> oder all." }
+      "description": { "en": "bench run: comma list of objective ids, probe:<id>, kind:<cli-help|noop|edit|graph|cache|concurrency|planning>, or all.", "de": "bench run: Kommaliste von Ziel-IDs, probe:<id>, kind:<cli-help|noop|edit|graph|cache|concurrency|planning> oder all." }
     },
     {
       "name": "--runs",
@@ -571,6 +546,48 @@
       "valueName": "n",
       "operations": ["fleet"],
       "description": { "en": "fleet status: how many runs the text output lists (default: 20, the JSON output always lists all).", "de": "fleet status: wie viele Läufe die Textausgabe auflistet (Standard: 20, die JSON-Ausgabe listet immer alle)." }
+    },
+    {
+      "name": "--key",
+      "value": "required",
+      "valueName": "key",
+      "operations": ["scheduler"],
+      "description": { "en": "scheduler run: the dedupe key; agents that run the same key at the same time share one run (default: the command line).", "de": "scheduler run: der Dedupe-Schlüssel; Agenten, die gleichzeitig denselben Schlüssel ausführen, teilen sich einen Lauf (Standard: die Befehlszeile)." }
+    },
+    {
+      "name": "--priority",
+      "value": "required",
+      "valueName": "band",
+      "operations": ["scheduler"],
+      "description": { "en": "scheduler run: priority band background, agent or interactive (default: agent).", "de": "scheduler run: Prioritätsband background, agent oder interactive (Standard: agent)." }
+    },
+    {
+      "name": "--depth",
+      "value": "required",
+      "valueName": "n",
+      "operations": ["scheduler"],
+      "description": { "en": "scheduler run: length of the longest chain of dependents of the target; deeper (shared) targets start first (default: 0).", "de": "scheduler run: Länge der längsten Kette abhängiger Ziele; tiefere (gemeinsame) Ziele starten zuerst (Standard: 0)." }
+    },
+    {
+      "name": "--peak-mb",
+      "value": "required",
+      "valueName": "n",
+      "operations": ["scheduler"],
+      "description": { "en": "scheduler run: expected peak memory in MB that is reserved for the command (default: 1024).", "de": "scheduler run: erwarteter Spitzenspeicher in MB, der für den Befehl reserviert wird (Standard: 1024)." }
+    },
+    {
+      "name": "--lane",
+      "value": "required",
+      "valueName": "lane",
+      "operations": ["scheduler"],
+      "description": { "en": "scheduler run: shared compiler lane (rustc or tsc) whose concurrency is capped.", "de": "scheduler run: gemeinsame Compiler-Spur (rustc oder tsc), deren Parallelität begrenzt ist." }
+    },
+    {
+      "name": "--class",
+      "value": "required",
+      "valueName": "class",
+      "operations": ["scheduler"],
+      "description": { "en": "scheduler run: job class plan, compile, test or generate (default: compile).", "de": "scheduler run: Auftragsklasse plan, compile, test oder generate (Standard: compile)." }
     },
     {
       "name": "--violations",
@@ -1292,7 +1309,7 @@
     {
       "name": "cache",
       "requires": "none",
-      "synopsis": "cache status|gc|verify|dedupe|grow|clear",
+      "synopsis": "cache status|gc|verify|dedupe|cas|clear",
       "summary": {
         "en": "Show and collect every declared cache home with its budget, or clear the selected tool's local task cache.",
         "de": "Zeigt und sammelt jede deklarierte Cache-Heimat mit ihrem Budget oder leert den lokalen Task-Cache des gewählten Werkzeugs."
@@ -1335,16 +1352,16 @@
           }
         },
         {
-          "name": "grow",
-          "synopsis": "cache grow --partition=rust [--bytes=<n>] [--dry-run] [--stop-collectors]", "flags": ["--partition", "--bytes", "--dry-run", "--stop-collectors"],
+          "name": "cas",
+          "synopsis": "cache cas status|adopt|gc [--dry-run]", "flags": ["--dry-run", "--json"],
           "summary": {
-            "en": "Grow the fixed image of a cache partition to the size its policy declares without building it again: bounded by the declared size, the elastic maximum and the host free-space reserve, it takes the exclusive image lease (running commands finish first), detaches the image, resizes the backing file offline, attaches it again and re-stamps the receipt and storage journal; a killed run resumes. --dry-run only prints the plan.",
-            "de": "Vergrößert das feste Image einer Cache-Partition auf die von der Richtlinie deklarierte Größe, ohne es neu zu bauen: begrenzt durch die deklarierte Größe, das elastische Maximum und die Freiplatz-Reserve des Hosts nimmt es die exklusive Image-Lease (laufende Befehle enden zuerst), hängt das Image aus, vergrößert die Sicherungsdatei offline, hängt es wieder ein und stempelt Beleg und Speicherjournal neu; ein abgebrochener Lauf wird fortgesetzt. --dry-run gibt nur den Plan aus."
+            "en": "Report, deduplicate and collect the host-wide content-addressed store: status prints its fill against the cap; adopt makes finished files of the declared places (dependency installs, bun cache, tool installs, Bazel disk cache) hard links of one stored object per content; gc applies the cap, the watermarks and the idle ages to the store, the graph memo and the build-input closures, least recently accessed first, never removing an object that is pinned, leased, linked by a workspace or too young.",
+            "de": "Zeigt, dedupliziert und sammelt den rechnerweiten inhaltsadressierten Speicher: status gibt die Füllung gegen die Obergrenze aus; adopt macht fertige Dateien der deklarierten Orte (Abhängigkeits-Installationen, Bun-Cache, Werkzeug-Installationen, Bazel-Disk-Cache) zu harten Links je eines gespeicherten Objekts pro Inhalt; gc wendet Obergrenze, Marken und Leerlaufalter auf Speicher, Graph-Memo und Abschluss-Inventare an, zuletzt benutzte zuerst, und entfernt nie ein Objekt, das gepinnt, geleast, von einem Workspace verlinkt oder zu jung ist."
           }
         },
         { "name": "clear", "synopsis": "cache clear", "flags": [], "summary": { "en": "Empty the cache and print a CacheClear.", "de": "Leert den Cache und gibt einen CacheClear aus." } }
       ],
-      "flags": ["--json", "--dry-run", "--area", "--budget", "--deep", "--tasks", "--partition", "--bytes", "--stop-collectors"],
+      "flags": ["--json", "--dry-run", "--area", "--budget", "--deep", "--tasks"],
       "examples": [
         { "command": "repo cache status", "description": { "en": "Show every cache partition and area against its budget.", "de": "Zeigt jede Cache-Partition und jeden Bereich gegen sein Budget." } },
         { "command": "repo cache gc --dry-run", "description": { "en": "List what the collector would remove.", "de": "Listet auf, was der Sammler entfernen würde." } },
@@ -1596,12 +1613,12 @@
       ]
     },
     {
-      "name": "service",
+      "name": "scheduler",
       "requires": "none",
-      "synopsis": "service status|start|stop|restart|issue|revoke|drop-caches|probe",
+      "synopsis": "scheduler status|cancel|run",
       "summary": {
-        "en": "Run, inspect or stop the resident service of this worktree that keeps the graph, file digests and task results warm and answers every agent over one local socket.",
-        "de": "Startet, prüft oder beendet den residenten Dienst dieses Arbeitsbaums, der Graph, Datei-Prüfsummen und Task-Ergebnisse warm hält und alle Agenten über einen lokalen Socket bedient."
+        "en": "Show or steer the fair global build queue shared by every agent on this machine, or run a command through it.",
+        "de": "Zeigt oder steuert die faire globale Build-Warteschlange aller Agenten auf diesem Rechner oder führt einen Befehl über sie aus."
       },
       "dryRun": false,
       "progress": true,
@@ -1609,100 +1626,90 @@
       "subcommands": [
         {
           "name": "status",
-          "synopsis": "service status [--json]",
+          "synopsis": "scheduler status [--json]",
           "summary": {
-            "en": "Print the process, the file watcher backend and trust, the graph generation, queue and memory of the service.",
-            "de": "Gibt Prozess, Backend und Vertrauensstufe des Dateibeobachters, Graph-Generation, Warteschlange und Speicher des Dienstes aus."
+            "en": "Print running and queued jobs with reserved memory, queue position, waiting time, progress and each agent's share.",
+            "de": "Gibt laufende und wartende Aufträge mit reserviertem Speicher, Warteposition, Wartezeit, Fortschritt und dem Anteil jedes Agenten aus."
           }
         },
         {
-          "name": "start",
-          "synopsis": "service start [--foreground]",
+          "name": "cancel",
+          "synopsis": "scheduler cancel <ticket>",
           "summary": {
-            "en": "Start the service detached and wait until it answers; with --foreground run it in this terminal.",
-            "de": "Startet den Dienst losgelöst und wartet, bis er antwortet; mit --foreground läuft er in diesem Terminal."
+            "en": "Cancel one ticket; a running command of that ticket is stopped, a queued job leaves the queue.",
+            "de": "Bricht ein Ticket ab; ein laufender Befehl dieses Tickets wird gestoppt, ein wartender Auftrag verlässt die Warteschlange."
           }
         },
         {
-          "name": "stop",
-          "synopsis": "service stop",
+          "name": "run",
+          "synopsis": "scheduler run [--key=<key>] [--priority=<band>] [--depth=<n>] [--peak-mb=<n>] [--lane=<lane>] [--class=<class>] -- <command...>",
           "summary": {
-            "en": "Drain running requests and stop the service.",
-            "de": "Lässt laufende Anfragen auslaufen und beendet den Dienst."
-          }
-        },
-        {
-          "name": "restart",
-          "synopsis": "service restart",
-          "summary": {
-            "en": "Stop the service and start it again.",
-            "de": "Beendet den Dienst und startet ihn erneut."
-          }
-        },
-        {
-          "name": "issue",
-          "synopsis": "service issue --agent <id> [--classes <classes>] [--for <projects>] [--ttl <seconds>]",
-          "summary": {
-            "en": "Print a capability token for one agent session, bound to this worktree and restricted to command classes, projects and lifetime; hand it to an agent that must not do more (SEMIO_SERVICE_TOKEN).",
-            "de": "Gibt eine Berechtigung für eine Agenten-Sitzung aus, an diesen Arbeitsbaum gebunden und beschränkt auf Befehlsklassen, Projekte und Lebensdauer; für einen Agenten, der nicht mehr tun darf (SEMIO_SERVICE_TOKEN)."
-          }
-        },
-        {
-          "name": "revoke",
-          "synopsis": "service revoke <session|token> | --agent <id>",
-          "summary": {
-            "en": "Revoke one agent session or every session of an agent: running commands of it are cancelled and later requests are refused.",
-            "de": "Widerruft eine Agenten-Sitzung oder alle Sitzungen eines Agenten: laufende Befehle werden abgebrochen und spätere Anfragen abgelehnt."
-          }
-        },
-        {
-          "name": "drop-caches",
-          "synopsis": "service drop-caches",
-          "summary": {
-            "en": "Forget digests and task results; the next request re-proves everything.",
-            "de": "Vergisst Prüfsummen und Task-Ergebnisse; die nächste Anfrage belegt alles neu."
-          }
-        },
-        {
-          "name": "probe",
-          "synopsis": "service probe",
-          "summary": {
-            "en": "Exit 0 when the service answers, 1 otherwise; prints nothing.",
-            "de": "Endet mit 0, wenn der Dienst antwortet, sonst mit 1; gibt nichts aus."
+            "en": "Wait fairly in the global queue, then run the command; identical keys share one run.",
+            "de": "Wartet fair in der globalen Warteschlange und führt dann den Befehl aus; gleiche Schlüssel teilen sich einen Lauf."
           }
         }
       ],
       "flags": [
         "--json",
-        "--foreground",
-        "--classes",
-        "--for",
-        "--ttl"
+        "--key",
+        "--priority",
+        "--depth",
+        "--peak-mb",
+        "--lane",
+        "--class"
       ],
       "examples": [
         {
-          "command": "repo service start",
-          "description": {
-            "en": "Keep this worktree's graph and results warm for every agent.",
-            "de": "Hält Graph und Ergebnisse dieses Arbeitsbaums für alle Agenten warm."
-          }
+          "command": "repo scheduler status",
+          "description": { "en": "See what runs and waits in the global queue and every agent's share.", "de": "Zeigt, was in der globalen Warteschlange läuft und wartet, und den Anteil jedes Agenten." }
         },
         {
-          "command": "repo service issue --classes=run --for=lib-a --ttl=3600",
+          "command": "repo scheduler run --key=core:build --depth=5 --peak-mb=2048 -- repo run core:build",
+          "description": { "en": "Run a build through the fair queue; a second agent asking for core:build joins this run.", "de": "Führt einen Build über die faire Warteschlange aus; ein zweiter Agent mit core:build schließt sich diesem Lauf an." }
+        }
+      ],
+      "notes": [
+        {
+          "en": "The queue is host-wide (SEMIO_SCHEDULER_DIRECTORY overrides its folder); a started job is never preempted, admission follows learned peak memory.",
+          "de": "Die Warteschlange gilt für den ganzen Rechner (SEMIO_SCHEDULER_DIRECTORY überschreibt ihren Ordner); ein gestarteter Auftrag wird nie verdrängt, die Zulassung folgt dem gelernten Spitzenspeicher."
+        }
+      ]
+    },
+    {
+      "name": "service",
+      "requires": "none",
+      "synopsis": "service host start|status|stop|run",
+      "summary": {
+        "en": "Run, inspect or stop the per-host graph service: the one process of this machine that holds the fact index and answers every agent's plan request over one local socket or pipe.",
+        "de": "Startet, prüft oder beendet den Graph-Dienst dieses Rechners: den einen Prozess, der den Faktenindex hält und die Planungsanfragen aller Agenten über einen lokalen Socket oder eine Pipe beantwortet."
+      },
+      "dryRun": false,
+      "progress": true,
+      "cancellable": true,
+      "subcommands": [
+        {
+          "name": "host",
+          "synopsis": "service host start|status|stop|run",
+          "summary": {
+            "en": "start: start the service detached and wait until it answers; status: print its process, memory, index and queue; stop: drain running requests and stop it; run: run it in this terminal.",
+            "de": "start: startet den Dienst losgelöst und wartet, bis er antwortet; status: gibt Prozess, Speicher, Index und Warteschlange aus; stop: lässt laufende Anfragen auslaufen und beendet ihn; run: führt ihn in diesem Terminal aus."
+          }
+        }
+      ],
+      "flags": [],
+      "examples": [
+        {
+          "command": "repo service host status",
           "description": {
-            "en": "A token that may only run tasks of lib-a for one hour.",
-            "de": "Eine Berechtigung, die eine Stunde lang nur Tasks von lib-a ausführen darf."
+            "en": "Show the one service of this machine, its memory and how many workspaces it serves.",
+            "de": "Zeigt den einen Dienst dieses Rechners, seinen Speicher und wie viele Arbeitsbäume er bedient."
           }
         }
       ],
       "notes": [
         {
-          "en": "With a service running, run and affected answer from its results in milliseconds when nothing relevant changed; --service=off or SEMIO_BUILD_SERVICE=off always runs in this process, --service=require fails when no service answers.",
-          "de": "Läuft ein Dienst, antworten run und affected in Millisekunden aus seinen Ergebnissen, wenn sich nichts Relevantes geändert hat; --service=off oder SEMIO_BUILD_SERVICE=off läuft immer in diesem Prozess, --service=require schlägt fehl, wenn kein Dienst antwortet."
-        },
-        {
-          "en": "Only the owner of the checkout can reach the service: its runtime directory is private to the user and every request carries a capability token.",
-          "de": "Nur der Eigentümer des Checkouts erreicht den Dienst: Sein Laufzeitverzeichnis ist privat für den Nutzer und jede Anfrage trägt eine Berechtigung."
+          "en": "repo run, run-many, exec, affected and watch start the service on demand and wait for it with progress; they never load the fact index themselves. The service runs per user and sealed implementation; a promoted implementation starts its own and the old one retires.",
+          "de": "repo run, run-many, exec, affected und watch starten den Dienst bei Bedarf und warten mit Fortschritt auf ihn; sie laden den Faktenindex nie selbst. Der Dienst läuft je Nutzer und versiegelter Implementierung; eine neu eingesetzte Implementierung startet ihren eigenen, der alte endet."
         }
       ]
     },

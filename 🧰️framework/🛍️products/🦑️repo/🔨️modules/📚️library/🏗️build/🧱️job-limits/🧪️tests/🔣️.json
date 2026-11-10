@@ -1,0 +1,130 @@
+{
+  "estimates": [
+    {
+      "class": "a",
+      "floorMegabytes": 512
+    },
+    {
+      "class": "b",
+      "floorMegabytes": 512,
+      "learnedPeakMegabytes": 2000
+    },
+    {
+      "class": "c",
+      "floorMegabytes": 3000,
+      "learnedPeakMegabytes": 2000
+    },
+    {
+      "class": "d",
+      "floorMegabytes": 1,
+      "learnedPeakMegabytes": 10
+    },
+    {
+      "class": "e",
+      "floorMegabytes": 100,
+      "learnedPeakMegabytes": 333
+    }
+  ],
+  "learned": [
+    {
+      "kind": "ok",
+      "limitMegabytes": 1000,
+      "peakMegabytes": 800
+    },
+    {
+      "kind": "memory-exceeded",
+      "limitMegabytes": 1000,
+      "peakMegabytes": 1000
+    },
+    {
+      "kind": "memory-exceeded",
+      "limitMegabytes": 1000,
+      "peakMegabytes": 1500
+    },
+    {
+      "kind": "failed",
+      "limitMegabytes": 1000,
+      "peakMegabytes": 300
+    }
+  ],
+  "trees": [
+    {
+      "root": 1,
+      "rows": [
+        {
+          "pid": 1,
+          "ppid": 0,
+          "kilobytes": 1024
+        },
+        {
+          "pid": 2,
+          "ppid": 1,
+          "kilobytes": 2048
+        },
+        {
+          "pid": 3,
+          "ppid": 2,
+          "kilobytes": 1
+        },
+        {
+          "pid": 4,
+          "ppid": 9,
+          "kilobytes": 99999
+        }
+      ]
+    },
+    {
+      "root": 7,
+      "rows": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "kilobytes": 0
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "within the limit",
+      "policy": {
+        "kind": "job",
+        "memoryMegabytes": 256,
+        "swapMegabytes": 0,
+        "cpuShares": 100,
+        "pids": 0,
+        "softRatioBasisPoints": 9000,
+        "enforcement": "hard"
+      },
+      "allocate": {
+        "megabytes": 32,
+        "stepMegabytes": 8,
+        "holdMilliseconds": 50
+      },
+      "expect": {
+        "kind": "ok"
+      }
+    },
+    {
+      "name": "overrun is killed",
+      "policy": {
+        "kind": "job",
+        "memoryMegabytes": 160,
+        "swapMegabytes": 0,
+        "cpuShares": 100,
+        "pids": 0,
+        "softRatioBasisPoints": 9000,
+        "enforcement": "hard"
+      },
+      "allocate": {
+        "megabytes": 1024,
+        "stepMegabytes": 16,
+        "holdMilliseconds": 50
+      },
+      "expect": {
+        "kind": "memory-exceeded",
+        "killedWithinMilliseconds": 1500
+      }
+    }
+  ]
+}

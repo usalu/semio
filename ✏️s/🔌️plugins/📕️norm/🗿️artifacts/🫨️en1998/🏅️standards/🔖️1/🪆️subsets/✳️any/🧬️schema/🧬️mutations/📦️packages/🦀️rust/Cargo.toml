@@ -50,6 +50,11 @@ semio-s-artifact-norm-en1998-model = { workspace = true }
 semio-s-artifact-norm-en1998-mut-bridges-towers = { workspace = true }
 semio-s-artifact-norm-en1998-mut-placements = { workspace = true }
 semio-s-artifact-norm-en1998-mut-tie-beams = { workspace = true }
+semio-s-artifact-norm-en1998-mut-isolation-systems = { workspace = true }
+semio-s-artifact-norm-en1998-mut-pier-bases = { workspace = true }
+semio-s-artifact-norm-en1998-mut-critical-regions = { workspace = true }
+semio-s-artifact-norm-en1998-mut-critical-regions-more = { workspace = true }
+semio-s-artifact-norm-en1998-mut-critical-regions-rest = { workspace = true }
 semio-s-artifact-norm-en1998-mut-seismic-slopes = { workspace = true }
 semio-s-artifact-norm-en1998-mut-buildings = { workspace = true }
 semio-s-artifact-norm-en1998-mut-foundations = { workspace = true }
@@ -59,7 +64,7 @@ semio-s-plugin-norm-app-surface = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 
 [features]
-test-support = ["dep:serde", "semio-s-artifact-norm-en1998-diff/test-support", "semio-s-artifact-norm-en1998-model/test-support", "semio-s-artifact-norm-en1998-mut-bridges-towers/test-support", "semio-s-artifact-norm-en1998-mut-buildings/test-support", "semio-s-artifact-norm-en1998-mut-foundations/test-support", "semio-s-artifact-norm-en1998-mut-members/test-support", "semio-s-artifact-norm-en1998-mut-placements/test-support", "semio-s-artifact-norm-en1998-mut-seismic-slopes/test-support", "semio-s-artifact-norm-en1998-mut-silos-tanks/test-support", "semio-s-artifact-norm-en1998-mut-tie-beams/test-support"]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1998-diff/test-support", "semio-s-artifact-norm-en1998-model/test-support", "semio-s-artifact-norm-en1998-mut-bridges-towers/test-support", "semio-s-artifact-norm-en1998-mut-buildings/test-support", "semio-s-artifact-norm-en1998-mut-foundations/test-support", "semio-s-artifact-norm-en1998-mut-members/test-support", "semio-s-artifact-norm-en1998-mut-placements/test-support", "semio-s-artifact-norm-en1998-mut-seismic-slopes/test-support", "semio-s-artifact-norm-en1998-mut-silos-tanks/test-support", "semio-s-artifact-norm-en1998-mut-tie-beams/test-support", "semio-s-artifact-norm-en1998-mut-isolation-systems/test-support", "semio-s-artifact-norm-en1998-mut-pier-bases/test-support", "semio-s-artifact-norm-en1998-mut-critical-regions/test-support", "semio-s-artifact-norm-en1998-mut-critical-regions-more/test-support", "semio-s-artifact-norm-en1998-mut-critical-regions-rest/test-support"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

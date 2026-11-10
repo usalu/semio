@@ -10,7 +10,7 @@ use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
 use semio_s_artifact_norm_din18599_mut_building::{change_attachment, change_automation_class, change_building_category, change_delta_u_wb, change_geg_qp_factor, change_heated_volume_m3, change_method, change_net_floor_area_m2, change_use_class};
 use semio_s_artifact_norm_din18599_mut_zoning::{change_element_u, update_climate};
 use semio_s_artifact_norm_din18599_mut_zone_rows::{insert_zone, remove_zone, change_zone_label_en, change_zone_label_de, change_zone_usage_profile, change_zone_occupants};
-use semio_s_artifact_norm_din18599_mut_zone_fields::{change_zone_area_m2, change_zone_volume_m3, change_zone_theta_i_heat_c, change_zone_theta_i_cool_c, change_zone_internal_gains_w_m2, change_zone_lighting_power_w_m2};
+use semio_s_artifact_norm_din18599_mut_zone_fields::{change_zone_area_m2, change_zone_volume_m3, change_zone_theta_i_heat_c, change_zone_theta_i_cool_c, change_zone_internal_gains_w_m2, change_zone_lighting_power_w_m2, change_zone_thermal_mass};
 use semio_s_artifact_norm_din18599_mut_element_rows::{insert_element, remove_element, change_element_label_en, change_element_label_de, change_element_kind, change_element_zone_id};
 use semio_s_artifact_norm_din18599_mut_element_fields::{change_element_area_m2, change_element_orientation_deg, change_element_tilt_deg, change_element_g_value, change_element_fc, change_element_adjacency};
 use semio_s_artifact_norm_din18599_mut_systems::{update_cooling, specify_dhw_system, specify_heating_system, update_lighting, update_renewables, update_ventilation};
@@ -118,6 +118,11 @@ pub enum Din18599MutationDsl {
     ChangeZoneLightingPowerWM2 {
         zone_id: String,
         new_lighting_power_w_m2: f64,
+    },
+    ChangeZoneThermalMass {
+        zone_id: String,
+        new_thermal_mass_class: semio_s_artifact_norm_din18599_model::ThermalMassClass,
+        new_c_wirk_wh_m2k: f64,
     },
     InsertElement {
         index: usize,
@@ -228,6 +233,7 @@ pub fn din18599_mutation_to_dsl(mutation: &Din18599Mutation) -> Din18599Mutation
         Din18599Mutation::ChangeZoneThetaIHeatC(payload) => Din18599MutationDsl::ChangeZoneThetaIHeatC { zone_id: payload.zone_id.clone(), new_theta_i_heat_c: payload.new_theta_i_heat_c },
         Din18599Mutation::ChangeZoneThetaICoolC(payload) => Din18599MutationDsl::ChangeZoneThetaICoolC { zone_id: payload.zone_id.clone(), new_theta_i_cool_c: payload.new_theta_i_cool_c },
         Din18599Mutation::ChangeZoneInternalGainsWM2(payload) => Din18599MutationDsl::ChangeZoneInternalGainsWM2 { zone_id: payload.zone_id.clone(), new_internal_gains_w_m2: payload.new_internal_gains_w_m2 },
+        Din18599Mutation::ChangeZoneThermalMass(payload) => Din18599MutationDsl::ChangeZoneThermalMass { zone_id: payload.zone_id.clone(), new_thermal_mass_class: payload.new_thermal_mass_class, new_c_wirk_wh_m2k: payload.new_c_wirk_wh_m2k },
         Din18599Mutation::ChangeZoneLightingPowerWM2(payload) => Din18599MutationDsl::ChangeZoneLightingPowerWM2 { zone_id: payload.zone_id.clone(), new_lighting_power_w_m2: payload.new_lighting_power_w_m2 },
         Din18599Mutation::InsertElement(payload) => Din18599MutationDsl::InsertElement { index: payload.index, element: payload.element.clone() },
         Din18599Mutation::RemoveElement(payload) => Din18599MutationDsl::RemoveElement { id: payload.id.clone() },
@@ -274,6 +280,7 @@ pub fn din18599_mutation_from_dsl(dsl: Din18599MutationDsl) -> Din18599Mutation 
         Din18599MutationDsl::ChangeZoneThetaIHeatC { zone_id, new_theta_i_heat_c } => Din18599Mutation::ChangeZoneThetaIHeatC(change_zone_theta_i_heat_c::ChangeZoneThetaIHeatC { zone_id, new_theta_i_heat_c }),
         Din18599MutationDsl::ChangeZoneThetaICoolC { zone_id, new_theta_i_cool_c } => Din18599Mutation::ChangeZoneThetaICoolC(change_zone_theta_i_cool_c::ChangeZoneThetaICoolC { zone_id, new_theta_i_cool_c }),
         Din18599MutationDsl::ChangeZoneInternalGainsWM2 { zone_id, new_internal_gains_w_m2 } => Din18599Mutation::ChangeZoneInternalGainsWM2(change_zone_internal_gains_w_m2::ChangeZoneInternalGainsWM2 { zone_id, new_internal_gains_w_m2 }),
+        Din18599MutationDsl::ChangeZoneThermalMass { zone_id, new_thermal_mass_class, new_c_wirk_wh_m2k } => Din18599Mutation::ChangeZoneThermalMass(change_zone_thermal_mass::ChangeZoneThermalMass { zone_id, new_thermal_mass_class, new_c_wirk_wh_m2k }),
         Din18599MutationDsl::ChangeZoneLightingPowerWM2 { zone_id, new_lighting_power_w_m2 } => Din18599Mutation::ChangeZoneLightingPowerWM2(change_zone_lighting_power_w_m2::ChangeZoneLightingPowerWM2 { zone_id, new_lighting_power_w_m2 }),
         Din18599MutationDsl::InsertElement { index, element } => Din18599Mutation::InsertElement(insert_element::InsertElement { index, element }),
         Din18599MutationDsl::RemoveElement { id } => Din18599Mutation::RemoveElement(remove_element::RemoveElement { id }),

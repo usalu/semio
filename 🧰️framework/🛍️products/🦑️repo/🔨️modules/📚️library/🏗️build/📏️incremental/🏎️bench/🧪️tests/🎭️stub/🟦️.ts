@@ -2,11 +2,11 @@
 import {appendFileSync,existsSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 
 const env=process.env,sleep=(milliseconds:number)=>new Promise<void>(accept=>setTimeout(accept,milliseconds)),number=(name:string,fallback:number)=>Number(env[name]??fallback);
-const rest=process.argv.slice(3),tool=rest.find(argument=>argument.startsWith("--tool="))?.slice(7)??"neutral",words=rest.filter(argument=>!argument.startsWith("--tool=")&&!argument.startsWith("--service="));
+const rest=process.argv.slice(3),tool=rest.find(argument=>argument.startsWith("--tool="))?.slice(7)??"neutral",words=rest.filter(argument=>!argument.startsWith("--tool="));
 if(env.BENCH_STUB_LOG)appendFileSync(env.BENCH_STUB_LOG,JSON.stringify(rest)+"\n");
 if(words[0]==="--help"){await sleep(number("BENCH_STUB_HELP_MS",20));console.log("usage: repo <command>");process.exit(0);}
 if(words[0]==="service"){
- if(words[1]==="start")writeFileSync(env.BENCH_STUB_SERVICE!,"1");else rmSync(env.BENCH_STUB_SERVICE!,{force:true});
+ if(words[2]==="start")writeFileSync(env.BENCH_STUB_SERVICE!,"1");else rmSync(env.BENCH_STUB_SERVICE!,{force:true});
  process.exit(0);
 }
 if(words[0]==="run"){

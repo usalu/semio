@@ -306,6 +306,7 @@ fn stamp(tree: &mut UiTree, node: NodeId, revision: u64, bindings: &[(Trigger, &
     tree.node_mut(node).expect("stamped node").intent = Some(UiIntentBindings {
         address: UiIntentAddress { surface: "note.play.navigator".into(), revision, node: 3, node_key: key },
         bindings: bindings.iter().map(|(trigger, name)| (*trigger, ActionId::try_v1("ctrl", name).expect("action id"))).collect(),
+        args: Vec::new(),
     });
 }
 

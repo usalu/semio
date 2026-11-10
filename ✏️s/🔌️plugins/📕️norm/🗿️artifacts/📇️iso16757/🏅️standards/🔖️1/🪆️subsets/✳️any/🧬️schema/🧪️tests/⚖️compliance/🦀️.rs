@@ -462,3 +462,29 @@ async fn script_runtime_arithmetic_operators() {
     let result = runtime.execute("(10 - 4) / 2 * 3", &inputs, semio_s_artifact_norm_iso16757_model::part_5::ScriptLimits::default()).expect("arithmetic");
     assert!((result.value - 9.0).abs() < 1e-9);
 }
+
+mod cross_check_vectors {
+    use semio_s_artifact_norm_iso16757_model::part_2::{BooleanOperator, GeometryCatalogue, GeometryNode};
+    use std::collections::BTreeMap;
+    include!("../../../🧪️tests/🧫️fixtures/🔮️cross-checks/🦀️.rs");
+
+    #[semio_framework_async_macros::async_test]
+    async fn solid_volumes_match_the_shapely_section_oracle() {
+        let catalogue = GeometryCatalogue::default();
+        for (id, node, expected) in volume_cases() {
+            let volume = crate::part_libraries::part_2::evaluate_solid_volume(&node, &catalogue).expect(id);
+            assert!((volume.volume_m3 - expected).abs() <= 2e-5 * expected, "{id}: {} vs {expected}", volume.volume_m3);
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn rotation_widens_bounds_and_keeps_the_volume() {
+        let catalogue = GeometryCatalogue::default();
+        let (_, node, expected) = volume_cases().into_iter().find(|c| c.0.contains("rotated-45-about-z")).expect("case");
+        let bbox = crate::part_libraries::part_2::evaluate_bounding_box(&node, &catalogue).expect("bbox");
+        assert!(((bbox.max[1] - bbox.min[1]) - 2.121_320_343_559_642_4).abs() < 1e-9);
+        assert!(((bbox.max[0] - bbox.min[0]) - 2.121_320_343_559_642_4).abs() < 1e-9);
+        let volume = crate::part_libraries::part_2::evaluate_solid_volume(&node, &catalogue).expect("volume");
+        assert!((volume.volume_m3 - expected).abs() < 1e-12 && volume.exact);
+    }
+}

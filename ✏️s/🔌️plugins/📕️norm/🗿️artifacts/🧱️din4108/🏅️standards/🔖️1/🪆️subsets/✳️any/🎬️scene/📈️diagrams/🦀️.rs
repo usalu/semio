@@ -44,12 +44,9 @@ pub fn depths(element: &EnvelopeElement) -> Vec<f64> {
 }
 
 /// 🌡️ The winter boundary and the profile of an element: the single source shared with the Glaser check.
-pub fn winter_profile(document: &Din4108Snapshot, element: &EnvelopeElement) -> part_3::VapourProfile {
+pub fn winter_profile(element: &EnvelopeElement) -> part_3::VapourProfile {
     let (r_si, r_se) = checks::surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
-    let boundary = part_3::glaser_boundary(element, document.climate_zone);
-    let t_int = if document.t_int_c > 0.0 { document.t_int_c } else { checks::GLASER_INTERIOR_T_C };
-    let rh_int = if document.rh_int > 0.0 { document.rh_int } else { checks::GLASER_INTERIOR_RH };
-    part_3::vapour_profile(&element.layers, r_si, r_se, t_int, rh_int, boundary.t_ext_w, boundary.rh_ext_w)
+    part_3::vapour_profile(&element.layers, r_si, r_se, part_3::GLASER_WINTER)
 }
 
 fn interface_marker(element: &EnvelopeElement, depths: &[f64], at: usize, y: f64, check: &str, report: &CheckReport) -> Option<Marker> {
@@ -70,12 +67,12 @@ fn projection_kit_binding(element: &EnvelopeElement, layer: &str, before: f64) -
     FieldBinding { path: format!("elements[id={}].layers[id={layer}].thicknessM", element.id), map: Affine { base: -before, k: 1.0 }, unit: "m".into(), quantise: Some(Quantise::Round { step: 0.001 }) }
 }
 
-fn temperature(document: &Din4108Snapshot, report: &CheckReport, element: &EnvelopeElement) -> Option<Diagram2d> {
+fn temperature(report: &CheckReport, element: &EnvelopeElement) -> Option<Diagram2d> {
     if element.layers.is_empty() {
         return None;
     }
     let depth = depths(element);
-    let profile = winter_profile(document, element);
+    let profile = winter_profile(element);
     let check = format!("din4108-6.u.{}", element.id);
     let points: Vec<Vec2> = depth.iter().zip(&profile.t_c).map(|(x, t)| p(*x, *t)).collect();
     let markers = (1..depth.len()).filter_map(|i| interface_marker(element, &depth, i, profile.t_c[i], &check, report)).collect();
@@ -96,22 +93,22 @@ fn temperature(document: &Din4108Snapshot, report: &CheckReport, element: &Envel
     })
 }
 
-fn glaser(document: &Din4108Snapshot, report: &CheckReport, element: &EnvelopeElement) -> Option<Diagram2d> {
+fn glaser(report: &CheckReport, element: &EnvelopeElement) -> Option<Diagram2d> {
     if element.layers.is_empty() || matches!(element.kind.as_str(), "window" | "door") {
         return None;
     }
-    let profile = winter_profile(document, element);
+    let profile = winter_profile(element);
     let check = format!("din4108-3.glaser.{}", element.id);
     let vapour: Vec<Vec2> = profile.sd_m.iter().zip(&profile.p_pa).map(|(x, y)| p(*x, *y)).collect();
     let saturation: Vec<Vec2> = profile.sd_m.iter().zip(&profile.p_sat_pa).map(|(x, y)| p(*x, *y)).collect();
     let markers = (0..profile.sd_m.len())
-        .filter(|i| profile.p_pa[*i] > profile.p_sat_pa[*i])
+        .filter(|i| profile.planes.contains(i))
         .map(|i| Marker {
             id: format!("condensation:{}:{i}", element.id),
             at: p(profile.sd_m[i], profile.p_pa[i]),
             shape: MarkerShape::Cross,
             tone: Tone::Error,
-            label: loc(&format!("Condensation at interface {i}: {:.0} Pa above saturation", profile.p_pa[i] - profile.p_sat_pa[i]), &format!("Tauwasser an Schichtgrenze {i}: {:.0} Pa über Sättigung", profile.p_pa[i] - profile.p_sat_pa[i])),
+            label: loc(&format!("Condensation plane at interface {i}: {:.0} Pa saturation", profile.p_sat_pa[i]), &format!("Tauebene an Schichtgrenze {i}: {:.0} Pa Sättigung", profile.p_sat_pa[i])),
             utilisation: None,
             bound_check: Some(check.clone()),
             binding: None,
@@ -120,7 +117,7 @@ fn glaser(document: &Din4108Snapshot, report: &CheckReport, element: &EnvelopeEl
     Some(Diagram2d {
         id: format!("glaser:{}", element.id),
         title: loc(&format!("Glaser vapour-pressure profile of {}", element.id), &format!("Glaser-Dampfdruckverlauf von {}", element.id)),
-        description: loc("Vapour pressure against the saturation pressure over the water-vapour diffusion-equivalent air layer thickness; condensation occurs where the vapour pressure exceeds saturation.", "Dampfdruck gegen Sättigungsdampfdruck über der wasserdampfdiffusionsäquivalenten Luftschichtdicke; Tauwasser fällt aus, wo der Dampfdruck die Sättigung übersteigt."),
+        description: loc("Vapour pressure against the saturation pressure over the water-vapour diffusion-equivalent air layer thickness; condensation planes hold the vapour pressure at saturation.", "Dampfdruck gegen Sättigungsdampfdruck über der wasserdampfdiffusionsäquivalenten Luftschichtdicke; Tauebenen halten den Dampfdruck auf der Sättigung."),
         axes: vec![axis("Equivalent air layer thickness s_d", "Wasserdampfdiffusionsäquivalente Luftschichtdicke s_d", QuantityKind::Length, "m"), axis("Vapour pressure", "Dampfdruck", QuantityKind::Pressure, "Pa")],
         series: vec![
             Series::Polyline { id: "vapour".into(), label: loc("Vapour pressure", "Dampfdruck"), points: vapour, style: stroke(check_tone(report, &check), 2.0, Dash::Solid) },
@@ -170,8 +167,8 @@ pub fn diagrams(document: &Din4108Snapshot, report: &CheckReport, focus: Option<
     }
     let mut out: Vec<Diagram2d> = Vec::new();
     for element in document.elements.iter().filter(|e| focus.is_none_or(|f| f == e.id)) {
-        out.extend(temperature(document, report, element));
-        out.extend(glaser(document, report, element));
+        out.extend(temperature(report, element));
+        out.extend(glaser(report, element));
     }
     out.extend(u_values(document, report));
     super::scene::projection::with_basis(out, &super::scene::projection::Basis::new(super::norm::NormFamilyId::Din4108, super::norm::AnnexChoice::De))

@@ -71,7 +71,7 @@ test("the launcher starts one detached gc of the due areas, honours the stamp, s
 });
 
 test("every heavy command checks the sweep right after the products collector and the intervals are authored",()=>{
- const text=readFileSync(new URL("../../../⌨️command/⚙️runtime/🟦️.ts",import.meta.url),"utf8");
- expect(text).toMatch(/profilePhaseV1\("products\.collect"[^\n]*\n\s*await profilePhaseV1\("budget\.sweep",async\(\)=>\{await\(await import\("\.\.\/\.\.\/🧹️cache-gc\/🚀️launch\/🟦️\.ts"\)\)\.launchBudgetSweepIfDueV1\(root\);\}\);/u);
+ const text=readFileSync(new URL("../../../⌨️command/🏃️task/🤝️shared/🟦️.ts",import.meta.url),"utf8");
+ expect(text).toMatch(/profilePhaseV1\("products\.collect"[^\n]*\n\s*await profilePhaseV1\("budget\.sweep",async\(\)=>\{await\(await import\("\.\.\/\.\.\/\.\.\/🧹️cache-gc\/🚀️launch\/🟦️\.ts"\)\)\.launchBudgetSweepIfDueV1\(root\);\}\);/u);
  expect(runtime.sweepIntervalMs).toBeGreaterThan(runtime.overBudgetIntervalMs);expect(runtime.overBudgetIntervalMs).toBeGreaterThanOrEqual(MINUTE);
 });

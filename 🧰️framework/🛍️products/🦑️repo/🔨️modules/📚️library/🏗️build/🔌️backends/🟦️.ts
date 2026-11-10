@@ -1,6 +1,5 @@
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import registry from "./📋️registry/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type { BuildGraphV1 } from "../🕸️graph/📋️model/🟦️.ts";
@@ -16,19 +15,12 @@ export type BackendCapabilityV1=typeof schema.definitions.Capability.enum[number
 /** 🌍️ A text in both supported languages. */
 export type BackendTextV1=Readonly<{en:string;de:string}>;
 /** 🗒️ One backend as the registry declares it. */
-export type BackendRowV1=Readonly<{id:BuildBackendIdV1;title:BackendTextV1;kind:"external"|"in-house";default?:boolean;module:string;driver:string;dependencyModel:"all"|"consumers";graphInputs?:"portable"|"compact";processEnvironment?:Readonly<Record<string,string>>;nativeSnapshot?:Readonly<{variable:string;environment:Readonly<Record<string,string>>}>;nativeCaller?:Readonly<{namespace:string;schema:string}>;cacheProof?:Readonly<{logMarker?:string;activity?:boolean;spawnMarker?:Readonly<{executed:string;completed:string}>}>;operations:Readonly<Record<string,BackendSupportV1>>;capabilities:Readonly<Partial<Record<BackendCapabilityV1,Readonly<{support:BackendSupportV1;note?:BackendTextV1}>>>>}>;
+export type BackendRowV1=Readonly<{id:BuildBackendIdV1;title:BackendTextV1;kind:"external"|"in-house";default?:boolean;module:string;driver:string;dependencyModel:"all"|"consumers";plansScoped:boolean;graphInputs?:"portable"|"compact";processEnvironment?:Readonly<Record<string,string>>;nativeSnapshot?:Readonly<{variable:string;environment:Readonly<Record<string,string>>}>;nativeCaller?:Readonly<{namespace:string;schema:string}>;cacheProof?:Readonly<{logMarker?:string;activity?:boolean;spawnMarker?:Readonly<{executed:string;completed:string}>}>;operations:Readonly<Record<string,BackendSupportV1>>;capabilities:Readonly<Partial<Record<BackendCapabilityV1,Readonly<{support:BackendSupportV1;note?:BackendTextV1}>>>>}>;
 
-/** 📜️ Reads the authored registry once and refuses a row set that breaks its schema, repeats an id or names a missing default. */
-export function readBackendRegistryV1(value:unknown=registry):readonly BackendRowV1[]{
- const issues=validateJsonSchemaSubset(schema,value,schema);
- if(issues.length)throw Error(`Closed build backend registry required: ${issues.slice(0,3).join("; ")}`);
- const rows=(value as {backends:BackendRowV1[]}).backends,ids=rows.map(row=>row.id);
- if(new Set(ids).size!==ids.length)throw Error("Unique build backend ids required");
- if(rows.filter(row=>row.default===true).length!==1)throw Error("Exactly one default build backend required");
- return Object.freeze(rows.map(row=>Object.freeze(row)));
-}
-
-const rows=readBackendRegistryV1();
+const rows:readonly BackendRowV1[]=Object.freeze((registry as {backends:BackendRowV1[]}).backends.map(row=>Object.freeze(row)));
+let verified:Promise<unknown>|undefined;
+/** ✔️ Validates the registry once, on first driver use. */
+const verifiedRegistryV1=():Promise<unknown>=>verified??=import("./📜️registry/🟦️.ts").then(module=>module.readBackendRegistryV1());
 
 /** 📇️ The registered backends in registry order. */
 export function buildBackendRowsV1():readonly BackendRowV1[]{return rows;}
@@ -88,6 +80,7 @@ const loaded=new Map<string,Promise<BuildBackendV1>>();
 
 /** 🚚️ Loads the adapter module a registry row names and checks that it exports a backend of the same id. */
 export async function loadBuildBackendV1(id:string):Promise<BuildBackendV1>{
+ await verifiedRegistryV1();
  const row=buildBackendRowV1(id);
  let pending=loaded.get(row.id);
  if(!pending){
@@ -111,3 +104,5 @@ export async function buildBackendBootstrapV1(args:readonly string[],tool:string
  }
  return undefined;
 }
+/** 🎯️ Whether the backend plans and executes from a target-scoped graph instead of the whole workspace; neutral code hands such a backend only the closure of the requested target. */
+export function buildBackendPlansScopedV1(id:string):boolean{return buildBackendRowV1(id).plansScoped;}

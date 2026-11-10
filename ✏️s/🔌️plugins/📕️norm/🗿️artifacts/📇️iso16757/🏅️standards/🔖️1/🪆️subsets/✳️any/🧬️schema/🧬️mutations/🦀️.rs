@@ -31,7 +31,7 @@ use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use crate::edit_rules::{resolve_edit, EDIT_RULES, ID_REMOVALS};
+pub use crate::edit_rules::{can_set_field, resolve_edit, EDIT_RULES, ID_REMOVALS};
 
 //#region 🔖️Mutations
 use semio_s_artifact_norm_iso16757_mut_selection::add_selection_constraint;

@@ -44,13 +44,13 @@
   "fatigueCategories": null,
   "patchLoads": null,
   "ringStiffeners": null,
+  "sheetProfiles": null,
+  "fireInsulations": null,
   "transverseStiffeners": {
     "removed": [],
     "inserted": [],
     "moved": [],
     "modified": []
   },
-  "sheetProfiles": null,
-  "fireInsulations": null,
   "reliabilityClass": null
 }

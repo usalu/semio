@@ -61,7 +61,7 @@
     },
     {
       "id": "en1998",
-      "provider": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🏷️field-meta/🦀️.rs",
+      "provider": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
       "function": "en1998_field_meta",
       "mutations": "semio_s_artifact_norm_en1998_mutations"
     },
@@ -85,8 +85,8 @@
     },
     {
       "id": "din18599",
-      "provider": "🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🏷️field-meta/🦀️.rs",
-      "function": "field_meta",
+      "provider": "🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
+      "function": "din18599_field_meta",
       "mutations": "semio_s_artifact_norm_din18599_mutations"
     },
     {

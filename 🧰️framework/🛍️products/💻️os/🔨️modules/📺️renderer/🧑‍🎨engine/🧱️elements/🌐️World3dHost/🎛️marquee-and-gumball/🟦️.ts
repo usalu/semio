@@ -221,8 +221,8 @@ export function useWorldMarqueeAndGumball(core: WorldCore5) {
     },
     [endRelocateDrag, gestureRecognizer],
   );
-  const { beginHandleDrag, endHandleDrag, updateHandleDrag } = useWorldHandleDrag(core);
-  return { beginHandleDrag, beginRelocateDrag, endHandleDrag, endRelocateDrag, handleFaceDragStart, handleGumballDrag, handleGumballDragEnd, handleGumballDragStart, marqueeDragActiveRef, marqueeFinalizeOnceRef, marqueePreviewRef, toLocalPoint, updateHandleDrag, updateRelocateDrag, visibleSelectionPreview, yieldToPinch };
+  const { beginHandleDrag, endHandleDrag, handleDragActive, updateHandleDrag } = useWorldHandleDrag(core);
+  return { beginHandleDrag, beginRelocateDrag, endHandleDrag, endRelocateDrag, handleFaceDragStart, handleGumballDrag, handleGumballDragEnd, handleGumballDragStart, handleDragActive, marqueeDragActiveRef, marqueeFinalizeOnceRef, marqueePreviewRef, toLocalPoint, updateHandleDrag, updateRelocateDrag, visibleSelectionPreview, yieldToPinch };
 }
 
 export type WorldCore6 = WorldCore5 & ReturnType<typeof useWorldMarqueeAndGumball>;

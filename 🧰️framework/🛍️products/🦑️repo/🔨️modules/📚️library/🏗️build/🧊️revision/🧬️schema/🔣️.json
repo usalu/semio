@@ -1,0 +1,173 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MVCC revisions of staged inputs / MVCC-Revisionen bereitgestellter Eingaben",
+  "$comment": "🧊️ RevisionV1: an immutable, content-addressed snapshot of exactly the input closure of a build. Canonical JSON (the bytes that are hashed): UTF-8, object keys sorted by code point, no whitespace, no ASCII escaping. A tree object is canonical({entries:[{digest,kind,name,size}...]}) with entries sorted by name code point; its digest is sha256 of those bytes and it is stored in the content-addressed store under that digest. A directory entry has kind tree, a file kind file or executable (executable only where the platform has an exec bit), a link kind symlink whose digest is that of its target text. The size of a tree is the sum of its entries. A revision object is canonical({journalCursor,parent?,roots,workspace}); its id is the sha256 of those bytes, so a revision is itself a store address. An action key is sha256(canonical({command,environment,manifest,tool})) and contains no workspace, no absolute path and no time, so equal inputs share results in every workspace.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "concurrency": 16,
+        "maximumAttempts": 3,
+        "chunkBytes": 1048576,
+        "pinTtlMs": 900000,
+        "renewIntervalMs": 300000,
+        "maximumPaths": 1000000,
+        "progressMs": 250
+      }
+    },
+    "Digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "Path": {"type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^(?!/)(?!.*(^|/)\\.{1,2}(/|$))(?!.*//)(?!.*\\\\)[^\\u0000]+(?<!/)$"},
+    "Mode": {"enum": ["file", "executable", "symlink"]},
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "mode", "digest", "size"],
+      "properties": {
+        "path": {"$ref": "#/definitions/Path"},
+        "mode": {"$ref": "#/definitions/Mode"},
+        "digest": {"$ref": "#/definitions/Digest"},
+        "size": {"type": "integer", "minimum": 0}
+      }
+    },
+    "TreeEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["digest", "kind", "name", "size"],
+      "properties": {
+        "digest": {"$ref": "#/definitions/Digest"},
+        "kind": {"enum": ["file", "executable", "symlink", "tree"]},
+        "name": {"type": "string", "minLength": 1, "pattern": "^[^/\\\\\\u0000]+$", "not": {"enum": [".", ".."]}},
+        "size": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Tree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entries"],
+      "properties": {"entries": {"type": "array", "items": {"$ref": "#/definitions/TreeEntry"}}}
+    },
+    "TreeRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "tree", "size"],
+      "properties": {
+        "path": {"type": "string", "maxLength": 1024, "$comment": "Workspace-relative prefix the tree is rooted at; empty is the workspace root."},
+        "tree": {"$ref": "#/definitions/Digest"},
+        "size": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["journalCursor", "roots", "workspace"],
+      "properties": {
+        "journalCursor": {"type": "string", "maxLength": 128},
+        "parent": {"$ref": "#/definitions/Digest"},
+        "roots": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/TreeRef"}},
+        "workspace": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,96}$"}
+      }
+    },
+    "InputManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "digest", "entries"],
+      "properties": {
+        "revision": {"$ref": "#/definitions/Digest"},
+        "digest": {"$ref": "#/definitions/Digest", "$comment": "Root tree digest: equal inputs have an equal digest in every workspace."},
+        "entries": {"type": "array", "items": {"$ref": "#/definitions/Entry"}}
+      }
+    },
+    "CasRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hash", "size"],
+      "properties": {"hash": {"$ref": "#/definitions/Digest"}, "size": {"type": "integer", "minimum": 0}}
+    },
+    "StageRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "paths"],
+      "properties": {
+        "revision": {"$ref": "#/definitions/Digest"},
+        "paths": {"type": "array", "items": {"$ref": "#/definitions/Path"}}
+      }
+    },
+    "StageReply": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "refs"],
+      "properties": {
+        "revision": {"$ref": "#/definitions/Digest"},
+        "refs": {"type": "array", "items": {"$ref": "#/definitions/CasRef"}}
+      }
+    },
+    "Pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "revision", "holder", "expiresMs"],
+      "properties": {
+        "version": {"const": 1},
+        "revision": {"$ref": "#/definitions/Digest"},
+        "holder": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,96}$"},
+        "expiresMs": {"type": "integer", "minimum": 0}
+      }
+    },
+    "ErrorCode": {"enum": ["unsafe-path", "content-evicted", "too-many-paths", "unknown-revision", "unsupported-entry", "invalid-revision"]},
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "files", "paths"],
+      "properties": {
+        "name": {"type": "string"},
+        "files": {"type": "object", "additionalProperties": {"type": "object", "required": ["text"], "properties": {"text": {"type": "string"}, "executable": {"type": "boolean"}, "link": {"type": "boolean"}}}},
+        "paths": {"type": "array", "items": {"$ref": "#/definitions/Path"}},
+        "manifest": {"$ref": "#/definitions/Digest"},
+        "absent": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "Messages": {
+      "const": {
+        "torn": {
+          "en": "{path} kept changing while it was staged; the revision records the content that was read.",
+          "de": "{path} hat sich während der Bereitstellung laufend geändert; die Revision hält den gelesenen Inhalt fest."
+        },
+        "absent": {
+          "en": "{path} does not exist at this revision.",
+          "de": "{path} existiert in dieser Revision nicht."
+        },
+        "stage": {
+          "en": "Revision inputs: {done} of {total} files staged.",
+          "de": "Revisions-Eingaben: {done} von {total} Dateien bereitgestellt."
+        },
+        "pinned": {
+          "en": "Revision {revision} pinned: {files} files, {reused} reused, {staged} staged, {torn} torn.",
+          "de": "Revision {revision} gepinnt: {files} Dateien, {reused} wiederverwendet, {staged} bereitgestellt, {torn} unruhig."
+        },
+        "unsafe-path": {
+          "en": "The path {path} is not a safe relative path.",
+          "de": "Der Pfad {path} ist kein sicherer relativer Pfad."
+        },
+        "content-evicted": {
+          "en": "The content of {path} left the store and the workspace no longer holds it; pin the revision again.",
+          "de": "Der Inhalt von {path} ist aus dem Speicher verschwunden und im Arbeitsbereich nicht mehr vorhanden; die Revision neu pinnen."
+        },
+        "too-many-paths": {
+          "en": "{count} inputs exceed the limit of {limit}.",
+          "de": "{count} Eingaben überschreiten die Grenze von {limit}."
+        },
+        "unknown-revision": {
+          "en": "The revision {revision} is not in the store.",
+          "de": "Die Revision {revision} ist nicht im Speicher."
+        },
+        "unsupported-entry": {
+          "en": "{path} is neither a file nor a symbolic link.",
+          "de": "{path} ist weder eine Datei noch ein symbolischer Link."
+        },
+        "invalid-revision": {
+          "en": "The object {revision} is not a valid revision.",
+          "de": "Das Objekt {revision} ist keine gültige Revision."
+        }
+      }
+    }
+  }
+}

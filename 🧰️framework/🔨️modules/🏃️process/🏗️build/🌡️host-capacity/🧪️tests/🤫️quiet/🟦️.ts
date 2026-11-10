@@ -17,8 +17,8 @@ const host=():HostSampleV1=>({version:1,atMs:Date.now(),platform:"darwin",cores:
 const control=(signal=new AbortController().signal)=>({signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined});
 const sized=(id:string,fixed:number,over:object={}):HostRequestV1=>({id,operation:"run",priority:"batch",minimumJobs:1,preferredJobs:3,fixedMegabytes:fixed,perJobMegabytes:100,cpuPerJob:1,...over});
 const quietOf=(full:HostRequestV1):HostRequestV1=>({...full,fixedMegabytes:500,minimumJobs:1,preferredJobs:1,quiet:true,rampSlot:false,perJobMegabytes:0});
-const options=(directory:string,request:HostRequestV1,over:Partial<HostCapacityOptionsV1>={}):HostCapacityOptionsV1=>({directory,policy,request,control:control(),environment:{},write:()=>undefined,sample:async()=>({host:host(),swappedOutMegabytes:0}),...over});
-const environmentOf=(directory:string,handle:HostCapacityHandleV1)=>({SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_HOST_CAPACITY_GRANT:handle.id,SEMIO_HOST_CAPACITY_PLAN:JSON.stringify(handle.plan)});
+const options=(directory:string,request:HostRequestV1,over:Partial<HostCapacityOptionsV1>={}):HostCapacityOptionsV1=>({directory,policy,request,control:control(),environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample:async()=>({host:host(),swappedOutMegabytes:0}),...over});
+const environmentOf=(directory:string,handle:HostCapacityHandleV1)=>({LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_HOST_CAPACITY_GRANT:handle.id,SEMIO_HOST_CAPACITY_PLAN:JSON.stringify(handle.plan)});
 const status=async(directory:string)=>readHostCapacityStatusV1({directory,policy,control:control(),sample:async()=>({host:host(),swappedOutMegabytes:0})});
 const holdBig=(directory:string)=>{let release!:()=>void;const hold=new Promise<void>(resolve=>{release=resolve;});const done=withHostCapacityV1(options(directory,sized(newHostCapacityIdV1(),8000,{preferredJobs:1,perJobMegabytes:0})),async()=>hold);return{release,done};};
 

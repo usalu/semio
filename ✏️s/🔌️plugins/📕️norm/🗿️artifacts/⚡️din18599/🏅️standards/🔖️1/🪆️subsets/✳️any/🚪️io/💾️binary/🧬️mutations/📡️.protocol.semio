@@ -93,3 +93,5 @@ record change-element-fc tag=42
 field payload bytes
 record change-element-adjacency tag=43
 field payload bytes
+record change-zone-thermal-mass tag=44
+field payload bytes

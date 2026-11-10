@@ -13,13 +13,13 @@ import {watchUnitCachePressureV1} from "../../🟦️.ts";
 const rules=UNIT_CACHE_POLICY_V1.gc,GIB=1024**3,base=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir();mkdirSync(base,{recursive:true});
 const python=(program:string,input:unknown):unknown=>{const run=spawnSync(testPythonV1()??"python3",["-I","-c",program],{input:JSON.stringify(input),encoding:"utf8"});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
 
-test("the shares of the unit cache (objects, lanes and memos; the incremental share lies inside the lanes) fill the ledger budget of 24 GiB without exceeding it, so the ledger stays the authority and enforcing the shares enforces the budget",()=>{
- const ledger=cacheLedgerV1(),area=ledger.areas.find(row=>row.id==="unit-cache")!,budget=cacheAreaBudgetBytesV1(ledger,area)!,shares=[rules.casShare,rules.laneShare,rules.admissionShare];
+test("the shares of the unit cache (lanes and memos; the incremental share lies inside the lanes) fill the ledger budget of 24 GiB without exceeding it, so the ledger stays the authority and enforcing the shares enforces the budget",()=>{
+ const ledger=cacheLedgerV1(),area=ledger.areas.find(row=>row.id==="unit-cache")!,budget=cacheAreaBudgetBytesV1(ledger,area)!,shares=[rules.laneShare,rules.admissionShare];
  expect(shares.every(share=>share>0&&share<1)).toBe(true);
  const independent=python("import json,sys\nv=json.load(sys.stdin)\nprint(json.dumps({'bytes':int(sum(v['shares'])*v['capacity']+0.5),'fits':sum(v['shares'])*v['capacity']<=v['budget']}))",{shares,capacity:budgetPolicy.partitions.rust.capacityBytes,budget}) as {bytes:number;fits:boolean};
  expect(independent.fits,"shares "+shares.join("+")+" of "+budgetPolicy.partitions.rust.capacityBytes+" bytes against a budget of "+budget).toBe(true);
  expect(shares.reduce((sum,share)=>sum+share,0)*budgetPolicy.partitions.rust.capacityBytes).toBeLessThanOrEqual(budget);
- expect(rules.casProtectedShare).toBeLessThanOrEqual(rules.casShare);expect(rules.incrementalShare).toBeLessThanOrEqual(rules.laneShare);
+ expect(rules.incrementalShare).toBeLessThanOrEqual(rules.laneShare);
  expect(shares.reduce((sum,share)=>sum+share,0)*budgetPolicy.partitions.rust.capacityBytes,"the ledger budget is the authority: the shares must use it nearly fully, not leave it idle").toBeGreaterThanOrEqual(budget*0.99);
 });
 

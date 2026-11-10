@@ -189,4 +189,5 @@ pub fn ensure_locale_on_names(names: &Names, locale: &str, placeholder: &str) ->
 //#region 🪢️Mounts
 #[path = "🧩️part-libraries/🦀️.rs"]
 pub mod part_libraries;
+pub use semio_s_artifact_norm_iso16757_model::part_2::solid as solid_volume;
 //#endregion 🪢️Mounts

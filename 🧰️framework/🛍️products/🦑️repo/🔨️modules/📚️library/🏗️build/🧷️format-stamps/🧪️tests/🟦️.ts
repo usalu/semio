@@ -96,7 +96,7 @@ test("the wiring stays in place: lease admission and wait hook, owner declaratio
  const text=(...parts:string[])=>readFileSync(join(library,...parts),"utf8"),leases=readFileSync(join(library,"../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts"),"utf8");
  expect(leases).toContain('Symbol.for("'+protocol.admissionGuardRegistry+'")');
  expect(leases).toContain('runAdmissionGuardsV1(options,"waiting")');expect(leases).toContain("return admitResourceLeaseV1(options,upgraded)");expect(leases).toContain("return admitResourceLeaseV1(options,await acquire())");expect(leases).toContain("return admitResourceLeaseV1(options,lease)");
- const graph=text("🏗️build","🕸️graph","🟦️.ts");
+ const graph=["🔐️authority","🕰️host","🧭️discovery"].map(name=>text("🏗️build","🕸️graph",name,"🟦️.ts")).join("\n");
  expect(graph).toContain('declareFormatStampV1("graph.generation",generationSchemaV1)');expect(graph).toContain('requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation","refuse")');expect(graph).toContain('requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation");return discoverBuildGraphPartV1');
  expect(text("🏗️build","👁️observation","🟨️.mjs")).toContain('declareFormatStampV1("graph.record",sourceAnalysisSchemaV1)');
  expect(text("🏗️build","🕸️graph","📥️inference","🔖️stamps","🟨️.mjs")).toContain('declareFormatStampV1("graph.inferrers", schema)');

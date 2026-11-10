@@ -50,7 +50,6 @@
     "source",
     "source/ignored"
   ],
-  "privateFence": ".cache/service/f",
   "opaqueDirectory": ".d0000ffff/p",
   "visibleDirectory": ".d0000fffg/p",
   "changes": [

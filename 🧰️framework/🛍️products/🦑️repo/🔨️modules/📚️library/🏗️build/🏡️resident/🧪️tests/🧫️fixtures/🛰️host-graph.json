@@ -1,0 +1,157 @@
+{
+ "projects": {
+  "core": {
+   "name": "core",
+   "root": "libs/core",
+   "targets": {
+    "build": {
+     "execution": {
+      "command": "build core"
+     },
+     "dependsOn": [
+      "^build"
+     ],
+     "outputs": [
+      "{projectRoot}/dist"
+     ]
+    },
+    "test": {
+     "execution": {
+      "command": "test core"
+     },
+     "dependsOn": [
+      "build",
+      "^build"
+     ],
+     "outputs": []
+    }
+   }
+  },
+  "util": {
+   "name": "util",
+   "root": "libs/util",
+   "targets": {
+    "build": {
+     "execution": {
+      "command": "build util"
+     },
+     "dependsOn": [
+      "^build"
+     ],
+     "outputs": [
+      "{projectRoot}/dist"
+     ]
+    },
+    "test": {
+     "execution": {
+      "command": "test util"
+     },
+     "dependsOn": [
+      "build",
+      "^build"
+     ],
+     "outputs": []
+    }
+   }
+  },
+  "app": {
+   "name": "app",
+   "root": "libs/app",
+   "targets": {
+    "build": {
+     "execution": {
+      "command": "build app"
+     },
+     "dependsOn": [
+      "^build"
+     ],
+     "outputs": [
+      "{projectRoot}/dist"
+     ]
+    },
+    "test": {
+     "execution": {
+      "command": "test app"
+     },
+     "dependsOn": [
+      "build",
+      "^build"
+     ],
+     "outputs": []
+    }
+   }
+  },
+  "tool": {
+   "name": "tool",
+   "root": "libs/tool",
+   "targets": {
+    "build": {
+     "execution": {
+      "command": "build tool"
+     },
+     "dependsOn": [
+      "^build"
+     ],
+     "outputs": [
+      "{projectRoot}/dist"
+     ]
+    },
+    "test": {
+     "execution": {
+      "command": "test tool"
+     },
+     "dependsOn": [
+      "build",
+      "^build"
+     ],
+     "outputs": []
+    }
+   }
+  },
+  "docs": {
+   "name": "docs",
+   "root": "libs/docs",
+   "targets": {
+    "build": {
+     "execution": {
+      "command": "build docs"
+     },
+     "dependsOn": [
+      "^build"
+     ],
+     "outputs": [
+      "{projectRoot}/dist"
+     ]
+    },
+    "test": {
+     "execution": {
+      "command": "test docs"
+     },
+     "dependsOn": [
+      "build",
+      "^build"
+     ],
+     "outputs": []
+    }
+   }
+  }
+ },
+ "dependencies": [
+  {
+   "source": "util",
+   "target": "core"
+  },
+  {
+   "source": "app",
+   "target": "util"
+  },
+  {
+   "source": "app",
+   "target": "core"
+  },
+  {
+   "source": "tool",
+   "target": "core"
+  }
+ ]
+}

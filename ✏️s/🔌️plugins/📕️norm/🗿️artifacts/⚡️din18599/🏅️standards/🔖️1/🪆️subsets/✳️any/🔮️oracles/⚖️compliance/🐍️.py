@@ -2,12 +2,18 @@
 """Independent DIN V 18599 / GEG oracle — zone-aggregated balance vs Rust evaluate() JSON."""
 from __future__ import annotations
 
+import calendar
 import json
 import sys
 from pathlib import Path
 
+import mpmath
+
+mpmath.mp.dps = 50
 RHO_CA = 0.34
-HOURS = 730.0
+DAY_HOURS = [24.0 * calendar.monthrange(2023, m)[1] for m in range(1, 13)]
+C_WIRK = {"Light": 50.0, "Medium": 90.0, "Heavy": 130.0}
+TAU0 = 16.0
 N_INF = 0.2
 LIGHT_HOURS = {"WFH": 1700.0, "Office": 2500.0, "School": 1800.0}
 OUTDOOR_ACH = {"WFH": 0.5, "Office": 1.0, "School": 1.5}
@@ -28,12 +34,20 @@ def adjacency(a: str) -> float:
     return {"Outdoor": 1.0, "Ground": 0.6, "Unheated": 0.5, "Heated": 0.0}[a]
 
 
-def util(gamma: float) -> float:
+def util_gain(gamma: float, a: float) -> float:
     if abs(gamma) < 1e-9:
         return 1.0
     if abs(gamma - 1.0) < 1e-9:
-        return 0.95 / 1.95
-    return (1.0 - gamma ** (-0.95)) / (1.0 - gamma ** (-1.95))
+        return a / (a + 1.0)
+    return float((1 - mpmath.mpf(gamma) ** a) / (1 - mpmath.mpf(gamma) ** (a + 1.0)))
+
+
+def util_loss(gamma: float, a: float) -> float:
+    if abs(gamma) < 1e-9:
+        return 1.0
+    if abs(gamma - 1.0) < 1e-9:
+        return a / (a + 1.0)
+    return float((1 - mpmath.mpf(gamma) ** -a) / (1 - mpmath.mpf(gamma) ** -(a + 1.0)))
 
 
 def orient_factor(az: float, tilt: float) -> float:
@@ -102,25 +116,28 @@ def zone_balances(doc: dict, elems: list, delta: float, climate: dict) -> list:
         qi_w = zone["internalGainsWM2"]
         q_h = 0.0
         q_c = 0.0
+        capacity = zone["areaM2"] * (zone["cWirkWhM2k"] if zone["thermalMassClass"] == "Custom" else C_WIRK[zone["thermalMassClass"]])
+        a = 1.0 + capacity / (h_t + h_v) / TAU0
         for m in range(12):
             te = theta[m]
-            qt = h_t * max(theta_i - te, 0.0) * HOURS / 1000.0
-            qv = h_v * max(theta_i - te, 0.0) * HOURS / 1000.0
-            qi = qi_w * zone["areaM2"] * HOURS / 1000.0
+            hours = DAY_HOURS[m]
+            qt = h_t * max(theta_i - te, 0.0) * hours / 1000.0
+            qv = h_v * max(theta_i - te, 0.0) * hours / 1000.0
+            qi = qi_w * zone["areaM2"] * hours / 1000.0
             qs = 0.0
             for e in z_elems:
                 if e["gValue"] > 0:
-                    qs += gh[m] * orient_factor(e["orientationDeg"], e["tiltDeg"]) * e["areaM2"] * e["gValue"] * max(0.0, min(1.0, e["fc"])) * HOURS / 1000.0
+                    qs += gh[m] * orient_factor(e["orientationDeg"], e["tiltDeg"]) * e["areaM2"] * e["gValue"] * max(0.0, min(1.0, e["fc"])) * hours / 1000.0
             loss = qt + qv
             gain = qi + qs
             gamma = 1e9 if loss <= 1e-9 else gain / loss
-            eta = util(gamma)
+            eta = util_gain(gamma, a)
             q_h += max(loss - eta * gain, 0.0)
-            loss_c = (h_t + h_v) * max(theta_c - te, 0.0) * HOURS / 1000.0
-            qt_c = h_t * max(te - theta_c, 0.0) * HOURS / 1000.0
-            qv_c = h_v * max(te - theta_c, 0.0) * HOURS / 1000.0
+            loss_c = (h_t + h_v) * max(theta_c - te, 0.0) * hours / 1000.0
+            qt_c = h_t * max(te - theta_c, 0.0) * hours / 1000.0
+            qv_c = h_v * max(te - theta_c, 0.0) * hours / 1000.0
             gamma_c = 1e9 if loss_c <= 1e-9 else (qi + qs) / loss_c
-            eta_c = util(gamma_c)
+            eta_c = util_loss(gamma_c, a)
             q_c += max((qi + qs) - eta_c * loss_c, 0.0) + qt_c + qv_c
         q_l = zone["lightingPowerWM2"] * zone["areaM2"] * LIGHT_HOURS.get(profile, 1700.0) * control / 1000.0
         out.append({"hT": h_t, "hV": h_v, "qH": q_h, "qC": q_c, "qL": q_l, "vol": zone["volumeM3"]})

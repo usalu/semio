@@ -131,6 +131,12 @@
     "moved": [],
     "modified": []
   },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "isolationSystems": {
     "removed": [],
     "inserted": [],
@@ -144,12 +150,6 @@
     "modified": []
   },
   "criticalRegions": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "placements": {
     "removed": [],
     "inserted": [],
     "moved": [],

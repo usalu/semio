@@ -1,13 +1,16 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the Din18599 editor: which value-tree path raises which concrete kind.
 
 use semio_framework_value::{FromValue, ToValue};
-use semio_s_plugin_norm_app_surface::{parse_path, IdRemoval, InsertItemRule, NormEdit, NormEditRules, PathSegment, SelectorKey, SetFieldRule};
+use semio_s_plugin_norm_app_surface::{parse_path, IdRemoval, InsertItemRule, NormEdit, NormEditRules, PathSegment, SelectorKey, SetFieldArgument, SetFieldArgumentSource, SetFieldRule};
 use crate::Din18599Mutation;
 use semio_s_artifact_norm_din18599_model::{Din18599Snapshot, EnvelopeElement, ThermalZone};
 
 /// 📚 Every path a Din18599 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
-    set_field_arguments: &[],
+    set_field_arguments: &[
+        SetFieldArgument { path: "zones[].thermalMassClass", kind: "change-zone-thermal-mass", argument: "newCWirkWhM2k", source: SetFieldArgumentSource::Sibling("cWirkWhM2k") },
+        SetFieldArgument { path: "zones[].cWirkWhM2k", kind: "change-zone-thermal-mass", argument: "newThermalMassClass", source: SetFieldArgumentSource::Sibling("thermalMassClass") },
+    ],
     move_item: &[],
     set_field: &[
         SetFieldRule { path: "renewables", kind: "update-renewables", selectors: &[], value: "newRenewables" },
@@ -37,6 +40,8 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         SetFieldRule { path: "zones[].thetaICoolC", kind: "change-zone-theta-i-cool-c", selectors: &[SelectorKey::Id("zoneId")], value: "newThetaICoolC" },
         SetFieldRule { path: "zones[].internalGainsWM2", kind: "change-zone-internal-gains-w-m2", selectors: &[SelectorKey::Id("zoneId")], value: "newInternalGainsWM2" },
         SetFieldRule { path: "zones[].lightingPowerWM2", kind: "change-zone-lighting-power-w-m2", selectors: &[SelectorKey::Id("zoneId")], value: "newLightingPowerWM2" },
+        SetFieldRule { path: "zones[].thermalMassClass", kind: "change-zone-thermal-mass", selectors: &[SelectorKey::Id("zoneId")], value: "newThermalMassClass" },
+        SetFieldRule { path: "zones[].cWirkWhM2k", kind: "change-zone-thermal-mass", selectors: &[SelectorKey::Id("zoneId")], value: "newCWirkWhM2k" },
         SetFieldRule { path: "elements[].labelEn", kind: "change-element-label-en", selectors: &[SelectorKey::Id("elementId")], value: "newLabelEn" },
         SetFieldRule { path: "elements[].labelDe", kind: "change-element-label-de", selectors: &[SelectorKey::Id("elementId")], value: "newLabelDe" },
         SetFieldRule { path: "elements[].kind", kind: "change-element-kind", selectors: &[SelectorKey::Id("elementId")], value: "newKind" },

@@ -51,7 +51,7 @@ Every norm artifact under `✏️s/🔌️plugins/📕️norm/🗿️artifacts/`
 ## Build gate (MANDATORY from now, added by coordinator)
 
 The host was saturated (~15 parallel builds, swap full, the shared build died in graph-plan). From now on every `repo run` build/test of a lane goes through the 2-slot gate, never directly:
-`bash TICKET/🧰️scripts/build-slot.sh '<project>:<target>' "TICKET/🗑️generated/<lane>/<n>.txt"` (Bash, `run_in_background: true`). It waits for a free global slot, then runs repo with the mandatory env vars and appends `exit <code>`. Only the `shared` lane may build outside the gate (priority). Light commands (`repo --service=off tools exec --light bun -- test <file>`, Python oracles, static scanners) are not builds and need no gate.
+Heavy builds go through the host-wide scheduler (dedupe by content, fair order between agents, admission by learned peak memory, hard memory limit): `repo run <project:target> --output=static` is scheduled by default, and `repo scheduler run --key=<project:target> --priority=agent --peak-mb=<n> -- <command...>` queues any other heavy command (Bash, `run_in_background: true`; redirect the output into `TICKET/🗑️generated/<lane>/<n>.txt`). Only the `shared` lane may use the `interactive` priority. Light commands (`repo tools exec --light bun -- test <file>`, Python oracles, static scanners) are not builds and need no scheduling.
 Do not queue a new build if a run of yours is still waiting/running. Expect long waits: implement meanwhile.
 
 ## Requests inbox (added by coordinator)

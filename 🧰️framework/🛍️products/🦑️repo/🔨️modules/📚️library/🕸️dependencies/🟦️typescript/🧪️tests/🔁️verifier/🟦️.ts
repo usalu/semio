@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { graphSourceV1 } from "../../../../🏗️build/🕸️graph/🧪️tests/📖️source/🟦️.ts";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
@@ -23,7 +24,7 @@ test("declared source-import facts hold in a fresh graph fact check and change o
   const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifacts) throw Error("Original caller artifacts required");
   mkdirSync(artifacts, { recursive: true });
-  expect(readFileSync(join(library, "🏗️build/🕸️graph/🟦️.ts"), "utf8")).toContain(fixture.graphPreparation);
+  expect(graphSourceV1()).toContain(fixture.graphPreparation);
   const root = realpathSync(mkdtempSync(join(artifacts, "fresh-verifier-"))), typescript = createRequire(import.meta.url)("typescript");
   for (const [path, source] of Object.entries(fixture.files)) writeFileSync(join(root, path), source as string);
   const { captureObservedSourceInputsV1 } = await import(observation), { relativeSourceInputsAsyncV1 } = await import(declared);

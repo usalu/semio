@@ -1,0 +1,9 @@
+{
+ "version": 1,
+ "owners": 48,
+ "modulesPerOwner": 40,
+ "bytesPerModule": 4096,
+ "warmup": 12,
+ "maximumGrowthMegabytes": 16,
+ "maximumSlopeKilobytesPerOwner": 400
+}

@@ -16,8 +16,8 @@
     },
     "rules": {
       "type": "array",
-      "minItems": 227,
-      "maxItems": 227,
+      "minItems": 234,
+      "maxItems": 234,
       "items": {
         "type": "object",
         "additionalProperties": false,

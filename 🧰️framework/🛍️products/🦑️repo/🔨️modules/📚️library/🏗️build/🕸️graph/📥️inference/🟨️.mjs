@@ -1,5 +1,6 @@
 /** 🕸️ Assembles the build inference plugin from its revisioned components and loads a complete new component graph whenever any authored Source of the module changes. */
 import {createRequire} from "node:module";
+import { createBoundedCacheV1 } from "../../🧊️bounded/🟨️.mjs";
 const javascriptManagerV1 = createRequire(import.meta.url)("../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
 import { registerSourceAnalysisV1 } from "../../../🏗️build/👁️observation/🟨️.mjs";
 import { fileURLToPath } from "node:url";
@@ -54,7 +55,7 @@ if (roster.length !== Object.keys(staticModules).length || roster.some((entry) =
 const sourceFiles = Object.freeze([import.meta.url, new URL(KERNEL, import.meta.url), new URL(MANIFEST, import.meta.url), ...roster.map((entry) => new URL(entry.path, import.meta.url))].map((url) => fileURLToPath(url)).concat(createRequire(import.meta.url)("../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").sourceFilesV1()));
 
 /** 📇️ Registers each source analysis once per identity and revision, so graphs of the same revision share one provider instead of re-registering its id. */
-const latestRegistrations = new Map();
+const latestRegistrations = createBoundedCacheV1({ name: "inference:registrations", maxEntries: 256, maxBytes: 256 });
 function register(analysis) {
   const prior = latestRegistrations.get(analysis.id);
   if (prior?.revision === analysis.revision) return prior.provider;
@@ -101,12 +102,12 @@ export const nativeSourceWatchPlanV1 = current.modules["project-assembly"].nativ
 
 /** 🔁️ Opens the answer of derived facts (the command walks a project record named) against the live files, for the generation that decides whether the projects holding them stay valid. */
 export const openGenerationDeriverV1 = current.modules["project-nodes"].openGenerationDeriverV1;
+export const primeSharedClosuresOfWorkspaceV1 = current.modules["project-nodes"].primeSharedClosuresOfWorkspaceV1;
 
 /** 🔎️ Queries source-project normalization through the same production stages without publishing graph facts. */
 export const inferReadOnlyBuildProjectSourcesV1 = current.modules["project-assembly"].inferReadOnlyBuildProjectSourcesV1;
 
 /** 🪪️ Expands actual native owners through the same read-only phase and original caller controls. */
-export const discoverNativeBuildOwnersV1 = current.modules["owner-discovery"].discoverNativeBuildOwnersV1;
 
 /** 🚪️ Observes one canonical owner and only its selected executable source closures. */
 export const discoverBuildOwnerAdmissionFactsV1 = current.modules["owner-discovery"].discoverBuildOwnerAdmissionFactsV1;

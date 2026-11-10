@@ -1,0 +1,6 @@
+{
+  "mutation": "changezonethermalmass",
+  "zoneId": "ghost",
+  "newThermalMassClass": "Heavy",
+  "newCWirkWhM2k": 120.0
+}

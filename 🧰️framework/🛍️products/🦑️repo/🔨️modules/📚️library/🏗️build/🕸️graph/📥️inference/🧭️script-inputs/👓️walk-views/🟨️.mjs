@@ -31,9 +31,12 @@ export function walkViewPrefixesV1(view) {
   return PREFIX_SETS_V1[WALK_VIEW_POLICY_V1.views[view].prefixes]();
 }
 
+/** 🧠️ The verdict of each view on each name it was asked about: the prefixes of a view are fixed, and the names of a workspace repeat from walk to walk. */
+const viewVerdictsV1 = new Map();
+
 /** 🔏️ The answer digest of one walk read through a view: the whole walk (roster, compiled modules, generated outputs, the script provider ports it names) when no view is named, otherwise the view's name with the roster and the compiled modules outside its prefixes, the generated outputs of every compiled module (a left-out module that imports a generated output still makes the target depend on its producer) and the ports (a project names each provider by reference, `../🔌️provider-closures`). */
 export function walkViewAnswerV1(value, compiled, generated, view, ports = []) {
   if (view === undefined) return createHash("sha256").update(JSON.stringify([value, compiled, generated, ports])).digest("hex");
-  const prefixes = walkViewPrefixesV1(view), kept = name => typeof name !== "string" || !prefixes.some(prefix => (name.startsWith("{workspaceRoot}/") ? name.slice(16) : name).startsWith(prefix));
+  const prefixes = walkViewPrefixesV1(view), decided = viewVerdictsV1.get(view) ?? viewVerdictsV1.set(view, new Map()).get(view), kept = name => { if (typeof name !== "string") return true; let verdict = decided.get(name); if (verdict === undefined) { if (decided.size >= WALK_VIEW_POLICY_V1.verdictEntries) decided.clear(); decided.set(name, verdict = !prefixes.some(prefix => (name.startsWith("{workspaceRoot}/") ? name.slice(16) : name).startsWith(prefix))); } return verdict; };
   return createHash("sha256").update(JSON.stringify([view, value.filter(kept), compiled.filter(kept), generated.filter(([name, rows]) => rows.length || kept(name)), ports])).digest("hex");
 }

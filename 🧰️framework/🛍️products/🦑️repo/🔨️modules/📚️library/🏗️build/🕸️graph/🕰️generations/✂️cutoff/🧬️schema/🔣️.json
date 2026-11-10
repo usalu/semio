@@ -10,6 +10,8 @@
     "ownerPrefix": "@derived:",
     "nameDigestCharacters": 32,
     "deriveConcurrency": 2,
+    "collectEveryClosures": 256,
+    "settleChunkClosures": 256,
     "maximumSuspects": 65536
    }
   },
@@ -36,8 +38,7 @@
    "additionalProperties": false,
    "required": [
     "version",
-    "worlds",
-    "memoBounds"
+    "worlds"
    ],
    "properties": {
     "version": {
@@ -158,42 +159,6 @@
           }
          }
         }
-       }
-      }
-     }
-    },
-    "memoBounds": {
-     "type": "array",
-     "items": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-       "id",
-       "fill",
-       "known",
-       "queries",
-       "cached"
-      ],
-      "properties": {
-       "id": {
-        "type": "string"
-       },
-       "fill": {
-        "enum": [
-         "below",
-         "full"
-        ]
-       },
-       "known": {
-        "type": "boolean"
-       },
-       "queries": {
-        "type": "integer",
-        "minimum": 1,
-        "maximum": 2
-       },
-       "cached": {
-        "type": "boolean"
        }
       }
      }

@@ -24,7 +24,7 @@ impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for ChangeZoneThetaIHeatC 
     };
 
     fn label(&self) -> semio_ui_locale::LocalizedLabel {
-        semio_ui_locale::LocalizedLabel::native("Change zone heating set-point", "Heiz-Solltemperatur der Zone ändern")
+        semio_ui_locale::LocalizedLabel::native("Change zone heating setpoint", "Heiz-Solltemperatur der Zone ändern")
     }
 }
 

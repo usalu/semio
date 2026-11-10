@@ -118,19 +118,19 @@ fn polyline_json(diagram: &Diagram2d, id: &str) -> String {
     format!("[{}]", points.iter().map(|p| format!("[{},{}]", p.x, p.y)).collect::<Vec<_>>().join(","))
 }
 
-fn oracle_element(document: &Din4108Snapshot, element: &model::EnvelopeElement, all: &[Diagram2d]) -> String {
+fn oracle_element(element: &model::EnvelopeElement, all: &[Diagram2d]) -> String {
     let (r_si, r_se) = checks::surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
-    let boundary = checks::part_3::glaser_boundary(element, document.climate_zone);
+    let winter = checks::part_3::GLASER_WINTER;
     let layers: Vec<String> = element.layers.iter().map(|l| format!("{{\"d\":{},\"lambda\":{},\"mu\":{}}}", l.thickness_m, l.lambda, l.mu)).collect();
     let temperature = all.iter().find(|d| d.id == format!("temperature:{}", element.id)).expect("temperature diagram");
     let glaser = all.iter().find(|d| d.id == format!("glaser:{}", element.id)).expect("glaser diagram");
     format!(
         "{{\"id\":\"{}\",\"r_si\":{r_si},\"r_se\":{r_se},\"t_int\":{},\"t_ext\":{},\"rh_int\":{},\"rh_ext\":{},\"layers\":[{}],\"temperature\":{},\"vapour\":{},\"saturation\":{}}}",
         element.id,
-        document.t_int_c,
-        boundary.t_ext_w,
-        document.rh_int,
-        boundary.rh_ext_w,
+        winter.t_int_c,
+        winter.t_ext_c,
+        winter.rh_int,
+        winter.rh_ext,
         layers.join(","),
         polyline_json(temperature, "temperature"),
         polyline_json(glaser, "vapour"),
@@ -144,7 +144,7 @@ fn the_independent_oracle_agrees() {
     let report = inferences::evaluate(&document);
     let all = diagrams(&document, &report, None);
     assert_diagram_laws(&all);
-    let rows: Vec<String> = document.elements.iter().filter(|e| !e.layers.is_empty()).map(|e| oracle_element(&document, e, &all)).collect();
+    let rows: Vec<String> = document.elements.iter().filter(|e| !e.layers.is_empty()).map(|e| oracle_element(e, &all)).collect();
     let input = format!("{{\"elements\":[{}]}}", rows.join(","));
     let script = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔮️oracles/🐍️.py");
     let output = norm::python_oracle::run_ok(script, &[], Some(input.as_bytes()));
@@ -178,10 +178,13 @@ fn the_glaser_drying_vectors_agree_with_the_independent_oracle() {
         let name = case["id"].as_str().expect("id");
         let layers: Vec<model::LayerDocument> = case["layers"].as_array().expect("layers").iter().map(vector_layer).collect();
         let number = |key: &str| case[key].as_f64().expect(key);
-        let boundary = |key: &str| (case[key]["tC"].as_f64().expect("tC"), case[key]["rh"].as_f64().expect("rh"));
-        let (winter, summer) = (boundary("winter"), boundary("summer"));
-        let condensed = checks::part_3::glaser_condensed_mass_kg_m2(&layers, number("rSi"), number("rSe"), number("tIntC"), number("rhInt"), winter.0, winter.1, number("hours"));
-        let evaporated = checks::part_3::glaser_evaporated_mass_kg_m2(&layers, number("rSi"), number("rSe"), number("tIntC"), number("rhInt"), winter, summer, number("hours"));
+        let period = |key: &str| {
+            let field = |name: &str| case[key][name].as_f64().expect(name);
+            checks::part_3::GlaserPeriod { t_int_c: field("tIntC"), rh_int: field("rhInt"), t_ext_c: field("tExtC"), rh_ext: field("rhExt"), hours: field("hours") }
+        };
+        let (winter, summer) = (period("winter"), period("summer"));
+        let condensed = checks::part_3::glaser_condensed_mass_kg_m2(&layers, number("rSi"), number("rSe"), winter);
+        let evaporated = checks::part_3::glaser_evaporated_mass_kg_m2(&layers, number("rSi"), number("rSe"), winter, summer);
         assert!(near(condensed, number("condensedKgM2")), "{name}: condensed {condensed} against {}", number("condensedKgM2"));
         assert!(near(evaporated, number("evaporatedKgM2")), "{name}: evaporated {evaporated} against {}", number("evaporatedKgM2"));
         assert_eq!(evaporated >= condensed, case["dries"].as_bool().expect("dries"), "{name}");
@@ -207,5 +210,81 @@ fn the_u_value_vectors_agree_with_the_independent_iso_6946_oracle() {
         let (want_r, want_u) = (case["rTotal"].as_f64().expect("rTotal"), case["u"].as_f64().expect("u"));
         assert!((r - want_r).abs() <= tolerance * want_r.abs().max(1.0), "{name}: R_T {r} against {want_r}");
         assert!((checks::u_value(r) - want_u).abs() <= tolerance * want_u.abs().max(1.0), "{name}: U against {want_u}");
+    }
+}
+
+fn cross_checks() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔮️cross-checks/🔣️.json")).expect("cross-check vectors")
+}
+
+fn stack_of(case: &serde_json::Value) -> Vec<model::LayerDocument> {
+    case["layers"]
+        .as_array()
+        .expect("layers")
+        .iter()
+        .map(|row| {
+            let segments = row["segments"].as_array().map(|list| list.iter().map(|s| model::LayerSegment { id: "s".into(), material_id: String::new(), fraction: s["fraction"].as_f64().expect("fraction"), lambda: s["lambda"].as_f64().expect("lambda"), mu: 1.0, density: 0.0 }).collect()).unwrap_or_default();
+            model::LayerDocument { segments, ..vector_layer(row) }
+        })
+        .collect()
+}
+
+#[test]
+fn the_cross_check_resistances_and_the_validity_warning_agree_with_the_exact_fraction_oracle() {
+    let vectors = cross_checks();
+    let tolerance = vectors["toleranceRelative"].as_f64().expect("tolerance");
+    for case in vectors["uValues"].as_array().expect("uValues") {
+        let name = case["id"].as_str().expect("id");
+        let layers = stack_of(case);
+        let (r_si, r_se) = (case["rSi"].as_f64().expect("rSi"), case["rSe"].as_f64().expect("rSe"));
+        let want = case["rTotal"].as_f64().expect("rTotal");
+        let got = checks::total_resistance(&layers, r_si, r_se);
+        assert!((got - want).abs() <= tolerance * want, "{name}: R_T {got} against {want}");
+        let ratio = checks::combined_method_ratio(&layers, r_si, r_se);
+        let applicable = case["combinedMethodApplicable"].as_bool().expect("applicable");
+        assert_eq!(ratio.is_none_or(|r| r <= checks::COMBINED_METHOD_MAX_RATIO), applicable, "{name}: ratio {ratio:?}");
+    }
+}
+
+#[test]
+fn an_inapplicable_combined_method_raises_a_localized_warning() {
+    let vectors = cross_checks();
+    let case = vectors["uValues"].as_array().expect("uValues").iter().find(|c| c["id"] == "upper-lower-ratio-above-1-5").expect("case");
+    let element = model::EnvelopeElement { id: "wall".into(), kind: "wall".into(), zone_id: String::new(), orientation_deg: 0.0, inclination_deg: 90.0, adjacent: "exterior".into(), area_m2: 10.0, delta_u_g: 0.0, delta_u_f: 0.0, delta_u_r: 0.0, layers: stack_of(case) };
+    let result = checks::part_6::check_u_value(&element, "residential", 20.0);
+    assert!(result.explanation.en.contains("Validity warning"), "{}", result.explanation.en);
+    assert!(result.explanation.de.contains("Gültigkeitswarnung"), "{}", result.explanation.de);
+    assert_ne!(result.status, norm::CheckStatus::Pass);
+}
+
+#[test]
+fn the_cross_check_temperature_factor_uses_the_standard_surface_resistance() {
+    let vectors = cross_checks();
+    for case in vectors["fRsi"].as_array().expect("fRsi") {
+        let name = case["id"].as_str().expect("id");
+        let element = model::EnvelopeElement { id: name.into(), kind: "wall".into(), zone_id: String::new(), orientation_deg: 0.0, inclination_deg: 90.0, adjacent: "exterior".into(), area_m2: 10.0, delta_u_g: 0.0, delta_u_f: 0.0, delta_u_r: 0.0, layers: stack_of(case) };
+        let result = checks::part_2::check_f_rsi(&element);
+        assert!((result.computed.value - case["fRsi"].as_f64().expect("fRsi")).abs() <= 1e-12, "{name}: f_Rsi {}", result.computed.value);
+        assert_eq!(result.status == norm::CheckStatus::Pass, case["passes"].as_bool().expect("passes"), "{name}");
+    }
+}
+
+#[test]
+fn the_cross_check_glaser_masses_agree_with_the_annex_a_oracle() {
+    let vectors = cross_checks();
+    for case in vectors["glaser"].as_array().expect("glaser") {
+        let name = case["id"].as_str().expect("id");
+        let layers = stack_of(case);
+        let period = |key: &str| {
+            let field = |n: &str| case[key][n].as_f64().expect(n);
+            checks::part_3::GlaserPeriod { t_int_c: field("tIntC"), rh_int: field("rhInt"), t_ext_c: field("tExtC"), rh_ext: field("rhExt"), hours: field("hours") }
+        };
+        let (winter, summer) = (period("winter"), period("summer"));
+        let (r_si, r_se) = (case["rSi"].as_f64().expect("rSi"), case["rSe"].as_f64().expect("rSe"));
+        let condensed = checks::part_3::glaser_condensed_mass_kg_m2(&layers, r_si, r_se, winter);
+        let evaporated = checks::part_3::glaser_evaporated_mass_kg_m2(&layers, r_si, r_se, winter, summer);
+        let (want_c, want_e) = (case["reference"]["condensedKgM2"].as_f64().expect("c"), case["reference"]["evaporatedKgM2"].as_f64().expect("e"));
+        assert!((condensed - want_c).abs() <= 1e-9 * want_c.max(1.0), "{name}: condensed {condensed} against {want_c}");
+        assert!((evaporated - want_e).abs() <= 1e-9 * want_e.max(1.0), "{name}: evaporated {evaporated} against {want_e}");
     }
 }

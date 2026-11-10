@@ -10,7 +10,7 @@ const DAY=86400000,HOUR=3600000,MINUTE=60000,purpose={en:"p",de:"q"},oracle=join
 const partitions={alpha:{directory:".cache/b/a",capacityBytes:1<<30,maximumLogicalBytes:1<<30}};
 const document=():any=>({
  version:1,
- roots:{repository:{directory:"r/cache",maximumBytes:1<<30,undeclaredUnusedAgeMs:14*DAY,undeclaredQuietMs:HOUR,ignored:[CACHE_SIZE_FILE_V1]},native:{directory:".cache",maximumBytes:1<<20,undeclaredUnusedAgeMs:7*DAY,undeclaredQuietMs:HOUR,ignored:[]}},
+ roots:{repository:{directory:"r/cache",maximumBytes:1<<30,undeclaredUnusedAgeMs:14*DAY,undeclaredQuietMs:HOUR,ignored:[CACHE_SIZE_FILE_V1]},native:{directory:".cache",maximumBytes:1<<20,undeclaredUnusedAgeMs:7*DAY,undeclaredQuietMs:HOUR,ignored:[]},rust:{directory:".r",maximumBytes:0,undeclaredUnusedAgeMs:1000,undeclaredQuietMs:0,ignored:[]}},
  areas:[
   {id:"alpha",root:"native",kind:"partition",directory:"b/a",partition:"alpha",managed:{owner:"image"},recreate:"derived",writers:["w"],purpose},
   {id:"tmps",root:"native",kind:"nested",directory:"nx/tmp",partition:"alpha",budget:{bytes:100000},collect:{unusedAgeMs:HOUR,quietMs:10*MINUTE,custody:"pid",units},writers:["w"],purpose},

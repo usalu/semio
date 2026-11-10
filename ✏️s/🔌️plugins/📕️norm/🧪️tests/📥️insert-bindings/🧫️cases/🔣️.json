@@ -2134,6 +2134,26 @@
       "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-weld-run/🧬️schema/🔣️.json"
     },
     {
+      "family": "🪶️en1999",
+      "path": "sheetProfiles",
+      "kind": "insert-sheet-profile",
+      "selectors": [],
+      "index": "index",
+      "item": "sheetProfile",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-sheet-profile/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🪶️en1999",
+      "path": "fireInsulations",
+      "kind": "insert-fire-insulation",
+      "selectors": [],
+      "index": "index",
+      "item": "fireInsulation",
+      "source": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-fire-insulation/🧬️schema/🔣️.json"
+    },
+    {
       "family": "🫨️en1998",
       "path": "accelerograms",
       "kind": "insert-accelerogram",
@@ -2375,6 +2395,56 @@
       "item": "variable",
       "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
       "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tower-variable/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "isolationSystems",
+      "kind": "insert-isolation-system",
+      "selectors": [],
+      "index": "index",
+      "item": "isolationSystem",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-isolation-system/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "pierBases",
+      "kind": "insert-pier-base",
+      "selectors": [],
+      "index": "index",
+      "item": "pierBase",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-pier-base/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "🫨️en1998",
+      "path": "criticalRegions",
+      "kind": "insert-critical-region",
+      "selectors": [],
+      "index": "index",
+      "item": "criticalRegion",
+      "source": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-critical-region/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚡️din18599",
+      "path": "zones",
+      "kind": "insert-zone",
+      "selectors": [],
+      "index": "index",
+      "item": "zone",
+      "source": "🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-zone/🧬️schema/🔣️.json"
+    },
+    {
+      "family": "⚡️din18599",
+      "path": "elements",
+      "kind": "insert-element",
+      "selectors": [],
+      "index": "index",
+      "item": "element",
+      "source": "🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "schema": "🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕insert-element/🧬️schema/🔣️.json"
     }
   ]
 }

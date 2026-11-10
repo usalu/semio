@@ -53,3 +53,13 @@ fn list_admission_uses_native_insert_and_identity_remove_vocabulary() {
     let variants = iso16757_field_meta("catalogue.products[id=product-cv].variants").unwrap();
     assert!(!variants.can_insert && !variants.can_remove);
 }
+
+#[test]
+fn shape_dimensions_and_placement_are_localized_editable_metre_and_degree_fields() {
+    let width = iso16757_field_meta("geometry.objects.geom-valve-50.shape.parameters.width").expect("width");
+    assert_eq!((width.label.en.as_str(), width.label.de.as_str(), width.unit()), ("Width", "Breite", Some("m")));
+    let nested = iso16757_field_meta("geometry.objects.geom-valve-50.shape.child.children[1].translation[2]").expect("translation");
+    assert_eq!((nested.label.de.as_str(), nested.unit()), ("Verschiebung", Some("m")));
+    let rotation = iso16757_field_meta("geometry.objects.geom-valve-50.shape.rotationDeg[0]").expect("rotation");
+    assert_eq!((rotation.label.en.as_str(), rotation.unit()), ("Rotation", Some("°")));
+}

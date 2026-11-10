@@ -26,8 +26,20 @@ export function closureHandleOfV1(value: unknown): ScriptInputsValueV1;
 export function registerClosureQueryV1(name: string, query: ScriptInputsValueV1): void;
 export function bindClosureScriptsV1(workspaceRoot: string, scripts: ScriptInputsValueV1): void;
 export function resetClosureEntriesV1(): void;
+export function closureEntryCountsV1(): { derived: number; loaded: number; stale: number; checked: number };
+export function closureStoreDirectoryV1(workspaceRoot: string): string | undefined;
+export function bindClosureStoreV1(workspaceRoot: string, directory: string, writable?: boolean): void;
 export function closureApiV1(scripts: ScriptInputsValueV1, workspaceRoot: string): ScriptInputsValueV1;
 export function derivedWalkAnswerV1(value: unknown): string;
 export function expandedCommandInputsV1<T>(value: T, workspaceRoot: string, scripts?: ScriptInputsValueV1): Promise<T>;
 export function resolveCommandWalkV1(workspaceRoot: string, entries: readonly string[], cache: ScriptInputsValueV1): Promise<{ readonly value: readonly string[]; readonly rows: readonly ScriptInputsValueV1[]; readonly derived: readonly { readonly row: ScriptInputsValueV1; readonly support: readonly ScriptInputsValueV1[] }[] }>;
 export function yieldInferenceV1(context: ScriptInputsValueV1, phase: string, index: number, force?: boolean): Promise<void>;
+export function withClosurePassV1<T>(compute:()=>Promise<T>|T):Promise<T>;
+
+/** 📋️ The recipes every owner reads and none depends on its own target. */
+export function sharedClosureRecipesV1(scripts: ScriptInputsValueV1): readonly Record<string, unknown>[];
+/** 🧰️ Derives the shared closure entries once, in order, before the owners start. */
+export function primeSharedClosuresV1(workspaceRoot: string, scripts: ScriptInputsValueV1, options?: { signal?: AbortSignal; progress?: (event: { done: number; total: number }) => unknown; recipes?: readonly Record<string, unknown>[] }): Promise<{ recipes: number; derived: number; loaded: number; stale: number }>;
+
+/** 🫧️ Releases what one finished owner left in the shared script input cache. */
+export function releaseOwnerStateV1(scripts: ScriptInputsValueV1): void;

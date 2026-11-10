@@ -3,6 +3,8 @@ import {appendFileSync,chmodSync,constants,copyFileSync,existsSync,lstatSync,mkd
 import {basename,dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import {laneNeutralV1,laneRestoreV1,parseDepInfoV1,sha256V1,UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import {casObjectPathV1,casRootV1} from "../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
+import {hasCasObjectSyncV1,putCasObjectSyncV1,readCasObjectSyncV1,touchCasObjectSyncV1} from "../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1,layout=policy.layout;
 type Definitions=typeof schema.definitions;
@@ -15,10 +17,11 @@ export type UnitEventV1={version:1;atMs:number;lane:string;pid:number;kind:Defin
 export function storePathsV1(root:string){return Object.freeze({root,objects:join(root,layout.objects),entries:join(root,layout.entries),locks:join(root,layout.locks),events:join(root,layout.events),temporary:join(root,layout.temporary)});}
 
 function ensure(path:string):string{mkdirSync(path,{recursive:true});return path;}
-const objectPath=(root:string,sha:string)=>join(root,layout.objects,sha.slice(0,2),sha);
+/** 🗄️ Compiled objects live in the host-wide content-addressed store, shared and deduplicated by every workspace and bounded by its cap; an entry whose object the host collected is a miss. */
+const objectPath=(sha:string)=>casObjectPathV1(casRootV1(),sha);
 
 /** 🕳️ Whether a recorded entry lost an object it replays: an output or, for a build script run, one of its two streams. */
-const lostObjectV1=(root:string,entry:Readonly<{outputs:readonly{sha256:string}[];stdout?:string|null;stderr?:string|null}>):boolean=>[...entry.outputs.map(row=>row.sha256),entry.stdout,entry.stderr].some(sha=>typeof sha==="string"&&!existsSync(objectPath(root,sha)));
+const lostObjectV1=(root:string,entry:Readonly<{outputs:readonly{sha256:string}[];stdout?:string|null;stderr?:string|null}>):boolean=>[...entry.outputs.map(row=>row.sha256),entry.stdout,entry.stderr].some(sha=>typeof sha==="string"&&!hasCasObjectSyncV1(casRootV1(),sha));
 const entryDirectory=(root:string,key:string)=>join(root,layout.entries,key.slice(0,2),key);
 
 /** 🔏️ Content digest of a file, memoised per lane by (size, mtime, inode) so unchanged dependency artifacts are hashed once. */
@@ -37,14 +40,9 @@ export function emitUnitEventV1(root:string,event:Omit<UnitEventV1,"version"|"at
  try{const directory=ensure(join(root,layout.events)),file=join(directory,event.lane+".jsonl");appendFileSync(file,JSON.stringify({version:1,atMs:Date.now(),pid:process.pid,...event})+"\n");}catch{}
 }
 
-function putObject(root:string,bytes:Uint8Array|string):string{
- const sha=sha256V1(bytes),target=objectPath(root,sha);
- if(existsSync(target)){try{const now=new Date();utimesSync(target,now,now);}catch{}return sha;}
- const temporary=join(ensure(join(root,layout.temporary)),randomBytes(8).toString("hex"));
- writeFileSync(temporary,bytes);ensure(dirname(target));try{renameSync(temporary,target);}catch(error){rmSync(temporary,{force:true});if(!existsSync(target))throw error;}return sha;
-}
+const putObject=(_root:string,bytes:Uint8Array|string):string=>putCasObjectSyncV1(casRootV1(),bytes);
 
-function readObject(root:string,sha:string):Buffer|undefined{try{return readFileSync(objectPath(root,sha));}catch{return undefined;}}
+const readObject=(_root:string,sha:string):Buffer|undefined=>readCasObjectSyncV1(casRootV1(),sha);
 
 /** 🔎️ Returns the newest entry of `key` whose recorded files and environment still hold, `undefined` on a miss. A missing object or an unreadable entry is a miss, never an error. */
 export function lookupUnitV1(root:string,key:string,context:Readonly<{cwd:string;laneRoot:string|undefined;environment:Readonly<Record<string,string|undefined>>;stampDirectory:string|undefined}>):UnitEntryV1|undefined{
@@ -69,10 +67,10 @@ export function restoreUnitV1(root:string,entry:UnitEntryV1,context:Readonly<{ou
  ensure(context.outDir);
  for(const row of entry.outputs){
   const destination=join(context.outDir,row.name);rmSync(destination,{force:true});
-  const source=objectPath(root,row.sha256);
+  const source=objectPath(row.sha256);
   if(row.template){writeFileSync(destination,render(readFileSync(source,"utf8")));}
-  else{copyFileSync(source,destination,constants.COPYFILE_FICLONE);if(row.executable)chmodSync(destination,0o755);}
-  const now=new Date();try{utimesSync(source,now,now);}catch{}
+  else{copyFileSync(source,destination,constants.COPYFILE_FICLONE);chmodSync(destination,row.executable?0o755:0o644);}
+  touchCasObjectSyncV1(casRootV1(),row.sha256);const now=new Date();
   if(!row.template)utimesSync(destination,now,now);
   if(!row.template&&context.stampDirectory)stampFile(destination,row.sha256,context.stampDirectory);
  }
@@ -105,18 +103,7 @@ export function publishUnitV1(root:string,input:Readonly<{key:string;crate:strin
  return entry;
 }
 
-/** 🔭️ Lists the cached objects with their sizes and last use, for garbage collection. */
-export function listObjectsV1(root:string):{digest:string;bytes:number;lastUsedMs:number}[]{
- const rows:{digest:string;bytes:number;lastUsedMs:number}[]=[],base=join(root,layout.objects);
- let shards:string[];try{shards=readdirSync(base);}catch{return rows;}
- for(const shard of shards)for(const name of readdirSync(join(base,shard))){try{const stat=statSync(join(base,shard,name));rows.push({digest:name,bytes:stat.size,lastUsedMs:Math.floor(stat.mtimeMs)});}catch{}}
- return rows;
-}
-
-/** 🗑️ Removes objects by digest; entries that lose an object become misses and are dropped lazily. */
-export function removeObjectsV1(root:string,digests:readonly string[]):number{let removed=0;for(const digest of digests){if(!/^[a-f0-9]{64}$/u.test(digest))continue;try{const path=objectPath(root,digest);if(existsSync(path)){rmSync(path,{force:true});removed++;}}catch{}}return removed;}
-
-/** 🧽️ Drops entries that lost an object, empty entry directories, and temporary files of writers that died an hour ago. */
+/** 🧽️ Drops entries that lost an object, empty entry directories, the pre-host object directory of the workspace image that nothing replays any more (the natural drain of its bytes), and temporary files of writers that died an hour ago. */
 export function pruneEntriesV1(root:string,nowMs:number):{entries:number;temporary:number}{
  let entries=0,temporary=0;
  for(const kind of[layout.entries,layout.runs]){
@@ -127,6 +114,7 @@ export function pruneEntriesV1(root:string,nowMs:number):{entries:number;tempora
    try{if(readdirSync(directory).length===0)rmSync(directory,{recursive:true,force:true});}catch{}
   }
  }
+ rmSync(join(root,layout.objects),{recursive:true,force:true});
  const work=join(root,layout.temporary);let names:string[];try{names=readdirSync(work);}catch{names=[];}
  for(const name of names){try{if(nowMs-statSync(join(work,name)).mtimeMs>3600000){rmSync(join(work,name),{force:true});temporary++;}}catch{}}
  return{entries,temporary};
@@ -226,10 +214,10 @@ export function restoreBuildRunV1(root:string,entry:BuildEntryV1,context:Readonl
  ensure(context.outDir);
  for(const row of entry.outputs){
   const destination=join(context.outDir,row.path);ensure(dirname(destination));rmSync(destination,{force:true});
-  const source=objectPath(root,row.sha256);
-  if(row.template)writeFileSync(destination,laneRestoreV1(readFileSync(source,"utf8"),context.laneRoot));else copyFileSync(source,destination,constants.COPYFILE_FICLONE);
+  const source=objectPath(row.sha256);
+  if(row.template)writeFileSync(destination,laneRestoreV1(readFileSync(source,"utf8"),context.laneRoot));else{copyFileSync(source,destination,constants.COPYFILE_FICLONE);chmodSync(destination,0o644);}
   if(row.executable)chmodSync(destination,0o755);
-  try{const now=new Date();utimesSync(source,now,now);}catch{}
+  touchCasObjectSyncV1(casRootV1(),row.sha256);
  }
  const text=(sha:string|null)=>sha===null?"":laneRestoreV1(readObject(root,sha)?.toString("utf8")??"",context.laneRoot);
  return{stdout:text(entry.stdout),stderr:text(entry.stderr)};

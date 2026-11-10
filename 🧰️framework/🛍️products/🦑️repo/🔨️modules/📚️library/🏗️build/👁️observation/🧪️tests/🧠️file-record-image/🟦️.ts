@@ -8,13 +8,13 @@ import{testPythonV1}from"../../../../../../../../🔨️modules/🏃️process/�
 const api=await import(new URL("../../🟨️.mjs",import.meta.url).href) as typeof import("../../🟨️.mjs");
 const{memoizedFileRecord,observeInference,captureObservedSourceInputsV1,releaseInferenceMemoryV1}=api as unknown as{captureObservedSourceInputsV1:(compute:()=>unknown)=>Promise<{value:unknown;observations:{kind:string;path:string;fact:{sha256?:string}}[]}>;memoizedFileRecord:(namespace:string,path:string,compute:(bytes:Buffer)=>unknown)=>unknown;observeInference:(options:{cachePath:string;key:unknown},compute:()=>unknown)=>Promise<unknown>;releaseInferenceMemoryV1:()=>void};
 const python=testPythonV1();
-beforeAll(async()=>{const root=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir();mkdirSync(root,{recursive:true});await observeInference({cachePath:join(root,"file-record-image-load.json"),key:"file-record-image-load"},()=>undefined);});
+beforeAll(async()=>{const root=mkdtempSync(join(tmpdir(),"fri-"));await observeInference({cachePath:join(root,"load.json"),key:"file-record-image-load"},()=>undefined);});
 const pythonAnalysis=(file:string)=>{
  const run=Bun.spawnSync([python!,"-I","-c","import sys,json\nb=open(sys.argv[1],'rb').read()\nprint(json.dumps({'length':len(b),'upper':b.decode('utf-8').upper(),'lines':b.count(b'\\n'),'sha256':__import__('hashlib').sha256(b).hexdigest()},ensure_ascii=True))",file]);
  expect(run.exitCode,run.stderr.toString()).toBe(0);
  return JSON.parse(run.stdout.toString()) as{length:number;upper:string;lines:number;sha256:string};
 };
-const fresh=()=>{const root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"file-record-image-"));mkdirSync(join(root,".cache"),{recursive:true});return root;};
+const fresh=()=>{const root=mkdtempSync(join(tmpdir(),"fri-"));mkdirSync(join(root,".cache"),{recursive:true});return root;};
 const scope=(root:string,name:string,body:()=>unknown)=>observeInference({cachePath:join(root,".cache",name+".json"),key:[name]},()=>({value:body()}));
 const settle=()=>Bun.sleepSync(2300);
 

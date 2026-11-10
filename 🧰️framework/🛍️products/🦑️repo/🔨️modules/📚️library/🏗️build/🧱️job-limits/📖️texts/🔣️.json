@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "id": "job-limits",
+  "languages": ["en", "de"],
+  "messages": {
+    "memory-exceeded": {
+      "en": "Job {job} was stopped at its memory limit of {limit} MB (peak {peak} MB, enforced by {enforcement}); the host and all other jobs are unaffected. The next run reserves more.",
+      "de": "Auftrag {job} wurde an seiner Speichergrenze von {limit} MB gestoppt (Spitze {peak} MB, durchgesetzt durch {enforcement}); der Rechner und alle anderen Aufträge sind nicht betroffen. Der nächste Lauf reserviert mehr."
+    },
+    "enforcement-fallback": {
+      "en": "No delegated cgroup v2 memory controller is available, job {job} is limited by the watchdog at {limit} MB instead.",
+      "de": "Es steht kein delegierter cgroup-v2-Speichercontroller zur Verfügung, Auftrag {job} wird stattdessen vom Wächter bei {limit} MB begrenzt."
+    }
+  }
+}

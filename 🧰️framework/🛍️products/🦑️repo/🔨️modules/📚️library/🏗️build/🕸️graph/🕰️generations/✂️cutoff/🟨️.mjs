@@ -1,11 +1,10 @@
 import{createHash}from"node:crypto";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import{canonicalJsonV1}from"../🧮️fact-codec/🟨️.mjs";
-import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
 
 /** ✂️ The declared constants of the derived fact cutoff; the schema file is the single source and a law keeps both equal. */
 export const CUTOFF_POLICY_V1=Object.freeze(structuredClone(schema.definitions.Policy.const));
-const P=CUTOFF_POLICY_V1,aborted=signal=>signal?.throwIfAborted();
+const P=CUTOFF_POLICY_V1;
 
 /** 🏷️ Whether a row is a derived fact: the answer of a question, never a raw fact that can be checked against the disk. */
 export const isDerivedRowV1=row=>row.kind===P.kind;
@@ -79,41 +78,11 @@ export function suspectsWithinV1(index,suspects,names){
  return out;
 }
 
-/** ❓️ Asks every suspect question again: an equal answer holds (with the rows the new computation read as the new support), a different answer or a failing computation changes the fact; without a computation every suspect changed.
- * With `memo` (a map, or the durable answers of `../💾️durable`, that outlives one plan and may be shared by peers: `get`/`set` may be async, `claim` makes a question single-flight) and `hold` (whether rows still hold on the disk; a row object is checked once per call, so the many rows closures share are not checked again for every closure, and a failing row is found by bisection and refuses every closure that read it) a question is asked only once while everything its last computation read still holds: a plan that starts again after the sources moved asks only the questions whose inputs changed; `reused` counts the answers taken from the memo. New questions are retained only below maximumSuspects; a full memo still computes and returns all semantic updates. */
-export async function settleSuspectsV1({index,suspects,derive,signal,progress,memo,hold}){
- const view=viewOf(index),names=[...suspects].filter(name=>view.pseudoRow.has(name)).sort(),held=new Map(),changed=new Map();let failed=0,done=0,next=0,reused=0;
- const verified=new Set(),broken=new Set();
- const classify=async list=>{
-  if(await hold(list,signal)){for(const row of list)verified.add(row);return true;}
-  if(list.length===1){broken.add(list[0]);return false;}
-  const middle=list.length>>1,first=await classify(list.slice(0,middle)),second=await classify(list.slice(middle));
-  return first&&second;
- };
- const holds=async rows=>{
-  const fresh=[];
-  for(const row of rows){if(broken.has(row))return false;if(!verified.has(row))fresh.push(row);}
-  return fresh.length===0||classify(fresh);
- };
- if(names.length>P.maximumSuspects)throw refuseBuildV1("refused","graph.cutoff-suspects-unbounded",{count:names.length,maximum:P.maximumSuspects});
- if(names.length)await progress?.({phase:"verification",done:0,total:names.length});
- const visit=async name=>{
-  const row=index.rows[view.pseudoRow.get(name)];
-  if(typeof derive!=="function"){changed.set(name,row);return;}
-  const question=canonicalJsonV1([row.kind,row.path]),again=async(shared=false)=>{const known=memo&&hold?await memo.get(question,shared):undefined;return known&&await holds(known.rows)?known:undefined;};
-  const ask=async()=>{
-   const known=await again(true);if(known)return{answer:known,reuse:true};
-   const derived=await derive(row,signal);let answer=derived;
-   if(memo&&hold&&derived.rows.length&&(memo.has(question)||memo.size<P.maximumSuspects)){const stored=await memo.set(question,{fact:derived.fact,rows:[...derived.rows]});if(stored?.rows)answer=stored;}
-   return{answer,reuse:false};
-  };
-  let answer=await again();
-  if(answer)reused++;
-  else try{const done=await(memo?.claim?memo.claim(question,signal,ask):ask());answer=done.answer;if(done.reuse)reused++;}catch(error){aborted(signal);failed++;changed.set(name,row);return;}
-  if(canonicalJsonV1(answer.fact)===canonicalJsonV1(row.fact))held.set(name,[row,...answer.rows]);else changed.set(name,row);
- };
- await Promise.all(Array.from({length:Math.min(P.deriveConcurrency,names.length)},async()=>{while(next<names.length){aborted(signal);await visit(names[next++]);await progress?.({phase:"verification",done:++done,total:names.length});}}));
- return{held,changed,failed,reused};
+/** 🧾️ The derived row of each suspect pseudo owner: the questions the node graph (`../../🧮️derived-nodes/🧩️closure-kinds`) asks again. */
+export function suspectRowsV1(index,suspects){
+ const view=viewOf(index),out=new Map();
+ for(const name of suspects){const id=view.pseudoRow.get(name);if(id!==undefined)out.set(name,index.rows[id]);}
+ return out;
 }
 
 /** 🧱️ The rows of the pseudo owners a build writes: the facts the compute produced with their fresh support, and the supports of the questions that still held. */

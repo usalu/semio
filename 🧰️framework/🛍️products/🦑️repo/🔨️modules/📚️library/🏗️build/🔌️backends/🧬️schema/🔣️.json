@@ -30,7 +30,7 @@
     "Backend": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "title", "kind", "module", "driver", "dependencyModel", "operations", "capabilities"],
+      "required": ["id", "title", "kind", "module", "driver", "dependencyModel", "plansScoped", "operations", "capabilities"],
       "properties": {
         "id": { "$ref": "#/definitions/Id" },
         "title": { "$ref": "#/definitions/Text" },
@@ -39,6 +39,7 @@
         "module": { "type": "string", "pattern": "^\\.\\./.+\\.ts$" },
         "driver": { "type": "string", "pattern": "^\\.\\./.+\\.ts$" },
         "dependencyModel": { "enum": ["all", "consumers"] },
+        "plansScoped": { "type": "boolean" },
         "graphInputs": { "enum": ["portable", "compact"] },
         "processEnvironment": { "type": "object", "additionalProperties": { "type": "string" } },
         "nativeSnapshot": {

@@ -32,6 +32,8 @@ pub struct Din18599ZonesPatch {
     pub occupants: Option<u32>,
     pub internal_gains_w_m2: Option<f64>,
     pub lighting_power_w_m2: Option<f64>,
+    pub thermal_mass_class: Option<semio_s_artifact_norm_din18599_model::ThermalMassClass>,
+    pub c_wirk_wh_m2k: Option<f64>,
 }
 
 impl protocol::list_delta::RowPatch<semio_s_artifact_norm_din18599_model::ThermalZone> for Din18599ZonesPatch {
@@ -65,6 +67,12 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_din18599_model::Therma
         }
         if let Some(value) = &self.lighting_power_w_m2 {
             row.lighting_power_w_m2 = value.clone();
+        }
+        if let Some(value) = &self.thermal_mass_class {
+            row.thermal_mass_class = value.clone();
+        }
+        if let Some(value) = &self.c_wirk_wh_m2k {
+            row.c_wirk_wh_m2k = value.clone();
         }
         Ok(())
     }
@@ -100,6 +108,12 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_din18599_model::Therma
         if later.lighting_power_w_m2.is_some() {
             self.lighting_power_w_m2 = later.lighting_power_w_m2;
         }
+        if later.thermal_mass_class.is_some() {
+            self.thermal_mass_class = later.thermal_mass_class;
+        }
+        if later.c_wirk_wh_m2k.is_some() {
+            self.c_wirk_wh_m2k = later.c_wirk_wh_m2k;
+        }
     }
 
     fn inverse(&self, row: &semio_s_artifact_norm_din18599_model::ThermalZone) -> Self {
@@ -114,11 +128,13 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_din18599_model::Therma
             occupants: self.occupants.as_ref().map(|_| row.occupants.clone()),
             internal_gains_w_m2: self.internal_gains_w_m2.as_ref().map(|_| row.internal_gains_w_m2.clone()),
             lighting_power_w_m2: self.lighting_power_w_m2.as_ref().map(|_| row.lighting_power_w_m2.clone()),
+            thermal_mass_class: self.thermal_mass_class.as_ref().map(|_| row.thermal_mass_class.clone()),
+            c_wirk_wh_m2k: self.c_wirk_wh_m2k.as_ref().map(|_| row.c_wirk_wh_m2k.clone()),
         }
     }
 
     fn is_empty(&self) -> bool {
-        self.label_en.is_none() && self.label_de.is_none() && self.usage_profile.is_none() && self.area_m2.is_none() && self.volume_m3.is_none() && self.theta_i_heat_c.is_none() && self.theta_i_cool_c.is_none() && self.occupants.is_none() && self.internal_gains_w_m2.is_none() && self.lighting_power_w_m2.is_none()
+        self.label_en.is_none() && self.label_de.is_none() && self.usage_profile.is_none() && self.area_m2.is_none() && self.volume_m3.is_none() && self.theta_i_heat_c.is_none() && self.theta_i_cool_c.is_none() && self.occupants.is_none() && self.internal_gains_w_m2.is_none() && self.lighting_power_w_m2.is_none() && self.thermal_mass_class.is_none() && self.c_wirk_wh_m2k.is_none()
     }
 }
 

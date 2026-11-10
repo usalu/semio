@@ -9,14 +9,15 @@ def sha(data):
 def audit(request):
     root, layout = request["root"], request["layout"]
     objects, dangling, leaks, invalid, variants = {}, [], [], [], {}
-    base = os.path.join(root, layout["objects"])
+    base = request["objects"]
     for shard in sorted(os.listdir(base)) if os.path.isdir(base) else []:
         for name in sorted(os.listdir(os.path.join(base, shard))):
             path = os.path.join(base, shard, name)
             data = open(path, "rb").read()
-            if sha(data) != name or shard != name[:2]:
+            digest = shard + name
+            if sha(data) != digest:
                 invalid.append("o/" + shard + "/" + name)
-            objects[name] = data
+            objects[digest] = data
     entries = runs = 0
     for kind, counter in ((layout["entries"], "entries"), (layout["runs"], "runs")):
         folder = os.path.join(root, kind)

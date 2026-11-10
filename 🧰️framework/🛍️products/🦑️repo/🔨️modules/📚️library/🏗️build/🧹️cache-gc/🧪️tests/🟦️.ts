@@ -1,5 +1,5 @@
 import {Database} from "bun:sqlite";
-import {nativeImageBackingFilenameV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {allocateNativeDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {afterAll,beforeAll,expect,test} from "bun:test";
 import {linkSync,mkdirSync,mkdtempSync,readdirSync,rmSync,statSync,symlinkSync,utimesSync,writeFileSync,existsSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -12,7 +12,7 @@ const DAY=86400000,HOUR=3600000,partitions={alpha:{directory:".cache/b/a",capaci
 const reason={en:"x",de:"y"},purpose={en:"p",de:"q"};
 const ledger:CacheLedgerV1=readCacheLedgerV1({
  version:1,
- roots:{repository:{directory:"r/cache",maximumBytes:1<<30,undeclaredUnusedAgeMs:14*DAY,undeclaredQuietMs:HOUR,ignored:[".DS_Store",CACHE_SIZE_FILE_V1]},native:{directory:".cache",maximumBytes:1<<20,undeclaredUnusedAgeMs:7*DAY,undeclaredQuietMs:HOUR,ignored:[]}},
+ roots:{repository:{directory:"r/cache",maximumBytes:1<<30,undeclaredUnusedAgeMs:14*DAY,undeclaredQuietMs:HOUR,ignored:[".DS_Store",CACHE_SIZE_FILE_V1]},native:{directory:".cache",maximumBytes:1<<20,undeclaredUnusedAgeMs:7*DAY,undeclaredQuietMs:HOUR,ignored:[]},rust:{directory:".r",maximumBytes:0,undeclaredUnusedAgeMs:1000,undeclaredQuietMs:0,ignored:[]}},
  areas:[
   {id:"alpha",root:"native",kind:"partition",directory:"b/a",partition:"alpha",managed:{owner:"image"},recreate:"derived",writers:["w"],purpose},
   {id:"beta",root:"native",kind:"partition",directory:"b/b",partition:"beta",managed:{owner:"image"},writers:["w"],purpose},
@@ -205,7 +205,7 @@ test("SQLite lease files and queues in use are never removed, finished ones are"
  const holder=new Database(busy);holder.exec("PRAGMA journal_mode=DELETE;CREATE TABLE t(x)");const other=new Database(idle);other.exec("PRAGMA journal_mode=DELETE;CREATE TABLE t(x)");other.close();
  for(const path of[busy,idle]){const time=(now-30*DAY)/1000;utimesSync(path,time,time);}
  file("r/cache/agents/live.queue/0000000abc-"+process.pid.toString(36).padStart(7,"0")+"-owner",1,30*DAY);
- holder.exec("BEGIN EXCLUSIVE");
+ holder.exec("BEGIN EXCLUSIVE");{const time=(now-30*DAY)/1000;utimesSync(busy,time,time);}
  const out=lines(),result=await collectCacheV1(workspace,ledger,{dryRun:false,only:new Set(["agents"])},ports(),out,partitions);
  holder.exec("ROLLBACK");holder.close();
  expect(sorted(join(workspace,"r/cache/agents"))).toEqual(["busy.sqlite","live.queue"]);
@@ -241,7 +241,7 @@ test("cancelling a collection stops it between units and the command reports it"
 
 test("status reads partitions, areas, retired roots and undeclared entries without any lease",async()=>{
  reset();
- mkdirSync(join(workspace,".cache/b/a/m"),{recursive:true});writeFileSync(join(workspace,".cache/b/a",nativeImageBackingFilenameV1()),"");
+ mkdirSync(join(workspace,".cache/b/a/m"),{recursive:true});allocateNativeDirectoryV1({directory:join(workspace,".cache/b/a"),filesystemBytes:1<<30,maximumPhysicalBytes:1<<30},()=>true);
  mkdirSync(join(workspace,".cache/b/b/m"),{recursive:true});file(".cache/b/b/m/x.bin",5000,DAY);
  file("r/cache/t1/x/y.bin",5000,DAY);file("r/cache/old/z.bin",5000,DAY);file("r/cache/e1/q.bin",5000,DAY);file("r/cache/deadbeef/x.bin",10,DAY);
  const held=ports({exclusive:async()=>{throw Error("status never takes a lease");}}),report=await reportCacheLedgerV1(workspace,ledger,held,partitions,undefined,{deep:true});

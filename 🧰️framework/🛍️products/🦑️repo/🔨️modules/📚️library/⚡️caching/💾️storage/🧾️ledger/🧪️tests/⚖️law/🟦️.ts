@@ -72,6 +72,13 @@ test("the scan itself flags undeclared, retired and dynamic homes and ignores co
  expect(scan([...writers][0]!,'filepath.Join(meta, "⚡️cache", hex.EncodeToString(h[:]))')).toEqual([]);
 });
 
+test("a nested home counts as declared while a path outside every area is still refused",()=>{
+ expect(()=>requireDeclaredCacheSegmentsV1(["bazel","actions","cas"],ledger)).not.toThrow();
+ expect(()=>requireDeclaredCacheSegmentsV1(["bazel/workspaces","x"],ledger)).not.toThrow();
+ expect(()=>requireDeclaredCacheSegmentsV1(["bazel","surprise","cas"],ledger)).toThrow("Declared cache area required");
+ expect(()=>requireDeclaredCacheSegmentsV1(["undeclared-home","x"],ledger)).toThrow("Declared cache area required");
+});
+
 test("the runtime door refuses undeclared homes before any path is built",()=>{
  const text=readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts"),"utf8");
  expect(text).toMatch(/export function repoCacheDirectory\(repoRoot: string, \.\.\.segments: string\[\]\): string \{\s*requireDeclaredCacheSegmentsV1\(segments\);/u);

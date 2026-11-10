@@ -11,7 +11,7 @@ import fixtureSchema from"./🧬️schema/🔣️.json";
 import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 import{declareLibraryBuildTestEnvelopeV1}from"../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1("graph");
-declareLibraryBuildTestEnvelopeV1({suite:"build-inference"});
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference",scratch:"checkout"});
 import{requireTestToolV1}from"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 const pythonTool=requireTestToolV1("python");
 

@@ -1,22 +1,25 @@
 {
-  "oracle": "numpy nodal solve, DIN EN ISO 13788 saturation pressure",
-  "toleranceRelative": 0.02,
+  "oracle": "ISO 13788 condensation-plane iteration, DIN 4108-3 Annex A periods, flux g = (p_i - p_c) / Z, Z = s_d / delta0, seconds",
+  "toleranceRelative": 1e-06,
   "cases": [
     {
       "id": "etics-no-condensation",
       "rSi": 0.13,
       "rSe": 0.04,
-      "tIntC": 20.0,
-      "rhInt": 0.5,
       "winter": {
-        "tC": -5.0,
-        "rh": 0.8
+        "tIntC": 20.0,
+        "rhInt": 0.5,
+        "tExtC": -5.0,
+        "rhExt": 0.8,
+        "hours": 2160
       },
       "summer": {
-        "tC": 12.0,
-        "rh": 0.7
+        "tIntC": 12.0,
+        "rhInt": 0.7,
+        "tExtC": 12.0,
+        "rhExt": 0.7,
+        "hours": 2160
       },
-      "hours": 2160,
       "layers": [
         {
           "thicknessM": 0.015,
@@ -47,17 +50,20 @@
       "id": "vapour-tight-outside-fails-drying",
       "rSi": 0.13,
       "rSe": 0.04,
-      "tIntC": 20.0,
-      "rhInt": 0.5,
       "winter": {
-        "tC": -5.0,
-        "rh": 0.8
+        "tIntC": 20.0,
+        "rhInt": 0.5,
+        "tExtC": -5.0,
+        "rhExt": 0.8,
+        "hours": 2160
       },
       "summer": {
-        "tC": 12.0,
-        "rh": 0.7
+        "tIntC": 12.0,
+        "rhInt": 0.7,
+        "tExtC": 12.0,
+        "rhExt": 0.7,
+        "hours": 2160
       },
-      "hours": 2160,
       "layers": [
         {
           "thicknessM": 0.0125,
@@ -75,25 +81,28 @@
           "mu": 1000
         }
       ],
-      "condensedKgM2": 0.0011411994758622832,
-      "evaporatedKgM2": 0.0004171026034606119,
+      "condensedKgM2": 4.209730595589127,
+      "evaporatedKgM2": 2.4328015989937892,
       "dries": false
     },
     {
       "id": "vapour-tight-outside-dries-in-hot-summer",
       "rSi": 0.13,
       "rSe": 0.04,
-      "tIntC": 20.0,
-      "rhInt": 0.5,
       "winter": {
-        "tC": -5.0,
-        "rh": 0.8
+        "tIntC": 20.0,
+        "rhInt": 0.5,
+        "tExtC": -5.0,
+        "rhExt": 0.8,
+        "hours": 2160
       },
       "summer": {
-        "tC": 25.0,
-        "rh": 0.5
+        "tIntC": 25.0,
+        "rhInt": 0.5,
+        "tExtC": 25.0,
+        "rhExt": 0.5,
+        "hours": 2160
       },
-      "hours": 2160,
       "layers": [
         {
           "thicknessM": 0.0125,
@@ -111,8 +120,8 @@
           "mu": 1000
         }
       ],
-      "condensedKgM2": 0.0011411994758622832,
-      "evaporatedKgM2": 0.003152741969705016,
+      "condensedKgM2": 4.209730595589127,
+      "evaporatedKgM2": 9.157290787490588,
       "dries": true
     }
   ]

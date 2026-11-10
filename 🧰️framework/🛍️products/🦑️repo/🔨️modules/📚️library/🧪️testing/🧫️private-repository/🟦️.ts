@@ -41,12 +41,13 @@ async function openPrivateRepositoryWorkspaceV1(profile:PrivateRepositoryProfile
   requireIsolated:async()=>requirePrivateRepositoryWorkspaceV1(root),
   close:async()=>{if(owned){delete process.env.SEMIO_PRIVATE_REPOSITORY;await retirePrivateRootV1(root);}}});
 }
-let privateWorkspaceV1:Promise<PrivateRepositoryWorkspaceV1>|undefined,privateProfileV1:PrivateRepositoryProfileV1|undefined,testRunnerV1=true;
+let privateWorkspaceV1:Promise<PrivateRepositoryWorkspaceV1>|undefined,privateProfileV1:PrivateRepositoryProfileV1|undefined,testRunnerV1=true;let privateCreationsV1=0;
 /** 🧪️ The one private repository of this test process, created on first use for its profile and retired after its last test; a later request for a deeper profile than the one it was created for is refused; a spawned child (test or script) adopts its parent's through `SEMIO_PRIVATE_REPOSITORY`. */
 export function privateRepositoryWorkspaceV1(profile:PrivateRepositoryProfileV1="store"):Promise<PrivateRepositoryWorkspaceV1>{
- if(privateWorkspaceV1===undefined){privateProfileV1=profile;privateWorkspaceV1=openPrivateRepositoryWorkspaceV1(profile);}
+ if(privateWorkspaceV1===undefined){privateProfileV1=profile;privateWorkspaceV1=openPrivateRepositoryWorkspaceV1(profile);if(privateCreationsV1++>0&&testRunnerV1)afterAll(retirePrivateWorkspaceV1,170000);}
  else if(profile==="graph"&&privateProfileV1==="store")return privateWorkspaceV1.then(workspace=>{if(privateRepositoryDeepestV1(workspace.root,"graph")>256)throw Error("private-repository-store-profile-too-deep:"+workspace.root);return workspace;});
  return privateWorkspaceV1;
 }
-/** 👶️ Retires the owned private repository after the last test; a child script outside the test runner only adopts its parent's. */
-try{afterAll(async()=>{if(privateWorkspaceV1!==undefined){const workspace=await privateWorkspaceV1.catch(()=>undefined);await workspace?.close();}},170000);}catch{testRunnerV1=false;}
+/** 👶️ Retires the owned private repository after the last test of the file that created it, so the next test file of the same process creates its own; a child script outside the test runner only adopts its parent's. */
+async function retirePrivateWorkspaceV1():Promise<void>{const held=privateWorkspaceV1;privateWorkspaceV1=undefined;privateProfileV1=undefined;if(held!==undefined){const workspace=await held.catch(()=>undefined);await workspace?.close();}}
+try{afterAll(retirePrivateWorkspaceV1,170000);}catch{testRunnerV1=false;}

@@ -5,7 +5,7 @@ import Ajv from "ajv";
 import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 
-const source=readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8"),start=source.indexOf("function persistInferenceBlockV1("),end=source.indexOf("/** 🧾️ The header text of a record",start),body=source.slice(start,end);
+const source=readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8"),start=source.indexOf("function persistInferenceBlockV1("),end=source.indexOf("/** 💬️ The header text of a record",start),body=source.slice(start,end);
 
 test("the fixture is closed under its schema",()=>{expect(new Ajv({strict:true}).validate(fixtureSchema,fixture)).toBe(true);expect(start).toBeGreaterThan(-1);expect(end).toBeGreaterThan(start);});
 test("blocks are compressed at a bounded quality, after the existence and refusal checks",()=>{

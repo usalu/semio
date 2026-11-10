@@ -1,7 +1,7 @@
 import {closeSync,openSync,readSync,readdirSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {basename,dirname,join} from "node:path";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
-import {listObjectsV1,pruneEntriesV1,removeObjectsV1} from "../💾️store/🟦️.ts";
+import {pruneEntriesV1} from "../💾️store/🟦️.ts";
 import {listLanesV1,removeLaneV1} from "../🧵️lane/🟦️.ts";
 import {ensureBallastV1,tryClaimWithBallastV1} from "./🛟️ballast/🟦️.ts";
 import {collectIncrementalV1,type IncrementalReportV1} from "./🌱️incremental/🟦️.ts";
@@ -10,17 +10,15 @@ import {recordFillSampleV1} from "./📈️fill/🟦️.ts";
 import {pruneAdmissionsV1} from "./📖️admissions/🟦️.ts";
 import {nativeFreeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
-const policy=UNIT_CACHE_POLICY_V1.gc,layout=UNIT_CACHE_POLICY_V1.layout,objectBatch=64;
+const policy=UNIT_CACHE_POLICY_V1.gc,layout=UNIT_CACHE_POLICY_V1.layout;
 /** 🧮️ One measured lane. */
 export type GcLaneV1=Readonly<{id:string;bytes:number;incrementalBytes:number;lastUsedMs:number;live:boolean}>;
-/** 📦️ One cached object. */
-export type GcObjectV1=Readonly<{digest:string;bytes:number;lastUsedMs:number}>;
 /** 📥️ The measured state of one cache root: `capacityBytes` is the share basis of its parts, `volumeBytes` and `freeBytes` are the image the root lives in, `demandBytes` is what waiting compiles still need freed whatever the water marks say (the headroom they were refused for). */
-export type GcInputV1=Readonly<{capacityBytes:number;volumeBytes:number;freeBytes:number;nowMs:number;lanes:readonly GcLaneV1[];objects:readonly GcObjectV1[];demandBytes?:number}>;
+export type GcInputV1=Readonly<{capacityBytes:number;volumeBytes:number;freeBytes:number;nowMs:number;lanes:readonly GcLaneV1[];demandBytes?:number}>;
 /** 🚦️ What a command that just looked at the image's free space does about the unit cache. */
 export type GcPressureV1="enough"|"maintain"|"watch"|"launch"|"throttled"|"collect-now";
 /** 📋️ What to remove, nothing else. */
-export type GcPlanV1=Readonly<{removeLanes:string[];removeIncremental:string[];removeObjects:string[]}>;
+export type GcPlanV1=Readonly<{removeLanes:string[];removeIncremental:string[]}>;
 
 const newestFirst=<T extends {lastUsedMs:number}>(key:(row:T)=>string)=>(left:T,right:T)=>right.lastUsedMs-left.lastUsedMs||(key(left)<key(right)?-1:key(left)>key(right)?1:0);
 const oldestFirst=<T extends {lastUsedMs:number}>(key:(row:T)=>string)=>(left:T,right:T)=>left.lastUsedMs-right.lastUsedMs||(key(left)<key(right)?-1:key(left)>key(right)?1:0);
@@ -48,19 +46,15 @@ export function gcOutOfSpaceV1(text:string,patterns:readonly string[]=policy.out
  * Order: idle lanes; free-space pressure above the high-water mark down to the low-water mark of the image, or the demand of waiting compiles when that is more (incremental directories, then lanes, then objects, oldest first); the lane, incremental and object shares of the capacity. Live lanes are never touched and count against their share first. */
 export function planGcV1(input:GcInputV1,override:Partial<typeof policy>={}):GcPlanV1{
  const rules={...policy,...override},cap=(share:number)=>Math.floor(input.capacityBytes*share);
- const removeLanes=new Set<string>(),removeIncremental=new Set<string>(),removeObjects=new Set<string>();
+ const removeLanes=new Set<string>(),removeIncremental=new Set<string>();
  const lanes=[...input.lanes].sort(oldestFirst(row=>row.id)),idle=lanes.filter(row=>!row.live);
  for(const lane of idle)if(input.nowMs-lane.lastUsedMs>rules.laneIdleMilliseconds)removeLanes.add(lane.id);
  const laneBytes=(lane:GcLaneV1)=>removeLanes.has(lane.id)?0:lane.bytes-(removeIncremental.has(lane.id)?lane.incrementalBytes:0);
- const objects=[...input.objects].sort(oldestFirst(row=>row.digest));
  let need=Math.max(gcNeedBytesV1(input.volumeBytes,input.freeBytes,rules),input.demandBytes??0);
- const freed=()=>input.lanes.reduce((sum,lane)=>sum+lane.bytes-laneBytes(lane),0)+objects.filter(row=>removeObjects.has(row.digest)).reduce((sum,row)=>sum+row.bytes,0);
+ const freed=()=>input.lanes.reduce((sum,lane)=>sum+lane.bytes-laneBytes(lane),0);
  if(need>0){
   for(const lane of idle){if(freed()>=need)break;if(!removeLanes.has(lane.id)&&!removeIncremental.has(lane.id)&&lane.incrementalBytes>0)removeIncremental.add(lane.id);}
   for(const lane of idle){if(freed()>=need)break;removeLanes.add(lane.id);}
-  const protectedDigests=new Set<string>();let protectedBytes=0;
-  for(const object of [...objects].reverse()){protectedBytes+=object.bytes;if(protectedBytes>cap(rules.casProtectedShare))break;protectedDigests.add(object.digest);}
-  for(const object of objects){if(freed()>=need)break;if(!protectedDigests.has(object.digest))removeObjects.add(object.digest);}
  }
  const keepPrefix=<T extends {lastUsedMs:number}>(rows:readonly T[],bytes:(row:T)=>number,budget:number,key:(row:T)=>string):T[]=>{
   const removed:T[]=[];let sum=0,overflow=false;
@@ -72,8 +66,7 @@ export function planGcV1(input:GcInputV1,override:Partial<typeof policy>={}):GcP
  const liveIncremental=input.lanes.filter(row=>row.live).reduce((sum,row)=>sum+row.incrementalBytes,0);
  const candidates=idle.filter(row=>!removeLanes.has(row.id));
  for(const lane of keepPrefix(candidates,row=>removeIncremental.has(row.id)?0:row.incrementalBytes,Math.max(0,cap(rules.incrementalShare)-liveIncremental),row=>row.id))if(lane.incrementalBytes>0)removeIncremental.add(lane.id);
- for(const object of keepPrefix(objects.filter(row=>!removeObjects.has(row.digest)),row=>row.bytes,cap(rules.casShare),row=>row.digest))removeObjects.add(object.digest);
- return Object.freeze({removeLanes:[...removeLanes].sort(),removeIncremental:[...removeIncremental].filter(id=>!removeLanes.has(id)).sort(),removeObjects:[...removeObjects].sort()});
+ return Object.freeze({removeLanes:[...removeLanes].sort(),removeIncremental:[...removeIncremental].filter(id=>!removeLanes.has(id)).sort()});
 }
 
 /** 🔬️ The size and free bytes of the image a cache root lives in. */
@@ -87,32 +80,30 @@ export function measureVolumeV1(root:string,capacityBytes:number):VolumeFactsV1{
 
 /** 📏️ Measures a cache root on disk. `capacityBytes` is the share basis of its parts (the image minus one compile workspace), the pressure comes from the image itself. */
 export function measureGcV1(root:string,capacityBytes:number,nowMs:number,measure:(root:string,capacityBytes:number)=>VolumeFactsV1=measureVolumeV1):GcInputV1{
- return{capacityBytes,...measure(root,capacityBytes),nowMs,lanes:listLanesV1(root,nowMs),objects:listObjectsV1(root)};
+ return{capacityBytes,...measure(root,capacityBytes),nowMs,lanes:listLanesV1(root,nowMs)};
 }
 
 /** 🗓️ Applies a plan. Live lanes are re-checked at removal time, so a lane that became live since measuring survives. Returns what was removed. */
-export function applyGcV1(root:string,plan:GcPlanV1,nowMs:number):{lanes:number;incremental:number;objects:number}{
+export function applyGcV1(root:string,plan:GcPlanV1,nowMs:number):{lanes:number;incremental:number}{
  let lanes=0,incremental=0;
  for(const id of plan.removeLanes)if(removeLaneV1(root,id,"lane",nowMs))lanes++;
  for(const id of plan.removeIncremental)if(removeLaneV1(root,id,"incremental",nowMs))incremental++;
- const objects=removeObjectsV1(root,plan.removeObjects);
  pruneEntriesV1(root,nowMs);pruneEvents(root);
- return{lanes,incremental,objects};
+ return{lanes,incremental};
 }
 
 /** 🔁️ Applies a plan item by item and lets the event loop run between items, so the collector's claim keeps beating and a cancellation or progress report is served during a long collection. */
-export async function applyGcYieldingV1(root:string,plan:GcPlanV1,nowMs:number,options:Readonly<{signal?:AbortSignal;progress?:(done:number,total:number)=>void}>={}):Promise<{lanes:number;incremental:number;objects:number}>{
- const turn=()=>new Promise<void>(done=>setImmediate(done)),chunks=Math.ceil(plan.removeObjects.length/objectBatch),total=plan.removeLanes.length+plan.removeIncremental.length+chunks;let lanes=0,incremental=0,objects=0,done=0;
+export async function applyGcYieldingV1(root:string,plan:GcPlanV1,nowMs:number,options:Readonly<{signal?:AbortSignal;progress?:(done:number,total:number)=>void}>={}):Promise<{lanes:number;incremental:number}>{
+ const turn=()=>new Promise<void>(done=>setImmediate(done)),total=plan.removeLanes.length+plan.removeIncremental.length;let lanes=0,incremental=0,done=0;
  const guard=():void=>options.signal?.throwIfAborted(),step=async()=>{options.progress?.(++done,total);await turn();};
  for(const id of plan.removeLanes){guard();if(removeLaneV1(root,id,"lane",nowMs))lanes++;await step();}
  for(const id of plan.removeIncremental){guard();if(removeLaneV1(root,id,"incremental",nowMs))incremental++;await step();}
- for(let index=0;index<plan.removeObjects.length;index+=objectBatch){guard();objects+=removeObjectsV1(root,plan.removeObjects.slice(index,index+objectBatch));await step();}
  pruneEntriesV1(root,nowMs);pruneEvents(root);
- return{lanes,incremental,objects};
+ return{lanes,incremental};
 }
 
-/** 🌱️ What a collection removed: lanes, lane incremental sets, objects, the incremental sessions of the build and target directories and the stale build units. */
-export type GcAppliedV1={lanes:number;incremental:number;objects:number;sessions:number;units:number};
+/** 🌱️ What a collection removed: lanes, lane incremental sets, the incremental sessions of the build and target directories and the stale build units. */
+export type GcAppliedV1={lanes:number;incremental:number;sessions:number;units:number};
 
 /** 🚰️ Collects once at a time: a second collector finds the claim taken and reports `running` instead of racing the first. The incremental sessions of every build, target and lane directory of the image go first (lock-aware, least recently used first, they regrow within hours), then lanes and objects are planned on what the image looks like afterwards. `demandBytes` is what waiting compiles need freed beyond the water marks: it raises the need of every stage, and the stages stop as soon as it is met. */
 export async function collectGarbageSingleFlightV1(root:string,capacityBytes:number,options:Readonly<{signal?:AbortSignal;progress?:(done:number,total:number)=>void;nowMs?:number;report?:IncrementalReportV1;volume?:(root:string,capacityBytes:number)=>VolumeFactsV1;demandBytes?:number}>={}):Promise<{running:true}|{running:false;plan:GcPlanV1;applied:GcAppliedV1}>{
@@ -155,7 +146,7 @@ export async function watchUnitCachePressureV1(root:string,capacityBytes:number,
     quietSince=null;
     if(at>=retryAt){
      const result=await collect(root,capacityBytes,{nowMs:at,signal:options.signal,report:options.report});collections++;
-     const after=measure(root,capacityBytes),gained=Math.max(0,after.freeBytes-before.freeBytes);freedBytes+=gained;idle=!result.running&&result.applied.lanes+result.applied.incremental+result.applied.sessions+result.applied.units+result.applied.objects>0?0:idle+1;
+     const after=measure(root,capacityBytes),gained=Math.max(0,after.freeBytes-before.freeBytes);freedBytes+=gained;idle=!result.running&&result.applied.lanes+result.applied.incremental+result.applied.sessions+result.applied.units>0?0:idle+1;
      if(idle>=policy.watchStalledRounds)return{state:"done",reason:"stalled",rounds,collections,freedBytes};
      retryAt=idle===0?at:now()+policy.watchPollMilliseconds;
     }
@@ -190,7 +181,7 @@ function pruneEvents(root:string):void{
 }
 
 /** 🪜️ Measures, plans and applies in one step. */
-export function collectGarbageV1(root:string,capacityBytes:number,nowMs=Date.now()):{plan:GcPlanV1;applied:{lanes:number;incremental:number;objects:number}}{
+export function collectGarbageV1(root:string,capacityBytes:number,nowMs=Date.now()):{plan:GcPlanV1;applied:{lanes:number;incremental:number}}{
  const plan=planGcV1(measureGcV1(root,capacityBytes,nowMs));
  return{plan,applied:applyGcV1(root,plan,nowMs)};
 }

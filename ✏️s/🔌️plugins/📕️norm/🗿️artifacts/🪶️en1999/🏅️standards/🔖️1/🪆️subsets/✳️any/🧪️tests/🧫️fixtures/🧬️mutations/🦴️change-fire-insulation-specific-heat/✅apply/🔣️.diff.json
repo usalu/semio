@@ -19,12 +19,6 @@
   "fatigueCategories": null,
   "patchLoads": null,
   "ringStiffeners": null,
-  "transverseStiffeners": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
   "sheetProfiles": {
     "removed": [],
     "inserted": [],
@@ -47,6 +41,12 @@
         }
       }
     ]
+  },
+  "transverseStiffeners": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
   },
   "reliabilityClass": null
 }

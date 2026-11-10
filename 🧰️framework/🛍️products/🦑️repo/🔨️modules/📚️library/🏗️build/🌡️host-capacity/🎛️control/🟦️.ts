@@ -1,6 +1,6 @@
 import {createRequire} from "node:module";
 import buildPolicy from "../../🔣️policy.json" with {type:"json"};
-import {readHostCapacityPolicyV1,type HostCapacityPolicyV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/📋️status/🟦️.ts";
+import {readHostCapacityPolicyV1,type HostCapacityPolicyV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 /** 📖️ The cancellation texts load when a wait is cancelled, never at startup: the leases, capacity and doctor entries stay inside their module budgets. */

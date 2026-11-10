@@ -1,6 +1,6 @@
 Feature: Schema-owned native insert payload bindings
   Scenario: Every cohort binds insertion payload members declared by its native leaf schema
-    Given the committed census of 227 insert rules across fifteen norm cohorts
+    Given the committed census of 234 insert rules across fifteen norm cohorts
     When each literal index, item and selector binding is compared with its native payload schema
     Then every emitted member exists and every required payload member is supplied
     And an independent strict Ajv membership oracle agrees

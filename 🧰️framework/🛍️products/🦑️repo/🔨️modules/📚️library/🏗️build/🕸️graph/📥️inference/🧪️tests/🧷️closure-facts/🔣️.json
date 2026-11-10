@@ -50,12 +50,12 @@
   {
    "name": "a closure file is admitted by its physical shape, not by its bytes",
    "function": "boundedScriptInputsV1",
-   "text": "if(!admitted.has(path)){requirePhysicalSourceV1(path);admitted.add(path);}"
+   "text": "if (requiredSources) requirePhysicalSourceV1(path); else if (!existsSync(path))"
   },
   {
    "name": "a data or asset leaf is admitted by its physical shape, not by its bytes",
    "function": "boundedScriptInputsV1",
-   "text": "if(!seen)requirePhysicalSourceV1(path);return;"
+   "text": "requirePhysicalSourceV1(path); return { kind: \"resource\", imports: [] };"
   },
   {
    "name": "code files are consumed through their analysis fact, which survives edits that keep the imports",
@@ -78,9 +78,9 @@
    "text": "requirePhysicalSourceV1(bound.script)"
   },
   {
-   "name": "the project's own manifest stays a content fact",
+   "name": "the project's own manifest is read through its declared field, not by its bytes",
    "function": "targetScriptSources",
-   "text": "readPhysicalSource(manifest)"
+   "text": "observedFieldV1(manifest,\"toml\",\"/package/metadata/semio/cargo-execution\")"
   },
   {
    "name": "the partial pass runs in project scope",
@@ -103,9 +103,9 @@
    "text": "wantedRoots = options?.ownerRoots"
   },
   {
-   "name": "a router script, named by its commands, is the one closure member read for its bytes",
+   "name": "a router script, named by its commands, is read through the imports it keeps",
    "function": "routerKeptFromSourceV1",
-   "text": "readPhysicalSource(path)"
+   "text": "observedFieldV1(path, \"script-router-kept\", JSON.stringify(words))"
   }
  ],
  "absent": [

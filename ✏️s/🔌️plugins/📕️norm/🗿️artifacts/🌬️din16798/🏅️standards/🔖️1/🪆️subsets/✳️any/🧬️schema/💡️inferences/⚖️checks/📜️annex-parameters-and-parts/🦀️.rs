@@ -142,19 +142,26 @@ pub mod part_1 {
         100.0 - 95.0 * (-0.03353 * pmv_c.powi(4) - 0.2179 * pmv_c.powi(2)).exp()
     }
 
-    /// 🔍 Bisect operative temperature so |PMV| ≤ limit (summer side).
-    pub fn invert_t_op_for_pmv(rh: f64, v: f64, met: f64, clo: f64, limit: f64, prefer_cool: bool) -> f64 {
-        let (mut lo, mut hi) = if prefer_cool { (16.0, 30.0) } else { (16.0, 30.0) };
-        for _ in 0..40 {
-            let mid = 0.5 * (lo + hi);
-            let pmv = pmv_iso7730(mid, rh, v, met, clo);
-            if prefer_cool {
-                if pmv > limit { hi = mid; } else { lo = mid; }
-            } else {
-                if pmv < -limit { lo = mid; } else { hi = mid; }
-            }
+    /// 🔍 The operative temperature [°C] at which the ISO 7730 PMV equals `+limit` (`prefer_cool`) or `-limit`: the bracket [16, 30] °C is doubled outwards until the PMV crosses the target (within [-10, 60] °C), then bisected; `None` when no sign change exists.
+    pub fn invert_t_op_for_pmv(rh: f64, v: f64, met: f64, clo: f64, limit: f64, prefer_cool: bool) -> Option<f64> {
+        let target = if prefer_cool { limit } else { -limit };
+        let g = |t: f64| pmv_iso7730(t, rh, v, met, clo) - target;
+        let (mut lo, mut hi) = (16.0_f64, 30.0_f64);
+        let mut width = hi - lo;
+        while g(lo) * g(hi) > 0.0 && (lo > -10.0 || hi < 60.0) {
+            lo = (lo - width).max(-10.0);
+            hi = (hi + width).min(60.0);
+            width *= 2.0;
         }
-        0.5 * (lo + hi)
+        let g_lo = g(lo);
+        if g_lo * g(hi) > 0.0 {
+            return None;
+        }
+        for _ in 0..80 {
+            let mid = 0.5 * (lo + hi);
+            if g(mid) * g_lo > 0.0 { lo = mid; } else { hi = mid; }
+        }
+        Some(0.5 * (lo + hi))
     }
 
     // --- ventilation rate method Table B.6/B.7 ---

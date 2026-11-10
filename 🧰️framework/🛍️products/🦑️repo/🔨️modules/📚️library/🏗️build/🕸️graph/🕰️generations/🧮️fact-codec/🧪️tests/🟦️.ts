@@ -95,3 +95,19 @@ test("a lazily opened index of a workspace shaped graph materialises only the ro
  for(const row of picks)expect(JSON.parse(canonicalJsonV1(lazy.rows[row]))).toEqual(JSON.parse(canonicalJsonV1(index.rows[row])));
  expect(lazy.rowsRead()).toBe(picks.length);
 });
+
+test("an opened index is a bounded view: walking every row and class keeps every cache within its bound and equals the full decode",()=>{
+ const index={version:1,owners:Array.from({length:60},(_,at)=>"o"+at),rows:Array.from({length:70000},(_,at)=>({kind:"file",path:"p/"+at,fact:{n:at,tag:"t"+(at%97)}})),classes:Array.from({length:6000},(_,at)=>({r:[at,at+1,at+2],o:[at%60]}))},bytes=encodeFactIndexV1(index as never,{maximumBytes:limit}),lazy=openFactIndexV1(bytes,{maximumBytes:limit,name:"test:view"}),full=decodeFactIndexV1(bytes,{maximumBytes:limit});
+ const policy=FACT_CODEC_POLICY_V1.view;
+ for(let id=0;id<index.rows.length;id++){const row=lazy.rows[id]!;if(id%7===0)expect(row).toEqual(full.rows[id]);}
+ expect(lazy.rowsRead()).toBe(index.rows.length);
+ for(let id=0;id<index.classes.length;id++)expect(lazy.classes[id]).toEqual(full.classes[id]);
+ expect(lazy.rows.reduce((total,row)=>total+row.path.length,0)).toBe(full.rows.reduce((total,row)=>total+row.path.length,0));
+ expect(lazy.classes.filter(cls=>cls.o[0]===3).length).toBe(full.classes.filter(cls=>cls.o[0]===3).length);
+ expect([...lazy.classes].length).toBe(index.classes.length);expect(lazy.classes.some(cls=>cls.r.includes(6001))).toBe(true);
+ const{caches}=lazy.stats(),byName=Object.fromEntries(caches.map(cache=>[cache.name.split(":").pop()!,cache]));
+ for(const cache of caches){expect(cache.entries).toBeLessThanOrEqual(cache.maxEntries);expect(cache.bytes).toBeLessThanOrEqual(cache.maxBytes);}
+ expect(byName.rows!.maxEntries).toBe(policy.rowEntries);expect(byName.rows!.evictions).toBeGreaterThan(0);expect(byName.classes!.maxEntries).toBe(policy.classEntries);
+ expect(()=>{(lazy.rows as unknown[]).push({});}).toThrow();
+ lazy.drop();expect(lazy.stats().caches.every(cache=>cache.entries===0)).toBe(true);expect(lazy.rows[5]).toEqual(full.rows[5]);
+},30000);

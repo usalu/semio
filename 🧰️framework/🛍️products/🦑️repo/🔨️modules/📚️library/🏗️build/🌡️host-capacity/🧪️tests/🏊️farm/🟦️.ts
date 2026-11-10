@@ -17,13 +17,13 @@ const queue=(directory:string)=>existsSync(join(directory,"queue"))?readdirSync(
 const settled=async(directory:string,count:number)=>{const started=Date.now();while(grants(directory).length!==count&&Date.now()-started<2000)await new Promise(done=>setTimeout(done,10));return grants(directory).length;};
 
 test("with the gate off the farm gets every job it asks for and nothing is reserved",async()=>{
- const directory=fresh(),request=requestBuildFarmCapacityV1({preferredJobs:6,environment:{SEMIO_HOST_CAPACITY:"off"},directory,policy:fast,write:()=>{}}),granted=await request.granted;
+ const directory=fresh(),request=requestBuildFarmCapacityV1({preferredJobs:6,environment:{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY:"off"},directory,policy:fast,write:()=>{}}),granted=await request.granted;
  expect(granted).toEqual({jobs:6,megabytes:fast.kinds.build.megabytes});request.release();
  expect(grants(directory)).toEqual([]);
 },60000);
 
 test("a fresh grant is requested beside the grant the invocation holds, answered with jobs and megabytes, held until released and then given back",async()=>{
- const directory=fresh(),environment:NodeJS.ProcessEnv={},sample=async()=>({host:host(),swappedOutMegabytes:0}),lines:string[]=[];
+ const directory=fresh(),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8"},sample=async()=>({host:host(),swappedOutMegabytes:0}),lines:string[]=[];
  await withBuildCapacityV1(["show","projects"],environment,async outer=>{
   expect(outer.handle).toBeDefined();expect(grants(directory).length).toBe(1);
   const request=requestBuildFarmCapacityV1({preferredJobs:6,environment,directory,policy:fast,write:line=>lines.push(line),sample}),granted=await request.granted;
@@ -40,7 +40,7 @@ test("a fresh grant is requested beside the grant the invocation holds, answered
 
 test("a wait the gate never answers is cancelled by releasing the request or by its signal and leaves no waiter behind",async()=>{
  for(const how of["release","signal"] as const){
-  const directory=fresh(),controller=new AbortController(),request=requestBuildFarmCapacityV1({preferredJobs:6,environment:{},directory,policy:fast,write:()=>{},signal:controller.signal,sample:async()=>({host:host({availableMegabytes:300,pressure:"critical"}),swappedOutMegabytes:0})});
+  const directory=fresh(),controller=new AbortController(),request=requestBuildFarmCapacityV1({preferredJobs:6,environment:{LANG:"en_US.UTF-8"},directory,policy:fast,write:()=>{},signal:controller.signal,sample:async()=>({host:host({availableMegabytes:300,pressure:"critical"}),swappedOutMegabytes:0})});
   await new Promise(done=>setTimeout(done,200));
   expect(queue(directory).length).toBe(1);
   if(how==="release")request.release();else controller.abort(new Error("cancelled by law"));
@@ -53,7 +53,7 @@ test("a request leaves no listener on the long-lived signal of its invocation on
  for(const gate of["on","off","waiting"] as const){
   const directory=fresh(),controller=new AbortController();
   for(let round=0;round<5;round++){
-   const request=requestBuildFarmCapacityV1({preferredJobs:6,environment:gate==="off"?{SEMIO_HOST_CAPACITY:"off"}:{},directory,policy:fast,write:()=>{},signal:controller.signal,sample:gate==="waiting"?async()=>({host:host({availableMegabytes:300,pressure:"critical"}),swappedOutMegabytes:0}):sample});
+   const request=requestBuildFarmCapacityV1({preferredJobs:6,environment:gate==="off"?{SEMIO_HOST_CAPACITY:"off"}:{LANG:"en_US.UTF-8"},directory,policy:fast,write:()=>{},signal:controller.signal,sample:gate==="waiting"?async()=>({host:host({availableMegabytes:300,pressure:"critical"}),swappedOutMegabytes:0}):sample});
    if(gate==="waiting")await new Promise(done=>setTimeout(done,50));else expect(await request.granted).toBeDefined();
    request.release();await request.granted;
   }

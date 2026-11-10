@@ -19,6 +19,8 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {fleetTextV1} from "../🟦️.ts";
 import type {FleetBazelSlotFactV1,FleetCapacityWaiterFactV1,FleetFactsV1,FleetGrantFactV1,FleetHolderFactV1,FleetLanguageV1,FleetSealedEntryFactV1,FleetSourceV1,FleetStandingFactV1,FleetWaiterFactV1} from "../🟦️.ts";
 import {refuseBuildV1} from "../../📖️texts/🟦️.ts";
+import {fleetFactOfSnapshotV1,SCHEDULER_POLICY_V1} from "../../🗓️scheduler/🟦️.ts";
+import {createFileSchedulerStoreV1,schedulerDirectoryV1} from "../../🗓️scheduler/💾️store/🟦️.ts";
 
 /** 📥️ The readers of the fleet status: each one asks an existing status reader of the build (leases, capacity, Bazel slots, cache ledger, sealed store, graph generation pointer) and turns the answer into the facts the aggregation reads. A reader never takes a lease, never loads the graph and never writes; a reader that fails is reported in `sources` and leaves its section out.
  * @see ../🟦️.ts the aggregation, ../🧬️schema/🔣️.json the facts */
@@ -117,8 +119,14 @@ export const readFleetGenerationV1:FleetReaderV1=async context=>{
  return {generation:{number:pointer.generation,built:{kind:manifest.built.kind,dirty:manifest.built.dirty.length},owners:Object.keys(manifest.owners).length,implementation:manifest.implementation,publishedAtMs:Math.floor(statSync(path).mtimeMs),verified:pointer.verified===undefined?null:{atMs:pointer.verified.atMs,covered:popcount(pointer.verified.owners),count:pointer.verified.count}}};
 };
 
+/** 🗓️ Scheduler: the host-wide queue, read without taking its lock. */
+export async function readFleetSchedulerV1(context:FleetReaderContextV1):Promise<Partial<FleetFactsV1>>{
+ const store=createFileSchedulerStoreV1(schedulerDirectoryV1(context.environment),SCHEDULER_POLICY_V1);
+ return{scheduler:fleetFactOfSnapshotV1(await store.snapshot())};
+}
+
 /** 🏭️ The readers of the real workspace. */
-export const FLEET_READERS_V1:FleetReadersV1=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1});
+export const FLEET_READERS_V1:FleetReadersV1=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1});
 
 /** 🧺️ Runs every reader at once, times it and merges what it returned; a reader that throws is a failed source, never a failed command. */
 export async function collectFleetFactsV1(context:FleetReaderContextV1,readers:FleetReadersV1=FLEET_READERS_V1,timeoutMilliseconds:number=policy.readers.timeoutMilliseconds):Promise<FleetFactsV1>{

@@ -95,7 +95,7 @@ export interface ServiceAdmissionOptionsV1{
  readonly now?:()=>number;
 }
 
-/** 🏛 Creates the admission of one service invocation. `admit` re-validates a client command and returns its ticket; `run` admits, declares the ticket's launches for the duration of `body`, and audits the end. */
+/** 🏛 Creates the admission of one service invocation: `admit` re-validates a command and returns its ticket; `run` admits, declares the launches for `body` and audits the end. */
 export function createServiceAdmissionV1(options:ServiceAdmissionOptionsV1){
  const{grant,tool,key,revocations,audit,declare,closure,now=()=>Date.now()}=options,root=canonicalRootV1(options.root),worktree=worktreeIdV1(root),encoded=canonicalJsonV1(grant),sessions=new Map<string,{admitted:number;active:number}>();
  const row=(event:ServiceAuditRowV1["event"],request:Partial<ServiceRequestV1>,session:string,extra:Partial<ServiceAuditRowV1>={}):ServiceAuditRowV1=>({v:1,at:now(),event,session,agent:String(request.agent??"-").slice(0,64),worktree,operation:String(request.args?.[0]??"-").slice(0,32),args:(request.args??[]).slice(0,64).map(argument=>String(argument).slice(0,512)),...extra});
@@ -149,7 +149,7 @@ export function createServiceAdmissionV1(options:ServiceAdmissionOptionsV1){
  };
 }
 
-/** 🧭 Returns the capabilities as the same client would have been issued them one-shot: the service grant is removed and, while an admitted command runs beneath a grant equal to the held one, its ticket's launches are declared. Every launch check of the authority core reads the declaration through this one function. */
+/** 🧭 The capabilities as a one-shot client would have been issued them: the service grant is removed and, while an admitted command runs beneath an equal grant, its ticket's launches are declared; every launch check reads them here. */
 export function declaredCapabilitiesV1<T extends object>(capabilities:T):Omit<T,"service">{
  const{service,...rest}=capabilities as T&{service?:unknown;launches?:readonly(readonly string[])[];workspaceRoot?:string};
  if(service===undefined)return capabilities;
@@ -173,7 +173,7 @@ export function createServiceAuditV1(invocation:ScriptInvocation,file:string):Se
  }};
 }
 
-/** 🚪 The door computation the admission asks of the layer above it: the declared bootstrap capabilities of one plain command, injected by the composition root so the admission never imports the build bootstrap. */
+/** 🚪 The declared bootstrap capabilities of one plain command, injected by the composition root so the admission never imports the build bootstrap. */
 export type ServiceBootstrapPortV1=(root:string,args:readonly string[],environment:NodeJS.ProcessEnv)=>Promise<object>;
 
 /** 🛰 Holds the issued invocation: reads its grant from the private envelope, binds the door computation to the caller facts of that envelope, and returns the admission. */

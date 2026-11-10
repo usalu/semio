@@ -494,7 +494,34 @@
         "react": 6104,
         "wgpu": 6204
       },
-      "pin": null
+      "pin": {
+        "field": {
+          "path": "scriptLimits.maxRecursion",
+          "key": "norm-inputs.scriptLimits.maxRecursion",
+          "owner": "",
+          "ownerWindow": "norm-iso16757-outliner",
+          "argument": "newMaxRecursion",
+          "label": {
+            "en": "Max recursion",
+            "de": "Max. Rekursion"
+          },
+          "limit": 1000,
+          "unit": "1"
+        },
+        "check": "iso16757.5.8.scriptLimits.capacity",
+        "states": {
+          "before": {
+            "value": 64,
+            "utilization": 0.064
+          },
+          "after": {
+            "value": 32,
+            "utilization": 0.032
+          }
+        },
+        "basis": "Part 5 section 8 script capacity (checks/part5 check_script_limits): utilization = max(maxSteps / 1e6, maxRecursion / 1000, timeoutMs / 10000) against the sandbox ceilings, so for the demo limits (10000 steps, 64 recursion, 50 ms) the recursion term 0.064 governs and is linear in maxRecursion (limit field 1000); halving it to 32 gives 0.032 because 0.01 (steps) and 0.005 (timeout) stay below. scriptLimits is a singleton facet with no outliner row, so owner is empty; change-script-limits carries all three limits and the part-number script dn*10+50 still runs. Utilization is derived by an independent Python evaluation of the Rust formula; no third-party oracle exists for the ceiling ratio.",
+        "linear": true
+      }
     },
     {
       "variant": "vdi3805",
@@ -503,7 +530,34 @@
         "react": 6105,
         "wgpu": 6205
       },
-      "pin": null
+      "pin": {
+        "field": {
+          "path": "catalog.products[id=RAD-600].configuration.attributes.heatExponentN",
+          "key": "norm-inputs.catalog.products[id=RAD-600].configuration.attributes.heatExponentN",
+          "owner": "scope:1:16:catalog.products7:RAD-600",
+          "ownerWindow": "norm-vdi3805-outliner",
+          "argument": "newConfiguration",
+          "label": {
+            "en": "Heat exponent n",
+            "de": "Heizexponent n"
+          },
+          "limit": 1.5,
+          "unit": "1"
+        },
+        "check": "vdi3805.3.n.RAD-600",
+        "states": {
+          "before": {
+            "value": 1.3,
+            "utilization": 0.8667
+          },
+          "after": {
+            "value": 1.4,
+            "utilization": 0.9333
+          }
+        },
+        "basis": "Blatt 3 radiator exponent check (checks/valve-radiator-and-pump-checks check_radiator): utilization = n / RADIATOR_N_MAX with the EN 442 band [1.1, 1.5]; blatt-3 RAD-600 starts at n = 1.3 (attributes and 210 record), 1.3/1.5 = 0.8667 to 1.4/1.5 = 0.9333. The edit is change-product-configuration, whose diff rewrites the mirrored 210 record n in the same patch, so the attribute/record sync check stays pass; only this check reads the exponent. Pass/fail of both states confirmed with the artifact Python oracle (n:RAD-600).",
+        "linear": true
+      }
     }
   ]
 }

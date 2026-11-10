@@ -11,6 +11,8 @@ message Din18599ZonesPatch {
   optional uint32 occupants = 7;
   optional double internal_gains_w_m2 = 8;
   optional double lighting_power_w_m2 = 9;
+  optional string thermal_mass_class = 10;
+  optional double c_wirk_wh_m2k = 11;
 }
 
 message Din18599ZonesRemoved {

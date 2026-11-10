@@ -78,7 +78,7 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
   if(bytes===undefined){counter.misses++;return text(404,"Not found");}
   try{
    const parsed=parseRemoteCacheActionResultV1(bytes);
-   for(const value of[...parsed.references,...parsed.trees])if(!options.store.has(namespace,"cas",value.hash))throw Error("blob left the store");
+   for(const value of[...parsed.references,...parsed.trees])if(!await options.store.has(namespace,"cas",value.hash))throw Error("blob left the store");
   }catch{await options.store.remove(namespace,"ac",key);counter.stale++;counter.misses++;return text(404,"Not found");}
   counter.hits++;return new Response((method==="GET"?bytes:null) as BodyInit|null,{headers:{"content-type":"application/octet-stream","content-length":String(bytes.byteLength)}});
  };
@@ -141,7 +141,7 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
 export type RemoteCacheTlsV1=Readonly<{certificate:string;key:string}>;
 
 /** ⚙️ Authors one running server: where to listen, what to store, who may use it and what it checks. */
-export type RemoteCacheServerOptionsV1=Readonly<{directory:string;host:string;port:number;maximumBytes:number;maximumEntryBytes:number;maximumAgeDays:number;defaultInstance:string;tokens:RemoteCacheTokensV1;readOnly?:boolean;tls?:RemoteCacheTlsV1|undefined;validation?:RemoteCacheValidationV1;maximumActionResultBytes?:number;maintenanceSeconds?:number;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1|RemoteCacheRequestEventV1|Readonly<{stage:"listening";url:string}>|Readonly<{stage:"stopped"}>)=>void}>;
+export type RemoteCacheServerOptionsV1=Readonly<{hostStore?:import("../../🗄️cas/🗃️store/🟦️.ts").CasStoreV1;directory:string;host:string;port:number;maximumBytes:number;maximumEntryBytes:number;maximumAgeDays:number;defaultInstance:string;tokens:RemoteCacheTokensV1;readOnly?:boolean;tls?:RemoteCacheTlsV1|undefined;validation?:RemoteCacheValidationV1;maximumActionResultBytes?:number;maintenanceSeconds?:number;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1|RemoteCacheRequestEventV1|Readonly<{stage:"listening";url:string}>|Readonly<{stage:"stopped"}>)=>void}>;
 
 /** 🛰️ A started server: its address, a live status and an orderly stop. */
 export interface RemoteCacheServerV1{readonly url:string;readonly port:number;readonly store:RemoteCacheStoreV1;readonly stopped:Promise<void>;stop():Promise<void>}
@@ -161,7 +161,7 @@ export async function startRemoteCacheServerV1(options:RemoteCacheServerOptionsV
  if(owner.held)throw new RemoteCacheDirectoryBusyV1(options.directory);
  let store:RemoteCacheStoreV1|undefined,timer:ReturnType<typeof setInterval>|undefined;
  try{
-  store=await RemoteCacheStoreV1.open({directory:options.directory,maximumBytes:options.maximumBytes,maximumEntryBytes:options.maximumEntryBytes,maximumAgeMilliseconds:options.maximumAgeDays*86400000,...(options.signal?{signal:options.signal}:{}),...(options.onEvent?{onEvent:options.onEvent}:{})});
+  store=await RemoteCacheStoreV1.open({directory:options.directory,...(options.hostStore?{host:options.hostStore}:{}),maximumBytes:options.maximumBytes,maximumEntryBytes:options.maximumEntryBytes,maximumAgeMilliseconds:options.maximumAgeDays*86400000,...(options.signal?{signal:options.signal}:{}),...(options.onEvent?{onEvent:options.onEvent}:{})});
   const opened=store,handler=createRemoteCacheHandlerV1({store:opened,tokens:options.tokens,defaultInstance:options.defaultInstance,...(options.readOnly===undefined?{}:{readOnly:options.readOnly}),...(options.validation===undefined?{}:{validation:options.validation}),...(options.maximumActionResultBytes===undefined?{}:{maximumActionResultBytes:options.maximumActionResultBytes}),...(options.onEvent?{onRequest:options.onEvent}:{})});
   const server=await runtimeServeV1({hostname:options.host,port:options.port,idleTimeoutSeconds:60,maximumRequestBodyBytes:options.maximumEntryBytes*2,...(options.tls?{tls:{certificate:options.tls.certificate,key:options.tls.key}}:{}),fetch:request=>handler(request)});
   const host=options.host.includes(":")&&!options.host.startsWith("[")?`[${options.host}]`:options.host,port=server.port,url=`${options.tls?"https":"http"}://${host}:${port}`;

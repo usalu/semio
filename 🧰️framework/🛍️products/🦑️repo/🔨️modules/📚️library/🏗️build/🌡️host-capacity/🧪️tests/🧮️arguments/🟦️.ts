@@ -73,7 +73,7 @@ test("the capacity command refuses every malformed option vector with the Python
   const expected=answers[index];
   if(expected===null){accepted++;continue;}
   refused++;messages.add(expected);
-  await expect(runCapacityCommandV1(row,{environment:{},write:()=>undefined,policy:BUILD_HOST_CAPACITY_POLICY_V1} as never),JSON.stringify(row)).rejects.toThrow(expected);
+  await expect(runCapacityCommandV1(row,{environment:{LANG:"en_US.UTF-8"},write:()=>undefined,policy:BUILD_HOST_CAPACITY_POLICY_V1} as never),JSON.stringify(row)).rejects.toThrow(expected);
  }
  expect(refused).toBeGreaterThan(300);expect(accepted).toBeGreaterThan(10);
  expect([...messages].sort()).toEqual(["Capacity option --cpu requires a positive integer","Capacity option --jobs requires a positive integer","Capacity option --memory requires a positive integer","Capacity run requires a command after --","Expected repo capacity status|run","Unknown capacity operation: ","Unknown capacity operation: nope"]);

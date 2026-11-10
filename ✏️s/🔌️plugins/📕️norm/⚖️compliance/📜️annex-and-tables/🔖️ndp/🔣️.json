@@ -1,6 +1,424 @@
 {
  "entries": [
   {
+   "id": "ndp.din4108-2.mould.f_rsi_min",
+   "code": "DIN 4108-2",
+   "part": "",
+   "clause": "6.2",
+   "symbol": "f_Rsi minimum",
+   "recommended": 0.7,
+   "naDe": 0.7,
+   "unit": "",
+   "source": {
+    "document": "DIN 4108-2",
+    "edition": "to be recorded at verification",
+    "locator": "6.2"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-2 6.2",
+   "asWritten": "f_Rsi >= 0.70, equal to theta_si >= 12.6 degC at 20 / -5 degC (checked by arithmetic only).",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-2.mould.r_si",
+   "code": "DIN 4108-2",
+   "part": "",
+   "clause": "6.2",
+   "symbol": "R_si mould check",
+   "recommended": 0.25,
+   "naDe": 0.25,
+   "unit": "m2K/W",
+   "source": {
+    "document": "DIN 4108-2",
+    "edition": "to be recorded at verification",
+    "locator": "6.2"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-2 6.2",
+   "asWritten": "Interior surface resistance for the f_Rsi check R_si = 0.25 m2K/W.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-2.mould.theta_e",
+   "code": "DIN 4108-2",
+   "part": "",
+   "clause": "6.2",
+   "symbol": "theta_e mould check",
+   "recommended": -5.0,
+   "naDe": -5.0,
+   "unit": "degC",
+   "source": {
+    "document": "DIN 4108-2",
+    "edition": "to be recorded at verification",
+    "locator": "6.2"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-2 6.2",
+   "asWritten": "Exterior air temperature -5 degC.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-2.mould.theta_i",
+   "code": "DIN 4108-2",
+   "part": "",
+   "clause": "6.2",
+   "symbol": "theta_i mould check",
+   "recommended": 20.0,
+   "naDe": 20.0,
+   "unit": "degC",
+   "source": {
+    "document": "DIN 4108-2",
+    "edition": "to be recorded at verification",
+    "locator": "6.2"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-2 6.2",
+   "asWritten": "Interior air temperature 20 degC.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.annex-a.condensation.duration",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "t condensation period",
+   "recommended": 2160.0,
+   "naDe": 2160.0,
+   "unit": "h",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-3 Annex A",
+   "asWritten": "Condensation period 90 d = 2160 h; taken from the oracle audit.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.annex-a.condensation.phi_e",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "phi_e condensation period",
+   "recommended": 0.8,
+   "naDe": 0.8,
+   "unit": "",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-3 Annex A",
+   "asWritten": "Glaser condensation period exterior relative humidity 80 %.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.annex-a.condensation.phi_i",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "phi_i condensation period",
+   "recommended": 0.5,
+   "naDe": 0.5,
+   "unit": "",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-3 Annex A",
+   "asWritten": "Glaser condensation period interior relative humidity 50 %.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.annex-a.condensation.theta_e",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "theta_e condensation period",
+   "recommended": -5.0,
+   "naDe": -5.0,
+   "unit": "degC",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-3 Annex A",
+   "asWritten": "Glaser condensation period exterior -5 degC.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.annex-a.condensation.theta_i",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "theta_i condensation period",
+   "recommended": 20.0,
+   "naDe": 20.0,
+   "unit": "degC",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-3 Annex A",
+   "asWritten": "Glaser condensation period interior 20 degC.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.annex-a.evaporation.duration",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "t evaporation period",
+   "recommended": 2160.0,
+   "naDe": 2160.0,
+   "unit": "h",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-3 Annex A",
+   "asWritten": "Evaporation period 90 d = 2160 h; taken from the oracle audit.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.annex-a.evaporation.phi",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "phi evaporation period",
+   "recommended": 0.7,
+   "naDe": 0.7,
+   "unit": "",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-3 Annex A",
+   "asWritten": "Glaser evaporation period relative humidity 70 % on both sides.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.annex-a.evaporation.theta",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "theta evaporation period",
+   "recommended": 12.0,
+   "naDe": 12.0,
+   "unit": "degC",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-3 Annex A",
+   "asWritten": "Glaser evaporation period 12 degC on both sides.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.delta0",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "delta_0",
+   "recommended": 2e-10,
+   "naDe": 2e-10,
+   "unit": "kg/(m s Pa)",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-3 Annex A / EN ISO 13788",
+   "asWritten": "Water vapour permeability of air delta_0 = 2.0e-10 kg/(m s Pa) (EN ISO 13788 value; DIN 4108-3 may state 1/delta_0 in m h Pa/kg).",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.mass-limit.general",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "4.2",
+   "symbol": "m_W,T limit",
+   "recommended": 1.0,
+   "naDe": 1.0,
+   "unit": "kg/m2",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "4.2"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-3 4.2",
+   "asWritten": "Condensate limit 1.0 kg/m2 (carried over from the previous code, not re-checked).",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.mass-limit.wood-light",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "4.2",
+   "symbol": "m_W,T limit wood and light elements",
+   "recommended": 0.5,
+   "naDe": 0.5,
+   "unit": "kg/m2",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "4.2"
+   },
+   "status": "unverified",
+   "specRef": "DIN 4108-3 4.2",
+   "asWritten": "Condensate limit 0.5 kg/m2 for wood and light elements (carried over from the previous code, not re-checked).",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.saturation.ice.a",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "a over ice",
+   "recommended": 21.875,
+   "naDe": 21.875,
+   "unit": "",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "EN ISO 13788 Eq. 5",
+   "asWritten": "Magnus over ice, a = 21.875 (theta < 0 degC).",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.saturation.ice.b",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "b over ice",
+   "recommended": 265.5,
+   "naDe": 265.5,
+   "unit": "degC",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "EN ISO 13788 Eq. 5",
+   "asWritten": "Magnus over ice, b = 265.5 degC.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.saturation.ice.p0",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "p_0 over ice",
+   "recommended": 610.5,
+   "naDe": 610.5,
+   "unit": "Pa",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "EN ISO 13788 Eq. 5",
+   "asWritten": "Magnus p_sat = p_0 exp(a theta/(b + theta)) over ice, p_0 = 610.5 Pa.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.saturation.water.a",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "a over water",
+   "recommended": 17.269,
+   "naDe": 17.269,
+   "unit": "",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "EN ISO 13788 Eq. 4",
+   "asWritten": "Magnus over water, a = 17.269 (theta >= 0 degC).",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.saturation.water.b",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "b over water",
+   "recommended": 237.3,
+   "naDe": 237.3,
+   "unit": "degC",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "EN ISO 13788 Eq. 4",
+   "asWritten": "Magnus over water, b = 237.3 degC.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.din4108-3.saturation.water.p0",
+   "code": "DIN 4108-3",
+   "part": "",
+   "clause": "Annex A",
+   "symbol": "p_0 over water",
+   "recommended": 610.5,
+   "naDe": 610.5,
+   "unit": "Pa",
+   "source": {
+    "document": "DIN 4108-3:2018-10",
+    "edition": "2018-10",
+    "locator": "Annex A"
+   },
+   "status": "unverified",
+   "specRef": "EN ISO 13788 Eq. 4",
+   "asWritten": "Magnus p_sat = p_0 exp(a theta/(b + theta)) over water, p_0 = 610.5 Pa.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
+   "id": "ndp.en-iso-6946.combined.max_ratio",
+   "code": "EN ISO 6946",
+   "part": "",
+   "clause": "6.7.2.4",
+   "symbol": "R_upper/R_lower validity limit",
+   "recommended": 1.5,
+   "naDe": 1.5,
+   "unit": "",
+   "source": {
+    "document": "EN ISO 6946",
+    "edition": "to be recorded at verification",
+    "locator": "6.7.2.4"
+   },
+   "status": "unverified",
+   "specRef": "EN ISO 6946 6.7.2",
+   "asWritten": "Combined method is valid for R_upper/R_lower <= 1.5; wording unverified.",
+   "evidence": "fleet-1108 ndp 2026-11-08: UNVERIFIED. No third-party library in the venv (blue-prints, structuralcodes, groundhog, concreteproperties, sectionproperties) encodes this constant; value taken from the lane din4108-fix request and the oracle audit, not from the printed standard."
+  },
+  {
    "id": "ndp.en1990.a1.override.gamma.allowed",
    "code": "EN 1990",
    "part": "",

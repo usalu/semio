@@ -7,16 +7,19 @@ import sys
 
 root, minimum, quiet, now = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
 volatile = re.compile(r"(\.sqlite|\.sqlite3|\.db|\.log|\.jsonl|\.lock|\.pid|-wal|-shm|\.tmp)$", re.I)
-groups = {}
+census = []
 for dirpath, dirnames, filenames in os.walk(root):
     for name in filenames:
         path = os.path.join(dirpath, name)
         info = os.lstat(path)
         if not os.path.isfile(path) or os.path.islink(path) or info.st_size < minimum:
             continue
-        digest = hashlib.sha256(open(path, "rb").read()).hexdigest()
-        recency = max(info.st_mtime, info.st_atime) * 1000
-        groups.setdefault((info.st_size, digest), []).append({"path": path, "identity": "%d:%d" % (info.st_dev, info.st_ino), "links": info.st_nlink, "protected": now - recency < quiet or bool(volatile.search(path))})
+        census.append((path, info))
+groups = {}
+for path, info in census:
+    digest = hashlib.sha256(open(path, "rb").read()).hexdigest()
+    recency = max(info.st_mtime, info.st_atime) * 1000
+    groups.setdefault((info.st_size, digest), []).append({"path": path, "identity": "%d:%d" % (info.st_dev, info.st_ino), "links": info.st_nlink, "protected": now - recency < quiet or bool(volatile.search(path))})
 out = {"groups": 0, "files": 0, "replacements": []}
 for key in sorted(groups):
     members = groups[key]

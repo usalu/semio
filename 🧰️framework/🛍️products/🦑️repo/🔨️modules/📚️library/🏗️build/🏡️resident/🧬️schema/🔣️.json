@@ -1,285 +1,2224 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Resident repo service protocol, descriptor, watcher frames and policy (v1)",
-  "description": "Authority for every document the resident service exchanges: client frames, service frames, native watcher frames, the discovery descriptor, the capability token payload and the policy. All documents are closed (additionalProperties false). Texts are always given per language; no language is a default.",
-  "definitions": {
-    "Language": {"type": "string", "enum": ["en", "de"]},
-    "Text": {
-      "description": "Texts keyed by language, only the languages the client asked for; at least one.",
-      "type": "object",
-      "propertyNames": {"enum": ["en", "de"]},
-      "additionalProperties": {"type": "string", "maxLength": 2000},
-      "minProperties": 1
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Resident repo service protocol, descriptor, watcher frames and policy (v1)",
+ "description": "Authority for every document the resident service exchanges: client frames, service frames, native watcher frames, the discovery descriptor, the capability token payload and the policy. All documents are closed (additionalProperties false). Texts are always given per language; no language is a default.",
+ "definitions": {
+  "Language": {
+   "type": "string",
+   "enum": [
+    "en",
+    "de"
+   ]
+  },
+  "Text": {
+   "description": "Texts keyed by language, only the languages the client asked for; at least one.",
+   "type": "object",
+   "propertyNames": {
+    "enum": [
+     "en",
+     "de"
+    ]
+   },
+   "additionalProperties": {
+    "type": "string",
+    "maxLength": 2000
+   },
+   "minProperties": 1
+  },
+  "RequestId": {
+   "type": "integer",
+   "minimum": 1,
+   "maximum": 4294967295
+  },
+  "Capability": {
+   "type": "string",
+   "pattern": "^v1\\.[A-Za-z0-9_-]{4,8192}\\.[A-Za-z0-9_-]{43}$"
+  },
+  "Hello": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "v",
+    "client",
+    "languages"
+   ],
+   "properties": {
+    "t": {
+     "const": "hello"
     },
-    "RequestId": {"type": "integer", "minimum": 1, "maximum": 4294967295},
-    "Capability": {"type": "string", "pattern": "^v1\\.[A-Za-z0-9_-]{4,8192}\\.[A-Za-z0-9_-]{43}$"},
-    "Hello": {
-      "type": "object", "additionalProperties": false, "required": ["t", "v", "client", "languages"],
-      "properties": {
-        "t": {"const": "hello"},
-        "v": {"const": 1},
-        "client": {
-          "type": "object", "additionalProperties": false, "required": ["name", "pid", "lane"],
-          "properties": {
-            "name": {"type": "string", "minLength": 1, "maxLength": 64},
-            "pid": {"type": "integer", "minimum": 0},
-            "lane": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Fairness lane, one per agent or terminal."}
-          }
-        },
-        "languages": {"type": "array", "minItems": 1, "maxItems": 2, "uniqueItems": true, "items": {"$ref": "#/definitions/Language"}},
-        "cap": {"$ref": "#/definitions/Capability"}
-      }
+    "v": {
+     "const": 1
     },
-    "Request": {
-      "type": "object", "additionalProperties": false, "required": ["t", "id", "command", "args", "cwd"],
-      "properties": {
-        "t": {"const": "request"},
-        "id": {"$ref": "#/definitions/RequestId"},
-        "command": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}$"},
-        "args": {"type": "array", "maxItems": 4096, "items": {"type": "string", "maxLength": 65536}},
-        "cwd": {"type": "string", "minLength": 1, "maxLength": 4096},
-        "env": {"type": "object", "maxProperties": 256, "additionalProperties": {"type": "string", "maxLength": 32768}},
-        "cap": {"$ref": "#/definitions/Capability"},
-        "deadlineMs": {"type": "integer", "minimum": 1, "maximum": 86400000},
-        "detach": {"type": "boolean", "description": "Keep running after the client disconnects (watch-like jobs); default false."}
-      }
-    },
-    "Cancel": {"type": "object", "additionalProperties": false, "required": ["t", "id"], "properties": {"t": {"const": "cancel"}, "id": {"$ref": "#/definitions/RequestId"}}},
-    "Ping": {"type": "object", "additionalProperties": false, "required": ["t", "n"], "properties": {"t": {"const": "ping"}, "n": {"type": "integer", "minimum": 0}}},
-    "ClientFrame": {"oneOf": [{"$ref": "#/definitions/Hello"}, {"$ref": "#/definitions/Request"}, {"$ref": "#/definitions/Cancel"}, {"$ref": "#/definitions/Ping"}]},
-    "WatcherState": {
-      "type": "object", "additionalProperties": false, "required": ["backend", "trust", "cursor"],
-      "properties": {
-        "backend": {"type": "string", "enum": ["fsevents", "inotify", "rdcw", "portable", "poll", "none"]},
-        "trust": {"type": "string", "enum": ["exact", "verify", "none"], "description": "exact: events plus fence prove freshness; verify: every request re-proves membership by stat; none: no memo answers."},
-        "cursor": {"type": "string", "maxLength": 32}
-      }
-    },
-    "Welcome": {
-      "type": "object", "additionalProperties": false, "required": ["t", "v", "service", "limits"],
-      "properties": {
-        "t": {"const": "welcome"},
-        "v": {"const": 1},
-        "service": {
-          "type": "object", "additionalProperties": false, "required": ["pid", "instance", "startedAt", "implementation", "generation", "watcher"],
-          "properties": {
-            "pid": {"type": "integer", "minimum": 1},
-            "instance": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
-            "startedAt": {"type": "integer", "minimum": 0},
-            "implementation": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-            "generation": {"type": ["integer", "null"], "minimum": 0},
-            "watcher": {"$ref": "#/definitions/WatcherState"}
-          }
-        },
-        "limits": {
-          "type": "object", "additionalProperties": false, "required": ["maximumFrameBytes", "maximumInFlight"],
-          "properties": {"maximumFrameBytes": {"type": "integer", "minimum": 1024}, "maximumInFlight": {"type": "integer", "minimum": 1}}
-        }
-      }
-    },
-    "Accepted": {"type": "object", "additionalProperties": false, "required": ["t", "id", "queue"], "properties": {"t": {"const": "accepted"}, "id": {"$ref": "#/definitions/RequestId"}, "queue": {"type": "integer", "minimum": 0}}},
-    "Progress": {
-      "type": "object", "additionalProperties": false, "required": ["t", "id", "phase", "done", "total", "message"],
-      "properties": {
-        "t": {"const": "progress"}, "id": {"$ref": "#/definitions/RequestId"},
-        "phase": {"type": "string", "enum": ["queued", "fence", "plan", "digest", "execute", "replay", "resync", "custody", "idle"]},
-        "done": {"type": "integer", "minimum": 0}, "total": {"type": "integer", "minimum": 0},
-        "message": {"$ref": "#/definitions/Text"}
-      }
-    },
-    "Output": {
-      "type": "object", "additionalProperties": false, "required": ["t", "id", "stream"],
-      "properties": {
-        "t": {"const": "output"}, "id": {"$ref": "#/definitions/RequestId"}, "stream": {"type": "string", "enum": ["stdout", "stderr"]},
-        "text": {"type": "string", "maxLength": 524288}, "b64": {"type": "string", "maxLength": 699052, "pattern": "^[A-Za-z0-9+/]*={0,2}$"}
+    "client": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "name",
+      "pid",
+      "lane"
+     ],
+     "properties": {
+      "name": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64
       },
-      "oneOf": [{"required": ["text"], "not": {"required": ["b64"]}}, {"required": ["b64"], "not": {"required": ["text"]}}]
-    },
-    "Timing": {
-      "type": "object", "additionalProperties": false,
-      "properties": {
-        "queueMs": {"type": "number", "minimum": 0}, "fenceMs": {"type": "number", "minimum": 0}, "planMs": {"type": "number", "minimum": 0},
-        "digestMs": {"type": "number", "minimum": 0}, "admitMs": {"type": "number", "minimum": 0}, "spawnMs": {"type": "number", "minimum": 0},
-        "runMs": {"type": "number", "minimum": 0}, "totalMs": {"type": "number", "minimum": 0}
+      "pid": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "lane": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "description": "Fairness lane, one per agent or terminal."
       }
+     }
     },
-    "Result": {
-      "type": "object", "additionalProperties": false, "required": ["t", "id", "exit", "served", "timing"],
-      "properties": {
-        "t": {"const": "result"}, "id": {"$ref": "#/definitions/RequestId"},
-        "exit": {"type": "integer", "minimum": 0, "maximum": 255},
-        "signal": {"type": ["string", "null"]},
-        "served": {"type": "string", "enum": ["memo", "executed", "query", "delegated"]},
-        "timing": {"$ref": "#/definitions/Timing"},
-        "summary": {"$ref": "#/definitions/Text"}
-      }
+    "languages": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 2,
+     "uniqueItems": true,
+     "items": {
+      "$ref": "#/definitions/Language"
+     }
     },
-    "RefusalCode": {"type": "string", "enum": ["capability", "scope", "language", "busy", "stale", "shutdown", "unknown-command", "invalid", "deadline", "environment", "internal"]},
-    "Refused": {
-      "type": "object", "additionalProperties": false, "required": ["t", "code", "message", "retry"],
-      "properties": {
-        "t": {"const": "refused"}, "id": {"$ref": "#/definitions/RequestId"}, "code": {"$ref": "#/definitions/RefusalCode"},
-        "message": {"description": "Refusals carry both languages: the client may have asked for none the service can render.", "type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string"}, "de": {"type": "string"}}},
-        "retry": {"type": "string", "enum": ["never", "fallback", "later"], "description": "fallback: run the command in-process without the service."}
-      }
+    "cap": {
+     "$ref": "#/definitions/Capability"
     },
-    "Notice": {
-      "type": "object", "additionalProperties": false, "required": ["t", "kind", "message"],
-      "properties": {"t": {"const": "notice"}, "kind": {"type": "string", "enum": ["draining", "stale", "degraded", "recovered"]}, "message": {"$ref": "#/definitions/Text"}}
-    },
-    "Pong": {"type": "object", "additionalProperties": false, "required": ["t", "n"], "properties": {"t": {"const": "pong"}, "n": {"type": "integer", "minimum": 0}}},
-    "ServiceFrame": {"oneOf": [{"$ref": "#/definitions/Welcome"}, {"$ref": "#/definitions/Accepted"}, {"$ref": "#/definitions/Progress"}, {"$ref": "#/definitions/Output"}, {"$ref": "#/definitions/Result"}, {"$ref": "#/definitions/Refused"}, {"$ref": "#/definitions/Notice"}, {"$ref": "#/definitions/Pong"}]},
-    "RelativePath": {"type": "string", "maxLength": 4096, "not": {"pattern": "^/|(^|/)\\.\\.(/|$)"}},
-    "ChangeRow": {
-      "type": "array", "minItems": 3, "maxItems": 3,
-      "items": [{"type": "string", "enum": ["a", "m", "r", "n"]}, {"type": "integer", "enum": [0, 1]}, {"$ref": "#/definitions/RelativePath"}],
-      "description": "[kind, isDirectory, path]: added, modified, removed, renamed. Kinds are advisory; every row means re-stat the path (a directory row means its subtree)."
-    },
-    "WatcherReady": {
-      "type": "object", "additionalProperties": false, "required": ["v", "t", "backend", "root", "cursor", "uuid", "replay", "latencyMs", "native"],
-      "properties": {"v": {"const": 1}, "t": {"const": "ready"}, "backend": {"type": "string", "enum": ["fsevents", "inotify", "rdcw"]}, "root": {"type": "string"}, "cursor": {"type": "string"}, "uuid": {"type": "string"}, "replay": {"type": "boolean"}, "latencyMs": {"type": "integer", "minimum": 0}, "native": {"const": true}, "watches": {"type": "integer", "minimum": 0}}
-    },
-    "WatcherBatch": {
-      "type": "object", "additionalProperties": false, "required": ["v", "t", "n", "at", "cursor", "c"],
-      "properties": {"v": {"const": 1}, "t": {"const": "batch"}, "n": {"type": "integer", "minimum": 1}, "at": {"type": "integer", "minimum": 0}, "cursor": {"type": "string"}, "c": {"type": "array", "items": {"$ref": "#/definitions/ChangeRow"}}}
-    },
-    "WatcherLost": {
-      "type": "object", "additionalProperties": false, "required": ["v", "t", "at", "reason", "scope"],
-      "properties": {"v": {"const": 1}, "t": {"const": "lost"}, "at": {"type": "integer", "minimum": 0}, "reason": {"type": "string", "enum": ["overflow", "kernel-dropped", "user-dropped", "must-scan", "root-changed", "mount", "watch-limit", "read-error"]}, "scope": {"type": "string", "description": "Relative directory whose events may be missing; empty means everything."}}
-    },
-    "WatcherHistoryDone": {"type": "object", "additionalProperties": false, "required": ["v", "t", "cursor"], "properties": {"v": {"const": 1}, "t": {"const": "history-done"}, "cursor": {"type": "string"}}},
-    "WatcherError": {"type": "object", "additionalProperties": false, "required": ["v", "t", "code", "message"], "properties": {"v": {"const": 1}, "t": {"const": "error"}, "code": {"type": "string"}, "message": {"type": "string"}}},
-    "WatcherBye": {"type": "object", "additionalProperties": false, "required": ["v", "t"], "properties": {"v": {"const": 1}, "t": {"const": "bye"}}},
-    "WatcherVersion": {"type": "object", "additionalProperties": false, "required": ["v", "t", "name", "protocol", "os"], "properties": {"v": {"const": 1}, "t": {"const": "version"}, "name": {"const": "semio-repo-watch"}, "protocol": {"const": 1}, "os": {"type": "string"}}},
-    "WatcherFrame": {"oneOf": [{"$ref": "#/definitions/WatcherReady"}, {"$ref": "#/definitions/WatcherBatch"}, {"$ref": "#/definitions/WatcherLost"}, {"$ref": "#/definitions/WatcherHistoryDone"}, {"$ref": "#/definitions/WatcherError"}, {"$ref": "#/definitions/WatcherBye"}, {"$ref": "#/definitions/WatcherVersion"}]},
-    "Descriptor": {
-      "description": "Discovery file the service writes atomically into its runtime directory; the native launcher reads it instead of probing blindly.",
-      "type": "object", "additionalProperties": false, "required": ["v", "pid", "instance", "startedAt", "endpoint", "protocol", "implementation", "root"],
-      "properties": {"v": {"const": 1}, "pid": {"type": "integer", "minimum": 1}, "instance": {"type": "string", "pattern": "^[0-9a-f]{16}$"}, "startedAt": {"type": "integer"}, "endpoint": {"type": "string", "minLength": 1}, "protocol": {"const": 1}, "implementation": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "root": {"type": "string"}, "stopping": {"type": "boolean"}}
-    },
-    "Caveat": {
-      "description": "Conjunctive restriction appended to a capability. Anyone holding a token can add caveats (narrow it) without the key; nobody can remove one.",
-      "oneOf": [
-        {"type": "object", "additionalProperties": false, "required": ["k", "v"], "properties": {"k": {"const": "scope"}, "v": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "enum": ["status", "query", "run", "watch", "admin"]}}}},
-        {"type": "object", "additionalProperties": false, "required": ["k", "v"], "properties": {"k": {"const": "projects"}, "v": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1, "maxLength": 256}}}},
-        {"type": "object", "additionalProperties": false, "required": ["k", "v"], "properties": {"k": {"const": "notAfter"}, "v": {"type": "integer", "minimum": 0}}},
-        {"type": "object", "additionalProperties": false, "required": ["k", "v"], "properties": {"k": {"const": "cwd"}, "v": {"type": "string", "minLength": 1, "maxLength": 4096}}},
-        {"type": "object", "additionalProperties": false, "required": ["k", "v"], "properties": {"k": {"const": "worktree"}, "v": {"type": "string", "pattern": "^[0-9a-f]{12}$"}}},
-        {"type": "object", "additionalProperties": false, "required": ["k", "v"], "properties": {"k": {"const": "agent"}, "v": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,64}$"}}}
-      ]
-    },
-    "CapabilityPayload": {"type": "object", "additionalProperties": false, "required": ["id", "caveats"], "properties": {"id": {"type": "string", "pattern": "^[0-9a-f]{16}$"}, "caveats": {"type": "array", "maxItems": 32, "items": {"$ref": "#/definitions/Caveat"}}}},
-    "Policy": {
-      "description": "Authored defaults. Every number is an upper bound or a timer; none is a language or a path.",
-      "const": {
-        "version": 1,
-        "maximumFrameBytes": 1048576,
-        "maximumInFlight": 8,
-        "maximumQueued": 64,
-        "maximumClients": 64,
-        "idleShutdownMilliseconds": 900000,
-        "pinReleaseMilliseconds": 20000,
-        "maximumResidentBytes": 536870912,
-        "residentCheckMilliseconds": 5000,
-        "fenceTimeoutMilliseconds": 1500,
-        "racyWindowMilliseconds": 2000,
-        "watcherLatencyMilliseconds": 5,
-        "watcherRestartBackoffMilliseconds": [200, 1000, 5000],
-        "watcherRestartsBeforePortable": 3,
-        "memoMaximumEntries": 65536,
-        "digestCacheMaximumFiles": 2000000,
-        "outputSignatureMaximumEntries": 2048,
-        "replayMaximumBytes": 1048576,
-        "frontierMaximumEntries": 64,
-        "journalMaximumEvents": 262144,
-        "graphInputNames": ["project.json", "📋️project.json", "Cargo.toml", "package.json", "go.mod", "pyproject.toml", "BUILD.bazel", "MODULE.bazel"],
-        "bindEnvironment": ["SEMIO_BUILD_TOOL", "SEMIO_BUILD_MODE", "SEMIO_BUILD_WORKERS", "SEMIO_BUILD_GRAPH_POLICY"],
-        "eligibleFlags": ["--service=", "--lang=", "--output=stream", "--no-color"],
-        "forwardEnvironment": ["SEMIO_LANGUAGE", "SEMIO_BUILD_TOOL", "SEMIO_BUILD_MODE", "SEMIO_BUILD_WORKERS", "SEMIO_BUILD_PARALLEL", "SEMIO_BUILD_GRAPH_POLICY", "NX_PARALLEL", "CI", "NO_COLOR", "FORCE_COLOR", "TERM", "LANG", "LC_ALL"],
-        "commands": {
-          "ping": {"class": "status", "idempotent": true, "tier": "service"},
-          "status": {"class": "status", "idempotent": true, "tier": "service"},
-          "dirty": {"class": "query", "idempotent": true, "tier": "service"},
-          "affected": {"class": "query", "idempotent": true, "tier": "service"},
-          "cursor": {"class": "query", "idempotent": true, "tier": "service"},
-          "adopt": {"class": "run", "idempotent": true, "tier": "service"},
-          "adopt-frontier": {"class": "run", "idempotent": true, "tier": "service"},
-          "run": {"class": "run", "idempotent": true, "tier": "service"},
-          "test": {"class": "run", "idempotent": true, "tier": "service"},
-          "run-many": {"class": "run", "idempotent": true, "tier": "service"},
-          "watch": {"class": "watch", "idempotent": true, "tier": "service"},
-          "drop-caches": {"class": "admin", "idempotent": true, "tier": "service"},
-          "issue": {"class": "admin", "idempotent": true, "tier": "service"},
-          "revoke": {"class": "admin", "idempotent": true, "tier": "service"},
-          "stop": {"class": "admin", "idempotent": true, "tier": "service"}
-        },
-        "messages": {
-          "en": {
-            "graph": "Re-reading the project graph after a configuration change.",
-            "queued": "Waiting for a free slot in the resident service ({position} ahead).",
-            "fence": "Synchronising with the file watcher.",
-            "plan": "Planning {tasks} tasks.",
-            "digest": "Hashing {files} changed files.",
-            "execute": "Running {task}.",
-            "replay": "Up to date, nothing changed since {since}.",
-            "resync": "Re-proving membership after a gap in the file events ({reason}).",
-            "stale-implementation": "The resident service runs outdated code and will restart; run the command again.",
-            "shutdown": "The resident service is stopping.",
-            "busy": "The resident service is busy ({inFlight} running, {queued} queued).",
-            "capability": "The capability token is missing, forged or expired.",
-            "revoked": "This agent session was revoked.",
-            "issue-agent": "service issue needs --agent <id> (letters, digits and . _ : - only, at most 64): a token belongs to one agent session.",
-            "issue-ttl": "service issue needs --ttl between 1 and {maximum} seconds (default 3600).",
-            "scope": "The capability does not allow the command class {class}.",
-            "language": "None of the requested languages is available.",
-            "unknown-command": "The resident service does not know the command {command}.",
-            "invalid": "The request is invalid: {reason}.",
-            "deadline": "The request exceeded its deadline of {milliseconds} ms.",
-            "environment": "The request runs with {key}={value} but the resident service was started with {actual}; running in this process instead.",
-            "internal": "The resident service failed: {reason}.",
-            "degraded": "File events are unavailable ({reason}); every answer is re-proved by stat.",
-            "recovered": "File events are available again.",
-            "service-started": "The resident service is running (pid {pid}, {files} files watched, backend {backend}).",
-            "service-running": "The resident service is already running (pid {pid}).",
-            "service-down": "No resident service is running for this worktree.",
-            "service-stopped": "The resident service has stopped.",
-            "service-failed": "The resident service did not become ready: {reason}.",
-            "service-usage": "Usage: repo service status|start|stop|restart|issue|revoke|drop-caches|probe"
-          },
-          "de": {
-            "graph": "Lese den Projektgraphen nach einer Konfigurationsänderung neu.",
-            "queued": "Warte auf einen freien Platz im residenten Dienst ({position} davor).",
-            "fence": "Synchronisiere mit dem Dateibeobachter.",
-            "plan": "Plane {tasks} Tasks.",
-            "digest": "Berechne Prüfsummen für {files} geänderte Dateien.",
-            "execute": "Führe {task} aus.",
-            "replay": "Aktuell, seit {since} hat sich nichts geändert.",
-            "resync": "Weise die Mitgliedschaft nach einer Lücke in den Dateiereignissen neu nach ({reason}).",
-            "stale-implementation": "Der residente Dienst führt veralteten Code aus und startet neu; führe den Befehl erneut aus.",
-            "shutdown": "Der residente Dienst wird beendet.",
-            "busy": "Der residente Dienst ist ausgelastet ({inFlight} laufen, {queued} wartend).",
-            "capability": "Die Berechtigung fehlt, ist gefälscht oder abgelaufen.",
-            "revoked": "Diese Agenten-Sitzung wurde widerrufen.",
-            "issue-agent": "service issue braucht --agent <id> (nur Buchstaben, Ziffern und . _ : -, höchstens 64): eine Berechtigung gehört zu genau einer Agenten-Sitzung.",
-            "issue-ttl": "service issue braucht --ttl zwischen 1 und {maximum} Sekunden (Standard 3600).",
-            "scope": "Die Berechtigung erlaubt die Befehlsklasse {class} nicht.",
-            "language": "Keine der angeforderten Sprachen ist verfügbar.",
-            "unknown-command": "Der residente Dienst kennt den Befehl {command} nicht.",
-            "invalid": "Die Anfrage ist ungültig: {reason}.",
-            "deadline": "Die Anfrage hat ihre Frist von {milliseconds} ms überschritten.",
-            "environment": "Die Anfrage läuft mit {key}={value}, der residente Dienst wurde aber mit {actual} gestartet; der Befehl läuft stattdessen in diesem Prozess.",
-            "internal": "Der residente Dienst ist fehlgeschlagen: {reason}.",
-            "degraded": "Dateiereignisse sind nicht verfügbar ({reason}); jede Antwort wird per stat neu belegt.",
-            "recovered": "Dateiereignisse sind wieder verfügbar.",
-            "service-started": "Der residente Dienst läuft (pid {pid}, {files} Dateien beobachtet, Backend {backend}).",
-            "service-running": "Der residente Dienst läuft bereits (pid {pid}).",
-            "service-down": "Für diesen Arbeitsbaum läuft kein residenter Dienst.",
-            "service-stopped": "Der residente Dienst wurde beendet.",
-            "service-failed": "Der residente Dienst ist nicht bereit geworden: {reason}.",
-            "service-usage": "Verwendung: repo service status|start|stop|restart|issue|revoke|drop-caches|probe"
-          }
-        }
-      }
+    "implementation": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$",
+     "description": "Sealed implementation digest the client runs; a host service of another digest refuses with `stale`."
     }
+   }
+  },
+  "WorkspaceId": {
+   "type": "string",
+   "pattern": "^[0-9a-f]{12}$",
+   "description": "Twelve hex digits of the canonical worktree root (`worktreeIdV1`)."
+  },
+  "AgentId": {
+   "type": "string",
+   "pattern": "^[A-Za-z0-9._:-]{1,64}$"
+  },
+  "RevisionId": {
+   "type": "string",
+   "pattern": "^[0-9a-f]{64}$",
+   "description": "Id of a pinned input revision (`RevisionV1.id` of BUILD/🧊️revision; its sha256 content address). On a request it is the build's previous revision unless `parent` says otherwise; absent means the service pins the current inputs."
+  },
+  "CasRef": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "hash",
+    "size"
+   ],
+   "properties": {
+    "hash": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "size": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "description": "Same shape as `CasRef` of BUILD/🧊️revision."
+  },
+  "Dirty": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "paths"
+   ],
+   "properties": {
+    "paths": {
+     "type": "array",
+     "maxItems": 65536,
+     "items": {
+      "$ref": "#/definitions/RelativePath"
+     }
+    },
+    "overflow": {
+     "type": "boolean"
+    },
+    "cursor": {
+     "type": "string",
+     "maxLength": 128,
+     "description": "Journal cursor the dirty set is valid up to; stored as `journalCursor` of the new revision."
+    }
+   },
+   "description": "`DirtySetV1` of the journal: workspace-relative paths changed since `parent`; overflow restages everything."
+  },
+  "Pin": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "revision",
+    "holder",
+    "expiresMs"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "revision": {
+     "$ref": "#/definitions/RevisionId"
+    },
+    "holder": {
+     "type": "string",
+     "pattern": "^[A-Za-z0-9._-]{1,96}$"
+    },
+    "expiresMs": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "description": "`PinV1` of BUILD/🧊️revision: the claim that keeps the revision in the store."
+  },
+  "TargetRef": {
+   "type": "string",
+   "pattern": "^[^\\s:]{1,256}:[^\\s:]{1,128}$",
+   "description": "project:target"
+  },
+  "PlanRequest": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "id",
+    "workspace",
+    "root",
+    "targets",
+    "agent",
+    "priority",
+    "language"
+   ],
+   "properties": {
+    "t": {
+     "const": "plan"
+    },
+    "id": {
+     "$ref": "#/definitions/RequestId"
+    },
+    "workspace": {
+     "$ref": "#/definitions/WorkspaceId"
+    },
+    "root": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096,
+     "description": "Absolute canonical worktree root; the service opens the workspace lazily from it and checks it hashes to `workspace`."
+    },
+    "targets": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 4096,
+     "uniqueItems": true,
+     "items": {
+      "$ref": "#/definitions/TargetRef"
+     }
+    },
+    "agent": {
+     "$ref": "#/definitions/AgentId"
+    },
+    "priority": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9,
+     "description": "0 is most urgent."
+    },
+    "revision": {
+     "$ref": "#/definitions/RevisionId"
+    },
+    "parent": {
+     "$ref": "#/definitions/RevisionId"
+    },
+    "dirty": {
+     "$ref": "#/definitions/Dirty"
+    },
+    "language": {
+     "$ref": "#/definitions/Language"
+    },
+    "cap": {
+     "$ref": "#/definitions/Capability"
+    },
+    "deadlineMs": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 86400000
+    },
+    "arguments": {
+     "type": "array",
+     "maxItems": 256,
+     "items": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+     },
+     "description": "The resolved arguments of the invocation (`run`, `run-many`, `exec`, ...): the service loads the graph slice that exactly this selection admits and returns it as `slice`."
+    },
+    "tool": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 64,
+     "description": "Build tool of the invocation; selects the backend graph policy of the slice."
+    },
+    "graphPolicy": {
+     "enum": [
+      "fresh",
+      "current"
+     ]
+    }
+   }
+  },
+  "HostStatusRequest": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "id"
+   ],
+   "properties": {
+    "t": {
+     "const": "host-status"
+    },
+    "id": {
+     "$ref": "#/definitions/RequestId"
+    }
+   }
+  },
+  "PlanTask": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "dependsOn",
+    "cacheable",
+    "outputs",
+    "stale"
+   ],
+   "properties": {
+    "id": {
+     "$ref": "#/definitions/TargetRef"
+    },
+    "dependsOn": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/TargetRef"
+     }
+    },
+    "cacheable": {
+     "type": "boolean"
+    },
+    "outputs": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/RelativePath"
+     }
+    },
+    "stale": {
+     "type": "boolean",
+     "description": "True when the task has to run for the pinned revision."
+    },
+    "key": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "pattern": "^[0-9a-f]{64}$",
+     "description": "The key of the task: the digest of its complete declaration, resolved inputs, environment and the keys of its dependencies. A client records it after the task succeeded; a task whose recorded key equals the key of the plan is not stale."
+    }
+   }
+  },
+  "Plan": {
+   "description": "The closure of the requested targets in topological order (dependencies first); every task depends only on tasks of the same plan.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "tasks"
+   ],
+   "properties": {
+    "tasks": {
+     "type": "array",
+     "maxItems": 65536,
+     "items": {
+      "$ref": "#/definitions/PlanTask"
+     }
+    }
+   }
+  },
+  "PlanPhase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "phase",
+    "ms"
+   ],
+   "properties": {
+    "phase": {
+     "type": "string",
+     "enum": [
+      "queued",
+      "load",
+      "plan"
+     ]
+    },
+    "ms": {
+     "type": "number",
+     "minimum": 0
+    }
+   }
+  },
+  "PlanReply": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "id",
+    "revision",
+    "plan",
+    "progress",
+    "cacheHits"
+   ],
+   "properties": {
+    "t": {
+     "const": "plan-reply"
+    },
+    "id": {
+     "$ref": "#/definitions/RequestId"
+    },
+    "revision": {
+     "$ref": "#/definitions/RevisionId"
+    },
+    "manifest": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$",
+     "description": "Root tree digest of the pinned inputs (`InputManifestV1.digest`): equal inputs have an equal digest in every workspace."
+    },
+    "pin": {
+     "$ref": "#/definitions/Pin"
+    },
+    "plan": {
+     "oneOf": [
+      {
+       "$ref": "#/definitions/Plan"
+      },
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "ref"
+       ],
+       "properties": {
+        "ref": {
+         "$ref": "#/definitions/CasRef"
+        }
+       }
+      }
+     ]
+    },
+    "progress": {
+     "type": "array",
+     "maxItems": 16,
+     "items": {
+      "$ref": "#/definitions/PlanPhase"
+     }
+    },
+    "cacheHits": {
+     "type": "integer",
+     "minimum": 0,
+     "description": "1 when the workspace index and the plan came from memory, else 0."
+    },
+    "slice": {
+     "$ref": "#/definitions/CasRef",
+     "description": "Content-addressed document `{graph,generationPin?}` with the graph slice of the requested `arguments`; present exactly when the request carried them."
+    }
+   }
+  },
+  "HostWorkspace": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "root",
+    "indexKey",
+    "lastUsedAt",
+    "plans"
+   ],
+   "properties": {
+    "id": {
+     "$ref": "#/definitions/WorkspaceId"
+    },
+    "root": {
+     "type": "string"
+    },
+    "indexKey": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "lastUsedAt": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "plans": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "indexBytes": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "ServiceStatus": {
+   "description": "ServiceStatusV1: `indexBytes` counts every distinct index once, however many workspaces share it.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "id",
+    "pid",
+    "instance",
+    "implementation",
+    "startedAt",
+    "rssMb",
+    "indexBytes",
+    "indexes",
+    "workspaces",
+    "clients",
+    "queue",
+    "inFlight"
+   ],
+   "properties": {
+    "t": {
+     "const": "service-status"
+    },
+    "id": {
+     "$ref": "#/definitions/RequestId"
+    },
+    "pid": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "instance": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{16}$"
+    },
+    "implementation": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "startedAt": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "rssMb": {
+     "type": "number",
+     "minimum": 0
+    },
+    "indexBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "indexes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "workspaces": {
+     "type": "array",
+     "maxItems": 256,
+     "items": {
+      "$ref": "#/definitions/HostWorkspace"
+     }
+    },
+    "clients": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "queue": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "inFlight": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "memory": {
+     "$ref": "#/definitions/MemoryStatus"
+    },
+    "plans": {
+     "$ref": "#/definitions/PlanStatus"
+    }
+   }
+  },
+  "HostDescriptor": {
+   "description": "Discovery file of the per-host service, written atomically next to its endpoint.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "v",
+    "pid",
+    "instance",
+    "startedAt",
+    "endpoint",
+    "protocol",
+    "implementation"
+   ],
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "pid": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "instance": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{16}$"
+    },
+    "startedAt": {
+     "type": "integer"
+    },
+    "endpoint": {
+     "type": "string",
+     "minLength": 1
+    },
+    "protocol": {
+     "const": 1
+    },
+    "implementation": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "stopping": {
+     "type": "boolean"
+    }
+   }
+  },
+  "Request": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "id",
+    "command",
+    "args",
+    "cwd"
+   ],
+   "properties": {
+    "t": {
+     "const": "request"
+    },
+    "id": {
+     "$ref": "#/definitions/RequestId"
+    },
+    "command": {
+     "type": "string",
+     "pattern": "^[a-z][a-z0-9-]{0,31}$"
+    },
+    "args": {
+     "type": "array",
+     "maxItems": 4096,
+     "items": {
+      "type": "string",
+      "maxLength": 65536
+     }
+    },
+    "cwd": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "env": {
+     "type": "object",
+     "maxProperties": 256,
+     "additionalProperties": {
+      "type": "string",
+      "maxLength": 32768
+     }
+    },
+    "cap": {
+     "$ref": "#/definitions/Capability"
+    },
+    "deadlineMs": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 86400000
+    },
+    "detach": {
+     "type": "boolean",
+     "description": "Keep running after the client disconnects (watch-like jobs); default false."
+    }
+   }
+  },
+  "Cancel": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "id"
+   ],
+   "properties": {
+    "t": {
+     "const": "cancel"
+    },
+    "id": {
+     "$ref": "#/definitions/RequestId"
+    }
+   }
+  },
+  "Ping": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "n"
+   ],
+   "properties": {
+    "t": {
+     "const": "ping"
+    },
+    "n": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "ClientFrame": {
+   "oneOf": [
+    {
+     "$ref": "#/definitions/Hello"
+    },
+    {
+     "$ref": "#/definitions/Request"
+    },
+    {
+     "$ref": "#/definitions/PlanRequest"
+    },
+    {
+     "$ref": "#/definitions/HostStatusRequest"
+    },
+    {
+     "$ref": "#/definitions/Cancel"
+    },
+    {
+     "$ref": "#/definitions/Ping"
+    }
+   ]
+  },
+  "WatcherState": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "backend",
+    "trust",
+    "cursor"
+   ],
+   "properties": {
+    "backend": {
+     "type": "string",
+     "enum": [
+      "fsevents",
+      "inotify",
+      "rdcw",
+      "portable",
+      "poll",
+      "none"
+     ]
+    },
+    "trust": {
+     "type": "string",
+     "enum": [
+      "exact",
+      "verify",
+      "none"
+     ],
+     "description": "exact: events plus fence prove freshness; verify: every request re-proves membership by stat; none: no memo answers."
+    },
+    "cursor": {
+     "type": "string",
+     "maxLength": 32
+    }
+   }
+  },
+  "Welcome": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "v",
+    "service",
+    "limits"
+   ],
+   "properties": {
+    "t": {
+     "const": "welcome"
+    },
+    "v": {
+     "const": 1
+    },
+    "features": {
+     "type": "array",
+     "uniqueItems": true,
+     "items": {
+      "type": "string",
+      "enum": [
+       "plan",
+       "host-status"
+      ]
+     },
+     "description": "Frames beyond the base protocol this service answers; a client must not send one the welcome does not list."
+    },
+    "service": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "pid",
+      "instance",
+      "startedAt",
+      "implementation",
+      "generation",
+      "watcher"
+     ],
+     "properties": {
+      "pid": {
+       "type": "integer",
+       "minimum": 1
+      },
+      "instance": {
+       "type": "string",
+       "pattern": "^[0-9a-f]{16}$"
+      },
+      "startedAt": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "implementation": {
+       "type": "string",
+       "pattern": "^[0-9a-f]{64}$"
+      },
+      "generation": {
+       "type": [
+        "integer",
+        "null"
+       ],
+       "minimum": 0
+      },
+      "watcher": {
+       "$ref": "#/definitions/WatcherState"
+      }
+     }
+    },
+    "limits": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "maximumFrameBytes",
+      "maximumInFlight"
+     ],
+     "properties": {
+      "maximumFrameBytes": {
+       "type": "integer",
+       "minimum": 1024
+      },
+      "maximumInFlight": {
+       "type": "integer",
+       "minimum": 1
+      }
+     }
+    }
+   }
+  },
+  "Accepted": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "id",
+    "queue"
+   ],
+   "properties": {
+    "t": {
+     "const": "accepted"
+    },
+    "id": {
+     "$ref": "#/definitions/RequestId"
+    },
+    "queue": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "Progress": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "id",
+    "phase",
+    "done",
+    "total",
+    "message"
+   ],
+   "properties": {
+    "t": {
+     "const": "progress"
+    },
+    "id": {
+     "$ref": "#/definitions/RequestId"
+    },
+    "phase": {
+     "type": "string",
+     "enum": [
+      "queued",
+      "fence",
+      "plan",
+      "digest",
+      "execute",
+      "replay",
+      "resync",
+      "custody",
+      "idle",
+      "start",
+      "load"
+     ]
+    },
+    "done": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "total": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "message": {
+     "$ref": "#/definitions/Text"
+    }
+   }
+  },
+  "Output": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "id",
+    "stream"
+   ],
+   "properties": {
+    "t": {
+     "const": "output"
+    },
+    "id": {
+     "$ref": "#/definitions/RequestId"
+    },
+    "stream": {
+     "type": "string",
+     "enum": [
+      "stdout",
+      "stderr"
+     ]
+    },
+    "text": {
+     "type": "string",
+     "maxLength": 524288
+    },
+    "b64": {
+     "type": "string",
+     "maxLength": 699052,
+     "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+    }
+   },
+   "oneOf": [
+    {
+     "required": [
+      "text"
+     ],
+     "not": {
+      "required": [
+       "b64"
+      ]
+     }
+    },
+    {
+     "required": [
+      "b64"
+     ],
+     "not": {
+      "required": [
+       "text"
+      ]
+     }
+    }
+   ]
+  },
+  "Timing": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "queueMs": {
+     "type": "number",
+     "minimum": 0
+    },
+    "fenceMs": {
+     "type": "number",
+     "minimum": 0
+    },
+    "planMs": {
+     "type": "number",
+     "minimum": 0
+    },
+    "digestMs": {
+     "type": "number",
+     "minimum": 0
+    },
+    "admitMs": {
+     "type": "number",
+     "minimum": 0
+    },
+    "spawnMs": {
+     "type": "number",
+     "minimum": 0
+    },
+    "runMs": {
+     "type": "number",
+     "minimum": 0
+    },
+    "totalMs": {
+     "type": "number",
+     "minimum": 0
+    }
+   }
+  },
+  "Result": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "id",
+    "exit",
+    "served",
+    "timing"
+   ],
+   "properties": {
+    "t": {
+     "const": "result"
+    },
+    "id": {
+     "$ref": "#/definitions/RequestId"
+    },
+    "exit": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 255
+    },
+    "signal": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "served": {
+     "type": "string",
+     "enum": [
+      "memo",
+      "executed",
+      "query",
+      "delegated"
+     ]
+    },
+    "timing": {
+     "$ref": "#/definitions/Timing"
+    },
+    "summary": {
+     "$ref": "#/definitions/Text"
+    }
+   }
+  },
+  "RefusalCode": {
+   "type": "string",
+   "enum": [
+    "capability",
+    "scope",
+    "language",
+    "busy",
+    "stale",
+    "shutdown",
+    "unknown-command",
+    "invalid",
+    "stalled",
+    "deadline",
+    "environment",
+    "internal",
+    "memory"
+   ]
+  },
+  "Refused": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "code",
+    "message",
+    "retry"
+   ],
+   "properties": {
+    "t": {
+     "const": "refused"
+    },
+    "id": {
+     "$ref": "#/definitions/RequestId"
+    },
+    "code": {
+     "$ref": "#/definitions/RefusalCode"
+    },
+    "message": {
+     "description": "Refusals carry both languages: the client may have asked for none the service can render.",
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "en",
+      "de"
+     ],
+     "properties": {
+      "en": {
+       "type": "string"
+      },
+      "de": {
+       "type": "string"
+      }
+     }
+    },
+    "retry": {
+     "type": "string",
+     "enum": [
+      "never",
+      "fallback",
+      "later"
+     ],
+     "description": "fallback: run the command in-process without the service."
+    }
+   }
+  },
+  "Notice": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "kind",
+    "message"
+   ],
+   "properties": {
+    "t": {
+     "const": "notice"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "draining",
+      "stale",
+      "degraded",
+      "recovered"
+     ]
+    },
+    "message": {
+     "$ref": "#/definitions/Text"
+    }
+   }
+  },
+  "Pong": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "t",
+    "n"
+   ],
+   "properties": {
+    "t": {
+     "const": "pong"
+    },
+    "n": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "ServiceFrame": {
+   "oneOf": [
+    {
+     "$ref": "#/definitions/Welcome"
+    },
+    {
+     "$ref": "#/definitions/Accepted"
+    },
+    {
+     "$ref": "#/definitions/Progress"
+    },
+    {
+     "$ref": "#/definitions/Output"
+    },
+    {
+     "$ref": "#/definitions/Result"
+    },
+    {
+     "$ref": "#/definitions/PlanReply"
+    },
+    {
+     "$ref": "#/definitions/ServiceStatus"
+    },
+    {
+     "$ref": "#/definitions/Refused"
+    },
+    {
+     "$ref": "#/definitions/Notice"
+    },
+    {
+     "$ref": "#/definitions/Pong"
+    }
+   ]
+  },
+  "RelativePath": {
+   "type": "string",
+   "maxLength": 4096,
+   "not": {
+    "pattern": "^/|(^|/)\\.\\.(/|$)"
+   }
+  },
+  "ChangeRow": {
+   "type": "array",
+   "minItems": 3,
+   "maxItems": 3,
+   "items": [
+    {
+     "type": "string",
+     "enum": [
+      "a",
+      "m",
+      "r",
+      "n"
+     ]
+    },
+    {
+     "type": "integer",
+     "enum": [
+      0,
+      1
+     ]
+    },
+    {
+     "$ref": "#/definitions/RelativePath"
+    }
+   ],
+   "description": "[kind, isDirectory, path]: added, modified, removed, renamed. Kinds are advisory; every row means re-stat the path (a directory row means its subtree)."
+  },
+  "WatcherReady": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "v",
+    "t",
+    "backend",
+    "root",
+    "cursor",
+    "uuid",
+    "replay",
+    "latencyMs",
+    "native"
+   ],
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "t": {
+     "const": "ready"
+    },
+    "backend": {
+     "type": "string",
+     "enum": [
+      "fsevents",
+      "inotify",
+      "rdcw"
+     ]
+    },
+    "root": {
+     "type": "string"
+    },
+    "cursor": {
+     "type": "string"
+    },
+    "uuid": {
+     "type": "string"
+    },
+    "replay": {
+     "type": "boolean"
+    },
+    "latencyMs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "native": {
+     "const": true
+    },
+    "watches": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "WatcherBatch": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "v",
+    "t",
+    "n",
+    "at",
+    "cursor",
+    "c"
+   ],
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "t": {
+     "const": "batch"
+    },
+    "n": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "at": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "cursor": {
+     "type": "string"
+    },
+    "c": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/ChangeRow"
+     }
+    }
+   }
+  },
+  "WatcherLost": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "v",
+    "t",
+    "at",
+    "reason",
+    "scope"
+   ],
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "t": {
+     "const": "lost"
+    },
+    "at": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "reason": {
+     "type": "string",
+     "enum": [
+      "overflow",
+      "kernel-dropped",
+      "user-dropped",
+      "must-scan",
+      "root-changed",
+      "mount",
+      "watch-limit",
+      "read-error"
+     ]
+    },
+    "scope": {
+     "type": "string",
+     "description": "Relative directory whose events may be missing; empty means everything."
+    }
+   }
+  },
+  "WatcherHistoryDone": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "v",
+    "t",
+    "cursor"
+   ],
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "t": {
+     "const": "history-done"
+    },
+    "cursor": {
+     "type": "string"
+    }
+   }
+  },
+  "WatcherError": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "v",
+    "t",
+    "code",
+    "message"
+   ],
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "t": {
+     "const": "error"
+    },
+    "code": {
+     "type": "string"
+    },
+    "message": {
+     "type": "string"
+    }
+   }
+  },
+  "WatcherBye": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "v",
+    "t"
+   ],
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "t": {
+     "const": "bye"
+    }
+   }
+  },
+  "WatcherVersion": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "v",
+    "t",
+    "name",
+    "protocol",
+    "os"
+   ],
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "t": {
+     "const": "version"
+    },
+    "name": {
+     "const": "semio-repo-watch"
+    },
+    "protocol": {
+     "const": 1
+    },
+    "os": {
+     "type": "string"
+    }
+   }
+  },
+  "WatcherFrame": {
+   "oneOf": [
+    {
+     "$ref": "#/definitions/WatcherReady"
+    },
+    {
+     "$ref": "#/definitions/WatcherBatch"
+    },
+    {
+     "$ref": "#/definitions/WatcherLost"
+    },
+    {
+     "$ref": "#/definitions/WatcherHistoryDone"
+    },
+    {
+     "$ref": "#/definitions/WatcherError"
+    },
+    {
+     "$ref": "#/definitions/WatcherBye"
+    },
+    {
+     "$ref": "#/definitions/WatcherVersion"
+    }
+   ]
+  },
+  "Descriptor": {
+   "description": "Discovery file the service writes atomically into its runtime directory; the native launcher reads it instead of probing blindly.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "v",
+    "pid",
+    "instance",
+    "startedAt",
+    "endpoint",
+    "protocol",
+    "implementation",
+    "root"
+   ],
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "pid": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "instance": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{16}$"
+    },
+    "startedAt": {
+     "type": "integer"
+    },
+    "endpoint": {
+     "type": "string",
+     "minLength": 1
+    },
+    "protocol": {
+     "const": 1
+    },
+    "implementation": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "root": {
+     "type": "string"
+    },
+    "stopping": {
+     "type": "boolean"
+    }
+   }
+  },
+  "Caveat": {
+   "description": "Conjunctive restriction appended to a capability. Anyone holding a token can add caveats (narrow it) without the key; nobody can remove one.",
+   "oneOf": [
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "k",
+      "v"
+     ],
+     "properties": {
+      "k": {
+       "const": "scope"
+      },
+      "v": {
+       "type": "array",
+       "minItems": 1,
+       "uniqueItems": true,
+       "items": {
+        "type": "string",
+        "enum": [
+         "status",
+         "query",
+         "run",
+         "watch",
+         "admin"
+        ]
+       }
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "k",
+      "v"
+     ],
+     "properties": {
+      "k": {
+       "const": "projects"
+      },
+      "v": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+       }
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "k",
+      "v"
+     ],
+     "properties": {
+      "k": {
+       "const": "notAfter"
+      },
+      "v": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "k",
+      "v"
+     ],
+     "properties": {
+      "k": {
+       "const": "cwd"
+      },
+      "v": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 4096
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "k",
+      "v"
+     ],
+     "properties": {
+      "k": {
+       "const": "worktree"
+      },
+      "v": {
+       "type": "string",
+       "pattern": "^[0-9a-f]{12}$"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "k",
+      "v"
+     ],
+     "properties": {
+      "k": {
+       "const": "agent"
+      },
+      "v": {
+       "type": "string",
+       "pattern": "^[A-Za-z0-9._:-]{1,64}$"
+      }
+     }
+    }
+   ]
+  },
+  "CapabilityPayload": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "caveats"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{16}$"
+    },
+    "caveats": {
+     "type": "array",
+     "maxItems": 32,
+     "items": {
+      "$ref": "#/definitions/Caveat"
+     }
+    }
+   }
+  },
+  "HostPolicy": {
+   "description": "Authored bounds of the per-host graph service. Every number is an upper bound or a timer.",
+   "const": {
+    "version": 1,
+    "maximumFrameBytes": 4194304,
+    "maximumClients": 64,
+    "maximumInFlight": 4,
+    "maximumQueued": 256,
+    "maximumWorkspaces": 16,
+    "maximumIndexBytes": 2684354560,
+    "maximumResidentBytes": 2684354560,
+    "residentCheckMilliseconds": 5000,
+    "workspaceIdleMilliseconds": 600000,
+    "idleShutdownMilliseconds": 1800000,
+    "supersededGraceMilliseconds": 60000,
+    "startTimeoutMilliseconds": 60000,
+    "startPollMilliseconds": 50,
+    "lockStaleMilliseconds": 120000,
+    "takeoverMilliseconds": 15000,
+    "maximumInlinePlanTasks": 4096,
+    "planMemoEntries": 256,
+    "memoryPurge": {
+     "environmentVariable": "MIMALLOC_PURGE_DELAY",
+     "delayMilliseconds": 0,
+     "description": {
+      "en": "How long the allocator keeps freed memory before returning it to the operating system; 0 returns it at once (the service worker's resident size after a settle fell from about 1.5 GB to 1.1 GB). Set in the environment of the service, its slice workers and every child they start.",
+      "de": "Wie lange der Allokator freigegebenen Speicher behält, bevor er ihn dem Betriebssystem zurückgibt; 0 gibt ihn sofort zurück (die residente Größe des Dienst-Workers nach einem Settle sank von etwa 1,5 GB auf 1,1 GB). Wird in der Umgebung des Dienstes, seiner Slice-Worker und aller von ihnen gestarteten Kindprozesse gesetzt."
+     }
+    },
+    "memoryPressure": {
+     "fullAvg10Percent": 20,
+     "throttleEventsPerSecond": 50,
+     "freeFloorMegabytes": 256,
+     "sustainedSeconds": 30
+    },
+    "sliceSafetyMarginMegabytes": 256
+   }
+  },
+  "Policy": {
+   "description": "Authored defaults. Every number is an upper bound or a timer; none is a language or a path.",
+   "const": {
+    "version": 1,
+    "maximumFrameBytes": 1048576,
+    "maximumInFlight": 8,
+    "maximumQueued": 64,
+    "maximumClients": 64,
+    "idleShutdownMilliseconds": 900000,
+    "pinReleaseMilliseconds": 20000,
+    "maximumResidentBytes": 536870912,
+    "residentCheckMilliseconds": 5000,
+    "fenceTimeoutMilliseconds": 1500,
+    "racyWindowMilliseconds": 2000,
+    "watcherLatencyMilliseconds": 5,
+    "watcherRestartBackoffMilliseconds": [
+     200,
+     1000,
+     5000
+    ],
+    "watcherRestartsBeforePortable": 3,
+    "memoMaximumEntries": 65536,
+    "digestCacheMaximumFiles": 262144,
+    "outputSignatureMaximumEntries": 2048,
+    "replayMaximumBytes": 1048576,
+    "frontierMaximumEntries": 64,
+    "journalMaximumEvents": 262144,
+    "graphInputNames": [
+     "project.json",
+     "📋️project.json",
+     "Cargo.toml",
+     "package.json",
+     "go.mod",
+     "pyproject.toml",
+     "BUILD.bazel",
+     "MODULE.bazel"
+    ],
+    "bindEnvironment": [
+     "SEMIO_BUILD_TOOL",
+     "SEMIO_BUILD_MODE",
+     "SEMIO_BUILD_WORKERS",
+     "SEMIO_BUILD_GRAPH_POLICY"
+    ],
+    "eligibleFlags": [
+     "--service=",
+     "--lang=",
+     "--output=stream",
+     "--no-color"
+    ],
+    "forwardEnvironment": [
+     "SEMIO_LANGUAGE",
+     "SEMIO_BUILD_TOOL",
+     "SEMIO_BUILD_MODE",
+     "SEMIO_BUILD_WORKERS",
+     "SEMIO_BUILD_PARALLEL",
+     "SEMIO_BUILD_GRAPH_POLICY",
+     "NX_PARALLEL",
+     "CI",
+     "NO_COLOR",
+     "FORCE_COLOR",
+     "TERM",
+     "LANG",
+     "LC_ALL"
+    ],
+    "commands": {
+     "ping": {
+      "class": "status",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "status": {
+      "class": "status",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "dirty": {
+      "class": "query",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "affected": {
+      "class": "query",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "cursor": {
+      "class": "query",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "adopt": {
+      "class": "run",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "adopt-frontier": {
+      "class": "run",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "run": {
+      "class": "run",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "test": {
+      "class": "run",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "run-many": {
+      "class": "run",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "watch": {
+      "class": "watch",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "drop-caches": {
+      "class": "admin",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "issue": {
+      "class": "admin",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "revoke": {
+      "class": "admin",
+      "idempotent": true,
+      "tier": "service"
+     },
+     "stop": {
+      "class": "admin",
+      "idempotent": true,
+      "tier": "service"
+     }
+    },
+    "messages": {
+     "en": {
+      "graph": "Re-reading the project graph after a configuration change.",
+      "host-start": "Starting the repo graph service for this host.",
+      "host-wait": "Waiting for the repo graph service ({elapsed} ms).",
+      "host-load": "Loading the project graph of {workspace}.",
+      "host-plan": "Planning {targets} targets.",
+      "host-unknown-workspace": "The workspace {workspace} does not match its root.",
+      "host-unknown-target": "Unknown target {target}.",
+      "host-stale": "The repo graph service runs other code than this client and retires; a fresh one is started.",
+      "host-unavailable": "The repo graph service did not become ready: {reason}.",
+      "host-started": "The repo graph service is running (pid {pid}, {workspaces} workspaces, {megabytes} MB).",
+      "host-down": "No repo graph service is running on this host.",
+      "host-stopped": "The repo graph service has stopped.",
+      "host-usage": "Usage: repo service host start|status [--output=json]|stop|run",
+      "queued": "Waiting for a free slot in the resident service ({position} ahead).",
+      "fence": "Synchronising with the file watcher.",
+      "plan": "Planning {tasks} tasks.",
+      "digest": "Hashing {files} changed files.",
+      "execute": "Running {task}.",
+      "replay": "Up to date, nothing changed since {since}.",
+      "resync": "Re-proving membership after a gap in the file events ({reason}).",
+      "stale-implementation": "The resident service runs outdated code and will restart; run the command again.",
+      "shutdown": "The resident service is stopping.",
+      "busy": "The resident service is busy ({inFlight} running, {queued} queued).",
+      "capability": "The capability token is missing, forged or expired.",
+      "revoked": "This agent session was revoked.",
+      "issue-agent": "service issue needs --agent <id> (letters, digits and . _ : - only, at most 64): a token belongs to one agent session.",
+      "issue-ttl": "service issue needs --ttl between 1 and {maximum} seconds (default 3600).",
+      "scope": "The capability does not allow the command class {class}.",
+      "language": "None of the requested languages is available.",
+      "unknown-command": "The resident service does not know the command {command}.",
+      "invalid": "The request is invalid: {reason}.",
+      "deadline": "The request exceeded its deadline of {milliseconds} ms.",
+      "environment": "The request runs with {key}={value} but the resident service was started with {actual}; running in this process instead.",
+      "internal": "The resident service met an unexpected failure (reference {reference}); try again, the details are in its log.",
+      "degraded": "File events are unavailable ({reason}); every answer is re-proved by stat.",
+      "recovered": "File events are available again.",
+      "service-started": "The resident service is running (pid {pid}, {files} files watched, backend {backend}).",
+      "service-running": "The resident service is already running (pid {pid}).",
+      "service-down": "No resident service is running for this worktree.",
+      "service-stopped": "The resident service has stopped.",
+      "service-failed": "The resident service did not become ready: {reason}.",
+      "service-usage": "Usage: repo service status|start|stop|restart|issue|revoke|drop-caches|probe",
+      "host-memory": "Service memory: {rss} MB resident (peak {hwm} MB), heap {heap} MB, {objects} objects, {caches} bounded caches.",
+      "host-slice": "Reading the project graph slice ({seconds} s).",
+      "host-slice-detail": "Reading the project graph slice ({seconds} s): {phase} {done} of {total}.",
+      "host-slice-owners": "Reading the project graph slice ({seconds} s): {phase} {done} of {total}; running (name, kind, seconds, rows): {owners}.",
+      "host-slice-owners-learning": "Reading the project graph slice ({seconds} s): {phase} {done} of {total}; running (name, kind, seconds, rows): {owners}; no memory peak learned for {kind} projects yet ({used} MB assumed, {budget} MB headroom), one at a time.",
+      "host-slice-owners-waiting": "Reading the project graph slice ({seconds} s): {phase} {done} of {total}; running (name, kind, seconds, rows): {owners}; waiting for memory headroom ({used} of {budget} MB reserved).",
+      "host-slice-owners-serial": "Reading the project graph slice ({seconds} s): {phase} {done} of {total}; running (name, kind, seconds, rows): {owners}; headroom of {budget} MB is below one project ({used} MB), one at a time.",
+      "host-slice-owners-resumed": "Reading the project graph slice ({seconds} s): {phase} {done} of {total}; running (name, kind, seconds, rows): {owners}; headroom of {budget} MB again ({used} MB taken), resuming.",
+      "host-memory-pressure-psi": "The plan was cancelled: the service has been stalled by memory pressure for {seconds} s (processes waited {value}% of the time for memory, limit {limit}%); try again later or ask for a smaller selection.",
+      "host-memory-pressure-events": "The plan was cancelled: the service's memory limit has throttled it for {seconds} s ({value} events per second, limit {limit}); try again later or ask for a smaller selection.",
+      "host-memory-pressure-free": "The plan was cancelled: the host has had only {value} MB of free memory (floor {limit} MB) for {seconds} s; try again later or ask for a smaller selection.",
+      "host-memory-budget": "The plan cannot continue: the service holds {current} MB of its {limit} MB memory limit (safety margin {margin} MB), so it was cancelled to keep the service up; try again later or ask for a smaller selection.",
+      "host-stalled": "The plan was cancelled: the slice load made no progress for {minutes} minutes; the service keeps running, try again later.",
+      "host-plans": "Plans: {total} asked, {hits} from memory, {computed} computed (last {seconds} s, {budget} over budget); owners re-inferred {reinferred}, cut off {cutoff}; capture {files} files, {probes} probes."
+     },
+     "de": {
+      "graph": "Lese den Projektgraphen nach einer Konfigurationsänderung neu.",
+      "host-start": "Starte den Repo-Graphdienst dieses Rechners.",
+      "host-wait": "Warte auf den Repo-Graphdienst ({elapsed} ms).",
+      "host-load": "Lese den Projektgraphen von {workspace}.",
+      "host-plan": "Plane {targets} Ziele.",
+      "host-unknown-workspace": "Der Arbeitsbereich {workspace} passt nicht zu seinem Wurzelverzeichnis.",
+      "host-unknown-target": "Unbekanntes Ziel {target}.",
+      "host-stale": "Der Repo-Graphdienst führt anderen Code als dieser Client aus und tritt ab; ein frischer wird gestartet.",
+      "host-unavailable": "Der Repo-Graphdienst ist nicht bereit geworden: {reason}.",
+      "host-started": "Der Repo-Graphdienst läuft (pid {pid}, {workspaces} Arbeitsbereiche, {megabytes} MB).",
+      "host-down": "Auf diesem Rechner läuft kein Repo-Graphdienst.",
+      "host-stopped": "Der Repo-Graphdienst wurde beendet.",
+      "host-usage": "Verwendung: repo service host start|status [--output=json]|stop|run",
+      "queued": "Warte auf einen freien Platz im residenten Dienst ({position} davor).",
+      "fence": "Synchronisiere mit dem Dateibeobachter.",
+      "plan": "Plane {tasks} Tasks.",
+      "digest": "Berechne Prüfsummen für {files} geänderte Dateien.",
+      "execute": "Führe {task} aus.",
+      "replay": "Aktuell, seit {since} hat sich nichts geändert.",
+      "resync": "Weise die Mitgliedschaft nach einer Lücke in den Dateiereignissen neu nach ({reason}).",
+      "stale-implementation": "Der residente Dienst führt veralteten Code aus und startet neu; führe den Befehl erneut aus.",
+      "shutdown": "Der residente Dienst wird beendet.",
+      "busy": "Der residente Dienst ist ausgelastet ({inFlight} laufen, {queued} wartend).",
+      "capability": "Die Berechtigung fehlt, ist gefälscht oder abgelaufen.",
+      "revoked": "Diese Agenten-Sitzung wurde widerrufen.",
+      "issue-agent": "service issue braucht --agent <id> (nur Buchstaben, Ziffern und . _ : -, höchstens 64): eine Berechtigung gehört zu genau einer Agenten-Sitzung.",
+      "issue-ttl": "service issue braucht --ttl zwischen 1 und {maximum} Sekunden (Standard 3600).",
+      "scope": "Die Berechtigung erlaubt die Befehlsklasse {class} nicht.",
+      "language": "Keine der angeforderten Sprachen ist verfügbar.",
+      "unknown-command": "Der residente Dienst kennt den Befehl {command} nicht.",
+      "invalid": "Die Anfrage ist ungültig: {reason}.",
+      "deadline": "Die Anfrage hat ihre Frist von {milliseconds} ms überschritten.",
+      "environment": "Die Anfrage läuft mit {key}={value}, der residente Dienst wurde aber mit {actual} gestartet; der Befehl läuft stattdessen in diesem Prozess.",
+      "internal": "Der residente Dienst ist auf einen unerwarteten Fehler gestoßen (Referenz {reference}); versuche es erneut, die Einzelheiten stehen in seinem Protokoll.",
+      "degraded": "Dateiereignisse sind nicht verfügbar ({reason}); jede Antwort wird per stat neu belegt.",
+      "recovered": "Dateiereignisse sind wieder verfügbar.",
+      "service-started": "Der residente Dienst läuft (pid {pid}, {files} Dateien beobachtet, Backend {backend}).",
+      "service-running": "Der residente Dienst läuft bereits (pid {pid}).",
+      "service-down": "Für diesen Arbeitsbaum läuft kein residenter Dienst.",
+      "service-stopped": "Der residente Dienst wurde beendet.",
+      "service-failed": "Der residente Dienst ist nicht bereit geworden: {reason}.",
+      "service-usage": "Verwendung: repo service status|start|stop|restart|issue|revoke|drop-caches|probe",
+      "host-memory": "Speicher des Dienstes: {rss} MB resident (Spitze {hwm} MB), Heap {heap} MB, {objects} Objekte, {caches} begrenzte Caches.",
+      "host-slice": "Lese den Projektgraph-Ausschnitt ({seconds} s).",
+      "host-slice-detail": "Lese den Projektgraph-Ausschnitt ({seconds} s): {phase} {done} von {total}.",
+      "host-slice-owners": "Lese den Projektgraph-Ausschnitt ({seconds} s): {phase} {done} von {total}; laufen (Name, Art, Sekunden, Zeilen): {owners}.",
+      "host-slice-owners-learning": "Lese den Projektgraph-Ausschnitt ({seconds} s): {phase} {done} von {total}; laufen (Name, Art, Sekunden, Zeilen): {owners}; für {kind}-Projekte ist noch kein Speicherbedarf gelernt ({used} MB angenommen, {budget} MB Reserve), einzeln.",
+      "host-slice-owners-waiting": "Lese den Projektgraph-Ausschnitt ({seconds} s): {phase} {done} von {total}; laufen (Name, Art, Sekunden, Zeilen): {owners}; wartet auf Speicherreserve ({used} von {budget} MB reserviert).",
+      "host-slice-owners-serial": "Lese den Projektgraph-Ausschnitt ({seconds} s): {phase} {done} von {total}; laufen (Name, Art, Sekunden, Zeilen): {owners}; Reserve von {budget} MB unter einem Projekt ({used} MB), einzeln.",
+      "host-slice-owners-resumed": "Lese den Projektgraph-Ausschnitt ({seconds} s): {phase} {done} von {total}; laufen (Name, Art, Sekunden, Zeilen): {owners}; Reserve von {budget} MB wieder da ({used} MB belegt), es geht weiter.",
+      "host-memory-pressure-psi": "Der Plan wurde abgebrochen: der Dienst steht seit {seconds} s unter Speicherdruck (Prozesse warteten {value}% der Zeit auf Speicher, Grenze {limit}%); versuche es später erneut oder frage eine kleinere Auswahl an.",
+      "host-memory-pressure-events": "Der Plan wurde abgebrochen: das Speicherlimit des Dienstes bremst ihn seit {seconds} s aus ({value} Ereignisse pro Sekunde, Grenze {limit}); versuche es später erneut oder frage eine kleinere Auswahl an.",
+      "host-memory-pressure-free": "Der Plan wurde abgebrochen: dem Rechner standen seit {seconds} s nur {value} MB freier Speicher zur Verfügung (Untergrenze {limit} MB); versuche es später erneut oder frage eine kleinere Auswahl an.",
+      "host-memory-budget": "Der Plan kann nicht fortgesetzt werden: der Dienst belegt {current} MB seines Speicherlimits von {limit} MB (Sicherheitsabstand {margin} MB); er wurde abgebrochen, damit der Dienst am Leben bleibt; später erneut versuchen oder eine kleinere Auswahl anfragen.",
+      "host-stalled": "Der Plan wurde abgebrochen: das Laden des Ausschnitts machte {minutes} Minuten lang keinen Fortschritt; der Dienst läuft weiter, versuche es später erneut.",
+      "host-plans": "Pläne: {total} angefragt, {hits} aus dem Speicher, {computed} berechnet (zuletzt {seconds} s, {budget} über dem Budget); Eigentümer neu abgeleitet {reinferred}, abgeschnitten {cutoff}; Erfassung {files} Dateien, {probes} Proben."
+     }
+    }
+   }
+  },
+  "CacheStats": {
+   "description": "CacheStatsV1 of one bounded cache (see 🧊️bounded).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "entries",
+    "bytes",
+    "maxEntries",
+    "maxBytes",
+    "hits",
+    "misses",
+    "evictions",
+    "rejected",
+    "loads"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "entries": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "bytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "maxEntries": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "maxBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "hits": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "misses": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "evictions": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "rejected": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "loads": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "MemoryStatus": {
+   "description": "MemoryStatusV1: what the service holds, so a status answers where its memory goes without attaching a debugger: resident and peak pages of the process, the collector's heap and external bytes, the most frequent object types and every bounded cache.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "rssMb",
+    "heapMb",
+    "extraMb",
+    "objectCount",
+    "objectTypes",
+    "caches",
+    "workers"
+   ],
+   "properties": {
+    "rssMb": {
+     "type": "number",
+     "minimum": 0
+    },
+    "hwmMb": {
+     "type": "number",
+     "minimum": 0
+    },
+    "heapMb": {
+     "type": "number",
+     "minimum": 0
+    },
+    "extraMb": {
+     "type": "number",
+     "minimum": 0
+    },
+    "objectCount": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "objectTypes": {
+     "type": "array",
+     "maxItems": 16,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "type",
+       "count"
+      ],
+      "properties": {
+       "type": {
+        "type": "string"
+       },
+       "count": {
+        "type": "integer",
+        "minimum": 0
+       }
+      }
+     }
+    },
+    "caches": {
+     "type": "array",
+     "maxItems": 64,
+     "items": {
+      "$ref": "#/definitions/CacheStats"
+     }
+    },
+    "workers": {
+     "description": "The slice workers' own heaps (each worker thread has its own collector, invisible to the main heap figures): the last heartbeat sample of every running worker and its age. Empty while no slice loads.",
+     "type": "array",
+     "maxItems": 2,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "index",
+       "heapMb",
+       "extraMb",
+       "objectCount",
+       "objectTypes",
+       "ageMilliseconds",
+       "running"
+      ],
+      "properties": {
+       "index": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "heapMb": {
+        "type": "number",
+        "minimum": 0
+       },
+       "extraMb": {
+        "type": "number",
+        "minimum": 0
+       },
+       "objectCount": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "objectTypes": {
+        "type": "array",
+        "maxItems": 8,
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "type",
+          "count"
+         ],
+         "properties": {
+          "type": {
+           "type": "string"
+          },
+          "count": {
+           "type": "integer",
+           "minimum": 0
+          }
+         }
+        }
+       },
+       "ageMilliseconds": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "running": {
+        "type": "boolean",
+        "description": "False for the last sample of a load that has ended."
+       }
+      }
+     }
+    }
+   }
+  },
+  "PlanStatus": {
+   "description": "PlanStatusV1: what the plans of this service did: how many were asked and answered from the memo, how many were computed, the last computation and what its capture held (files staged, probes cached, files served live).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "total",
+    "hits",
+    "computed",
+    "lastMilliseconds",
+    "totalMilliseconds",
+    "captureFiles",
+    "captureProbes",
+    "unstaged",
+    "budgetRefusals"
+   ],
+   "properties": {
+    "total": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "hits": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "computed": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "lastMilliseconds": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "totalMilliseconds": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "captureFiles": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "captureProbes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "unstaged": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "budgetRefusals": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "load": {
+     "description": "LoadStatsV1 of the last computed slice load, as the generation loader reports them: stale facts, closures verified, owners re-inferred, owners cut off by an unchanged node value, and the milliseconds of the verification.",
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "staleFacts": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "closuresVerified": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "ownersReinferred": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "ownersCutOff": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "verifiedMilliseconds": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    }
+   }
   }
+ }
 }

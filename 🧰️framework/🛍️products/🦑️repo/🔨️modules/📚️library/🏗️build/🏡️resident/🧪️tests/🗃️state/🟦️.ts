@@ -1,6 +1,7 @@
 import {afterAll,describe,expect,test} from "bun:test";
 import {chmodSync,existsSync,mkdirSync,readdirSync,renameSync,rmSync,writeFileSync,appendFileSync} from "node:fs";
 import {POLICY_V1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
+import {boundedCacheStatsV1} from "../../../🧊️bounded/🟨️.mjs";
 import {createFilterV1,createOwnerIndexV1,createWorkspaceStateV1,outputSignatureV1} from "../../🗃️state/🟨️.mjs";
 import {cleanup,pick,pythonDigest,rng,sha,snapshot,tempRoot,writeTree} from "../🟦️.ts";
 
@@ -133,6 +134,7 @@ describe("state against naive oracles under random edits",()=>{
 
  test("verify mode proves by stat: a silent content change is found, an unchanged owner is not rehashed",async()=>{
   const ctx=setup("state-verify-",{racyWindowMilliseconds:0});roots.push(ctx.root);const{root,state}=ctx;
+  await Bun.sleep(10);
   state.setTrust("verify");
   expect(state.since(state.cursor())).toMatchObject({complete:false,reason:"trust"});
   const key=await state.taskKey("o1:build"),hashed=state.stats.hashCalls;
@@ -141,6 +143,19 @@ describe("state against naive oracles under random edits",()=>{
   await Bun.sleep(20);writeFileSync(root+"/pkgs/o0/src/a.ts","silent edit longer");
   expect(await state.taskKey("o1:build")).not.toBe(key);
  });
+
+ test("the digest cache is bounded and an evicted owner still digests like the oracle after an edit",async()=>{
+  const ctx=setup("state-bound-",{digestCacheMaximumFiles:2});roots.push(ctx.root);const{root,state}=ctx,all=graph.owners.map(o=>o.root);
+  for(const owner of graph.owners)expect(await state.refreshOwner(owner.name)).toBe(naiveDigest(root,ctx.snap().files,owner,all).digest);
+  const stats=boundedCacheStatsV1().find(row=>row.name==="resident:digest-owners")!;
+  expect(stats.maxBytes).toBe(2);expect(stats.bytes).toBeLessThanOrEqual(2);expect(stats.evictions+stats.rejected).toBeGreaterThan(0);
+  const hashed=state.stats.hashCalls;
+  await Bun.sleep(20);writeFileSync(root+"/pkgs/o0/src/a.ts","edited after eviction");
+  await state.apply([["m",0,"pkgs/o0/src/a.ts"]],Date.now());
+  const owner=graph.owners[0]!;
+  expect(await state.refreshOwner("o0")).toBe(naiveDigest(root,ctx.snap().files,owner,all).digest);
+  expect(state.stats.hashCalls).toBeGreaterThan(hashed);
+ },60000);
 
  test("exact mode never touches the disk for a clean task",async()=>{
   const ctx=setup("state-clean-");roots.push(ctx.root);const{state}=ctx;
@@ -189,11 +204,4 @@ describe("state against naive oracles under random edits",()=>{
   expect(await outputSignatureV1(root,["out"],2)).toBeUndefined();
   rmSync(root+"/out/b");expect(await outputSignatureV1(root,["out/b"],100)).toBeDefined();
  });
-});
-
-test("resident Source eligibility agrees with the schema-derived capsule corpus and SQLite",async()=>{
- const {SOURCE_OPACITY_PROTOCOL_V1}=await import("../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts"),{default:corpus}=await import("../../../../⚡️caching/🕸️graph/🏁️startup/🚦️service/👁️workspace/🧪️tests/📥️opaque.json"),{default:schema}=await import("../../../../⚡️caching/🕸️graph/🏁️startup/🚦️service/👁️workspace/🧪️tests/🔣️opaque.json"),{default:Ajv}=await import("ajv"),{Database}=await import("bun:sqlite"),database=new Database(":memory:");
- try{expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);const filter=createFilterV1({opaqueBasenames:SOURCE_OPACITY_PROTOCOL_V1});
-  for(const row of corpus){const sql=database.query("SELECT EXISTS(SELECT 1 FROM json_each(?1) part,json_each(?2) prefix WHERE substr(part.value,1,length(prefix.value))=prefix.value AND length(part.value)=length(prefix.value)+?3 AND substr(part.value,length(prefix.value)+1) NOT GLOB '*[^0-9a-f]*') excluded").get(JSON.stringify(row.path.split(String.fromCharCode(92)).join("/").split("/")),JSON.stringify(SOURCE_OPACITY_PROTOCOL_V1.prefixes),SOURCE_OPACITY_PROTOCOL_V1.digestHex) as {excluded:number};expect(Boolean(sql.excluded)).toBe(row.excluded);expect(filter.excluded(row.path),row.path).toBe(row.excluded);}
- }finally{database.close();}
 });

@@ -1,0 +1,6 @@
+{
+  "mutation": "changezonethermalmass",
+  "zoneId": "zone-living",
+  "newThermalMassClass": "Medium",
+  "newCWirkWhM2k": 90.0
+}

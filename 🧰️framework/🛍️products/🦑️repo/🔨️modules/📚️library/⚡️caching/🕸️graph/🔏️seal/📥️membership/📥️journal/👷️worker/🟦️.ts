@@ -61,7 +61,7 @@ export async function runFilesystemJournalWorkerV1(value: unknown): Promise<void
   for (let path = options.directory; ; path = dirname(path)) { const status = await lstat(path); if (!status.isDirectory() || status.isSymbolicLink()) throw new Error("Original journal worker directory ancestry required"); if (dirname(path) === path) break; }
   let native: any, refusal: unknown;
   const binary=join(repositoryCachePartitionRootV1(options.repositoryRoot,"tools"),"repo-watch",workspaceWatchPin.sources[0]!.sha256.slice(0,16),process.platform==="win32"?"semio-repo-watch.exe":"semio-repo-watch");
-  watcher = await createRepositoryWorkspaceWatcherV1(options.root,policy,join(options.root,".nx",options.generation+"-j"+threadId,"f"),binary,control);
+  watcher = await createRepositoryWorkspaceWatcherV1(options.root,policy,binary,control);
   const receive = (error: unknown, events: readonly FilesystemJournalChangeV1[]) => {
     if (error) refusal = error;
     const invalid = events.some(event => !event || typeof event.path !== "string" || !["create", "update", "delete"].includes(event.type));

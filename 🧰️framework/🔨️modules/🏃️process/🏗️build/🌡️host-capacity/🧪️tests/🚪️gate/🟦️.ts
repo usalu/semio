@@ -15,7 +15,7 @@ const host=(over:Partial<HostSampleV1>={}):HostSampleV1=>({version:1,atMs:Date.n
 const sampler=(current:()=>Partial<HostSampleV1>)=>async()=>({host:host({...current()}),swappedOutMegabytes:0});
 const control=(signal=new AbortController().signal,remaining:()=>number|null=()=>null)=>{const published:unknown[]=[];return {published,value:{signal,remainingMilliseconds:remaining,publish:async(row:unknown)=>{published.push(row);},yieldContinuation:async()=>undefined}};};
 const request=(over:object={})=>({id:newHostCapacityIdV1(),operation:"run",priority:"batch" as const,minimumJobs:1,preferredJobs:1,fixedMegabytes:8000,perJobMegabytes:0,cpuPerJob:1,...over});
-const options=(directory:string,over:Partial<HostCapacityOptionsV1>={}):HostCapacityOptionsV1=>({directory,policy,request:request(),control:control().value,environment:{},write:()=>undefined,sample:sampler(()=>({})),...over});
+const options=(directory:string,over:Partial<HostCapacityOptionsV1>={}):HostCapacityOptionsV1=>({directory,policy,request:request(),control:control().value,environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample:sampler(()=>({})),...over});
 
 test("Requests that do not fit together run one after the other in arrival order and the machine never holds more than its budget",async()=>{
  const directory=fresh(),order:string[]=[];let running=0,peak=0;
@@ -118,7 +118,7 @@ test("A child inside a grant inherits it without queueing even when the machine 
  const directory=fresh();let seen:unknown;
  await withHostCapacityV1(options(directory,{request:request({fixedMegabytes:13000})}),async outer=>{
   expect(outer.environment.SEMIO_HOST_CAPACITY_GRANT).toBe(outer.id);
-  const inner=await withHostCapacityV1(options(directory,{environment:outer.environment,request:request({fixedMegabytes:13000})}),async handle=>handle);
+  const inner=await withHostCapacityV1(options(directory,{environment:{LANG:"en_US.UTF-8",...outer.environment},request:request({fixedMegabytes:13000})}),async handle=>handle);
   seen=inner;expect(inner).toMatchObject({inherited:true,id:outer.id,jobs:outer.jobs});
  });
  expect(seen).toBeDefined();
@@ -142,7 +142,7 @@ test("A process started outside the owner's tree (a build server) is attached to
 
 test("The governor can be switched off explicitly or by policy and says so",async()=>{
  const directory=fresh(),lines:string[]=[];
- await withHostCapacityV1(options(directory,{environment:{SEMIO_HOST_CAPACITY:"off"},write:line=>lines.push(line),sample:async()=>{throw Error("must not sample");}}),async handle=>expect(handle).toMatchObject({bypassed:true,reservedMegabytes:0}));
+ await withHostCapacityV1(options(directory,{environment:{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY:"off"},write:line=>lines.push(line),sample:async()=>{throw Error("must not sample");}}),async handle=>expect(handle).toMatchObject({bypassed:true,reservedMegabytes:0}));
  expect(lines[0]).toContain("SEMIO_HOST_CAPACITY=off");
  await withHostCapacityV1(options(directory,{policy:{...policy,enabled:false}}),async handle=>expect(handle.bypassed).toBe(true));
 });
@@ -232,7 +232,7 @@ import {withHostCapacityV1} from ${JSON.stringify(moduleUrl)};
 const [directory,logFile,hostFile,policyText,mode]=process.argv.slice(2);
 const policy=JSON.parse(policyText);
 const id=process.env.CHILD_ID;
-await withHostCapacityV1({directory,policy,request:{id,operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:8000,perJobMegabytes:0,cpuPerJob:1},control:{signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined},environment:{},write:()=>undefined,sample:async()=>({host:{...JSON.parse(readFileSync(hostFile,"utf8")),atMs:Date.now()},swappedOutMegabytes:0})},async()=>{
+await withHostCapacityV1({directory,policy,request:{id,operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:8000,perJobMegabytes:0,cpuPerJob:1},control:{signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined},environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample:async()=>({host:{...JSON.parse(readFileSync(hostFile,"utf8")),atMs:Date.now()},swappedOutMegabytes:0})},async()=>{
  appendFileSync(logFile,JSON.stringify({id,event:"start",at:Date.now()})+"\\n");
  await sleep(mode==="hold"?600000:250);
  appendFileSync(logFile,JSON.stringify({id,event:"end",at:Date.now()})+"\\n");
@@ -306,7 +306,7 @@ function lendingChild(directory:string,mode:"waiting"|"working",authored:object)
 const host={version:1,atMs:Date.now(),platform:"darwin",cores:10,totalMegabytes:32768,availableMegabytes:20000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:8000,openFilesMaximum:245760,attachedImages:10};
 const control={signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined};
 const request={id:"${mode}-aaaaaaaa",operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:1000,perJobMegabytes:0,cpuPerJob:1};
-await withHostCapacityV1({directory:${JSON.stringify(directory)},policy:${JSON.stringify(authored)},request,control,environment:{},write:()=>undefined,sample:async()=>({host:{...host,atMs:Date.now()},swappedOutMegabytes:0}),observe:async()=>100},async()=>{const end=Date.now()+4000;while(Date.now()<end)${mode==="waiting"?"await waitingDelayV1(50);":"await new Promise(done=>setTimeout(done,50));"}});`);
+await withHostCapacityV1({directory:${JSON.stringify(directory)},policy:${JSON.stringify(authored)},request,control,environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample:async()=>({host:{...host,atMs:Date.now()},swappedOutMegabytes:0}),observe:async()=>100},async()=>{const end=Date.now()+4000;while(Date.now()<end)${mode==="waiting"?"await waitingDelayV1(50);":"await new Promise(done=>setTimeout(done,50));"}});`);
  return script;
 }
 

@@ -21,6 +21,7 @@ pub const DESIGN_LAMBDA_ROWS: &[(&str, f64)] = &[
     ("gypsum", 0.70),
     ("mineral_render", 0.70),
     ("screed", 1.4),
+    ("pe_foil", 0.50),
     ("timber", 0.13),
     ("wood", 0.13),
     ("softwood", 0.13),

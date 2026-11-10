@@ -1,6 +1,6 @@
 import {afterAll,expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {existsSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {createRequire} from "node:module";
 import {tmpdir} from "node:os";
 import {dirname,join,resolve} from "node:path";
@@ -12,21 +12,23 @@ afterAll(()=>rmSync(scratch,{recursive:true,force:true}));
 const trampoline=["/🏛️sealed/🟦️.ts","/🏛️sealed/🚦️trampoline/🟦️.ts","/🏛️sealed/🧭️mode/🟦️.ts","/🚪️door/🏃️main/🟦️.ts"],entry=resolve(import.meta.dir,"../../📜️script.ts"),doorCore=resolve(import.meta.dir,"../../🟦️.ts"),groups=fixture.groups;
 const plugin=join(scratch,"loaded-modules.ts"),driver=join(scratch,"import-driver.ts"),bare=join(scratch,"bunfig.toml");
 writeFileSync(bare,"");
-writeFileSync(plugin,'import {readFileSync,writeFileSync} from "node:fs";const seen:string[]=[];Bun.plugin({name:"loaded-modules",setup(build){build.onLoad({filter:/\\.(ts|mjs)$/},args=>{seen.push(args.path);return {contents:readFileSync(args.path,"utf8"),loader:args.path.endsWith(".ts")?"ts":"js"};});}});process.on("exit",()=>{writeFileSync(process.env.LOADED_MODULES_OUT!,JSON.stringify(seen));});\n');
+writeFileSync(plugin,'import {readFileSync,writeFileSync} from "node:fs";const seen:string[]=[];Bun.plugin({name:"loaded-modules",setup(build){build.onLoad({filter:/\\.(ts|mjs)$/},args=>{seen.push(args.path);writeFileSync(process.env.LOADED_MODULES_OUT!,JSON.stringify(seen));return {contents:readFileSync(args.path,"utf8"),loader:args.path.endsWith(".ts")?"ts":"js"};});}});process.on("exit",()=>{writeFileSync(process.env.LOADED_MODULES_OUT!,JSON.stringify(seen));});\n');
 writeFileSync(driver,'await import(process.argv[2]!);\n');
 
 /** 🚦️ Names the heavy groups a loaded module list reaches, by path substring. */
 const reached=(loaded:readonly string[],selected:readonly string[]):Record<string,string[]>=>Object.fromEntries(groups.filter(group=>selected.includes(group.id)).map(group=>[group.id,loaded.filter(path=>group.match.some(part=>path.includes(part))&&!((group as {except?:string[]}).except??[]).some(part=>path.includes(part)))]).filter(([,paths])=>(paths as string[]).length>0));
 
-const load=(row:{id:string;kind:string;args?:readonly string[];module?:string}):string[]=>{
- const out=join(scratch,`${row.id}.json`),arguments_=row.kind==="door"?[entry,...row.args!]:[driver,resolve(import.meta.dir,row.module!)],result=spawnSync(process.execPath,["--config="+bare,"--preload",plugin,...arguments_],{encoding:"utf8",timeout:60_000,env:{...process.env,SEMIO_LANGUAGE:"en",SEMIO_REPO_SEAL:"live",LOADED_MODULES_OUT:out}});
- if(result.status!==0&&result.status!==2)throw Error(`${row.id}: exit ${result.status}: ${result.stderr.slice(0,400)}`);
+const load=async(row:{id:string;kind:string;args?:readonly string[];module?:string;emptyWorkspace?:boolean;settleMs?:number}):Promise<string[]>=>{
+ const workspace=row.emptyWorkspace?join(scratch,row.id+"-workspace"):undefined;if(workspace){mkdirSync(workspace,{recursive:true});writeFileSync(join(workspace,"📋️project.json"),"{}");writeFileSync(join(workspace,"package.json"),JSON.stringify({name:"empty",workspaces:[]}));}
+ const out=join(scratch,`${row.id}.json`),arguments_=row.kind==="door"?[entry,...row.args!]:[driver,resolve(import.meta.dir,row.module!)],child=Bun.spawn([process.execPath,"--config="+bare,"--preload",plugin,...arguments_],{...(workspace?{cwd:workspace}:{}),stdout:"ignore",stderr:"pipe",env:{...process.env,SEMIO_LANGUAGE:"en",SEMIO_REPO_SEAL:"live",LOADED_MODULES_OUT:out}}),status=row.settleMs===undefined?await child.exited:await Promise.race([child.exited,Bun.sleep(row.settleMs).then(()=>{child.kill();return 0;})]);
+ if(status!==0&&status!==2)throw Error(`${row.id}: exit ${status}: ${(await new Response(child.stderr).text()).slice(0,400)}`);
  return JSON.parse(readFileSync(out,"utf8")) as string[];
 };
 
-test("a light command loads no heavy module group and stays within its module and byte budget; a negative control proves the trace sees the groups",()=>{
- for(const row of fixture.rows){
-  const loaded=load(row),forbidden=(row as {forbid?:string[]}).forbid??[],expected=(row as {expectViolations?:string[]}).expectViolations,found=reached(loaded,forbidden);
+test("a light command loads no heavy module group and stays within its module and byte budget; a negative control proves the trace sees the groups",async()=>{
+ const traces=await Promise.all(fixture.rows.map(row=>load(row)));
+ for(const[at,row]of fixture.rows.entries()){
+  const loaded=traces[at]!,forbidden=(row as {forbid?:string[]}).forbid??[],expected=(row as {expectViolations?:string[]}).expectViolations,found=reached(loaded,forbidden);
   if(expected){expect(Object.keys(found).sort(),row.id).toEqual([...expected].sort());continue;}
   expect(found,`${row.id} reached heavy groups`).toEqual({});
   const bytes=loaded.reduce((sum,path)=>sum+statSync(path).size,0);
@@ -43,8 +45,8 @@ test("the group matcher flags exactly the modules whose path names a group",()=>
 });
 
 test("the traced front door equals the static closure an independent bundler computes",async()=>{
- const traced=load({id:"closure-help",kind:"door",args:["repo","--help"]}).filter(path=>path!==entry&&!path.endsWith("/⚙️runtime/🏁️main/🟦️.ts")&&!path.endsWith("/📤️output/🚪️entry/🟦️.ts")&&!trampoline.some(part=>path.includes(part))).sort();
- const result=await build({entryPoints:[doorCore],bundle:true,format:"esm",platform:"node",write:false,outdir:join(scratch,"bundle"),metafile:true,external:["node:*","bun:*"],logLevel:"silent",plugins:[{name:"light-entries",setup(builder){builder.onResolve({filter:/.*/},args=>args.path.includes("⌨️command")?{path:args.path,external:true}:undefined);}}]});
+ const traced=(await load({id:"closure-help",kind:"door",args:["repo","--help"]})).filter(path=>path!==entry&&!path.endsWith("/⚙️runtime/🏁️main/🟦️.ts")&&!path.endsWith("/📤️output/🚪️entry/🟦️.ts")&&!trampoline.some(part=>path.includes(part))).sort();
+ const result=await build({entryPoints:[doorCore],bundle:true,format:"esm",platform:"node",write:false,outdir:join(scratch,"bundle"),metafile:true,external:["node:*","bun:*"],logLevel:"silent",plugins:[{name:"light-entries",setup(builder){builder.onResolve({filter:/.*/},args=>args.path.includes("⌨️command")||args.kind==="dynamic-import"?{path:args.path,external:true}:undefined);}}]});
  const inputs=Object.keys(result.metafile.inputs).filter(path=>!path.endsWith(".json")).map(path=>resolve(process.cwd(),path)).sort();
  expect(traced).toEqual([...new Set(inputs)].sort());
 });

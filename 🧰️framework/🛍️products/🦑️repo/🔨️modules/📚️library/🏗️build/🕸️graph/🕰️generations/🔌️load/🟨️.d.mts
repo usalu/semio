@@ -43,7 +43,10 @@ export interface GenerationHostV1{
  /** 📌️ Told once a load served a graph: the sealed generation, its manifest digest, the owners of that manifest in code point order and the owners (every owner when undefined) the load served from it. */
  sealed?(record:{generation:number;manifest:string;owners:readonly string[];covered:ReadonlySet<string>|undefined;atMs:number}):void;
 }
-export function loadGenerationGraphV1(host:GenerationHostV1,options?:{policy?:GenerationGraphPolicyV1;closure?:readonly string[];selection?:unknown;slice?:{selection:unknown;roots:readonly string[];providers?:readonly {consumerRoots:readonly string[];sourcePath:string}[]};lean?:boolean;externalInputs?:readonly string[];pin?:import("../🧷️pin/🟨️.mjs").GenerationPinV1}):Promise<unknown>;
+export type GenerationLoadStatsV1=Readonly<{staleFacts:number;closuresVerified:number;ownersReinferred:number;ownersCutOff:number;doubtfulFacts:number;verifiedMilliseconds:number}>;
+/** 📊️ The stats of one load. */
+export function generationLoadStatsV1(result:unknown,verifiedMilliseconds:number):GenerationLoadStatsV1;
+export function loadGenerationGraphV1(host:GenerationHostV1,options?:{policy?:GenerationGraphPolicyV1;closure?:readonly string[];selection?:unknown;slice?:{selection:unknown;roots:readonly string[];providers?:readonly {consumerRoots:readonly string[];sourcePath:string}[]};lean?:boolean;externalInputs?:readonly string[];pin?:import("../🧷️pin/🟨️.mjs").GenerationPinV1}):Promise<{graph:unknown;stats:GenerationLoadStatsV1}>;
 /** 📦️ Expands compact inputs within the capacity of one capture. */
 export function expandInChunksV1(projects:Record<string,unknown>,expand:(chunk:Record<string,unknown>)=>Promise<Record<string,unknown>>,limits:{maximumProjects:number;maximumBytes:number}):Promise<Record<string,unknown>>;
 /** 🌊️ Expands compact inputs chunk by chunk while the nodes of the assembly arrive. */

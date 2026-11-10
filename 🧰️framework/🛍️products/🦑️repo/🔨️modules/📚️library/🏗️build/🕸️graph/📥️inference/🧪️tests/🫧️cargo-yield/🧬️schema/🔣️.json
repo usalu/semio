@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cargo walk yields / Cargo-Durchlauf gibt ab",
+  "description": "EN: A generated workspace of many directories with Cargo manifests; the crate walk of an owner may block the event loop for at most maximumTurnMilliseconds and must stop within cancelWithinMilliseconds after cancellation. DE: Ein erzeugter Arbeitsbereich aus vielen Verzeichnissen mit Cargo-Manifesten; der Crate-Durchlauf eines Eigners darf die Ereignisschleife höchstens maximumTurnMilliseconds blockieren und muss nach einem Abbruch innerhalb von cancelWithinMilliseconds enden. EN: Ten cargo owners ask the crate index of the same pass: every directory is listed at most once, and a clean second pass with every directory proven stable lists none. DE: Zehn Cargo-Eigner fragen den Crate-Index desselben Durchgangs: jedes Verzeichnis wird höchstens einmal aufgelistet, und ein sauberer zweiter Durchgang mit nachweislich unveränderten Verzeichnissen listet keines.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "branches",
+    "directoriesPerBranch",
+    "cratesPerBranch",
+    "maximumTurnMilliseconds",
+    "cancelWithinMilliseconds",
+    "cancelAfterMilliseconds",
+    "owners"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "branches": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "directoriesPerBranch": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cratesPerBranch": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumTurnMilliseconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelWithinMilliseconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelAfterMilliseconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "owners": {
+      "type": "integer",
+      "minimum": 2
+    }
+  }
+}

@@ -41,11 +41,11 @@ const hostRow=(path:string):RowV1=>{
 };
 
 /** 💽️ Answers statfs for any path: the host filesystem as before, except below a directory partition, where the volume is the declared envelope and its used bytes come from the shared measured usage, never from the host disk that merely stores the directories; Windows has no statfs, so host paths read the free space of their volume. Asynchronous callers share one walk and accept a measurement of a few seconds unless they ask for a fresh one, as a before-and-after delta does. */
-export function nativeStatfsV1(path:string,options?:{bigint?:false;platform?:string;fresh?:boolean}):Promise<StatsFs>;
-export function nativeStatfsV1(path:string,options:{bigint:true;platform?:string;fresh?:boolean}):Promise<BigIntStatsFs>;
-export async function nativeStatfsV1(path:string,options?:{bigint?:boolean;platform?:string;fresh?:boolean}):Promise<StatsFs|BigIntStatsFs>{
+export function nativeStatfsV1(path:string,options?:{bigint?:false;platform?:string;fresh?:boolean;maximumAgeMilliseconds?:number}):Promise<StatsFs>;
+export function nativeStatfsV1(path:string,options:{bigint:true;platform?:string;fresh?:boolean;maximumAgeMilliseconds?:number}):Promise<BigIntStatsFs>;
+export async function nativeStatfsV1(path:string,options?:{bigint?:boolean;platform?:string;fresh?:boolean;maximumAgeMilliseconds?:number}):Promise<StatsFs|BigIntStatsFs>{
  const bigint=options?.bigint===true,platform=options?.platform??process.platform,partition=nativePartitionOfV1(path,platform);
- if(partition){const usage=nativeDirectoryUsageV1(partition.root,partition.maximumPhysicalBytes),bytes=options?.fresh===true?await usage.fresh():await usage.recent(protocol.usage.recentMilliseconds);return bigint?statsFor(true,rowOf(partition,bytes)):statsFor(false,rowOf(partition,bytes));}
+ if(partition){const usage=nativeDirectoryUsageV1(partition.root,partition.maximumPhysicalBytes),bytes=options?.fresh===true?await usage.fresh():await usage.recent(options?.maximumAgeMilliseconds??protocol.usage.recentMilliseconds);return bigint?statsFor(true,rowOf(partition,bytes)):statsFor(false,rowOf(partition,bytes));}
  if(platform==="win32")return bigint?statsFor(true,hostRow(path)):statsFor(false,hostRow(path));
  return bigint?statfs(path,{bigint:true}):statfs(path);
 }

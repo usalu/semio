@@ -81,7 +81,44 @@
                       "seconds": {
                         "type": "number",
                         "minimum": 0
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "rows": {
+                        "type": "integer",
+                        "minimum": 0
                       }
+                    }
+                  }
+                },
+                "decision": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "key",
+                    "used",
+                    "budget"
+                  ],
+                  "properties": {
+                    "key": {
+                      "enum": [
+                        "waiting",
+                        "serial",
+                        "resumed",
+                        "learning"
+                      ]
+                    },
+                    "used": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "budget": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "kind": {
+                      "type": "string"
                     }
                   }
                 }
@@ -92,7 +129,7 @@
             "type": "array",
             "items": {
               "type": "string",
-              "pattern": "^build:graph-phase:[a-z]+:(?:0|[1-9][0-9]*):(?:0|[1-9][0-9]*)(?::[1-9][0-9]*:(?:0|[1-9][0-9]*):[^:]+)?$"
+              "pattern": "^build:graph-phase:[a-z]+:(?:0|[1-9][0-9]*):(?:0|[1-9][0-9]*)(?::[1-9][0-9]*:(?:0|[1-9][0-9]*):[^:]+(?::[a-z]+\\|[0-9]+\\|[0-9]+\\|[^:]*)?)?$"
             }
           },
           "rows": {
@@ -212,7 +249,44 @@
                       "seconds": {
                         "type": "number",
                         "minimum": 0
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "rows": {
+                        "type": "integer",
+                        "minimum": 0
                       }
+                    }
+                  }
+                },
+                "decision": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "key",
+                    "used",
+                    "budget"
+                  ],
+                  "properties": {
+                    "key": {
+                      "enum": [
+                        "waiting",
+                        "serial",
+                        "resumed",
+                        "learning"
+                      ]
+                    },
+                    "used": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "budget": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "kind": {
+                      "type": "string"
                     }
                   }
                 }

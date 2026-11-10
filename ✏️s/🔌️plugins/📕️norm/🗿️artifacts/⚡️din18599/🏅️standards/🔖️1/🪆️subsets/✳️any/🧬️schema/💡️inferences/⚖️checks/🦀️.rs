@@ -8,7 +8,7 @@ extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, EnvelopeElement, MonthlyClimate, ThermalZone, UsageProfile, UseClass};
+use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, EnvelopeElement, MonthlyClimate, ThermalMassClass, ThermalZone, UsageProfile, UseClass};
 
 //#region 🔖️ComplianceHelpers
 use semio_s_plugin_norm_compliance::incremental_evaluation::Scope;

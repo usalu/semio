@@ -18,3 +18,8 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-s-artifact-norm-en1998-mutations-text-kit = { workspace = true }
 semio-s-artifact-norm-en1998-mut-tie-beams = { workspace = true }
+semio-s-artifact-norm-en1998-mut-isolation-systems = { workspace = true }
+semio-s-artifact-norm-en1998-mut-pier-bases = { workspace = true }
+semio-s-artifact-norm-en1998-mut-critical-regions = { workspace = true }
+semio-s-artifact-norm-en1998-mut-critical-regions-more = { workspace = true }
+semio-s-artifact-norm-en1998-mut-critical-regions-rest = { workspace = true }

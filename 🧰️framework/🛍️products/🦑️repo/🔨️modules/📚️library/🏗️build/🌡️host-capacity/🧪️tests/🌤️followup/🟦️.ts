@@ -19,7 +19,7 @@ const sample=async()=>({host:host(),swappedOutMegabytes:0});
 const control=()=>({signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined});
 const holdMachine=(directory:string)=>{
  let release!:()=>void;const hold=new Promise<void>(resolve=>{release=resolve;});
- const done=withHostCapacityV1({directory,policy,request:{id:newHostCapacityIdV1(),operation:"exec",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:13500,perJobMegabytes:0,cpuPerJob:1},control:control(),environment:{},write:()=>undefined,sample},async()=>hold);
+ const done=withHostCapacityV1({directory,policy,request:{id:newHostCapacityIdV1(),operation:"exec",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:13500,perJobMegabytes:0,cpuPerJob:1},control:control(),environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample},async()=>hold);
  return{release,done};
 };
 const ports=(directory:string,over:object={})=>({directory,policy,strip,tool:"bazel",sample,observe:async()=>1100,write:()=>undefined,exitCode:()=>0,...over});
@@ -50,14 +50,14 @@ test("A class whose last run executed work and ended before the follow-up window
  await finished(directory,policy.estimates.quietFollowUpMilliseconds+120_000,false);await finished(directory,policy.estimates.quietFollowUpMilliseconds+60_000,true);
  await sleep(40);
  let started=false;
- const waiting=withBuildCapacityV1(args,{SEMIO_HOST_CAPACITY_DIRECTORY:directory},async()=>{started=true;},ports(directory));
+ const waiting=withBuildCapacityV1(args,{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},async()=>{started=true;},ports(directory));
  await sleep(300);expect(started,"the last run executed work and the window is over").toBe(false);
  machine.release();await waiting;await machine.done;expect(started).toBe(true);
  const quiet=fresh(),full=holdMachine(quiet);
  await finished(quiet,7*86_400_000,false);
  await sleep(40);
  let answered=false;
- const served=withBuildCapacityV1(args,{SEMIO_HOST_CAPACITY_DIRECTORY:quiet},async granted=>{answered=true;expect(granted.handle!.reservedMegabytes).toBeLessThan(4096);},ports(quiet));
+ const served=withBuildCapacityV1(args,{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:quiet},async granted=>{answered=true;expect(granted.handle!.reservedMegabytes).toBeLessThan(4096);},ports(quiet));
  await sleep(300);expect(answered,"its own last run, a week ago, executed nothing").toBe(true);
  await served;full.release();await full.done;
 },30000);
@@ -67,10 +67,10 @@ test("A quiet grant is admitted under raised memory pressure while a full reques
  await finished(directory,60_000,false);await finished(directory,30_000,false);
  const warned=async()=>({host:host({pressure:"warn",availableMegabytes:7000}),swappedOutMegabytes:0});
  const started=Date.now();let granted=0;
- await withBuildCapacityV1(args,{SEMIO_HOST_CAPACITY_DIRECTORY:directory},async given=>{granted=given.handle!.reservedMegabytes;},ports(directory,{sample:warned}));
+ await withBuildCapacityV1(args,{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},async given=>{granted=given.handle!.reservedMegabytes;},ports(directory,{sample:warned}));
  expect(Date.now()-started,"admitted at once under raised pressure").toBeLessThan(2500);expect(granted).toBeLessThan(4096);
  const cold=fresh();let waited=true;
- const full=withBuildCapacityV1(args,{SEMIO_HOST_CAPACITY_DIRECTORY:cold},async()=>{waited=false;},ports(cold,{sample:warned}));
+ const full=withBuildCapacityV1(args,{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:cold},async()=>{waited=false;},ports(cold,{sample:warned}));
  await sleep(300);expect(waited,"without a forecast the soft stop holds the full request").toBe(true);
  await Promise.race([full,sleep(1)]);
 },30000);
@@ -81,7 +81,7 @@ test("A multi-worker target declares its envelope: the grant carries its cores a
  const workerPolicy=readTestWorkerPolicyV1(),plans:Record<string,{cpu:number;memory:number;stacks:number}>={};
  for(const target of ["test-e2e","test-unit"]){
   const directory=fresh();
-  await withBuildCapacityV1(["run",`@x/y:${target}`,"--parallel=1"],{SEMIO_HOST_CAPACITY_DIRECTORY:directory},async granted=>{
+  await withBuildCapacityV1(["run",`@x/y:${target}`,"--parallel=1"],{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},async granted=>{
    const facts=testWorkerFactsV1(granted.handle!.environment,workerPolicy);
    plans[target]={cpu:granted.handle!.plan.cpu,memory:granted.handle!.plan.memoryMegabytes,stacks:planTestWorkersV1(workerPolicy,"e2e-stacks",facts).workers};
   },ports(directory,{tool:"nx"}));
@@ -91,7 +91,7 @@ test("A multi-worker target declares its envelope: the grant carries its cores a
 },30000);
 
 test("A declared machine is what the door scales against and what the worker policy plans for",()=>{
- const real={cores:availableParallelism(),memoryBytes:totalmem()};
+ const real={cores:availableParallelism(),memoryBytes:Math.floor(totalmem()/1048576)*1048576};
  const declared=currentWorkerHostV1({SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES:"2048",SEMIO_HOST_CAPACITY_CORES:"1"});
  expect(declared.cores).toBe(1);expect(declared.memoryBytes).toBe(Math.min(Math.floor(real.memoryBytes/1048576),2048)*1048576);
  expect(currentWorkerHostV1({})).toEqual(real);
@@ -100,9 +100,9 @@ test("A declared machine is what the door scales against and what the worker pol
 
 test("The profile shrinks the reservation of a large envelope to the share a small machine may give",async()=>{
  const reserved:Record<string,number>={};
- for(const [name,environment] of [["host",{}],["8g",{SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES:"8192"}]] as const){
+ for(const [name,environment] of [["host",{LANG:"en_US.UTF-8"}],["8g",{SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES:"8192"}]] as const){
   const directory=fresh();
-  await withBuildCapacityV1(["run","@x/y:test-e2e","--parallel=1"],{SEMIO_HOST_CAPACITY_DIRECTORY:directory,...environment},async granted=>{reserved[name]=granted.handle!.reservedMegabytes;},ports(directory,{tool:"nx"}));
+  await withBuildCapacityV1(["run","@x/y:test-e2e","--parallel=1"],{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory,...environment},async granted=>{reserved[name]=granted.handle!.reservedMegabytes;},ports(directory,{tool:"nx"}));
  }
  expect(reserved["8g"]!,"the 8 GB profile reserves at most half of what is above its floor").toBeLessThan(reserved["host"]!);
 });
@@ -162,7 +162,7 @@ test("g13 replay: the dashboard build whose quiet reservation has to grow is adm
   const directory=fresh();
   await updateHostEstimateStoreV1(directory,policy,()=>classCopy(g13.store,Date.now()-g13.nowMs));
   await updateHostEstimateStoreV1(directory,policy,store=>recordHostForecastV1(policy,store,g13.leaf,{executed:true,peakMegabytes:4800,activeMilliseconds:200000,peakAtMilliseconds:120000,endedAtMs:Date.now()-442_000}));
-  const lines:string[]=[],environment:NodeJS.ProcessEnv={SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES:String(total)};
+  const lines:string[]=[],environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES:String(total)};
   const given=async()=>({host:host({totalMegabytes:total,availableMegabytes:available}),swappedOutMegabytes:0});
   let outcome="";
   await withBuildCapacityV1(g13.args,environment,async granted=>{

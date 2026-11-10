@@ -51,6 +51,7 @@ test("the collected assembly and the streamed assembly equal the model for every
 test("the external inputs a backend adds to every project keep their nodes in a slice, by package name or node key, and an unknown name refuses",async()=>{
  const{store,current}=await publish(fixture as unknown as Corpus),keys=async(externalInputs?:string[])=>Object.keys((await store.assemble(current,{names:["e"],externalInputs})).externalNodes).sort();
  expect(await keys()).toEqual([]);
+ await expect(keys(["plain","absent"])).rejects.toMatchObject({code:"GENERATION_UNKNOWN_EXTERNAL"});
  const kept=await keys(["plain","npm:named"]);
  expect(kept).toContain("npm:plain");expect(kept).toContain("npm:named");expect(kept).not.toContain("npm:unused");
  expect(await keys(["plain"])).toEqual(["npm:plain"]);

@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Host-wide content-addressed store / Rechnerweiter inhaltsadressierter Speicher",
+  "$comment": "🗄️ CasPolicyV1: one store per host, shared and deduplicated by all workspaces, size-capped with least-recently-accessed eviction. Byte sizes are plain numbers; ratios are fractions of capBytes.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "capBytes": 128849018880,
+        "highWatermark": 0.9,
+        "lowWatermark": 0.75,
+        "minAgeMs": 600000,
+        "leaseMaxMs": 3600000,
+        "touchGranularityMs": 60000,
+        "temporaryMaxAgeMs": 3600000,
+        "ledgerQuietMs": 3600000,
+        "lockStaleMs": 7200000,
+        "progressMs": 250,
+        "checkEvery": 256,
+        "fanOutHexLength": 2,
+        "areas": [
+          {
+            "id": "graph-memo",
+            "capBytes": 4294967296,
+            "maxAgeMs": 604800000
+          },
+          {
+            "id": "build-input-closures",
+            "capBytes": 8589934592,
+            "maxAgeMs": 604800000
+          }
+        ]
+      }
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "PinFile": {
+      "type": "object",
+      "required": [
+        "version",
+        "holder",
+        "pid",
+        "expiresAtMs",
+        "digests"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "holder": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]{1,96}$"
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expiresAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "digests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Digest"
+          }
+        }
+      }
+    },
+    "LedgerEvent": {
+      "type": "object",
+      "required": [
+        "d",
+        "t"
+      ],
+      "properties": {
+        "d": {
+          "$ref": "#/definitions/Digest"
+        },
+        "t": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "progress": {
+          "en": "Cache store: scanned {entries} entries, {usedGib} GiB used of {capGib} GiB, freed {freedMib} MiB.",
+          "de": "Cache-Speicher: {entries} Einträge geprüft, {usedGib} GiB belegt von {capGib} GiB, {freedMib} MiB freigegeben."
+        },
+        "done": {
+          "en": "Cache store collected: {evicted} entries, {freedMib} MiB freed, {keptGib} GiB kept, {protectedMib} MiB protected{partial}.",
+          "de": "Cache-Speicher bereinigt: {evicted} Einträge, {freedMib} MiB freigegeben, {keptGib} GiB behalten, {protectedMib} MiB geschützt{partial}."
+        },
+        "idle": {
+          "en": "Cache store is below the high watermark ({usedGib} GiB of {capGib} GiB); nothing to collect.",
+          "de": "Der Cache-Speicher liegt unter der oberen Marke ({usedGib} GiB von {capGib} GiB); nichts zu bereinigen."
+        },
+        "locked": {
+          "en": "Another collector already runs on this cache store.",
+          "de": "Auf diesem Cache-Speicher läuft bereits ein Sammler."
+        },
+        "partial": {
+          "en": ", cancelled before completion",
+          "de": ", vor dem Ende abgebrochen"
+        },
+        "shortfall": {
+          "en": "The store stays above its cap by {overMib} MiB because the rest is pinned, leased or too young.",
+          "de": "Der Speicher bleibt um {overMib} MiB über der Grenze, weil der Rest gepinnt, geleast oder zu jung ist."
+        },
+        "status": {
+          "en": "Cache store {root}: {objects} objects, {usedGib} GiB of {capGib} GiB cap.",
+          "de": "Cache-Speicher {root}: {objects} Objekte, {usedGib} GiB von {capGib} GiB Grenze."
+        },
+        "adopted": {
+          "en": "Cache store: {linked} files now share {objects} stored objects, {savedMib} MiB saved, {failed} failed{partial}.",
+          "de": "Cache-Speicher: {linked} Dateien teilen sich jetzt {objects} gespeicherte Objekte, {savedMib} MiB gespart, {failed} fehlgeschlagen{partial}."
+        },
+        "adopting": {
+          "en": "Cache store: examined {entries} files, {savedMib} MiB saved so far.",
+          "de": "Cache-Speicher: {entries} Dateien geprüft, bisher {savedMib} MiB gespart."
+        }
+      }
+    },
+    "Adoption": {
+      "const": {
+        "minBytes": 65536,
+        "quietMs": 600000,
+        "clearWriteBits": true,
+        "skipPattern": "(^\\.|\\.(sqlite3?|db|log|jsonl|lock|pid|tmp|wal|shm)$|-wal$|-shm$)",
+        "places": [
+          {
+            "id": "bun-cache",
+            "path": ".cache/b/d/m/bun-cache",
+            "mode": "hardlink",
+            "reason": "The bun content cache never changes a stored file in place."
+          },
+          {
+            "id": "tool-downloads",
+            "path": ".cache/b/t/m/downloads",
+            "mode": "hardlink",
+            "reason": "Pinned tool archives are written once under their digest."
+          },
+          {
+            "id": "bazel-cas",
+            "path": ".🧬semio/🦑️repo/⚡️cache/bazel/actions/cas",
+            "mode": "hardlink",
+            "reason": "The Bazel disk cache CAS names every file by its digest and replaces, never edits, it."
+          },
+          {
+            "id": "dependency-installs",
+            "path": ".cache/b/d/m/j",
+            "mode": "reflink",
+            "reason": "Installed trees can be patched or rewritten by their tools, so only copy-on-write clones are safe."
+          },
+          {
+            "id": "tool-installs",
+            "path": ".cache/b/t/m",
+            "mode": "reflink",
+            "reason": "Installed toolchains can be updated in place by their tools, so only copy-on-write clones are safe."
+          }
+        ]
+      }
+    }
+  }
+}

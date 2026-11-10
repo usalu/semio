@@ -373,6 +373,7 @@ pub fn render_world_3d(
         },
         ..Default::default()
     });
+    state.authority.stage_handle_scene(modelling.and_then(|world| world.annotations.as_ref()), &view_proj.to_cols_array(), inner.w, inner.h);
     if let Some(world) = modelling {
         let paints_legend = world.scalar_field.is_some() && matches!(state.overlay.scalar_field_status, World3dScalarFieldStatus::Applied | World3dScalarFieldStatus::Mismatch);
         if world.annotations.is_some() || paints_legend {

@@ -181,8 +181,6 @@ export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS
     if(argument.startsWith("--tool=")){tool=argument.slice(7);continue;}
     if(argument==="--workers"){workers=args[++index]??"";continue;}
     if(argument.startsWith("--workers=")){workers=argument.slice(10);continue;}
-    if(argument==="--service"){index++;continue;}
-    if(argument.startsWith("--service=")){continue;}
     selected.push(argument);
   }
   requireBuildBackendIdV1(tool);

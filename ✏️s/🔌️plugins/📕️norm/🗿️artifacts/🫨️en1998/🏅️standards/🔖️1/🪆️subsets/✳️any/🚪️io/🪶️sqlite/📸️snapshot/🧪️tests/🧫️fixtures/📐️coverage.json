@@ -1,5 +1,5 @@
 {
-  "tableCount": 25,
+  "tableCount": 28,
   "scalarWords": 217,
   "scalarTables": [
     "site",
@@ -25,7 +25,10 @@
     "bearing",
     "joint",
     "tie_beam",
-    "slope"
+    "slope",
+    "isolation_system",
+    "pier_base",
+    "critical_region"
   ],
   "invalidAnnex": [
     "任意\u0000annex",

@@ -1,0 +1,12 @@
+import{readFileSync,writeFileSync}from"node:fs";
+import{Worker}from"node:worker_threads";
+const ROOT="/home/deck/semio",out=process.argv[2]??"rss-slice-worker.json",here=new URL("./rss-slice-worker-body.ts",import.meta.url);
+const status=()=>Object.fromEntries(readFileSync("/proc/self/status","utf8").split("\n").filter(l=>/^(VmRSS|VmHWM):/.test(l)).map(l=>[l.split(":")[0],Math.round(parseInt(l.split(/\s+/)[1])/1024)]));
+let last=performance.now(),maxLag=0,over1s=0,peak=0;const lags:number[]=[];
+setInterval(()=>{const now=performance.now(),lag=now-last-100;last=now;if(lag>maxLag)maxLag=lag;if(lag>1000){over1s++;lags.push(Math.round(lag));}peak=Math.max(peak,status().VmRSS);},100);
+setInterval(()=>console.error("TICK "+JSON.stringify({rss:status().VmRSS,lagMax:Math.round(maxLag),over1s})),5000);
+const started=performance.now();
+const cancelAfter=Number(process.env.CANCEL_AFTER_MS??0);
+const reply:any=await new Promise((resolve,reject)=>{const worker=new Worker(here,{workerData:{root:ROOT,arguments:["run","repo:test-build-observation","--output=static"],graphPolicy:"fresh"},env:process.env as any});let cancelled=false;if(cancelAfter)setTimeout(()=>{cancelled=true;void worker.terminate();},cancelAfter);worker.on("message",resolve);worker.on("error",reject);worker.on("exit",code=>{if(cancelled)resolve({type:"cancelled"});else reject(Error("worker exit "+code));});});
+const result={wallMs:Math.round(performance.now()-started),type:reply.type,projects:Object.keys(reply.graph?.projects??{}).length,message:reply.message,peakMb:peak,hwm:status().VmHWM,maxLagMs:Math.round(maxLag),over1s,lags:lags.slice(0,30)};
+writeFileSync(out,JSON.stringify(result));console.error("RESULT "+JSON.stringify(result));process.exit(0);

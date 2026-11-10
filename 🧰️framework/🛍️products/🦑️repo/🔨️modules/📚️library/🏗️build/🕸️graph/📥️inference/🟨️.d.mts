@@ -10,7 +10,6 @@ export function nativeSourceWatchPlanV1(root:string,workspaceRoot:string):Promis
 export function inferReadOnlyBuildProjectSourcesV1(json:unknown,root:string,workspaceRoot:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<GeneratedProjectV1&{root:string;namedInputs:Record<string,unknown[]>}>;
 /** 🔁️ Opens the answer of derived facts (the command walks a project record named) against the live files. */
 export function openGenerationDeriverV1(host:{workspaceRoot:string;registry:unknown}):Promise<(row:{kind:string;path:string;fact:unknown},signal?:AbortSignal)=>Promise<{fact:unknown;rows:readonly {kind:string;path:string;fact:unknown}[]}>>;
-export function discoverNativeBuildOwnersV1(configFiles:readonly string[],workspaceRoot:string,context:BuildInferenceContextV1):Promise<{files:string[];nativeCache:Map<string,unknown>;nativeClosures:Map<string,unknown>}>;
 export function discoverBuildOwnerAdmissionFactsV1(owner:import("../🚪️admission/🟦️.ts").BuildOwnerRegistryV1["owners"][number],targets:readonly string[],registry:import("../🚪️admission/🟦️.ts").BuildOwnerRegistryV1,context:BuildInferenceContextV1,inputNames?:readonly string[]):Promise<import("../🚪️admission/🟦️.ts").BuildOwnerAdmissionFactsV1&{project:GeneratedProjectV1&{name:string}}>;
 export function readBuildOwnerRegistrySourceV1(workspaceRoot:string):string;
 /** 🔏️ Names the revision of the Source this module has on disk right now. */
@@ -116,3 +115,4 @@ export function unclassifiedImplementationCodeV1(rows:readonly ImplementationRow
 /** 📜️ The declared inference protocol of the loaded revision. */
 export function inferenceProtocolV1():InferenceProtocolV1;
 export const loadedImplementationRowsV1:readonly {readonly kind:"digest";readonly path:string;readonly fact:{readonly sha256:string;readonly size:number;readonly mtimeMs:number}}[];
+export function primeSharedClosuresOfWorkspaceV1(options:{workspaceRoot:string;signal?:AbortSignal}):Promise<void>;

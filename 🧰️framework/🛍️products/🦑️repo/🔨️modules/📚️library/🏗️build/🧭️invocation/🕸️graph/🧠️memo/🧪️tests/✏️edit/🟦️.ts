@@ -346,9 +346,10 @@ test("the derivation child: a stale row a project holds itself, an unsupported d
  writeGraphMemoDeriveFileV1(request,{version:1,index:"9".repeat(64),suspects:[...suspects]});await answerGraphMemoDerivationV1(root,environment,undefined,async()=>deriveModel,generations);
  expect(readGraphMemoDeriveFileV1(graphMemoDeriveAnswerFileV1(request),"answer")).toMatchObject({missing:true});
  writeFileSync(request,JSON.stringify({version:1,index:digest,suspects:[...suspects],extra:1}));await expect(answerGraphMemoDerivationV1(root,environment,undefined,async()=>deriveModel,generations)).rejects.toThrow();
- const here=import.meta.dir,runtime=readFileSync(join(here,"../../../../../⌨️command/⚙️runtime/🟦️.ts"),"utf8"),loader=readFileSync(join(here,"../../../🟦️.ts"),"utf8");
- expect(runtime.includes(`process.env.${GRAPH_MEMO_POLICY_V1.derive}!==undefined`)&&runtime.indexOf(`process.env.${GRAPH_MEMO_POLICY_V1.derive}`)<runtime.indexOf("prepareBuildToolStorageV1"),"the runtime answers a derivation before any tool or graph work").toBe(true);
- expect(loader.includes(`child("build:graph-derive",environment)`),"the graph loader hands the memo its derivation child").toBe(true);
+ const here=import.meta.dir,runtime=readFileSync(join(here,"../../../../../⌨️command/⚙️runtime/🟦️.ts"),"utf8"),entry=readFileSync(join(here,"../../🧮️derive/♨️warm/⌨️main/🟦️.ts"),"utf8");
+ expect(runtime.includes(GRAPH_MEMO_POLICY_V1.derive),"the runtime carries no derivation entry").toBe(false);
+ expect(entry.includes("answerGraphMemoDerivationV1(root,{[GRAPH_MEMO_POLICY_V1.derive]:request}"),"the warm child entry answers a derivation").toBe(true);
+ expect(readFileSync(join(here,"../../🚪️command/🟦️.ts"),"utf8").includes("derivation.graphMemoDeriveAnswerFileV1(file)"),"the memo command asks its derivation through the request file").toBe(true);
 },120000);
 
 /** ⏱️ A second derived question, whose support reads the whole text of every import target and whose row names only its input (the targets lie in another directory, so a change there does not name the question): how many imports of `lib/d.ts` name a file whose text contains `yes`. A target can therefore be restored to its sealed bytes without touching any row that names the question itself. */

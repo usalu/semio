@@ -13,7 +13,7 @@ const DAY=86400000,HOUR=3600000,UNIT=20480,reason={en:"x",de:"y"},purpose={en:"p
 const partitions={alpha:{directory:".cache/b/a",capacityBytes:1<<30,maximumLogicalBytes:1<<30}};
 const ledger=readCacheLedgerV1({
  version:1,
- roots:{repository:{directory:"r/cache",maximumBytes:1<<30,undeclaredUnusedAgeMs:14*DAY,undeclaredQuietMs:HOUR,ignored:[CACHE_SIZE_FILE_V1]},native:{directory:".cache",maximumBytes:1<<20,undeclaredUnusedAgeMs:7*DAY,undeclaredQuietMs:HOUR,ignored:[]}},
+ roots:{repository:{directory:"r/cache",maximumBytes:1<<30,undeclaredUnusedAgeMs:14*DAY,undeclaredQuietMs:HOUR,ignored:[CACHE_SIZE_FILE_V1]},native:{directory:".cache",maximumBytes:1<<20,undeclaredUnusedAgeMs:7*DAY,undeclaredQuietMs:HOUR,ignored:[]},rust:{directory:".r",maximumBytes:0,undeclaredUnusedAgeMs:1000,undeclaredQuietMs:0,ignored:[]}},
  areas:[
   {id:"alpha",root:"native",kind:"partition",directory:"b/a",partition:"alpha",managed:{owner:"image"},writers:["w"],purpose},
   {id:"loose",root:"repository",kind:"tree",directory:"loose",budget:{bytes:1<<20},collect:{unusedAgeMs:100*DAY,quietMs:HOUR,custody:"quiet"},writers:["w"],purpose},
@@ -90,7 +90,7 @@ test("status and gc print the machine budget in both languages, take it from --b
  expect(cacheArgumentsV1(["gc","--dry-run"],ledger).budget).toBeUndefined();
  expect(()=>cacheArgumentsV1(["verify","--deep","--budget=1G"],ledger)).toThrow();
  expect(()=>cacheArgumentsV1(["status","--budget"],ledger)).toThrow();
- const run=async(args:string[],environment:Record<string,string|undefined>={})=>{const out:string[]=[];const code=await runCacheLedgerCommandV1(args,{workspace,environment,write:line=>out.push(line),ledger,partitions},ports());return{code,out};};
+ const run=async(args:string[],environment:Record<string,string|undefined>={SEMIO_LANGUAGE:"en"})=>{const out:string[]=[];const code=await runCacheLedgerCommandV1(args,{workspace,environment,write:line=>out.push(line),ledger,partitions},ports());return{code,out};};
  const english=await run(["status","--lang=en","--budget=12GiB"]),german=await run(["status","--lang=de","--budget=12GiB"]);
  expect(english.code).toBe(0);
  expect(english.out.join("\n")).toContain("Machine budget: 12.00 GiB (from --budget)");expect(german.out.join("\n")).toContain("Rechner-Budget: 12.00 GiB (aus --budget)");

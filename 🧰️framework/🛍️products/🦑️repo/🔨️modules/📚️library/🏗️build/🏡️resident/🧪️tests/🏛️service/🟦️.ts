@@ -12,7 +12,6 @@ import {endpointsV1,worktreeIdV1} from "../../📨️protocol/📍️endpoint/�
 import {capabilityIdV1,verifyCapabilityV1,createRevocationRegistryV1} from "../../📨️protocol/🔑️capability/🟨️.mjs";
 import coreSchema from "../../../📥️caller/🛰️service/🧬️schema/🔣️.json" with {type:"json"};
 import {createFilterV1} from "../../🗃️state/🟨️.mjs";
-import {residentGraphSeamsV1} from "../../🕰️graph-hooks/🔌️host/🟨️.mjs";
 import {taskClosureV1} from "../../🔌️ports/🗺️graph/🟨️.mjs";
 import {cleanup,haveBinary,pick,residentWatcherV1,rng,shortTempDirectory,sleep,snapshot,tempRoot,waitFor,writeTree} from "../🟦️.ts";
 import {agentSessionAddressV1,agentSessionRegistryRootV1,agentSessionStoreV1,agentSessionWorktreeKeyV1,readAgentSessionTokenV1,readAgentSessionV1,listAgentSessionsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
@@ -147,7 +146,7 @@ describe("memo, planning and invalidation",()=>{
 });
 
 describe("frontier cursors for the generation host",()=>{
- test("adopted digests answer dirty --digest from the journal; unknown digests, foreign instances and bad cursors prove nothing; the real seams save the stat pass",async()=>{
+ test("adopted digests answer dirty --digest from the journal; unknown digests, foreign instances and bad cursors prove nothing",async()=>{
   const s=await startService();
   const cursor=JSON.parse((await s.run("cursor",[])).out),digest="ab".repeat(32);
   expect((await s.run("dirty",["--digest",digest])).out).toContain('"reason":"digest"');
@@ -158,19 +157,6 @@ describe("frontier cursors for the generation host",()=>{
   const other="cd".repeat(32);
   expect((await s.run("adopt-frontier",[other,"someone-else:1"])).out).toBe("ignored\n");expect((await s.run("adopt-frontier",[other,cursor.instance+":999999"])).out).toBe("ignored\n");expect((await s.run("adopt-frontier",["nope",cursor.instance+":1"])).out).toBe("ignored\n");
   expect((await s.run("dirty",["--digest",other])).out).toContain('"reason":"digest"');
-  const filter=createFilterV1({rooted:[".git"],names:["node_modules"]});
-  const capture=()=>{const snap=snapshot(s.root,rel=>filter.excluded(rel)||rel.startsWith(".out/")||rel===".semio-fence"||rel.startsWith(".semio-fence/"));return{version:1,capturedAt:Date.now(),directories:[...snap.directories].map(([p,[m,i]])=>[p,m,i]).sort((a:any,b:any)=>a[0]<b[0]?-1:1),members:[...snap.files].sort((a,b)=>a[0]<b[0]?-1:1)};};
-  const digestOf=(frontier:any)=>require("node:crypto").createHash("sha256").update(JSON.stringify(frontier.members)).digest("hex");
-  let stat=0;
-  const seams=residentGraphSeamsV1({root:s.root,environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},membership:async()=>{stat++;const frontier=capture();return{digest:digestOf(frontier),frontier,changes:[]};},holds:async()=>true});
-  const first=await seams.membership(undefined);expect(stat).toBe(1);
-  appendFileSync(s.root+"/pkgs/b/src/x.ts","edit");writeFileSync(s.root+"/pkgs/b/src/new.ts","n");rmSync(s.root+"/pkgs/c/src/x.ts");
-  await sleep(50);
-  const second=await seams.membership({manifest:{membership:first.digest},frontier:first.frontier});
-  expect(stat).toBe(1);
-  const fresh=capture();
-  expect(second.frontier.members).toEqual(fresh.members);expect(second.frontier.directories).toEqual(fresh.directories);
-  expect(second.changes.filter((c:any)=>!c.directory).map((c:any)=>c.kind+" "+c.path).sort()).toEqual(["added pkgs/b/src/new.ts","changed pkgs/b/src/x.ts".replace("changed","changed"),"removed pkgs/c/src/x.ts"].filter(x=>!x.startsWith("changed")).sort());
  },20000);
 });
 
@@ -512,17 +498,17 @@ describe("process level crash safety",()=>{
  },30000);
 });
 
-test("foreground repository composition retains native readiness through public status and stop",async()=>{
- const {createForegroundRunnerV1}=await import("../../🏗️composition/🟨️.mjs"),{runResidentCommandV1}=await import("../../⌨️command/🟨️.mjs"),{repositoryFilesystemJournalPolicyV1}=await import("../../../../⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts");
- const root=tempRoot("svc-composition-"),base=shortTempDirectory("sc-");cleanups.push(()=>cleanup(root),()=>cleanup(base));writeFileSync(join(root,"visible.json"),"visible");writeFileSync(join(root,".p0123abcd"),"private");
- const environment={...ambientV1,XDG_RUNTIME_DIR:base,SEMIO_RESIDENT_EXECUTORS:"0"},runtime=endpointsV1(root,environment),sourcePolicy=await repositoryFilesystemJournalPolicyV1(root),controller=new AbortController();
- const run=createForegroundRunnerV1({sourcePolicy,signal:controller.signal,watcherBinary:WATCHER,script:"unused",loadGraph:async()=>({version:1,projects:{},dependencies:[]}),salt:()=>"",warmSize:0,executorSize:0,environmentPaths:[],environmentPrefixes:[]});
+test("foreground repository composition retains native readiness through the status and stop commands of the service",async()=>{
+ const {createForegroundRunnerV1}=await import("../../🏗️composition/🟨️.mjs"),{forwardCommandV1}=await import("../../🚪️client/🟨️.mjs"),{mintCapabilityV1}=await import("../../📨️protocol/🔑️capability/🟨️.mjs");
+ const root=tempRoot("svc-composition-"),base=shortTempDirectory("sc-");cleanups.push(()=>cleanup(root),()=>cleanup(base));writeFileSync(join(root,"visible.json"),"visible");
+ const environment={...ambientV1,XDG_RUNTIME_DIR:base,SEMIO_RESIDENT_EXECUTORS:"0"},runtime=endpointsV1(root,environment),controller=new AbortController();
+ const run=createForegroundRunnerV1({signal:controller.signal,watcherBinary:WATCHER,script:"unused",loadGraph:async()=>({version:1,projects:{},dependencies:[]}),salt:()=>"",warmSize:0,executorSize:0,environmentPaths:[],environmentPrefixes:[]});
  const running=run({root,runtime,environment});let ended=false;void running.finally(()=>{ended=true;}).catch(()=>{});
- const sink=()=>{let text="";return{write(value:string){text+=value;},text:()=>text};};
+ const ask=async(command:string,cap?:string)=>{const out:string[]=[];const result=await forwardCommandV1({root,command,args:[],cwd:root,languages:["en","de"],...cap?{cap}:{},environment,stdout:{write:(text:string)=>out.push(String(text))},stderr:{write(){}}} as never);return{...result,out:out.join("")};};
  try{
   expect(await waitFor(()=>existsSync(runtime.descriptor)||ended,15000)).toBe(true);if(ended)await running;
-  const output=sink();expect(await runResidentCommandV1({root,args:["status","--json"],languages:["en","de"],environment,stdout:output,stderr:output})).toBe(0);
-  const status=JSON.parse(output.text());expect(status.watcher.backend).toBe(process.platform==="linux"?"inotify":process.platform==="darwin"?"fsevents":"rdcw");expect(status.watcher.trust).toBe("exact");expect(status.state.files).toBe(1);
- }finally{const output=sink();await runResidentCommandV1({root,args:["stop"],languages:["en","de"],environment,stdout:output,stderr:output});}
+  const status=await ask("status");expect(status.exit).toBe(0);
+  const state=JSON.parse(status.out);expect(state.watcher.backend).toBe(process.platform==="linux"?"inotify":process.platform==="darwin"?"fsevents":"rdcw");expect(state.watcher.trust).toBe("exact");expect(state.state.files).toBe(1);
+ }finally{await ask("stop",mintCapabilityV1(readFileSync(runtime.key),[{k:"notAfter",v:Date.now()+60000}]));}
  expect(await running).toBe(0);expect(existsSync(WATCHER)).toBe(true);
 },30000);

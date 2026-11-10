@@ -68,7 +68,7 @@ const walk=(directory:string,out:string[]=[]):string[]=>{
 test("every executable file of the loaded implementation and of the graph host is claimed by an inferrer or by infrastructure, and no fragment is dead",async()=>{
  const plugin=await import("../../🟨️.mjs");await plugin.libraryBootstrap;
  const loaded=plugin.loadedImplementationRowsV1.map((row:{path:string})=>({kind:"digest",path:relative(workspace,row.path).split(sep).join("/")}));
- const source=readFileSync(join(library,"🏗️build","🕸️graph","🟦️.ts"),"utf8"),host=[...source.split("\n").find(line=>line.startsWith("const graphImplementationUrlsV1"))!.matchAll(/new URL\("([^"]+)"/gu)].map(match=>relative(workspace,resolve(library,"🏗️build","🕸️graph",match[1]!)).split(sep).join("/")).map(path=>({kind:"digest",path}));
+ const authority=join(library,"🏗️build","🕸️graph","🔐️authority","🟦️.ts"),{graphSelfUrlsV1}=await import(authority),source=readFileSync(authority,"utf8"),host=[...graphSelfUrlsV1().map((url:URL)=>fileURLToPath(url)),...[...source.split("\n").find(line=>line.startsWith("const graphImplementationUrlsV1"))!.matchAll(/new URL\("([^"]+)"/gu)].map(match=>resolve(dirname(authority),match[1]!))].map(path=>({kind:"digest",path:relative(workspace,path).split(sep).join("/")}));
  expect(loaded.length).toBeGreaterThan(50);expect(host.length).toBeGreaterThan(20);
  expect(unclassifiedCodeV1([...loaded,...host] as never,protocol)).toEqual([]);
  const files=[...walk(library),...walk(join(workspace,"🧰️framework","🔨️modules")),...loaded.map((row:{path:string})=>row.path)];
@@ -108,10 +108,10 @@ test("no record, parser identity or generation fact is keyed by the bytes of the
  expect(read("📦️project-nodes","🟨️.mjs")).toContain("projectStampPathsV1({native})");
  expect(read("🧬️source-analyses","🟨️.mjs")).toContain("inferrerStampV1(\"source-analyses\")");
  const observation=readFileSync(join(library,"🏗️build","👁️observation","🟨️.mjs"),"utf8");
- expect(observation).toContain("[recordStampV1(),inferenceAuthorityDigestV1(),key]");
+ expect(observation,"an owner record is keyed by its own key, never by the workspace-wide authority: its recorded observations decide whether it holds").toContain("[recordStampV1(),null,key]");expect(observation).not.toContain("inferenceAuthorityDigestV1(),key");
  expect(observation).toContain("nestedProject?recordStampV1():OBSERVATION_REVISION");
  expect(observation).toContain("stampedFragments.some(fragment=>row.path.includes(fragment))");
- const host=readFileSync(join(library,"🏗️build","🕸️graph","🟦️.ts"),"utf8");
+ const host=readFileSync(join(library,"🏗️build","🕸️graph","🕰️host","🟦️.ts"),"utf8")+readFileSync(join(library,"🏗️build","🕸️graph","🏷️retention","🟦️.ts"),"utf8");
  expect(host).toContain("producer.classifyImplementationRowsV1(rows)");expect(host).toContain("generationSchemaV1.definitions.Identity.const");expect(readFileSync(join(library,"🏗️build","🕸️graph","🕰️generations","🧬️schema","🔣️.json"),"utf8")).toContain("graph-generations-v4");
  const generations=readFileSync(join(library,"🏗️build","🕸️graph","🕰️generations","🟨️.mjs"),"utf8");
  expect(generations.includes("implementation:Object.freeze({none:")).toBe(false);

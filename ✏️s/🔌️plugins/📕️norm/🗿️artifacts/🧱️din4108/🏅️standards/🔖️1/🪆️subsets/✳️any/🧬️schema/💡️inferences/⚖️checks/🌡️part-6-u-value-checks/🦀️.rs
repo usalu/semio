@@ -55,6 +55,14 @@ pub fn check_u_value(element: &EnvelopeElement, usage: &str, t_int_c: f64) -> Ch
     let r_min = part_2::table3_r_min(&element.kind, &element.adjacent, usage, t_int_c, mass);
     let u_max = if r_min > 0.0 { 1.0 / r_min } else { f64::INFINITY };
     let clause = if inhomogeneous { "6.7" } else { "6.1" };
+    let ratio = combined_method_ratio(&element.layers, r_si, r_se).filter(|ratio| *ratio > COMBINED_METHOD_MAX_RATIO);
+    let (note_en, note_de) = match ratio {
+        Some(ratio) => (
+            format!(" Validity warning: R'_T/R''_T = {ratio:.2} > {COMBINED_METHOD_MAX_RATIO} (EN ISO 6946 §6.7.2.4), the combined method is not applicable; use a numerical calculation (EN ISO 10211)."),
+            format!(" Gültigkeitswarnung: R'_T/R''_T = {ratio:.2} > {COMBINED_METHOD_MAX_RATIO} (EN ISO 6946 §6.7.2.4), das Berechnungsverfahren ist nicht anwendbar; numerische Berechnung (EN ISO 10211) verwenden."),
+        ),
+        None => (String::new(), String::new()),
+    };
     let mut builder = CheckResult::assess(
         format!("din4108-6.u.{}", element.id),
         "EN ISO 6946",
@@ -66,14 +74,17 @@ pub fn check_u_value(element: &EnvelopeElement, usage: &str, t_int_c: f64) -> Ch
     .annex(AnnexChoice::De)
     .explanation(loc(
         &format!(
-            "U+ΔU = {u:.3} (ΔU_g={:.3}/f={:.3}/r={:.3}, orient={:.0}°, incl={:.0}°, zone={}) vs U_max = {u_max:.3}.",
+            "U+ΔU = {u:.3} (ΔU_g={:.3}/f={:.3}/r={:.3}, orient={:.0}°, incl={:.0}°, zone={}) vs U_max = {u_max:.3}.{note_en}",
             element.delta_u_g, element.delta_u_f, element.delta_u_r, element.orientation_deg, element.inclination_deg, element.zone_id
         ),
         &format!(
-            "U+ΔU = {u:.3} (ΔU_g={:.3}/f={:.3}/r={:.3}, Orient={:.0}°, Neigung={:.0}°, Zone={}) gegenüber U_max = {u_max:.3}.",
+            "U+ΔU = {u:.3} (ΔU_g={:.3}/f={:.3}/r={:.3}, Orient={:.0}°, Neigung={:.0}°, Zone={}) gegenüber U_max = {u_max:.3}.{note_de}",
             element.delta_u_g, element.delta_u_f, element.delta_u_r, element.orientation_deg, element.inclination_deg, element.zone_id
         ),
     ));
+    if ratio.is_some() && u <= u_max {
+        builder = builder.status(semio_s_plugin_norm_compliance::CheckStatus::Warning);
+    }
     if u > u_max {
         if let Some((idx, d_req)) = required_insulation_thickness(&element.layers, r_si, r_se, r_min) {
             let layer = &element.layers[idx];

@@ -73,6 +73,8 @@ export function observeScriptProcessOutputV1():void{
 export function scriptProcessWatchdogNoticeV1(kind:keyof typeof notices,values:Readonly<Record<string,string|number>>,languages:readonly("en"|"de")[]):string{
  return languages.map(language=>Object.entries(values).reduce((text,[key,value])=>text.replaceAll("{"+key+"}",String(value)),notices[kind][language])).join("\n")+"\n";
 }
+/** 🧵️ What a stall does: a stalled main thread ends the process; a stalled worker thread of a long-lived service only aborts its own work, so one silent plan never takes the whole service down. */
+export function scriptProcessStallActionV1(mainThread:boolean):"exit"|"abort"{return mainThread?"exit":"abort";}
 /** ▶️ Starts the stall watchdog; `onStall` runs once with the idle time, the decision and the live child pids. */
 export function startScriptProcessWatchdogV1(options:Readonly<{onStall:(idleMilliseconds:number,decision:"stalled"|"tree-stalled",children:readonly number[],treeIdleMilliseconds:number)=>void;now?:()=>number;children?:()=>readonly number[]|undefined;cpu?:(pids:readonly number[])=>number|undefined;stallMilliseconds?:number;idleTreeMilliseconds?:number;checkMilliseconds?:number}>):()=>void{
  const now=options.now??Date.now,children=options.children??liveChildPidsV1,cpu=options.cpu??treeCpuMillisecondsV1,natural=naturalV1,stall=options.stallMilliseconds??natural(policy.stallEnvironment)??policy.stallMilliseconds,idleTree=options.idleTreeMilliseconds??natural(policy.idleTreeEnvironment)??policy.idleTreeMilliseconds;let observed=now(),treeCpu:number|undefined,treeSince=observed;lastProgress=observed;

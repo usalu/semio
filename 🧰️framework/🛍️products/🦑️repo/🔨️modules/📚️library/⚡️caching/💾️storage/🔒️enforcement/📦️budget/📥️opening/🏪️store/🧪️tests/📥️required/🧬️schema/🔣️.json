@@ -178,7 +178,7 @@
       "properties": {
         "module": {
           "enum": [
-            "🏗️build/🕸️graph/🟦️.ts",
+            "🏗️build/🕸️graph/📥️load/🟦️.ts",
             "🏗️build/📥️caller/🟦️.ts",
             "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs"
           ]
@@ -204,7 +204,7 @@
             "🏗️build/📥️inputs/💾️storage/🔧️custody/🟨️.mjs",
             "🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs",
             "🏗️build/👁️observation/🟨️.mjs",
-            "🏗️build/🕸️graph/🟦️.ts",
+            "🏗️build/🕸️graph/🔐️authority/🟦️.ts",
             "🏗️build/👁️observation/📥️reuse/🟨️.mjs",
             "🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs"
           ]

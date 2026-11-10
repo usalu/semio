@@ -1,0 +1,42 @@
+{
+ "version": 1,
+ "scoped": [
+  {
+   "name": "one task",
+   "targets": ["lib-a:build"],
+   "tasks": [{"id": "lib-a:build", "dependsOn": [], "stale": true}],
+   "expected": {"projects": ["lib-a"], "tasks": ["lib-a:build"], "edges": [], "stale": ["lib-a:build"]}
+  },
+  {
+   "name": "closure across projects, order kept, cached task not stale",
+   "targets": ["app:build"],
+   "tasks": [
+    {"id": "core:build", "dependsOn": [], "stale": false},
+    {"id": "util:build", "dependsOn": ["core:build"], "stale": true},
+    {"id": "app:build", "dependsOn": ["util:build", "core:build"], "stale": true}
+   ],
+   "expected": {"projects": ["app", "core", "util"], "tasks": ["core:build", "util:build", "app:build"], "edges": [["util:build", "core:build"], ["app:build", "util:build"], ["app:build", "core:build"]], "stale": ["util:build", "app:build"]}
+  },
+  {
+   "name": "roster request has no literal scope target",
+   "targets": ["*:*"],
+   "tasks": [{"id": "p:test", "dependsOn": ["p:build"], "stale": true}, {"id": "p:build", "dependsOn": [], "stale": false}],
+   "expected": {"projects": ["p"], "tasks": ["p:test", "p:build"], "edges": [["p:test", "p:build"]], "stale": ["p:test"]}
+  },
+  {
+   "name": "a dependency outside the plan is refused",
+   "targets": ["x:build"],
+   "tasks": [{"id": "x:build", "dependsOn": ["y:build"], "stale": true}],
+   "expected": null
+  }
+ ],
+ "requests": [
+  {"args": ["run", "repo-task-scope:test"], "expected": {"arguments": ["run", "repo-task-scope:test"], "tool": "nx", "targets": ["repo-task-scope:test"]}},
+  {"args": ["run", "repo-task-scope:test", "--dry-run"], "expected": {"arguments": ["run", "repo-task-scope:test", "--dry-run"], "tool": "nx", "targets": ["repo-task-scope:test"]}},
+  {"args": ["run-many", "--all", "--targets=test"], "expected": {"arguments": ["run-many", "--all", "--targets=test"], "tool": "nx", "targets": ["*:*"]}},
+  {"args": ["run", "--help"], "expected": null},
+  {"args": ["leases", "status"], "expected": null},
+  {"args": ["tools", "list"], "expected": null},
+  {"args": ["scheduler", "status"], "expected": null}
+ ]
+}

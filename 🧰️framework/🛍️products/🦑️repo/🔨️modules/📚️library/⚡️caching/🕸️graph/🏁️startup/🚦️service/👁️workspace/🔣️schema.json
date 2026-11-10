@@ -6,12 +6,17 @@
         "maximumPathUnits": 256,
         "maximumPendingEvents": 200000,
         "maximumStartupMilliseconds": 60000,
-        "privateMarkerDepth": 1,
         "sourcePolicy": "closed-root-and-name",
-        "privateScope": "excluded-source",
-        "readiness": "physical-subscription-and-canary",
+        "readiness": "journal-cursor",
         "failure": "terminal",
-        "custody": "original-service-until-process-exit"
+        "custody": "host-journal",
+        "pollMilliseconds": 200,
+        "blindRootedPaths": [
+          "bazel-out",
+          "bazel-bin",
+          "bazel-testlogs",
+          "bazel-semio"
+        ]
       }
     }
   }

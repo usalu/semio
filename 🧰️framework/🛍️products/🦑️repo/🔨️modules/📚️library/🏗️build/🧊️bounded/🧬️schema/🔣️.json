@@ -1,0 +1,71 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Bounded cache",
+ "description": "A least recently used cache with a finite entry bound and a finite byte bound. A value larger than the byte bound is never stored (rejected). An insert that exceeds either bound evicts the least recently used entries first (never the entry just inserted). A get and a set make the key the most recently used; peek and has do not. Concurrent loads of one key share one loader call. Stats are the public CacheStats record.",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "maximumRegistered": 256
+   }
+  },
+  "Stats": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["name", "entries", "bytes", "maxEntries", "maxBytes", "hits", "misses", "evictions", "rejected", "loads"],
+   "properties": {
+    "name": {"type": "string"},
+    "entries": {"type": "integer", "minimum": 0},
+    "bytes": {"type": "integer", "minimum": 0},
+    "maxEntries": {"type": "integer", "minimum": 1},
+    "maxBytes": {"type": "integer", "minimum": 1},
+    "hits": {"type": "integer", "minimum": 0},
+    "misses": {"type": "integer", "minimum": 0},
+    "evictions": {"type": "integer", "minimum": 0},
+    "rejected": {"type": "integer", "minimum": 0},
+    "loads": {"type": "integer", "minimum": 0}
+   }
+  },
+  "Operation": {
+   "type": "array",
+   "description": "[\"set\", key, size] | [\"get\", key] | [\"peek\", key] | [\"delete\", key]",
+   "minItems": 2,
+   "maxItems": 3
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "cases"],
+   "properties": {
+    "version": {"const": 1},
+    "cases": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "maxEntries", "maxBytes", "operations", "expected"],
+      "properties": {
+       "id": {"type": "string"},
+       "maxEntries": {"type": "integer", "minimum": 1},
+       "maxBytes": {"type": "integer", "minimum": 1},
+       "operations": {"type": "array", "items": {"$ref": "#/definitions/Operation"}},
+       "expected": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["hits", "misses", "evictions", "rejected", "bytes", "keys"],
+        "properties": {
+         "hits": {"type": "integer"},
+         "misses": {"type": "integer"},
+         "evictions": {"type": "integer"},
+         "rejected": {"type": "integer"},
+         "bytes": {"type": "integer"},
+         "keys": {"type": "array", "items": {"type": "string"}, "description": "least recently used first"}
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

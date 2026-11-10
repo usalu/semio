@@ -1,4 +1,5 @@
 import{graphMemoryAllocationV1,GRAPH_MEMORY_POLICY_V1}from"../../../../../🧠️memory/🟨️.mjs";
+import { createBoundedCacheV1 } from "../../../../../🧊️bounded/🟨️.mjs";
 import {noticeLanguagesV1} from "../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import { spawn } from "node:child_process";
 import { closeSync, constants, mkdtempSync, openSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
@@ -100,7 +101,7 @@ export function createFarmTemporaryDirectoryV1(kind, { directory = realpathSync(
   const prefix = policy.temporaryDirectories.prefixes[kind];
   if (typeof prefix !== "string") throw refuseBuildV1("invalid","graph.farm-directory-kind-required",{kind});
   if (!reclaimedDirectoriesV1.has(directory)) {
-    reclaimedDirectoriesV1.add(directory);
+    reclaimedDirectoriesV1.set(directory, true);
     const pattern = new RegExp(policy.temporaryDirectories.pattern, "u");
     let names = [];
     try { names = readdirSync(directory); } catch {}
@@ -112,7 +113,7 @@ export function createFarmTemporaryDirectoryV1(kind, { directory = realpathSync(
 /** 🫀️ Whether a process id still names a process: only the answer "no such process" counts as gone, so a platform that cannot tell keeps the directory. */
 export function farmProcessAliveV1(pid) { try { process.kill(pid, 0); return true; } catch (error) { return error?.code !== "ESRCH"; } }
 
-const reclaimedDirectoriesV1 = new Set();
+const reclaimedDirectoriesV1 = createBoundedCacheV1({ name: "inference:reclaimed-directories", maxEntries: 256, maxBytes: 256 });
 
 /**
  * 🧵️ A pool of worker processes, each running one service module (`open(session, where)` once, then `run(job)` per job, one at a time). Every job ends as `{ reply }`, `{ failure }` (the service threw) or `{ lost }` (the process died or timed out on every attempt), so a caller decides what a failed job means; nothing is thrown except the abort reason of the signal.

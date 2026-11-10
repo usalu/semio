@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-thermal-mass/schema.json",
+  "title": "ChangeZoneThermalMass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "zoneId",
+    "newThermalMassClass",
+    "newCWirkWhM2k"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changezonethermalmass"
+    },
+    "zoneId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal zone",
+          "de": "Thermische Zone"
+        },
+        "description": {
+          "en": "The zone this mutation addresses.",
+          "de": "Das Objekt (Zone), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newThermalMassClass": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalMassClass",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Thermal mass class",
+          "de": "Wärmespeicherklasse"
+        },
+        "description": {
+          "en": "Effective heat storage capacity class of DIN V 18599-2.",
+          "de": "Klasse der wirksamen Wärmespeicherfähigkeit nach DIN V 18599-2."
+        },
+        "group": "zone",
+        "order": 20
+      }
+    },
+    "newCWirkWhM2k": {
+      "type": "number",
+      "exclusiveMinimum": 0.0,
+      "maximum": 1000.0,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Explicit effective heat capacity C_wirk",
+          "de": "Expliziter Wert wirksame Wärmespeicherfähigkeit C_wirk"
+        },
+        "widget": "stepper",
+        "unit": "Wh/(m²·K)",
+        "step": 5,
+        "precision": 0,
+        "group": "zone",
+        "order": 30
+      }
+    }
+  }
+}

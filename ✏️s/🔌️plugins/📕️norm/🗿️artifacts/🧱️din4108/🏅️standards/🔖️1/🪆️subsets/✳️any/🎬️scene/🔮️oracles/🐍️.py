@@ -1,4 +1,4 @@
-"""🔮️ Independent oracle of the DIN 4108 scene diagrams: the steady-state temperature at the layer interfaces from a nodal solve of the series resistance network (numpy linear algebra, not the closed-form ratio of the code), the vapour pressure by linear interpolation over the equivalent air layer thickness (numpy), and the saturation pressure by the formula of DIN EN ISO 13788 (610.5 · exp(17.269 θ / (237.3 + θ)) for θ ≥ 0, 610.5 · exp(21.875 θ / (265.5 + θ)) below), which differs from the Magnus fit of the code by well under one percent.
+"""🔮️ Independent oracle of the DIN 4108 scene diagrams: the steady-state temperature at the layer interfaces from a nodal solve of the series resistance network (numpy linear algebra, not the closed-form ratio of the code), the vapour pressure by linear interpolation over the equivalent air layer thickness between the boundaries and the condensation planes of the Glaser iteration (numpy), and the saturation pressure by the formula of DIN EN ISO 13788 (610.5 · exp(17.269 θ / (237.3 + θ)) for θ ≥ 0, 610.5 · exp(21.875 θ / (265.5 + θ)) below), which the code uses as well.
 Reads {"elements": [{"id", "r_si", "r_se", "t_int", "t_ext", "rh_int", "rh_ext", "layers": [{"d", "lambda", "mu"}], "temperature": [[x, y]], "vapour": [[x, y]], "saturation": [[x, y]]}]} as JSON on stdin and prints {"ok": bool, "checks": n, "failures": [...]}."""
 
 import json
@@ -23,7 +23,7 @@ def nodal_temperatures(element):
     conductance = np.zeros((nodes, nodes))
     source = np.zeros(nodes)
     for index, resistance in enumerate(resistances):
-        g = 1.0 / resistance
+        g = 1.0 / max(resistance, 1e-9)
         left, right = index - 1, index
         if left >= 0:
             conductance[left, left] += g
@@ -63,13 +63,31 @@ def check_element(element, failures):
         sd.append(sd[-1] + layer["d"] * layer["mu"])
     p_int = element["rh_int"] * saturation_iso_13788(element["t_int"])
     p_ext = element["rh_ext"] * saturation_iso_13788(element["t_ext"])
-    for (x, y), s in zip(element["vapour"], sd):
+    sat = [saturation_iso_13788(t) for t in expected]
+    last = len(sd) - 1
+    planes = []
+
+    def pressures():
+        nodes = sorted([0, last] + planes)
+        fixed = {0: p_int, last: p_ext, **{k: sat[k] for k in planes}}
+        p = np.zeros(len(sd))
+        for a, b in zip(nodes, nodes[1:]):
+            idx = list(range(a, b + 1))
+            p[idx] = np.interp([sd[k] for k in idx], [sd[a], sd[b]], [fixed[a], fixed[b]]) if sd[b] > sd[a] else fixed[a]
+        return p
+
+    while True:
+        p = pressures()
+        excess = [(p[k] - sat[k], k) for k in range(1, last) if k not in planes and p[k] > sat[k]]
+        if not excess:
+            break
+        planes.append(max(excess)[1])
+    for (x, y), s_k, want in zip(element["vapour"], sd, p):
         count += 1
-        want = float(np.interp(s, [0.0, sd[-1]], [p_int, p_ext])) if sd[-1] > 0 else p_int
-        if abs(x - s) > 1e-9:
-            failures.append(f"{element['id']}: vapour abscissa {x}, oracle {s}")
+        if abs(x - s_k) > 1e-9:
+            failures.append(f"{element['id']}: vapour abscissa {x}, oracle {s_k}")
         if abs(y - want) > SATURATION_TOLERANCE * max(abs(want), 1.0):
-            failures.append(f"{element['id']}: vapour pressure at s_d {s} is {y}, oracle {want}")
+            failures.append(f"{element['id']}: vapour pressure at s_d {s_k} is {y}, oracle {want}")
     for (_, y), t in zip(element["saturation"], expected):
         count += 1
         want = saturation_iso_13788(t)

@@ -1,0 +1,62 @@
+{
+ "version": 1,
+ "files": {
+  "tools/one.mjs": "import \"./a.mjs\";\nexport const one = 1;\n",
+  "tools/two.mjs": "import \"./a.mjs\";\nimport \"./b.mjs\";\nexport const two = 2;\n",
+  "tools/a.mjs": "export const a = 1;\n",
+  "tools/b.mjs": "export const b = 2;\n"
+ },
+ "shared": [
+  "tools/one.mjs",
+  "tools/two.mjs"
+ ],
+ "owners": [
+  {
+   "name": "first owner",
+   "entries": [
+    "tools/one.mjs",
+    "tools/two.mjs"
+   ],
+   "closures": [
+    [
+     "tools/a.mjs",
+     "tools/one.mjs"
+    ],
+    [
+     "tools/a.mjs",
+     "tools/b.mjs",
+     "tools/two.mjs"
+    ]
+   ]
+  },
+  {
+   "name": "second owner",
+   "entries": [
+    "tools/one.mjs",
+    "tools/two.mjs"
+   ],
+   "closures": [
+    [
+     "tools/a.mjs",
+     "tools/one.mjs"
+    ],
+    [
+     "tools/a.mjs",
+     "tools/b.mjs",
+     "tools/two.mjs"
+    ]
+   ]
+  }
+ ],
+ "question": [
+  "/tools/a.mjs"
+ ],
+ "primed": {
+  "recipes": 2,
+  "derived": 2
+ },
+ "ownerDerived": [
+  0,
+  0
+ ]
+}

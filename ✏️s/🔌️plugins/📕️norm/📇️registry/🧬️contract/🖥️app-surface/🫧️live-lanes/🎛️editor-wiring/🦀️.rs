@@ -1,6 +1,6 @@
 //! 🎛️ Editor wiring of the live lanes: the gesture adapter from host phases and keys to the drag statechart, the ephemeral reducer of the five live commands, the lane frame the windows paint from and the macros that stamp the command rows into an editor. See [`super`].
 
-use crate::{with_clock, now_ms, view_write_events, DragPreview, FieldWrite, GhostPreview, GhostSource, LaneEvent, LanePresence, LaneTransient, NormTransient, PeerDrag};
+use crate::{PAINT_BUDGET, with_clock, now_ms, view_write_events, DragPreview, FieldWrite, GhostPreview, GhostSource, LaneEvent, LanePresence, LaneTransient, NormTransient, PeerDrag};
 use crate::direct_manipulation::{complete_preview, derived_yaw, standing_pose, handle_placed_fields, is_placement_write, insert_edit, snap_point, InsertSpec, key_intent, DragEffect, DragEvent, DragPhase, DragState, HandleDragTool, Key, KeyIntent, Modifiers};
 use crate::{dispatch_live_command, resolve_view_steps, LiveCommand, LiveOutcome, NormEdit, NormRetainedEditor};
 use semio_plugin::{ArtifactView, Emit, Fault, NoConfigMutation, PresenceView, TransientView};

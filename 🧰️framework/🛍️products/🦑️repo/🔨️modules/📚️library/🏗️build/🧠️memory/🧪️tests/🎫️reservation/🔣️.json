@@ -54,13 +54,13 @@
   ],
   "pressure": [
     {
-      "name": "resident-pages-exceed-managed-heap",
+      "name": "resident-pages-never-charged",
       "counters": {
         "rss": 4380942336,
         "heapUsed": 1073741824,
         "external": 134217728
       },
-      "expectedBytes": 4380942336
+      "expectedBytes": 1207959552
     },
     {
       "name": "managed-storage-exceeds-current-resident-pages",

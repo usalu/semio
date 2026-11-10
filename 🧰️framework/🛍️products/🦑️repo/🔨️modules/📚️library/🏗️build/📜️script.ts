@@ -94,7 +94,7 @@ class TestScript extends Script {
 
 /** 🧭️ Routes the repository's portable build commands to the selected implementation. */
 export class RepoScript extends Script {
-  async run(args:string[]):Promise<void> { const{forwardRepoCommandV1}=await import("./🏡️resident/🚪️client/🔁️repo/🟨️.mjs"),{resolveLanguageV1}=await import("../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts");const forwarded=await forwardRepoCommandV1({root:this.repoRoot,args,environment:process.env,stdout:machineOutputV1,languageOf:()=>resolveLanguageV1(["en","de"],args,process.env).language});if(forwarded!==undefined){process.exitCode=forwarded;return;} await runOwnedBuildInvocationV1(this.repoRoot,args,this.invocation,createIssuedResourceControlV1(this.invocation,"repository:command",0)); }
+  async run(args:string[]):Promise<void> { const{runRepoInvocationV1}=await import("./🧭️invocation/🏃️run/🟦️.ts");await runRepoInvocationV1({root:this.repoRoot,args,signal:this.invocation.control.signal,execute:()=>runOwnedBuildInvocationV1(this.repoRoot,args,this.invocation,createIssuedResourceControlV1(this.invocation,"repository:command",0))}); }
 }
 
 /** 🌳️ Preserves caller cancellation and deadline while selecting configured build resources. */
@@ -119,7 +119,8 @@ export async function runBuildCliV1(root:string,typed:readonly string[],environm
   if(diagnostic[0]==="tools"&&["exec","list"].includes(diagnostic[1]??"")){const{buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts");if(buildInvocationRequestsHelpV1(diagnostic)){const{buildHelpForArgumentsV1}=await import("./⚙️operations/📖️help/🟦️.ts");writeResultLineV1(buildHelpForArgumentsV1(diagnostic,diagnosticEnvironment));return;}const{requiresNativeToolchainScopeV1,runToolsCommandV1}=await import("./🧰️tool-registry/⌨️command/🟦️.ts");if(!requiresNativeToolchainScopeV1(diagnostic.slice(1),process.platform)){process.exitCode=await runToolsCommandV1(diagnostic.slice(1),{environment,write:writeResultLineV1,root});return;}}
   const{withBuildCapacityV1}=await profilePhaseV1("door.load",()=>import("./🌡️host-capacity/🟦️.ts"));
   const{withImplementationPinV1}=await import("./📥️inputs/🔏️revision/🟨️.mjs");
-  await profilePhaseV1("door.capacity",()=>withBuildCapacityV1(args.slice(prefix),environment,granted=>profilePhaseV1("door.admitted",()=>withImplementationPinV1(()=>runAdmittedBuildCliV1(root,[...args.slice(0,prefix),...granted.args],environment)))));
+  const plannedByService=await(async()=>{try{return(await(await import("./🧭️invocation/🛰️plan/🟦️.ts")).invocationPlanRequestV1(root,args.slice(prefix),environment))!==undefined;}catch{return false;}})();
+  await profilePhaseV1("door.capacity",()=>withBuildCapacityV1(args.slice(prefix),environment,async granted=>{(await import("./🕸️graph/🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs")).useCapacityGrantV1(()=>({handle:granted.handle,limit:granted.limit}));return profilePhaseV1("door.admitted",()=>withImplementationPinV1(()=>runAdmittedBuildCliV1(root,[...args.slice(0,prefix),...granted.args],environment)));},{plannedByService}));
 }
 
 /** 🌡️ Creates the original script envelope and runs the CLI once the machine has admitted the invocation, so its budget starts with the grant and not with the queue. */

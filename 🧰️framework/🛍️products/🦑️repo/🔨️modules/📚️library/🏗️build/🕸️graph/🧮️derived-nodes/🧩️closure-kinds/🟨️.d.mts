@@ -1,0 +1,13 @@
+import type{GenerationRowV1}from"../../🕰️generations/🟨️.mjs";
+export const CLOSURE_KINDS_V1:readonly["script-walk","ts-program","derived-walk"];
+export const CLOSURE_SETTLE_V1:Readonly<{deriveConcurrency:number;maximumSuspects:number;environmentKey:string}>;
+/** 🏷️ The node kind of one question. */
+export function closureKindOfV1(path:string):"script-walk"|"ts-program"|"derived-walk";
+export const CLOSURE_RULES_V1:Readonly<Record<string,(ctx:any)=>Promise<unknown>>>;
+export function verifyClosureObservedV1(ref:{rows:readonly GenerationRowV1[]},options:{signal?:AbortSignal;environment:{hold(rows:readonly GenerationRowV1[],signal?:AbortSignal):Promise<boolean>}}):Promise<boolean>;
+/** ❓️ The settler of derived questions: one node graph per store; `settle` asks the suspect questions again, an equal answer holds, a different answer or a failing walk changes the fact; the result lists the support rows of the answers (`answers`) only when `answers:true` is asked, so a plan holds nothing it does not read. */
+export function createClosureSettlerV1(options?:{store?:unknown;workspace?:{workspaceRoot:string;cacheRoot:string;grant?:()=>unknown;blobs?:unknown;skip?:readonly string[]};limits?:Readonly<{deriveConcurrency:number;maximumSuspects:number;environmentKey:string}>}):Readonly<{graph:unknown;store:unknown;invalidate(dirty:{paths:readonly string[];overflow?:boolean},options?:{signal?:AbortSignal}):Promise<unknown>;settle(options:{pseudoRows:ReadonlyMap<string,GenerationRowV1>;derive?:(row:GenerationRowV1,signal?:AbortSignal)=>Promise<{fact:unknown;rows:readonly GenerationRowV1[]}>;hold?:(rows:readonly GenerationRowV1[],signal?:AbortSignal)=>Promise<boolean>;dirty?:{paths:readonly string[];directories?:readonly string[];overflow?:boolean;excluded?:(path:string)=>boolean};signal?:AbortSignal;answers?:boolean;progress?:(event:{phase:"verification";done:number;total:number})=>Promise<void>|void}):Promise<{held:Map<string,GenerationRowV1[]>;kept:Set<string>;changed:Map<string,GenerationRowV1>;answers:Map<string,{fact:unknown;rows:GenerationRowV1[]}>;failed:number;reused:number}>;markIndexed(options:{held?:ReadonlyMap<string,{digest?:string;length:number}>;dropped?:readonly string[]}):Promise<void>;stats():Record<string,number>}>;
+/** 🎟️ Binds the capacity grant of this process to the workspace graphs. */
+export function useCapacityGrantV1(grant:(()=>unknown)|undefined):void;
+/** 🏭️ The settler of one workspace shared by every plan of the host service. */
+export function sharedClosureSettlerV1(options:{workspaceRoot:string;cacheRoot:string;blobs?:unknown;skip?:readonly string[]}):ReturnType<typeof createClosureSettlerV1>;

@@ -83,50 +83,13 @@ test("pressure decisions equal the vectors, a Python oracle and a SQLite oracle 
 });
 
 test("a collection frees exactly down to the low-water mark when enough is collectable, and never when the image is at or below the high-water mark",()=>{
- const volume=1000,lanes=Array.from({length:10},(_,index)=>({id:"l"+index,bytes:20,incrementalBytes:0,lastUsedMs:1000+index,live:false})),objects=Array.from({length:10},(_,index)=>({digest:index.toString(16).padStart(64,"0"),bytes:20,lastUsedMs:1000+index}));
- const input=(free:number)=>({capacityBytes:100000,volumeBytes:volume,freeBytes:free,nowMs:2000,lanes,objects});
- expect(planGcV1(input(200))).toEqual({removeLanes:[],removeIncremental:[],removeObjects:[]});
+ const volume=1000,lanes=Array.from({length:10},(_,index)=>({id:"l"+index,bytes:20,incrementalBytes:0,lastUsedMs:1000+index,live:false}));
+ const input=(free:number)=>({capacityBytes:100000,volumeBytes:volume,freeBytes:free,nowMs:2000,lanes});
+ expect(planGcV1(input(200))).toEqual({removeLanes:[],removeIncremental:[]});
  for(const free of[199,150,100,50]){
-  const plan=planGcV1(input(free),{casProtectedShare:0}),freed=plan.removeLanes.length*20+plan.removeObjects.length*20,need=gcNeedBytesV1(volume,free);
-  expect(freed,"free "+free).toBeGreaterThanOrEqual(need);expect(freed-need,"free "+free).toBeLessThan(40);
+  const plan=planGcV1(input(free)),freed=plan.removeLanes.length*20,need=gcNeedBytesV1(volume,free);
+  expect(freed,"free "+free).toBeGreaterThanOrEqual(need);expect(freed-need,"free "+free).toBeLessThan(20);
  }
-});
-
-test("image pressure never evicts the protected newest share of the object store, however large the need, and agrees with a Python derivation",()=>{
- const random=(()=>{let state=20261024;return()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};})(),cases:Array<{capacityBytes:number;volumeBytes:number;freeBytes:number;objects:Array<{digest:string;bytes:number;lastUsedMs:number}>;protectedShare:number;casShare:number;highWaterShare:number;lowWaterShare:number}>=[],plans:string[][]=[];
- for(let round=0;round<200;round++){
-  const capacityBytes=1_000_000+Math.floor(random()*9_000_000),objects=Array.from({length:Math.floor(random()*40)},(_,index)=>({digest:index.toString(16).padStart(64,"0"),bytes:Math.floor(random()*300_000),lastUsedMs:1000+Math.floor(random()*100_000)})),input={capacityBytes,volumeBytes:capacityBytes,freeBytes:Math.floor(random()*capacityBytes*0.05),nowMs:2_000_000,lanes:[],objects};
-  plans.push([...planGcV1(input).removeObjects]);cases.push({capacityBytes,volumeBytes:input.volumeBytes,freeBytes:input.freeBytes,objects,protectedShare:schema.definitions.Policy.const.gc.casProtectedShare,casShare:schema.definitions.Policy.const.gc.casShare,highWaterShare:schema.definitions.Policy.const.gc.highWaterShare,lowWaterShare:schema.definitions.Policy.const.gc.lowWaterShare});
- }
- const python=pythonOracle(`
-import json,sys
-cases=json.load(sys.stdin);out=[]
-for c in cases:
-    used=c["volumeBytes"]-c["freeBytes"]
-    need=used-int(c["volumeBytes"]*c["lowWaterShare"]) if used>int(c["volumeBytes"]*c["highWaterShare"]) else 0
-    objs=sorted(c["objects"],key=lambda o:(o["lastUsedMs"],o["digest"]))
-    protected=set();total=0
-    for o in reversed(objs):
-        total+=o["bytes"]
-        if total>int(c["capacityBytes"]*c["protectedShare"]):break
-        protected.add(o["digest"])
-    removed=[];freed=0
-    for o in objs:
-        if freed>=need:break
-        if o["digest"] in protected:continue
-        removed.append(o["digest"]);freed+=o["bytes"]
-    share=int(c["capacityBytes"]*c["casShare"]);keep=0;over=False
-    for o in sorted(c["objects"],key=lambda o:(-o["lastUsedMs"],o["digest"])):
-        keep+=o["bytes"]
-        if over or keep>share:
-            over=True
-            if o["digest"] not in removed:removed.append(o["digest"])
-    out.append(sorted(removed))
-print(json.dumps(out))
-`,cases) as string[][];
- python.forEach((row,index)=>expect(plans[index]!.slice().sort(),"round "+index).toEqual(row));
- const heavy=Array.from({length:6},(_,index)=>({digest:index.toString(16).padStart(64,"0"),bytes:40,lastUsedMs:1000+index})),plan=planGcV1({capacityBytes:1000,volumeBytes:1000,freeBytes:0,nowMs:2000,lanes:[],objects:heavy});
- expect(plan.removeObjects.length).toBe(4);expect(plan.removeObjects).not.toContain(heavy[5]!.digest);expect(plan.removeObjects).not.toContain(heavy[4]!.digest);
 });
 
 test("compiler output is classified as out of space by the operating system's error number or message, never by an unrelated error",()=>{
@@ -151,11 +114,10 @@ test("a second collector finds the claim taken and reports running; a free claim
 });
 
 test("a long collection reports progress, can be cancelled between items, and keeps the items it did not reach",async()=>{
- const root=scratch(),digests=Array.from({length:200},(_,index)=>index.toString(16).padStart(64,"0"));
+ const root=scratch(),lanes=Array.from({length:6},(_,index)=>"l"+index);
  try{
-  mkdirSync(join(root,UNIT_CACHE_POLICY_V1.layout.objects),{recursive:true});
   const seen:number[]=[],controller=new AbortController();
-  await expect(applyGcYieldingV1(root,{removeLanes:[],removeIncremental:[],removeObjects:digests},Date.now(),{signal:controller.signal,progress:(done,total)=>{seen.push(done);expect(total).toBe(Math.ceil(200/64));if(done===2)controller.abort(new Error("cancelled"));}})).rejects.toThrow("cancelled");
+  await expect(applyGcYieldingV1(root,{removeLanes:lanes,removeIncremental:[]},Date.now(),{signal:controller.signal,progress:(done,total)=>{seen.push(done);expect(total).toBe(6);if(done===2)controller.abort(new Error("cancelled"));}})).rejects.toThrow("cancelled");
   expect(seen).toEqual([1,2]);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
@@ -184,7 +146,7 @@ test("the real background collector starts detached, takes the claim, collects a
   expect(existsSync(join(root,"gc.stamp"))).toBe(true);
   const log=join(root,"gc.log");let text="";
   for(let attempt=0;attempt<200&&!text.includes("\"running\"");attempt++){await new Promise(done=>setTimeout(done,50));try{text=readFileSync(log,"utf8");}catch{}}
-  expect(JSON.parse(text.trim().split("\n").pop()!)).toMatchObject({running:false,applied:{lanes:0,incremental:0,objects:0}});
+  expect(JSON.parse(text.trim().split("\n").pop()!)).toMatchObject({running:false,applied:{lanes:0,incremental:0}});
   expect(startUnitCacheCollectorV1({root:join(root,"missing","\0bad"),capacityBytes:1000,environment:{}})).toMatchObject({state:"failed"});
  }finally{rmSync(root,{recursive:true,force:true});}
 });

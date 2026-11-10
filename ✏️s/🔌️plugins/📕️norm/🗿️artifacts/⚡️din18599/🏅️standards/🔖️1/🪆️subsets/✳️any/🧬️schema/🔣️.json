@@ -104,6 +104,14 @@
           },
           "lightingPowerWM2": {
             "type": "number"
+          },
+          "thermalMassClass": {
+            "type": "string",
+            "default": "Medium"
+          },
+          "cWirkWhM2k": {
+            "type": "number",
+            "default": 0
           }
         }
       }

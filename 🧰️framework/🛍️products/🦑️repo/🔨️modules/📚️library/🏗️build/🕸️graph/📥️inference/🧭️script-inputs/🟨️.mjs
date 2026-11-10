@@ -1,4 +1,7 @@
 import {readTypeScriptPackageProducerV1,typeScriptPackagePublicDirectoryV1} from "./../../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🏭️producer/🟦️.ts";
+import { createBoundedCacheV1 } from "../../../🧊️bounded/🟨️.mjs";
+import { createClosureStoreV1 } from "./💾️entries/🟨️.mjs";
+import { rowKeyV1 } from "../../🕰️generations/🧮️fact-rows/🟨️.mjs";
 import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
 import {buildInputSourceRoleV1,readBuildRuntimeSourceEntriesV1,readBuildSourceResourceEntriesV1} from "../../🚪️admission/🟦️.ts";
 import {createRequire} from "node:module";
@@ -14,18 +17,21 @@ import { createHash } from "node:crypto";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { activeTypeScriptProgramReuseV1 } from "./♨️reuse/🟨️.mjs";
-import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, observeDetachedV1, detachedFailureV1, retainDetachedFailureV1, observationLayerHoldsV1, observationRoundV1, observationRowsHoldV1, recordClosureFactV1, registerClosureProviderV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, observeDetachedV1, detachedFailureV1, retainDetachedFailureV1, observationLayerHoldsV1, observationRoundV1, observationRowsHoldV1, recordClosureFactV1, registerClosureProviderV1, observedFieldV1, registerFieldExtractorV1, retainObservedRowsV1, observeDetachedSyncV1, withObservationPassRoundV1 , observationLayerHoldsAsyncV1, observationRowsHoldAsyncV1, OBSERVATION_LIMITS_V1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { readCargoExecutionContractV1, selectCargoExecutionOperationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { REVISION_POLICY_V1 } from "../../../📥️inputs/🔏️revision/🟨️.mjs";
 import { INFERENCE_LIMITS_V1 } from "../🧬️schema/🟨️.mjs";
+import { rowPathsV1, rowTouchedV1 } from "../../🧮️derived-nodes/🧩️closure-kinds/🧭️row-paths/🟨️.mjs";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { GlobV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
 import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { routerCommandSpecifiersV1, routerCommandWordV1 } from "./🔀️router/🟨️.mjs";
-import { cargoManifestDirectoriesV1, crateNamesV1, entryFilesV1, includeRootsV1, readDerivedWalkV1 } from "../../../📥️inputs/🎯️precision/🟦️.ts";
+import { cargoManifestDirectoriesAsyncV1, crateNamesOfV1, packageNameV1, entryFilesV1, includeRootsV1, readDerivedWalkV1 } from "../../../📥️inputs/🎯️precision/🟦️.ts";
 import { buildSchedulingPrefixesV1 } from "../../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
 import { WALK_VIEW_POLICY_V1, closureRoleViewV1, walkViewAnswerV1, walkViewOfRecipeV1, walkViewPrefixesV1 } from "./👓️walk-views/🟨️.mjs";
 import { PROVIDER_CLOSURE_POLICY_V1, expandClosureValueV1, joinWithProviderViewV1, providerGroupNameV1, providerProjectNameV1, providerReferenceV1, sharedReferencesOfV1, toolGroupNameV1, toolReferenceV1 } from "./🔌️provider-closures/🟨️.mjs";
+import { createStringTableV1 } from "../../../👁️observation/🔢️row-table/🟨️.mjs";
+import { createReachSetsV1 } from "./🧠️reach-memo/🟨️.mjs";
 const { existsSync, statSync } = observedFs;
 
 /** 🚧️ Turns an import of a command closure that resolves to nothing into the withheld-project failure of its importing source, so one broken file withholds its own project instead of aborting the whole graph. */
@@ -33,11 +39,11 @@ function unresolvedSourceImportV1(error,path){return Object.assign(Error(String(
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "script-inputs";
-let buildPath, readPhysicalSource, requirePhysicalSourceV1, prepareSourceAnalysesV1, revisionIdentity, register, PROVIDER_PORTS, LIBRARY_ROOT, POLICY, readToml, readBunLockGraph, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA;
+let workspaceDataDirectory, buildPath, readPhysicalSource, requirePhysicalSourceV1, prepareSourceAnalysesV1, revisionIdentity, register, PROVIDER_PORTS, LIBRARY_ROOT, POLICY, readToml, readBunLockGraph, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
-  ({ buildPath, readPhysicalSource, requirePhysicalSourceV1, LIBRARY_ROOT, POLICY, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA } = registry.coordinates);
+  ({ workspaceDataDirectory, buildPath, readPhysicalSource, requirePhysicalSourceV1, LIBRARY_ROOT, POLICY, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA } = registry.coordinates);
   ({ prepareSourceAnalysesV1 } = registry.sourceAnalyses);
   ({ revisionIdentity, register } = registry);
   PROVIDER_PORTS = register({ id: `build:script-provider-ports:v1:${createHash("sha256").update(revisionIdentity.url).digest("hex")}`, revision: createHash("sha256").update(scriptProviderPortsV1.toString()).digest("hex"), analyze: (_path, bytes) => scriptProviderPortsV1(bytes.toString("utf8")) });
@@ -51,6 +57,8 @@ export function createScriptInputCache(context={}) {
   return { files: new Map(), closures: new Map(), commandDependencies: new Map(), modules:new Set(), resources:new Set(),generatedImports:new Map(),declared:new Map(),paths:new Map(),compiledNames:new WeakMap(),walkPorts:new WeakMap(),moduleSets:new WeakMap(),context,providerDesignation:context.scriptProviderDesignation,lateClosures:context.lateClosures===true };
 }
 
+export { askHeavyQuestionV1, isHeavyQuestionV1, primeSharedClosuresInChildV1 } from "./🪆️heavy-questions/🟨️.mjs";
+
 /** 🌊️ The script provider ports one module defines: the literal names of its `defineScriptProviderV1("…")` calls, `*` when a use of the function is not such a call (every designated provider is then requested); import and export specifiers and the declaration itself are no uses. */
 export function scriptProviderPortsV1(text) {
   const names = new Set();
@@ -63,11 +71,20 @@ export function scriptProviderPortsV1(text) {
 
 /** 📜️ The script provider designation one walk resolves ports through, validated against the schema beside it (where the repository's designation keeps its own): its path, the schema's path and the declared providers. */
 function providerDesignationV1(cache) {
-  const path = cache.providerDesignation ?? join(LIBRARY_ROOT, SCRIPT_PROVIDER_DESIGNATION), schema = join(dirname(path), relative(dirname(SCRIPT_PROVIDER_DESIGNATION), SCRIPT_PROVIDER_DESIGNATION_SCHEMA));
-  const declared = JSON.parse(readPhysicalSource(path).toString("utf8"));
-  if (validateJsonSchemaSubset(JSON.parse(readPhysicalSource(schema).toString("utf8")), declared).length) throw Error("Complete repository script provider declaration required");
-  return { path, schema, providers: declared.providers };
+  const path = cache.providerDesignation ?? join(LIBRARY_ROOT, SCRIPT_PROVIDER_DESIGNATION), schema = join(dirname(path), relative(dirname(SCRIPT_PROVIDER_DESIGNATION), SCRIPT_PROVIDER_DESIGNATION_SCHEMA)), domain = join(LIBRARY_ROOT, SCRIPT_PROVIDER_DESIGNATION_SCHEMA);
+  for (const file of [path, schema, domain]) requirePhysicalSourceV1(file);
+  return { path, schema, providers: observedFieldV1(path, "script-provider-designation", schema, { paths: [schema, domain] }) };
 }
+
+/** 🔌️ The crate name of a Cargo manifest: the one fact the crate index reads of it, so an edit of any other manifest line moves no walk. */
+registerFieldExtractorV1("cargo-package-name", (text) => packageNameV1(text));
+
+/** 🔌️ The providers a designation declares once it validates against the schema beside it and the repository's own: the projection a walk depends on, so an edit that changes neither the providers nor the verdict moves no closure. */
+registerFieldExtractorV1("script-provider-designation", (text, schemaPath, _path, readOther) => {
+  const declared = JSON.parse(text), document = JSON.parse(readOther(schemaPath)), domain = JSON.parse(readOther(join(LIBRARY_ROOT, SCRIPT_PROVIDER_DESIGNATION_SCHEMA)));
+  if (validateJsonSchemaSubset(document, declared, document, domain?.$id === document?.$id ? [] : [domain]).length) throw Error("Complete repository script provider declaration required");
+  return declared.providers;
+});
 
 /** 🚰️ The designated ports among the ports one module defines, which a walk names instead of descending into their modules: every designated port when a use is not a literal call (`*`); a port the designation does not name requests nothing. */
 export function designatedPortsV1(cache, ports) {
@@ -109,8 +126,9 @@ export function workspacePackageModuleV1(containing, specifier, workspaceRoot, c
   if (specifier.startsWith(".") || isAbsolute(specifier) || isBuiltin(specifier) || /^[a-z][a-z0-9+.-]*:/u.test(specifier)) return undefined;
   specifier=buildImportResourceV1(containing,specifier).specifier;
   const promised=producedOutput?.(specifier);if(promised&&!declarations)return resolve(workspaceRoot,promised.output);
-  const options={moduleResolution:compiler.ModuleResolutionKind.NodeNext,module:compiler.ModuleKind.NodeNext,allowJs:true,resolveJsonModule:true,noDtsResolution:!declarations};
+  const options={...tsconfigCompilerOptionsV1(compiler,host,workspaceRoot,containing),moduleResolution:compiler.ModuleResolutionKind.NodeNext,module:compiler.ModuleKind.NodeNext,allowJs:true,resolveJsonModule:true,noDtsResolution:!declarations};
   let resolution=compiler.resolveModuleName(specifier,containing,options,host,undefined,undefined,mode);
+  if(!resolution.resolvedModule&&options.paths)resolution=compiler.resolveModuleName(specifier,containing,{...options,moduleResolution:compiler.ModuleResolutionKind.Bundler,module:compiler.ModuleKind.ESNext},host,undefined,undefined,mode);
   const packageName=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0],future=new Map(),packages=[];
   for(const manifest of resolution.affectingLocations??[]){
    const physical=host.realpath?host.realpath(manifest):manifest,local=relative(workspaceRoot,physical);if(local===""||local.startsWith("..")||isAbsolute(local)||local.split(sep).includes("node_modules"))continue;
@@ -335,13 +353,36 @@ export function withoutSchedulingV1(closure, prefixes) {
 const keptClosuresV1 = new WeakMap();
 
 /** 🔀️ The router script is the one closure member that is a content fact: its command table is read from its bytes, so the imports of the commands it runs with are exactly the ones its text names. */
-function routerKeptFromSourceV1(compiler, path, words) { return routerKeptV1(compiler, path, readPhysicalSource(path).toString("utf8"), words); }
+function routerKeptFromSourceV1(_compiler, path, words) { requirePhysicalSourceV1(path); const kept = observedFieldV1(path, "script-router-kept", JSON.stringify(words)); return kept === null ? undefined : new Set(kept); }
+
+/** 🔌️ The imports a router script keeps for a list of command words (`null` when it is no router this reading understands): the one fact a walk reads of the router's text, so an edit that keeps them moves no walk. */
+registerFieldExtractorV1("script-router-kept", (text, pointer, path) => { const kept = routerKeptV1(parserTypescriptV1(), path, text, JSON.parse(pointer)); return kept === undefined ? null : [...kept].sort(); });
 
 /** 🧵️ The imports a router script needs for all the commands it runs with, or nothing when any of them is not a router this reading understands. */
 function routerKeptV1(compiler, path, text, words) {
   const kept = new Set();
   for (const word of words) { let own; try { own = routerCommandSpecifiersV1(compiler, path, text, word); } catch { return undefined; } if (own === undefined) return undefined; for (const specifier of own) kept.add(specifier); }
   return kept;
+}
+
+const tsconfigOptionsByHostV1 = new WeakMap();
+/** 🧭️ The `baseUrl`, `paths` and `extends` semantics bun resolves modules with: the options of the nearest `tsconfig.json` at or above the importing file below the workspace root, parsed by TypeScript itself through the observed host, so an edit of it moves the walk.
+ * @see https://www.typescriptlang.org/tsconfig#paths */
+export function tsconfigCompilerOptionsV1(compiler, host, workspaceRoot, file) {
+  const root = resolve(workspaceRoot), memo = tsconfigOptionsByHostV1.get(host) ?? new Map();
+  tsconfigOptionsByHostV1.set(host, memo);
+  let at = dirname(file), config;
+  while (config === undefined && (at === root || at.startsWith(root + sep))) { const candidate = join(at, "tsconfig.json"); if (host.fileExists(candidate)) config = candidate; if (at === root) break; at = dirname(at); }
+  if (config === undefined) return {};
+  if (!memo.has(config)) {
+    const read = compiler.readConfigFile(config, host.readFile);
+    memo.set(config, read.error || !read.config ? {} : compiler.parseJsonConfigFileContent(read.config, { useCaseSensitiveFileNames: true, readDirectory: () => [], fileExists: host.fileExists, readFile: host.readFile }, dirname(config), undefined, config).options);
+  }
+  return memo.get(config);
+}
+/** 🧭️ The Bundler resolution options of a module of a command closure, with the `baseUrl` and `paths` of its tsconfig. */
+export function tsconfigResolutionOptionsV1(compiler, host, workspaceRoot, file) {
+  return { ...tsconfigCompilerOptionsV1(compiler, host, workspaceRoot, file), moduleResolution: compiler.ModuleResolutionKind.Bundler, module: compiler.ModuleKind.ESNext, allowJs: true, resolveJsonModule: true };
 }
 
 /** 🌍️ The module resolution configuration bun reads for every module of a command closure (checked with the kernel read oracle: `undeclared-g`): the nearest `package.json` and the nearest `tsconfig.json` above each module directory, and the `tsconfig.json` files an `extends` names; the walk stops below the workspace root, whose own files are shared inputs of every target. Answers through the observed host, so a config that appears or changes re-keys the walk. */
@@ -373,34 +414,42 @@ export function resolutionConfigsV1(compiler, host, workspaceRoot, modules) {
 async function boundedScriptInputsV1(entries, workspaceRoot, cache = createScriptInputCache(), requiredSources=false, resourceEntries=[], commands=new Map()) {
   const resources=new Set(resourceEntries.map(path=>resolve(path))),resourceKey=memoDigestV1([...resources].sort()),selectors=new Map([...commands].map(([path,words])=>[resolve(path),[...new Set(words)].sort()])),selectorKey=memoDigestV1([...selectors].sort(([a],[b])=>a<b?-1:a>b?1:0)),roots = [...new Set(entries.map(entry => resolve(entry)))].sort(), key = memoDigestV1(resolve(workspaceRoot), roots, requiredSources,resourceKey,selectorKey);
   let steps=0;const checkpoint=(force=false)=>yieldInferenceV1(cache.context,"build:command-source-imports",++steps,force);
-  let compiledPaths;
+  let memberParts=[];
   const walked=await memoizedObservedAsyncComputationV1(cache.closures,key,async()=>{
-  const compiler = parserTypescriptV1(), host = observedTypeScriptHost(compiler.sys), files = new Set(),compiled=new Set(),defined=new Set();
-  const visit = async(path,source=true) => {
-    await checkpoint();
-    if (closurePathNameV1(cache, workspaceRoot, path).startsWith("{workspaceRoot}/../")) throw new Error(`Command import escapes workspace: ${path}`);
-    if(presentationResourcesV1(cache).has(buildPath(relative(workspaceRoot,path))))return;
-    const seen=files.has(path);
-    files.add(path);
-    if(requiredSources){const admitted=cache.physical??=new Set();if(!admitted.has(path)){requirePhysicalSourceV1(path);admitted.add(path);}}
-    else if (!existsSync(path)) return;
-    if(!source||!DECLARED_MODULE_SUFFIX_V1.test(path)){cache.resources.add(path);if(!seen)requirePhysicalSourceV1(path);return;}
-    if(compiled.has(path))return;
-    compiled.add(path);cache.modules.add(path);
-    const imports = await memoizedObservedAsyncComputationV1(cache.files,JSON.stringify([resolve(workspaceRoot),path,requiredSources,cache.providerDesignation??null,selectors.get(path)??null]),async()=>{
+  const compiler = parserTypescriptV1(), host = observedTypeScriptHost(compiler.sys);
+  const walk = await reachWalkV1({ roots, workspaceRoot, cache, requiredSources, resources, selectors, checkpoint, compiler, host });
+  cache.compiledNames.set(walk.result, new Set([...walk.compiled].map((file) => closurePathNameV1(cache, workspaceRoot, file))));
+  cache.walkPorts.set(walk.result, [...walk.defined].sort());
+  memberParts = walk.members;
+  return walk.result;
+  },checkpoint);
+  const stored=cache.closures.get(key);
+  if(stored){
+   const question=walkQuestionV1(cache,workspaceRoot,roots,requiredSources,resources,selectors);
+   if(!walkFactsV1.has(stored.observations))walkFactsV1.set(stored.observations,{row:{kind:"derived",path:question,fact:walkAnswerV1(cache,workspaceRoot,walked)},views:Object.fromEntries(Object.keys(WALK_VIEW_POLICY_V1.views).map(view=>[view,{kind:"derived",path:walkQuestionV1(cache,workspaceRoot,roots,requiredSources,resources,selectors,view),fact:walkAnswerV1(cache,workspaceRoot,walked,view)}]))});
+   for(const part of memberParts){let walks=walkMembersV1.get(part);if(!walks)walkMembersV1.set(part,walks=new Set());walks.add(question);}
+   if(memberParts.length)walkPartsV1.set(walked,memberParts);
+   if(cache.pass?.transient)cache.closures.delete(key);
+  }
+  return walked;
+}
+
+/** 🧭️ The edges of one module: the designated ports it defines, its command imports (through the router selectors of the walk, the workspace packages, the runtime and the TypeScript resolution), its runtime references and its literal URLs, resolved to the files they name. */
+async function walkImportsV1({ cache, workspaceRoot, requiredSources, selectors, compiler, host, checkpoint }, path) {
+  const sink = new Set(), output = cache.generatedOutput ? (specifier) => { const got = observeDetachedSyncV1(() => cache.generatedOutput(specifier)); for (const part of [got.rows, ...got.layers]) if (part.length) sink.add(part); return got.value; } : undefined;
       requirePhysicalSourceV1(path);
       const ports = observedSourceAnalysisV1(PROVIDER_PORTS, path), imports = ports.length ? designatedPortsV1(cache, ports).map(port => ({ port })) : [], words = selectors.get(path), kept = words?.length ? routerKeptFromSourceV1(compiler, path, words) : undefined;
-      const generated=specifier=>{const produced=cache.generatedOutput?.(specifier);if(!produced)return false;const rows=cache.generatedImports.get(path)??[];if(!rows.some(row=>row.target===produced.target&&row.output===produced.output))rows.push(produced);cache.generatedImports.set(path,rows);for(const file of produced.sources??[])imports.push({path:resolve(workspaceRoot,file),source:true});return true;};
+      const generated=specifier=>{const produced=output?.(specifier);if(!produced)return false;const rows=cache.generatedImports.get(path)??[];if(!rows.some(row=>row.target===produced.target&&row.output===produced.output))rows.push(produced);cache.generatedImports.set(path,rows);for(const file of produced.sources??[])imports.push({path:resolve(workspaceRoot,file),source:true});return true;};
       for (const entry of observedSourceAnalysisV1(prepareSourceAnalysesV1().command,path)) {
         await checkpoint();
         if (kept && !kept.has(entry)) continue;
         const resource=buildImportResourceV1(path,entry);
         if(generated(resource.specifier))continue;
-        let resolved=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,compiler.ModuleKind.ESNext,false,cache.generatedOutput);
+        let resolved=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,compiler.ModuleKind.ESNext,false,output);
         try { resolved ??= observedRequireResolve(path, resource.specifier); }
         catch (error) {
           if (error.code !== "MODULE_NOT_FOUND") throw error;
-          resolved = compiler.resolveModuleName(resource.specifier, path, { moduleResolution: compiler.ModuleResolutionKind.Bundler, allowJs: true, resolveJsonModule: true }, host).resolvedModule?.resolvedFileName;
+          resolved = compiler.resolveModuleName(resource.specifier, path, tsconfigResolutionOptionsV1(compiler, host, workspaceRoot, path), host).resolvedModule?.resolvedFileName;
           if (!resolved) {if(requiredSources||resource.suffix||!DECLARED_MODULE_SUFFIX_V1.test(resource.specifier))throw unresolvedSourceImportV1(error,path);continue;}
           if (/\.d\.[cm]?ts$/.test(resolved)) throw error;
         }
@@ -409,7 +458,7 @@ async function boundedScriptInputsV1(entries, workspaceRoot, cache = createScrip
       const references = observedSourceAnalysisV1(prepareSourceAnalysesV1().references,path);
       for (const [specifiers, mode] of [[references.runtime.imports, compiler.ModuleKind.ESNext], [references.runtime.requires, compiler.ModuleKind.CommonJS]]) for (const specifier of specifiers) {
         await checkpoint();
-        const resource=buildImportResourceV1(path,specifier);if(generated(resource.specifier))continue;const member=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,mode,false,cache.generatedOutput);
+        const resource=buildImportResourceV1(path,specifier);if(generated(resource.specifier))continue;const member=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,mode,false,output);
         if (member&&!generated(member)) imports.push({path:member,source:resource.source});
       }
       for (const literal of references.urls) {
@@ -417,30 +466,239 @@ async function boundedScriptInputsV1(entries, workspaceRoot, cache = createScrip
         const target = workspaceUrlTargetV1(path, literal, workspaceRoot,false);if(!target||generated(target.path))continue;
         imports.push({...target,url:true});
       }
+      Object.defineProperty(imports, "shared", { value: [...sink] });
       return imports;
-    },checkpoint);
-    for (const imported of imports) {
-      if(imported.port!==undefined){defined.add(imported.port);continue;}
-      const resource=imported.url&&resources.has(resolve(imported.path));
-      if(imported.url&&!resource&&(!existsSync(imported.path)||!statSync(imported.path).isFile()))continue;
-      await visit(imported.path,imported.source&&!resource);
+}
+
+/** 🕸️ One module of the command walk as a graph node: what visiting `path` (as a source module or as a resource) observed and the edges it resolved; built once per cache and pass, so a closure is a walk over nodes that are already in memory and its support is the nodes' rows by reference.
+ * @see ../../../../👁️observation/🟨️.mjs `retainObservedRowsV1` */
+async function walkNodeV1(env, path, source) {
+  const { cache, workspaceRoot, requiredSources, selectors, compiler, host, checkpoint } = env, nodes = cache.walkNodes ??= new Map();
+  const key = walkKeyV1(env, path, source);
+  let entry = nodes.get(key);
+  if (entry?.pass !== env.pass && entry?.node !== undefined) { if (walkPartsHoldV1(env.pass, [...entry.node.parts, ...entry.node.shared], workspaceRoot)) entry.pass = env.pass; else { nodes.delete(key); entry = undefined; } }
+  if (entry === undefined) {
+    entry = { pass: env.pass, node: undefined, building: undefined }; nodes.set(key, entry);
+    entry.building = (async () => {
+      const captured = await observeDetachedV1(async () => {
+        if (closurePathNameV1(cache, workspaceRoot, path).startsWith("{workspaceRoot}/../")) throw new Error(`Command import escapes workspace: ${path}`);
+        if (presentationResourcesV1(cache).has(buildPath(relative(workspaceRoot, path)))) return { kind: "skip", imports: [] };
+        if (requiredSources) requirePhysicalSourceV1(path); else if (!existsSync(path)) return { kind: "missing", imports: [] };
+        if (!source || !DECLARED_MODULE_SUFFIX_V1.test(path)) { requirePhysicalSourceV1(path); return { kind: "resource", imports: [] }; }
+        const imports = await memoizedObservedAsyncComputationV1(cache.files, moduleKeyV1(cache, JSON.stringify([resolve(workspaceRoot), path, requiredSources, cache.providerDesignation ?? null, selectors.get(path) ?? null])), async () => walkImportsV1(env, path), checkpoint);
+        return { kind: "module", shared: imports.shared ?? [], imports: imports.map((imported) => imported.url ? { ...imported, file: existsSync(imported.path) && statSync(imported.path).isFile() } : imported) };
+      });
+      const node = { shared: [], ...captured.value, parts: [captured.rows, ...captured.layers], path, source, name: closurePathNameV1(cache, workspaceRoot, path), no: cache.walkCount = (cache.walkCount ?? 0) + 1 };
+      if (node.kind === "module") cache.modules.add(path); else if (node.kind === "resource") cache.resources.add(path);
+      return node;
+    })();
+  }
+  try { entry.node ??= await entry.building; } catch (error) { nodes.delete(key); retainDetachedFailureV1(error); throw error; }
+  return entry.node;
+}
+
+/** ✅️ Whether every row array of a node still holds in this pass; an array shared by many nodes (the Wasm compile index) is checked once per pass. */
+function walkPartsHoldV1(pass, parts, workspaceRoot) {
+  pass.valid ??= new WeakSet();
+  for (const part of parts) {
+    if (pass.valid.has(part)) continue;
+    if (pass.dirty !== undefined) {
+      const meta = partReachV1(workspaceRoot, part);
+      if (!rowTouchedV1(meta, pass.dirty)) {
+        if (meta.outside.length && !pass.valid.has(meta.outside) && !observationRowsHoldV1(meta.outside)) return false;
+        pass.valid.add(meta.outside); pass.valid.add(part); continue;
+      }
+    }
+    if (!observationRowsHoldV1(part)) return false;
+    pass.valid.add(part);
+  }
+  return true;
+}
+
+const OUTSIDE_V1 = "\0outside";
+const partReaches = new WeakMap();
+/** 🧭️ What can move the rows of one part (see `rowPathsV1`), with the rows about paths above the checkout kept apart: a journal that watches the checkout vouches for the rest, those are checked once per pass. */
+function partReachV1(workspaceRoot, part) {
+  let meta = partReaches.get(part);
+  if (meta === undefined) {
+    const relativeName = (path) => { const name = relative(workspaceRoot, path); return name === "" ? "" : name.startsWith("..") || isAbsolute(name) ? OUTSIDE_V1 : buildPath(name); };
+    meta = { paths: new Set(), dirs: new Set(), bare: new Set(), config: false, volatile: false, outside: [] };
+    for (const row of part) { const one = rowPathsV1(row, relativeName, OUTSIDE_V1); if (one.outside) meta.outside.push(row); for (const path of one.paths) meta.paths.add(path); for (const dir of one.dirs) meta.dirs.add(dir); for (const dir of one.bare) meta.bare.add(dir); meta.config ||= one.config; meta.volatile ||= one.volatile; }
+    meta.paths = [...meta.paths]; meta.dirs = [...meta.dirs]; meta.bare = [...meta.bare];
+    partReaches.set(part, meta);
+  }
+  return meta;
+}
+
+/** 🧭️ The directory configuration node: the configs the walk reads for the modules of one directory, with the rows that read them; the union over directories is `resolutionConfigsV1` of the whole set. */
+async function walkConfigNodeV1(env, directory) {
+  const { cache, workspaceRoot, compiler, host } = env, nodes = cache.walkNodes ??= new Map(), key = moduleKeyV1(cache, JSON.stringify(["configs", resolve(workspaceRoot), directory]));
+  let entry = nodes.get(key);
+  if (entry?.pass !== env.pass && entry?.node !== undefined) { if (walkPartsHoldV1(env.pass, entry.node.parts, workspaceRoot)) entry.pass = env.pass; else { nodes.delete(key); entry = undefined; } }
+  if (entry === undefined) {
+    entry = { pass: env.pass, node: undefined, building: undefined }; nodes.set(key, entry);
+    entry.building = (async () => {
+      const captured = await observeDetachedV1(async () => resolutionConfigsV1(compiler, host, workspaceRoot, [join(directory, "_")]));
+      return { configs: captured.value, parts: [captured.rows, ...captured.layers] };
+    })();
+  }
+  try { entry.node ??= await entry.building; } catch (error) { nodes.delete(key); throw error; }
+  return entry.node;
+}
+
+/** 🌳️ The command walk over graph nodes: depth first over `(path, source)` pairs, the same visiting rules as the inline walk, every node's rows merged by reference into the closure's scope. */
+async function reachWalkV1({ roots, workspaceRoot, cache, requiredSources, resources, selectors, checkpoint, compiler, host }) {
+  const env = { cache, workspaceRoot, requiredSources, selectors, compiler, host, checkpoint, pass: cache.pass ?? {} };
+  env.pass.valid ??= new WeakSet();
+  const files = new Set(), compiled = new Set(), defined = new Set(), seen = new Set(), stack = roots.map((path) => [path, true]), directories = new Set(), members = new Set();
+  let steps = 0;
+  const drain = async () => {
+    while (stack.length) {
+      const [path, source] = stack.pop(), mark = (source ? "1" : "0") + path;
+      if (seen.has(mark)) continue;
+      seen.add(mark);
+      if (++steps % 64 === 0) await checkpoint();
+      const node = await walkNodeV1(env, path, source);
+      for (const part of node.parts) { retainObservedRowsV1(part); members.add(part); }
+      for (const part of node.shared) { retainObservedRowsV1(part); members.add(part); }
+      if (node.kind === "skip") continue;
+      files.add(path);
+      if (node.kind === "missing") continue;
+      if (node.kind === "resource") { cache.resources.add(path); continue; }
+      compiled.add(path); cache.modules.add(path); directories.add(dirname(path));
+      for (const imported of node.imports) {
+        if (imported.port !== undefined) { defined.add(imported.port); continue; }
+        const resource = imported.url && resources.has(resolve(imported.path));
+        if (imported.url && !resource && !imported.file) continue;
+        stack.push([imported.path, imported.source && !resource]);
+      }
     }
   };
-  for (const entry of roots) await visit(entry);
-  for (const config of resolutionConfigsV1(compiler, host, workspaceRoot, compiled)) await visit(config, false);
-  const result = [...files].map((file) => closurePathNameV1(cache, workspaceRoot, file)).sort();
-  cache.compiledNames.set(result, new Set([...compiled].map((file) => closurePathNameV1(cache, workspaceRoot, file))));
-  cache.walkPorts.set(result, [...defined].sort());
-  compiledPaths=[...compiled];
-  return result;
-  },checkpoint);
-  const stored=cache.closures.get(key);
-  if(stored){
-   const question=walkQuestionV1(cache,workspaceRoot,roots,requiredSources,resources,selectors);
-   if(!walkFactsV1.has(stored.observations))walkFactsV1.set(stored.observations,{row:{kind:"derived",path:question,fact:walkAnswerV1(cache,workspaceRoot,walked)},views:Object.fromEntries(Object.keys(WALK_VIEW_POLICY_V1.views).map(view=>[view,{kind:"derived",path:walkQuestionV1(cache,workspaceRoot,roots,requiredSources,resources,selectors,view),fact:walkAnswerV1(cache,workspaceRoot,walked,view)}]))});
-   for(const path of compiledPaths??[]){const inner=cache.files.get(JSON.stringify([resolve(workspaceRoot),path,requiredSources,cache.providerDesignation??null,selectors.get(path)??null]));if(inner){let walks=walkMembersV1.get(inner.observations);if(!walks)walkMembersV1.set(inner.observations,walks=new Set());walks.add(question);}}
+  await drain();
+  const configs = new Set();
+  for (const directory of directories) { const node = await walkConfigNodeV1(env, directory); for (const part of node.parts) { retainObservedRowsV1(part); members.add(part); } for (const config of node.configs) configs.add(config); }
+  for (const config of [...configs].sort()) stack.push([config, false]);
+  await drain();
+  return { result: [...files].map((file) => closurePathNameV1(cache, workspaceRoot, file)).sort(), compiled, defined, members: [...members] };
+}
+
+const MEMO_SLOT_V1 = 2 ** 22;
+const moduleKeyV1 = (cache, text) => (cache.moduleKeys ??= createStringTableV1()).id(text);
+const walkKeyV1 = (env, path, source) => moduleKeyV1(env.cache, JSON.stringify([resolve(env.workspaceRoot), path, env.requiredSources, env.cache.providerDesignation ?? null, env.selectors.get(path) ?? null, source]));
+
+/** 🧮️ The module graph of one cache with the reach set of every node: the dense bitset of the node numbers reachable from it (strongly connected components share one set), persistent across passes. A pass first checks which nodes its journal dirty set (or, without one, the files) can have changed, drops those and every node that reaches them, and rebuilds only those: an edit of one module recomputes its reverse-import path once and every closure over untouched nodes stays a lookup.
+ * @returns {{graph:Map<number,{node:object;targets:number[]}>;reverse:Map<number,Set<number>>;reaches:Map<number,Uint32Array>;nodes:Map<number,object>;pass:object|undefined}} */
+const reachStateV1 = (cache) => cache.reachState ??= { graph: new Map(), reverse: new Map(), reaches: new Map(), resources: new Map(), sets: createReachSetsV1(), nodes: new Map(), pass: undefined };
+
+async function reachPassV1(env, state) {
+  const { pass, workspaceRoot } = env;
+  if (state.pass === pass) return;
+  state.pass = pass;
+  pass.valid ??= new WeakSet();
+  const touched = [];
+  for (const [key, entry] of state.graph) {
+    const { node } = entry, config = node.config?.node;
+    if (!walkPartsHoldV1(pass, [...node.parts, ...node.shared, ...(config?.parts ?? [])], workspaceRoot)) touched.push(key);
   }
-  return walked;
+  const stale = new Set(touched), queue = [...touched];
+  while (queue.length) for (const above of state.reverse.get(queue.pop()) ?? []) if (!stale.has(above)) { stale.add(above); queue.push(above); }
+  for (const key of stale) state.graph.delete(key);
+  for (const key of touched) env.cache.walkNodes?.delete(key);
+  for (const memoKey of [...state.reaches.keys()]) if (stale.has(memoKey % MEMO_SLOT_V1)) state.reaches.delete(memoKey);
+  if (stale.size) state.sets.retain(new Set(state.reaches.values()));
+}
+
+/** 🧮️ The files a command walk reaches from `entries` as a union of per-node reach sets (see `reachStateV1`). The sets are built without router selectors, so every walk shares them; a router named by a selector keeps only the imports its commands need, so the walk expands exactly the nodes that can reach such a router (their own edges, the router through its selected node) and takes every other subtree as one set. The answer, the compiled modules, the ports and the support parts are those of the walk over the same nodes (`reachWalkV1`); a differential law holds them equal.
+ * @returns {Promise<{result:string[];compiled:Set<string>;defined:Set<string>;parts:Set<readonly unknown[]>}>} */
+async function reachClosureV1({ roots, workspaceRoot, cache, requiredSources, resources, selectors, checkpoint, compiler, host }) {
+  const pass = cache.pass ?? {}, base = { cache, workspaceRoot, requiredSources, selectors: new Map(), compiler, host, checkpoint, pass }, chosen = { ...base, selectors }, state = reachStateV1(cache);
+  pass.valid ??= new WeakSet();
+  await reachPassV1(base, state);
+  const resourceKey = [...resources].sort().join("\0"), { graph, reverse, reaches, nodes, sets } = state, slot = state.resources.get(resourceKey) ?? state.resources.set(resourceKey, state.resources.size).get(resourceKey), memoKey = key => { if (key >= MEMO_SLOT_V1) throw Error("Module key space exhausted"); return slot * MEMO_SLOT_V1 + key; };
+  const configsOf = async (env, node) => { if (node.kind !== "module") return []; const have = node.config?.pass === pass ? node.config.node : (node.config = { pass, node: await walkConfigNodeV1(env, dirname(node.path)) }).node; return have.configs; };
+  const targetsOf = (node, configs) => {
+    const out = [];
+    for (const imported of node.imports) {
+      if (imported.port !== undefined) continue;
+      const resource = imported.url && resources.has(resolve(imported.path));
+      if (imported.url && !resource && !imported.file) continue;
+      out.push([imported.path, imported.source && !resource]);
+    }
+    for (const config of configs) out.push([config, false]);
+    return out;
+  };
+  let steps = 0;
+  const recordOf = async (env, path, source) => {
+    const key = walkKeyV1(env, path, source);
+    if (env === base) { let record = graph.get(key); if (record !== undefined) return record; }
+    const cached = cache.walkNodes?.get(key), node = cached?.node !== undefined && cached.pass === pass ? cached.node : await walkNodeV1(env, path, source);
+    nodes.set(node.no, node);
+    const targets = targetsOf(node, await configsOf(env, node)), record = { node, targets: targets.map(([target, targetSource]) => walkKeyV1(base, target, targetSource)), edges: targets };
+    if (env === base) { graph.set(key, record); for (const target of record.targets) { let above = reverse.get(target); if (above === undefined) reverse.set(target, above = new Set()); above.add(key); } }
+    return record;
+  };
+  const build = async entry => {
+    const queue = [entry], seen = new Set();
+    while (queue.length) {
+      const [path, source] = queue.pop(), key = walkKeyV1(base, path, source);
+      if (reaches.has(memoKey(key)) || seen.has(key)) continue;
+      seen.add(key);
+      if (++steps % 64 === 0) await checkpoint();
+      const record = await recordOf(base, path, source);
+      for (const target of record.edges) queue.push(target);
+    }
+  };
+  const reachOf = async (path, source) => {
+    const key = walkKeyV1(base, path, source);
+    if (!reaches.has(memoKey(key))) {
+      await build([path, source]);
+      const order = new Map(), low = new Map(), onStack = new Set(), stack = []; let counter = 0;
+      const visit = at => {
+        order.set(at, counter); low.set(at, counter); counter++; stack.push(at); onStack.add(at);
+        for (const target of graph.get(at).targets) {
+          if (reaches.has(memoKey(target))) continue;
+          if (!order.has(target)) { visit(target); low.set(at, Math.min(low.get(at), low.get(target))); }
+          else if (onStack.has(target)) low.set(at, Math.min(low.get(at), order.get(target)));
+        }
+        if (low.get(at) === order.get(at)) {
+          const members = []; let top;
+          do { top = stack.pop(); onStack.delete(top); members.push(top); } while (top !== at);
+          const lists = [sets.of(members.map(member => graph.get(member).node.no))];
+          for (const member of members) for (const target of graph.get(member).targets) { const done = reaches.get(memoKey(target)); if (done !== undefined) lists.push(done); }
+          const reach = sets.union(lists);
+          for (const member of members) reaches.set(memoKey(member), reach);
+        }
+      };
+      visit(key);
+    }
+    return reaches.get(memoKey(key));
+  };
+  const lists = [], individual = [];
+  if (selectors.size === 0) for (const path of roots) lists.push(await reachOf(path, true));
+  else {
+    const listed = [];
+    for (const path of selectors.keys()) { await reachOf(path, true); const record = graph.get(walkKeyV1(base, path, true)); if (record !== undefined) listed.push(record.node.no); }
+    const visited = new Set(), queue = roots.map(path => [path, true]);
+    while (queue.length) {
+      const [path, source] = queue.pop(), key = walkKeyV1(chosen, path, source);
+      if (visited.has(key)) continue;
+      visited.add(key);
+      if (selectors.has(path) && source) { const record = await recordOf(chosen, path, true); individual.push(record.node); for (const target of record.edges) queue.push(target); continue; }
+      const reach = await reachOf(path, source);
+      if (!listed.some(no => sets.has(reach, no))) { lists.push(reach); continue; }
+      const record = await recordOf(base, path, source); individual.push(record.node); for (const target of record.edges) queue.push(target);
+    }
+  }
+  const merged = sets.members(sets.union([...lists, sets.of(individual.map(node => node.no))])), files = [], compiled = new Set(), defined = new Set(), parts = new Set();
+  for (const no of merged) {
+    const node = nodes.get(no);
+    for (const part of node.parts) parts.add(part);
+    for (const part of node.shared) parts.add(part);
+    if (node.kind === "skip") continue;
+    files.push(node.name);
+    if (node.kind === "module") { compiled.add(node.name); for (const imported of node.imports) if (imported.port !== undefined) defined.add(imported.port); for (const part of node.config?.node?.parts ?? []) parts.add(part); }
+  }
+  return { result: [...new Set(files)].sort(), compiled, defined, parts };
 }
 
 /** 🌐️ The full command closure of `entries` as a process loads it: the bounded walk and, for every script provider port it names, the designation, its schema and the provider's own bounded walk, transitively; composed from the bounded walks, so each provider walk is computed once and every caller holds the same walk facts. Callers that list files read this (owner discovery, component targets, input precision, a whole-walk closure such as the test discovery); a command closure read through a view names its providers by reference instead (`./🔌️provider-closures`). */
@@ -472,23 +730,26 @@ const walkFactsV1 = new WeakMap();
 export function derivedWalkAnswerV1(value) { return createHash("sha256").update(JSON.stringify(value)).digest("hex"); }
 
 /** 🚶️ The answer of one repository walk (the crate index of the Cargo manifests, or the TypeScript files a question selects), read through the observed file system. */
-function walkValueV1(recipe, workspaceRoot) {
+async function walkValueV1(recipe, workspaceRoot, step) {
   const local = path => join(workspaceRoot, path), list = directory => { try { return observedFs.readdirSync(local(directory), { withFileTypes: true }).map(entry => ({ name: entry.name, directory: entry.isDirectory(), file: entry.isFile(), link: entry.isSymbolicLink() })); } catch { return []; } };
   const readText = path => { try { return observedFs.readFileSync(local(path), "utf8"); } catch { return undefined; } };
-  if (recipe.fn === "crate-index") return [...crateNamesV1(cargoManifestDirectoriesV1(list, recipe.skip), readText)];
+  if (recipe.fn === "crate-index") return [...crateNamesOfV1(await cargoManifestDirectoriesAsyncV1(list, recipe.skip, step), path => { try { return observedFieldV1(local(path), "cargo-package-name", ""); } catch { return undefined; } })];
   const host = { exists: path => existsSync(local(path)), listDirectory: directory => list(directory).map(({ name, directory }) => ({ name, directory })) };
   return recipe.question.mode === "entries" ? entryFilesV1(recipe.question.globs, host) : includeRootsV1(recipe.question.include, recipe.question.exclude, host);
 }
 
 /** 🌳️ One repository walk as a derived fact: the observations it read are one shared layer, named by the question and the digest of the answer, so a project that used the walk holds that one row instead of the directories the walk listed. */
-function derivedWalkV1(workspaceRoot, recipe) {
-  const question = JSON.stringify({ derive: 1, workspaceRoot: resolve(workspaceRoot), recipe }), cache = new Map(), value = memoizedObservedComputationV1(cache, question, () => walkValueV1(recipe, workspaceRoot)), stored = cache.get(question);
+async function derivedWalkV1(workspaceRoot, recipe, scripts) {
+  const step = cooperativeStepV1(scripts, "build:derived-walk"), question = JSON.stringify({ derive: 1, workspaceRoot: resolve(workspaceRoot), recipe }), cache = new Map(), value = await memoizedObservedAsyncComputationV1(cache, question, () => walkValueV1(recipe, workspaceRoot, step), () => step()), stored = cache.get(question);
   if (stored && !walkFactsV1.has(stored.observations)) walkFactsV1.set(stored.observations, { row: { kind: "derived", path: question, fact: derivedWalkAnswerV1(value) } });
   return value;
 }
 
 /** ✍️ The stored observations of every file a command walk visited, by the questions of the walks that visited it: they are part of those walks' observations, so a project that names such a walk by its derived fact does not carry them again. */
 const walkMembersV1 = new WeakMap();
+
+/** 🧱️ The row arrays (node parts and shared computations) the walk that produced a result visited: the support of its derived fact, by reference. */
+const walkPartsV1 = new WeakMap();
 
 /** 🛤️ The canonical question one command walk answers: the workspace, the entry files, whether sources are required, the resource files, the router selectors and the script provider designation; nothing else decides the walk. A view names the declared view its answer is read through (`./👓️walk-views`); the whole walk names none. */
 function walkQuestionV1(cache, workspaceRoot, roots, requiredSources, resources, selectors, view) {
@@ -503,7 +764,13 @@ function walkAnswerV1(cache, workspaceRoot, value, view) {
 }
 
 /** 🔁️ Asks a derived fact of the command closure again against the live files (a command walk or a TypeScript program): its answer digest and every observation the computation read, for a generation that decides whether the projects holding the fact stay valid. */
-export async function deriveClosureFactV1(row, cache) {
+export async function deriveClosureFactV1(row, cache, pass = {}) {
+  cache.pass = pass;
+  pass.round ??= new Map();
+  return withObservationPassRoundV1(pass.round, () => deriveClosureFactInRoundV1(row, cache));
+}
+
+async function deriveClosureFactInRoundV1(row, cache) {
   const question = JSON.parse(row.path), refuse = () => refuseBuildV1("invalid", "closure.derived-question-unknown", { question: String(row.path).slice(0, 96) });
   const support = ({ rows, layers }) => [...new Set([...rows, ...layers.flat()])];
   if (question?.program === 1) {
@@ -514,18 +781,28 @@ export async function deriveClosureFactV1(row, cache) {
   if (question?.derive === 1) {
     let recipe;
     try { recipe = readDerivedWalkV1(question.recipe); } catch { throw refuse(); }
-    const asked = await observeDetachedV1(() => derivedWalkV1(question.workspaceRoot, recipe));
+    const asked = await observeDetachedV1(() => derivedWalkV1(question.workspaceRoot, recipe, cache));
     return { fact: derivedWalkAnswerV1(asked.value), rows: support(asked) };
   }
   if (question?.walk !== 1 || !Array.isArray(question.roots) || !Array.isArray(question.resources) || !Array.isArray(question.selectors) || question.view !== undefined && !Object.hasOwn(WALK_VIEW_POLICY_V1.views, question.view)) throw refuse();
   if ((question.provider ?? null) !== (cache.providerDesignation ?? null)) throw refuseBuildV1("invalid", "closure.derived-provider-differs", { provider: String(question.provider) });
+  if (cache.pass?.transient === true) {
+    const compiler = parserTypescriptV1(), host = observedTypeScriptHost(compiler.sys), resources = new Set(question.resources.map((path) => resolve(path))), selectors = new Map(question.selectors.map(([path, words]) => [resolve(path), [...new Set(words)].sort()])), roots = [...new Set(question.roots.map((entry) => resolve(entry)))].sort();
+    let steps = 0;
+    const walk = await reachClosureV1({ roots, workspaceRoot: question.workspaceRoot, cache, requiredSources: Boolean(question.requiredSources), resources, selectors, checkpoint: (force = false) => yieldInferenceV1(cache.context, "build:command-source-imports", ++steps, force), compiler, host });
+    cache.compiledNames.set(walk.result, walk.compiled);
+    cache.walkPorts.set(walk.result, [...walk.defined].sort());
+    const reached = { fact: walkAnswerV1(cache, question.workspaceRoot, walk.result, question.view), parts: [...walk.parts] };
+    return Object.defineProperties(reached, { rows: { get: () => [...new Set(reached.parts.flat())], enumerable: true }, files: { value: walk.result } });
+  }
   const asked = await observeDetachedV1(() => boundedScriptInputsV1(question.roots, question.workspaceRoot, cache, question.requiredSources, question.resources, new Map(question.selectors)));
-  return { fact: walkAnswerV1(cache, question.workspaceRoot, asked.value, question.view), rows: support(asked) };
+  const answer = { fact: walkAnswerV1(cache, question.workspaceRoot, asked.value, question.view), parts: [asked.rows, ...(walkPartsV1.get(asked.value) ?? asked.layers)] };
+  return Object.defineProperties(answer, { rows: { get: () => support(asked), enumerable: true }, files: { value: asked.value } });
 }
 
 /** 🙈️ The resources the build policy declares presentation-only (progress labels): their edits never change a command's behavior, so they are not command inputs. The policy is read once per script input cache and the facts of that read are replayed into every receiving project, so the rows of a project never depend on which project of the same process asked first. */
 function presentationResourcesV1(cache) {
-  return memoizedObservedComputationV1(cache.presentation ??= new Map(), "presentation", () => new Set(JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "🏗️build", "🔣️policy.json")).toString("utf8")).presentationResources));
+  return memoizedObservedComputationV1(cache.presentation ??= new Map(), "presentation", () => { const path = join(LIBRARY_ROOT, "🏗️build", "🔣️policy.json"); requirePhysicalSourceV1(path); return new Set(observedFieldV1(path, "json", "/presentationResources")); });
 }
 
 /** 🔧️ Native leaves hash their compiler contract and exact command implementation, independently of UI selection: the cargo driver by reference to its tool closure (read through the native view: the scheduling code of leases, capacity, storage, supervision, retries and progress texts stays out, the native-build modules that assemble the Cargo arguments stay in), the toolchain files, environment and commands by value. */
@@ -562,8 +839,8 @@ export async function targetScriptSources(target, workspaceRoot, scripts, projec
    const ownerWrap=ownerCommandChildV1(options,bound),ownerChild=ownerWrap&&bindBuildCommandV1(ownerWrap.command,workspaceRoot,ownerWrap.cwd,projectRoot,[]);if(ownerChild?.script)retain(ownerChild);
    const owner=options.nativeOwnerCommand,selected=owner?bindBuildCommandV1([owner.program,...owner.arguments].map(value=>JSON.stringify(value)).join(" "),workspaceRoot,owner.workingDirectory,projectRoot,arguments_):bound;if(owner)retain(selected);
    const explicitManifest=owner?.manifest??nativeManifest,manifest=resolve(workspaceRoot,explicitManifest??join(projectRoot,"Cargo.toml"));local(manifest);if(explicitManifest===undefined&&!existsSync(manifest))continue;
-   const cargo=readToml(manifest),reference=cargo.package?.metadata?.semio?.["cargo-execution"];if(reference===undefined)continue;if(typeof reference!=="string"||!reference||isAbsolute(reference))throw Error("Relative Cargo execution declaration required");
-   const declarationPath=resolve(dirname(manifest),reference);local(declarationPath);readPhysicalSource(manifest);const declaration=readCargoExecutionContractV1("declaration",JSON.parse(readPhysicalSource(declarationPath).toString("utf8")));entries.add(manifest);entries.add(declarationPath);
+   let reference;try{reference=observedFieldV1(manifest,"toml","/package/metadata/semio/cargo-execution");}catch(error){if(!String(error?.message).startsWith("Field absent"))throw error;}if(reference===undefined)continue;if(typeof reference!=="string"||!reference||isAbsolute(reference))throw Error("Relative Cargo execution declaration required");
+   const declarationPath=resolve(dirname(manifest),reference);local(declarationPath);requirePhysicalSourceV1(manifest);const declaration=readCargoExecutionContractV1("declaration",JSON.parse(readPhysicalSource(declarationPath).toString("utf8")));entries.add(manifest);entries.add(declarationPath);
    const selectedOperation=selectCargoExecutionOperationV1(declaration,{program:selected.program,cwd:owner?.workingDirectory??options.cwd??".",arguments:selected.arguments},workspaceRoot);if(!selectedOperation?.continuation)continue;
    const child=selectedOperation.continuation,childBound=bindBuildCommandV1([child.program,...child.arguments].map(value=>JSON.stringify(value)).join(" "),workspaceRoot,child.cwd,projectRoot,[]);if(!childBound.script)throw Error("Declared Cargo continuation requires an explicit script Source");retain(childBound);
   }
@@ -691,7 +968,7 @@ export function genericCommandFallbackInputs(workspaceRoot) {
 }
 
 const sortedJsonV1 = value => Array.isArray(value) ? value.map(sortedJsonV1) : value !== null && typeof value === "object" ? Object.fromEntries(Object.keys(value).filter(key => value[key] !== undefined).sort().map(key => [key, sortedJsonV1(value[key])])) : value;
-const closureHandleSymbolV1 = Symbol.for("semio.closure.handle"), knownClosureRecipesV1 = new Map();
+const closureHandleSymbolV1 = Symbol.for("semio.closure.handle"), knownClosureRecipesV1 = createBoundedCacheV1({ name: "inference:closure-recipes", maxEntries: 262144, maxBytes: 67108864, sizeOf: recipe => 128 + JSON.stringify(recipe).length });
 
 /** 📋️ The recipe a symbolic list was made from, by its key. */
 export function closureRecipeByKeyV1(key) { const recipe = knownClosureRecipesV1.get(key); if (!recipe) throw refuseBuildV1("invalid", "closure.key-unknown", { key }); return recipe; }
@@ -719,22 +996,59 @@ export function closureHandleFromRecipeV1(recipe) { return closureHandleV1(recip
 /** 🧺️ The identity (recipe, key, marker) of a symbolic command input list, or undefined for an ordinary list. */
 export function closureHandleOfV1(value) { return value !== null && typeof value === "object" ? value[closureHandleSymbolV1] : undefined; }
 
-const closureQueriesV1 = new Map([
+const CLOSURE_QUERIES_V1 = new Map([
   ["some", (value, substrings) => (Array.isArray(value) ? value : value?.closure ?? []).some(path => typeof path === "string" && substrings.some(part => path.includes(part)))],
   ["generated", value => value?.generatedDependencies ?? []],
   ["digest", derivedWalkAnswerV1],
 ]);
 
 /** 🌂️ Registers a pure query over the closure a recipe produces (the inferrer that owns the question, such as the whole-workspace key check, registers it). */
-export function registerClosureQueryV1(name, query) { closureQueriesV1.set(name, query); }
+export function registerClosureQueryV1(name, query) { CLOSURE_QUERIES_V1.set(name, query); }
 
-const closureScriptsV1 = new Map(), closureEntriesV1 = new Map(), closureInflightV1 = new Map(), closureFailuresV1 = new Map(), knownClosureInputsV1 = new Map();
+const closureScriptsV1 = createBoundedCacheV1({ name: "inference:closure-scripts", maxEntries: 16, maxBytes: 16 }),
+  closureEntriesV1 = createBoundedCacheV1({ name: "inference:closure-entries", maxEntries: INFERENCE_LIMITS_V1.closureEntryCacheEntries, maxBytes: INFERENCE_LIMITS_V1.closureEntryCacheBytes, sizeOf: entry => INFERENCE_LIMITS_V1.closureEntryBaseBytes + 2 * (entry.bytes ?? 0) }),
+  closureStoresV1 = createBoundedCacheV1({ name: "inference:closure-stores", maxEntries: 16, maxBytes: 16 }),
+  closureInflightV1 = createBoundedCacheV1({ name: "inference:closure-inflight", maxEntries: 4096, maxBytes: 4096 }),
+  closureFailuresV1 = createBoundedCacheV1({ name: "inference:closure-failures", maxEntries: 1024, maxBytes: 1024 }),
+  knownClosureInputsV1 = createBoundedCacheV1({ name: "inference:closure-inputs", maxEntries: 65536, maxBytes: 67108864, sizeOf: inputs => 128 + JSON.stringify(inputs).length });
+
+const closureCountsV1 = { derived: 0, loaded: 0, stale: 0, checked: 0 };
+/** 🔢️ How many closure entries this process derived, loaded from the durable store, found stale there and verified row by row (once per discovery pass, however many owners ask) since the last reset. */
+export function closureEntryCountsV1() { return { ...closureCountsV1 }; }
+
+const closureEntryBytesV1 = entry => JSON.stringify([entry.value, entry.rows]).length + 8 * entry.layers.length;
+const closureSidecarV1 = layers => ({ facts: layers.map(layer => walkFactsV1.get(layer) ?? null), members: layers.map(layer => { const walks = walkMembersV1.get(layer); return walks ? [...walks] : null; }) });
+const closureLayersV1 = entry => {
+  if (entry.layers) return entry.layers;
+  const layers = entry.store.layers(entry.digests);
+  if (layers === undefined) throw refuseBuildV1("invalid", "closure.provider-entry-stale", { port: "layers" });
+  layers.forEach((layer, at) => {
+    const fact = entry.sidecar?.facts[at], members = entry.sidecar?.members[at];
+    if (fact && !walkFactsV1.has(layer)) walkFactsV1.set(layer, fact);
+    if (members) { let walks = walkMembersV1.get(layer); if (!walks) walkMembersV1.set(layer, walks = new Set()); for (const walk of members) walks.add(walk); }
+  });
+  return layers;
+};
+const closureStoreBindingsV1 = new Map();
+/** 📁️ The directory of the durable closure entries of a workspace: the graph's inference data directory of the running writer, or undefined where no graph writer is running (the entries then live in this process only). */
+export function closureStoreDirectoryV1(workspaceRoot) { try { return join(workspaceDataDirectory(workspaceRoot), "ce"); } catch { return undefined; } }
+/** 🔗️ Binds the directory a worker process reads the closure entries of its parent from; a worker never writes there, its parent persists the entries it derives itself. */
+export function bindClosureStoreV1(workspaceRoot, directory, writable = false) { closureStoreBindingsV1.set(workspaceRoot, { directory, writable }); closureStoresV1.delete(workspaceRoot); }
+
+const closureStoreOfV1 = workspaceRoot => {
+  let store = closureStoresV1.get(workspaceRoot);
+  if (store !== undefined) return store;
+  const bound = closureStoreBindingsV1.get(workspaceRoot), directory = bound?.directory ?? closureStoreDirectoryV1(workspaceRoot);
+  store = directory === undefined ? null : createClosureStoreV1({ directory, readOnly: bound !== undefined && !bound.writable });
+  closureStoresV1.set(workspaceRoot, store);
+  return store;
+};
 
 /** 🧊️ Binds the script input cache that computes the closure entries of one workspace (the inference binds its own, a verifier binds one of its own). */
 export function bindClosureScriptsV1(workspaceRoot, scripts) { closureScriptsV1.set(workspaceRoot, scripts); }
 
 /** 🧽️ Forgets every in-process entry, as a process that starts later has none. */
-export function resetClosureEntriesV1() { closureEntriesV1.clear(); closureInflightV1.clear(); closureFailuresV1.clear(); knownClosureRecipesV1.clear(); knownClosureInputsV1.clear(); }
+export function resetClosureEntriesV1() { closureScriptsV1.clear(); closureEntriesV1.clear(); closureInflightV1.clear(); closureFailuresV1.clear(); knownClosureRecipesV1.clear(); knownClosureInputsV1.clear(); closureStoresV1.clear(); closureCountsV1.derived = closureCountsV1.loaded = closureCountsV1.stale = closureCountsV1.checked = 0; }
 
 /** 🌃️ Produces what one recipe stands for, with the same functions the direct inference calls. */
 async function produceClosureRecipeV1(recipe, workspaceRoot, scripts) {
@@ -747,15 +1061,48 @@ async function produceClosureRecipeV1(recipe, workspaceRoot, scripts) {
     case "script-provider": return scriptProviderGroupV1(workspaceRoot, scripts, recipe.port, recipe.view);
     case "tool-closure": return toolClosureGroupV1(workspaceRoot, scripts, recipe.name);
     case "target-sources": return targetScriptSources(target, workspaceRoot, scripts, recipe.projectRoot, recipe.nativeManifest);
-    case "crate-index": case "source-roots": return derivedWalkV1(workspaceRoot, readDerivedWalkV1(recipe));
+    case "crate-index": case "source-roots": return derivedWalkV1(workspaceRoot, readDerivedWalkV1(recipe), scripts);
     default: throw refuseBuildV1("invalid", "closure.recipe-unknown", { recipe: String(recipe.fn) });
   }
 }
 
-const closureEntryHoldsV1 = entry => {
-  const round = observationRoundV1();
+let closurePassV1;
+/** 🧭️ Runs one inference pass during which a shared closure entry is verified once, however many projects ask for it: the files do not change inside a pass, and a pass that nests another shares its token. */
+export async function withClosurePassV1(compute) {
+  const outer = closurePassV1;
+  closurePassV1 = outer ?? {};
+  try { return await compute(); } finally { closurePassV1 = outer; }
+}
+
+/** 🫧️ One cooperative step of a long loop: every `yieldMilliseconds` it gives the event loop one turn, reports through the inference checkpoint (`phase`) and stops at cancellation. */
+function cooperativeStepV1(scripts, phase) {
+  let since = -Infinity, index = 0;
+  const context = scripts?.context ?? {}, signal = context.invocation?.control.signal ?? context.phaseControl?.signal;
+  return async () => {
+    if (performance.now() - since < OBSERVATION_LIMITS_V1.yieldMilliseconds) return;
+    since = performance.now();
+    await new Promise(resolve => setImmediate(resolve));
+    await yieldInferenceV1(context, phase, ++index);
+    signal?.throwIfAborted();
+  };
+}
+
+/** 🫧️ The verdict of {@link closureEntryHoldsV1}, checked row by row with cooperative steps and remembered for the round, so a stored entry of tens of thousands of rows never blocks the event loop. */
+async function closureEntryHoldsAsyncV1(entry, scripts) {
+  const round = closurePassV1 ?? observationRoundV1();
   if (round && entry.checked?.round === round) return entry.checked.holds;
-  const holds = observationRowsHoldV1(entry.rows) && entry.layers.every(observationLayerHoldsV1);
+  closureCountsV1.checked++;
+  const step = cooperativeStepV1(scripts, "build:closure-entry-rows"), layers = entry.layers ?? entry.store.layers(entry.digests);
+  let holds = layers !== undefined && await observationRowsHoldAsyncV1(entry.rows, step);
+  if (holds) for (const layer of layers) if (!await observationLayerHoldsAsyncV1(layer, step)) { holds = false; break; }
+  if (round) entry.checked = { round, holds };
+  return holds;
+}
+
+const closureEntryHoldsV1 = entry => {
+  const round = closurePassV1 ?? observationRoundV1();
+  if (round && entry.checked?.round === round) return entry.checked.holds;
+  const layers = entry.layers ?? entry.store.layers(entry.digests), holds = layers !== undefined && observationRowsHoldV1(entry.rows) && layers.every(observationLayerHoldsV1);
   if (round) entry.checked = { round, holds };
   return holds;
 };
@@ -769,17 +1116,48 @@ async function ensureClosureEntryV1(workspaceRoot, recipe) {
 /** ♻️ The entry of one recipe from the cache, a flight in progress, or a new detached computation; an unparseable source is remembered as a failure for as long as the facts it rests on hold. */
 async function produceClosureEntryV1(workspaceRoot, recipe) {
   const id = workspaceRoot + "\0" + closureRecipeKeyV1(recipe), known = closureEntriesV1.get(id);
-  if (known && closureEntryHoldsV1(known)) return known;
+  if (known && await closureEntryHoldsAsyncV1(known, closureScriptsV1.get(workspaceRoot))) return known;
   const failed = closureFailuresV1.get(id);
-  if (failed) { if (closureEntryHoldsV1(failed)) throw failed.error; closureFailuresV1.delete(id); }
+  if (failed) { if (await closureEntryHoldsAsyncV1(failed, closureScriptsV1.get(workspaceRoot))) throw failed.error; closureFailuresV1.delete(id); }
   let flight = closureInflightV1.get(id);
   if (!flight) {
     const scripts = closureScriptsV1.get(workspaceRoot);
     if (!scripts) throw refuseBuildV1("missing", "closure.scripts-unbound", { workspace: String(workspaceRoot) });
-    flight = observeDetachedV1(() => produceClosureRecipeV1(recipe, workspaceRoot, scripts)).then(({ value, rows, layers }) => { const entry = { recipe, value, rows, layers, answers: new Map(), checked: null }; closureEntriesV1.set(id, entry); return entry; }, error => { const facts = error?.code === "BUILD_SOURCE_UNPARSEABLE" ? detachedFailureV1(error) : undefined; if (facts) closureFailuresV1.set(id, { error, rows: facts.rows, layers: facts.layers, checked: null }); throw error; }).finally(() => closureInflightV1.delete(id));
+    const store = closureStoreOfV1(workspaceRoot), derive = () => observeDetachedV1(() => produceClosureRecipeV1(recipe, workspaceRoot, scripts)).then(async ({ value, rows, layers }) => { closureCountsV1.derived++; const pass = closurePassV1, entry = { recipe, value, rows, layers, answers: new Map(), checked: pass ? { round: pass, holds: true } : null, bytes: 0, store, digests: undefined }; try { const saved = store ? await store.save(id, { ...entry, sidecar: closureSidecarV1(layers) }) : undefined; entry.bytes = saved?.bytes ?? closureEntryBytesV1(entry); entry.digests = saved?.digests; } catch { entry.bytes = closureEntryBytesV1(entry); } closureEntriesV1.set(id, entry); return entry; });
+    flight = (store ? store.load(id) : Promise.resolve(undefined)).then(async stored => { const entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null }; if (entry && await closureEntryHoldsAsyncV1(entry, scripts)) { closureCountsV1.loaded++; closureEntriesV1.set(id, entry); return entry; } if (entry) closureCountsV1.stale++; return derive(); }).then(entry => entry, error => { const facts = error?.code === "BUILD_SOURCE_UNPARSEABLE" ? detachedFailureV1(error) : undefined; if (facts) closureFailuresV1.set(id, { error, rows: facts.rows, layers: facts.layers, checked: null }); throw error; }).finally(() => closureInflightV1.delete(id));
     closureInflightV1.set(id, flight);
   }
   return flight;
+}
+
+/** 🫧️ Releases what one finished owner left behind in the cache shared by the owners: the source reads, closure walks and command dependency memos of the call and half of the in-process closure entries, which a later owner reads again from the durable store; the shared provider designation and the generated imports stay. */
+export function releaseOwnerStateV1(scripts) {
+  scripts.files.clear(); scripts.closures.clear(); scripts.commandDependencies.clear(); scripts.walkNodes?.clear();
+  closureEntriesV1.shrink(0.5);
+}
+
+/** 📋️ The recipes every owner reads and none depends on its own target: the native command inputs, the group of every provider port in every view and every tool closure. */
+export function sharedClosureRecipesV1(scripts) {
+  const designation = providerDesignationV1(scripts), recipes = [{ fn: "native-command" }];
+  for (const port of Object.keys(designation.providers).sort()) for (const view of Object.keys(PROVIDER_CLOSURE_POLICY_V1.views)) recipes.push({ fn: "script-provider", port, view });
+  for (const name of Object.keys(PROVIDER_CLOSURE_POLICY_V1.tools.closures).sort()) recipes.push({ fn: "tool-closure", name, view: PROVIDER_CLOSURE_POLICY_V1.tools.closures[name].view });
+  return recipes;
+}
+
+/** 🧰️ Derives the shared closure entries once, one after the other, before the owners start: each is a durable memo node keyed by its recipe, so an owner only reads it and a process that finds it again derives nothing. Progress and cancellation follow the caller. */
+export async function primeSharedClosuresV1(workspaceRoot, scripts, { signal, progress, recipes = sharedClosureRecipesV1(scripts) } = {}) {
+  bindClosureScriptsV1(workspaceRoot, scripts);
+  const before = closureEntryCountsV1();
+  let done = 0;
+  await progress?.({ done, total: recipes.length });
+  for (const recipe of recipes) {
+    signal?.throwIfAborted();
+    knownClosureRecipesV1.set(closureRecipeKeyV1(recipe), recipe);
+    await ensureProviderEntriesV1(workspaceRoot, await ensureClosureEntryV1(workspaceRoot, recipe));
+    await progress?.({ done: ++done, total: recipes.length });
+  }
+  const after = closureEntryCountsV1();
+  return { recipes: recipes.length, derived: after.derived - before.derived, loaded: after.loaded - before.loaded, stale: after.stale - before.stale };
 }
 
 /** 🚚️ Brings the shared entries of every reference an entry's value holds up to date, detached: the asking project holds only the answers its queries record. */
@@ -802,7 +1180,7 @@ function expandedEntryValueV1(workspaceRoot, entry) {
 const closureAnswerV1 = (workspaceRoot, entry, query) => {
   const key = JSON.stringify(query), stable = !sharedReferencesOfV1(entry.value).length;
   if (stable && entry.answers.has(key)) return entry.answers.get(key);
-  const run = closureQueriesV1.get(query[0]);
+  const run = CLOSURE_QUERIES_V1.get(query[0]);
   if (!run) throw refuseBuildV1("invalid", "closure.query-unknown", { query: String(query[0]) });
   const value = expandedEntryValueV1(workspaceRoot, entry);
   if (value === undefined) return undefined;
@@ -857,7 +1235,7 @@ export function closureApiV1(scripts, workspaceRoot) {
       return groups;
     },
     async derive(recipe) {
-      if (!late) return derivedWalkV1(workspaceRoot, recipe);
+      if (!late) return derivedWalkV1(workspaceRoot, recipe, scripts);
       const key = closureRecipeKeyV1(recipe);
       knownClosureRecipesV1.set(key, recipe); used.set(key, recipe);
       const entry = await ensureClosureEntryV1(workspaceRoot, recipe);
@@ -870,7 +1248,7 @@ export function closureApiV1(scripts, workspaceRoot) {
     },
     async query(list, name, ...args) {
       const handle = closureHandleOfV1(list);
-      return handle ? fact(handle.recipe, [name, ...args]) : closureQueriesV1.get(name)(await expanded(list), ...args);
+      return handle ? fact(handle.recipe, [name, ...args]) : CLOSURE_QUERIES_V1.get(name)(await expanded(list), ...args);
     },
     async targetClosureSome(target, projectRoot, substrings) {
       return late ? fact({ fn: "target-sources", target: closureTargetV1(target), projectRoot }, ["some", substrings]) : (await expanded((await targetScriptClosure(target, workspaceRoot, scripts, projectRoot)) ?? [])).some(path => typeof path === "string" && substrings.some(part => path.includes(part)));
@@ -884,8 +1262,8 @@ export function closureApiV1(scripts, workspaceRoot) {
       return { closureRecipes, closureInputs };
     },
     async resolve(recipes) {
-      const rows = [], seen = new Set(), layers = new Set(), values = new Map(), derived = new Map(), walked = new Set(), take = row => { if (!seen.has(row)) { seen.add(row); rows.push(row); } };
-      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe); values.set(key, entry.value); entry.rows.forEach(take); for (const layer of entry.layers) { layers.add(layer); const fact = walkFactsV1.get(layer); if (fact) { const row = view === undefined ? fact.row : fact.views?.[view] ?? fact.row; derived.set(row.path, { row, support: layer }); walked.add(fact.row.path); } } }
+      const rows = [], seen = new Set(), layers = new Set(), values = new Map(), derived = new Map(), walked = new Set(), take = row => { const key = rowKeyV1(row); if (!seen.has(key)) { seen.add(key); rows.push(row); } };
+      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe); values.set(key, entry.value); entry.rows.forEach(take); for (const layer of closureLayersV1(entry)) { layers.add(layer); const fact = walkFactsV1.get(layer); if (fact) { const row = view === undefined ? fact.row : fact.views?.[view] ?? fact.row; derived.set(row.path, { row, support: layer }); walked.add(fact.row.path); } } }
       for (const layer of layers) { if (walkFactsV1.has(layer)) continue; const walks = walkMembersV1.get(layer); if (!walks || ![...walks].some(question => walked.has(question))) layer.forEach(take); }
       return { values, rows, derived: [...derived.values()] };
     },

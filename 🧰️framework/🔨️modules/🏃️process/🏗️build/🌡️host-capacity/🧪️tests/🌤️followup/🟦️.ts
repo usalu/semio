@@ -123,7 +123,7 @@ test("The sample file is shared by every process of the machine, so a process re
  const back=(await status({},"plain after",32768)).host;expect(calls,"a process without a declaration does not inherit the declared sample").toEqual(["plain","small","plain after"]);expect(back.totalMegabytes).toBe(32768);
  expect(JSON.parse(readFileSync(join(directory,"sample.json"),"utf8")).declared,"the file names the machine it describes").toBe("");
  await status({SEMIO_HOST_CAPACITY_CORES:"4"},"cores",32768);expect(JSON.parse(readFileSync(join(directory,"sample.json"),"utf8")).declared).toBe("-/4");
- await withHostCapacityV1({directory,policy:shared,request:{id:newHostCapacityIdV1(),operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:1024,perJobMegabytes:0,cpuPerJob:1},control:controls(),environment:{SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES:"16384"},write:()=>undefined,sample:machine(16384,calls,"gate")},async()=>undefined);
+ await withHostCapacityV1({directory,policy:shared,request:{id:newHostCapacityIdV1(),operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:1024,perJobMegabytes:0,cpuPerJob:1},control:controls(),environment:{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES:"16384"},write:()=>undefined,sample:machine(16384,calls,"gate")},async()=>undefined);
  expect(calls.at(-1),"the gate itself samples per declaration").toBe("gate");
 },30000);
 

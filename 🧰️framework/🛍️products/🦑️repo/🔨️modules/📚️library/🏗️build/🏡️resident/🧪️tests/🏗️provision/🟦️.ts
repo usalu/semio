@@ -155,21 +155,8 @@ test("resident cold publication closes compiler preparation while tooling owns t
   expect(tooling||compilerOpen).toBe(false);const db=new Database(":memory:");try{expect((db.query("SELECT ?1 < ?2 AND ?2 < ?3 ordered").get(order.indexOf("tools-open"),order.indexOf("compiler-open"),order.indexOf("compiler-close")) as {ordered:number}).ordered).toBe(1);}finally{db.close();}
   expect(order.at(-1)).toBe("tools-close");if(row.fail==="none"||row.fail==="body")expect(order.indexOf("compiler-close")).toBeLessThan(order.indexOf("body"));
  }
- const runtime=readFileSync(join(import.meta.dir,"../../../⌨️command/⚙️runtime/🟦️.ts"),"utf8");
- expect(runtime.includes("SEMIO_REPO_WATCH_BINARY")).toBe(false);expect(runtime).toContain("withRepositoryResidentWatcherV1(root,parent,phaseControl,async(watcherBinary,residentControl)=>");
-});
-
-test("resident foreground cancellation settles the service and worker pools before releasing its owner",async()=>{
- const text=readFileSync(join(import.meta.dir,"../../🏗️composition/🟨️.mjs"),"utf8"),ast=ts.createSourceFile("composition.js",text,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),node=ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==="createForegroundRunnerV1");if(!node)throw Error("Actual foreground lifetime required");
- for(const fail of [false,true]){const cleanupFailure=Error("pool close");
- const controller=new AbortController(),reason=Error("resident cancelled"),order:string[]=[];let settled:(reason:string)=>void=()=>{};
- const service={closed:new Promise<string>(resolve=>{settled=resolve;}),start:async()=>{order.push("start");queueMicrotask(()=>controller.abort(reason));},stop:async()=>{order.push("stop");settled("cancelled");}};
- const create=new Function("existsSync","residentImplementationV1","writeWarmPreloadV1","createWarmPoolV1","createBuildGraphPortV1","createExecutorPoolV1","createDelegatedExecutionPortV1","createResidentServiceV1","RESIDENT_EXCLUDES_V1","RESIDENT_FENCE_DIRECTORY_V1","POLICY_V1","preparePrivateDirectoryV1","dirname",ts.transpile(node.getText(ast),{target:ts.ScriptTarget.ESNext}).replace("export ","")+";return createForegroundRunnerV1;")(
- ()=>true,()=>({implementation:"fixture",implementationPaths:[]}),()=>"/owned/preload",()=>({top:()=>{},close:async()=>{order.push("pool-close");if(fail)throw cleanupFailure;}}),()=>({}),()=>({}),()=>({}),()=>service,{rooted:[],names:[]},"fence",{idleShutdownMilliseconds:1},preparePrivateDirectoryV1,dirname);
- const run=create({signal:controller.signal,loadGraph:async()=>({}),script:"entry",salt:()=>"",warmSize:0,executorSize:0});
- const runtimeRoot=tempRoot("composition-");roots.push(runtimeRoot);
-  const pending=run({runtime:{directory:join(runtimeRoot,"r")},root:runtimeRoot,environment:{}});if(fail){let error:unknown;try{await pending;}catch(caught){error=caught;}expect(error).toBeInstanceOf(AggregateError);expect((error as AggregateError).errors).toEqual([reason,cleanupFailure]);}else await expect(pending).rejects.toBe(reason);expect(order).toEqual(["start","stop","pool-close"]);
- }
+ const runtime=readFileSync(join(import.meta.dir,"../../../⌨️command/🌐️host/🟦️.ts"),"utf8");
+ expect(runtime.includes("SEMIO_REPO_WATCH_BINARY")).toBe(false);expect(runtime).toContain("withRepositoryResidentWatcherV1(root,parent,phaseControl,(_binary,control)=>");
 });
 
 test.skipIf(process.env.SEMIO_GENUINE_BIRTH!=="setup-sdk")("genuine fresh resident owner compiles the pinned watcher and retains Source delivery through physical settlement",async()=>{
@@ -178,28 +165,15 @@ test.skipIf(process.env.SEMIO_GENUINE_BIRTH!=="setup-sdk")("genuine fresh reside
  const repository=residentRepository;
  expect(existsSync(join(repository.root,".cache/b/t/m/repo-watch"))).toBe(false);
  await withBuildTestInvocationV1(parent=>outsideReceiver(()=>repository.invoke(original=>withScriptInvocationSignalV1(original,parent.control.signal,actual=>withRepositoryResidentWatcherV1(repository.root,actual,createIssuedResourceControlV1(actual,"resident:watcher-proof",0),async(binary,control)=>{
-  const root=mkdtempSync(join(artifact,"rw-"));roots.push(root);const received:string[]=[];const watcher=await createRepositoryWorkspaceWatcherV1(root,{roots:[".nx"],names:[]},join(root,".nx","r","f"),binary,control);
+  const root=mkdtempSync(join(artifact,"rw-"));roots.push(root);const received:string[]=[];const watcher=await createRepositoryWorkspaceWatcherV1(root,{roots:[".git",".cache",".r",".🧬semio",".nx"],names:["node_modules","target","__pycache__",".venv"]},binary,control);
   try{watcher.watch((error,events)=>{if(error)throw error;received.push(...events.map(event=>event.path));});writeFileSync(join(root,"visible.json"),"owned");writeFileSync(join(root,".p0123abcd"),"private");await watcher.forceFlushPending();expect(received).toContain("visible.json");expect(received).not.toContain(".p0123abcd");expect(existsSync(binary)).toBe(true);}finally{await watcher.stop();}
   expect(existsSync(binary)).toBe(true);
 
   expect(binary.startsWith(join(repository.root,".cache","b","t","m","repo-watch"))).toBe(true);
-  const{createFilterV1}=await import("../../🗃️state/🟨️.mjs"),{scanListingV1}=await import("../../🔌️ports/📋️listing/🟨️.mjs"),{createWatchSupervisorV1}=await import("../../🔭️watch/🟨️.mjs"),{SOURCE_OPACITY_PROTOCOL_V1,isOpaqueSourcePathV1}=await import("../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts");
-  for(const directory of [".p89abcdef/p",".dabcdef01/p",".p0123abc/p",".prettier",".package-cache"])mkdirSync(join(root,directory),{recursive:true});
-  const exclude={rooted:[".nx"],names:[]},filter=createFilterV1({...exclude,opaqueBasenames:SOURCE_OPACITY_PROTOCOL_V1}),native=await scanListingV1({root,binary,exclude,filter,opaqueBasenames:SOURCE_OPACITY_PROTOCOL_V1}),portable=await scanListingV1({root,exclude,filter,opaqueBasenames:SOURCE_OPACITY_PROTOCOL_V1});
-  expect(native.directories.map(row=>row[0]).sort()).toEqual(portable.directories.map(row=>row[0]).sort());expect(native.members.map(row=>row[0]).sort()).toEqual(portable.members.map(row=>row[0]).sort());expect(native.directories.some(row=>isOpaqueSourcePathV1(row[0]))).toBe(false);expect(native.members.some(row=>isOpaqueSourcePathV1(row[0]))).toBe(false);
-  mkdirSync(join(root,".nx","r","f"),{recursive:true});const events:string[]=[],losses:string[]=[],supervisor=createWatchSupervisorV1({root,binary,policy:POLICY_V1,filter,...exclude,opaqueBasenames:SOURCE_OPACITY_PROTOCOL_V1,backend:"native",privateFence:true,failureMode:"terminal",fenceDirectory:".nx/r/f",instance:"resident-owned-proof",onBatch:async rows=>{events.push(...rows.map(row=>row[2]));},onLost:(_scope,reason)=>{losses.push(reason);}});
-  try{await supervisor.start();writeFileSync(join(root,".d76543210"),"private");writeFileSync(join(root,".prettierrc.json"),"visible");writeFileSync(join(root,".p0123abc","p","new"),"visible");expect((await supervisor.fence()).ok).toBe(true);await supervisor.drained();expect(events).toContain(".prettierrc.json");expect(events).toContain(".p0123abc/p/new");expect(events.some(isOpaqueSourcePathV1)).toBe(false);expect(losses).toEqual([]);}finally{await supervisor.stop();}
+  const{createFilterV1}=await import("../../🗃️state/🟨️.mjs"),{scanListingV1}=await import("../../🔌️ports/📋️listing/🟨️.mjs");
+  for(const directory of [".prettier",".package-cache","src/deep"])mkdirSync(join(root,directory),{recursive:true});
+  const exclude={rooted:[".nx"],names:[]},filter=createFilterV1(exclude),native=await scanListingV1({root,binary,exclude,filter}),portable=await scanListingV1({root,exclude,filter});
+  expect(native.directories.map(row=>row[0]).sort()).toEqual(portable.directories.map(row=>row[0]).sort());expect(native.members.map(row=>row[0]).sort()).toEqual(portable.members.map(row=>row[0]).sort());
  })),{owner:"resident-cold-proof",maximumElapsedMilliseconds:Math.floor(Math.min(180000,parent.control.remainingMilliseconds()??180000))})));
 },300000);
 
-test("repository resident composition keeps the canonical Source boundary and strict private readiness",async()=>{
- const text=readFileSync(join(import.meta.dir,"../../🏗️composition/🟨️.mjs"),"utf8"),ast=ts.createSourceFile("composition.js",text,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),node=ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==="createForegroundRunnerV1");if(!node)throw Error("Actual composition owner required");
- const {SOURCE_OPACITY_PROTOCOL_V1}=await import("../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts"),sourcePolicy={roots:[".metadata"],names:["generated"],opaqueBasenames:SOURCE_OPACITY_PROTOCOL_V1},failure=Error("recorded startup"),captures:any[]=[];
- const create=new Function("existsSync","residentImplementationV1","writeWarmPreloadV1","createWarmPoolV1","createBuildGraphPortV1","createExecutorPoolV1","createDelegatedExecutionPortV1","createResidentServiceV1","RESIDENT_EXCLUDES_V1","RESIDENT_FENCE_DIRECTORY_V1","POLICY_V1","createFilterV1","preparePrivateDirectoryV1","dirname",ts.transpile(node.getText(ast),{target:ts.ScriptTarget.ESNext}).replace("export ","")+";return createForegroundRunnerV1;")(
- ()=>true,()=>({implementation:"fixture",implementationPaths:[]}),()=>"/owned/preload",()=>({close:async()=>{}}),()=>({}),()=>({}),()=>({}),(options:unknown)=>{captures.push(options);return{start:async()=>{throw failure;},stop:async()=>{}};},{rooted:["other"],names:["other"]},".metadata/fence",{idleShutdownMilliseconds:1},()=>({excluded:()=>true}),preparePrivateDirectoryV1,dirname);
- const run=create({sourcePolicy,loadGraph:async()=>({}),script:"entry",watcherBinary:"/owned/native",salt:()=>"",warmSize:0,executorSize:0});
- const runtimeRoot=tempRoot("composition-");roots.push(runtimeRoot);
-  await expect(run({runtime:{directory:join(runtimeRoot,"r")},root:runtimeRoot,environment:{}})).rejects.toBe(failure);
- expect(captures[0].exclude).toEqual({rooted:sourcePolicy.roots,names:sourcePolicy.names});expect(captures[0].opaqueBasenames).toBe(SOURCE_OPACITY_PROTOCOL_V1);expect(captures[0].backend).toBe("native");expect(captures[0].privateFence).toBe(true);expect(captures[0].failureMode).toBe("terminal");
- const runtime=readFileSync(join(import.meta.dir,"../../../⌨️command/⚙️runtime/🟦️.ts"),"utf8");expect(runtime).toContain("repositoryFilesystemJournalPolicyV1(root)");expect(runtime).toContain("sourcePolicy,signal:residentControl.signal");
-});

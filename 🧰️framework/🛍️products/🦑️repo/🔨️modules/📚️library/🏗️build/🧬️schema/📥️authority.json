@@ -50,7 +50,8 @@
               "directories",
               "typescriptText",
               "typescriptRealpath",
-              "analysis"
+              "analysis",
+              "field"
             ]
           },
           "path": {

@@ -8,6 +8,7 @@ import {fileURLToPath} from "node:url";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {canonicalJsonV1,createNodeFilePortV1,type GenerationStoreV1} from "../../🟨️.mjs";
 import {loadGenerationGraphV1} from "../../🔌️load/🟨️.mjs";
+const graphOfV1=async(...input:Parameters<typeof loadGenerationGraphV1>)=>(await loadGenerationGraphV1(...input)).graph;
 import {createFileClaimLeasePortV1} from "../../🧩️claims/🟨️.mjs";
 import {createSliceCustodyV1,renderCustodyMessageV1,type SliceClaimV1} from "../../🔐️custody/🟨️.mjs";
 import {isPseudoOwnerV1} from "../../🔀️merge/🟨️.mjs";
@@ -58,48 +59,48 @@ const overlap=(a:Span,b:Span)=>a.start<b.end&&b.start<a.end;
 test("disjoint slices refresh at the same time, the later publisher merges onto the earlier generation, and the graph holds both edits",async()=>{
  const dir=scratch();
  try{
-  await seed(dir,twoRings());await loadGenerationGraphV1(createMockHost(dir).host);
+  await seed(dir,twoRings());(await loadGenerationGraphV1(createMockHost(dir).host)).graph;
   await applyOps(dir,[edit("a1","x"),edit("b2","y")]);
   const shared={spans:[] as Span[],alone:[] as boolean[]},a=agent(dir,shared),b=agent(dir,shared);
-  const[first,second]=await Promise.all([loadGenerationGraphV1(a.host,{closure:["a0"]}),loadGenerationGraphV1(b.host,{closure:["b0"]})]) as any[];
+  const[first,second]=await Promise.all([graphOfV1(a.host,{closure:["a0"]}),graphOfV1(b.host,{closure:["b0"]})]) as any[];
   expect(first.projects.a1.sources[0].sha256).toBe(sha("export const a1x=1;\n"));expect(second.projects.b2.sources[0].sha256).toBe(sha("export const b2y=1;\n"));
   expect(shared.spans.map(span=>span.owners)).toEqual(expect.arrayContaining([["a1"],["b2"]]));expect(shared.spans).toHaveLength(2);
   expect(overlap(shared.spans[0]!,shared.spans[1]!)).toBe(true);
   const keys=[...a.said,...b.said].map(row=>row.key);
   expect(keys.filter(key=>key==="published")).toHaveLength(1);expect(keys.filter(key=>key==="merged")).toHaveLength(1);expect(keys).not.toContain("blocked");
   expect(shared.alone).toHaveLength(2);expect(shared.alone[0]).toBe(false);
-  const final=createMockHost(dir),graph=await loadGenerationGraphV1(final.host);
+  const final=createMockHost(dir),graph=(await loadGenerationGraphV1(final.host)).graph;
   expect(final.log).toEqual([]);expect(final.said.some(row=>row.key==="verified"&&row.text.startsWith("graph: generation 2 verified"))).toBe(true);
   if(python)expect(shape(graph)).toEqual(pythonGraph(dir));
   expect(await tornV1(createWorld(dir).store,dir)).toEqual([]);
-  await applyOps(dir,[edit("b3","z")]);await loadGenerationGraphV1(agent(dir,shared).host,{closure:["b0"]});expect(shared.alone).toEqual([false,expect.any(Boolean),true]);
+  await applyOps(dir,[edit("b3","z")]);(await loadGenerationGraphV1(agent(dir,shared).host,{closure:["b0"]})).graph;expect(shared.alone).toEqual([false,expect.any(Boolean),true]);
  }finally{clean(dir);}
 },120000);
 
 test("overlapping slices still build one after the other: the second waits with a notice and finds the work done",async()=>{
  const dir=scratch();
  try{
-  await seed(dir,twoRings());await loadGenerationGraphV1(createMockHost(dir).host);
+  await seed(dir,twoRings());(await loadGenerationGraphV1(createMockHost(dir).host)).graph;
   await applyOps(dir,[edit("a1","x"),edit("a2","y")]);
   const shared={spans:[] as Span[],alone:[] as boolean[]},a=agent(dir,shared),b=agent(dir,shared);
-  const graphs=await Promise.all([loadGenerationGraphV1(a.host,{closure:["a0"]}),loadGenerationGraphV1(b.host,{closure:["a3"]})]) as any[];
+  const graphs=await Promise.all([graphOfV1(a.host,{closure:["a0"]}),graphOfV1(b.host,{closure:["a3"]})]) as any[];
   for(const graph of graphs){expect(graph.projects.a1.sources[0].sha256).toBe(sha("export const a1x=1;\n"));expect(graph.projects.a2.sources[0].sha256).toBe(sha("export const a2y=1;\n"));}
   expect(shared.spans).toHaveLength(1);expect(shared.spans[0]!.owners).toEqual(["a1","a2"]);
   expect([...a.said,...b.said].filter(row=>row.key==="blocked").map(row=>row.text)).toEqual([expect.stringContaining("shared: a1, a2")]);
   expect([...a.said,...b.said].map(row=>row.key)).not.toContain("merged");
-  if(python)expect(shape(await loadGenerationGraphV1(createMockHost(dir).host))).toEqual(pythonGraph(dir));
+  if(python)expect(shape((await loadGenerationGraphV1(createMockHost(dir).host)).graph)).toEqual(pythonGraph(dir));
  }finally{clean(dir);}
 },120000);
 
 test("a structural change (a new project) is claimed for the whole workspace and never builds beside another refresh",async()=>{
  const dir=scratch();
  try{
-  await seed(dir,twoRings());await loadGenerationGraphV1(createMockHost(dir).host);
+  await seed(dir,twoRings());(await loadGenerationGraphV1(createMockHost(dir).host)).graph;
   await applyOps(dir,[edit("a1","x"),{op:"write",path:"pkg/c0/project.json",content:JSON.stringify({name:"c0",package:"@syn/c0"})},{op:"write",path:"pkg/c0/src/index.ts",content:'import "@syn/b1";\nexport const c=0;\n'}]);
   const shared={spans:[] as Span[],alone:[] as boolean[]},a=agent(dir,shared),b=agent(dir,shared);
-  await Promise.all([loadGenerationGraphV1(a.host,{closure:["a0"]}),loadGenerationGraphV1(b.host)]);
+  await Promise.all([graphOfV1(a.host,{closure:["a0"]}),graphOfV1(b.host)]);
   for(let i=1;i<shared.spans.length;i++)expect(overlap(shared.spans[i-1]!,shared.spans[i]!)).toBe(false);
-  const graph:any=await loadGenerationGraphV1(createMockHost(dir).host);expect(graph.projects.c0).toBeDefined();
+  const graph:any=(await loadGenerationGraphV1(createMockHost(dir).host)).graph;expect(graph.projects.c0).toBeDefined();
   if(python)expect(shape(graph)).toEqual(pythonGraph(dir));
   expect(await tornV1(createWorld(dir).store,dir)).toEqual([]);
  }finally{clean(dir);}

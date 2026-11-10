@@ -30,5 +30,5 @@ for (const row of fixture.families) test(row.id + " binds its field metadata to 
   expect(at).toBeGreaterThanOrEqual(0);
   const body = source.slice(at, source.indexOf("\n}", at) + 2);
   expect(body).toContain("admit_field_meta(");
-  expect(body).toContain(row.mutations + "::EDIT_RULES.can_set_field(path)");
+  expect(body.includes(row.mutations + "::EDIT_RULES.can_set_field(path)") || body.includes(row.mutations + "::can_set_field(path)")).toBe(true);
 });

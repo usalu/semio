@@ -1,5 +1,4 @@
 import {preparePrivateDirectoryV1} from "../📨️protocol/📍️endpoint/🔐️directory/🟨️.mjs";
-import{createFilterV1}from"../🗃️state/🟨️.mjs";
 /** 🏗 Composition root of `repo service start --foreground`: binds the repository's graph, warm workers, custody and the native watcher to the resident service. */
 import {createHash} from "node:crypto";
 import {existsSync,readFileSync,readdirSync,statSync} from "node:fs";
@@ -31,20 +30,19 @@ export function custodyPortFromPoolV1(pool){
 
 /** ▶ Builds the foreground runner. `dependencies` are injected by the CLI wiring so this module imports nothing from the repository. */
 export function createForegroundRunnerV1(dependencies){
- const{signal,sourcePolicy,opaqueBasenames=sourcePolicy?.opaqueBasenames,loadGraph,script,execPath=process.execPath,warmModules=[],custody,salt,watcherBinary,generationOf,environmentPaths,environmentPrefixes,warmSize=process.platform==="win32"?0:1,executorSize=Number(dependencies.environment?.SEMIO_RESIDENT_EXECUTORS??process.env.SEMIO_RESIDENT_EXECUTORS??0),capacity,log=()=>{}}=dependencies;
+ const{signal,loadGraph,script,execPath=process.execPath,warmModules=[],custody,salt,watcherBinary,generationOf,environmentPaths,environmentPrefixes,warmSize=process.platform==="win32"?0:1,executorSize=Number(dependencies.environment?.SEMIO_RESIDENT_EXECUTORS??process.env.SEMIO_RESIDENT_EXECUTORS??0),capacity,log=()=>{}}=dependencies;
  return async({runtime,root,environment})=>{
   signal?.throwIfAborted();
   const binary=watcherBinary&&existsSync(watcherBinary)?watcherBinary:undefined,{implementation,implementationPaths}=dependencies.implementation??residentImplementationV1(root);
-  const exclude=sourcePolicy?{rooted:sourcePolicy.roots,names:sourcePolicy.names}:{rooted:[...RESIDENT_EXCLUDES_V1.rooted],names:[...RESIDENT_EXCLUDES_V1.names]};
-  if(sourcePolicy&&(!binary||!createFilterV1({...exclude,opaqueBasenames}).excluded(RESIDENT_FENCE_DIRECTORY_V1)))throw Error("Owned native watcher and excluded private resident fence required");
+  const exclude={rooted:[...RESIDENT_EXCLUDES_V1.rooted],names:[...RESIDENT_EXCLUDES_V1.names]};
   preparePrivateDirectoryV1(dirname(runtime.directory));preparePrivateDirectoryV1(runtime.directory);
   const warmCapture=dependencies.warmCapture,preload=warmCapture?undefined:writeWarmPreloadV1(runtime.directory);
   const pool=createWarmPoolV1({command:warmCapture?[execPath,"--eval",warmCapture.loader,"--",warmCapture.digest]:[execPath,"--preload",preload,script],...(warmCapture?{snapshot:warmCapture.text}:{}),environment:{...environment,SEMIO_WARM_MODULES:JSON.stringify(warmModules),SEMIO_BUILD_SERVICE:"off"},cwd:root,size:warmSize,idleMilliseconds:POLICY_V1.idleShutdownMilliseconds,log});
   const filterHolder={excluded:()=>false};
-  const graph=createBuildGraphPortV1({loadGraph,salt,generation:generationOf,environmentPaths,environmentPrefixes,listing:async({root:r,exclude,filter})=>{Object.assign(filterHolder,filter);return scanListingV1({root:r,binary,exclude,filter,opaqueBasenames});}});
+  const graph=createBuildGraphPortV1({loadGraph,salt,generation:generationOf,environmentPaths,environmentPrefixes,listing:async({root:r,exclude,filter})=>{Object.assign(filterHolder,filter);return scanListingV1({root:r,binary,exclude,filter});}});
   const executors=executorSize>0&&process.platform!=="win32"?createExecutorPoolV1({command:[execPath,script,"repo","service","executor"],environment:{...environment,SEMIO_BUILD_SERVICE:"off"},cwd:root,size:executorSize,log}):undefined;
   const execution=createDelegatedExecutionPortV1({pool,executors,coldCommand:[execPath,script],argvFor:id=>["repo","run",id,"--service=off"],environment:{...environment,SEMIO_BUILD_SERVICE:"off"},cwd:root});
-  const service=createResidentServiceV1({root,runtime,implementation,implementationPaths,backend:sourcePolicy?"native":binary?"auto":"portable",watcherBinary:binary,opaqueBasenames,privateFence:Boolean(sourcePolicy),failureMode:sourcePolicy?"terminal":"recover",exclude,fenceDirectory:RESIDENT_FENCE_DIRECTORY_V1,ports:{graph,execution,custody,capacity},withWatcherStartup:dependencies.withWatcherStartup,log});
+  const service=createResidentServiceV1({root,runtime,implementation,implementationPaths,backend:binary?"auto":"portable",watcherBinary:binary,exclude,fenceDirectory:RESIDENT_FENCE_DIRECTORY_V1,ports:{graph,execution,custody,capacity},log});
   let stopping;const stop=reason=>{stopping??=Promise.resolve().then(()=>service.stop(reason));void stopping.catch(()=>{});},terminate=()=>stop("SIGTERM"),interrupt=()=>stop("SIGINT"),abort=()=>stop("cancelled");
   process.once("SIGTERM",terminate);process.once("SIGINT",interrupt);signal?.addEventListener("abort",abort,{once:true});
   let result,failed=false,primary;

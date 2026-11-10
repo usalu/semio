@@ -1,19 +1,20 @@
 /** 🗃 Event-sourced workspace state: journal of file events, owner digests, task keys, memo and the membership frontier, all as projections of watcher batches. */
 import {createHash} from "node:crypto";
 import {lstat,readFile,readdir} from "node:fs/promises";
+import {createBoundedCacheV1} from "../../🧊️bounded/🟨️.mjs";
 
 const sha=(...parts)=>{const hash=createHash("sha256");for(const part of parts)hash.update(part);return hash.digest("hex");};
 const byCodePoint=(a,b)=>a<b?-1:a>b?1:0;
 const missing=error=>["ENOENT","ENOTDIR","ELOOP"].includes(error?.code);
 
 /** 🚫 The exclusion rule shared with the native watcher: rooted prefixes and component names. */
-export function createFilterV1({rooted=[],names=[],opaqueBasenames}={}){
+export function createFilterV1({rooted=[],names=[]}={}){
  const prefixes=rooted.map(item=>item.replace(/^\/+|\/+$/gu,"")),set=new Set(names);
  return Object.freeze({
   excluded(path){
    if(!path)return false;
    for(const prefix of prefixes)if(path===prefix||(path.length>prefix.length&&path.startsWith(prefix)&&path.charCodeAt(prefix.length)===47))return true;
-   for(const part of path.split(String.fromCharCode(92)).join("/").split("/")){if(set.has(part))return true;if(opaqueBasenames?.prefixes.some(prefix=>part.startsWith(prefix)&&part.length===prefix.length+opaqueBasenames.digestHex&&/^[0-9a-f]+$/u.test(part.slice(prefix.length))))return true;}
+   for(const part of path.split(String.fromCharCode(92)).join("/").split("/")){if(set.has(part))return true;}
    return false;
   },
  });
@@ -47,6 +48,8 @@ export function createOwnerIndexV1(roots){
 export function createWorkspaceStateV1(options){
  const{root,instance,policy,filter,fence=undefined,now=()=>Date.now()}=options;
  const owners=new Map(),tasks=new Map(),members=new Map(),directories=new Map(),memo=new Map();
+ const clearDigests=owner=>{if(owner.refreshing)return;for(const rec of owner.files.values()){rec.digest=undefined;rec.stamp=undefined;}};
+ const digested=createBoundedCacheV1({name:"resident:digest-owners",maxEntries:65536,maxBytes:policy.digestCacheMaximumFiles,sizeOf:owner=>owner.files.size,onEvict:(_name,owner)=>clearDigests(owner)});
  const stats={events:0,batches:0,statCalls:0,hashCalls:0,hashedBytes:0,ownerRefreshes:0,envHashes:0,losses:0,reconciles:0,ignored:0,unowned:0};
  let seq=0,lostSeq=0,envSeq=0,envDigest="",envDigestSeq=-1,envSalt="",envRefreshing,ownerIndex=createOwnerIndexV1([]),outputIndex=createOwnerIndexV1([]),invalidOutputs=new Set(),running=new Set(),envPaths=new Set(),envPrefixes=[],journal=[],journalRows=0,journalFloor=0,generation=null,closureCache=new Map(),trust="exact";
  const abs=path=>path===""?root:root+"/"+path;
@@ -55,7 +58,7 @@ export function createWorkspaceStateV1(options){
  const newOwner=item=>({name:item.name,root:item.root,deps:item.deps??[],tasks:new Map(),files:new Map(),dirtyFiles:new Set(),seq:0,digest:undefined,digestSeq:-1,refreshing:undefined,statCheck:false});
 
  const configure=({owners:list,env})=>{
-  owners.clear();tasks.clear();closureCache=new Map();
+  digested.clear();owners.clear();tasks.clear();closureCache=new Map();
   for(const item of list){
    const owner=newOwner(item);
    for(const task of item.tasks??[]){const id=item.name+":"+task.name;const entry={id,owner:item.name,name:task.name,command:task.command,dependsOn:task.dependsOn??[],outputs:task.outputs??[],cacheable:task.cacheable!==false,key:undefined,keySeq:-1};owner.tasks.set(task.name,entry);tasks.set(id,entry);}
@@ -87,7 +90,7 @@ export function createWorkspaceStateV1(options){
 
  /** 📥 Loads the initial membership from a frontier-shaped listing (native scan or walk). */
  const load=listing=>{
-  members.clear();directories.clear();
+  members.clear();directories.clear();digested.clear();
   for(const owner of owners.values()){owner.files=new Map();owner.dirtyFiles.clear();owner.digest=undefined;owner.digestSeq=-1;owner.statCheck=false;}
   for(const[path,mode]of listing.members)if(!isIgnored(path)&&outputIndex.ownerOf(path)===undefined)track(path,mode);
   for(const[path,mtime,ino]of listing.directories)if(path===""||!isIgnored(path))directories.set(path,[mtime,ino]);
@@ -245,7 +248,7 @@ export function createWorkspaceStateV1(options){
  const refreshOwner=name=>{
   const owner=owners.get(name);
   if(!owner)throw new Error("Unknown owner "+name);
-  if(owner.digest!==undefined&&owner.digestSeq>=owner.seq&&!owner.statCheck&&trust==="exact")return Promise.resolve(owner.digest);
+  if(owner.digest!==undefined&&owner.digestSeq>=owner.seq&&!owner.statCheck&&trust==="exact"){digested.get(name);return Promise.resolve(owner.digest);}
   if(owner.refreshing)return owner.refreshing;
   const startSeq=seq;
   owner.refreshing=(async()=>{
@@ -271,6 +274,7 @@ export function createWorkspaceStateV1(options){
     });
     const lines=[];for(const path of[...files.keys()].sort(byCodePoint))lines.push(path+"\0"+files.get(path).digest+"\n");
     owner.digest=sha(lines.join(""));owner.digestSeq=startSeq;
+    if(!digested.set(name,owner))clearDigests({files:owner.files});
     return owner.digest;
    }catch(error){
     for(const path of pending)owner.dirtyFiles.add(path);owner.statCheck=owner.statCheck||proving;throw error;

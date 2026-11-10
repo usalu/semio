@@ -1,0 +1,17 @@
+import{readFileSync,readdirSync,statSync}from"node:fs";
+import{join,resolve}from"node:path";
+import{heapStats}from"bun:jsc";
+const B=resolve("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build"),G=join(B,"🕸️graph");
+const snap=(l:string)=>{Bun.gc(true);const h=heapStats(),m=process.memoryUsage();console.log(l,JSON.stringify({rssMB:Math.round(m.rss/1048576),heapMB:Math.round(h.heapSize/1048576),extraMB:Math.round(h.extraMemorySize/1048576),objects:h.objectCount,strings:h.objectTypeCounts.string,arrays:h.objectTypeCounts.Array}));};
+const gen=await import(join(G,"🕰️generations/🟨️.mjs"));
+const dir=resolve(".cache/b/g/m/generations/x"),files=readdirSync(dir).map(n=>({n,s:statSync(join(dir,n))})).sort((a,b)=>b.s.size-a.s.size);
+console.log(files.slice(0,6).map(f=>f.n+" "+f.s.size).join("\n"));
+snap("before");
+const file=files.find(f=>f.n.endsWith(".facts.br"))!;
+let index:any=gen.unpackFactIndexV1(readFileSync(join(dir,file.n)),512*1024*1024);
+snap("index loaded");
+console.log("rows",index.rows.length,"owners",index.owners.length,"classes",index.classes.length);
+const mem=await import(join(B,"🧠️memory/🟨️.mjs"));console.log("interner",JSON.stringify(mem.graphStringInternerV1.stats()));
+mem.graphStringInternerV1.clear();snap("interner cleared");
+index=undefined;snap("index dropped");
+process.exit(0);

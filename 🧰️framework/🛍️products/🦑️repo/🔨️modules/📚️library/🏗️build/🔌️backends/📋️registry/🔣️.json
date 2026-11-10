@@ -12,6 +12,7 @@
    "module": "../🔧️tools/🧶️nx/🔌️backend/🟦️.ts",
    "driver": "../🔧️tools/🧶️nx/📐️conformance/🟦️.ts",
    "dependencyModel": "consumers",
+   "plansScoped": true,
    "processEnvironment": {
     "NX_DAEMON": "false"
    },
@@ -114,6 +115,7 @@
    "module": "../🔧️tools/🏗️bazel/🔌️backend/🟦️.ts",
    "driver": "../🔧️tools/🏗️bazel/📐️conformance/🟦️.ts",
    "dependencyModel": "all",
+   "plansScoped": true,
    "graphInputs": "compact",
    "cacheProof": {
     "logMarker": "(?:disk|remote) cache hit",
@@ -209,6 +211,7 @@
    "module": "../🔧️tools/🐙️semio/🔌️backend/🟦️.ts",
    "driver": "../🔧️tools/🐙️semio/📐️conformance/🟦️.ts",
    "dependencyModel": "all",
+   "plansScoped": true,
    "cacheProof": {
     "activity": true
    },

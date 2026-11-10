@@ -1,4 +1,5 @@
 /** 🧬️ Registers the structural Source parsers (taxonomy projection, command and module imports, script requirements, Rust references) under this revision's identity. */
+import { createBoundedCacheV1 } from "../../../🧊️bounded/🟨️.mjs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -176,7 +177,7 @@ let sourceAnalysesV1;
 /** 🪪️ Names the exact evaluated module URL and its originally bound implementation revision. */
 export function sourceAnalysisOwnerIdentityV1(url,revision){return createHash("sha256").update(JSON.stringify([url,revision])).digest("hex");}
 
-const compilerRevisionsV1=new Map();
+const compilerRevisionsV1=createBoundedCacheV1({name:"inference:compiler-revisions",maxEntries:64,maxBytes:64});
 /** 🔩️ The revision the module parsers carry, bound to the bytes of the TypeScript compiler they use, as every caller records it: resolved and read once per process, and the facts of that read are replayed into each receiving project, so the rows of a project never depend on which project of the same process asked first (a farm worker infers in a fresh process). */
 function compilerRevisionV1(stamp){return memoizedObservedComputationV1(compilerRevisionsV1,stamp,()=>createHash("sha256").update(stamp).update(readPhysicalSource(observedRequireResolve(fileURLToPath(revisionIdentity.url),"typescript"))).digest("hex"));}
 

@@ -73,3 +73,8 @@ required-features = ["testkit"]
 name = "world_interaction_pointer_gestures"
 path = "../../🧪️tests/🖱️pointer-gestures/🦀️.rs"
 required-features = ["testkit"]
+
+[[test]]
+name = "world_interaction_handle_drag"
+path = "../../🧪️tests/🧲️handle-drag/🦀️.rs"
+required-features = ["testkit"]

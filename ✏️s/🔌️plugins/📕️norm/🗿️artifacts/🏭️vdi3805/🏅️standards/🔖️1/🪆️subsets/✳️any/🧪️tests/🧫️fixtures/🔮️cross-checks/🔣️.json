@@ -1,0 +1,213 @@
+{
+  "oracle": "scipy brentq, EN 442 log-mean excess, IAPWS-95 water density table (NIST WebBook)",
+  "deltaTNominalK": 49.83288654563971,
+  "radiators": [
+    {
+      "standardOutputW": 1200.0,
+      "n": 1.3,
+      "flowC": 75.0,
+      "returnC": 65.0,
+      "roomC": 20.0,
+      "deltaTLogK": 49.83288654563971,
+      "outputW": 1200.0,
+      "massFlowKgS": 0.028639618138424822,
+      "returnSolvedC": 64.99999999999966
+    },
+    {
+      "standardOutputW": 1200.0,
+      "n": 1.3,
+      "flowC": 55.0,
+      "returnC": 45.0,
+      "roomC": 20.0,
+      "deltaTLogK": 29.72013411988462,
+      "outputW": 612.8813176612019,
+      "massFlowKgS": 0.014627239084992886,
+      "returnSolvedC": 45.0
+    },
+    {
+      "standardOutputW": 1200.0,
+      "n": 1.3,
+      "flowC": 70.0,
+      "returnC": 55.0,
+      "roomC": 20.0,
+      "deltaTLogK": 42.05509878085694,
+      "outputW": 962.4421690830598,
+      "massFlowKgS": 0.015313320112697848,
+      "returnSolvedC": 55.0
+    },
+    {
+      "standardOutputW": 1800.0,
+      "n": 1.25,
+      "flowC": 45.0,
+      "returnC": 35.0,
+      "roomC": 20.0,
+      "deltaTLogK": 19.576151889712175,
+      "outputW": 559.8047863422214,
+      "massFlowKgS": 0.013360496094086429,
+      "returnSolvedC": 35.0
+    },
+    {
+      "standardOutputW": 800.0,
+      "n": 1.33,
+      "flowC": 60.0,
+      "returnC": 50.0,
+      "roomC": 22.0,
+      "deltaTLogK": 32.74590996118122,
+      "outputW": 457.6701020603783,
+      "massFlowKgS": 0.010922914130319292,
+      "returnSolvedC": 50.0
+    }
+  ],
+  "valves": [
+    {
+      "kvsM3H": 1.0,
+      "flowM3H": 1.0,
+      "waterC": 20.0,
+      "waterDensityKgM3": 998.21,
+      "dropBar": 0.99821
+    },
+    {
+      "kvsM3H": 0.63,
+      "flowM3H": 0.4,
+      "waterC": 70.0,
+      "waterDensityKgM3": 977.76,
+      "dropBar": 0.3941587301587303
+    },
+    {
+      "kvsM3H": 2.5,
+      "flowM3H": 1.8,
+      "waterC": 80.0,
+      "waterDensityKgM3": 971.79,
+      "dropBar": 0.5037759359999999
+    },
+    {
+      "kvsM3H": 4.0,
+      "flowM3H": 5.0,
+      "waterC": 60.0,
+      "waterDensityKgM3": 983.2,
+      "dropBar": 1.53625
+    },
+    {
+      "kvsM3H": 3.0,
+      "flowM3H": 3.0,
+      "waterC": 4.0,
+      "waterDensityKgM3": 999.97,
+      "dropBar": 0.99997
+    }
+  ],
+  "authority": [
+    {
+      "kvsM3H": 1.0,
+      "designFlowM3H": 0.5,
+      "dropRestBar": 0.15,
+      "dropValveBar": 0.25,
+      "authority": 0.625
+    },
+    {
+      "kvsM3H": 0.63,
+      "designFlowM3H": 0.3,
+      "dropRestBar": 0.05,
+      "dropValveBar": 0.22675736961451246,
+      "authority": 0.819336337566571
+    },
+    {
+      "kvsM3H": 2.5,
+      "designFlowM3H": 2.0,
+      "dropRestBar": 0.3,
+      "dropValveBar": 0.6400000000000001,
+      "authority": 0.6808510638297872
+    }
+  ],
+  "kvsTableR5": [
+    {
+      "dn": 10,
+      "tableKvs": 0.16,
+      "r5": 0.15848931924611134,
+      "matchesR5": true
+    },
+    {
+      "dn": 15,
+      "tableKvs": 0.25,
+      "r5": 0.251188643150958,
+      "matchesR5": true
+    },
+    {
+      "dn": 20,
+      "tableKvs": 0.4,
+      "r5": 0.3981071705534972,
+      "matchesR5": true
+    },
+    {
+      "dn": 25,
+      "tableKvs": 0.63,
+      "r5": 0.6309573444801932,
+      "matchesR5": true
+    },
+    {
+      "dn": 32,
+      "tableKvs": 1.0,
+      "r5": 1.0,
+      "matchesR5": true
+    },
+    {
+      "dn": 40,
+      "tableKvs": 1.6,
+      "r5": 1.5848931924611136,
+      "matchesR5": true
+    },
+    {
+      "dn": 50,
+      "tableKvs": 2.5,
+      "r5": 2.51188643150958,
+      "matchesR5": true
+    },
+    {
+      "dn": 65,
+      "tableKvs": 4.0,
+      "r5": 3.9810717055349722,
+      "matchesR5": true
+    },
+    {
+      "dn": 80,
+      "tableKvs": 6.3,
+      "r5": 6.309573444801933,
+      "matchesR5": true
+    },
+    {
+      "dn": 100,
+      "tableKvs": 10.0,
+      "r5": 10.0,
+      "matchesR5": true
+    },
+    {
+      "dn": 125,
+      "tableKvs": 16.0,
+      "r5": 15.848931924611133,
+      "matchesR5": true
+    },
+    {
+      "dn": 150,
+      "tableKvs": 25.0,
+      "r5": 25.118864315095795,
+      "matchesR5": true
+    },
+    {
+      "dn": 200,
+      "tableKvs": 40.0,
+      "r5": 39.810717055349734,
+      "matchesR5": true
+    },
+    {
+      "dn": 250,
+      "tableKvs": 63.0,
+      "r5": 63.09573444801933,
+      "matchesR5": true
+    },
+    {
+      "dn": 300,
+      "tableKvs": 100.0,
+      "r5": 100.0,
+      "matchesR5": true
+    }
+  ]
+}

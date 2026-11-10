@@ -19,14 +19,14 @@ afterAll(async()=>{await settleRestartCustodiesV1();for(const root of roots)rmSy
 const host=():HostSampleV1=>({version:1,atMs:Date.now(),platform:"darwin",cores:10,totalMegabytes:32768,availableMegabytes:20000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:8000,openFilesMaximum:245760,attachedImages:0});
 const control=(signal=new AbortController().signal)=>({signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined});
 const request=(over:object={})=>({id:newHostCapacityIdV1(),operation:"run",priority:"batch" as const,minimumJobs:1,preferredJobs:1,fixedMegabytes:13000,perJobMegabytes:0,cpuPerJob:1,...over});
-const options=(directory:string,over:Partial<HostCapacityOptionsV1>={}):HostCapacityOptionsV1=>({directory,policy,request:request(),control:control(),environment:{},write:()=>undefined,sample:async()=>({host:host(),swappedOutMegabytes:0}),...over});
+const options=(directory:string,over:Partial<HostCapacityOptionsV1>={}):HostCapacityOptionsV1=>({directory,policy,request:request(),control:control(),environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample:async()=>({host:host(),swappedOutMegabytes:0}),...over});
 const STARTED="Sat Oct 24 19:14:40 2026",PARENT=async()=>({pid:process.pid,started:STARTED});
 const grants=(directory:string)=>readdirSync(join(directory,"grants")),queue=(directory:string)=>readdirSync(join(directory,"queue"));
 const stale=()=>Error("This command runs an outdated implementation");
-const park=async(directory:string,lines:string[]=[],environment:Record<string,string>={},ask:object={},real=false)=>{
+const park=async(directory:string,lines:string[]=[],environment:Record<string,string>={LANG:"en_US.UTF-8"},ask:object={},real=false)=>{
  await expect(withHostCapacityV1(options(directory,{park:()=>true,...real?{}:{self:async()=>STARTED},write:line=>lines.push(line),environment,request:request(ask)}),async()=>{throw stale();})).rejects.toThrow("outdated implementation");
 };
-const handover=async(directory:string,lines:string[]=[],environment:Record<string,string>={},ask:object={},real=false)=>{await park(directory,lines,environment,ask,real);return offerRestartCustodiesV1({});};
+const handover=async(directory:string,lines:string[]=[],environment:Record<string,string>={LANG:"en_US.UTF-8"},ask:object={},real=false)=>{await park(directory,lines,environment,ask,real);return offerRestartCustodiesV1({});};
 
 test("the decision on an offered grant agrees with the closed vectors, the schema and an independent Python oracle",()=>{
  const ajv=new Ajv({strict:true,allowUnionTypes:true}).addSchema(schema),facts=ajv.compile({$ref:schema.$id+"#/definitions/HandoverFacts"}),row=ajv.compile({$ref:schema.$id+"#/definitions/HandoverCase"});
@@ -86,7 +86,7 @@ test("a process that is not the one the grant was offered to queues like any oth
  ] as const){
   const directory=fresh(),lines:string[]=[],additions=await handover(directory);
   const controller=new AbortController();setTimeout(()=>controller.abort(Error("gave up")),250);
-  await expect(withHostCapacityV1(options(directory,{environment:additions,control:control(controller.signal),write:line=>lines.push(line),...over}),async()=>"never"),name).rejects.toThrow("gave up");
+  await expect(withHostCapacityV1(options(directory,{environment:{LANG:"en_US.UTF-8",...additions},control:control(controller.signal),write:line=>lines.push(line),...over}),async()=>"never"),name).rejects.toThrow("gave up");
   expect(lines[0],name).toBe(`[capacity] the grant of the command this one replaces cannot be taken over (${reason}): queueing like any other request`);
   expect(grants(directory).length,name).toBe(1);expect(queue(directory),name).toEqual([]);
   await settleRestartCustodiesV1();expect(grants(directory),name).toEqual([]);
@@ -118,8 +118,9 @@ const run=(script:string,environment:Record<string,string>,wrapper?:string[])=>n
 const script=fileURLToPath(new URL("./📜️child/🟦️.ts",import.meta.url));
 
 test("a real process that is not the child of the offering process does not take the grant over",async()=>{
- const directory=fresh(),additions=await handover(directory,[],{},{fixedMegabytes:64},true);
- expect(systemAncestryV1(process.platform,process.pid)[0]?.started).toBe(spawnSync("ps",["-o","lstart=","-p",String(process.pid)],{encoding:"utf8"}).stdout.trim());
+ const directory=fresh(),additions=await handover(directory,[],{LANG:"en_US.UTF-8"},{fixedMegabytes:64},true);
+ const started=systemAncestryV1(process.platform,process.pid)[0]?.started;
+ if(process.platform==="linux")expect(started).toMatch(/^tick:\d+$/u);else expect(started).toBe(spawnSync("ps",["-o","lstart=","-p",String(process.pid)],{encoding:"utf8"}).stdout.trim());
  const unrelated=await run(script,{...additions,HC_DIRECTORY:directory,HC_MODE:"claim",HC_MEGABYTES:"64",HC_TIMEOUT_MS:"4000",LANG:"en_US.UTF-8"},["sh","-c",'"$@"; :',"sh"]);
  const row=JSON.parse(unrelated.out[0]!);
  expect(unrelated.err).toContain("[capacity] the grant of the command this one replaces cannot be taken over (this process is not the one the grant was offered to): queueing like any other request");
@@ -129,7 +130,7 @@ test("a real process that is not the child of the offering process does not take
 },60000);
 
 test("a real replacement process takes the grant of the process that started it and queues behind nobody",async()=>{
- const directory=fresh(),additions=await handover(directory,[],{},{},true);
+ const directory=fresh(),additions=await handover(directory,[],{LANG:"en_US.UTF-8"},{},true);
  const competitor=withHostCapacityV1(options(directory),async()=>"competitor");
  await sleep(100);
  expect(queue(directory).length).toBe(1);
@@ -143,11 +144,11 @@ test("a real replacement process takes the grant of the process that started it 
 
 test("the gate lock is never held while the process table is read, and a refused claim never leaves it behind",async()=>{
  const directory=fresh(),additions=await handover(directory),seen:boolean[]=[];
- await withHostCapacityV1(options(directory,{environment:{...additions},parent:async()=>{seen.push(existsSync(join(directory,"lock")));return{pid:process.pid,started:STARTED};}}),async handle=>{expect(handle.adopted).toBe(true);});
+ await withHostCapacityV1(options(directory,{environment:{LANG:"en_US.UTF-8",...additions},parent:async()=>{seen.push(existsSync(join(directory,"lock")));return{pid:process.pid,started:STARTED};}}),async handle=>{expect(handle.adopted).toBe(true);});
  expect(seen).toEqual([false]);
  const other=fresh(),again=await handover(other),lines:string[]=[];
  const controller=new AbortController();setTimeout(()=>controller.abort(Error("gave up")),250);
- await expect(withHostCapacityV1(options(other,{environment:{...again},control:control(controller.signal),parent:async()=>{seen.push(existsSync(join(other,"lock")));return{pid:process.pid+1,started:STARTED};},write:line=>lines.push(line)}),async()=>"never")).rejects.toThrow("gave up");
+ await expect(withHostCapacityV1(options(other,{environment:{LANG:"en_US.UTF-8",...again},control:control(controller.signal),parent:async()=>{seen.push(existsSync(join(other,"lock")));return{pid:process.pid+1,started:STARTED};},write:line=>lines.push(line)}),async()=>"never")).rejects.toThrow("gave up");
  expect(seen).toEqual([false,false]);expect(existsSync(join(other,"lock"))).toBe(false);expect(lines.some(line=>line.includes("cannot be taken over"))).toBe(true);
  await settleRestartCustodiesV1();
 },30000);

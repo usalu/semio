@@ -2353,14 +2353,6 @@
             {
               "id": "insert-ring-stiffener-dupe",
               "directoryName": "⛔dupe"
-            },
-            {
-              "id": "insert-sheet-profile-dupe",
-              "directoryName": "⛔dupe"
-            },
-            {
-              "id": "insert-fire-insulation-dupe",
-              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -2376,6 +2368,21 @@
           ]
         },
         {
+          "mutationId": "insert-sheet-profile",
+          "sourceMutationDirectoryName": "➕insert-sheet-profile",
+          "mutationDirectoryName": "➕insert-sheet-profile",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-sheet-profile-dupe",
+              "directoryName": "⛔dupe"
+            }
+          ]
+        },
+        {
           "mutationId": "remove-sheet-profile",
           "sourceMutationDirectoryName": "➖remove-sheet-profile",
           "mutationDirectoryName": "➖remove-sheet-profile",
@@ -2383,6 +2390,21 @@
             {
               "id": "apply",
               "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-fire-insulation",
+          "sourceMutationDirectoryName": "➕insert-fire-insulation",
+          "mutationDirectoryName": "➕insert-fire-insulation",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-fire-insulation-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -2927,10 +2949,10 @@
         "insert-patch-load",
         "remove-patch-load",
         "insert-ring-stiffener",
-        "insert-sheet-profile",
-        "insert-fire-insulation",
         "remove-ring-stiffener",
+        "insert-sheet-profile",
         "remove-sheet-profile",
+        "insert-fire-insulation",
         "remove-fire-insulation",
         "insert-member-action",
         "remove-member-action",

@@ -4,6 +4,8 @@ import {compileSchemaV1} from "../🟨️.mjs";
 
 /** 🎚 The policy constants of the schema. */
 export const POLICY_V1=Object.freeze(schema.definitions.Policy.const);
+/** 🌐 The bounds of the per-host graph service. */
+export const HOST_POLICY_V1=Object.freeze(schema.definitions.HostPolicy.const);
 /** 📜 The whole schema document. */
 export const SCHEMA_V1=schema;
 

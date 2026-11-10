@@ -5,7 +5,7 @@ import{resolve}from"node:path";
 import{spawn,spawnSync}from"node:child_process";
 import schema from"../🧬️schema/🔣️.json";
 import fixture from"./🔣️.json";
-import{createScriptTerminationGuardV1,liveChildCountV1,treeCpuMillisecondsV1,waitingDelayV1,enterScriptProcessWaitV1,activeScriptProcessWaitsV1,noteScriptProcessProgressV1,observeScriptProcessOutputV1,scriptProcessWaitEpisodeV1,scriptProcessStallDecisionV1,scriptProcessWatchdogNoticeV1,startScriptProcessWatchdogV1}from"../🟦️.ts";
+import{scriptProcessStallActionV1,createScriptTerminationGuardV1,liveChildCountV1,treeCpuMillisecondsV1,waitingDelayV1,enterScriptProcessWaitV1,activeScriptProcessWaitsV1,noteScriptProcessProgressV1,observeScriptProcessOutputV1,scriptProcessWaitEpisodeV1,scriptProcessStallDecisionV1,scriptProcessWatchdogNoticeV1,startScriptProcessWatchdogV1}from"../🟦️.ts";
 test("the stall decision agrees with the closed schema and an independent SQLite table",()=>{
  const database=new Database(":memory:"),validate=new Ajv({strict:true}).compile({...schema.definitions.State,definitions:{}});
  try{for(const row of fixture.decisions){expect(validate(row.state)).toBe(true);expect(scriptProcessStallDecisionV1(row.state,fixture.stall,fixture.idleTree)).toBe(row.decision);
@@ -86,3 +86,13 @@ test("an interrupt or a termination ends the process with the conventional exit 
     expect(err.split("\n").filter(line => line.trim() !== "").length, name).toBeLessThanOrEqual(2 * contains.length);
   }
 }, 60_000);
+test("a stalled worker thread aborts its own work and never exits the service process",()=>{
+ expect(scriptProcessStallActionV1(true)).toBe("exit");
+ expect(scriptProcessStallActionV1(false)).toBe("abort");
+});
+test("a stalled worker is refused with the typed stalled code, retry later, in both languages",async()=>{
+ const{refuseProcessV1}=await import("../../../../../📖️texts/🟦️.ts"),{renderRepoErrorV1,repoErrorExitCodeV1,isRepoErrorV1}=await import("../../../../../🏗️build/🗣️language/🚨️error/🟦️.ts");
+ const error=refuseProcessV1("stalled","routing.stalled-worker",{minutes:10,retry:"later"});
+ expect(isRepoErrorV1(error)).toBe(true);expect(error.code).toBe("stalled");expect(error.values.retry).toBe("later");expect(repoErrorExitCodeV1(error.code)).toBe(1);
+ expect(renderRepoErrorV1(error,"en")).toContain("10 minutes");expect(renderRepoErrorV1(error,"de")).toContain("10 Minuten");
+});

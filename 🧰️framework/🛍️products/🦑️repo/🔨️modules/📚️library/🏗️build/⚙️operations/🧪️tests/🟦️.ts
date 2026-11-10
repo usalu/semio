@@ -177,7 +177,7 @@ test("exec exports the tool-neutral project environment and the catalogue never 
 
 test("the real CLI prints the own help of a command, also for preflight, without running it",()=>{
  const script=join(import.meta.dir,"../../📜️script.ts");
- const run=(args:string[])=>spawnSync(process.execPath,[script,"repo",...args],{cwd:root,encoding:"utf8",env:{...process.env,SEMIO_LANGUAGE:undefined,LANG:"C",LC_ALL:"C"} as NodeJS.ProcessEnv});
+ const run=(args:string[])=>spawnSync(process.execPath,[script,"repo",...args],{cwd:root,encoding:"utf8",env:{...process.env,SEMIO_LANGUAGE:"en",LANG:"C",LC_ALL:"C"} as NodeJS.ProcessEnv});
  for(const [args,expected] of [[["preflight","--help"],"repo preflight - "],[["cache","clear","--help"],"repo cache clear - "],[["dependencies","lock","--help","--lang=de"],"Verwendung:"]] as const){
   const result=run([...args]);
   expect(result.status,args.join(" ")+result.stderr).toBe(0);
@@ -215,7 +215,7 @@ test("a subcommand lists only the options it reads and the examples that belong 
   expect(subcommand.flags,row.operation+" "+row.subcommand).toEqual(row.flags);
   for(const name of subcommand.flags??[])expect(operation.flags.includes(name),name).toBe(true);
   for(const language of help.languages){
-   const page=renderBuildHelpV1(help,{operation:row.operation,subcommand:row.subcommand},language),optionLines=page.split("\n").filter(line=>/^  (-\w, )?--[a-z]/u.test(line)&&!/^  (--tool|--workers|--service|-h, --help|--lang)/u.test(line));
+   const page=renderBuildHelpV1(help,{operation:row.operation,subcommand:row.subcommand},language),optionLines=page.split("\n").filter(line=>/^  (-\w, )?--[a-z]/u.test(line)&&!/^  (--tool|--workers|-h, --help|--lang)/u.test(line));
    expect(optionLines.length,row.operation+" "+row.subcommand+" "+language).toBe(row.flags.length);
    for(const name of row.flags)expect(page.includes(`  ${name}`),name).toBe(true);
    for(const command of row.examples)expect(page.includes(`  ${command}`),command).toBe(true);

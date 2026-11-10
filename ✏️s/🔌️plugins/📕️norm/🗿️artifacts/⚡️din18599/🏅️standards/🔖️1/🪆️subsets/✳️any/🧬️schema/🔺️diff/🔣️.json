@@ -787,7 +787,9 @@
         "thetaICoolC",
         "occupants",
         "internalGainsWM2",
-        "lightingPowerWM2"
+        "lightingPowerWM2",
+        "thermalMassClass",
+        "cWirkWhM2k"
       ],
       "properties": {
         "labelEn": {
@@ -884,6 +886,26 @@
           "anyOf": [
             {
               "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/lightingPowerWM2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "thermalMassClass": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/thermalMassClass"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cWirkWhM2k": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone/properties/cWirkWhM2k"
             },
             {
               "type": "null"

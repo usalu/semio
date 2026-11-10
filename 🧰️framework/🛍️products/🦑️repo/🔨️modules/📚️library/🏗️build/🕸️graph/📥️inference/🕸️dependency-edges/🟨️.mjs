@@ -1,5 +1,6 @@
 /** 🕸️ Derives project dependency edges and publishes the complete module facts of one graph. */
 const javascriptManagerV1 = createRequire(import.meta.url)("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
+import { createBoundedCacheV1 } from "../../../🧊️bounded/🟨️.mjs";
 import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createRequire, isBuiltin } from "node:module";
@@ -29,7 +30,7 @@ export function wire(registry) {
 const NO_EDGE_READS_V1 = Object.freeze({ owner() {}, path() {}, package() {}, module() {}, workspace() {}, lock() {} });
 const readsOfV1 = (context, name) => context.edgeReads?.owner(name) ?? NO_EDGE_READS_V1;
 
-const moduleGraphPublications=new Map();
+const moduleGraphPublications=createBoundedCacheV1({name:"inference:module-graph-publications",maxEntries:2,maxBytes:2});
 const moduleGraphPublicationKeyV1=root=>JSON.stringify([resolve(root),repositoryBuildGraphDataDirectoryV1(root,"inference")]);
 
 /** 🧭️ Picks an indexed dependency source file through the original portable file map. */

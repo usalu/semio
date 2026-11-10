@@ -167,14 +167,12 @@ test("a running command frees on demand within the monitor interval once the ima
  }finally{rmSync(root,{recursive:true,force:true});}
 },30000);
 
-test("a demand frees the oldest idle lanes and cold objects beyond the water marks, never a live lane and never the protected newest objects",()=>{
- const lane=(id:string,bytes:number,lastUsedMs:number,live=false)=>({id,bytes,incrementalBytes:0,lastUsedMs,live}),relaxed={laneIdleMilliseconds:10**9,laneShare:1,incrementalShare:1,casShare:1};
- const input:GcInputV1={capacityBytes:100,volumeBytes:100,freeBytes:60,nowMs:1_000_000,lanes:[lane("p1",10,100_000),lane("p2",10,200_000),lane("p3",10,300_000),lane("live",30,50_000,true),lane("p4",10,900_000)],objects:[{digest:"d1",bytes:5,lastUsedMs:1},{digest:"d2",bytes:5,lastUsedMs:2}]};
- expect(planGcV1(input,relaxed)).toEqual({removeLanes:[],removeIncremental:[],removeObjects:[]});
- expect(planGcV1({...input,demandBytes:25},relaxed)).toEqual({removeLanes:["p1","p2","p3"],removeIncremental:[],removeObjects:[]});
- expect(planGcV1({...input,demandBytes:70},{...relaxed,casProtectedShare:0})).toEqual({removeLanes:["p1","p2","p3","p4"],removeIncremental:[],removeObjects:["d1","d2"]});
- expect(planGcV1({...input,demandBytes:70},{...relaxed,casProtectedShare:0.05}).removeObjects).toEqual(["d1"]);
- expect(planGcV1({...input,demandBytes:70},{...relaxed,casProtectedShare:0.1}).removeObjects).toEqual([]);
+test("a demand frees the oldest idle lanes beyond the water marks and never a live lane",()=>{
+ const lane=(id:string,bytes:number,lastUsedMs:number,live=false)=>({id,bytes,incrementalBytes:0,lastUsedMs,live}),relaxed={laneIdleMilliseconds:10**9,laneShare:1,incrementalShare:1};
+ const input:GcInputV1={capacityBytes:100,volumeBytes:100,freeBytes:60,nowMs:1_000_000,lanes:[lane("p1",10,100_000),lane("p2",10,200_000),lane("p3",10,300_000),lane("live",30,50_000,true),lane("p4",10,900_000)]};
+ expect(planGcV1(input,relaxed)).toEqual({removeLanes:[],removeIncremental:[]});
+ expect(planGcV1({...input,demandBytes:25},relaxed)).toEqual({removeLanes:["p1","p2","p3"],removeIncremental:[]});
+ expect(planGcV1({...input,demandBytes:70},relaxed).removeLanes).toEqual(["p1","p2","p3","p4"]);
  expect(planGcV1({...input,demandBytes:10**6},relaxed).removeLanes).not.toContain("live");
 });
 

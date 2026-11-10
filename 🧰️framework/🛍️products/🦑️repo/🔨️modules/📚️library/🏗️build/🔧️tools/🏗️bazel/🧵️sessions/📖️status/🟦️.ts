@@ -1,9 +1,10 @@
 import {readdirSync,readFileSync} from "node:fs";
 import {join} from "node:path";
-import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import type {BazelSlotStateV1} from "../🟦️.ts";
-import {refuseBuildV1} from "../../../../📖️texts/🟦️.ts";
+/** 💤️ The schema validator, loaded on the first slot state file that exists: a status of a host without Bazel slots never needs it. */
+const validatorV1=()=>createRequire(import.meta.url)("../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts") as {validateJsonSchemaSubset:(schema:never,value:unknown,root:never)=>readonly unknown[]};
+import {createRequire} from "node:module";
 
 /** 📖️ The read-only leaf of the session slots: where the servers live, which slots exist, which server process lives in a slot and what a slot remembers. It imports no lease, no storage and no tool module, so a status command can read the Bazel servers without loading the build tools.
  * @see ../🔌️port/🟦️.ts the claims and the writes, ../🧬️schema/🔣️.json the names and the slot state */
@@ -22,7 +23,7 @@ export function readBazelServerPidSyncV1(outputBase:string):number|undefined{
 }
 /** 🧠️ What a slot remembers, or undefined when it remembers nothing valid or its output base is gone. */
 export function readBazelSlotStateSyncV1(server:string,slot:string):BazelSlotStateV1|undefined{
- if(!slotPattern.test(slot))throw refuseBuildV1("invalid","bazel.session-slot-invalid",{slot});
- try{const value=JSON.parse(readFileSync(join(server,slot+policy.names.stateSuffix),"utf8"));return validateJsonSchemaSubset(schema.definitions.SlotState as never,value,schema as never).length||value.slot!==slot?undefined:value as BazelSlotStateV1;}
+ if(!slotPattern.test(slot))throw(createRequire(import.meta.url)("../../../../📖️texts/🟦️.ts") as typeof import("../../../../📖️texts/🟦️.ts")).refuseBuildV1("invalid","bazel.session-slot-invalid",{slot});
+ try{const value=JSON.parse(readFileSync(join(server,slot+policy.names.stateSuffix),"utf8"));return validatorV1().validateJsonSchemaSubset(schema.definitions.SlotState as never,value,schema as never).length||value.slot!==slot?undefined:value as BazelSlotStateV1;}
  catch(error){if(missing(error)||error instanceof SyntaxError)return undefined;throw error;}
 }

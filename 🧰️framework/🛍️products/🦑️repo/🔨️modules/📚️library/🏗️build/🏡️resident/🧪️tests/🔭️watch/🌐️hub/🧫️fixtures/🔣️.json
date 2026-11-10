@@ -1,0 +1,38 @@
+{
+  "open": [
+    {
+      "name": "plain root",
+      "tag": "r1",
+      "args": [
+        "watch",
+        "--root",
+        "/w",
+        "--latency-ms",
+        "5"
+      ],
+      "line": "open\tr1\t/w\t5\t1\t\t\t\t\n"
+    },
+    {
+      "name": "exclusions and replay",
+      "tag": "r2",
+      "args": [
+        "watch",
+        "--root",
+        "/w x",
+        "--latency-ms",
+        "9",
+        "--exclude",
+        ".git",
+        "--exclude",
+        "a/b",
+        "--exclude-name",
+        "node_modules",
+        "--since",
+        "42",
+        "--uuid",
+        "U-1"
+      ],
+      "line": "open\tr2\t/w x\t9\t1\t.git\u001fa/b\tnode_modules\t42\tU-1\n"
+    }
+  ]
+}

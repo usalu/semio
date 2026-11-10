@@ -1,6 +1,6 @@
 import{lstat as statEntry,readdir as listEntries}from"node:fs/promises";
-import{lstatSync,readdirSync}from"node:fs";
-import{join,resolve}from"node:path";
+import{lstatSync,readFileSync,readdirSync,renameSync,writeFileSync}from"node:fs";
+import{dirname,join,resolve}from"node:path";
 import{nativeDirectoryProtocolV1}from"../📋️contract/🟦️.ts";
 
 const protocol=nativeDirectoryProtocolV1();
@@ -98,10 +98,13 @@ export type NativeDirectoryUsageV1=Readonly<{
 type Slot={readonly controller:AbortController;readonly promise:Promise<number>;subscribers:number;settled:boolean;start():void;cancel(reason:unknown):void};
 
 /** 🛫️ Builds one usage cell. Measurements never overlap: a caller that arrives while one runs waits for it and for exactly one trailing run shared by every such caller, so any number of simultaneous commits cost at most two walks and every answer reflects a walk that began after the caller's own write. A walk whose last waiter leaves is cancelled. */
-export function createNativeDirectoryUsageV1(input:Readonly<{root:string;maximumEntries:number;measure?:(root:string,signal:AbortSignal)=>Promise<number>;now?:()=>number}>):NativeDirectoryUsageV1{
+/** 💾️ Where a cell keeps its last measurement between processes: a fresh process starts from it instead of walking the tree again. */
+export type NativeDirectoryUsageRecordV1=Readonly<{read():Readonly<{bytes:number;atMs:number}>|undefined;write(bytes:number,atMs:number):void}>;
+export function createNativeDirectoryUsageV1(input:Readonly<{root:string;maximumEntries:number;measure?:(root:string,signal:AbortSignal)=>Promise<number>;now?:()=>number;record?:NativeDirectoryUsageRecordV1}>):NativeDirectoryUsageV1{
  const now=input.now??Date.now,measure=input.measure??((root:string,signal:AbortSignal)=>measureNativeDirectoryUsageAsyncV1(root,{maximumEntries:input.maximumEntries,signal}).then(row=>row.allocatedBytes));
  let known:{bytes:number;atMs:number}|undefined,running:Slot|undefined,queued:Slot|undefined;
- const record=(bytes:number,atMs:number=now())=>{if(!known||atMs>=known.atMs)known={bytes,atMs};};
+ try{const kept=input.record?.read();if(kept&&Number.isSafeInteger(kept.bytes)&&Number.isSafeInteger(kept.atMs))known={bytes:kept.bytes,atMs:kept.atMs};}catch{}
+ const record=(bytes:number,atMs:number=now())=>{if(!known||atMs>=known.atMs){known={bytes,atMs};try{input.record?.write(bytes,atMs);}catch{}}};
  const handoff=(done:Slot)=>{
   if(running!==done)return;running=undefined;const following=queued;queued=undefined;
   if(!following)return;
@@ -137,6 +140,14 @@ const registry=new Map<string,NativeDirectoryUsageV1>();
 /** 🗂️ Returns the process-wide usage cell of a partition root, so the capacity meter and every space query share one measurement and one cache. */
 export function nativeDirectoryUsageV1(root:string,maximumPhysicalBytes:number):NativeDirectoryUsageV1{
  const key=resolve(root);let cell=registry.get(key);
- if(!cell){cell=createNativeDirectoryUsageV1({root:key,maximumEntries:nativeDirectoryEntryBoundV1(maximumPhysicalBytes)});registry.set(key,cell);}
+ if(!cell){cell=createNativeDirectoryUsageV1({root:key,maximumEntries:nativeDirectoryEntryBoundV1(maximumPhysicalBytes),record:nativeDirectoryUsageFileV1(join(dirname(key),protocol.usage.recordFile))});registry.set(key,cell);}
  return cell;
+}
+
+/** 📒️ The usage record of one partition as a small JSON file beside its volume root, replaced atomically: any process that measures leaves it for every later status. */
+export function nativeDirectoryUsageFileV1(file:string):NativeDirectoryUsageRecordV1{
+ return Object.freeze({
+  read:()=>{const value=JSON.parse(readFileSync(file,"utf8")) as {bytes?:unknown;atMs?:unknown};return Number.isSafeInteger(value.bytes)&&Number.isSafeInteger(value.atMs)?{bytes:value.bytes as number,atMs:value.atMs as number}:undefined;},
+  write:(bytes,atMs)=>{const temporary=file+"."+process.pid+".tmp";writeFileSync(temporary,JSON.stringify({bytes,atMs}));renameSync(temporary,file);}
+ });
 }

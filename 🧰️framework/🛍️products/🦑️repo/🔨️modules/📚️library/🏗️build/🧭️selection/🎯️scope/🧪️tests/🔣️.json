@@ -1,0 +1,26 @@
+{
+  "projects": {
+    "app": { "dependencies": ["lib"], "tools": ["bundler"], "targets": { "build": { "dependsOn": ["^build", "codegen"] }, "codegen": {}, "test": { "dependsOn": ["build"] }, "lint": {} } },
+    "lib": { "dependencies": ["bridge"], "targets": { "build": { "dependsOn": ["^build"] } } },
+    "bridge": { "dependencies": ["leaf"], "targets": {} },
+    "leaf": { "dependencies": [], "targets": { "build": {} } },
+    "bundler": { "dependencies": ["bundler-core"], "targets": { "build": { "dependsOn": ["^build"] } } },
+    "bundler-core": { "dependencies": [], "targets": { "build": {} } },
+    "loop-a": { "dependencies": [], "targets": { "build": { "dependsOn": ["loop-b"] }, "loop-b": { "dependsOn": ["build"] } } },
+    "fan": { "dependencies": ["leaf"], "targets": { "all": { "dependsOn": [{ "target": "build", "projects": ["leaf", "lib"] }, { "target": "build", "dependencies": true }] } } },
+    "unrelated-1": { "dependencies": ["unrelated-2"], "targets": { "build": { "dependsOn": ["^build"] } } },
+    "unrelated-2": { "dependencies": [], "targets": { "build": {} } }
+  },
+  "cases": [
+    { "name": "caret passes through a project without the target", "scope": { "version": 1, "targets": [{ "project": "app", "target": "build" }], "includeToolClosure": false }, "nx": true, "tasks": ["app:build", "app:codegen", "leaf:build", "lib:build"], "projects": ["app", "bridge", "leaf", "lib"], "readsAtMost": 4 },
+    { "name": "same project chain", "scope": { "version": 1, "targets": [{ "project": "app", "target": "test" }], "includeToolClosure": false }, "nx": true, "tasks": ["app:build", "app:codegen", "app:test", "leaf:build", "lib:build"], "projects": ["app", "bridge", "leaf", "lib"], "readsAtMost": 4 },
+    { "name": "optional dependency target without a task", "scope": { "version": 1, "targets": [{ "project": "app", "target": "lint" }], "includeToolClosure": false }, "nx": true, "tasks": ["app:lint"], "projects": ["app", "bridge", "leaf", "lib"], "readsAtMost": 4 },
+    { "name": "tool closure adds the tool projects and their dependencies without their tasks", "scope": { "version": 1, "targets": [{ "project": "app", "target": "lint" }], "includeToolClosure": true }, "tasks": ["app:lint"], "projects": ["app", "bridge", "bundler", "bundler-core", "leaf", "lib"], "readsAtMost": 6 },
+    { "name": "cycle terminates", "scope": { "version": 1, "targets": [{ "project": "loop-a", "target": "build" }], "includeToolClosure": false }, "tasks": ["loop-a:build", "loop-a:loop-b"], "projects": ["loop-a"], "readsAtMost": 1 },
+    { "name": "object forms with projects and dependencies", "scope": { "version": 1, "targets": [{ "project": "fan", "target": "all" }], "includeToolClosure": false }, "nx": true, "tasks": ["fan:all", "leaf:build", "lib:build"], "projects": ["bridge", "fan", "leaf", "lib"], "readsAtMost": 4 },
+    { "name": "leaf is bounded by itself", "scope": { "version": 1, "targets": [{ "project": "unrelated-2", "target": "build" }], "includeToolClosure": false }, "nx": true, "tasks": ["unrelated-2:build"], "projects": ["unrelated-2"], "readsAtMost": 1 },
+    { "name": "several roots union", "scope": { "version": 1, "targets": [{ "project": "unrelated-1", "target": "build" }, { "project": "leaf", "target": "build" }], "includeToolClosure": false }, "tasks": ["leaf:build", "unrelated-1:build", "unrelated-2:build"], "projects": ["leaf", "unrelated-1", "unrelated-2"], "readsAtMost": 3 },
+    { "name": "missing requested task refuses", "scope": { "version": 1, "targets": [{ "project": "bridge", "target": "build" }], "includeToolClosure": false }, "error": "Selected task missing" },
+    { "name": "open scope refuses", "scope": { "version": 1, "targets": [], "includeToolClosure": false }, "error": "Closed target scope" }
+  ]
+}

@@ -7,6 +7,10 @@ import matrix from "../🧫️witness/🔣️.json" with { type: "json" };
 import { timeTravelScenarioV1 } from "../🟦️.ts";
 
 const playgrounds = JSON.parse(readFileSync(new URL("../../../../../🧑‍💻dev/🧩️catalog/🤖️generated/🚀️playgrounds.json", import.meta.url), "utf8")) as { variant: string; pluginId: string; ports: { react: number; wgpu: number } }[];
+const scope = (path: string): string => {
+  const [, collection, id] = /^([\w.]+)\[id=([^\]]+)\]/u.exec(path)!;
+  return `scope:1:${collection.length}:${collection}${id.length}:${id}`;
+};
 const pinned = matrix.artifacts.filter(artifact => artifact.pin !== null);
 
 test("engineering matrix is closed, bilingual and covers all fifteen norm artifacts under the independent schema oracle", () => {
@@ -34,6 +38,8 @@ test("each pinned witness changes the dependent utilization and preserves its ow
     expect(witness.states.after.utilization).not.toBe(witness.states.before.utilization);
     expect(witness.field.key).toBe(`norm-inputs.${witness.field.path}`);
     expect(witness.field.ownerWindow).toBe(`norm-${variant}-outliner`);
+    if (witness.field.owner === "") expect(witness.field.path).not.toContain("[id=");
+    else expect(witness.field.owner).toBe(scope(witness.field.path));
   }
 });
 

@@ -97,6 +97,17 @@
     "moved": [],
     "modified": []
   },
+  "placements": {
+    "removed": [
+      {
+        "id": "bldg-office",
+        "index": 0
+      }
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
   "isolationSystems": {
     "removed": [],
     "inserted": [],
@@ -111,17 +122,6 @@
   },
   "criticalRegions": {
     "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
-  "placements": {
-    "removed": [
-      {
-        "id": "bldg-office",
-        "index": 0
-      }
-    ],
     "inserted": [],
     "moved": [],
     "modified": []

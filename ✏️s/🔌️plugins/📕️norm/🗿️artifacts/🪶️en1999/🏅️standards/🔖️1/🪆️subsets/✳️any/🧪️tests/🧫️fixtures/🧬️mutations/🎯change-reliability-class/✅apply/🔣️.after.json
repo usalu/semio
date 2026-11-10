@@ -309,7 +309,7 @@
   "patchLoads": [],
   "ringStiffeners": [],
   "transverseStiffeners": [],
+  "reliabilityClass": "RC3",
   "sheetProfiles": [],
-  "fireInsulations": [],
-  "reliabilityClass": "RC3"
+  "fireInsulations": []
 }

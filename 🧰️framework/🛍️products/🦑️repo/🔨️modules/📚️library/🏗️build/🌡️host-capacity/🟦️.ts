@@ -7,6 +7,9 @@ import {agentSessionAddressV1,currentAgentSessionV1} from "../../../../../../�
 import {currentWorkerHostV1,planWorkersV1,readWorkerPolicyV1,workerActionKindV1} from "../👷️workers/🟦️.ts";
 import dashboardInstallation from "../../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔣️.json" with {type:"json"};
 import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1,refuseCapacityV1} from "./🎛️control/🟦️.ts";
+import {grantJobLimitV1,learnedRunAfterOutcomeV1} from "../🧱️job-limits/🎫️admission/🟦️.ts";
+import type {JobLimitPolicyV1,JobOutcomeV1} from "../🧱️job-limits/🟦️.ts";
+import {PLANNED_COMMANDS_V1,PLANNER_PHASE_CLASSES_V1} from "./🎯️planned-commands/🟦️.ts";
 
 export {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "./🎛️control/🟦️.ts";
 
@@ -56,8 +59,8 @@ export function buildCapacityAskV1(args:readonly string[],environment:Readonly<R
  if(head.some(argument=>argument==="--help"||argument==="-h"))return undefined;
  const requested=command==="cargo"?option(head,"parallelism"):option(head,"parallel"),fromEnvironment=command==="cargo"?undefined:environment.SEMIO_BUILD_PARALLEL,parsed=Number(requested??fromEnvironment);
  const preferred=Number.isSafeInteger(parsed)&&parsed>0?parsed:command==="cargo"?availableParallelism():planWorkersV1(readWorkerPolicyV1((buildPolicy as unknown as {workers:unknown}).workers),currentWorkerHostV1()).localJobs;
- const targets=command==="cargo"?[]:requestedTargets(head),kinds=requestedKinds(targets);
- return Object.freeze({operation:command,preferredJobs:preferred,kinds:Object.freeze(kinds),targets:Object.freeze(targets),lineage:buildCapacityLineageV1(args,kinds)});
+ const targets=command==="cargo"?[]:requestedTargets(head),dry=command!=="cargo"&&head.some(argument=>argument==="--dry-run"||argument==="--graph"||argument.startsWith("--graph=")),kinds=dry?[]:requestedKinds(targets);
+ return Object.freeze({operation:command,preferredJobs:dry?1:preferred,kinds:Object.freeze(kinds),targets:Object.freeze(targets),lineage:dry?buildCapacityLineageV1(args,kinds).map(name=>name+":dry"):buildCapacityLineageV1(args,kinds)});
 }
 
 /** 🎟️ How many graph computers the compute slots of a rebuild may run at once on this host: what the rebuild measurably took on earlier runs against the memory above the floor (the prior until it has learned), within the authored bounds; a store that cannot be read answers with the prior. */
@@ -107,24 +110,27 @@ export function requestBuildFarmCapacityV1(input:HostCapacityPortsV1&Readonly<{p
 }
 
 /** 🚪️ Runs an invocation under the machine-wide capacity grant when its command is heavy: waits fairly with progress lines that name what it stands behind (its request is labelled with what it builds, e.g. the target of `repo run`, without control characters), then hands the body the arguments rewritten to the granted jobs and sets the environment the children inherit; light commands pass untouched. A run of a forecast-aware tool is learned as one that executed work when an executor asked for it or when its peak exceeded the quiet size of its class, so the quiet class learns only what quiet runs hold and the next forecast follows the run's own last outcome. */
-export async function withBuildCapacityV1<T>(args:readonly string[],environment:NodeJS.ProcessEnv,body:(granted:Readonly<{args:readonly string[];handle:HostCapacityHandleV1|undefined}>)=>Promise<T>,ports:HostCapacityPortsV1&Readonly<{directory?:string;policy?:HostCapacityPolicyV1;write?:(line:string)=>void;control?:ResourceLeaseControl;admitDeferred?:boolean;tool?:string;forecast?:boolean;exitCode?:()=>number|string|null|undefined;park?:(error:unknown)=>boolean|Promise<boolean>;strip?:(args:readonly string[],environment:NodeJS.ProcessEnv)=>readonly string[]}>={}):Promise<T>{
+export async function withBuildCapacityV1<T>(args:readonly string[],environment:NodeJS.ProcessEnv,body:(granted:Readonly<{args:readonly string[];handle:HostCapacityHandleV1|undefined;limit:JobLimitPolicyV1|undefined;report:(outcome:JobOutcomeV1)=>void}>)=>Promise<T>,ports:HostCapacityPortsV1&Readonly<{directory?:string;policy?:HostCapacityPolicyV1;write?:(line:string)=>void;control?:ResourceLeaseControl;admitDeferred?:boolean;tool?:string;forecast?:boolean;exitCode?:()=>number|string|null|undefined;park?:(error:unknown)=>boolean|Promise<boolean>;strip?:(args:readonly string[],environment:NodeJS.ProcessEnv)=>readonly string[];plannedByService?:boolean}>={}):Promise<T>{
  const policy=ports.policy??BUILD_HOST_CAPACITY_POLICY_V1,parsed=ports.strip?undefined:(await import("../🧭️invocation/🟦️.ts")).parseBuildInvocationV1(args,environment),stripped=ports.strip?ports.strip(args,environment):parsed!.args,tool=ports.tool??parsed?.tool??environment.SEMIO_BUILD_TOOL,ask=buildCapacityAskV1(stripped,environment,policy);
- if(!ask||buildCapacityDeferredV1(stripped)&&ports.admitDeferred!==true||await nativeDashboardLaunchV1(stripped))return body({args,handle:undefined});
+ if(!ask||buildCapacityDeferredV1(stripped)&&ports.admitDeferred!==true||await nativeDashboardLaunchV1(stripped))return body({args,handle:undefined,limit:undefined,report:()=>undefined});
+ if(ports.plannedByService===true&&ask.lineage[ask.lineage.length-1]!.endsWith(":dry"))return body({args,handle:undefined,limit:undefined,report:()=>undefined});
  const sized=sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation:ask.operation,preferredJobs:ask.preferredJobs,kinds:ask.kinds,targets:ask.targets}),base:HostRequestV1|undefined=sized&&Object.freeze({...sized,label:(ask.lineage.length<2?"":ask.lineage[ask.lineage.length-1]!.slice(ask.lineage[ask.lineage.length-2]!.length+1)).replace(/\p{Cc}/gu,"").slice(0,120)||ask.operation});
- if(!base)return body({args,handle:undefined});
- const directory=ports.directory??hostCapacityDirectoryV1(environment),session=currentAgentSessionV1({environment}),now=ports.now??Date.now,write=ports.write??(line=>process.stderr.write(line+"\n")),learned=readHostEstimateStoreV1(directory),estimate=estimateHostPhasesV1(policy,learned,ask.lineage,base,now());
+ if(!base)return body({args,handle:undefined,limit:undefined,report:()=>undefined});
+ const directory=ports.directory??hostCapacityDirectoryV1(environment),session=currentAgentSessionV1({environment}),now=ports.now??Date.now,write=ports.write??(line=>process.stderr.write(line+"\n")),stored=readHostEstimateStoreV1(directory),client=ports.plannedByService===true,learned=client?Object.freeze({...stored,classes:Object.fromEntries(Object.entries(stored.classes).filter(([name])=>!PLANNER_PHASE_CLASSES_V1.includes(name)))}) as typeof stored:stored,estimate=estimateHostPhasesV1(policy,learned,ask.lineage,base,now());
  const total=hostProfileV1(environment).totalMegabytes,capacity=Math.max(0,total-hostFloorMegabytesV1(policy,{totalMegabytes:total})),scaled=scaleHostRequestV1(policy,{...base,priority:hostRequestPriorityV1(base.priority,leasePriorityClassV1(environment,{agentSession:session.agent.client!=="human",interactiveTerminal:session.agent.client==="human"}),estimate)},estimate.ratioBasisPoints,capacity,estimate.floorMegabytes),measured=hostClassBoundV1(policy,learned,ask.lineage,now()).source==="measured",request=rampHostRequestV1(base,scaled,estimate,measured),growth=estimate.growRatioBasisPoints<estimate.ratioBasisPoints?rampHostRequestV1(base,scaleHostRequestV1(policy,{...base,priority:request.priority},estimate.growRatioBasisPoints,capacity,estimate.floorMegabytes),estimate,measured):request;
  if(estimate.floorMegabytes>estimate.phases.execution!.megabytes)write(formatHostCapacityV1(resolveHostCapacityLanguageV1(environment),"phased",{operation:ask.operation,percent:Math.round(estimate.ratioBasisPoints/100),samples:estimate.samples,floor:estimate.floorMegabytes,phase:(estimate.phases.plan?.megabytes??0)>=(estimate.phases.assembly?.megabytes??0)?"plan":"assembly"}));
  else if(estimate.samples>0)write(formatHostCapacityV1(resolveHostCapacityLanguageV1(environment),"estimated",{operation:ask.operation,percent:Math.round(estimate.ratioBasisPoints/100),samples:estimate.samples}));
  const leaf=ask.lineage[ask.lineage.length-1]!,forecastable=ports.forecast!==false&&tool==="bazel"&&policy.operations.find(row=>row.name===ask.operation)?.forecast===true,forecast=forecastable?forecastHostQuietV1(policy,learned,leaf,now()):undefined,quiet=forecast?.quiet===true&&forecast.megabytes<growth.fixedMegabytes+growth.preferredJobs*growth.perJobMegabytes,admission=quiet?quietHostRequestV1(growth,forecast!):request;
  if(quiet)write(forecast!.followUpMilliseconds===undefined?formatHostCapacityV1(resolveHostCapacityLanguageV1(environment),"quiet",{operation:ask.operation,samples:forecast!.samples,percent:Math.round(forecast!.shareBasisPoints/100),reserved:admission.fixedMegabytes,full:growth.fixedMegabytes+growth.preferredJobs*growth.perJobMegabytes}):formatHostCapacityV1(resolveHostCapacityLanguageV1(environment),"quietFollowUp",{operation:ask.operation,seconds:Math.round(forecast!.followUpMilliseconds/1000),reserved:admission.fixedMegabytes,full:growth.fixedMegabytes+growth.preferredJobs*growth.perJobMegabytes}));
+ let breached:JobOutcomeV1|undefined;
  const learn=async(run:HostRunV1)=>{
+  run=learnedRunAfterOutcomeV1(run,breached);
   const code=(ports.exitCode??(()=>process.exitCode))(),status=run.status==="ok"&&code!==undefined&&code!==null&&Number(code)!==0?"failed" as const:run.status,defaultMegabytes=Math.max(1,base.fixedMegabytes+run.jobs*base.perJobMegabytes);
   const forecasted=run.executed===undefined?undefined:{executed:run.executed||forecast!==undefined&&run.peakMegabytes>forecast.megabytes,peakMegabytes:run.peakMegabytes,activeMilliseconds:run.activeMilliseconds,peakAtMilliseconds:run.peakAtMilliseconds,endedAtMs:run.endedAtMs};
   if(forecasted!==undefined&&!forecasted.executed){if(status==="ok")await updateHostEstimateStoreV1(directory,policy,store=>recordHostForecastV1(policy,store,leaf,forecasted),{now});return;}
   const own=run.phases===undefined?run.peakMegabytes:Math.max(0,...run.phases.filter(row=>row.phase!=="rebuild").map(row=>row.peakMegabytes));
   if(!learnableHostRunV1(status,Math.max(1,Math.floor(own*10000/defaultMegabytes+0.5)),estimate))return;
-  await updateHostEstimateStoreV1(directory,policy,store=>{const next=recordHostPhasesV1(policy,store,ask.lineage,ask.operation,defaultMegabytes,{...run,keepPeak:true});return forecasted!==undefined&&status==="ok"?recordHostForecastV1(policy,next,leaf,forecasted):next;},{now});
+  await updateHostEstimateStoreV1(directory,policy,store=>{const next=recordHostPhasesV1(policy,store,ask.lineage,ask.operation,defaultMegabytes,{...run,...client&&run.phases?{phases:run.phases.filter(row=>!PLANNER_PHASE_CLASSES_V1.includes("phase:"+row.phase))}:{},keepPeak:true});return forecasted!==undefined&&status==="ok"?recordHostForecastV1(policy,next,leaf,forecasted):next;},{now});
  };
  const waiting=ports.control?undefined:createCapacityControlV1(),tasks=request.perJobMegabytes>0;
  try{
@@ -132,7 +138,7 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
    waiting?.dispose();
    const previous=Object.fromEntries([...Object.keys(handle.environment),"SEMIO_BUILD_PARALLEL"].map(key=>[key,environment[key]]));
    Object.assign(environment,handle.environment,tasks?{SEMIO_BUILD_PARALLEL:String(handle.jobs)}:{});
-   try{return await body({args:tasks?grantedBuildArgumentsV1(args,ask.operation,handle.jobs):args,handle});}
+   try{return await body({args:tasks?grantedBuildArgumentsV1(args,ask.operation,handle.jobs):args,handle,limit:grantJobLimitV1(handle),report:outcome=>{breached=outcome;}});}
    finally{for(const [key,value] of Object.entries(previous))if(value===undefined)delete environment[key];else environment[key]=value;}
   });
  }finally{waiting?.dispose();}

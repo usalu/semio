@@ -2,6 +2,7 @@
 
 use super::NdpEntry;
 
+use semio_s_plugin_norm_ndp_din4108 as din4108;
 use semio_s_plugin_norm_ndp_en1990 as en1990;
 use semio_s_plugin_norm_ndp_en1991 as en1991;
 use semio_s_plugin_norm_ndp_en1992 as en1992;
@@ -13,7 +14,7 @@ use semio_s_plugin_norm_ndp_en1997 as en1997;
 use semio_s_plugin_norm_ndp_en1998 as en1998;
 use semio_s_plugin_norm_ndp_en1999 as en1999;
 
-const PARTS: [&[NdpEntry]; 10] = [en1990::ROWS, en1991::ROWS, en1992::ROWS, en1993::ROWS, en1994::ROWS, en1995::ROWS, en1996::ROWS, en1997::ROWS, en1998::ROWS, en1999::ROWS];
+const PARTS: [&[NdpEntry]; 11] = [din4108::ROWS, en1990::ROWS, en1991::ROWS, en1992::ROWS, en1993::ROWS, en1994::ROWS, en1995::ROWS, en1996::ROWS, en1997::ROWS, en1998::ROWS, en1999::ROWS];
 
 const LEN: usize = {
     let mut total = 0;

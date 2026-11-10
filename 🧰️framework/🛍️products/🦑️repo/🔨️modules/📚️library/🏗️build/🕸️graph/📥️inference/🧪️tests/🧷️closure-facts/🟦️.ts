@@ -14,7 +14,7 @@ import {censusInferenceRecordsV1} from "../../../../../⚡️caching/🕸️grap
 import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 import{declareLibraryBuildTestEnvelopeV1}from"../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1("graph");
-declareLibraryBuildTestEnvelopeV1({suite:"build-inference"});
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference",scratch:"checkout"});
 import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 import{createIssuedResourceControlV1,scriptInvocationEnvironment}from"@semio-tech/process/routing";
 

@@ -1,0 +1,93 @@
+{
+ "unmanaged": [
+  {
+   "name": "idle host",
+   "totalMegabytes": 16000,
+   "availableMegabytes": 12000,
+   "ledger": [],
+   "expect": 4000
+  },
+  {
+   "name": "grants observed",
+   "totalMegabytes": 16000,
+   "availableMegabytes": 6000,
+   "ledger": [
+    {
+     "observedMegabytes": 3000,
+     "reservedMegabytes": 5000
+    }
+   ],
+   "expect": 7000
+  },
+  {
+   "name": "unobserved grant counts by reservation",
+   "totalMegabytes": 16000,
+   "availableMegabytes": 6000,
+   "ledger": [
+    {
+     "observedMegabytes": null,
+     "reservedMegabytes": 5000
+    }
+   ],
+   "expect": 5000
+  },
+  {
+   "name": "lent grant holds nothing",
+   "totalMegabytes": 16000,
+   "availableMegabytes": 6000,
+   "ledger": [
+    {
+     "observedMegabytes": 3000,
+     "reservedMegabytes": 5000,
+     "lentSinceMs": 1
+    }
+   ],
+   "expect": 10000
+  },
+  {
+   "name": "never negative",
+   "totalMegabytes": 16000,
+   "availableMegabytes": 15000,
+   "ledger": [
+    {
+     "observedMegabytes": 3000,
+     "reservedMegabytes": 5000
+    }
+   ],
+   "expect": 0
+  }
+ ],
+ "processes": {
+  "table": "  1     0   1000 systemd\n 10     1 900000 claude\n 11    10  50000 bun\n 12     1 300000 /usr/lib/code/code\n 13     1   2000 semio-repo-watch\n 20     1  40000 bun\n 21    20 700000 bun\n 22     1  10000 sshd\n garbage\n",
+  "grantRoots": [
+   20
+  ],
+  "expect": [
+   {
+    "name": "agent",
+    "processes": 1,
+    "megabytes": 879
+   },
+   {
+    "name": "editor",
+    "processes": 1,
+    "megabytes": 293
+   },
+   {
+    "name": "tool",
+    "processes": 1,
+    "megabytes": 49
+   },
+   {
+    "name": "other",
+    "processes": 2,
+    "megabytes": 11
+   },
+   {
+    "name": "watcher",
+    "processes": 1,
+    "megabytes": 2
+   }
+  ]
+ }
+}

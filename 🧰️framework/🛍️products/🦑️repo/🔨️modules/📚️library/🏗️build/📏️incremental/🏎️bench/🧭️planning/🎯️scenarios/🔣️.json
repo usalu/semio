@@ -1,0 +1,255 @@
+{
+ "version": 1,
+ "markers": [
+  {
+   "phase": "verification",
+   "pattern": "^graph: (\\d+ stale facts|refreshing \\d+ projects)"
+  },
+  {
+   "phase": "inference",
+   "pattern": "^graph: (asking the host for up to|inferring projects with|memory above the budget)"
+  },
+  {
+   "phase": "planning",
+   "pattern": "^graph: generation \\d+ (published|is current|was published by a peer|was sealed by a peer)"
+  }
+ ],
+ "counters": [
+  {
+   "name": "facts",
+   "pattern": "^graph: fact index of generation \\d+: (\\d+) facts",
+   "group": 1
+  },
+  {
+   "name": "staleFacts",
+   "pattern": "^graph: (\\d+) stale facts",
+   "group": 1
+  },
+  {
+   "name": "projectsStale",
+   "pattern": "^graph: \\d+ stale facts .*leave (\\d+) projects stale",
+   "group": 1
+  },
+  {
+   "name": "closuresVerified",
+   "pattern": "^graph: (\\d+) derived results asked again",
+   "group": 1
+  },
+  {
+   "name": "closuresReused",
+   "pattern": "^graph: \\d+ derived results asked again after \\d+ stale facts: (\\d+) unchanged",
+   "group": 1
+  },
+  {
+   "name": "closuresChanged",
+   "pattern": "^graph: \\d+ derived results asked again after \\d+ stale facts: \\d+ unchanged, (\\d+) changed",
+   "group": 1
+  },
+  {
+   "name": "projectsInferred",
+   "pattern": "^graph: (\\d+) of \\d+ projects inferred by",
+   "group": 1
+  },
+  {
+   "name": "workerRestartMb",
+   "pattern": "^graph: worker \\d+ restarted after (\\d+) MB",
+   "group": 1
+  },
+  {
+   "name": "tasksStale",
+   "pattern": "^tasks: (\\d+) stale, \\d+ up to date",
+   "group": 1
+  },
+  {
+   "name": "tasksUpToDate",
+   "pattern": "^tasks: \\d+ stale, (\\d+) up to date",
+   "group": 1
+  }
+ ],
+ "stores": [
+  ".🧬semio/🦑️repo/⚡️cache",
+  ".cache/b"
+ ],
+ "scenarios": [
+  {
+   "id": "cold-plan",
+   "kind": "cold",
+   "title": {
+    "en": "Cold graph plan of one artifact project",
+    "de": "Kalter Graphplan eines Artefaktprojekts"
+   },
+   "projects": [
+    "@semio-tech/norm-en1990-rs:build"
+   ],
+   "dryRun": true,
+   "runs": 1,
+   "metrics": [
+    "wallMs",
+    "phaseMs",
+    "closures",
+    "peakRssMb",
+    "swapMb",
+    "oomKills",
+    "memAvailableMb"
+   ]
+  },
+  {
+   "id": "warm-noop",
+   "kind": "warm",
+   "title": {
+    "en": "Warm no-op re-plan",
+    "de": "Warmer Neuplan ohne Änderung"
+   },
+   "projects": [
+    "@semio-tech/norm-en1990-rs:build"
+   ],
+   "dryRun": true,
+   "runs": 3,
+   "primes": 1,
+   "metrics": [
+    "wallMs",
+    "phaseMs",
+    "closures",
+    "peakRssMb",
+    "swapMb",
+    "oomKills",
+    "memAvailableMb"
+   ]
+  },
+  {
+   "id": "leaf-edit",
+   "kind": "edit",
+   "title": {
+    "en": "Re-plan after a one-line edit of one leaf source",
+    "de": "Neuplan nach Einzeilen-Änderung einer Blattquelle"
+   },
+   "projects": [
+    "@semio-tech/norm-en1990-rs:build"
+   ],
+   "dryRun": true,
+   "runs": 3,
+   "primes": 1,
+   "edit": {
+    "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+    "comment": "//"
+   },
+   "metrics": [
+    "wallMs",
+    "phaseMs",
+    "closures",
+    "peakRssMb",
+    "swapMb",
+    "oomKills",
+    "memAvailableMb"
+   ]
+  },
+  {
+   "id": "task-keys-edit",
+   "kind": "edit",
+   "title": {
+    "en": "Re-plan and project inference after a one-line edit, with the recorded task keys deciding what is stale",
+    "de": "Neuplan und Projektinferenz nach Einzeilen-Änderung, wobei die aufgezeichneten Aufgabenschlüssel entscheiden, was veraltet ist"
+   },
+   "projects": [
+    "@semio-tech/norm-en1990-rs:build"
+   ],
+   "dryRun": false,
+   "runs": 3,
+   "primes": 1,
+   "edit": {
+    "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+    "comment": "//"
+   },
+   "metrics": [
+    "wallMs",
+    "phaseMs",
+    "closures",
+    "peakRssMb",
+    "swapMb",
+    "oomKills",
+    "memAvailableMb"
+   ]
+  },
+  {
+   "id": "shared-manifest-edit",
+   "kind": "edit",
+   "title": {
+    "en": "Re-plan after an edit of a widely shared framework manifest",
+    "de": "Neuplan nach Änderung eines weit geteilten Framework-Manifests"
+   },
+   "projects": [
+    "@semio-tech/norm-en1990-rs:build"
+   ],
+   "dryRun": true,
+   "runs": 3,
+   "primes": 1,
+   "edit": {
+    "file": "🧰️framework/Cargo.toml",
+    "comment": "#"
+   },
+   "metrics": [
+    "wallMs",
+    "phaseMs",
+    "closures",
+    "peakRssMb",
+    "swapMb",
+    "oomKills",
+    "memAvailableMb"
+   ]
+  },
+  {
+   "id": "two-planners",
+   "kind": "concurrent",
+   "title": {
+    "en": "Two concurrent planners for different projects",
+    "de": "Zwei gleichzeitige Planer für verschiedene Projekte"
+   },
+   "projects": [
+    "@semio-tech/norm-en1990-rs:build",
+    "@semio-tech/norm-din16798-rs:build"
+   ],
+   "dryRun": true,
+   "runs": 2,
+   "primes": 1,
+   "metrics": [
+    "wallMs",
+    "phaseMs",
+    "closures",
+    "peakRssMb",
+    "swapMb",
+    "oomKills",
+    "memAvailableMb"
+   ]
+  },
+  {
+   "id": "host-memory",
+   "kind": "host",
+   "title": {
+    "en": "Peak resident memory of every repo process and available host memory over time",
+    "de": "Spitzenspeicher jedes repo-Prozesses und verfügbarer Hauptspeicher über die Zeit"
+   },
+   "projects": [],
+   "runs": 1,
+   "intervalMs": 1000,
+   "metrics": [
+    "peakRssMb",
+    "swapMb",
+    "oomKills",
+    "memAvailableMb"
+   ]
+  },
+  {
+   "id": "store-disk",
+   "kind": "store",
+   "title": {
+    "en": "Disk use of the store and cache homes",
+    "de": "Plattenbedarf der Store- und Cache-Verzeichnisse"
+   },
+   "projects": [],
+   "runs": 1,
+   "metrics": [
+    "storeMb"
+   ]
+  }
+ ]
+}

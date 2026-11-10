@@ -1,5 +1,5 @@
 {
-  "schemaBytes": 6819,
+  "schemaBytes": 7033,
   "tableWidths": {
     "din18599_climate_child": 7,
     "din18599_climate_month": 8,
@@ -12,13 +12,13 @@
     "din18599_lighting": 5,
     "din18599_renewables": 11,
     "din18599_ventilation": 11,
-    "din18599_zone": 26
+    "din18599_zone": 30
   },
   "cases": [
     {
       "id": "full",
       "rows": 25,
-      "valueBytes": 2213
+      "valueBytes": 2268
     },
     {
       "id": "emptyCollections",

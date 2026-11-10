@@ -1,15 +1,17 @@
 import {refuseBuildV1} from "../../📖️texts/🟦️.ts";
-/** ⏱️ Times and reports the phases of one graph construction: a phase has a total, advances monotonically, publishes its counter at most every `minimumMilliseconds` (first, last and every completed state included) and leaves one timing row; a phase also names the work currently running in it (at most `maximumNames` oldest first, how many run, how long the oldest has run in steps of `secondsStep`), published under the same throttle so a long single item is never anonymous; the clock owns no I/O, callers inject the clock, the progress publisher and the row writer. */
-export function createGraphPhaseClockV1({publish,write,now=()=>performance.now(),minimumMilliseconds=250,maximumNames=3,secondsStep=5,maximumResourceCharacters=480,maximumNameCharacters=96}={}){
+/** ⏱️ Times and reports the phases of one graph construction: a phase has a total, advances monotonically, publishes its counter at most every `minimumMilliseconds` (first, last and every completed state included) and leaves one timing row; a phase also names the work currently running in it (at most `maximumNames` oldest first, how many run, how long the oldest has run in steps of `secondsStep`, and per item its kind, seconds and observed rows) and the latest admission decision (`key|used|budget|kind`), published under the same throttle so a long single item is never anonymous; the clock owns no I/O, callers inject the clock, the progress publisher and the row writer. */
+export function createGraphPhaseClockV1({publish,write,now=()=>performance.now(),minimumMilliseconds=250,maximumNames=3,secondsStep=5,maximumResourceCharacters=480,maximumNameCharacters=96,maximumRows=256}={}){
  const phases=new Map(),rows=[];
  const resourceOf=(phase,state,done)=>"build:graph-phase:"+phase+":"+done+":"+state.total+state.detail;
  const emit=(phase,state,done)=>{state.lastAt=now();state.lastDone=done;state.lastResource=resourceOf(phase,state,done);return publish?.(state.lastResource);};
- const detailOf=(phase,total,running)=>{
+ const ownerToken=(row)=>{const name=encodeURIComponent(String(row.name).slice(0,maximumNameCharacters));return row.kind===undefined?name:name+"|"+encodeURIComponent(String(row.kind))+"|"+Math.floor(Math.max(0,row.seconds)/secondsStep)*secondsStep+"|"+Math.max(0,Math.floor(row.rows??0));};
+ const detailOf=(phase,total,running,decision)=>{
   if(running.length===0)return "";
   const base=("build:graph-phase:"+phase+":"+total+":"+total).length,seconds=Math.floor(Math.max(0,running[0].seconds)/secondsStep)*secondsStep,names=[];
   let size=base+(":"+running.length+":"+seconds+":").length;
-  for(const row of running.slice(0,maximumNames)){const text=encodeURIComponent(String(row.name).slice(0,maximumNameCharacters)),extra=text.length+(names.length?1:0);if(size+extra>maximumResourceCharacters)break;names.push(text);size+=extra;}
-  return ":"+running.length+":"+seconds+":"+names.join(",");
+  for(const row of running.slice(0,maximumNames)){const text=ownerToken(row),extra=text.length+(names.length?1:0);if(size+extra>maximumResourceCharacters)break;names.push(text);size+=extra;}
+  const note=decision===undefined?"":":"+decision.key+"|"+Math.max(0,Math.floor(decision.used))+"|"+Math.max(0,Math.floor(decision.budget))+"|"+encodeURIComponent(String(decision.kind??"")).slice(0,48);
+  return ":"+running.length+":"+seconds+":"+names.join(",")+(size+note.length<=maximumResourceCharacters?note:"");
  };
  return Object.freeze({
   begin(phase,total){
@@ -24,10 +26,10 @@ export function createGraphPhaseClockV1({publish,write,now=()=>performance.now()
    if(state.done===state.lastDone&&resourceOf(phase,state,state.done)===state.lastResource||state.done!==state.total&&now()-state.lastAt<minimumMilliseconds)return undefined;
    return emit(phase,state,state.done);
   },
-  running(phase,running){
+  running(phase,running,decision){
    const state=phases.get(phase);if(!state)throw refuseBuildV1("invalid","graph.phase-not-begun",{phase});
    if(!Array.isArray(running))throw refuseBuildV1("invalid","graph.phase-running-list-required",{phase});
-   state.detail=detailOf(phase,state.total,running);
+   state.detail=detailOf(phase,state.total,running,decision);
    if(resourceOf(phase,state,state.done)===state.lastResource||now()-state.lastAt<minimumMilliseconds)return undefined;
    return emit(phase,state,state.done);
   },
@@ -37,7 +39,7 @@ export function createGraphPhaseClockV1({publish,write,now=()=>performance.now()
    if(state.lastDone!==state.done||resourceOf(phase,state,state.done)!==state.lastResource)await emit(phase,state,state.done);
    phases.delete(phase);
    const row=Object.freeze({phase,milliseconds:Math.round(now()-state.startedAt),done:state.done,total:state.total,...details});
-   rows.push(row);write?.(row);return row;
+   rows.push(row);if(rows.length>maximumRows)rows.splice(0,rows.length-maximumRows);write?.(row);return row;
   },
   rows:()=>rows.slice(),
  });

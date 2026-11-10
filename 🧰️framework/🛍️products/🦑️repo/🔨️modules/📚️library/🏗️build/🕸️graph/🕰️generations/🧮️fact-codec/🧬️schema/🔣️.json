@@ -9,6 +9,17 @@
     "magic": "SFI1",
     "maximumDepth": 64,
     "maximumVarintBytes": 9,
+    "view": {
+     "rowEntries": 16384,
+     "rowBytes": 33554432,
+     "factEntries": 16384,
+     "factBytes": 67108864,
+     "factBytesPerStored": 6,
+     "textEntries": 65536,
+     "textBytes": 16777216,
+     "classEntries": 4096,
+     "classBytes": 33554432
+    },
     "tags": {
      "null": 0,
      "false": 1,

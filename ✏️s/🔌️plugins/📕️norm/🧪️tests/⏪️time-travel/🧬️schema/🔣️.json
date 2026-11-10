@@ -158,8 +158,7 @@
               "minLength": 1
             },
             "owner": {
-              "type": "string",
-              "minLength": 1
+              "type": "string"
             },
             "ownerWindow": {
               "type": "string",

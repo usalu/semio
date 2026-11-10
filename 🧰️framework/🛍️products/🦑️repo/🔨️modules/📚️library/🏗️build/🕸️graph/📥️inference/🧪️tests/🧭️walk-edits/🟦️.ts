@@ -48,3 +48,15 @@ for(const step of corpus.steps)test(`the observations of a command walk hold exa
   expect(configs(after)).toEqual(await esbuildOracle(root));
  }finally{rmSync(root,{recursive:true,force:true});rmSync(scratch,{recursive:true,force:true});}
 },120000);
+
+test("the walk resolves baseUrl and paths exactly as the TypeScript resolver does",async()=>{
+ const ts=createRequire(import.meta.url)("typescript"),{workspacePackageModuleV1}=await import("../../🧭️script-inputs/🟨️.mjs"),root=realpathSync(mkdtempSync(join(tmpdir(),"walk-paths-")));
+ try{
+  write(root,{...corpus.files,"tsconfig.json":JSON.stringify({compilerOptions:{baseUrl:".",paths:{"@alias/*":["./libs/*","./libs2/*"],"exact":["./libs2/x.ts"]}}}),"libs/deep/y.ts":"export const y = 1;\n"});
+  const config=ts.parseJsonConfigFileContent(ts.readConfigFile(join(root,"tsconfig.json"),ts.sys.readFile).config,ts.sys,root,undefined,join(root,"tsconfig.json")).options,from=join(root,corpus.entry);
+  for(const specifier of["@alias/x","@alias/deep/y","exact","libs/x","libs2/x","@alias/absent","absent-module"]){
+   const oracle=ts.resolveModuleName(specifier,from,{...config,moduleResolution:ts.ModuleResolutionKind.Bundler,module:ts.ModuleKind.ESNext,allowJs:true,resolveJsonModule:true},ts.sys).resolvedModule?.resolvedFileName;
+   expect(workspacePackageModuleV1(from,specifier,root),specifier).toBe(oracle);
+  }
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

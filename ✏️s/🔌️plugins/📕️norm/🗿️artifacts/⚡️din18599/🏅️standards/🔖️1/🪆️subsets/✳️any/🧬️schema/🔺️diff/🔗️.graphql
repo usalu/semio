@@ -11,6 +11,8 @@ type Din18599ZonesPatch {
   occupants: Int
   internalGainsWM2: Float
   lightingPowerWM2: Float
+  thermalMassClass: String
+  cWirkWhM2k: Float
 }
 
 type Din18599ZonesRemoved {

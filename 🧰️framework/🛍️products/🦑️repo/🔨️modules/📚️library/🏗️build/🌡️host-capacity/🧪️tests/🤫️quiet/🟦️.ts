@@ -22,7 +22,7 @@ const args=["run","@x/y:build","--parallel=2"],leaf=buildCapacityAskV1(strip(arg
 const sample=async()=>({host:host(),swappedOutMegabytes:0});
 const control=()=>({signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined});
 const seed=async(directory:string,runs:readonly boolean[])=>{const base=Date.now()-3_600_000;for(const [index,executed] of runs.entries())await updateHostEstimateStoreV1(directory,policy,store=>recordHostForecastV1(policy,store,leaf,{executed,peakMegabytes:executed?9000:1200,activeMilliseconds:8000,peakAtMilliseconds:4000,endedAtMs:base+index*60_000}));};
-const holdMachine=(directory:string)=>{let release!:()=>void;const hold=new Promise<void>(resolve=>{release=resolve;});const done=withHostCapacityV1({directory,policy,request:{id:newHostCapacityIdV1(),operation:"exec",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:13500,perJobMegabytes:0,cpuPerJob:1},control:control(),environment:{},write:()=>undefined,sample},async()=>hold);return{release,done};};
+const holdMachine=(directory:string)=>{let release!:()=>void;const hold=new Promise<void>(resolve=>{release=resolve;});const done=withHostCapacityV1({directory,policy,request:{id:newHostCapacityIdV1(),operation:"exec",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:13500,perJobMegabytes:0,cpuPerJob:1},control:control(),environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample},async()=>hold);return{release,done};};
 const ports=(directory:string,over:object={})=>({directory,policy,strip,tool:"bazel",sample,observe:async()=>1100,write:()=>undefined,exitCode:()=>0,...over});
 const counts=(directory:string)=>{const store=readHostEstimateStoreV1(directory);return{quiet:store.classes[`${leaf}~quiet`]?.samples.length??0,busy:store.classes[`${leaf}~busy`]?.samples.length??0};};
 
@@ -64,7 +64,7 @@ test("Every learned outcome and the forecast that follows it equal the independe
   const directory=fresh();
   await updateHostEstimateStoreV1(directory,policy,()=>sequence.store as unknown as HostEstimateStoreV1);
   for(const [index,step] of sequence.steps.entries()){
-   const environment:NodeJS.ProcessEnv={SEMIO_HOST_CAPACITY_DIRECTORY:directory};
+   const environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory};
    expect(forecastHostQuietV1(policy,readHostEstimateStoreV1(directory),leaf,step.nowMs),`${sequence.name} #${index}`).toEqual(step.expect.forecast as HostForecastV1);
    await withBuildCapacityV1(args,environment,async()=>{if(step.asked)await upgradeBuildCapacityV1(undefined,environment);await sleep(70);},ports(directory,{now:()=>step.nowMs,observe:async()=>step.peakMegabytes}));
    const store=readHostEstimateStoreV1(directory),learned=(suffix:string)=>store.classes[`${leaf}~${suffix}`]?.samples.some(row=>row.atMs===step.nowMs)===true;

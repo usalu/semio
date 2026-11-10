@@ -17,6 +17,22 @@
    ["analysis", "/w/m.ts", {"revision": "r", "provider": "p", "nestedObservations": []}],
    ["analysis", "/w/m.ts", {"provider": "p", "revision": "r", "nestedObservations": [{"kind": "exists", "path": "/w/x", "fact": true}]}],
    ["analysis", "/w/m.ts", {"provider": "p", "revision": "r", "nestedObservations": [{"kind": "exists", "path": "/w/x", "fact": true}]}]]},
+  {"name": "analysis facts with nested rows are equal by provider, revision, source stamp, result digest and the nested rows in order", "rows": [
+   ["analysis", "/w/m.ts", {"provider": "ts", "revision": "r1", "source": {"size": 9, "mtimeMs": 1.5, "ctimeMs": 2, "ino": 3, "sha256": "aa"}, "resultSha256": "bb", "nestedObservations": [{"kind": "exists", "path": "/w/x", "fact": true}, {"kind": "file", "path": "/w/y", "fact": {"size": 1, "mtimeMs": 2, "ctimeMs": 3, "ino": 4, "sha256": "cc"}}]}],
+   ["analysis", "/w/m.ts", {"provider": "ts", "revision": "r1", "source": {"size": 9, "mtimeMs": 1.5, "ctimeMs": 2, "ino": 3, "sha256": "aa"}, "resultSha256": "bb", "nestedObservations": [{"kind": "exists", "path": "/w/x", "fact": true}, {"kind": "file", "path": "/w/y", "fact": {"size": 1, "mtimeMs": 2, "ctimeMs": 3, "ino": 4, "sha256": "cc"}}]}],
+   ["analysis", "/w/m.ts", {"provider": "ts", "revision": "r1", "source": {"size": 9, "mtimeMs": 1.5, "ctimeMs": 2, "ino": 3, "sha256": "aa"}, "resultSha256": "bb", "nestedObservations": [{"kind": "file", "path": "/w/y", "fact": {"size": 1, "mtimeMs": 2, "ctimeMs": 3, "ino": 4, "sha256": "cc"}}, {"kind": "exists", "path": "/w/x", "fact": true}]}],
+   ["analysis", "/w/m.ts", {"provider": "ts", "revision": "r2", "source": {"size": 9, "mtimeMs": 1.5, "ctimeMs": 2, "ino": 3, "sha256": "aa"}, "resultSha256": "bb", "nestedObservations": []}],
+   ["analysis", "/w/m.ts", {"provider": "ts", "revision": "r2", "source": {"size": 9, "mtimeMs": 1.5, "ctimeMs": 2, "ino": 3, "sha256": "aa"}, "resultSha256": "bb", "nestedObservations": []}],
+   ["analysis", "/w/m.ts", {"provider": "ts", "revision": "r2", "source": {"size": 10, "mtimeMs": 1.5, "ctimeMs": 2, "ino": 3, "sha256": "aa"}, "resultSha256": "bb", "nestedObservations": []}],
+   ["analysis", "/w/m.ts", {"provider": "ts", "revision": "r2", "source": {"size": 9, "mtimeMs": 1.5, "ctimeMs": 2, "ino": 3, "sha256": "aa"}, "resultSha256": "bb", "nestedObservations": [{"path": "/w/x", "kind": "exists", "fact": true}]}],
+   ["analysis", "/w/m.ts", {"provider": "ts", "revision": "r2", "source": {"size": 9, "mtimeMs": 1.5, "ctimeMs": 2, "ino": 3, "sha256": "aa"}, "resultSha256": "bb", "nestedObservations": [{"path": "/w/x", "kind": "exists", "fact": true}]}],
+   ["analysis", "/w/m.ts", {"provider": "ts", "revision": "r2", "source": {"size": 9, "mtimeMs": 1.5, "ctimeMs": 2, "ino": 3, "sha256": "aa"}, "resultSha256": "bb", "nestedObservations": [{"kind": "analysis", "path": "/w/n.ts", "fact": {"provider": "ts", "revision": "r2", "source": {"size": 1, "mtimeMs": 0, "ctimeMs": 0, "ino": 0, "sha256": "dd"}, "resultSha256": "ee", "nestedObservations": []}}]}]]},
+  {"name": "numbers, nulls, arrays, nested objects and stamps with extra or reordered keys keep their exact JSON", "rows": [
+   ["stat", "/w/n", 1.5], ["stat", "/w/n", 1.5], ["stat", "/w/n", 2], ["stat", "/w/n", -3], ["stat", "/w/n", 0],
+   ["field", "/w/p.json", ["a", 1, null, {"b": false}]], ["field", "/w/p.json", ["a", 1, null, {"b": false}]], ["field", "/w/p.json", ["a", 1, null, {"b": true}]],
+   ["file", "/w/f", {"sha256": "aa", "size": 3, "mtimeMs": 5, "ctimeMs": 6, "ino": 7}], ["file", "/w/f", {"sha256": "aa", "size": 3, "mtimeMs": 5, "ctimeMs": 6, "ino": 7}],
+   ["file", "/w/f", {"size": 3, "mtimeMs": 5, "ctimeMs": 6, "ino": 7, "sha256": "aa", "extra": 1}], ["file", "/w/f", {"size": 3, "mtimeMs": 5, "ctimeMs": 6, "ino": 7, "sha256": "aa"}],
+   ["file", "/w/f", {"size": 3.25, "mtimeMs": 1731000000000.5, "ctimeMs": 1731000000000.25, "ino": 9007199254740991, "sha256": "aa"}], ["file", "/w/f", {"size": 3.25, "mtimeMs": 1731000000000.5, "ctimeMs": 1731000000000.25, "ino": 9007199254740991, "sha256": "aa"}]]},
   {"name": "paths that differ in one character or share a long prefix are distinct", "rows": [
    ["readdir", "/w/dir/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1", "x"],
    ["readdir", "/w/dir/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa2", "x"],

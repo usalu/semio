@@ -131,5 +131,5 @@ test("tools setup bazel opens only the tools and dependencies partitions and nev
  expect(tools.getText()).toContain("loadBuildBackendV1");expect(tools.getText()).toContain(".setup(");expect(tools.getText()).not.toContain("withBazelStorageV1");expect(tools.getText()).not.toContain("ensureBuildEnvironmentV1");const backendText=parse("../../🔌️backend/🟦️.ts").getText(),backend=backendText.slice(backendText.indexOf("setup("),Math.min(...["async reset(","async prepareStorage(","async cacheProbe("].map(name=>backendText.indexOf(name)).filter(at=>at>backendText.indexOf("setup("))));expect(backend.length).toBeGreaterThan(0);expect(backend).toContain("withBazelSetupStorageV1");expect(backend).not.toContain("withBazelStorageV1");expect(backend).not.toContain("ensureBuildEnvironmentV1");
  const required=new Map(catalogue.operations.map(row=>[row.name,row.requires]));
  for(const name of fixture.setup.installSkipped)expect(required.get(name),name).toBe("none");
- expect(guard.expression.getText()).toBe('buildOperationRequiresV1(command)==="dependencies"&&process.env[BUILD_GRAPH_PLAN_OUT_V1]===undefined');expect(guard.thenStatement.getText()).toContain("ensureBuildEnvironmentV1");
+ expect(guard.expression.getText()).toBe('buildOperationRequiresV1(command)==="dependencies"');expect(guard.thenStatement.getText()).toContain("ensureBuildEnvironmentV1");
 });

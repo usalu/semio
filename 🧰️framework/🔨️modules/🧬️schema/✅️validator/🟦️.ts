@@ -1,4 +1,4 @@
-import {schemaReferenceClosure,type SchemaReferenceRequest,type SchemaReferenceControl} from "../📄️source/🔗️closure/🟦️.ts";
+import type {SchemaReferenceRequest,SchemaReferenceControl} from "../📄️source/🔗️closure/🟦️.ts";
 /** 🧩️ Describes a non-null, non-array object whose member values are unknown. */
 export type UnknownRecord = Record<string, unknown>;
 
@@ -186,7 +186,7 @@ export function compileJsonSchemaSubset(schema: unknown, root: unknown = schema,
 
 /** 📍️ Compiles captured documents through the normative Source closure, retaining physical retrieval and declared resource identities. */
 export async function compileJsonSchemaSourceSubset(request:SchemaReferenceRequest,control:SchemaReferenceControl):Promise<CompiledJsonSchemaSubset>{
- const dialect=Object.getOwnPropertyDescriptor(request,"dialect")?.value,closure=await schemaReferenceClosure(request,control);if(dialect!=="draft-07")throw Error("The owned schema subset requires draft-07");
+ const dialect=Object.getOwnPropertyDescriptor(request,"dialect")?.value,closure=await(await import("../📄️source/🔗️closure/🟦️.ts")).schemaReferenceClosure(request,control);if(dialect!=="draft-07")throw Error("The owned schema subset requires draft-07");
  const documents=new Map([closure.root,...closure.documents].map(input=>[input.id,JSON.parse(input.source) as unknown])),references=new Map<unknown,unknown>();
  const at=(id:string,pointer:string):unknown=>{let node=documents.get(id);if(pointer!=="")for(const part of pointer.slice(1).split("/"))node=(node as Record<string,unknown>)[part.replace(/~1/g,"/").replace(/~0/g,"~")];return node;};
  for(const edge of closure.edges){if(!documents.has(edge.origin.id))continue;references.set(at(edge.origin.id,edge.origin.pointer.slice(0,-"/$ref".length)),at(edge.target.id,edge.target.pointer));}

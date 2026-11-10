@@ -11,7 +11,7 @@ import fixtureSchema from"./🧬️schema/🔣️.json";
 import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 import{declareLibraryBuildTestEnvelopeV1}from"../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1("graph");
-declareLibraryBuildTestEnvelopeV1({suite:"build-inference"});
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference",scratch:"checkout"});
 import{requireTestToolV1}from"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 const pythonTool=requireTestToolV1("python");
 
@@ -46,7 +46,7 @@ for(const scenario of fixture.scenarios)test("a withheld project "+scenario.name
  const own=rows.filter(row=>row.kind==="file"&&row.path===failing);
  expect(own.length,"the project holds the bytes of the failing source").toBeGreaterThan(0);
  expect(own.every(row=>row.fact.sha256===sha(failing)&&row.fact.sha256===value.sha256)).toBe(true);
- expect(rows.some(row=>row.kind==="file"&&row.path===join(root,"proj/📜️script.ts")),"and the files the failed walk read before it").toBe(true);
+ expect(rows.some(row=>row.kind==="field"&&row.fact.format==="script-router-kept"&&row.path===join(root,"proj/📜️script.ts")),"and the router the failed walk read before it, through the imports it keeps").toBe(true);
  expect(await observation.observationsHold(rows)).toBe(true);
  write(root,scenario.edit);
  expect(await observation.observationsHold(rows),scenario.name).toBe(scenario.holds);

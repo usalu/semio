@@ -13,7 +13,7 @@ const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 const write=(root:string,files:Record<string,string>)=>{for(const[path,text]of Object.entries(files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}};
 
 function world(){
- const root=realpathSync(mkdtempSync(join(tmpdir(),"carried-closures-")));roots.push(root);
+ mkdirSync(tmpdir(),{recursive:true});const root=realpathSync(mkdtempSync(join(tmpdir(),"carried-closures-")));roots.push(root);
  write(root,{"tools/a.mjs":'import "./b.mjs";\n',"tools/b.mjs":"export const b=1;\n","tools/c.mjs":"export const c=1;\n"});
  const walked:string[]=[],cachePath=join(root,"np","project.json"),entry=join(root,"tools/a.mjs");
  const fresh=()=>{const scripts=createScriptInputCache({workspaceRoot:root,lateClosures:true}),add=scripts.modules.add.bind(scripts.modules);scripts.modules.add=(path:string)=>{walked.push(path);return add(path);};return scriptInputs.closureApiV1(scripts,root);};

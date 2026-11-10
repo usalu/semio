@@ -198,9 +198,10 @@ fn check_zone_clothing_insulation(
         ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Dimensionless, pmv_s.abs()), Quantity::new(QuantityKind::Dimensionless, lim))
         .explanation(loc(format!("Summer PMV={pmv_s:.3} at {clo_summer:.2} clo; |PMV|≤{lim}"), format!("Sommer-PMV={pmv_s:.3} bei {clo_summer:.2} clo; |PMV|≤{lim}")));
         if pmv_s.abs() > lim {
-            let t_req = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_summer, lim * 0.55, pmv_s > 0.0);
+            if let Some(t_req) = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_summer, lim * 0.55, pmv_s > 0.0) {
             bp_s = bp_s.remedy(Remedy::exactly(zone_subject(zone, path("tOpSummerC")), Quantity::new(QuantityKind::Temperature, zone.t_op_summer_c), Quantity::new(QuantityKind::Temperature, t_req),
                 loc(format!("Set summer operative temperature to ≈{t_req:.1} °C so |PMV|≤{lim}."), format!("Operative Sommertemperatur auf ≈{t_req:.1} °C setzen, damit |PMV|≤{lim}."))));
+            }
         }
         out.push(bp_s.build());
         let ppd_s = ppd_from_pmv(pmv_s);
@@ -210,9 +211,10 @@ fn check_zone_clothing_insulation(
         ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Dimensionless, ppd_s), Quantity::new(QuantityKind::Dimensionless, plim))
         .explanation(loc(format!("Summer PPD={ppd_s:.1} %; limit {plim:.0} %"), format!("Sommer-PPD={ppd_s:.1} %; Grenzwert {plim:.0} %")));
         if ppd_s > plim {
-            let t_req = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_summer, lim * 0.55, pmv_s > 0.0);
+            if let Some(t_req) = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_summer, lim * 0.55, pmv_s > 0.0) {
             bppd_s = bppd_s.remedy(Remedy::exactly(zone_subject(zone, path("tOpSummerC")), Quantity::new(QuantityKind::Temperature, zone.t_op_summer_c), Quantity::new(QuantityKind::Temperature, t_req),
                 loc(format!("Adjust summer θ_op to ≈{t_req:.1} °C to keep PPD ≤{plim:.0} %."), format!("Operative Sommertemperatur auf ≈{t_req:.1} °C anpassen, damit PPD ≤{plim:.0} %."))));
+            }
         }
         out.push(bppd_s.build());
 
@@ -223,9 +225,10 @@ fn check_zone_clothing_insulation(
         ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Dimensionless, pmv_w.abs()), Quantity::new(QuantityKind::Dimensionless, lim))
         .explanation(loc(format!("Winter PMV={pmv_w:.3} at {clo_winter:.2} clo; |PMV|≤{lim}"), format!("Winter-PMV={pmv_w:.3} bei {clo_winter:.2} clo; |PMV|≤{lim}")));
         if pmv_w.abs() > lim {
-            let t_req = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_winter, lim * 0.55, pmv_w > 0.0);
+            if let Some(t_req) = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_winter, lim * 0.55, pmv_w > 0.0) {
             bp_w = bp_w.remedy(Remedy::exactly(zone_subject(zone, path("tOpWinterC")), Quantity::new(QuantityKind::Temperature, zone.t_op_winter_c), Quantity::new(QuantityKind::Temperature, t_req),
                 loc(format!("Set winter operative temperature to ≈{t_req:.1} °C so |PMV|≤{lim}."), format!("Operative Wintertemperatur auf ≈{t_req:.1} °C setzen, damit |PMV|≤{lim}."))));
+            }
         }
         out.push(bp_w.build());
         let ppd_w = ppd_from_pmv(pmv_w);
@@ -235,9 +238,10 @@ fn check_zone_clothing_insulation(
         ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Dimensionless, ppd_w), Quantity::new(QuantityKind::Dimensionless, plim))
         .explanation(loc(format!("Winter PPD={ppd_w:.1} %; limit {plim:.0} %"), format!("Winter-PPD={ppd_w:.1} %; Grenzwert {plim:.0} %")));
         if ppd_w > plim {
-            let t_req = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_winter, lim * 0.55, pmv_w > 0.0);
+            if let Some(t_req) = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_winter, lim * 0.55, pmv_w > 0.0) {
             bppd_w = bppd_w.remedy(Remedy::exactly(zone_subject(zone, path("tOpWinterC")), Quantity::new(QuantityKind::Temperature, zone.t_op_winter_c), Quantity::new(QuantityKind::Temperature, t_req),
                 loc(format!("Adjust winter θ_op to ≈{t_req:.1} °C to keep PPD ≤{plim:.0} %."), format!("Operative Wintertemperatur auf ≈{t_req:.1} °C anpassen, damit PPD ≤{plim:.0} %."))));
+            }
         }
         out.push(bppd_w.build());
     }

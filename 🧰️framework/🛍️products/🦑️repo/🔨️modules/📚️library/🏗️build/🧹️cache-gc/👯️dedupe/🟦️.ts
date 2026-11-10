@@ -43,7 +43,7 @@ export function planDedupeV1(files:readonly DedupeFileV1[]):DedupePlanV1{
 }
 
 async function sha256V1(path:string,ports:CacheRunnerPortsV1):Promise<string|null>{
- let handle;try{handle=await open(path,"r");}catch{return null;}
+ let handle;try{handle=await open(path,constants.O_RDONLY|(constants.O_NOATIME??0)).catch(()=>open(path,"r"));}catch{return null;}
  try{const hash=createHash("sha256"),buffer=Buffer.allocUnsafe(1<<20);for(;;){ports.signal.throwIfAborted();const{bytesRead}=await handle.read(buffer,0,buffer.length,null);if(!bytesRead)break;hash.update(buffer.subarray(0,bytesRead));}return hash.digest("hex");}
  catch(error){if(ports.signal.aborted)throw error;return null;}
  finally{await handle.close().catch(()=>{});}
@@ -105,7 +105,7 @@ export async function dedupeTreeV1(request:DedupeRequestV1,ports:CacheRunnerPort
   const stamp=stamps.get(row.path)!,temporary=join(dirname(row.path),".dedupe-"+process.pid+"-"+(counter++));
   try{
    const before=await lstat(row.path);
-   if(!before.isFile()||before.ino!==stamp.ino||before.mtimeMs!==stamp.mtimeMs||before.size!==stamp.size||ports.now()-Math.max(before.mtimeMs,before.atimeMs)<request.quietMs){skipped++;request.write(text("dedupe.changed",{path:row.path}));continue;}
+   if(!before.isFile()||before.ino!==stamp.ino||before.mtimeMs!==stamp.mtimeMs||before.size!==stamp.size||ports.now()-before.mtimeMs<request.quietMs){skipped++;request.write(text("dedupe.changed",{path:row.path}));continue;}
    const origin=stamps.get(row.canonical)!,unchanged=async():Promise<boolean>=>{const source=await lstat(row.canonical);return source.isFile()&&source.ino===origin.ino&&source.mtimeMs===origin.mtimeMs&&source.size===origin.size&&source.size===row.bytes;};
    if(!await unchanged()){skipped++;request.write(text("dedupe.changed",{path:row.canonical}));continue;}
    if(!await clone(row.canonical,temporary)){skipped++;request.write(text("dedupe.unsupported",{path:row.path}));continue;}

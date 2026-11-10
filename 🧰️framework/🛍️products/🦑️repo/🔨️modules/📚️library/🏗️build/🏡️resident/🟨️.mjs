@@ -1,17 +1,21 @@
 /** 🏡 Resident repo service: public surface. */
-export{createResidentServiceV1,ServiceRunningErrorV1}from"./🏛️service/🟨️.mjs";
 export{createGovernorV1,BusyErrorV1}from"./🏛️service/🚦️governor/🟨️.mjs";
 export{createWorkspaceStateV1,createFilterV1,createOwnerIndexV1,outputSignatureV1}from"./🗃️state/🟨️.mjs";
 export{createWatchSupervisorV1}from"./🔭️watch/🟨️.mjs";
-export{forwardCommandV1,launcherCapabilityV1}from"./🚪️client/🟨️.mjs";
-export{forwardRepoCommandV1,serviceEligibleV1,serviceModeV1}from"./🚪️client/🔁️repo/🟨️.mjs";
 export{encodeFrameV1,createFrameDecoderV1,compileSchemaV1,ProtocolErrorV1}from"./📨️protocol/🟨️.mjs";
 export{POLICY_V1,SCHEMA_V1,renderTextV1,renderBothV1,validatorV1}from"./📨️protocol/🎚️policy/🟨️.mjs";
 export{mintCapabilityV1,attenuateCapabilityV1,verifyCapabilityV1,authorizeCapabilityV1,createRootKeyV1}from"./📨️protocol/🔑️capability/🟨️.mjs";
 export{endpointsV1,worktreeIdV1,canonicalRootV1}from"./📨️protocol/📍️endpoint/🟨️.mjs";
-export{createWarmPoolV1,createDelegatedExecutionPortV1,writeWarmPreloadV1}from"./🏊️delegate/🟨️.mjs";
 export{stateConfigurationFromBuildGraphV1,createBuildGraphPortV1}from"./🔌️ports/🗺️graph/🟨️.mjs";
 export{scanListingV1}from"./🔌️ports/📋️listing/🟨️.mjs";
-export{membershipFromJournalV1,dirtyPathsFromJournalV1,createResidentHoldsV1}from"./🕰️graph-hooks/🟨️.mjs";
+export{dirtySetFromRowsV1,dirtyIndexV1,advanceFrontierByDirtySetV1,classifyChangesV1,renderGraphHooksNoticeV1,GRAPH_HOOKS_POLICY_V1}from"./🕰️graph-hooks/🟨️.mjs";
+export{journalGraphSeamsV1,relativeFactPathV1}from"./🕰️graph-hooks/🔌️host/🟨️.mjs";
 export{runResidentCommandV1,RESIDENT_EXCLUDES_V1,RESIDENT_FENCE_DIRECTORY_V1}from"./⌨️command/🟨️.mjs";
-export{createForegroundRunnerV1,custodyPortFromPoolV1,residentImplementationV1}from"./🏗️composition/🟨️.mjs";
+export{createHostServiceV1,HostRunningErrorV1}from"./🏛️service/🌐️host/🟨️.mjs";
+export{createIndexPoolV1}from"./🏛️service/🌐️host/🧊️pool/🟨️.mjs";
+export{createGraphPlannerPortV1,graphDigestV1,UnknownTargetErrorV1}from"./🔌️ports/🧭️plan/🟨️.mjs";
+export{requestPlanV1,requestHostStatusV1,connectHostV1,resolvePlanV1,HostUnavailableErrorV1,PlanRefusedErrorV1}from"./🚪️client/🛰️plan/🟨️.mjs";
+export{runHostForegroundV1,spawnHostServiceV1}from"./🏗️composition/🌐️host/🟨️.mjs";
+export{runHostCommandV1}from"./⌨️command/🌐️host/🟨️.mjs";
+export{hostEndpointsV1,workspaceIdV1}from"./📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
+export{HOST_POLICY_V1}from"./📨️protocol/🎚️policy/🟨️.mjs";

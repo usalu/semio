@@ -12,6 +12,8 @@ import fixtureSchema from"./🧬️schema/🔣️.json";
 import fixture from"./🔣️.json";
 import moduleSchema from"../🧬️schema/🔣️.json";
 import*as memory from"../🟨️.mjs";
+/** 🧪️ A private scratch directory created by the test itself: the temporary directory a previous test file of the same process was granted may be retired already. */
+const scratchDirectory=(prefix:string):string=>{mkdirSync(tmpdir(),{recursive:true});return mkdtempSync(join(tmpdir(),prefix));};
 
 const MEGABYTE=1048576;
 const oraclePath=fileURLToPath(new URL("./🐍️.py",import.meta.url)),python=testPythonV1();
@@ -37,26 +39,16 @@ test("the fixture is closed, the policy and the texts equal their declaration",(
  expect(JSON.parse(JSON.stringify(memory.GRAPH_MEMORY_MESSAGES_V1))).toEqual(moduleSchema.definitions.Messages.const);
  for(const key of Object.keys(moduleSchema.definitions.Messages.const.en))expect(Object.keys(moduleSchema.definitions.Messages.const.de)).toContain(key);
  const holders=(text:string)=>[...text.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]!).sort();
- for(const key of Object.keys(moduleSchema.definitions.Messages.const.en) as ("waiting"|"serial"|"resumed")[]){
+ for(const key of Object.keys(moduleSchema.definitions.Messages.const.en) as ("waiting"|"serial"|"resumed"|"learning")[]){
   const english=holders(moduleSchema.definitions.Messages.const.en[key]),german=holders(moduleSchema.definitions.Messages.const.de[key]);
-  expect(german,key).toEqual(english);for(const name of english)expect(["budget","used","running"],key).toContain(name);
+  expect(german,key).toEqual(english);for(const name of english)expect(["budget","used","running","kind"],key).toContain(name);
  }
 });
 
-test("the admission decision equals the recorded verdicts and the independent model",()=>{
- const directory=mkdtempSync(join(tmpdir(),"memory-law-"));
+test("the language choice, the messages and the owner concurrency of a headroom equal the independent model",()=>{
+ const directory=scratchDirectory("memory-law-");
  try{
   const expected=oracle(["expect",written(directory,"fixture.json",fixture)]);
-  fixture.admission.forEach((row,index)=>{
-   const actual=memory.decideMemoryAdmissionV1(memory.GRAPH_MEMORY_POLICY_V1,row.state);
-   expect(actual,row.name).toEqual(row.expect as never);
-   expect(actual,row.name).toEqual(expected.admission[index]);
-  });
-  fixture.budgets.forEach((row,index)=>{
-   const run=()=>memory.graphMemoryBudgetBytesV1(row.environment,memory.GRAPH_MEMORY_POLICY_V1,row.hostMegabytes);
-   if("error" in row.expect){expect(run,row.name).toThrow();expect(expected.budgets[index],row.name).toEqual({error:true});}
-   else{expect(run(),row.name).toBe(row.expect.bytes);expect(expected.budgets[index],row.name).toEqual({bytes:row.expect.bytes});}
-  });
   fixture.languages.forEach((row,index)=>{expect(memory.selectGraphMemoryLanguagesV1(row.environment),row.name).toEqual(row.expect as ("en"|"de")[]);expect(expected.languages[index],row.name).toEqual(row.expect);});
   fixture.messageCases.forEach((row,index)=>{
    const actual=memory.renderGraphMemoryMessagesV1(row.key as "waiting",row.fields as Record<string,number>,row.environment);
@@ -88,28 +80,8 @@ class FakeTime{
  }
 }
 
-/** 🧪️ Runs one scenario of the fixture against the real governor over a modeled heap and returns the recorded trace. */
-async function run(scenario:typeof fixture.governor[number]){
- const time=new FakeTime(),controller=new AbortController(),language=(scenario as {language?:string}).language,environment:Record<string,string>=language==="none"?{}:{LANG:language==="de"?"de_DE.UTF-8":"en_US.UTF-8"};
- let done=0,live=0,garbage=0,running=0,collections=0,finishedCount=0,rejected=0;
- const base=scenario.baseMegabytes*MEGABYTE,sample=()=>base+live+garbage,collect=()=>{garbage=0;collections++;};
- const lines:{at:number;text:string}[]=[],starts:{task:number;at:number;runningBefore:number;usedBytes:number}[]=[],finished:{task:number;at:number}[]=[];
- const governor=memory.createMemoryGovernorV1({budgetBytes:scenario.budgetMegabytes*MEGABYTE,baselineBytes:((scenario as {baselineMegabytes?:number}).baselineMegabytes??0)*MEGABYTE,workers:scenario.workers,sample,collect,sleep:time.sleep,now:time.now,signal:controller.signal,report:text=>lines.push({at:time.clock,text}),environment});
- if(scenario.abortAtMilliseconds!==undefined)time.at(scenario.abortAtMilliseconds,()=>controller.abort(Error("scenario abort")));
- const results=scenario.tasks.map((task,index)=>governor.run(async()=>{
-  starts.push({task:index,at:time.clock,runningBefore:running,usedBytes:sample()});running++;live+=task.memoryMegabytes*MEGABYTE;
-  await time.sleep(task.durationMilliseconds);
-  live-=task.memoryMegabytes*MEGABYTE;garbage+=Math.round(task.memoryMegabytes*MEGABYTE*scenario.garbageShare);running--;finished.push({task:index,at:time.clock});finishedCount++;return index;
- }).catch(error=>{rejected++;return error;}));
- await time.drive(()=>finishedCount+rejected>=scenario.tasks.length);
- const settled=await Promise.all(results);
- const keyOf=(text:string)=>(["waiting","serial","resumed"] as const).find(key=>(["en","de"] as const).some(language=>new RegExp("^"+memory.GRAPH_MEMORY_MESSAGES_V1[language][key].replace(/[.*+?^${}()|[\]\\]/gu,"\\$&").replace(/\\\{[a-z]+\\\}/gu,".*")+"$","u").test(text)))??"unknown";
- const all=lines.map(row=>({at:row.at,key:keyOf(row.text),text:row.text})),unique=all.filter((row,index)=>all.findIndex(other=>other.at===row.at&&other.key===row.key)===index);
- return{scenario:scenario.name,starts,finished,completed:settled.filter(value=>typeof value==="number"),rejected,expectRejected:scenario.abortAtMilliseconds===undefined?0:scenario.tasks.length-scenario.workers,collections,durationMilliseconds:time.clock,messages:unique,lines:lines.map(row=>row.text),stats:governor.stats()};
-}
-
 test("the graph child heap is the declared size and equals the independent model",()=>{
- const directory=mkdtempSync(join(tmpdir(),"memory-child-heap-"));
+ const directory=scratchDirectory("memory-child-heap-");
  try{
   const expected=oracle(["expect",written(directory,"fixture.json",fixture)]),bytes=memory.graphChildHeapBytesV1();
   expect(expected.childHeap).toEqual({bytes,grantIndependent:true});
@@ -118,46 +90,22 @@ test("the graph child heap is the declared size and equals the independent model
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
 
-test("the governor keeps the laws of every scenario, checked by the independent model",async()=>{
- const directory=mkdtempSync(join(tmpdir(),"memory-trace-"));
- try{
-  const fixturePath=written(directory,"fixture.json",fixture);
-  for(const scenario of fixture.governor){
-   const trace=await run(scenario);
-   if(process.env.MEMORY_LAW_TRACE===scenario.name)console.log(JSON.stringify(trace,null,1));
-   expect(oracle(["trace",fixturePath,written(directory,"trace.json",trace)]),scenario.name).toEqual([]);
-   if(scenario.name==="progress-lines-are-spaced"){
-    expect(trace.messages.filter(row=>row.key==="waiting").length).toBeGreaterThanOrEqual(2);
-    for(const row of trace.messages)expect(row.text.startsWith("Graph: ")).toBe(true);
-   }
-   if(scenario.name==="unconstrained")expect(trace.collections).toBe(0);
-   if(scenario.name==="unresolved-language-prints-both"){
-    expect(trace.messages.length).toBeGreaterThan(0);expect(trace.lines.length).toBe(2*trace.messages.length);
-    trace.lines.forEach((line,index)=>expect(line.startsWith(index%2===0?"graph: ":"Graph: "),line).toBe(true));
-   }
-  }
- }finally{rmSync(directory,{recursive:true,force:true});}
-});
-
-test("the default sample reads constant-time counters, never a heap walk, and the baseline is what survives one collection",()=>{
+test("the default sample reads constant-time counters, never a heap walk",()=>{
  const ports=memory.createMemoryPortsV1(),retained:object[]=[];
  for(let index=0;index<400000;index++)retained.push({index,text:"x".repeat(12)+index,list:[index,index+1,{inner:index}]});
  const started=performance.now();let last=0;for(let round=0;round<200;round++)last=ports.sample();
  const perCall=(performance.now()-started)/200,counters=process.memoryUsage();
  expect(perCall).toBeLessThan(5);
- expect(Math.abs(last-memory.graphMemoryPressureBytesV1(counters))/last).toBeLessThan(0.25);expect(last).toBeGreaterThanOrEqual(counters.rss*0.75);
+ expect(Math.abs(last-memory.graphMemoryPressureBytesV1(counters))/last).toBeLessThan(0.25);expect(last).toBeGreaterThanOrEqual((counters.heapUsed+counters.external)*0.75);
  expect(retained.length).toBe(400000);
- const order:string[]=[];
- expect(memory.measureMemoryBaselineV1({collect:()=>{order.push("collect");},sample:()=>{order.push("sample");return 7;}})).toBe(7);
- expect(order).toEqual(["collect","sample"]);
 });
 
-test("the governor refuses a missing worker count or budget and rejects every waiter on abort",async()=>{
- expect(()=>memory.createMemoryGovernorV1({budgetBytes:MEGABYTE,workers:1,baselineBytes:-1})).toThrow();
- expect(()=>memory.createMemoryGovernorV1({budgetBytes:MEGABYTE,workers:0})).toThrow();
- expect(()=>memory.createMemoryGovernorV1({budgetBytes:0,workers:1})).toThrow();
+test("the governor refuses a missing worker count or headroom and rejects every waiter on abort",async()=>{
+ expect(()=>memory.createMemoryGovernorV1({workers:0,headroom:()=>MEGABYTE})).toThrow();
+ expect(()=>memory.createMemoryGovernorV1({workers:1} as never)).toThrow();
+ expect(()=>memory.createMemoryGovernorV1({workers:1,headroom:()=>MEGABYTE,estimateBytes:0})).toThrow();
  const controller=new AbortController();controller.abort(Error("stopped"));
- const governor=memory.createMemoryGovernorV1({budgetBytes:MEGABYTE,workers:1,sample:()=>0,collect:()=>undefined,signal:controller.signal});
+ const governor=memory.createMemoryGovernorV1({workers:1,headroom:()=>MEGABYTE,signal:controller.signal});
  await expect(governor.run(()=>1)).rejects.toThrow("stopped");
 });
 
@@ -188,24 +136,119 @@ test("interned results cost a fraction of the memory of the same parsed results"
 
 test("a governor leaves no abort listener on a long-lived signal once disposed: a stage that runs a chunk of projects per call must not keep the environment of every chunk alive through the listener",async()=>{
  const listeners=new Set<unknown>(),signal={aborted:false,reason:undefined,throwIfAborted(){},addEventListener:(_type:string,listener:unknown)=>listeners.add(listener),removeEventListener:(_type:string,listener:unknown)=>listeners.delete(listener)} as unknown as AbortSignal;
- const governors=Array.from({length:5},()=>memory.createMemoryGovernorV1({budgetBytes:1<<30,workers:2,signal,sample:()=>0,collect:()=>{}}));
+ const governors=Array.from({length:5},()=>memory.createMemoryGovernorV1({workers:2,signal,headroom:()=>1<<30}));
  expect(listeners.size).toBe(5);
  for(const governor of governors){expect(await governor.run(async()=>7)).toBe(7);governor.dispose();}
  expect(listeners.size).toBe(0);
 });
 
-test("the parent governor does not charge its working set, measures the cost of one project and admits parallel projects while memory allows",async()=>{
- const time=new FakeTime();let done=0,live=0,garbage=0,running=0,peak=0,available=8192*MEGABYTE;
- const environment=(()=>{const directory=mkdtempSync(join(tmpdir(),"memory-parent-")),id="graph_parent_002";mkdirSync(join(directory,"grants"));
-  writeFileSync(join(directory,"grants",id+".json"),JSON.stringify({id,operation:"run",jobs:8,cpu:8,reservedMegabytes:2048,admittedAtMs:Date.now(),observedMegabytes:null,pid:process.pid,bootAtMs:Math.round((Date.now()-uptime()*1000)/1000)*1000}));
-  return{SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_HOST_CAPACITY_PLAN:JSON.stringify({version:1,id,jobs:8,cpu:8,memoryMegabytes:2048,fixedMegabytes:0,floorMegabytes:1981})};})();
- const governor=memory.createGraphParentMemoryGovernorV1({environment,workers:4,sample:()=>3000*MEGABYTE+live+garbage,collect:()=>{garbage=0;},now:time.now,sleep:time.sleep,available:()=>available} as never);
- const task=async()=>{running++;peak=Math.max(peak,running);live+=200*MEGABYTE;await time.sleep(1000);live-=200*MEGABYTE;garbage+=200*MEGABYTE;running--;done++;};
-const solo=governor.run(task);await time.drive(()=>done===1);await solo;
-expect(governor.stats().projectCostMegabytes).toBe(200);
- peak=0;const batch=[1,2,3,4].map(()=>governor.run(task));await time.drive(()=>done===5);await Promise.all(batch);
- expect(peak).toBe(4);
- available=512*MEGABYTE;peak=0;const tight=[1,2,3].map(()=>governor.run(task));await time.drive(()=>done===8);await Promise.all(tight);
- expect(peak).toBe(1);
- governor.dispose();
+/** 🚦️ Runs `workers` owners of `ownerMegabytes` against a modeled cgroup and answers how many ran at once. */
+async function peakOwners(row:typeof fixture.headroom[number],estimateMegabytes?:number){
+ const time=new FakeTime(),limit=row.limitMegabytes*MEGABYTE,margin=limit*memory.GRAPH_MEMORY_POLICY_V1.safetyMarginBasisPoints/10000;
+ let live=0,running=0,peak=0,done=0;
+ const headroom=()=>limit-row.currentMegabytes*MEGABYTE-live-margin;
+ const governor=memory.createMemoryGovernorV1({workers:row.workers,headroom,estimateBytes:(estimateMegabytes??row.ownerMegabytes)*MEGABYTE,now:time.now,sleep:time.sleep});
+ const task=async()=>{running++;peak=Math.max(peak,running);live+=row.ownerMegabytes*MEGABYTE;await time.sleep(5000);live-=row.ownerMegabytes*MEGABYTE;running--;done++;};
+ const all=Array.from({length:row.workers*2},()=>governor.run(task));
+ await time.drive(()=>done===row.workers*2);await Promise.all(all);governor.dispose();
+ return{peak,cost:governor.stats().ownerCostMegabytes};
+}
+
+test("with a 4 GB cgroup, 2.5 GB in use and 200 MB owners more than one owner runs at a time, and every row equals the independent model",async()=>{
+ const directory=scratchDirectory("memory-headroom-");
+ try{
+  const expected=oracle(["expect",written(directory,"fixture.json",fixture)]);
+  for(const[index,row]of fixture.headroom.entries()){const{peak}=await peakOwners(row);expect(peak,row.name).toBe(expected.headroom[index]);}
+  expect((await peakOwners(fixture.headroom[0]!)).peak).toBeGreaterThan(1);
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("the peak of an owner is learned from the headroom the running owners consume, and a wrong first guess is corrected",async()=>{
+ const row=fixture.headroom[0]!,low=await peakOwners(row,20),high=await peakOwners(row,900);
+ expect(low.cost,"a first guess below the truth is raised to the consumed headroom").toBe(row.ownerMegabytes);
+ expect(high.peak,"a first guess above the headroom still runs one owner and then learns").toBeGreaterThanOrEqual(1);
+});
+
+test("the service headroom is the cgroup limit less the usage less the safety margin, and the host answers when no cgroup is readable",()=>{
+ const margin=memory.GRAPH_MEMORY_POLICY_V1.safetyMarginBasisPoints/10000;
+ expect(memory.serviceMemoryHeadroomBytesV1({cgroup:()=>({limitBytes:4096*MEGABYTE,currentBytes:2560*MEGABYTE})})).toBe(Math.floor(4096*MEGABYTE*(1-margin)-2560*MEGABYTE));
+ expect(memory.serviceMemoryHeadroomBytesV1({cgroup:()=>({limitBytes:Infinity,currentBytes:1000*MEGABYTE}),total:()=>8192*MEGABYTE})).toBe(Math.floor(8192*MEGABYTE*(1-margin)-1000*MEGABYTE));
+ expect(memory.serviceMemoryHeadroomBytesV1({cgroup:()=>undefined,total:()=>8192*MEGABYTE,free:()=>3000*MEGABYTE})).toBe(Math.floor(8192*MEGABYTE*(1-margin)-5192*MEGABYTE));
+});
+
+test("the admission law of one more owner equals the independent model on every row",()=>{
+ const directory=scratchDirectory("memory-admission-");
+ try{
+  const expected=oracle(["expect",written(directory,"fixture.json",fixture)]);
+  fixture.admission.forEach((row,index)=>{
+   const actual=memory.graphOwnerAdmissionV1({headroom:row.headroomMegabytes*MEGABYTE,running:row.running,inflight:row.inflight.map(owner=>({estimate:owner.estimateMegabytes*MEGABYTE,taken:owner.takenMegabytes*MEGABYTE})),estimate:row.estimateMegabytes*MEGABYTE,learned:row.learned});
+   expect(actual,row.name).toBe(row.expect);expect(expected.admission[index],row.name).toBe(row.expect);
+  });
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+/** 🚦️ Runs the tasks of a scenario through a governor against a modeled cgroup; every task takes the same time and grows the usage by its growth while it runs. */
+async function runScenario(row:typeof fixture.scenarios[number],peaks:Record<string,number>){
+ const time=new FakeTime(),limit=row.limitMegabytes*MEGABYTE,margin=limit*memory.GRAPH_MEMORY_POLICY_V1.safetyMarginBasisPoints/10000,total=limit-margin-row.currentMegabytes*MEGABYTE;
+ let live=0,running=0,peak=0,done=0,maximumLive=0;
+ const governor=memory.createMemoryGovernorV1({workers:row.workers,headroom:()=>total-live,estimateBytes:row.guessMegabytes*MEGABYTE,peaks:{read:()=>({...peaks}),write:value=>{for(const key of Object.keys(peaks))delete peaks[key];Object.assign(peaks,value);}},now:time.now,sleep:time.sleep});
+ const all=row.tasks.map(task=>governor.run(async()=>{running++;peak=Math.max(peak,running);live+=task.growthMegabytes*MEGABYTE;maximumLive=Math.max(maximumLive,live);await time.sleep(5000);live-=task.growthMegabytes*MEGABYTE;running--;done++;},{kind:task.kind}));
+ await time.drive(()=>done===row.tasks.length);await Promise.all(all);governor.dispose();
+ return{peak,maximumLive,total};
+}
+
+test("owners of a kind without a learned peak run alone, learned and persisted peaks admit more, and no scenario exceeds the headroom, equal to the independent model",async()=>{
+ const directory=scratchDirectory("memory-scenario-");
+ try{
+  const expected=oracle(["expect",written(directory,"fixture.json",fixture)]);
+  for(const[index,row]of fixture.scenarios.entries()){
+   const peaks=Object.fromEntries(Object.entries(row.persisted).map(([kind,megabytes])=>[kind,megabytes*MEGABYTE])),{peak,maximumLive,total}=await runScenario(row,peaks);
+   expect(peak,row.name).toBe(row.expectPeak);expect(expected.scenarios[index].peak,row.name).toBe(row.expectPeak);
+   expect(Object.fromEntries(Object.entries(peaks).map(([kind,bytes])=>[kind,Math.round(bytes/MEGABYTE)])),row.name).toEqual(row.expectLearned);expect(expected.scenarios[index].learned,row.name).toEqual(row.expectLearned);
+   if(row.tasks.every(task=>task.growthMegabytes*MEGABYTE<=total))expect(maximumLive,row.name).toBeLessThanOrEqual(total);
+  }
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("the learned peaks of one governor persist into the next, which then admits concurrently at once",async()=>{
+ const row=fixture.scenarios[0]!,peaks:Record<string,number>={};
+ expect((await runScenario({...row,persisted:{}},peaks)).peak).toBe(row.expectPeak);
+ const second=await runScenario({...row,tasks:row.tasks.slice(0,2)},peaks);
+ expect(second.peak).toBe(2);
+});
+
+test("the learned owner peaks persist in a file, a missing or damaged file reads as nothing learned",()=>{
+ const directory=scratchDirectory("memory-peaks-");
+ try{
+  const path=join(directory,"deep","peaks.json"),store=memory.createGraphOwnerPeaksFileV1(path);
+  expect(store.read()).toEqual({});
+  store.write({"language:cargo":262144000});expect(memory.createGraphOwnerPeaksFileV1(path).read()).toEqual({"language:cargo":262144000});
+  writeFileSync(path,"{broken");expect(store.read()).toEqual({});
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("a declared memory limit replaces the cgroup and charges the resident memory of this process",()=>{
+ const margin=memory.GRAPH_MEMORY_POLICY_V1.safetyMarginBasisPoints/10000,name=memory.GRAPH_MEMORY_POLICY_V1.limitEnvironment;
+ expect(memory.serviceMemoryHeadroomBytesV1({environment:{[name]:"4096"},usage:()=>1500*MEGABYTE,cgroup:()=>{throw Error("the cgroup must not be read");}})).toBe(Math.floor(4096*MEGABYTE*(1-margin)-1500*MEGABYTE));
+ expect(memory.serviceMemoryHeadroomBytesV1({environment:{[name]:"nonsense"},cgroup:()=>({limitBytes:4096*MEGABYTE,currentBytes:2560*MEGABYTE})})).toBe(Math.floor(4096*MEGABYTE*(1-margin)-2560*MEGABYTE));
+});
+
+test("the governor reports pressure when the headroom no longer covers the largest learned peak",async()=>{
+ let free=1000*MEGABYTE;
+ const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>free,estimateBytes:300*MEGABYTE,peaks:{read:()=>({rust:400*MEGABYTE}),write:()=>undefined}});
+ expect(governor.pressure()).toBe(false);free=399*MEGABYTE;expect(governor.pressure()).toBe(true);free=401*MEGABYTE;expect(governor.pressure()).toBe(false);
+ const unlearned=memory.createMemoryGovernorV1({workers:2,headroom:()=>200*MEGABYTE,estimateBytes:300*MEGABYTE});expect(unlearned.pressure()).toBe(true);
+ governor.dispose();unlearned.dispose();
+});
+
+test("every admission decision reaches the decide port with its closed key, megabytes and kind, in addition to the bilingual lines",async()=>{
+ const time=new FakeTime(),decisions:{key:string;used:number;budget:number;kind?:string}[]=[],lines:string[]=[];let live=0;
+ const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>1386*MEGABYTE-live,estimateBytes:256*MEGABYTE,now:time.now,sleep:time.sleep,decide:decision=>decisions.push(decision),report:line=>lines.push(line),environment:{LANG:"en_US"}});
+ let done=0;const task=async()=>{live+=250*MEGABYTE;await time.sleep(12000);live-=250*MEGABYTE;done++;};
+ const all=[governor.run(task,{kind:"language:cargo"}),governor.run(task,{kind:"language:cargo"})];
+ await time.drive(()=>done===2);await Promise.all(all);governor.dispose();
+ const learning=decisions.find(row=>row.key==="learning");
+ expect(learning).toEqual({key:"learning",used:256,budget:expect.any(Number),kind:"language:cargo"});
+ expect(lines.some(line=>line.includes("language:cargo")||line.includes("one project"))).toBe(true);
+ for(const row of decisions)expect(["waiting","serial","resumed","learning"]).toContain(row.key);
 });

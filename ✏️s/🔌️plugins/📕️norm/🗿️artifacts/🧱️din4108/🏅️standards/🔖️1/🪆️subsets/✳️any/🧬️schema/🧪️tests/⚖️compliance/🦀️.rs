@@ -38,7 +38,7 @@ async fn table3_r_min_and_f_rsi_for_wall() {
     let wall = snap.elements.iter().find(|e| e.id == "wall-north").unwrap();
     let check = part_2::check_minimum_r(wall, &snap.usage, snap.t_int_c);
     assert_eq!(check.status, CheckStatus::Pass);
-    let frsi = part_2::check_f_rsi(wall, 20.0, -14.0);
+    let frsi = part_2::check_f_rsi(wall);
     assert!(frsi.computed.value >= F_RSI_MINIMUM - 1e-9);
     assert_eq!(frsi.status, CheckStatus::Pass);
 }
@@ -51,7 +51,7 @@ async fn thin_insulation_fails_table3_and_frsi() {
     assert_eq!(check.status, CheckStatus::Fail);
     assert!(!check.remedies.is_empty());
     assert!(check.remedies[0].applicable);
-    let frsi = part_2::check_f_rsi(wall, snap.t_int_c, snap.climate_zone.design_external_temperature_c());
+    let frsi = part_2::check_f_rsi(wall);
     assert_eq!(
         frsi.status,
         CheckStatus::Fail,
@@ -686,16 +686,35 @@ async fn moving_opaque_zone_id_changes_zone_transmission_loss() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn glaser_climate_changes_condensation_or_limit() {
+async fn glaser_uses_the_annex_a_climate_independent_of_region_and_orientation() {
     let base = Din4108Snapshot::compliant_etics_dwelling();
     let before = evaluate(&base);
-    let mut cold = base.clone();
-    cold.climate_zone = semio_s_plugin_norm_compliance::ClimateZoneDe::Zone1;
-    let after = evaluate(&cold);
+    let mut other = base.clone();
+    other.climate_zone = semio_s_plugin_norm_compliance::ClimateZoneDe::Zone1;
+    other.t_int_c = 22.0;
+    other.rh_int = 0.60;
+    for element in &mut other.elements {
+        element.orientation_deg = 270.0;
+    }
+    let after = evaluate(&other);
     let g = |r: &semio_s_plugin_norm_compliance::CheckReport| {
-        r.checks.iter().filter(|c| c.id.starts_with("din4108-3.glaser.")).map(|c| (c.computed.value.to_bits(), c.limit.value.to_bits())).collect::<Vec<_>>()
+        r.checks.iter().filter(|c| c.id.starts_with("din4108-3.")).map(|c| (c.id.clone(), c.computed.value.to_bits(), c.limit.value.to_bits())).collect::<Vec<_>>()
     };
-    assert_ne!(g(&before), g(&after), "climate must change Glaser computed or limit");
+    assert_eq!(g(&before), g(&after));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn saturation_pressure_follows_the_ice_branch_below_zero() {
+    let ice = part_3::saturation_vapor_pressure_pa(-5.0);
+    assert!((ice - 401.18).abs() < 0.5, "p={ice}");
+    assert!((part_3::saturation_vapor_pressure_pa(0.0) - 610.5).abs() < 1e-9);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_vapour_flux_is_pressure_difference_over_z_with_z_from_sd() {
+    let z = part_3::vapour_diffusion_resistance_z(2.0);
+    assert!((z - 1.0e10).abs() < 1.0);
+    assert!((part_3::vapour_flux_kg_m2_s(1200.0, 1000.0, z) - 2.0e-8).abs() < 1e-18);
 }
 
 #[test]

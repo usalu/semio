@@ -1,0 +1,1358 @@
+{
+ "boundMilliseconds": 3000,
+ "client": [
+  {
+   "name": "a SIGTERM'd client leaves no job running",
+   "signal": "SIGTERM"
+  },
+  {
+   "name": "a SIGKILLed client's job is cancelled",
+   "signal": "SIGKILL"
+  }
+ ],
+ "coalescing": {
+  "identical": {
+   "clients": 2,
+   "jobs": 1
+  },
+  "different": {
+   "clients": 2,
+   "targets": [
+    [
+     "app:test"
+    ],
+    [
+     "core:build"
+    ]
+   ],
+   "jobs": 2
+  },
+  "firstCancelled": {
+   "survivorGetsReply": true,
+   "jobCancelled": false
+  },
+  "bothCancelled": {
+   "jobCancelled": true
+  },
+  "otherWorkspace": {
+   "note": "without a content digest and a per-workspace bind, workspaces never share",
+   "clients": 2,
+   "jobs": 2
+  },
+  "otherRevision": {
+   "clients": 2,
+   "jobs": 2
+  },
+  "boundContent": {
+   "clients": 2,
+   "jobs": 1,
+   "eachClientGetsItsOwnPin": true
+  },
+  "differentEdits": {
+   "clients": 2,
+   "jobs": 2
+  }
+ },
+ "slice": [
+  {
+   "name": "a cancelled slice load leaves none of the processes its worker started",
+   "mode": "abort"
+  },
+  {
+   "name": "a finished slice load leaves none of the processes its worker started",
+   "mode": "done"
+  },
+  {
+   "name": "a restarted service kills the processes a dead service left behind",
+   "mode": "dead-service"
+  },
+  {
+   "name": "children the worker reports are killed with their group even without the token",
+   "mode": "reported"
+  },
+  {
+   "name": "a load that busy-loops synchronously and never yields is gone within the bound after cancel",
+   "mode": "busy"
+  }
+ ],
+ "pressure": {
+  "policy": {
+   "fullAvg10Percent": 20,
+   "throttleEventsPerSecond": 50,
+   "freeFloorMegabytes": 256,
+   "sustainedSeconds": 30
+  },
+  "sequences": [
+   {
+    "name": "PSI full avg10 over the limit for 30 s trips",
+    "samples": [
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     }
+    ],
+    "tripsAtSecond": 30
+   },
+   {
+    "name": "PSI bursts shorter than 30 s never trip",
+    "samples": [
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 25
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     },
+     {
+      "full": 1
+     }
+    ],
+    "tripsAtSecond": null
+   },
+   {
+    "name": "PSI is authoritative over the events counter",
+    "samples": [
+     {
+      "full": 0.5,
+      "high": 0
+     },
+     {
+      "full": 0.5,
+      "high": 1000
+     },
+     {
+      "full": 0.5,
+      "high": 2000
+     },
+     {
+      "full": 0.5,
+      "high": 3000
+     },
+     {
+      "full": 0.5,
+      "high": 4000
+     },
+     {
+      "full": 0.5,
+      "high": 5000
+     },
+     {
+      "full": 0.5,
+      "high": 6000
+     },
+     {
+      "full": 0.5,
+      "high": 7000
+     },
+     {
+      "full": 0.5,
+      "high": 8000
+     },
+     {
+      "full": 0.5,
+      "high": 9000
+     },
+     {
+      "full": 0.5,
+      "high": 10000
+     },
+     {
+      "full": 0.5,
+      "high": 11000
+     },
+     {
+      "full": 0.5,
+      "high": 12000
+     },
+     {
+      "full": 0.5,
+      "high": 13000
+     },
+     {
+      "full": 0.5,
+      "high": 14000
+     },
+     {
+      "full": 0.5,
+      "high": 15000
+     },
+     {
+      "full": 0.5,
+      "high": 16000
+     },
+     {
+      "full": 0.5,
+      "high": 17000
+     },
+     {
+      "full": 0.5,
+      "high": 18000
+     },
+     {
+      "full": 0.5,
+      "high": 19000
+     },
+     {
+      "full": 0.5,
+      "high": 20000
+     },
+     {
+      "full": 0.5,
+      "high": 21000
+     },
+     {
+      "full": 0.5,
+      "high": 22000
+     },
+     {
+      "full": 0.5,
+      "high": 23000
+     },
+     {
+      "full": 0.5,
+      "high": 24000
+     },
+     {
+      "full": 0.5,
+      "high": 25000
+     },
+     {
+      "full": 0.5,
+      "high": 26000
+     },
+     {
+      "full": 0.5,
+      "high": 27000
+     },
+     {
+      "full": 0.5,
+      "high": 28000
+     },
+     {
+      "full": 0.5,
+      "high": 29000
+     },
+     {
+      "full": 0.5,
+      "high": 30000
+     },
+     {
+      "full": 0.5,
+      "high": 31000
+     },
+     {
+      "full": 0.5,
+      "high": 32000
+     },
+     {
+      "full": 0.5,
+      "high": 33000
+     },
+     {
+      "full": 0.5,
+      "high": 34000
+     },
+     {
+      "full": 0.5,
+      "high": 35000
+     },
+     {
+      "full": 0.5,
+      "high": 36000
+     },
+     {
+      "full": 0.5,
+      "high": 37000
+     },
+     {
+      "full": 0.5,
+      "high": 38000
+     },
+     {
+      "full": 0.5,
+      "high": 39000
+     },
+     {
+      "full": 0.5,
+      "high": 40000
+     },
+     {
+      "full": 0.5,
+      "high": 41000
+     },
+     {
+      "full": 0.5,
+      "high": 42000
+     },
+     {
+      "full": 0.5,
+      "high": 43000
+     },
+     {
+      "full": 0.5,
+      "high": 44000
+     }
+    ],
+    "tripsAtSecond": null
+   },
+   {
+    "name": "without PSI a sustained high-event rate trips",
+    "samples": [
+     {
+      "high": 0
+     },
+     {
+      "high": 100
+     },
+     {
+      "high": 200
+     },
+     {
+      "high": 300
+     },
+     {
+      "high": 400
+     },
+     {
+      "high": 500
+     },
+     {
+      "high": 600
+     },
+     {
+      "high": 700
+     },
+     {
+      "high": 800
+     },
+     {
+      "high": 900
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1100
+     },
+     {
+      "high": 1200
+     },
+     {
+      "high": 1300
+     },
+     {
+      "high": 1400
+     },
+     {
+      "high": 1500
+     },
+     {
+      "high": 1600
+     },
+     {
+      "high": 1700
+     },
+     {
+      "high": 1800
+     },
+     {
+      "high": 1900
+     },
+     {
+      "high": 2000
+     },
+     {
+      "high": 2100
+     },
+     {
+      "high": 2200
+     },
+     {
+      "high": 2300
+     },
+     {
+      "high": 2400
+     },
+     {
+      "high": 2500
+     },
+     {
+      "high": 2600
+     },
+     {
+      "high": 2700
+     },
+     {
+      "high": 2800
+     },
+     {
+      "high": 2900
+     },
+     {
+      "high": 3000
+     },
+     {
+      "high": 3100
+     },
+     {
+      "high": 3200
+     },
+     {
+      "high": 3300
+     },
+     {
+      "high": 3400
+     },
+     {
+      "high": 3500
+     },
+     {
+      "high": 3600
+     },
+     {
+      "high": 3700
+     },
+     {
+      "high": 3800
+     },
+     {
+      "high": 3900
+     },
+     {
+      "high": 4000
+     },
+     {
+      "high": 4100
+     },
+     {
+      "high": 4200
+     },
+     {
+      "high": 4300
+     },
+     {
+      "high": 4400
+     }
+    ],
+    "tripsAtSecond": 31
+   },
+   {
+    "name": "without PSI a short burst of high events never trips",
+    "samples": [
+     {
+      "high": 0
+     },
+     {
+      "high": 100
+     },
+     {
+      "high": 200
+     },
+     {
+      "high": 300
+     },
+     {
+      "high": 400
+     },
+     {
+      "high": 500
+     },
+     {
+      "high": 600
+     },
+     {
+      "high": 700
+     },
+     {
+      "high": 800
+     },
+     {
+      "high": 900
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     },
+     {
+      "high": 1000
+     }
+    ],
+    "tripsAtSecond": null
+   },
+   {
+    "name": "without a cgroup sustained low free memory trips",
+    "samples": [
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     }
+    ],
+    "tripsAtSecond": 30
+   },
+   {
+    "name": "without a cgroup a short dip of free memory never trips",
+    "samples": [
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 104857600
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     },
+     {
+      "freeBytes": 4294967296
+     }
+    ],
+    "tripsAtSecond": null
+   }
+  ]
+ },
+ "limit": {
+  "headroom": {
+   "limitMegabytes": 4096,
+   "currentMegabytes": 3000
+  },
+  "marginMegabytes": 100,
+  "expect": {
+   "memoryMaxMegabytes": 996,
+   "memoryHighMegabytes": 896,
+   "memorySwapMax": 0
+  },
+  "floorMegabytes": 64
+ }
+}

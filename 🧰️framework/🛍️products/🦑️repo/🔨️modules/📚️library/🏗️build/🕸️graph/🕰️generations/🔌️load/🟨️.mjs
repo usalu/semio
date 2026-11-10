@@ -1,8 +1,8 @@
-import{createDurableAnswersV1,createDurableStateV1}from"../✂️cutoff/💾️durable/🟨️.mjs";
+import{createBoundedCacheV1}from"../../../🧊️bounded/🟨️.mjs";
 import{createHash}from"node:crypto";
 import{join}from"node:path";
 import{graphQueueRequestedAtV1,graphQueueYieldsV1,yieldGraphQueueV1}from"../🛌️yield/🟨️.mjs";
-import{GENERATION_POLICY_V1,canonicalJsonV1,compareCodePointsV1,createGenerationStoreV1,readGenerationExternalInputsV1,resolveGenerationExternalInputV1,rowKeyV1}from"../🟨️.mjs";
+import{GENERATION_POLICY_V1,canonicalJsonV1,compareCodePointsV1,createAnswersV1,createGenerationStoreV1,readGenerationExternalInputsV1,resolveGenerationExternalInputV1,rowKeyV1}from"../🟨️.mjs";
 import{createGraphPhaseClockV1}from"../../⏱️phases/🟨️.mjs";
 import{decodeVerifiedScopeV1}from"../🔭️coverage/🟨️.mjs";
 import{readPinnedGenerationV1}from"../🧷️pin/🟨️.mjs";
@@ -254,18 +254,25 @@ export function announceGenerationBuildV1(host,spec,rows){
  if((spec.staleRows??0)>listed)host.say("reasonMore",{count:spec.staleRows-listed});
 }
 
-/** 📊️ Turns the store's progress events into the shared graph phase counters with their bilingual labels. */
+/** 📊️ Turns the store's progress events into the shared graph phase counters with their bilingual labels; concurrent workers report in one order (a phase is opened once, then advanced), however their events interleave. */
+const progressSinksV1=new Set();
+/** 📡️ Registers a listener of the phase counters of every generation load of this process (a worker reports them to its service): `{phase, done, total}` at most once per `progressReportMilliseconds` and on every completed phase. Returns the function that removes it. */
+export function onGenerationProgressV1(listener){progressSinksV1.add(listener);return()=>progressSinksV1.delete(listener);}
+
 export function createGenerationProgressV1(clock){
- const active=new Set();
- return async({phase,done,total})=>{
+ const active=new Set();let chain=Promise.resolve(),reportedAt=-Infinity;
+ const handle=async({phase,done,total,running,decision})=>{
+  if(running!==undefined){if(!active.has(phase))return;await clock.running?.(phase,running,decision);const at=performance.now();if(progressSinksV1.size&&at-reportedAt>=GENERATION_POLICY_V1.progressReportMilliseconds){reportedAt=at;for(const sink of progressSinksV1)try{sink({phase,done,total,running,...decision===undefined?{}:{decision}});}catch{}}return;}
   if(done===0||!active.has(phase)){if(active.has(phase))await clock.end(phase);await clock.begin(phase,total);active.add(phase);}
   await clock.advance(phase,done);
+  const at=performance.now();if(progressSinksV1.size&&(done>=total||at-reportedAt>=GENERATION_POLICY_V1.progressReportMilliseconds)){reportedAt=at;for(const sink of progressSinksV1)try{sink({phase,done,total});}catch{}}
   if(done>=total){await clock.end(phase);active.delete(phase);}
  };
+ return event=>{const run=chain.then(()=>handle(event));chain=run.catch(()=>undefined);return run;};
 }
 
 /** 🕓️ The pending crate manifests this process has already reported, so each is named once. */
-const pendingCratesReportedV1=new Set();
+const pendingCratesReportedV1=createBoundedCacheV1({name:"generation:pending-crates",maxEntries:GENERATION_POLICY_V1.pendingCrateReports,maxBytes:GENERATION_POLICY_V1.pendingCrateReports});
 const needsBuild=async(_body,pending)=>({built:false,published:false,needsBuild:true,computed:0,pending});
 
 /** 📦️ Expands fixed project/UTF8-byte groups once and preserves every caught consumer failure. */
@@ -298,13 +305,14 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
  externalInputs=readGenerationExternalInputsV1(externalInputs);
  await host.preflight?.();
  const requestedAt=graphQueueRequestedAtV1()??Date.now(),identity=await host.identity(),roots=slice?[...new Set(slice.roots)]:closure?[...new Set(closure)]:undefined,rows=pin===undefined?await host.implementationRows():[],implementation=implementationDigestV1(rows),scoped=scopeImplementationRowsV1(rows),limits=host.expansionLimits??{maximumProjects:GENERATION_POLICY_V1.expansionMaximumProjects,maximumBytes:GENERATION_POLICY_V1.expansionMaximumBytes};
+ host.scope?.(roots===undefined&&pin===undefined);
  const answersByRoot=new Map();let pointer;
  const attempt=async(builder,store,control)=>{
-  const options=host.storeOptions(store,control);let answers=answersByRoot.get(options.root);if(!answers)answersByRoot.set(options.root,answers=createDurableStateV1());
-  const engine=createGenerationStoreV1({...options,answers:createDurableAnswersV1({root:options.root,fs:options.fs,lease:options.lease,resource:options.resources.facts,state:answers})}),progress=createGenerationProgressV1(host.clock(control));
-  const compute=builder?async(spec,signal)=>{announceGenerationBuildV1(host,spec,rows);const part=await host.discoverPart(spec,signal,control);announceWithheldProjectsV1(host,part);await host.release?.();return shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part,stubs:spec.stubs,implementation:scoped});}:async()=>{throw Error("A shared graph reader never computes");};
+  const options=host.storeOptions(store,control);let answers=answersByRoot.get(options.root);if(!answers)answersByRoot.set(options.root,answers=createAnswersV1({root:options.root,fs:options.fs,durable:options.durableAnswers!==false,workspaceRoot:host.workspaceRoot}));
+  const engine=createGenerationStoreV1({...options,answers}),progress=createGenerationProgressV1(host.clock(control));
+  const compute=builder?async(spec,signal)=>{announceGenerationBuildV1(host,spec,rows);const wanted=spec.owners.length+spec.discover.length;let inferred=0;if(wanted)await progress({phase:"owners",done:0,total:wanted});const part=await host.discoverPart(spec,signal,control,()=>{if(wanted&&inferred<wanted-1)progress({phase:"owners",done:++inferred,total:wanted}).catch(()=>undefined);},(running,decision)=>progress({phase:"owners",done:inferred,total:wanted,running,decision}).catch(()=>undefined));if(wanted)await progress({phase:"owners",done:wanted,total:wanted});announceWithheldProjectsV1(host,part);await host.release?.();return shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part,stubs:spec.stubs,implementation:scoped});}:async()=>{throw Error("A shared graph reader never computes");};
   pointer=join(options.root,GENERATION_POLICY_V1.pointer);
-  const base={identity,implementation,policy:builder?"fresh":policy,membership:host.membership,compute,signal:host.signal,progress,requestedAt,builder:builder?body=>body(builder===true?undefined:builder):needsBuild};
+  const base={identity,implementation,policy:builder?"fresh":policy,membership:host.membership,compute,prime:builder?host.prime:undefined,signal:host.signal,progress,requestedAt,builder:builder?body=>body(builder===true?undefined:builder):needsBuild};
   const closeFn=slice?async(current)=>{const global=await engine.readGlobal(current.manifest);return sliceClosureV1({owners:Object.fromEntries(Object.entries(current.manifest.owners).map(([name,row])=>[name,row.root])),external:Object.keys(global.externalNodes??{}),fragment:name=>engine.readFragment(current.manifest.owners[name]).then(value=>{if(!value)throw Object.assign(Error("Fragment of "+name+" is missing"),{code:"GENERATION_INCOMPLETE"});return sliceViewV1(value);}),selection:slice.selection,roots:slice.roots,providers:slice.providers??[]});}:undefined;
   const started=Date.now(),result=pin!==undefined?await readPinnedGenerationV1({engine,pin,identity,roots,closure:closeFn,signal:host.signal}):roots?await engine.refreshClosure({...base,roots,closure:closeFn}):await engine.refresh(base);
   engine.dropIndexes();if(typeof builder==="object")await builder.release();
@@ -315,7 +323,7 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
   else if(result.served==="pinned")host.say("pinned",{generation,count:result.names?result.names.size:Object.keys(result.current.manifest.owners).length});
   else if(result.served==="built"&&result.published){host.say(result.merged===undefined?"published":"merged",{generation,computed:result.computed,carried:result.carried??0,seconds:Math.round((Date.now()-started)/1000),theirs:result.merged??0});if(result.index)host.say("indexed",{generation,rows:result.index.rows,owners:result.index.owners,expanded:(result.index.expandedBytes/1048576).toFixed(1),percent:(100*result.index.expandedBytes/GENERATION_POLICY_V1.maximumIndexBytes).toFixed(1),limit:GENERATION_POLICY_V1.maximumIndexBytes/1048576,packed:(result.index.packedBytes/1048576).toFixed(1)});}
   else if(host.verbose||lean)host.say(roots?"closure":"verified",roots?{count:result.names.size}:{generation,checked:result.plan?.checked??0});
-  for(const path of result.plan?.pending??[])if(!pendingCratesReportedV1.has(path)){pendingCratesReportedV1.add(path);host.say("pendingCrate",{path});}
+  for(const path of result.plan?.pending??[])if(!pendingCratesReportedV1.has(path)){pendingCratesReportedV1.set(path,true);host.say("pendingCrate",{path});}
   if(result.plan?.cutoff?.questions)host.say("cutoff",{questions:result.plan.cutoff.questions,rows:result.plan.stale??0,held:result.plan.cutoff.held,changed:result.plan.cutoff.changed});
   if(lean){const listing=await engine.catalog(result.current,{signal:host.signal});return{graph:host.readLean({version:1,lean:true,projects:Object.fromEntries(listing.projects.map(row=>[row.name,{name:row.name,root:row.root,targets:Object.fromEntries(row.targets.map(target=>[target,{}]))}])),dependencies:[],...(listing.unavailable.length?{unavailable:listing.unavailable}:{})}),result};}
   const stream=engine.assembleStream(result.current,{names:result.names&&[...result.names],externalInputs,compare:(a,b)=>a.localeCompare(b),signal:host.signal,progress});
@@ -323,10 +331,10 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
   const closureDigest=selection?createHash("sha256").update(canonicalJsonV1([assembled.membership,[...result.names].sort(),...externalRoots.length?[externalRoots]:[]])).digest("hex"):assembled.membership;
   const graph=host.readGraph({version:1,projects,dependencies:assembled.dependencies,namedInputs:host.namedInputs,externalNodes:assembled.externalNodes,...(assembled.unavailable.length?{unavailable:assembled.unavailable}:{}),admission:{selection:selection??{kind:"all"},registry:host.registryDigest,closure:closureDigest,...externalRoots.length?{externalInputs:externalRoots}:{}}});
   if(host.sealed){const manifest=result.current.manifest,owners=Object.keys(manifest.owners).sort(compareCodePointsV1);host.sealed({generation:manifest.generation,manifest:result.current.pointer.manifest,owners,covered:pin!==undefined?decodeVerifiedScopeV1(owners,pin.covered):result.names,atMs:pin!==undefined?pin.covered.atMs:requestedAt});}
-  return{graph,result};
+  return{graph,result,stats:generationLoadStatsV1(result,Date.now()-started)};
  };
  const first=await host.withShared((store,control)=>attempt(false,store,control));
- if(!first.needsBuild){await host.release?.();return first.graph;}
+ if(!first.needsBuild){await host.release?.();return{graph:first.graph,stats:first.stats};}
  const queued=Date.now();
  const request=first.pending?.dirty.length?{generation:first.pending.generation,dirty:first.pending.dirty,roots:first.pending.roots,structural:first.pending.structural,implementation}:undefined;
  if(host.prefetch&&request&&!await host.builderIdle?.(request)){host.carryClosures?.(true);try{await host.prefetch(request);}finally{host.carryClosures?.(false);}}
@@ -334,5 +342,10 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
  const notice=setInterval(()=>{if(held)return;host.say("waiting",{seconds:Math.round((Date.now()-queued)/1000),generation:first.generation});if(pointer!==undefined&&graphQueueYieldsV1({queuedMs:Date.now()-queued,yieldAfterMilliseconds:host.yieldAfterMilliseconds}))yieldGraphQueueV1({generation:first.generation,pointer,requestedAt,queuedMs:Date.now()-queued,exit:host.exitProcess});},host.waitNoticeMilliseconds??GENERATION_POLICY_V1.waitNoticeMilliseconds);notice.unref?.();
  let built,want=first.pending;try{for(let round=1;;round++){built=await host.withBuilder((store,control,claim)=>{held=true;return attempt(claim??true,store,control);},want);if(!built.needsBuild)break;held=false;want={...built.pending,structural:built.pending.structural||round>=CUSTODY_POLICY_V1.widenRounds};}}finally{clearInterval(notice);}
  await host.release?.();
- return built.graph;
+ return{graph:built.graph,stats:built.stats};
+}
+
+/** 📊️ What one load verified and reinferred: the stale facts, the closures asked, the owners recomputed and the owners an unchanged answer cut off, and the milliseconds the verification and refresh took. */
+export function generationLoadStatsV1(result,verifiedMilliseconds){
+ return Object.freeze({staleFacts:result.plan?.stale??0,closuresVerified:result.plan?.cutoff?.questions??0,ownersReinferred:result.computed??0,ownersCutOff:result.plan?.cutoff?.held??0,doubtfulFacts:result.plan?.doubtful??0,verifiedMilliseconds});
 }

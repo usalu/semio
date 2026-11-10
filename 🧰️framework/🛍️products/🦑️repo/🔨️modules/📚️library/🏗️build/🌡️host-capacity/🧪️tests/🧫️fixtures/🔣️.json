@@ -207,14 +207,23 @@
    "expect": null
   },
   {
-   "name": "tools is light",
+   "name": "tools setup is a command block",
    "args": [
     "tools",
     "setup",
     "bazel"
    ],
    "environment": {},
-   "expect": null
+   "expect": {
+    "operation": "command",
+    "preferredJobs": 8,
+    "kinds": [],
+    "targets": [],
+    "lineage": [
+     "tools",
+     "tools:setup"
+    ]
+   }
   },
   {
    "name": "cache is light",
@@ -228,6 +237,15 @@
   {
    "name": "no arguments is light",
    "args": [],
+   "environment": {},
+   "expect": null
+  },
+  {
+   "name": "tools list is light",
+   "args": [
+    "tools",
+    "list"
+   ],
    "environment": {},
    "expect": null
   }

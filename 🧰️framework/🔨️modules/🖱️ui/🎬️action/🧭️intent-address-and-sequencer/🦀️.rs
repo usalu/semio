@@ -54,6 +54,7 @@ pub struct UiIntentAddress {
 pub struct UiIntentBindings {
     pub address: UiIntentAddress,
     pub bindings: Vec<(ui_contract::Trigger, ui_contract::ActionId)>,
+    pub args: Vec<(ui_contract::Trigger, DslValue)>,
 }
 
 impl UiIntentBindings {
@@ -63,6 +64,17 @@ impl UiIntentBindings {
 
     pub fn binds(&self, trigger: ui_contract::Trigger) -> bool {
         self.bindings.iter().any(|(bound, _)| *bound == trigger)
+    }
+
+    /// 🧷️ The arguments the document AUTHORED on the binding of `trigger` (`None` when it carries none), the half of the dispatch contract [`Self::action_for`] cannot hold.
+    pub fn args_for(&self, trigger: ui_contract::Trigger) -> Option<&DslValue> {
+        self.args.iter().find(|(bound, _)| *bound == trigger).map(|(_, args)| args)
+    }
+
+    /// 🌉️ The plugin action address of the binding of `trigger` with the gesture's own `input` merged over its authored arguments — the same descriptor [`UiIntentCommand::descriptor`] builds for a fired control, for a host that dispatches a binding without a control event.
+    pub fn descriptor_for(&self, trigger: ui_contract::Trigger, input: Option<DslValue>) -> Option<ActionDescriptor> {
+        let action = self.action_for(trigger)?.clone();
+        Some(UiIntentCommand { address: self.address.clone(), trigger, action, args: self.args_for(trigger).cloned(), input, seq: 0 }.descriptor())
     }
 }
 
@@ -105,18 +117,9 @@ impl UiIntentCommand {
     }
 
     pub fn payload(&self) -> Option<DslValue> {
-        let Some(input) = self.input.as_ref() else { return self.args.clone() };
-        let named = match input {
-            DslValue::Object(_) | DslValue::Array(_) => input.clone(),
-            scalar => DslValue::Object(vec![(self.input_field().to_string(), scalar.clone())]),
-        };
-        match (self.args.as_ref(), &named) {
-            (Some(DslValue::Object(authored)), DslValue::Object(merged)) => {
-                let mut entries: Vec<(String, DslValue)> = authored.iter().filter(|(key, _)| !merged.iter().any(|(name, _)| name == key)).cloned().collect();
-                entries.extend(merged.iter().cloned());
-                Some(DslValue::Object(entries))
-            }
-            _ => Some(named),
+        match self.input.as_ref() {
+            Some(input) => Some(intent_payload(self.args.as_ref(), input, self.input_field())),
+            None => self.args.clone(),
         }
     }
 
@@ -126,6 +129,22 @@ impl UiIntentCommand {
         } else {
             INTENT_VALUE_FIELD
         }
+    }
+}
+
+/// 🧬️ The one merge of a gesture's `input` over a binding's authored `args`: a scalar is NAMED by `scalar_field`, a map merges key-wise and wins over a colliding authored key, an array replaces the arguments wholesale.
+pub fn intent_payload(args: Option<&DslValue>, input: &DslValue, scalar_field: &str) -> DslValue {
+    let named = match input {
+        DslValue::Object(_) | DslValue::Array(_) => input.clone(),
+        scalar => DslValue::Object(vec![(scalar_field.to_string(), scalar.clone())]),
+    };
+    match (args, &named) {
+        (Some(DslValue::Object(authored)), DslValue::Object(merged)) => {
+            let mut entries: Vec<(String, DslValue)> = authored.iter().filter(|(key, _)| !merged.iter().any(|(name, _)| name == key)).cloned().collect();
+            entries.extend(merged.iter().cloned());
+            DslValue::Object(entries)
+        }
+        _ => named,
     }
 }
 

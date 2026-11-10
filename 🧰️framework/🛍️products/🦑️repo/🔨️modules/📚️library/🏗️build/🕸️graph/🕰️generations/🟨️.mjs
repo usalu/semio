@@ -1,5 +1,6 @@
 import{pendingCratePathsV1}from"./🕓️pending-crates/🟨️.mjs";
 import{readEdgeReadsV1,readEnvironmentPartsV1}from"./🧵️edge-reads/🟨️.mjs";
+import{createBoundedCacheV1}from"../../🧊️bounded/🟨️.mjs";
 import{createHash,randomBytes}from"node:crypto";
 import{brotliCompressSync,brotliDecompressSync,constants as zlibConstants}from"node:zlib";
 import{lstat,mkdir,open,readdir,readFile,rename,rm}from"node:fs/promises";
@@ -11,15 +12,18 @@ import{coverageOfV1,mergeVerifiedStampV1,readVerifiedStampV1,uncoveredOfV1}from"
 import{INDEX_CHUNK_POLICY_V1,addOwnerRunsV1,bulkUpsertClassesV1,classesOfChunksV1,createChunkInternerV1}from"./🧱️chunk-classes/🟨️.mjs";
 import{createFrontierV1,diffFrontiersV1,frontierFactHoldsV1,frontierHoldsV1,stableDirectoriesV1}from"./🧭️frontier/🟨️.mjs";
 import{mergeIntoHeadV1}from"./🔀️merge/🟨️.mjs";
-import{DURABLE_ANSWERS_V1,createDurableAnswersV1}from"./✂️cutoff/💾️durable/🟨️.mjs";
-import{derivedUpsertsV1,holdersOfDerivedV1,isDerivedOwnerV1,orphanedDerivedOwnersV1,scopeWithDerivedV1,settleSuspectsV1,splitStaleConsumersV1,suspectsWithinV1,unsupportedDerivedV1,verifiableRowIdsV1}from"./✂️cutoff/🟨️.mjs";
+import{createClosureSettlerV1,sharedClosureSettlerV1}from"../🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs";
+import{createCasStoreV1}from"../../🗄️cas/🗃️store/🟦️.ts";
+import{createNodeStoreV1}from"../🧮️derived-nodes/💾️store/🟨️.mjs";
+import{selectDoubtfulRowsV1}from"./🔎️doubt/🟨️.mjs";
+import{derivedOwnerNameV1,derivedUpsertsV1,holdersOfDerivedV1,isDerivedOwnerV1,orphanedDerivedOwnersV1,scopeWithDerivedV1,splitStaleConsumersV1,suspectRowsV1,suspectsWithinV1,unsupportedDerivedV1,verifiableRowIdsV1}from"./✂️cutoff/🟨️.mjs";
+import{GENERATION_POLICY_V1,P,HEX,sha256,isObject,unpack,aborted,fail,requireKeys,requireHex,requireCount,requireText}from"./🧱️guards/🟨️.mjs";
+import{ROW_KEY_TEXT_LIMIT_V1,createFactIndexV1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1}from"./🧮️fact-rows/🟨️.mjs";
+export{GENERATION_POLICY_V1,ROW_KEY_TEXT_LIMIT_V1,createFactIndexV1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1};
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 export{canonicalJsonV1,compareCodePointsV1,createFrontierV1,diffFrontiersV1,frontierFactHoldsV1,frontierHoldsV1,stableDirectoriesV1};
 
-/** 📏️ The declared names and limits of the graph generation store; the schema file is their single source. */
-export const GENERATION_POLICY_V1=Object.freeze({...schema.definitions.Policy.const,policies:Object.freeze([...schema.definitions.Policy.const.policies])});
-const P=GENERATION_POLICY_V1,HEX=/^[a-f0-9]{64}$/u,sha256=bytes=>createHash("sha256").update(bytes).digest("hex"),isObject=value=>value!==null&&typeof value==="object"&&!Array.isArray(value);
 
 /** 🔌️ Admits bounded consumer external roots without changing their sealed package identity. */
 export function readGenerationExternalInputsV1(value){const rule=schema.definitions.ExternalInputs;if(!Array.isArray(value)||value.length>rule.maxItems||value.some(name=>{if(typeof name!=="string"||!name.length)return true;let length=0;for(const point of name)if(++length>rule.items.maxLength)return true;return false;}))throw fail("Bounded external input references required","GENERATION_EXTERNAL_INPUTS");return Object.freeze([...new Set(value)].sort(compareCodePointsV1));}
@@ -42,19 +46,7 @@ export function packFactIndexV1(index,maximumBytes){
 /** 📖️ Reads a packed fact index within the finite reader ceiling straight from the binary document, without any intermediate text. */
 export function unpackFactIndexV1(bytes,maximumBytes){return readFactIndexV1(decodeFactIndexV1(brotliDecompressSync(bytes,{maxOutputLength:maximumBytes}),{maximumBytes,share:text=>graphStringInternerV1.share(text)}));}
 /** 🪶️ Opens a packed fact index for verification only: strings, facts and rows stay in the document until they are read (`🧮️fact-codec` `openFactIndexV1`). */
-export function openPackedFactIndexV1(bytes,maximumBytes){return openFactIndexV1(brotliDecompressSync(bytes,{maxOutputLength:maximumBytes}),{maximumBytes,share:text=>graphStringInternerV1.share(text)});}
-const unpack=(bytes,limit)=>JSON.parse(brotliDecompressSync(bytes,{maxOutputLength:limit}).toString("utf8"));
-const aborted=signal=>signal?.throwIfAborted();
-const fail=(message,code)=>Object.assign(Error(message),code?{code}:{});
-
-function requireKeys(value,required,optional,what){
- if(!isObject(value))throw fail("Closed "+what+" required");
- for(const key of required)if(!Object.hasOwn(value,key))throw fail("Closed "+what+" required: missing "+key);
- for(const key of Object.keys(value))if(!required.includes(key)&&!optional.includes(key))throw fail("Closed "+what+" required: unknown "+key);
-}
-const requireHex=(value,what)=>{if(typeof value!=="string"||!HEX.test(value))throw fail("Digest required: "+what);};
-const requireCount=(value,what,maximum=Number.MAX_SAFE_INTEGER)=>{if(!Number.isSafeInteger(value)||value<0||value>maximum)throw fail("Bounded count required: "+what);};
-const requireText=(value,what,maximum=P.textMaximumCharacters)=>{if(typeof value!=="string"||!value||value.length>maximum)throw fail("Bounded text required: "+what);};
+export function openPackedFactIndexV1(bytes,maximumBytes,name){return openFactIndexV1(brotliDecompressSync(bytes,{maxOutputLength:maximumBytes}),{maximumBytes,name,share:text=>graphStringInternerV1.share(text)});}
 
 /** 📌️ Admits the closed pointer to the newest generation: a manifest digest, or null after an explicit invalidation. */
 export function readGenerationPointerV1(bytes){
@@ -114,133 +106,7 @@ function readFactIndexV1(value){
  return value;
 }
 
-const rowKeys=new WeakMap();
-/** 🪪️ The identity of one observation row: its canonical text, or `#` and the SHA-256 of that text when the text is longer than `ROW_KEY_TEXT_LIMIT_V1` (an analysis row carries kilobytes of nested facts, and a build keys every row of a graph: the key stays below 70 bytes however large the fact is); two rows have one key exactly when their canonical texts are equal, and a shared row object is keyed once. */
-export function rowKeyV1(row){let key=rowKeys.get(row);if(key===undefined){const text=canonicalJsonV1([row.kind,row.path,row.fact]);key=text.length<=ROW_KEY_TEXT_LIMIT_V1?text:"#"+sha256(text);rowKeys.set(row,key);}return key;}
-export const ROW_KEY_TEXT_LIMIT_V1=P.rowKeyTextLimit;
-
-const ownerIdMaps=new WeakMap();
-const ownerIdMap=index=>{let map=ownerIdMaps.get(index);if(!map){map=new Map(index.owners.map((name,id)=>[name,id]));ownerIdMaps.set(index,map);}return map;};
-
-/** 🗃️ Builds the inverted fact index: rows are interned once, and owners partition the pairs into classes of rows that share exactly the same consumers, so one stale row names its consumers without reading any fragment. */
-export function createFactIndexV1(ownerRows){
- const owners=[...ownerRows.keys()].sort(compareCodePointsV1),rows=[],byKey=new Map(),byObject=new Map(),empty=[],interner=createChunkInternerV1();let seen=new Int32Array(1<<16),scratch=new Uint32Array(1<<12);
- owners.forEach((name,owner)=>{
-  const list=ownerRows.get(name);if(scratch.length<list.length)scratch=new Uint32Array(Math.max(list.length,scratch.length*2));
-  let count=0;
-  for(const row of list){
-   let id=byObject.get(row);
-   if(id===undefined){const key=rowKeyV1(row);id=byKey.get(key);if(id===undefined){id=rows.length;byKey.set(key,id);rows.push(row);}byObject.set(row,id);}
-   if(id>=seen.length){const grown=new Int32Array(Math.max(seen.length*2,id+1));grown.set(seen);seen=grown;}
-   if(seen[id]!==owner+1){seen[id]=owner+1;scratch[count++]=id;}
-  }
-  if(!count){empty.push({r:[],o:[owner]});return;}
-  addOwnerRunsV1(interner,scratch,count,owner);
- });
- return{version:1,owners,rows,classes:[...classesOfChunksV1(rows.length,interner),...empty]};
-}
-
-/** 🩹️ Replaces the consumers in `upserts` (their old classes disappear), adds rows to the consumers in `append`, drops `drop`, prunes unreferenced rows and rebuilds the partition once classes outgrow the owners or the class lists hold more than `compactionDuplication` times the rows (the duplication of an index patched generation after generation, which no comparison with the previous generation can see). */
-export function patchFactIndexV1(index,{drop=[],upserts=new Map(),append=new Map()},{bulkRows=INDEX_CHUNK_POLICY_V1.bulkUpsertRows}={}){
- const ownerIds=new Map(ownerIdMap(index)),rows=index.rows.slice(),owners=index.owners.slice(),original=index.rows.length,byPath=pathIndexOf(index),added=new Map();
- const idOf=name=>{let id=ownerIds.get(name);if(id===undefined){id=owners.length;owners.push(name);ownerIds.set(name,id);}return id;};
- const touched=new Set(),gone=new Set();
- for(const name of drop)if(ownerIds.has(name)){touched.add(ownerIds.get(name));if(!upserts.has(name))gone.add(ownerIds.get(name));}
- for(const name of upserts.keys())touched.add(idOf(name));
- const classes=[];
- for(const cls of index.classes){const kept=cls.o.filter(id=>!touched.has(id));if(kept.length)classes.push({r:cls.r,o:kept});}
- const idOfRow=row=>{
-  const key=rowKeyV1(row);let id=added.get(key);if(id!==undefined)return id;
-  const candidates=byPath.get(row.path);
-  if(candidates!==undefined)for(const candidate of typeof candidates==="number"?[candidates]:candidates)if(rows[candidate].kind===row.kind&&rowKeyV1(rows[candidate])===key)return candidate;
-  id=rows.length;rows.push(row);added.set(key,id);return id;
- };
- const rowIdsFor=list=>{const out=new Set();for(const row of list)out.add(idOfRow(row));return[...out].sort((a,b)=>a-b);};
- let pairs=0;for(const list of upserts.values())pairs+=list.length;
- if(pairs>=bulkRows)bulkUpsertClassesV1({upserts,ownerIds,idOfRow,rowCount:rows.length,classes});
- else
- for(const name of[...upserts.keys()].sort(compareCodePointsV1))classes.push({r:rowIdsFor(upserts.get(name)),o:[ownerIds.get(name)]});
- for(const name of[...append.keys()].sort(compareCodePointsV1)){const extra=rowIdsFor(append.get(name));classes.push({r:extra,o:[idOf(name)]});}
- const used=new Uint8Array(rows.length),live=new Uint8Array(owners.length);
- for(const cls of classes){for(const id of cls.r)used[id]=1;for(const id of cls.o)if(!gone.has(id))live[id]=1;}
- const rowMap=new Int32Array(rows.length).fill(-1),ownerMap=new Int32Array(owners.length).fill(-1),rowsOut=[],ownersOut=[];
- for(let id=0;id<rows.length;id++)if(used[id]){rowMap[id]=rowsOut.length;rowsOut.push(rows[id]);}
- for(let id=0;id<owners.length;id++)if(live[id]){ownerMap[id]=ownersOut.length;ownersOut.push(owners[id]);}
- const compact=classes.filter(cls=>cls.o.some(id=>live[id])).map(cls=>({r:cls.r.map(id=>rowMap[id]),o:cls.o.filter(id=>live[id]).map(id=>ownerMap[id])}));
- const result={version:1,owners:ownersOut,rows:rowsOut,classes:compact};
- const ids=result.classes.reduce((sum,cls)=>sum+cls.r.length,0);
- return result.classes.length>P.compactionFactor*result.owners.length+P.compactionFloor&&result.classes.length>P.compactionGrowth*index.classes.length||ids>P.compactionFloor&&ids>P.compactionDuplication*result.rows.length?refineFactIndexV1(result):result;
-}
-
-const pathIndexes=new WeakMap();
-/** 🔎️ The rows of an index by path (a row id, or the ids of the rows that share the path), read once per index: finds the stored twin of a row from its path and kind, so a patch compares the facts of a handful of candidates instead of building the identity of every stored row. */
-function pathIndexOf(index){
- let map=pathIndexes.get(index);if(map)return map;
- map=new Map();
- for(let id=0;id<index.rows.length;id++){const path=index.rows[id].path,held=map.get(path);if(held===undefined)map.set(path,id);else if(typeof held==="number")map.set(path,[held,id]);else held.push(id);}
- pathIndexes.set(index,map);return map;
-}
-
-/** ⚖️ Merges the classes of an index into the coarsest exact partition: rows with the same consumers share one class. */
-export function refineFactIndexV1(index){
- const rowCount=index.rows.length,start=new Uint32Array(rowCount+1);
- for(const cls of index.classes)for(const id of cls.r)start[id+1]+=cls.o.length;
- for(let id=0;id<rowCount;id++)start[id+1]+=start[id];
- const flat=new Uint32Array(start[rowCount]),fill=start.slice(0,rowCount);
- for(const cls of index.classes)for(const id of cls.r)for(const owner of cls.o)flat[fill[id]++]=owner;
- const groups=new Map(),classes=[];
- for(let id=0;id<rowCount;id++){
-  const list=flat.subarray(start[id],start[id+1]).sort();let unique=0;
-  for(let at=0;at<list.length;at++)if(at===0||list[at]!==list[at-1])list[unique++]=list[at];
-  const owners=Array.from(list.subarray(0,unique)),key=owners.join(",");let group=groups.get(key);
-  if(!group){group={r:[],o:owners};groups.set(key,group);classes.push(group);}
-  group.r.push(id);
- }
- const covered=new Set(classes.flatMap(cls=>cls.o));
- for(const cls of index.classes)for(const owner of cls.o)if(!covered.has(owner)){covered.add(owner);classes.push({r:[],o:[owner]});}
- return{version:1,owners:index.owners,rows:index.rows,classes};
-}
-
-/** 📚️ The sorted consumers of every row of the index, as `[rowKey, names]` pairs (a pure view for laws). */
-export function factConsumersV1(index){
- const consumers=index.rows.map(()=>new Set());
- for(const cls of index.classes)for(const id of cls.r)for(const owner of cls.o)consumers[id].add(index.owners[owner]);
- return index.rows.map((row,id)=>[rowKeyV1(row),[...consumers[id]].sort(compareCodePointsV1)]);
-}
-
-/** 🕵️ Finds exactly the stale rows among `ids`: a chunk that holds is cleared by one call, a failing chunk is bisected within a call budget and then checked row by row. */
-export async function staleFactRowsV1(index,ids,hold,{signal,progress,chunk=P.verifyChunkRows,parallel=P.verifyParallelChunks,budget=P.bisectBudgetCalls}={}){
- const stale=new Set(),chunks=[];let done=0,calls=0,next=0;
- for(let at=0;at<ids.length;at+=chunk)chunks.push(ids.slice(at,at+chunk));
- const check=async list=>{aborted(signal);calls++;return hold(list.map(id=>index.rows[id]),signal);};
- const find=async(list,state)=>{
-  if(await check(list))return;
-  if(list.length===1){stale.add(list[0]);return;}
-  if(state.left<=0){for(const id of list)if(!await check([id]))stale.add(id);return;}
-  state.left-=2;const mid=list.length>>1;await find(list.slice(0,mid),state);await find(list.slice(mid),state);
- };
- await progress?.({phase:"facts",done:0,total:ids.length});
- await Promise.all(Array.from({length:Math.min(parallel,chunks.length)},async()=>{
-  while(next<chunks.length){const list=chunks[next++];await find(list,{left:budget});done+=list.length;await progress?.({phase:"facts",done,total:ids.length});}
- }));
- return{stale,calls};
-}
-
-/** 🧭️ Selects the classes that name one of `only` (every class without it) and the distinct rows they list. */
-export function selectFactClassesV1(index,only){
- const map=ownerIdMap(index),wanted=only?new Set([...only].map(name=>map.get(name)).filter(id=>id!==undefined)):undefined,classes=[],used=new Uint8Array(index.rows.length),ids=[];
- index.classes.forEach((cls,at)=>{if(wanted&&!cls.o.some(id=>wanted.has(id)))return;classes.push(at);for(const id of cls.r)if(!used[id]){used[id]=1;ids.push(id);}});
- return{classes,ids};
-}
-
-/** 🧱️ The consumers of the stale rows within the selected classes. */
-export function staleConsumersV1(index,classes,stale){
- const names=new Set();
- for(const at of classes){const cls=index.classes[at];if(cls.r.some(id=>stale.has(id)))for(const owner of cls.o)names.add(index.owners[owner]);}
- return names;
-}
-
-/** 🗂️ The filesystem port of the store on real files: a missing file reads as undefined, writes are atomic by rename and a content addressed write that finds its file does nothing. */
+/** 🗂️ The filesystem port on real files: a missing file reads undefined, writes are atomic by rename, a content addressed write that finds its file does nothing. */
 export function createNodeFilePortV1(){
  return Object.freeze({
   async read(path){try{return await readFile(path);}catch(error){if(error?.code==="ENOENT"||error?.code==="ENOTDIR")return undefined;throw error;}},
@@ -294,15 +160,25 @@ export function unfoundedWithheldOwnersV1(index,owners,separator=sep){
  return[...open.values()].map(([name])=>name);
 }
 
+/** 🧠️ The answers of the derived questions of one store root: the node store under `root` (unless `durable` is false) and the settler that keeps the graph of the answers in memory, so the readers and the builder of one load ask each question once. */
+export function createAnswersV1({root,fs=createNodeFilePortV1(),durable=true,workspaceRoot}){
+ if(durable&&workspaceRoot!==undefined){
+  const settler=sharedClosureSettlerV1({workspaceRoot,cacheRoot:dirname(root),blobs:createCasStoreV1()});
+  return Object.freeze({nodes:settler.store,settler});
+ }
+ const nodes=durable?createNodeStoreV1({root,fs:{read:path=>fs.read(path),write:(path,bytes)=>fs.write(path,bytes),mkdir:async()=>undefined,remove:path=>fs.remove(path),list:async directory=>(await fs.list(directory)).map(file=>({path:join(directory,file.name),mtimeMs:file.modifiedMs}))}}):undefined;
+ return Object.freeze({nodes,settler:createClosureSettlerV1({store:nodes})});
+}
+
 /**
  * 🛠️ Creates the generation store over `root`: readers never take a lease; a builder publishes the next immutable generation with one compare-and-swap of the pointer under an exclusive hold that covers one small read and one rename.
  * `holds(rows, signal)` answers whether every observation row still holds; `membership(previous, signal)` answers `{digest, frontier, changes}` against the previous frontier (`changes` is meaningful only with a previous frontier); `compute(spec, signal)` refreshes exactly the dirty owners.
  */
-export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,holds,derive,answers,resources,now=()=>Date.now(),sleep=defaultSleep,stamp=P.stampVerification}){
+export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,holds,doubt,derive,answers=createAnswersV1({root,fs}),resources,now=()=>Date.now(),sleep=defaultSleep,stamp=P.stampVerification}){
  if(typeof root!=="string"||!root||typeof holds!=="function"||!resources?.facts)throw fail("Generation store root, fact check and facts resource required");
- const memo=answers??createDurableAnswersV1({root,fs,lease,resource:resources.facts});
+ const{nodes,settler}=answers;
  const stats={holdCalls:0,rowsChecked:0,computed:0,published:0,casConflicts:0,merged:0,mergeConflicts:0,publishHeldMs:[],indexLoads:0,fragmentReads:0,indexViews:0};
- const at=(directory,digest,extension)=>join(root,directory,digest+extension),pointerPath=join(root,P.pointer),indexCache=new Map();
+ const at=(directory,digest,extension)=>join(root,directory,digest+extension),pointerPath=join(root,P.pointer),indexCache=createBoundedCacheV1({name:"generation:indexes",maxEntries:P.indexCacheEntries,maxBytes:P.indexCacheBytes,sizeOf:index=>index.stats?index.stats().bytes:index.rows.length*P.indexRowBytes,onEvict:(_key,index)=>index.drop?.()});
  const manifestPath=digest=>at(P.manifests,digest,".json"),fragmentPath=digest=>at(P.fragments,digest,".json.br"),indexPath=digest=>at(P.indexes,digest,".facts.br"),frontierPath=digest=>at(P.frontiers,digest,".json.br");
  const hold=async(rows,signal)=>{stats.holdCalls++;stats.rowsChecked+=rows.length;return holds(rows,signal);};
  const readPointer=async()=>{const bytes=await fs.read(pointerPath);return bytes?readGenerationPointerV1(bytes):undefined;};
@@ -331,14 +207,14 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const bytes=await fs.read(indexPath(digest));if(!bytes)return undefined;
   if(sha256(bytes)!==digest)throw fail("Fact index content differs from its name","GENERATION_CORRUPT");
   const index=unpackFactIndexV1(bytes,P.maximumIndexBytes);stats.indexLoads++;
-  indexCache.set(digest,index);while(indexCache.size>2)indexCache.delete(indexCache.keys().next().value);return index;
+  indexCache.set(digest,index);return index;
  }
  async function readIndexView(digest){
   const key="view:"+digest,cached=indexCache.get(key)??indexCache.get(digest);if(cached)return cached;
   const bytes=await fs.read(indexPath(digest));if(!bytes)return undefined;
   if(sha256(bytes)!==digest)throw fail("Fact index content differs from its name","GENERATION_CORRUPT");
-  const index=openPackedFactIndexV1(bytes,P.maximumIndexBytes);stats.indexViews++;
-  indexCache.set(key,index);while(indexCache.size>2)indexCache.delete(indexCache.keys().next().value);return index;
+  const index=openPackedFactIndexV1(bytes,P.maximumIndexBytes,"fact-index:"+digest.slice(0,12));stats.indexViews++;
+  indexCache.set(key,index);return index;
  }
  async function readFrontier(digest){
   if(digest===null)return undefined;const bytes=await fs.read(frontierPath(digest));if(!bytes)return undefined;
@@ -366,7 +242,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   * 🔍️ Verifies the facts of the selected owners (every owner without a selection) and maps the observed membership changes to their owners through the roots of the manifest.
   * `changes` undefined means the caller cannot diff membership: the plan is cold.
   */
- async function plan({current,identity,changes,only,skipEnvironment=false,signal,progress}){
+ async function plan({current,identity,changes,journalDirty,only,skipEnvironment=false,signal,progress}){
   const cold=reason=>({kind:"cold",reason,dirty:new Set(),added:[],removed:[],pending:[],envStale:true,checked:0});
   if(!current?.manifest)return cold(current?(current.missing?"manifest":"invalidated"):"empty");
   const manifest=current.manifest;
@@ -390,8 +266,11 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const[name,row]of owners)if((!only||only.has(name))&&!present.has(row.fragment+".json.br"))dirty.add(name);
   const unfounded=unfoundedWithheldOwnersV1(index,manifest.owners);for(const name of unfounded)dirty.add(name);
   const scope=only?new Set(skipEnvironment?only:[...only,P.envOwner]):undefined,selection=selectFactClassesV1(index,scope?scopeWithDerivedV1(index,scope):undefined);
-  const{stale}=await staleFactRowsV1(index,verifiableRowIdsV1(index,selection.ids),hold,{signal,progress});
-  const{direct,suspects:reached}=splitStaleConsumersV1(index,selection.classes,stale),suspects=scope?suspectsWithinV1(index,reached,scope):reached,settled=await settleSuspectsV1({index,suspects,derive,signal,progress,memo,hold}),changedHolders=holdersOfDerivedV1(index,settled.changed.keys());
+  const verifiable=verifiableRowIdsV1(index,selection.ids),candidates=doubt?await selectDoubtfulRowsV1(index,verifiable,doubt,{signal,progress,chunk:P.doubtChunkRows}):verifiable;
+  const{stale}=await staleFactRowsV1(index,candidates,hold,{signal,progress,...doubt?{budget:Infinity}:{}});
+  await doubt?.settled?.({rows:index.rows,ids:verifiable,stale});
+  const{direct,suspects:reached}=splitStaleConsumersV1(index,selection.classes,stale),suspects=scope?suspectsWithinV1(index,reached,scope):reached,settled=await settler.settle({pseudoRows:suspectRowsV1(index,suspects),derive,signal,progress,hold,...journalDirty?{dirty:journalDirty}:{}}),changedHolders=holdersOfDerivedV1(index,settled.changed.keys());
+  await settler.release?.();
   for(const name of direct){if(name===P.envOwner)envStale=true;else if(manifest.owners[name])dirty.add(name);}
   for(const holders of changedHolders.values())for(const name of holders)if(manifest.owners[name])dirty.add(name);
   for(const change of changes){
@@ -409,7 +288,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const name of removed)dirty.delete(name);
   const scoped=only?new Set([...[...dirty].filter(name=>only.has(name)),...unfounded]):dirty,clean=!scoped.size&&!added.length&&!removed.size&&!envStale;
   const staleKinds={};for(const id of stale){const kind=index.rows[id].kind;staleKinds[kind]=(staleKinds[kind]??0)+1;}
-  return{kind:clean?"clean":"delta",dirty:scoped,added,removed:[...removed],pending:[...pending].sort(compareCodePointsV1),envStale,checked:selection.ids.length,stale:stale.size,staleKinds,reasons,cutoff:{questions:suspects.size,held:settled.held.size,changed:settled.changed.size,failed:settled.failed,reused:settled.reused},refresh:settled.held};
+  return{kind:clean?"clean":"delta",dirty:scoped,added,removed:[...removed],pending:[...pending].sort(compareCodePointsV1),envStale,checked:selection.ids.length,stale:stale.size,doubtful:candidates.length,staleKinds,reasons,cutoff:{questions:suspects.size,held:settled.held.size,kept:settled.kept.size,changed:settled.changed.size,failed:settled.failed,reused:settled.reused},refresh:settled.held};
  }
 
  /** 🤝️ Swaps the pointer for the next generation only if it still names the generation the builder started from; the exclusive hold covers one small read and one rename and nothing else. */
@@ -424,11 +303,12 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** 🏗️ Builds and publishes the next generation from the newest one: the plan names the dirty owners, `compute` refreshes exactly those and unchanged fragments are carried over by digest. The verification view of the fact index (the rows the plan read stay materialized in it) is released before `compute` runs, so the inference never carries it; a later plan in this process opens it again. */
- async function build({identity,implementation,membership,compute,signal,progress,hint,only,observedAtMs=now(),coverage,claim}){
+ async function build({identity,implementation,membership,compute,prime,signal,progress,hint,only,observedAtMs=now(),coverage,claim}){
+  await prime?.(signal);
   const current=await read(signal),usable=current?.manifest&&current.manifest.identity===identity?current.manifest:undefined;
   const reuse=hint&&usable&&current.pointer.generation===hint.generation&&now()-hint.atMs<=P.hintMaximumAgeMilliseconds;
   const previous=usable&&!reuse?{manifest:usable,frontier:await readFrontier(usable.frontier)}:undefined,live=reuse?hint.live:await membership(previous?.frontier?previous:undefined,signal);
-  const found=reuse?hint.plan:await plan({current,identity,changes:previous?.frontier?live.changes:undefined,only,skipEnvironment:coverage!==undefined,signal,progress});
+  const found=reuse?hint.plan:await plan({current,identity,changes:previous?.frontier?live.changes:undefined,...previous?.frontier&&live.dirty?{journalDirty:live.dirty}:{},only,skipEnvironment:coverage!==undefined,signal,progress});
   if(found.kind==="clean"){
    if(usable.membership===live.digest&&!found.refresh?.size)return{current,built:false,published:false,plan:found,computed:0};
    return{...await refreshMetadata({current,live,signal,held:found.refresh}),built:false,plan:found,computed:0};
@@ -464,8 +344,11 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const name of names)if(!returned.has(name)&&!dropped.has(name)){delete owners[name];dropped.add(name);}
   for(const[name,row]of Object.entries(owners))if(row.tag&&result.replaceTags?.includes(row.tag)&&!returned.has(name)){delete owners[name];dropped.add(name);}
   for(const name of returned)dropped.delete(name);
+  const renamed=new Map();
+  for(const name of returned){const row=owners[name];if(row&&!row.tag&&row.kind==="project")renamed.set(row.root,name);}
+  for(const[name,row]of Object.entries(owners))if(!returned.has(name)&&!row.tag&&row.kind==="project"&&renamed.has(row.root)){delete owners[name];dropped.add(name);}
   for(const name of result.carried??[])if(owners[name]&&!returned.has(name))owners[name]={...owners[name],edgesEnv:envDigest};
-  for(const[name,row]of Object.entries(owners))if(row.edgesEnv!==envDigest)throw fail("Every owner needs edges of the published environment: "+name,"GENERATION_INCOMPLETE");
+  for(const[name,row]of Object.entries(owners))if(row.edgesEnv!==envDigest)throw fail("Every owner needs edges of the published environment: "+name+" ("+JSON.stringify({kind:row.kind,tag:row.tag??null,edges:String(row.edgesEnv??"none").slice(0,12),environment:String(envDigest).slice(0,12),root:row.root,dirty:names.includes(name),returned:returned.has(name),dropped:dropped.has(name),carried:(result.carried??[]).includes(name),sameRootReturned:[...returned].filter(other=>owners[other]?.root===row.root)})+")","GENERATION_INCOMPLETE");
   upserts.set(P.envOwner,result.env.rows??[]);
   for(const[name,rows]of derivedUpsertsV1(result.derived??[],found.refresh))upserts.set(name,rows);
   let index=cold?createFactIndexV1(upserts):patchFactIndexV1(await readIndex(usable.factIndex),{drop:[...dropped],upserts,append});
@@ -483,6 +366,8 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   if(!done&&!cold){index=undefined;const merged=await mergeIntoHeadV1({read,readIndex,writeManifest,publish,patch:patchFactIndexV1,pack:value=>packFactIndexV1(value,P.maximumIndexBytes),keep:bytes=>keep(P.indexes,bytes,".facts.br"),key:rowKeyV1,stats},{base:current,mine:next,patch:{drop:[...dropped],upserts,append},verified,signal});if(merged.outcome){outcome=merged.outcome;done=merged;}}
   if(!done)return{current:await read(signal),built:true,published:false,plan:found,computed:result.owners.length};
   indexCache.set(done.kept.digest,done.index);
+  await settler.markIndexed({held:found.refresh,dropped:(result.derived??[]).map(fact=>derivedOwnerNameV1(fact.row))}).catch(()=>undefined);
+  await doubt?.published?.({rows:done.index.rows,observedAt:observedAtMs}).catch(()=>false);
   if(await(claim?claim.alone({signal}).catch(()=>false):true))await retire({signal}).catch(error=>{if(signal?.aborted)throw error;});
   return{current:{pointer:outcome.pointer,manifest:done.next},built:true,published:true,plan:found,computed:result.owners.length,carried:result.carried?.length??0,...(done.theirs?{merged:done.theirs.length}:{}),index:{rows:done.index.rows.length,owners:done.index.owners.filter(name=>!isDerivedOwnerV1(name)).length,expandedBytes:done.packed.expandedBytes,packedBytes:done.kept.bytes}};
  }
@@ -494,13 +379,13 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   if(held?.size){const old=await readIndex(manifest.factIndex);if(old){patched=patchFactIndexV1(old,{upserts:derivedUpsertsV1([],held)});factIndex=(await keep(P.indexes,packFactIndexV1(patched,P.maximumIndexBytes).bytes,".facts.br")).digest;}}
   const next={...manifest,generation:manifest.generation+1,parent:current.pointer.manifest,membership:live?live.digest:manifest.membership,frontier:frontier?frontier.digest:manifest.frontier,factIndex,built:{kind:"refresh",base:manifest.generation,dirty:[]}};
   const digest=await writeManifest(next);
-  try{const outcome=await publish({manifestDigest:digest,expectedGeneration:current.pointer.generation,verified:current.pointer.verified,signal});if(outcome.published){if(patched)indexCache.set(factIndex,patched);return{current:{pointer:outcome.pointer,manifest:next},published:true};}}
+  try{const outcome=await publish({manifestDigest:digest,expectedGeneration:current.pointer.generation,verified:current.pointer.verified,signal});if(outcome.published){if(patched){indexCache.set(factIndex,patched);await settler.markIndexed({held}).catch(()=>undefined);}return{current:{pointer:outcome.pointer,manifest:next},published:true};}}
   catch(error){if(signal?.aborted)throw error;}
   return{current:await read(signal)??current,published:false};
  }
 
  /** 🔁️ Brings the caller to a generation that holds. `current` serves the newest generation of this identity without verification or waiting; `fresh` verifies (only the closure `only` when given), serves a verified generation without any lease and builds otherwise, inside `builder` (which hands the build its slice claim; see `./🔐️custody`) or the builder lease, where a holder that finds the work done by a peer returns that generation untouched and a build whose swap a peer won merges onto the peer's generation (see `./🔀️merge`). */
- async function refresh({identity,implementation,policy="fresh",only,membership,compute,signal,progress,builder,requestedAt}){
+ async function refresh({identity,implementation,policy="fresh",only,membership,compute,prime,signal,progress,builder,requestedAt}){
   if(!P.policies.includes(policy))throw fail("Closed graph policy required");
   const started=now(),first=await read(signal),usable=first?.manifest&&first.manifest.identity===identity;
   if(policy==="current"&&usable)return{current:first,served:"current",built:false,published:false,computed:0};
@@ -512,7 +397,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   }
   if(usable){
    const previous={manifest:first.manifest,frontier:await readFrontier(first.manifest.frontier)},live=await membership(previous.frontier?previous:undefined,signal);
-   const verdict=await plan({current:first,identity,changes:previous.frontier?live.changes:undefined,only:scope,skipEnvironment:coverage!==undefined,signal,progress});
+   const verdict=await plan({current:first,identity,changes:previous.frontier?live.changes:undefined,...previous.frontier&&live.dirty?{journalDirty:live.dirty}:{},only:scope,skipEnvironment:coverage!==undefined,signal,progress});
    if(verdict.kind==="clean"){
     if(!scope&&live.digest!==first.manifest.membership||verdict.refresh?.size){const refreshed=await refreshMetadata({current:first,live:!scope&&live.digest!==first.manifest.membership?live:undefined,signal,held:verdict.refresh});return{...refreshed,served:"verified",built:false,computed:0,plan:verdict};}
     return{current:first,served:"verified",built:false,published:false,computed:0,plan:verdict};
@@ -520,7 +405,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    if(verdict.kind==="delta")pending={structural:verdict.envStale||verdict.added.length>0||verdict.removed.length>0,generation:first.pointer.generation,dirty:[...verdict.dirty].sort(compareCodePointsV1),roots:Object.fromEntries([...verdict.dirty].filter(name=>first.manifest.owners[name]).map(name=>[name,first.manifest.owners[name].root]))};
    if(verdict.kind==="delta"&&previous.frontier)hint={generation:first.pointer.generation,plan:verdict,live,atMs:now()};
   }
-  const body=claim=>build({identity,implementation,membership,compute,signal,progress,hint,only:scope,observedAtMs:started,coverage,claim});
+  const body=claim=>build({identity,implementation,membership,compute,prime,signal,progress,hint,only:scope,observedAtMs:started,coverage,claim});
   for(let attempt=0;attempt<8;attempt++){
    const result=await(builder?builder(body,pending):lease?lease.exclusive(resources.builder,body,{signal}):body());
    if(result.published||!result.built)return{...result,served:"built"};
@@ -629,7 +514,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const row of kept){live.add(row.digest);indexes.add(row.manifest.factIndex);fragments.add(row.manifest.global);if(row.manifest.frontier)frontiers.add(row.manifest.frontier);for(const owner of Object.values(row.manifest.owners))fragments.add(owner.fragment);}
   const cutoff=now()-P.graceMilliseconds;
   const sweep=async(directory,keep,extension)=>{for(const file of await fs.list(join(root,directory))){aborted(signal);if(file.name.endsWith(extension)&&!keep.has(file.name.slice(0,64))&&file.modifiedMs<cutoff)await fs.remove(join(root,directory,file.name));}};
-  await sweep(P.manifests,live,".json");await sweep(P.fragments,fragments,".json.br");await sweep(P.indexes,indexes,"");await sweep(P.frontiers,frontiers,".json.br");for(const file of await fs.list(join(root,DURABLE_ANSWERS_V1.directory))){aborted(signal);if(file.modifiedMs<now()-DURABLE_ANSWERS_V1.retainMilliseconds)await fs.remove(join(root,DURABLE_ANSWERS_V1.directory,file.name));}
+  await sweep(P.manifests,live,".json");await sweep(P.fragments,fragments,".json.br");await sweep(P.indexes,indexes,"");await sweep(P.frontiers,frontiers,".json.br");await nodes?.prune({now:now()});
  }
 
  /** ♻️ Marks the newest generation invalid without deleting anything; the next fresh reader builds. */

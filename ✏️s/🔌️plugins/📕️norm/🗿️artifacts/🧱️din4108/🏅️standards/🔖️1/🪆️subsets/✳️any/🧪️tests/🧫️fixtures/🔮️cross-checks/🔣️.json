@@ -1,0 +1,717 @@
+{
+  "oracle": "scipy brentq, IAPWS-IF97 region 4 + R14-08, ISO 13788 curves, exact Fractions (ISO 6946 6.7.2), ISO 13788 condensation-plane iteration; masses over 90 d = 7776000 s",
+  "toleranceRelative": 1e-09,
+  "uValues": [
+    {
+      "id": "fixture:etics-wall",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "layers": [
+        {
+          "thicknessM": 0.015,
+          "lambda": 0.7,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.24,
+          "lambda": 0.81,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.14,
+          "lambda": 0.035,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.008,
+          "lambda": 0.7,
+          "segments": []
+        }
+      ],
+      "rUpper": 4.49915343915344,
+      "rLower": 4.49915343915344,
+      "rTotal": 4.49915343915344,
+      "u": 0.22226403556224567,
+      "fixtureRTotal": 4.49915343915344,
+      "fixtureAgrees": true,
+      "ratioUpperLower": 1.0,
+      "combinedMethodApplicable": true
+    },
+    {
+      "id": "fixture:roof-upward-heat-flow",
+      "rSi": 0.1,
+      "rSe": 0.04,
+      "layers": [
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.2,
+          "lambda": 0.035,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.16,
+          "lambda": 2.1,
+          "segments": []
+        }
+      ],
+      "rUpper": 5.980476190476191,
+      "rLower": 5.980476190476191,
+      "rTotal": 5.980476190476191,
+      "u": 0.16721076518831116,
+      "fixtureRTotal": 5.98047619047619,
+      "fixtureAgrees": true,
+      "ratioUpperLower": 1.0,
+      "combinedMethodApplicable": true
+    },
+    {
+      "id": "fixture:floor-on-ground",
+      "rSi": 0.17,
+      "rSe": 0.0,
+      "layers": [
+        {
+          "thicknessM": 0.05,
+          "lambda": 1.4,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.1,
+          "lambda": 0.035,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.2,
+          "lambda": 2.1,
+          "segments": []
+        }
+      ],
+      "rUpper": 3.158095238095238,
+      "rLower": 3.158095238095238,
+      "rTotal": 3.158095238095238,
+      "u": 0.3166465621230398,
+      "fixtureRTotal": 3.158095238095238,
+      "fixtureAgrees": true,
+      "ratioUpperLower": 1.0,
+      "combinedMethodApplicable": true
+    },
+    {
+      "id": "fixture:timber-studs-in-insulation",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "layers": [
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.16,
+          "lambda": 0.0,
+          "segments": [
+            {
+              "fraction": 0.88,
+              "lambda": 0.035
+            },
+            {
+              "fraction": 0.12,
+              "lambda": 0.13
+            }
+          ]
+        },
+        {
+          "thicknessM": 0.02,
+          "lambda": 0.13,
+          "segments": []
+        }
+      ],
+      "rUpper": 3.956761728134879,
+      "rLower": 3.8221220159151192,
+      "rTotal": 3.889441872024999,
+      "u": 0.25710629774224136,
+      "fixtureRTotal": 3.889441872024999,
+      "fixtureAgrees": true,
+      "ratioUpperLower": 1.0352264296270832,
+      "combinedMethodApplicable": true
+    },
+    {
+      "id": "two-inhomogeneous-layers-different-fractions",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "layers": [
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "mu": 1.0,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.04,
+          "lambda": 0.0,
+          "mu": 1.0,
+          "segments": [
+            {
+              "fraction": 0.88,
+              "lambda": 0.035
+            },
+            {
+              "fraction": 0.12,
+              "lambda": 0.13
+            }
+          ]
+        },
+        {
+          "thicknessM": 0.06,
+          "lambda": 0.0,
+          "mu": 1.0,
+          "segments": [
+            {
+              "fraction": 0.92,
+              "lambda": 0.035
+            },
+            {
+              "fraction": 0.08,
+              "lambda": 0.13
+            }
+          ]
+        },
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "mu": 1.0,
+          "segments": []
+        }
+      ],
+      "rUpper": 2.8259855684105677,
+      "rLower": 2.5405196697425936,
+      "rTotal": 2.6832526190765806,
+      "u": 0.3726820176715757,
+      "ratioUpperLower": 1.112365159800907,
+      "combinedMethodApplicable": true
+    },
+    {
+      "id": "rafter-roof-single-inhomogeneous-layer",
+      "rSi": 0.1,
+      "rSe": 0.04,
+      "layers": [
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "mu": 1.0,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.18,
+          "lambda": 0.0,
+          "mu": 1.0,
+          "segments": [
+            {
+              "fraction": 0.85,
+              "lambda": 0.035
+            },
+            {
+              "fraction": 0.15,
+              "lambda": 0.13
+            }
+          ]
+        },
+        {
+          "thicknessM": 0.024,
+          "lambda": 0.13,
+          "mu": 1.0,
+          "segments": []
+        }
+      ],
+      "rUpper": 4.178495562340115,
+      "rLower": 4.029437719640765,
+      "rTotal": 4.10396664099044,
+      "u": 0.24366669797263818,
+      "ratioUpperLower": 1.0369922190316514,
+      "combinedMethodApplicable": true
+    },
+    {
+      "id": "upper-lower-ratio-above-1-5",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "layers": [
+        {
+          "thicknessM": 0.2,
+          "lambda": 0.0,
+          "mu": 1.0,
+          "segments": [
+            {
+              "fraction": 0.9,
+              "lambda": 0.04
+            },
+            {
+              "fraction": 0.1,
+              "lambda": 2.0
+            }
+          ]
+        },
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "mu": 1.0,
+          "segments": []
+        }
+      ],
+      "rUpper": 2.062222222222222,
+      "rLower": 1.067457627118644,
+      "rTotal": 1.5648399246704332,
+      "u": 0.6390430000120347,
+      "ratioUpperLower": 1.9319007797889984,
+      "combinedMethodApplicable": false
+    },
+    {
+      "id": "mortar-joints-brick-wall",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "layers": [
+        {
+          "thicknessM": 0.365,
+          "lambda": 0.0,
+          "mu": 1.0,
+          "segments": [
+            {
+              "fraction": 0.92,
+              "lambda": 0.12
+            },
+            {
+              "fraction": 0.08,
+              "lambda": 0.9
+            }
+          ]
+        },
+        {
+          "thicknessM": 0.015,
+          "lambda": 0.7,
+          "mu": 1.0,
+          "segments": []
+        }
+      ],
+      "rUpper": 2.389121186434335,
+      "rLower": 2.1925250626566415,
+      "rTotal": 2.290823124545488,
+      "u": 0.43652431708292866,
+      "ratioUpperLower": 1.0896665343197864,
+      "combinedMethodApplicable": true
+    }
+  ],
+  "fRsi": [
+    {
+      "id": "etics-wall",
+      "rLayers": 4.329153439153439,
+      "rSi": 0.25,
+      "rSe": 0.04,
+      "tIntC": 20.0,
+      "tExtC": -5.0,
+      "fRsi": 0.9458775285789558,
+      "thetaSiC": 18.646938214473895,
+      "limit": 0.7,
+      "passes": true
+    },
+    {
+      "id": "bare-concrete-lintel",
+      "rLayers": 0.09523809523809523,
+      "rSi": 0.25,
+      "rSe": 0.04,
+      "tIntC": 20.0,
+      "tExtC": -5.0,
+      "fRsi": 0.3510506798516687,
+      "thetaSiC": 3.7762669962917172,
+      "limit": 0.7,
+      "passes": false
+    },
+    {
+      "id": "thin-frame",
+      "rLayers": 0.4615384615384615,
+      "rSi": 0.25,
+      "rSe": 0.04,
+      "tIntC": 20.0,
+      "tExtC": -5.0,
+      "fRsi": 0.6673490276356192,
+      "thetaSiC": 11.68372569089048,
+      "limit": 0.7,
+      "passes": false
+    },
+    {
+      "id": "roof",
+      "rLayers": 4.621428571428571,
+      "rSi": 0.25,
+      "rSe": 0.04,
+      "tIntC": 20.0,
+      "tExtC": -5.0,
+      "fRsi": 0.9490983129726586,
+      "thetaSiC": 18.727457824316463,
+      "limit": 0.7,
+      "passes": true
+    },
+    {
+      "id": "marginal-wall",
+      "rLayers": 0.4833333333333333,
+      "rSi": 0.25,
+      "rSe": 0.04,
+      "tIntC": 20.0,
+      "tExtC": -5.0,
+      "fRsi": 0.6767241379310345,
+      "thetaSiC": 11.918103448275861,
+      "limit": 0.7,
+      "passes": false
+    }
+  ],
+  "fRsiCritical": {
+    "thetaSiMinC": 12.624608302600715,
+    "fRsiMinAtMinus5": 0.7049843321040286,
+    "thetaSiMinIapwsC": 12.628200471747554
+  },
+  "glaser": [
+    {
+      "id": "etics-no-condensation",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "winter": {
+        "tIntC": 20.0,
+        "rhInt": 0.5,
+        "tExtC": -5.0,
+        "rhExt": 0.8,
+        "hours": 2160
+      },
+      "summer": {
+        "tIntC": 12.0,
+        "rhInt": 0.7,
+        "tExtC": 12.0,
+        "rhExt": 0.7,
+        "hours": 2160
+      },
+      "layers": [
+        {
+          "thicknessM": 0.015,
+          "lambda": 0.7,
+          "mu": 10,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.24,
+          "lambda": 0.81,
+          "mu": 10,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.14,
+          "lambda": 0.035,
+          "mu": 40,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.008,
+          "lambda": 0.7,
+          "mu": 20,
+          "segments": []
+        }
+      ],
+      "reference": {
+        "planes": [],
+        "condensedKgM2": 0.0,
+        "evaporatedKgM2": 0.0,
+        "dries": true
+      },
+      "referenceIapws": {
+        "planes": [],
+        "condensedKgM2": 0.0,
+        "evaporatedKgM2": 0.0,
+        "dries": true
+      }
+    },
+    {
+      "id": "vapour-tight-outside",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "winter": {
+        "tIntC": 20.0,
+        "rhInt": 0.5,
+        "tExtC": -5.0,
+        "rhExt": 0.8,
+        "hours": 2160
+      },
+      "summer": {
+        "tIntC": 12.0,
+        "rhInt": 0.7,
+        "tExtC": 12.0,
+        "rhExt": 0.7,
+        "hours": 2160
+      },
+      "layers": [
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "mu": 1,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.2,
+          "lambda": 0.035,
+          "mu": 1.3,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.02,
+          "lambda": 0.13,
+          "mu": 1000,
+          "segments": []
+        }
+      ],
+      "reference": {
+        "planes": [
+          2
+        ],
+        "condensedKgM2": 4.209730595589127,
+        "evaporatedKgM2": 2.4328015989937892,
+        "dries": false
+      },
+      "referenceIapws": {
+        "planes": [
+          2
+        ],
+        "condensedKgM2": 4.212941993085788,
+        "evaporatedKgM2": 2.434562861453463,
+        "dries": false
+      }
+    },
+    {
+      "id": "interior-insulated-brick",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "winter": {
+        "tIntC": 20.0,
+        "rhInt": 0.5,
+        "tExtC": -5.0,
+        "rhExt": 0.8,
+        "hours": 2160
+      },
+      "summer": {
+        "tIntC": 12.0,
+        "rhInt": 0.7,
+        "tExtC": 12.0,
+        "rhExt": 0.7,
+        "hours": 2160
+      },
+      "layers": [
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "mu": 8,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.06,
+          "lambda": 0.035,
+          "mu": 1.3,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.365,
+          "lambda": 0.8,
+          "mu": 10,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.02,
+          "lambda": 0.87,
+          "mu": 15,
+          "segments": []
+        }
+      ],
+      "reference": {
+        "planes": [
+          2
+        ],
+        "condensedKgM2": 4.605677102953988,
+        "evaporatedKgM2": 3.839887285523021,
+        "dries": false
+      },
+      "referenceIapws": {
+        "planes": [
+          2
+        ],
+        "condensedKgM2": 4.60926733302834,
+        "evaporatedKgM2": 3.842667228337991,
+        "dries": false
+      }
+    },
+    {
+      "id": "flat-roof-vapour-barrier-inside",
+      "rSi": 0.1,
+      "rSe": 0.04,
+      "winter": {
+        "tIntC": 20.0,
+        "rhInt": 0.5,
+        "tExtC": -5.0,
+        "rhExt": 0.8,
+        "hours": 2160
+      },
+      "summer": {
+        "tIntC": 12.0,
+        "rhInt": 0.7,
+        "tExtC": 12.0,
+        "rhExt": 0.7,
+        "hours": 2160
+      },
+      "layers": [
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "mu": 8,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.0002,
+          "lambda": 0.5,
+          "mu": 50000,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.22,
+          "lambda": 0.035,
+          "mu": 1.3,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.004,
+          "lambda": 0.17,
+          "mu": 10000,
+          "segments": []
+        }
+      ],
+      "reference": {
+        "planes": [
+          3
+        ],
+        "condensedKgM2": 0.1101774607943987,
+        "evaporatedKgM2": 0.07932269454543711,
+        "dries": false
+      },
+      "referenceIapws": {
+        "planes": [
+          3
+        ],
+        "condensedKgM2": 0.11025832990384517,
+        "evaporatedKgM2": 0.07938012137554147,
+        "dries": false
+      }
+    },
+    {
+      "id": "timber-wall-osb-outside",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "winter": {
+        "tIntC": 20.0,
+        "rhInt": 0.5,
+        "tExtC": -5.0,
+        "rhExt": 0.8,
+        "hours": 2160
+      },
+      "summer": {
+        "tIntC": 12.0,
+        "rhInt": 0.7,
+        "tExtC": 12.0,
+        "rhExt": 0.7,
+        "hours": 2160
+      },
+      "layers": [
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "mu": 8,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.16,
+          "lambda": 0.04,
+          "mu": 1.2,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.015,
+          "lambda": 0.13,
+          "mu": 50,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.06,
+          "lambda": 0.04,
+          "mu": 1.2,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.01,
+          "lambda": 0.7,
+          "mu": 25,
+          "segments": []
+        }
+      ],
+      "reference": {
+        "planes": [
+          2,
+          4
+        ],
+        "condensedKgM2": 1.8811600677774165,
+        "evaporatedKgM2": 4.8559288213621965,
+        "dries": true
+      },
+      "referenceIapws": {
+        "planes": [
+          2,
+          4
+        ],
+        "condensedKgM2": 1.8827586907167757,
+        "evaporatedKgM2": 4.859444342374452,
+        "dries": true
+      }
+    }
+  ],
+  "saturation": [
+    {
+      "tC": -10,
+      "iapws": 259.8738107980631,
+      "iso13788": 259.3332489148579
+    },
+    {
+      "tC": -5,
+      "iapws": 401.741022116384,
+      "iso13788": 401.1809813516554
+    },
+    {
+      "tC": 0,
+      "iapws": 611.212677444345,
+      "iso13788": 610.5
+    },
+    {
+      "tC": 5,
+      "iapws": 872.5748611295189,
+      "iso13788": 871.8645252404153
+    },
+    {
+      "tC": 12,
+      "iapws": 1402.8223728154271,
+      "iso13788": 1401.8075136709174
+    },
+    {
+      "tC": 20,
+      "iapws": 2339.214766776897,
+      "iso13788": 2336.951143802342
+    },
+    {
+      "tC": 25,
+      "iapws": 3169.74685495237,
+      "iso13788": 3165.9200740618753
+    },
+    {
+      "tC": 30,
+      "iapws": 4246.688340548065,
+      "iso13788": 4240.505085387517
+    }
+  ]
+}

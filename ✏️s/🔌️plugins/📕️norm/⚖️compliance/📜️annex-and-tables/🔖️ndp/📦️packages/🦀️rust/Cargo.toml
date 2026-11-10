@@ -11,6 +11,7 @@ role = "library"
 
 [dependencies]
 semio-s-plugin-norm-ndp-model = { path = "../../🧱️model/📦️packages/🦀️rust" }
+semio-s-plugin-norm-ndp-din4108 = { path = "../../🗃️table/din4108/📦️packages/🦀️rust" }
 semio-s-plugin-norm-ndp-en1990 = { path = "../../🗃️table/en1990/📦️packages/🦀️rust" }
 semio-s-plugin-norm-ndp-en1991 = { path = "../../🗃️table/en1991/📦️packages/🦀️rust" }
 semio-s-plugin-norm-ndp-en1992 = { path = "../../🗃️table/en1992/📦️packages/🦀️rust" }

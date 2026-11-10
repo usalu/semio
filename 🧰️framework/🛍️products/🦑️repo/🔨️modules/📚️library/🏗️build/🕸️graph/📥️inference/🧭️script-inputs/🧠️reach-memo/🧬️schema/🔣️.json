@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:reach-memo:v1",
+  "title": "Reach sets / Erreichbarkeitsmengen",
+  "description": "EN: The reach set of a module (the numbers of the modules reachable from it) is a dense bitset of 32 bit words over the module numbers, one buffer shared by every module of a strongly connected component and by every component whose set is equal (hash-consing); the union of the sets of the targets is a word-wise OR, so the sets of a graph of 22 thousand modules stay under 3 KB each and a few tens of MB together. The byte bound is a guard that fails loudly, never an eviction: nothing is ever rebuilt because of a budget. DE: Die Erreichbarkeitsmenge eines Moduls (die Nummern der von ihm erreichbaren Module) ist ein dichtes Bitset aus 32-Bit-Wörtern über die Modulnummern, ein Puffer für alle Module einer starken Zusammenhangskomponente und für alle Komponenten mit gleicher Menge (Hash-Consing); die Vereinigung der Mengen der Ziele ist ein wortweises ODER, sodass die Mengen eines Graphen aus 22 Tausend Modulen je unter 3 KB und zusammen wenige zehn MB bleiben. Die Bytegrenze ist eine Wache, die laut scheitert, nie eine Verdrängung: wegen eines Budgets wird nie etwas neu gebildet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "guardBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "guardBytes": {
+      "type": "integer",
+      "minimum": 1048576,
+      "description": "EN: The most bytes of distinct reach sets one script input cache holds; over it the walk fails with BUILD_REACH_SETS_GUARD. DE: Die meisten Bytes verschiedener Erreichbarkeitsmengen, die ein Skripteingabe-Cache hält; darüber scheitert der Lauf mit BUILD_REACH_SETS_GUARD."
+    }
+  }
+}

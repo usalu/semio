@@ -449,8 +449,14 @@ fn check_part_number(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     }
 }
 
+/// 🧮️ Sandbox ceilings of the part-number script runtime: steps, recursion depth and wall-clock milliseconds.
+pub const SCRIPT_CEILINGS: (f64, f64, f64) = (1_000_000.0, 1_000.0, 10_000.0);
+
 fn check_script_limits(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     let limits = doc.script_limits;
+    let (steps_max, recursion_max, timeout_max) = SCRIPT_CEILINGS;
+    let load = (f64::from(limits.max_steps) / steps_max).max(f64::from(limits.max_recursion) / recursion_max).max(limits.timeout_ms as f64 / timeout_max);
+    let positive = limits.max_steps > 0 && limits.max_recursion > 0 && limits.timeout_ms > 0;
     report.push(assess(
         "iso16757.5.8.scriptLimits.capacity",
         "5",
@@ -458,12 +464,12 @@ fn check_script_limits(doc: &Iso16757Snapshot, report: &mut CheckReport) {
         subject("scriptLimits", "scriptLimits.maxSteps", "Script limits", "Skriptgrenzen"),
         copy("Script execution capacity", "Skriptausführungskapazität"),
         copy(
-            format!("scriptLimits capacity steps={} recursion={} timeoutMs={}.", limits.max_steps, limits.max_recursion, limits.timeout_ms),
-            format!("scriptLimits Kapazität steps={} recursion={} timeoutMs={}.", limits.max_steps, limits.max_recursion, limits.timeout_ms),
+            format!("scriptLimits steps={} recursion={} timeoutMs={} use {:.2} % of the largest sandbox ceiling (1e6 steps, 1000 levels, 10 s); all must be positive.", limits.max_steps, limits.max_recursion, limits.timeout_ms, load * 100.0),
+            format!("scriptLimits steps={} recursion={} timeoutMs={} nutzen {:.2} % der größten Sandbox-Obergrenze (1e6 Schritte, 1000 Ebenen, 10 s); alle müssen positiv sein.", limits.max_steps, limits.max_recursion, limits.timeout_ms, load * 100.0),
         ),
-        CheckStatus::Pass,
-        q_dim(f64::from(limits.max_steps)),
-        q_dim(f64::from(limits.max_recursion).max(1.0) + limits.timeout_ms as f64 / 1000.0),
+        if positive && load <= 1.0 { CheckStatus::Pass } else { CheckStatus::Fail },
+        q_dim(load),
+        q_dim(1.0),
         Vec::new(),
     ));
     report.push(assess(

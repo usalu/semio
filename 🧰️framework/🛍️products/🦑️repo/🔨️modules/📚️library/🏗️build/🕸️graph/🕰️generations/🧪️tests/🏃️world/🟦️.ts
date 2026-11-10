@@ -44,6 +44,12 @@ async function readOwners(dir:string):Promise<{owners:Owner[];rows:GenerationRow
   rows.push({kind:"field",path:file,fact:{name:json.name,package:json.package??null}});
   owners.push({name:json.name,root:dirname(file),config:file,...(json.package?{package:json.package}:{}),...(json.broken?{broken:true}:{}),uses:json.uses??[]});
  }
+ const projectRoots=new Set(files.filter(file=>basename(file)==="project.json").map(file=>dirname(file)));
+ for(const file of files.filter(file=>basename(file)==="Cargo.toml"&&!projectRoots.has(dirname(file)))){
+  const text=await readFile(join(dir,file),"utf8"),match=/^name = "(.*)"$/mu.exec(text);if(!match)continue;
+  rows.push({kind:"file",path:file,fact:{sha256:sha(Buffer.from(text)),size:Buffer.byteLength(text)}});
+  owners.push({name:match[1]!,root:dirname(file),config:file,uses:[]});
+ }
  return{owners:owners.sort((a,b)=>a.name<b.name?-1:1),rows};
 }
 
@@ -223,7 +229,7 @@ export function createMockHost(dir:string,options:{signal?:AbortSignal;language?
    events.push("builder:wait");const previous=custody.tail;let release!:()=>void;custody.tail=new Promise<void>(resolve=>{release=resolve;});await previous;events.push("builder:held");
    try{await options.gate?.();return await body({root:join(dir,".gen")},{published});}finally{events.push("builder:released");release();}
   },
-  storeOptions:(store:{root:string})=>({root:store.root,lease,holds,resources:{facts:"repository-graph-facts:mock"},...(options.stamp===undefined?{}:{stamp:options.stamp})}),
+  storeOptions:(store:{root:string})=>({root:store.root,lease,holds,durableAnswers:false,resources:{facts:"repository-graph-facts:mock"},...(options.stamp===undefined?{}:{stamp:options.stamp})}),
   membership,discoverPart:discover,
   ...(options.prefetch?{async prefetch(request:{generation:number;dirty:readonly string[];roots:Readonly<Record<string,string>>;implementation:string}){events.push("prefetch");await options.prefetch!(request);}}:{}),
   async expand(projects:Record<string,unknown>){expanded.push(Object.keys(projects).sort());return projects;},

@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "scenarios": [
+    {
+      "id": "task state",
+      "files": {
+        "a/📋️project.json": "{\"name\": \"a\", \"namedInputs\": {\"default\": [\"src/**/*.ts\"]}, \"targets\": {\"build\": {\"command\": \"tsc\", \"inputs\": [\"default\"]}, \"test\": {\"command\": \"t\", \"inputs\": [\"default\"]}}}",
+        "a/src/x.ts": "x",
+        "b/📋️project.json": "{\"name\": \"b\", \"targets\": {\"build\": {\"command\": \"cargo build\", \"inputs\": [\"{projectRoot}/src/**/*.rs\"]}}}",
+        "b/src/lib.rs": "fn a(){}",
+        "c/📋️project.json": "{\"name\": \"c\", \"targets\": {\"build\": {\"command\": \"c\", \"inputs\": [\"{projectRoot}/data/*.txt\"]}}}",
+        "c/data/one.txt": "1"
+      },
+      "projects": {
+        "a": {
+          "manifests": [
+            "a/📋️project.json"
+          ]
+        },
+        "b": {
+          "manifests": [
+            "b/📋️project.json"
+          ]
+        },
+        "c": {
+          "manifests": [
+            "c/📋️project.json"
+          ]
+        }
+      },
+      "declarations": {
+        "a:build": "{\"executor\": \"repo:script\", \"command\": \"tsc\"}",
+        "a:test": "{\"executor\": \"repo:script\", \"command\": \"t\"}",
+        "b:build": "{\"executor\": \"repo:script\", \"command\": \"cargo build\"}",
+        "c:build": "{\"executor\": \"repo:script\", \"command\": \"c\"}"
+      },
+      "order": [
+        "b:build",
+        "a:build",
+        "a:test",
+        "c:build"
+      ],
+      "tasks": {
+        "b:build": {
+          "root": "b",
+          "target": "build",
+          "dependsOn": [],
+          "cacheable": true
+        },
+        "a:build": {
+          "root": "a",
+          "target": "build",
+          "dependsOn": [
+            "b:build"
+          ],
+          "cacheable": true
+        },
+        "a:test": {
+          "root": "a",
+          "target": "test",
+          "dependsOn": [
+            "a:build"
+          ],
+          "cacheable": true
+        },
+        "c:build": {
+          "root": "c",
+          "target": "build",
+          "dependsOn": [],
+          "cacheable": false
+        }
+      },
+      "run": [
+        "b:build",
+        "a:build",
+        "a:test",
+        "c:build"
+      ],
+      "steps": [
+        {
+          "name": "nothing changed: everything cacheable is up to date",
+          "edit": {},
+          "run": []
+        },
+        {
+          "name": "a source of a changes a:build and the task above it",
+          "edit": {
+            "a/src/x.ts": "y"
+          },
+          "run": [
+            "a:build"
+          ]
+        },
+        {
+          "name": "a:test ran after a:build only",
+          "edit": {},
+          "run": [
+            "a:test"
+          ]
+        },
+        {
+          "name": "a dependency source changes every task above it",
+          "edit": {
+            "b/src/lib.rs": "fn b(){}"
+          },
+          "run": [
+            "b:build"
+          ]
+        },
+        {
+          "name": "an unrelated file changes nothing",
+          "edit": {
+            "a/README.md": "doc"
+          },
+          "run": []
+        },
+        {
+          "name": "a new input file of c",
+          "edit": {
+            "c/data/two.txt": "2"
+          },
+          "run": [
+            "c:build"
+          ]
+        }
+      ]
+    }
+  ]
+}

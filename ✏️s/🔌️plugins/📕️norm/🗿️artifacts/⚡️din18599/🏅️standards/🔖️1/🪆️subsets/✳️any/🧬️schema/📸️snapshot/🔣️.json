@@ -854,6 +854,38 @@
             "precision": 1,
             "step": 0.5
           }
+        },
+        "thermalMassClass": {
+          "$ref": "#/$defs/ThermalMassClass",
+          "default": "Medium",
+          "x-semio-ui": {
+            "label": {
+              "en": "Thermal mass class",
+              "de": "Wärmespeicherklasse"
+            },
+            "description": {
+              "en": "Effective heat storage capacity class of DIN V 18599-2; custom uses the explicit value below.",
+              "de": "Klasse der wirksamen Wärmespeicherfähigkeit nach DIN V 18599-2; benutzerdefiniert verwendet den expliziten Wert darunter."
+            }
+          }
+        },
+        "cWirkWhM2k": {
+          "type": "number",
+          "default": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Explicit effective heat capacity C_wirk",
+              "de": "Expliziter Wert wirksame Wärmespeicherfähigkeit C_wirk"
+            },
+            "description": {
+              "en": "Used only for the custom thermal mass class.",
+              "de": "Wird nur für die benutzerdefinierte Wärmespeicherklasse verwendet."
+            },
+            "widget": "stepper",
+            "unit": "Wh/(m²·K)",
+            "precision": 0,
+            "step": 5
+          }
         }
       },
       "x-semio-formats": [
@@ -1195,6 +1227,36 @@
         "🔗️graphql",
         "🛰️protobuf"
       ]
+    },
+    "ThermalMassClass": {
+      "title": "ThermalMassClass",
+      "type": "string",
+      "enum": [
+        "Light",
+        "Medium",
+        "Heavy",
+        "Custom"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Light": {
+            "en": "Light (50 Wh/(m²·K))",
+            "de": "Leicht (50 Wh/(m²·K))"
+          },
+          "Medium": {
+            "en": "Medium (90 Wh/(m²·K))",
+            "de": "Mittel (90 Wh/(m²·K))"
+          },
+          "Heavy": {
+            "en": "Heavy (130 Wh/(m²·K))",
+            "de": "Schwer (130 Wh/(m²·K))"
+          },
+          "Custom": {
+            "en": "Custom value",
+            "de": "Benutzerdefinierter Wert"
+          }
+        }
+      }
     },
     "UsageProfile": {
       "title": "UsageProfile",

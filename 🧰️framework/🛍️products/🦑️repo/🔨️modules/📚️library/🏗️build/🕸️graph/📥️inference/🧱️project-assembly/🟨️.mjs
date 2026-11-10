@@ -1,4 +1,5 @@
 import{selectPackageManagerV1,packageManagerSourceFilesV1 as managerSourceFilesV1}from"../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
+import { createBoundedCacheV1 } from "../../../🧊️bounded/🟨️.mjs";
 import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
 import{requireCanonicalTestAggregateV1}from"../../../../⚡️caching/🗂️suites/🧮️aggregate/🟦️.ts";
 import{applyBuildGeneratedTaskDependenciesV1,buildSourceContractGroupsV1}from"../../🚪️admission/🟦️.ts";
@@ -174,7 +175,7 @@ function precisionReceiptsV1(workspaceRoot) {
   };
 }
 
-const precisionDocumentsV1 = new Map();
+const precisionDocumentsV1 = createBoundedCacheV1({ name: "inference:precision-documents", maxEntries: 4, maxBytes: 4 });
 /** 📏️ The input precision rules as every project that applies them records them: read once per process, and the facts of that read (the engine, its schema and the rules) are replayed into each receiving project, so the rows of a project never depend on which project of the same process asked first (a farm worker infers in a fresh process). */
 export function readProjectInputPrecisionV1() {
   return memoizedObservedComputationV1(precisionDocumentsV1, PRECISION_RULES, () => { for (const file of PRECISION_FILES) readFileSync(join(LIBRARY_ROOT, file)); for(const file of managerSourceFilesV1())readFileSync(file); const rules = join(LIBRARY_ROOT, PRECISION_RULES); return existsSync(rules) ? readInputPrecisionV1(JSON.parse(readFileSync(rules, "utf8"))) : null; }) ?? undefined;

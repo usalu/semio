@@ -127,6 +127,22 @@
       }
     ]
   },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "bldg-office",
+        "patch": {
+          "x": null,
+          "y": null,
+          "z": null,
+          "yaw": 0.5
+        }
+      }
+    ]
+  },
   "isolationSystems": {
     "removed": [],
     "inserted": [],
@@ -144,21 +160,5 @@
     "inserted": [],
     "moved": [],
     "modified": []
-  },
-  "placements": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": [
-      {
-        "id": "bldg-office",
-        "patch": {
-          "x": null,
-          "y": null,
-          "z": null,
-          "yaw": 0.5
-        }
-      }
-    ]
   }
 }

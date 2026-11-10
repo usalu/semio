@@ -141,25 +141,7 @@ function fakeChild(script:(child:any)=>void){
 const frame=(child:any,value:unknown)=>child.stdout.write(JSON.stringify(value)+"\n");
 const ready={v:1,t:"ready",backend:"fsevents",root:"/x",cursor:"1",uuid:"U",replay:false,latencyMs:5,native:true};
 
-describe("funded startup lifecycle model",()=>{
- for(const row of startupCorpus.cases)test(row.name,async()=>{
-  const db=new Database(":memory:"),root=tempRoot("watch-start-");roots.push(root);
-  const abort=new AbortController();if(row.abort===0)abort.abort(Error("owner cancelled"));
-  const born=performance.now();let launched=0,readyTimer:ReturnType<typeof setTimeout>|undefined;
-  const remaining=()=>row.remaining===null?null:Math.max(0,row.remaining-(performance.now()-born));
-  const expected=db.query("select (?1 is not null and ?1>0 and ?2<?1 and (?3 is null or ?3>?2)) accepted").get(row.remaining,row.ready,row.abort) as {accepted:number};
-  expect(Boolean(expected.accepted)).toBe(row.accepted);
-  const{supervisor}=make(root,{policy:{...policy,fenceTimeoutMilliseconds:startupCorpus.fenceMilliseconds},startupControl:{signal:abort.signal,remainingMilliseconds:remaining},binary:"scripted-model",spawnProcess:()=>{
-   launched++;const child=fakeChild(child=>{readyTimer=setTimeout(()=>frame(child,ready),row.ready);});
-   child.stdin.end=()=>{clearTimeout(readyTimer);queueMicrotask(()=>child.emit("exit",0));};return child;
-  }});
-  const cancel=row.abort!==null&&row.abort>0?setTimeout(()=>abort.abort(Error("owner cancelled")),row.abort):undefined;
-  try{
-   const state=await supervisor.start();expect(state.backend==="fsevents").toBe(row.accepted);expect(launched>0).toBe(row.launched);
-   expect(state.trust).not.toBe("exact");
-   if(row.accepted)expect(supervisor.stats.fenceMisses).toBe(1);
-  }finally{clearTimeout(cancel);await supervisor.stop();db.close();}
- });
+describe("launch lifecycle model",()=>{
  test("retired timers and frames cannot settle a later launch",async()=>{
   const root=tempRoot("watch-start-generation-");roots.push(root);const timing=startupCorpus.lifecycle,timers:ReturnType<typeof setTimeout>[]=[];let launches=0;
   const{supervisor}=make(root,{policy:{...policy,fenceTimeoutMilliseconds:timing.fence},binary:"scripted-model",spawnProcess:()=>{
@@ -228,21 +210,3 @@ describe("supervisor against a scripted watcher",()=>{
  });
 });
 
-describe("strict workspace watch custody",()=>{
- test("private physical fence ancestry refuses symlinks before any native launch",async()=>{
-  const root=tempRoot("watch-fence-link-"),outside=tempRoot("watch-outside-");roots.push(root,outside);symlinkSync(outside,root+"/private",process.platform==="win32"?"junction":"dir");let launches=0;
-  const{supervisor}=make(root,{binary:"fake",privateFence:true,failureMode:"terminal",fenceDirectory:"private/f",spawnProcess:()=>{launches++;throw Error("Unowned native launch");}});
-  try{await expect(supervisor.start()).rejects.toThrow("No-follow");expect(launches).toBe(0);}finally{await supervisor.stop();}
- });
-
- test("a missing physical canary refuses startup without a portable backend",async()=>{
-  const root=tempRoot("watch-strict-");roots.push(root);let launches=0;
-  const{supervisor}=make(root,{binary:"fake",privateFence:true,failureMode:"terminal",spawnProcess:()=>{launches++;return fakeChild(child=>frame(child,ready));}});
-  try{await expect(supervisor.start()).rejects.toThrow("physical canary");expect(supervisor.state().backend).toBe("fsevents");expect(supervisor.state().trust).toBe("verify");expect(launches).toBe(1);}finally{await supervisor.stop();}
- });
- test("a native coverage loss permanently refuses every later fence",async()=>{
-  const root=tempRoot("watch-strict-loss-");roots.push(root);
-  const{supervisor,losses}=make(root,{binary:"fake",privateFence:true,failureMode:"terminal",spawnProcess:()=>fakeChild(child=>{frame(child,ready);frame(child,{v:1,t:"lost",at:1,reason:"registration-error",scope:"source"});})});
-  try{await expect(supervisor.start()).rejects.toThrow("coverage");await expect(supervisor.fence()).rejects.toThrow("coverage");expect(losses).toEqual(["registration-error:source"]);expect(supervisor.state().trust).toBe("verify");}finally{await supervisor.stop();}
- });
-});

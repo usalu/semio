@@ -58,6 +58,13 @@ const USAGE_PROFILE: &[NormFieldChoice] = &[
     choice("Office", "Office", "Büro"),
     choice("School", "School", "Schule"),
 ];
+/// 🧱 DIN V 18599-2 Wärmespeicherklassen (wire codes used in zone.thermalMassClass).
+const THERMAL_MASS_CLASS: &[NormFieldChoice] = &[
+    choice("Light", "Light (50 Wh/(m²·K))", "Leicht (50 Wh/(m²·K))"),
+    choice("Medium", "Medium (90 Wh/(m²·K))", "Mittel (90 Wh/(m²·K))"),
+    choice("Heavy", "Heavy (130 Wh/(m²·K))", "Schwer (130 Wh/(m²·K))"),
+    choice("Custom", "Custom value", "Benutzerdefinierter Wert"),
+];
 const BOOL_YES_NO: &[NormFieldChoice] = &[choice("true", "Yes", "Ja"), choice("false", "No", "Nein")];
 
 const TABLE: &[(&str, FieldSpec)] = &[
@@ -129,6 +136,8 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("zones[].occupants", FieldSpec::new("Occupants", "Personen")),
     ("zones[].internalGainsWM2", FieldSpec::quantity("Internal gains", "Interne Gewinne", UnitId::WattPerSquareMetre)),
     ("zones[].lightingPowerWM2", FieldSpec::quantity("Zone lighting power", "Zonenbeleuchtungsleistung", UnitId::WattPerSquareMetre)),
+    ("zones[].thermalMassClass", FieldSpec::choice("Thermal mass class", "Wärmespeicherklasse", THERMAL_MASS_CLASS)),
+    ("zones[].cWirkWhM2k", FieldSpec::new("Custom effective heat capacity C_wirk [Wh/(m²·K)]", "Expliziter Wert C_wirk [Wh/(m²·K)]")),
     ("zones[].labelEn", FieldSpec::new("Label (EN)", "Bezeichnung (EN)")),
     ("zones[].labelDe", FieldSpec::new("Label (DE)", "Bezeichnung (DE)")),
 ];

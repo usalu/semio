@@ -9,6 +9,7 @@ import type {IncrementalCommandPortsV1} from "../../⌨️command/🟦️.ts";
 import type {ConcurrentReportV1} from "../../🤝️concurrent/🟦️.ts";
 import {runConcurrencyCommandV1} from "../../🤝️concurrent/⌨️command/🟦️.ts";
 import {benchCompareV1,benchHostV1,benchJudgeV1,benchMarkersV1,benchMutateV1,benchObservedValuesV1,benchObserverV1,benchReportV1,benchSeriesV1,type BenchHostV1,type BenchLaneV1,type BenchMetricV1,type BenchObservationV1,type BenchPairV1,type BenchProbeV1,type BenchReasonV1,type BenchReportV1,type BenchRowV1,type BenchSampleV1,type BenchSeriesV1,type BenchSloSetV1,type BenchSloToolV1,type BenchStartKindV1,type BenchToolV1} from "../🟦️.ts";
+import {planningResourcesV1} from "../🧭️planning/🏃️runner/🟦️.ts";
 import {terminateOwnedChildTree} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 const policy=schema.definitions.Policy.const;
@@ -17,7 +18,7 @@ const both=(english:string,german:string)=>`${english}\n${german}`;
 /** 🥠️ What a bench spawn runs: the implementation (or `neutral` for a command without `--tool`), the arguments of `repo` and whether the process tree's memory is sampled. */
 export type BenchSpawnSpecV1=Readonly<{tool:BenchSloToolV1;args:readonly string[];memory:boolean}>;
 /** 🪀️ One finished command: its exit code, wall time, when it started on the clock of the ports, the time to the first output and to the first tool marker line, the peak resident size of its process tree and what its output told (phases, executed actions, re-inferred projects; absent where the spawner does not read output). */
-export type BenchRunV1=Readonly<{exit:number|null;wallMs:number;startedMs:number;firstOutputMs:number|null;markerMs:number|null;peakRssBytes:number|null;observation?:BenchObservationV1}>;
+export type BenchRunV1=Readonly<{exit:number|null;wallMs:number;startedMs:number;firstOutputMs:number|null;markerMs:number|null;peakRssBytes:number|null;observation?:BenchObservationV1;resources?:Readonly<Record<string,number>>}>;
 /** 🥞️ The tasks one cached run touched: those that may be cached, how many of them executed, and the uncached ones that executed. */
 export type BenchCacheRunV1=Readonly<{cacheable:number;executedCacheable:number;uncachedExecuted:number;total:number}>;
 /** 🥟️ The numbers of one concurrent-agent run: the span of the concurrent sessions, the serial reference, the longest wait for an unrelated project and the criteria that failed. */
@@ -33,6 +34,7 @@ export type BenchPortsV1=Readonly<{
  cache(tool:BenchToolV1,target:string):Promise<BenchCacheRunV1>;
  concurrency(tool:BenchToolV1,workload:string,sessions:number):Promise<BenchConcurrencyRunV1>;
  service:BenchServicePortV1;
+ resources?():Readonly<{end():Record<string,number>}>;
  host():BenchHostV1;
  clock():string;
  fresh:boolean;
@@ -49,9 +51,9 @@ export type BenchOptionsV1=Readonly<{override:number|null;tools:readonly BenchTo
 const sample=(index:number,run:BenchRunV1,values:BenchSampleV1["values"],startKind:BenchStartKindV1|null,load:number|null,ok=run.exit===0):BenchSampleV1=>Object.freeze({index,ok,exit:run.exit,values,startKind,loadPerCore:load});
 const unavailable=(probe:BenchProbeV1,tool:BenchSloToolV1,reason:BenchReasonV1):BenchSeriesV1=>benchSeriesV1({probe:probe.id,tool,lane:probe.lane??null,status:"unavailable",reason,samples:[]});
 
-/** 🥣️ Builds the arguments of `repo run` for a target: the resident lane insists on the service, the one-shot lane switches it off when the checkout has one so that the two lanes measure different paths. */
+/** 🥣️ Builds the arguments of `repo run` for a target; every run plans through the per-host graph service, so no lane adds a flag. */
 export function benchRunArgumentsV1(target:string,lane:BenchLaneV1|null,service:boolean,extra:readonly string[]=[]):string[]{
- return ["run",target,...extra,...(lane==="resident"?[policy.residentFlag]:service?[policy.oneshotFlag]:[])];
+ return ["run",target,...extra];
 }
 
 /** 🥤️ Reads the sum of resident sizes of a process and all its descendants from a process table: `ps -A -o pid=,ppid=,rss=` rows (kilobytes) on POSIX systems or `ProcessId,ParentProcessId,WorkingSetSize` CSV rows (bytes) on Windows; shared pages count once per process, so the number is an upper bound. */
@@ -118,10 +120,21 @@ export async function benchRunProbeV1(set:BenchSloSetV1,probe:BenchProbeV1,tool:
  if(probe.cold&&!ports.fresh)return unavailable(probe,tool,"not-cold");
  const unit=probe.unit===undefined?undefined:set.units.find(row=>row.id===probe.unit),target=probe.target??unit?.target;
  if((probe.kind==="edit"||probe.kind==="peer")&&!unit)throw Error(both(`Unknown unit: ${probe.unit}`,`Unbekannte Einheit: ${probe.unit}`));
- const samples:BenchSampleV1[]=[],args=target===undefined?[]:benchRunArgumentsV1(target,lane,context.service,probe.kind==="graph"?["--dry-run"]:[]);
+ const samples:BenchSampleV1[]=[],args=target===undefined?[]:benchRunArgumentsV1(target,lane,context.service,probe.kind==="graph"||probe.kind==="planning"?["--dry-run"]:[]);
  const step=async(at:number,body:()=>Promise<void>)=>{ports.check();await ports.progress(`${probe.id}:${tool}:${at+1}/${total}`);await body();};
  const series=(reason:BenchReasonV1|null=null)=>benchSeriesV1({probe:probe.id,tool,lane,status:"measured",reason,samples});
- const timed=()=>ports.spawn({tool,args,memory:probe.memory===true},ports.signal);
+ const peerArgs=probe.peer===undefined?null:benchRunArgumentsV1(probe.peer,lane,context.service,["--dry-run"]);
+ const spawned=()=>ports.spawn({tool,args,memory:probe.memory===true},ports.signal);
+ const together=async():Promise<BenchRunV1>=>{
+  const [first,second]=await Promise.all([spawned(),ports.spawn({tool,args:peerArgs!,memory:false},ports.signal)]);
+  return Object.freeze({...first,exit:first.exit===0?second.exit:first.exit,wallMs:Math.max(first.wallMs,second.wallMs)});
+ };
+ const timed=async():Promise<BenchRunV1>=>{
+  const watch=probe.kind==="planning"?ports.resources?.():undefined;
+  let run:BenchRunV1;
+  try{run=await (peerArgs===null?spawned():together());}catch(error){watch?.end();throw error;}
+  return watch?Object.freeze({...run,resources:watch.end()}):run;
+ };
  if(probe.kind==="cli-help"){
   for(let at=0;at<total;at++)await step(at,async()=>{
    const done=await attempt(ports,()=>ports.spawn({tool:"neutral",args:["--help"],memory:false},ports.signal));
@@ -169,7 +182,7 @@ export async function benchRunProbeV1(set:BenchSloSetV1,probe:BenchProbeV1,tool:
    }else outcome=await attempt(ports,()=>timed());
    if(at<warmup)return;
    if(outcome instanceof Error){samples.push(failed(samples.length,here));return;}
-   const timing=probe.kind==="edit"?outcome.exit===0?{startMs:offset+startOffset(outcome),greenMs:offset+outcome.wallMs}:{}:{wallMs:outcome.wallMs},values:Partial<Record<BenchMetricV1,number>>={...timing,...(outcome.observation?benchObservedValuesV1(outcome.observation):{})};
+   const timing=probe.kind==="edit"?outcome.exit===0?{startMs:offset+startOffset(outcome),greenMs:offset+outcome.wallMs}:{}:{wallMs:outcome.wallMs},values:Partial<Record<BenchMetricV1,number>>={...timing,...(outcome.observation?benchObservedValuesV1(outcome.observation):{}),...(outcome.resources??{})};
    if(probe.memory){if(outcome.peakRssBytes===null){missing++;samples.push(failed(samples.length,here));return;}values.peakRssBytes=outcome.peakRssBytes;}
    samples.push(sample(samples.length,outcome,values,probe.kind==="edit"?startKindOf(outcome):null,here));
   });
@@ -224,8 +237,8 @@ export function benchCliPortsV1(host:BenchHostPortsV1,signal:AbortSignal):BenchP
  const incremental=incrementalCliPortsV1({...host,now:()=>Math.floor(Date.now())}),slices=new Map<string,Awaited<ReturnType<typeof incremental.slice>>>();
  const service:BenchServicePortV1=host.service??Object.freeze({
   available:async()=>{try{const catalog=JSON.parse(await readFile(join(host.root,host.catalog),"utf8")) as {operations:readonly {name:string}[]};return catalog.operations.some(row=>row.name===policy.serviceOperation);}catch{return false;}},
-  start:async()=>{const call=cli("neutral",[policy.serviceOperation,"start"]);await host.run(call.command,call.args,host.root,call.env,host.signal);},
-  stop:async()=>{const call=cli("neutral",[policy.serviceOperation,"stop"]);await host.run(call.command,call.args,host.root,call.env,host.signal);}
+  start:async()=>{const call=cli("neutral",[policy.serviceOperation,"host","start"]);await host.run(call.command,call.args,host.root,call.env,host.signal);},
+  stop:async()=>{const call=cli("neutral",[policy.serviceOperation,"host","stop"]);await host.run(call.command,call.args,host.root,call.env,host.signal);}
  });
  return Object.freeze({
   read:async path=>readFile(incrementalInsideV1(host.root,path),"utf8"),
@@ -245,6 +258,7 @@ export function benchCliPortsV1(host:BenchHostPortsV1,signal:AbortSignal):BenchP
    return benchConcurrencyFromReportV1(JSON.parse(out.join("\n")) as ConcurrentReportV1);
   }),
   service,
+  resources:()=>planningResourcesV1(host.root),
   host:host.sample??(()=>benchHostV1({platform:platform(),arch:arch(),cpus:Math.max(1,cpus().length),memoryBytes:totalmem(),load1:platform()==="win32"?null:loadavg()[0]!})),
   clock:host.clock??(()=>new Date().toISOString()),
   fresh:host.fresh,

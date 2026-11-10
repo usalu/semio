@@ -12,7 +12,7 @@ import {appendAuditV1} from "../../📥️caller/🛰️service/🔑️session/�
 import {agentSessionEnvironmentV1,agentSessionRegistryRootV1,agentSessionStoreV1,currentAgentSessionV1,setAgentSessionCapabilityV1,writeAgentSessionTokenV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 import coreSchema from "../../📥️caller/🛰️service/🧬️schema/🔣️.json" with {type:"json"};
 import {createFilterV1,createWorkspaceStateV1,outputSignatureV1} from "../🗃️state/🟨️.mjs";
-import {createResidentWatcherV1} from "../🔭️watch/🎟️startup/🟨️.mjs";
+import {createWatchSupervisorV1} from "../🔭️watch/🟨️.mjs";
 import {BusyErrorV1,createGovernorV1} from "./🚦️governor/🟨️.mjs";
 import {runtimeCollectGarbageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
@@ -56,10 +56,10 @@ function atomicWrite(path,text,mode=0o600){
 
 /** 🏡 Creates the service; call `start()` then `closed`. */
 export function createResidentServiceV1(options){
- const{root,runtime,ports,log=()=>{},now=()=>Date.now(),environment=process.env,implementation,implementationPaths=[],requireCapability=true,backend="auto",watcherBinary,opaqueBasenames,privateFence=false,failureMode="recover",exclude={rooted:[],names:[]},fenceDirectory,onExit=()=>{}}=options;
+ const{root,runtime,ports,log=()=>{},now=()=>Date.now(),environment=process.env,implementation,implementationPaths=[],requireCapability=true,backend="auto",watcherBinary,exclude={rooted:[],names:[]},fenceDirectory,onExit=()=>{}}=options;
  const policy=Object.freeze({...POLICY_V1,...(options.policy??{})});
  const posix=process.platform!=="win32",instance=randomBytes(8).toString("hex"),startedAt=now();
- const filter=createFilterV1({rooted:[...exclude.rooted,fenceDirectory],names:exclude.names,opaqueBasenames});
+ const filter=createFilterV1({rooted:[...exclude.rooted,fenceDirectory],names:exclude.names});
  const state=createWorkspaceStateV1({root,instance,policy,filter,fence:fenceDirectory,now});
  const governor=createGovernorV1({maximumInFlight:policy.maximumInFlight,maximumQueued:policy.maximumQueued});
  const connections=new Set(),implementationSet=new Set(implementationPaths);
@@ -478,8 +478,8 @@ export function createResidentServiceV1(options){
    graphInfo=await ports.graph.load();state.configure(graphInfo);state.setEnvironmentSalt(await ports.graph.environmentDigest());state.setGeneration(graphInfo.generation??null);lap("graph");
    const restore=savedState();
    let launchedResolve;const launched=new Promise(resolve=>{launchedResolve=resolve;});
-   const launch=startupControl=>{watcher=createResidentWatcherV1({root,policy,filter,rooted:[...exclude.rooted],names:exclude.names,opaqueBasenames,privateFence,failureMode,binary:watcherBinary,backend,fenceDirectory,instance,onBatch,onLost,onTrust:trust=>{state.setTrust(trust.trust==="exact"?"exact":"verify");log("trust",JSON.stringify(trust));},log,restore},startupControl);const result=watcher.start();launchedResolve();return result;};
-   const started=options.withWatcherStartup?options.withWatcherStartup(launch):launch(undefined);
+   const launch=()=>{watcher=createWatchSupervisorV1({root,policy,filter,rooted:[...exclude.rooted],names:exclude.names,binary:watcherBinary,backend,fenceDirectory,instance,onBatch,onLost,onTrust:trust=>{state.setTrust(trust.trust==="exact"?"exact":"verify");log("trust",JSON.stringify(trust));},log,restore});const result=watcher.start();launchedResolve();return result;};
+   const started=launch();
    await Promise.race([launched,started.then(()=>undefined)]);
    const listing=await ports.graph.listing({root,exclude,filter});lap("scan");
    state.load(listing);gateOpen();lap("load");

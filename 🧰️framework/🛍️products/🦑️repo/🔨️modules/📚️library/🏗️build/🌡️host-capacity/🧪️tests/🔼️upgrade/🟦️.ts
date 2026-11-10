@@ -22,11 +22,11 @@ const seed=async(directory:string,runs:readonly boolean[])=>{
 };
 const holdMachine=(directory:string)=>{
  let release!:()=>void;const hold=new Promise<void>(resolve=>{release=resolve;});
- const done=withHostCapacityV1({directory,policy,request:{id:newHostCapacityIdV1(),operation:"exec",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:13500,perJobMegabytes:0,cpuPerJob:1},control:control(),environment:{},write:()=>undefined,sample},async()=>hold);
+ const done=withHostCapacityV1({directory,policy,request:{id:newHostCapacityIdV1(),operation:"exec",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:13500,perJobMegabytes:0,cpuPerJob:1},control:control(),environment:{LANG:"en_US.UTF-8"},write:()=>undefined,sample},async()=>hold);
  return{release,done};
 };
 const ports=(directory:string,over:object={})=>({directory,policy,strip,tool:"bazel",sample,observe:async()=>1100,write:()=>undefined,exitCode:()=>0,...over});
-const run=(directory:string,body:Parameters<typeof withBuildCapacityV1>[2],over:object={},environment:NodeJS.ProcessEnv={SEMIO_HOST_CAPACITY_DIRECTORY:directory})=>withBuildCapacityV1(args,environment,body,ports(directory,over));
+const run=(directory:string,body:Parameters<typeof withBuildCapacityV1>[2],over:object={},environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory})=>withBuildCapacityV1(args,environment,body,ports(directory,over));
 
 test("A run forecast to execute nothing answers beside a full machine with a small grant and is learned as quiet without teaching its class",async()=>{
  const directory=fresh(),machine=holdMachine(directory),lines:string[]=[];
@@ -84,7 +84,7 @@ test("Nothing is forecast for another tool, an operation without a forecast or w
  await sleep(250);expect(started,"another tool has no action gate and asks for the full grant").toBe(false);
  machine.release();await other;await machine.done;expect(started).toBe(true);
  const cold=fresh();
- await run(cold,async granted=>{expect(granted.handle!.reservedMegabytes,"no history, the full request").toBeGreaterThan(4096);expect(await upgradeBuildCapacityV1(undefined,{SEMIO_HOST_CAPACITY_DIRECTORY:cold,SEMIO_HOST_CAPACITY_GRANT:granted.handle!.id})).toBe("held");await sleep(80);},{},{SEMIO_HOST_CAPACITY_DIRECTORY:cold});
+ await run(cold,async granted=>{expect(granted.handle!.reservedMegabytes,"no history, the full request").toBeGreaterThan(4096);expect(await upgradeBuildCapacityV1(undefined,{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:cold,SEMIO_HOST_CAPACITY_GRANT:granted.handle!.id})).toBe("held");await sleep(80);},{},{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:cold});
  const store=readHostEstimateStoreV1(cold);
  expect(store.classes[`${leaf}~busy`]!.samples.length,"a run under a full grant that executed is busy").toBe(1);
  expect(await upgradeBuildCapacityV1(undefined,{})).toBe("absent");
@@ -94,7 +94,7 @@ test("repo capacity status names a quiet grant and the upgrade that waits, in En
  const directory=fresh(),machine=holdMachine(directory),english:string[]=[],german:string[]=[];
  await seed(directory,[false,false,false,false,false]);
  await sleep(40);
- const environment:NodeJS.ProcessEnv={SEMIO_HOST_CAPACITY_DIRECTORY:directory};
+ const environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory};
  const context=(language:string,write:(line:string)=>void)=>({environment:{LANG:language},write,directory,policy,sample});
  await run(directory,async()=>{
   const waiting=upgradeBuildCapacityV1(undefined,environment);

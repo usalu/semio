@@ -20,6 +20,7 @@ import { type InsertZone, parseInsertZone } from "./➕insert-zone/🧬️schema
 import { type RemoveZone, parseRemoveZone } from "./➖remove-zone/🧬️schema/🟦️.ts";
 import { type ChangeZoneLabelEn, parseChangeZoneLabelEn } from "./🟠change-zone-label-en/🧬️schema/🟦️.ts";
 import { type ChangeZoneLabelDe, parseChangeZoneLabelDe } from "./🟡change-zone-label-de/🧬️schema/🟦️.ts";
+import { type ChangeZoneThermalMass, parseChangeZoneThermalMass } from "./🧊change-zone-thermal-mass/🧬️schema/🟦️.ts";
 import { type ChangeZoneUsageProfile, parseChangeZoneUsageProfile } from "./🟢change-zone-usage-profile/🧬️schema/🟦️.ts";
 import { type ChangeZoneOccupants, parseChangeZoneOccupants } from "./🔵change-zone-occupants/🧬️schema/🟦️.ts";
 import { type ChangeZoneAreaM2, parseChangeZoneAreaM2 } from "./🟣change-zone-area-m2/🧬️schema/🟦️.ts";
@@ -72,6 +73,7 @@ export type Din18599Mutation =
   | ChangeZoneThetaICoolC
   | ChangeZoneInternalGainsWM2
   | ChangeZoneLightingPowerWM2
+  | ChangeZoneThermalMass
   | InsertElement
   | RemoveElement
   | ChangeElementLabelEn
@@ -115,6 +117,7 @@ export const parseDin18599Mutation: NormWireReader<Din18599Mutation> = normWireT
   changezonethetaicoolc: parseChangeZoneThetaICoolC,
   changezoneinternalgainswm2: parseChangeZoneInternalGainsWM2,
   changezonelightingpowerwm2: parseChangeZoneLightingPowerWM2,
+  changezonethermalmass: parseChangeZoneThermalMass,
   insertelement: parseInsertElement,
   removeelement: parseRemoveElement,
   changeelementlabelen: parseChangeElementLabelEn,

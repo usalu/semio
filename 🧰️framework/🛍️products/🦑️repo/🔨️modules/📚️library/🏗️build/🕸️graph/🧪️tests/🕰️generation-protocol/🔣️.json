@@ -15,7 +15,7 @@
   },
   "discoverBuildGraphPartV1": {
    "start": "export async function discoverBuildGraphPartV1(",
-   "end": "/** 🧺️ Keeps exactly the discovered files"
+   "end": "/** 🧱️ module boundary */"
   },
   "invalidateBuildGraphV1": {
    "start": "export async function invalidateBuildGraphV1(",

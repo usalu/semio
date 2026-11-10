@@ -1,0 +1,29 @@
+{
+  "tree": {
+    "a/x/project.json": "{}", "a/x/src/main.ts": "m", "a/y/Cargo.toml": "c", "a/y/t.feature": "f", "a/z": "file",
+    "b/z.feature": "f", "b/node_modules/pkg/project.json": "{}", "top/project.json": "{}", "top/deep/er/Cargo.toml": "c"
+  },
+  "dirty": [
+    {"name": "edit in place", "rows": [["m", 0, "a/x/src/main.ts"]], "probes": [["a/x/src/main.ts", true], ["a/x/src", true], ["a/x", false], ["a/y/Cargo.toml", false], ["", false]]},
+    {"name": "top level file", "rows": [["m", 0, "package.json"]], "probes": [["package.json", true], ["", true], ["a", false]]},
+    {"name": "directory added: its subtree is doubtful", "rows": [["a", 1, "b/new"]], "probes": [["b/new", true], ["b/new/deep/file.ts", true], ["b", true], ["b/z.feature", false]]},
+    {"name": "directory modified: no subtree", "rows": [["m", 1, "a/x"]], "probes": [["a/x", true], ["a/x/src/main.ts", false], ["a", true]]},
+    {"name": "rename: both sides", "rows": [["n", 1, "a/x"], ["n", 1, "a/w"]], "probes": [["a/x/project.json", true], ["a/w/anything", true], ["a/y/Cargo.toml", false]]},
+    {"name": "removed file and removed directory", "rows": [["r", 0, "a/y/t.feature"], ["r", 1, "top/deep"]], "probes": [["a/y/t.feature", true], ["top/deep/er/Cargo.toml", true], ["top/project.json", false]]},
+    {"name": "no rows prove nothing changed", "rows": [], "probes": [["a/x/project.json", false], ["", false]]}
+  ],
+  "scenarios": [
+    {"name": "content edit keeps the frontier", "ops": [{"op": "write", "path": "a/x/project.json", "content": "{\"v\":2}"}], "rows": [["m", 0, "a/x/project.json"]], "unchanged": true, "maximumChecked": 4},
+    {"name": "non member file added", "ops": [{"op": "write", "path": "a/x/readme.md", "content": "r"}], "rows": [["a", 0, "a/x/readme.md"]], "maximumChecked": 4},
+    {"name": "member added", "ops": [{"op": "write", "path": "a/x/new.feature", "content": "n"}], "rows": [["a", 0, "a/x/new.feature"]], "maximumChecked": 4},
+    {"name": "member removed", "ops": [{"op": "rm", "path": "a/y/t.feature"}], "rows": [["r", 0, "a/y/t.feature"]], "maximumChecked": 4},
+    {"name": "mode changed", "ops": [{"op": "chmod", "path": "a/y/Cargo.toml", "mode": 493}], "rows": [["m", 0, "a/y/Cargo.toml"]], "maximumChecked": 4, "posix": true},
+    {"name": "directory with members added", "ops": [{"op": "write", "path": "b/new/deep/project.json", "content": "{}"}, {"op": "write", "path": "b/new/t.feature", "content": "t"}], "rows": [["a", 1, "b/new"]]},
+    {"name": "excluded directory added", "ops": [{"op": "write", "path": "a/node_modules/q/project.json", "content": "{}"}], "rows": [["a", 1, "a/node_modules"]]},
+    {"name": "directory removed", "ops": [{"op": "rmdir", "path": "top/deep"}], "rows": [["r", 1, "top/deep"]]},
+    {"name": "directory renamed", "ops": [{"op": "mv", "from": "a/x", "to": "a/w"}], "rows": [["n", 1, "a/x"], ["n", 1, "a/w"]]},
+    {"name": "file replaced by a directory", "ops": [{"op": "rm", "path": "a/z"}, {"op": "write", "path": "a/z/project.json", "content": "{}"}], "rows": [["r", 0, "a/z"], ["a", 1, "a/z"]]},
+    {"name": "directory replaced by a file", "ops": [{"op": "rmdir", "path": "top/deep"}, {"op": "write", "path": "top/deep", "content": "f"}], "rows": [["r", 1, "top/deep"], ["a", 0, "top/deep"]]},
+    {"name": "a row for something already gone", "ops": [], "rows": [["m", 0, "a/ghost.feature"], ["r", 1, "b/ghost"]], "unchanged": true}
+  ]
+}

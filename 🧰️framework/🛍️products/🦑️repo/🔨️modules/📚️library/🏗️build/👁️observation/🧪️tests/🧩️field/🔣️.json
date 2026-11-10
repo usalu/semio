@@ -1,0 +1,6 @@
+{
+  "documents": [
+    {"id": "scalar-and-nesting", "text": "{\"b\":[1,2,{\"z\":null,\"a\":\"ü\"}],\"a\":true,\"c\":{\"x/y\":1,\"m~n\":2}}", "pointers": ["", "/a", "/b", "/b/2", "/b/2/a", "/c", "/c/x~1y", "/c/m~0n", "/missing", "/b/9"]},
+    {"id": "unrelated-section", "text": "{\"presentationResources\":[\"p\",\"q\"],\"other\":{\"k\":1}}", "pointers": ["/presentationResources", "/other"]}
+  ]
+}

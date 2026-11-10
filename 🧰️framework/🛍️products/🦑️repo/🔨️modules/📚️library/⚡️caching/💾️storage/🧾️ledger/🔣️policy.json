@@ -516,6 +516,46 @@
       }
     },
     {
+      "id": "graph-derived-nodes",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "derived-nodes",
+      "partition": "graph",
+      "budget": {
+        "bytes": 536870912
+      },
+      "managed": {
+        "owner": "graph"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧮️derived-nodes/💾️store/🟨️.mjs"
+      ],
+      "purpose": {
+        "en": "Durable derived-fact nodes of the graph (small records; records above the limit are chunks in the host content store), pruned by count and age.",
+        "de": "Dauerhafte abgeleitete Faktenknoten des Graphen (kleine Datensätze; größere Datensätze liegen als Chunks im Host-Inhaltsspeicher), begrenzt nach Anzahl und Alter."
+      }
+    },
+    {
+      "id": "graph-stat-index",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "stat-index",
+      "partition": "graph",
+      "budget": {
+        "bytes": 134217728
+      },
+      "managed": {
+        "owner": "graph"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧮️derived-nodes/🗂️stat-index/🟨️.mjs"
+      ],
+      "purpose": {
+        "en": "Compact stat index: size, mtime, inode and digest per file and listing per directory, one binary record per top-level subtree.",
+        "de": "Kompakter Stat-Index: Größe, mtime, Inode und Digest je Datei sowie Auflistung je Verzeichnis, ein binärer Datensatz je Teilbaum der obersten Ebene."
+      }
+    },
+    {
       "id": "graph-lock-closures",
       "root": "repository",
       "kind": "nested",
@@ -1305,24 +1345,24 @@
   "needs": [
     {
       "partition": "rust",
-      "measuredOn": "2026-10-22",
+      "measuredOn": "2026-11-09",
       "headroomPercent": 15,
       "floorBytes": 4294967296,
       "components": [
         {
           "id": "cargo-home",
           "area": "cargo-home",
-          "measuredBytes": 1748000000
+          "measuredBytes": 1420360629
         },
         {
           "id": "nx-artifacts",
           "area": "nx-artifacts",
-          "measuredBytes": 61000000
+          "measuredBytes": 60749977
         },
         {
           "id": "unit-cache",
           "area": "unit-cache",
-          "measuredBytes": 8400000000
+          "measuredBytes": 20892484717
         },
         {
           "id": "compiler-workspaces",

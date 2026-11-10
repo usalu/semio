@@ -3810,6 +3810,21 @@
       "verb": "change"
     },
     {
+      "aggregateVariant": "ChangeZoneThermalMass",
+      "artifact": "⚡️din18599",
+      "edit": null,
+      "entity": "zone-thermal-mass",
+      "kind": "change-zone-thermal-mass",
+      "module": "🧊change-zone-thermal-mass",
+      "physicalLayout": "direct",
+      "record": "ChangedZoneThermalMass",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊change-zone-thermal-mass/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneThermalMass",
+      "verb": "change"
+    },
+    {
       "aggregateVariant": "InsertElement",
       "artifact": "⚡️din18599",
       "edit": {

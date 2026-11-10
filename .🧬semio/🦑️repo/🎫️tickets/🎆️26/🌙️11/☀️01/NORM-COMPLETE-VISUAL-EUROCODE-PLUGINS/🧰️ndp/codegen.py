@@ -29,7 +29,8 @@ PEND = "to be recorded at verification"
 d = sorted(json.loads(pathlib.Path(src).read_text(encoding="utf-8"))["entries"], key=lambda e: e["id"])
 parts = defaultdict(list)
 for e in d:
-    parts[e["id"].split(".")[1]].append(e)
+    prefix = e["id"].split(".")[1]
+    parts["din4108" if prefix.startswith(("din4108", "en-iso-6946")) else prefix].append(e)
 def s(x): return json.dumps(x, ensure_ascii=False)
 def v(x): return "Unset" if x is None else f"Number({float(x)!r})" if isinstance(x, (int, float)) else f"Text({s(x)})"
 folder = out.with_suffix("")

@@ -143,3 +143,16 @@ describe("texts",()=>{
   expect(validatorV1("Request")({t:"request",id:1,command:"run",args:[],cwd:"/w"})).toEqual([]);
  });
 });
+
+describe("owner progress texts",()=>{
+ const fields={seconds:310,phase:"owners",done:1,total:726,owners:"@semio-tech/framework-rs (language:cargo, 45, 28123)",used:256,budget:1386,kind:"language:cargo"};
+ test("the owner stage lines exist in English and German for every admission decision and name owners, kind, seconds and rows",()=>{
+  for(const key of["host-slice-owners","host-slice-owners-learning","host-slice-owners-waiting","host-slice-owners-serial","host-slice-owners-resumed"]){
+   const text=renderTextV1(key,fields,["en","de"])!;
+   expect(Object.keys(text)).toEqual(["en","de"]);
+   for(const language of["en","de"] as const){expect(text[language]).toContain("@semio-tech/framework-rs (language:cargo, 45, 28123)");expect(text[language]).not.toMatch(/\{[a-z]+\}/u);}
+  }
+  expect(renderTextV1("host-slice-owners-learning",fields,["de"])!.de).toContain("noch kein Speicherbedarf gelernt");
+  expect(renderTextV1("host-slice-owners",fields,["en"])!.en).toContain("running (name, kind, seconds, rows)");
+ });
+});

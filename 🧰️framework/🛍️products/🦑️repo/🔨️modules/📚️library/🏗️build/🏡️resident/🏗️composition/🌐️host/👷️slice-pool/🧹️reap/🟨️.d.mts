@@ -1,0 +1,11 @@
+export type ProcessRowV1={pid:number;ppid:number;token?:string};
+export type ReapScopeV1={pids?:Iterable<number>;match?:(row:ProcessRowV1)=>boolean};
+export const SLICE_JOB_VARIABLE_V1:string;
+export const SLICE_GRACE_MILLISECONDS_V1:number;
+export function sliceJobTokenV1(pid:number,index:number,random?:string):string;
+export function listProcessesV1(platform?:string):ProcessRowV1[];
+export function signalProcessTreeV1(pid:number,signal:string,platform?:string):void;
+export function withDescendantsV1(table:readonly ProcessRowV1[],roots:Iterable<number>):Set<number>;
+export function createReaperV1(options?:{list?:()=>ProcessRowV1[];send?:(pid:number,signal:string)=>void;graceMilliseconds?:number;alive?:(pid:number)=>boolean}):{victims(scope:ReapScopeV1):number[];reap(scope:ReapScopeV1,graceMilliseconds?:number):Promise<number>;killNow(scope:ReapScopeV1):void};
+export function deadServiceRowV1(alive?:(pid:number)=>boolean):(row:ProcessRowV1)=>boolean;
+export function reportChildV1<T extends {pid?:number}>(port:{postMessage(message:unknown):void},child:T):T;

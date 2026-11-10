@@ -185,7 +185,7 @@ test("the bounded store evicts least recently used values exactly like an indepe
    expect(store.usage().bytes,row.name).toBeLessThanOrEqual(row.maximumBytes);
   }
   await store.collect();
-  const survivors=Object.keys(keys).filter(name=>store.has("default","ac",keys[name]!)).sort();
+  const present=await Promise.all(Object.keys(keys).map(name=>store.has("default","ac",keys[name]!))),survivors=Object.keys(keys).filter((_,index)=>present[index]).sort();
   expect(survivors,row.name).toEqual(row.survivors);expect(survivors,row.name+" against the model").toEqual(modelSurvivors(row.maximumBytes,row.ops as {put?:string;size?:number;read?:string}[]));
   await store.close();
  }
@@ -236,7 +236,7 @@ test("idle entries older than the maximum age are dropped when the store collect
  await store.put("default","nx","old",(async function*(){yield new Uint8Array(4);})(),{mode:"keep",declaredLength:4});
  await new Promise(resolve=>setTimeout(resolve,120));
  await store.put("default","nx","new",(async function*(){yield new Uint8Array(4);})(),{mode:"keep",declaredLength:4});
- await store.collect();expect(store.has("default","nx","old")).toBe(false);expect(store.has("default","nx","new")).toBe(true);await store.close();
+ await store.collect();expect(await store.has("default","nx","old")).toBe(false);expect(await store.has("default","nx","new")).toBe(true);await store.close();
 });
 
 test("the command words parse like the catalogue says and refuse everything else, in both languages",()=>{
@@ -335,7 +335,7 @@ test("remote-cache gc plans first, then removes exactly the planned entries, in 
  const german:string[]=[],applied=await collectRemoteCacheV1(["--directory",folder,"--max-bytes","1048576","--lang","de"],context(line=>german.push(line)));
  expect(applied).toEqual({exitCode:0});expect(german.at(-1)).toContain(`${plan.result.removed.entries} von 12 Einträgen entfernt`);expect(german[0]).toContain("Sammle");
  const store3=await RemoteCacheStoreV1.open({directory:folder,maximumBytes:2**30,maximumEntryBytes:2**20,maximumAgeMilliseconds:0});expect(store3.usage().entries).toBe(plan.result.remaining.entries);expect(store3.usage().bytes).toBeLessThanOrEqual(1048576*0.9);
- expect(store3.has("main","nx","key11"),"the newest entry survives").toBe(true);expect(store3.has("main","nx","key0"),"the oldest entry goes first").toBe(false);await store3.close();
+ expect(await store3.has("main","nx","key11"),"the newest entry survives").toBe(true);expect(await store3.has("main","nx","key0"),"the oldest entry goes first").toBe(false);await store3.close();
  const cancelling=new AbortController();cancelling.abort();
  expect(await collectRemoteCacheV1(["--directory",folder,"--dry-run"],{...context(()=>{},{SEMIO_LANGUAGE:"en"}),signal:cancelling.signal})).toEqual({exitCode:130});
 });

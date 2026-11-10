@@ -19,7 +19,7 @@ const breakAndTake=(directory:string):string=>{const later=Date.now()+policy.wai
 test("A holder that stalled past the lock's staleness while a peer broke and took the lock gives back nothing: the peer's lock survives the holder's release",async()=>{
  const directory=fresh();let taken:string|undefined;
  const request:HostRequestV1={id:newHostCapacityIdV1(),operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:1000,perJobMegabytes:0,cpuPerJob:1};
- await withHostCapacityV1({directory,policy,request,pid:process.pid,environment:{},sample:async()=>({host:host(40000),swappedOutMegabytes:0}),control:{signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined},write:line=>{if(taken===undefined&&line.includes("admitted"))taken=breakAndTake(directory);}},async()=>undefined);
+ await withHostCapacityV1({directory,policy,request,pid:process.pid,environment:{LANG:"en_US.UTF-8"},sample:async()=>({host:host(40000),swappedOutMegabytes:0}),control:{signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined},write:line=>{if(taken===undefined&&line.includes("admitted"))taken=breakAndTake(directory);}},async()=>undefined);
  expect(taken,"the stall happened inside the admission's lock").toBeDefined();
  expect([existsSync(join(directory,"lock")),owner(directory)],"the peer still holds the lock it took").toEqual([true,taken]);
  (gate as unknown as {releaseHostLockV1?:(directory:string,pid:number)=>void}).releaseHostLockV1?.(directory,peer);
@@ -41,7 +41,7 @@ test("A growth whose holder lost the lock while it stalled writes no grown row u
 test("A waiting request publishes its progress to the caller only after it gave the gate lock back, so a slow caller never holds the machine-wide lock",async()=>{
  const directory=fresh(),controller=new AbortController(),seen:(string|undefined)[]=[];
  const request:HostRequestV1={id:newHostCapacityIdV1(),operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:30000,perJobMegabytes:0,cpuPerJob:1};
- const waiting=withHostCapacityV1({directory,policy,request,pid:process.pid,environment:{},sample:async()=>({host:host(2000),swappedOutMegabytes:0}),control:{signal:controller.signal,remainingMilliseconds:()=>null,publish:async()=>{seen.push(owner(directory));controller.abort(Object.assign(Error("stop"),{code:"cancelled"}));},yieldContinuation:async()=>undefined},write:()=>undefined},async()=>undefined);
+ const waiting=withHostCapacityV1({directory,policy,request,pid:process.pid,environment:{LANG:"en_US.UTF-8"},sample:async()=>({host:host(2000),swappedOutMegabytes:0}),control:{signal:controller.signal,remainingMilliseconds:()=>null,publish:async()=>{seen.push(owner(directory));controller.abort(Object.assign(Error("stop"),{code:"cancelled"}));},yieldContinuation:async()=>undefined},write:()=>undefined},async()=>undefined);
  await expect(waiting).rejects.toThrow();
  expect(seen.length,"the wait published its progress").toBeGreaterThan(0);
  expect(seen.every(text=>text===undefined||!text.startsWith(process.pid+":")),"no progress was published while this process held the gate lock").toBe(true);

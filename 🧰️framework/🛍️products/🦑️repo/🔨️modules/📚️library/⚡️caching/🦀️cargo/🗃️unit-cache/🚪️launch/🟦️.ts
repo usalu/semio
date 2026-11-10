@@ -101,7 +101,7 @@ export const unitCacheCapacityBytesV1=(policy:Readonly<{capacityBytes:number;max
 export function unitCacheRootV1(storeRoot:string):string{return join(storeRoot,"u");}
 
 /** 📏️ The share of the image each part of the cache may use. */
-export const UNIT_CACHE_SHARES_V1=Object.freeze({objects:policy.gc.casShare,lanes:policy.gc.laneShare,incremental:policy.gc.incrementalShare});
+export const UNIT_CACHE_SHARES_V1=Object.freeze({lanes:policy.gc.laneShare,incremental:policy.gc.incrementalShare});
 
 /** 💬️ One operator message with its placeholders filled. */
 export function laneMessageV1(kind:keyof typeof schema.definitions.Messages.const,parameters:Readonly<Record<string,string|number>>,language:"en"|"de"):string{
@@ -141,7 +141,7 @@ export async function relieveUnitCachePressureV1(options:Readonly<{root:string;c
    const started=start({...options,watch:true});
    options.report(started.state==="started"?laneMessageV1("collector",{usedPercent:Math.round(100*(volume.volumeBytes-volume.freeBytes)/volume.volumeBytes),highPercent:Math.round(100*policy.gc.highWaterShare)},options.language):laneMessageV1("collectorFailed",{reason:started.reason},options.language));
   }else if(decision==="collect-now"){
-   const result=await collectGarbageSingleFlightV1(options.root,options.capacityBytes,{nowMs});if(!result.running&&result.applied.lanes+result.applied.incremental+result.applied.sessions+result.applied.units+result.applied.objects>0)options.report(laneMessageV1("collected",result.applied,options.language));
+   const result=await collectGarbageSingleFlightV1(options.root,options.capacityBytes,{nowMs});if(!result.running&&result.applied.lanes+result.applied.incremental+result.applied.sessions+result.applied.units>0)options.report(laneMessageV1("collected",result.applied,options.language));
   }
   return decision;
  }catch{return "enough";}
@@ -170,8 +170,8 @@ export async function retryAfterOutOfSpaceV1<T>(options:Readonly<{store:string;l
 }
 
 /** 🛑️ After a compile ran out of space: collects once, right now, and says so in the selected language. The caller retries its command once and calls `reportUnitCacheStillFullV1` if that fails the same way. */
-export async function collectAfterOutOfSpaceV1(options:Readonly<{root:string;capacityBytes:number;language:"en"|"de";report:(line:string)=>void;nowMs?:number}>):Promise<Readonly<{lanes:number;incremental:number;objects:number;sessions:number;units:number}>>{
- const volume=measureVolumeV1(options.root,options.capacityBytes);let applied={lanes:0,incremental:0,objects:0,sessions:0,units:0};
+export async function collectAfterOutOfSpaceV1(options:Readonly<{root:string;capacityBytes:number;language:"en"|"de";report:(line:string)=>void;nowMs?:number}>):Promise<Readonly<{lanes:number;incremental:number;sessions:number;units:number}>>{
+ const volume=measureVolumeV1(options.root,options.capacityBytes);let applied={lanes:0,incremental:0,sessions:0,units:0};
  try{const result=await collectGarbageSingleFlightV1(options.root,options.capacityBytes,{nowMs:options.nowMs});if(!result.running)applied=result.applied;}catch{}
  options.report(laneMessageV1("outOfSpace",{freeGib:gib(volume.freeBytes),volumeGib:gib(volume.volumeBytes),...applied},options.language));
  return applied;

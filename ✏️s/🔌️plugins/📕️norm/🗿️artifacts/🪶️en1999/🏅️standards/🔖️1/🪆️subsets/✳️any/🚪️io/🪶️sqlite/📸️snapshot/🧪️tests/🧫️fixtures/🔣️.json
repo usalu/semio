@@ -327,7 +327,9 @@
     "en1999_fatigue_category",
     "en1999_patch_load",
     "en1999_ring_stiffener",
-    "en1999_transverse_stiffener"
+    "en1999_transverse_stiffener",
+    "en1999_sheet_profile",
+    "en1999_fire_insulation"
   ],
   "controlledOutput": {
     "textBytes": 100000,

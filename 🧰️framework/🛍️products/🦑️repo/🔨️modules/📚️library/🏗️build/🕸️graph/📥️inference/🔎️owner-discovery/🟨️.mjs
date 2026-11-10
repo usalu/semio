@@ -1,4 +1,5 @@
-import {wasmCompileOutputIndexV1,wasmCompileOutputV1} from "../🧭️script-inputs/🕸️wasm-outputs/🟦️.ts";
+import {ROSTER_RULES_V1} from "../../🧭️roster/🟨️.mjs";
+import {wasmCompileOutputIndexV1,wasmCompileOutputV1} from "./🕸️wasm-outputs/🟦️.ts";
 import {typeScriptPackageOutputProducerV1} from "./../../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🏭️producer/🟦️.ts";
 /** 🔎️ Discovers canonical owners, their native manifests and the selected executable Source closures. */
 import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -8,7 +9,7 @@ import { createHash } from "node:crypto";
 import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/🟨️.mjs";
 import { dirname, isAbsolute, join, relative, resolve, posix } from "node:path";
 import { loadCatalogBuildProvidersV1, catalogBuildContributionForManifestV1 } from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
-import { observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, recordRegistryOwnerV1, memoizedObservedComputationV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { importObservedModuleV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, recordRegistryOwnerV1, memoizedObservedComputationV1, observedFieldV1, registerFieldExtractorV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { pathToFileURL } from "node:url";
 import * as loadedProjectInputs from "../../../../🏗️build/📥️inputs/🟨️.mjs";
 import ownerAdmissionSchema from "../../../🧬️schema/🚪️admission.json" with { type: "json" };
@@ -19,11 +20,11 @@ const { existsSync, lstatSync, readFileSync, readdirSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "owner-discovery";
-let buildPath, POLICY, WORKSPACE_POLICY, exampleCollectionPath, yieldInferenceV1, readPhysicalSource, importRevision, PROJECT_BASENAME, nativeDependencyRoots, libraryBootstrap, readToml, createScriptInputCache, cargoTargets, componentBuildTargets, readTaxonomyProjectionV1, owned, playgroundSessionTargets, playgroundPreparationTargets, collectPlaygroundCatalog, playgroundSiteTargetsForAdmissionV1, targetWithDefaults, SCRIPT_BASENAME, loaded, targetScriptSources, projectWithDefaults, withNativePreparation, LIBRARY_ROOT, EXAMPLE_COLLECTIONS, WORKSPACE_OWNERSHIP, relativeScriptInputs, prepareSourceAnalysesV1, buildImportResourceV1, workspacePackageModuleV1;
+let buildPath, POLICY, WORKSPACE_POLICY, exampleCollectionPath, yieldInferenceV1, readPhysicalSource, requirePhysicalSourceV1, importRevision, PROJECT_BASENAME, nativeDependencyRoots, libraryBootstrap, readToml, createScriptInputCache, cargoTargets, componentBuildTargets, readTaxonomyProjectionV1, owned, playgroundSessionTargets, playgroundPreparationTargets, collectPlaygroundCatalog, playgroundSiteTargetsForAdmissionV1, targetWithDefaults, SCRIPT_BASENAME, loaded, targetScriptSources, projectWithDefaults, withNativePreparation, LIBRARY_ROOT, EXAMPLE_COLLECTIONS, WORKSPACE_OWNERSHIP, relativeScriptInputs, prepareSourceAnalysesV1, buildImportResourceV1, workspacePackageModuleV1;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
-  ({ buildPath, POLICY, WORKSPACE_POLICY, exampleCollectionPath, readPhysicalSource, PROJECT_BASENAME, owned, SCRIPT_BASENAME, LIBRARY_ROOT, EXAMPLE_COLLECTIONS, WORKSPACE_OWNERSHIP } = registry.coordinates);
+  ({ buildPath, POLICY, WORKSPACE_POLICY, exampleCollectionPath, readPhysicalSource, requirePhysicalSourceV1, PROJECT_BASENAME, owned, SCRIPT_BASENAME, LIBRARY_ROOT, EXAMPLE_COLLECTIONS, WORKSPACE_OWNERSHIP } = registry.coordinates);
   ({ yieldInferenceV1, createScriptInputCache, targetScriptSources, relativeScriptInputs, buildImportResourceV1, workspacePackageModuleV1 } = registry.scriptInputs);
   ({ importRevision, libraryBootstrap, loaded } = registry.bootstrap);
   ({ nativeDependencyRoots, readToml, withNativePreparation } = registry.nativeManifests);
@@ -74,9 +75,8 @@ export function inferenceCandidates(configFiles, workspaceRoot) {
   for (const path of ancestors.reverse()) { const stat = lstatSync(path); if (!stat.isDirectory() || stat.isSymbolicLink()) throw Error(`Build inference requires real workspace ancestry: ${path}`); }
   const directories = new Map([[root, true]]), files = new Set();
   for (const supplied of configFiles) {
-    if (typeof supplied !== "string" || !supplied || supplied.includes("\0") || supplied.includes("\uFFFD")) continue;
+    if (!ROSTER_RULES_V1.admitsCandidate(supplied)) continue;
     const path = buildPath(supplied), parts = path.split("/");
-    if (isOpaqueSourcePathV1(path) || exampleCollectionPath(path) || isAbsolute(path) || /^[A-Za-z]:/u.test(path) || parts.some(part => !part || part === "." || part === ".." || part === ".🧬semio" || POLICY.generatedDirectories.includes(part)) || path.startsWith("compose/") || path.startsWith("temp/compose/")) continue;
     let directory = root, admitted = true;
     for (const part of parts.slice(0, -1)) {
       directory = join(directory, part);
@@ -105,7 +105,7 @@ export async function catalogBuildContributionsV1(workspaceRoot,providers) {
   const catalogContributions=await loadCatalogBuildProvidersV1(providers,{
     readText(path){return readFileSync(join(workspaceRoot,path),"utf8");},
     kind(path){try{const stat=lstatSync(join(workspaceRoot,path));return stat.isSymbolicLink()?"symlink":stat.isDirectory()?"directory":stat.isFile()?"file":null;}catch(error){if(error.code==="ENOENT")return null;throw error;}},
-    async load(path){const file=join(workspaceRoot,path),source=readPhysicalSource(file),revision=createHash("sha256").update(source).digest("hex"),module=await importRevision(pathToFileURL(file),revision);if(createHash("sha256").update(readPhysicalSource(file)).digest("hex")!==revision)throw Object.assign(Error("Catalog provider source changed during admission"),{code:"BUILD_SOURCE_AUTHORITY"});return module;},
+    async load(path){const file=join(workspaceRoot,path),captured=importObservedModuleV1(file);if(captured!==undefined)return captured;return importRevision(pathToFileURL(file),createHash("sha256").update(readPhysicalSource(file)).digest("hex"));},
   });
   for(const owner of catalogContributions){for(const input of owner.inputs)readFileSync(join(workspaceRoot,input));const project=JSON.parse(readFileSync(join(workspaceRoot,owner.projectRoot,PROJECT_BASENAME),"utf8"));if(project.name!==owner.project||!project.targets?.[owner.generateTarget])throw Error("Catalog build producer is absent from its owner's project");}
   return catalogContributions;
@@ -122,18 +122,6 @@ export function projectAssemblyAuthorityV1(workspaceRoot,nativeRoot,projectsByRo
  let nativeOwners;
  if(nativeRoot!==undefined){try{nativeOwners=nativeDependencyRoots(nativeRoot,workspaceRoot,true,nativeCache,nativeClosures).map(owner=>[owner,projectsByRoot.get(owner)??null]);}catch(error){if(error.code!=="NATIVE_INPUT_ADMISSION")throw error;nativeOwners=[error.manifest,error.message];}}
  return createHash("sha256").update(JSON.stringify([nativeOwners??null,componentRoots??null])).digest("hex");
-}
-
-/** 🪪️ Expands actual native owners through the same read-only phase and original caller controls. */
-export async function discoverNativeBuildOwnersV1(configFiles,workspaceRoot,context){
-  configFiles = inferenceCandidates([...configFiles,...configFiles.filter(file=>file.endsWith("Cargo.toml")).map(file=>buildPath(join(dirname(file),PROJECT_BASENAME)))], workspaceRoot);
-  const nativeCache=new Map(),nativeClosures=new Map(),nativeCandidates=new Set(configFiles);let candidateIndex=0;
-  for(const file of configFiles.filter(file=>file.endsWith("Cargo.toml"))){
-    await yieldInferenceV1(context,"build:cargo-owners",++candidateIndex);
-    try{for(const root of nativeDependencyRoots(buildPath(dirname(file)),workspaceRoot,true,nativeCache,nativeClosures)){nativeCandidates.add(`${root}/Cargo.toml`);nativeCandidates.add(`${root}/${PROJECT_BASENAME}`);}}
-    catch(error){if(error.code!=="NATIVE_INPUT_ADMISSION")throw error;}
-  }
-  return {files:inferenceCandidates([...nativeCandidates],workspaceRoot),nativeCache,nativeClosures};
 }
 
 /** 🚧️ The characters a generated import path may not hold, compiled once. */
@@ -240,7 +228,12 @@ export function readBuildOwnerRegistrySourceV1(workspaceRoot){return pinnedAutho
 
 /** 📦️ Resolves an ignored generator or exact authored compiled-package publication to its actual producer. */
 const wasmCompileIndicesV1=new WeakMap();
-export function readBuildProducedCompileOutputV1(path,workspaceRoot,contracts,registry,context){if(registry){let cache=wasmCompileIndicesV1.get(registry);if(!cache){cache=new Map();wasmCompileIndicesV1.set(registry,cache);}const index=memoizedObservedComputationV1(cache,workspaceRoot,()=>wasmCompileOutputIndexV1(workspaceRoot,registry.owners,file=>existsSync(file)?readPhysicalSource(file).toString("utf8"):undefined)),wasm=wasmCompileOutputV1(index,path);if(wasm)return wasm;}
+/** 🔌️ The part of a project declaration the Wasm compile index reads: the project name and, per target, its declared Wasm package producer and outputs; any other edit of the declaration moves nothing. */
+registerFieldExtractorV1("wasm-producer-declaration",text=>{const declaration=JSON.parse(text),targets={};for(const[name,target]of Object.entries(declaration.targets??{})){const producer=target?.metadata?.semio?.wasmPackageSourceV1;if(producer?.compileOutputs!==undefined)targets[name]={metadata:{semio:{wasmPackageSourceV1:producer}},outputs:target.outputs};}return{name:declaration.name,targets};});
+registerFieldExtractorV1("wasm-package-contract",text=>{const manifest=JSON.parse(text);return{name:manifest.name,exports:manifest.exports};});
+const wasmDeclarationV1=(file,format)=>{requirePhysicalSourceV1(file);try{return JSON.stringify(observedFieldV1(file,format,""));}catch{return undefined;}};
+export function readBuildProducedCompileOutputV1(path,workspaceRoot,contracts,registry,context){if(registry){let cache=wasmCompileIndicesV1.get(registry);if(!cache){cache=new Map();wasmCompileIndicesV1.set(registry,cache);}const index=memoizedObservedComputationV1(cache,workspaceRoot,()=>wasmCompileOutputIndexV1(workspaceRoot,registry.owners,file=>!existsSync(file)?undefined:file.endsWith("📋️project.json")?wasmDeclarationV1(file,"wasm-producer-declaration"):file.endsWith("/package.json")?wasmDeclarationV1(file,"wasm-package-contract"):file.endsWith("/Cargo.toml")?(requirePhysicalSourceV1(file),""):readPhysicalSource(file).toString("utf8"))),wasm=wasmCompileOutputV1(index,path);if(wasm)return wasm;}
+ if(!isAbsolute(path))return undefined;
  const generated=readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,registry,context);if(generated)return generated;const local=buildPath(relative(workspaceRoot,path));const produced=typeScriptPackageOutputProducerV1(path,workspaceRoot,file=>existsSync(file)?readPhysicalSource(file).toString("utf8"):undefined);if(!produced)return undefined;
  const manifest=buildPath(relative(workspaceRoot,produced.manifest)),root=buildPath(relative(workspaceRoot,produced.packageRoot)),owner=registry?.owners.find(owner=>owner.name===produced.project);if(registry)recordRegistryOwnerV1(workspaceRoot,produced.project,owner);if(registry&&(!owner||owner.root!==root||owner.manifest!==manifest))throw Error("Canonical TypeScript artifact producer absent");
- const packageManifest=join(produced.packageRoot,"package.json");readPhysicalSource(packageManifest);return Object.freeze({project:produced.project,target:produced.target,manifest,output:local,sources:[manifest,buildPath(relative(workspaceRoot,packageManifest)),buildPath(relative(workspaceRoot,produced.source))]});}
+ const packageManifest=join(produced.packageRoot,"package.json");requirePhysicalSourceV1(packageManifest);return Object.freeze({project:produced.project,target:produced.target,manifest,output:local,sources:[manifest,buildPath(relative(workspaceRoot,packageManifest)),buildPath(relative(workspaceRoot,produced.source))]});}

@@ -1,0 +1,25 @@
+{
+  "title": "Incremental Multi-Agent Build Graph Service",
+  "emoji": "⚡️",
+  "status": "open",
+  "description": "Heavily optimize the build system so developing is incredibly fast for many agents and workspaces editing the monorepo simultaneously on a 16 GB RAM / 200 GB disk host, with bounded resources (no cache/RAM/swap exhaustion or crashes over long sessions). Implement the target design from the norm ticket's 🔍️audits/fleet-1108-build-graph-design-review.md: one per-host incremental graph service shared by all agents/workspaces, fine-grained content-addressed dependency DAG with early cutoff, watcher-driven invalidation, MVCC pinned revisions, demand-driven target-scoped planning, hard per-job memory limits, size-capped CAS with LRU GC, fair global scheduling. Coordinate a fleet of parallel agents.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2787"
+  },
+  "goal": "aioptimizedrepo",
+  "sessions": [
+    "57414192-2cc4-4e33-a38b-861b55f79ad7"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-09 00:20:09",
+      "author": "",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Heavily optimize the build system so developing is incredibly fast for many agents and workspaces editing the monorepo simultaneously on a 16 GB RAM / 200 GB disk host, with bounded resources (no cache/RAM/swap exhaustion or crashes over long sessions). Implement the target design from the norm ticket's 🔍️audits/fleet-1108-build-graph-design-review.md: one per-host incremental graph service shared by all agents/workspaces, fine-grained content-addressed dependency DAG with early cutoff, watcher-driven invalidation, MVCC pinned revisions, demand-driven target-scoped planning, hard per-job memory limits, size-capped CAS with LRU GC, fair global scheduling. Coordinate a fleet of parallel agents.",
+      "effort": "medium"
+    }
+  ]
+}

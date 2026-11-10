@@ -6,6 +6,7 @@ import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {canonicalJsonV1} from "../../../🟨️.mjs";
 import {loadGenerationGraphV1} from "../../🟨️.mjs";
+const graphOfV1=async(...input:Parameters<typeof loadGenerationGraphV1>)=>(await loadGenerationGraphV1(...input)).graph;
 import {applyOps,createMockHost,ringFiles,seed} from "../../../🧪️tests/🏃️world/🟦️.ts";
 
 const here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"../../../🧪️tests/🐍️.py"),python=Bun.which("python3")??Bun.which("python");
@@ -18,7 +19,7 @@ type Request={generation:number;dirty:readonly string[];roots:Readonly<Record<st
 async function staleWorkspace(dir:string){
  await seed(dir,ringFiles(6));
  const requests:Request[]=[],asked:Request[]=[],mock=createMockHost(dir,{prefetch:async request=>{requests.push(request);}}),host=mock.host as Record<string,unknown>;
- await loadGenerationGraphV1(mock.host);
+ (await loadGenerationGraphV1(mock.host)).graph;
  await applyOps(dir,[{op:"write",path:"pkg/p2/src/index.ts",content:'import "@syn/p4";\nexport const v=2;\n'}]);
  mock.events.length=0;requests.length=0;
  host.carryClosures=(on:boolean)=>{mock.events.push("carry:"+on);};
@@ -30,7 +31,7 @@ test("an idle builder builds at once: no prefetch is run, the plan is asked abou
  try{
   const{mock,host,requests,asked}=await staleWorkspace(dir);
   host.builderIdle=async(request:Request)=>{asked.push(request);return true;};
-  const graph=await loadGenerationGraphV1(mock.host);
+  const graph=(await loadGenerationGraphV1(mock.host)).graph;
   expect(mock.events).toEqual(["shared","builder:wait","builder:held","builder:released"]);
   expect(requests).toEqual([]);
   expect(asked).toHaveLength(1);expect(asked[0]!.dirty).toEqual(["p2"]);expect(asked[0]!.roots.p2).toBe("pkg/p2");expect(asked[0]!.generation).toBe(0);
@@ -43,7 +44,7 @@ test("a busy builder prepares the stale owners first and carries the closures ex
  try{
   const{mock,host,requests,asked}=await staleWorkspace(dir);
   host.builderIdle=async(request:Request)=>{asked.push(request);return false;};
-  const graph=await loadGenerationGraphV1(mock.host);
+  const graph=(await loadGenerationGraphV1(mock.host)).graph;
   expect(mock.events).toEqual(["shared","carry:true","prefetch","carry:false","builder:wait","builder:held","builder:released"]);
   expect(requests).toHaveLength(1);expect(requests[0]).toEqual(asked[0]!);
   expect(shape(graph)).toEqual(pythonGraph(dir));
@@ -54,11 +55,11 @@ test("a host that cannot tell keeps the prefetch, and a preparation that fails s
  const dir=scratch();
  try{
   const{mock,requests}=await staleWorkspace(dir);
-  await loadGenerationGraphV1(mock.host);
+  (await loadGenerationGraphV1(mock.host)).graph;
   expect(mock.events).toEqual(["shared","carry:true","prefetch","carry:false","builder:wait","builder:held","builder:released"]);expect(requests).toHaveLength(1);
   await applyOps(dir,[{op:"write",path:"pkg/p3/src/index.ts",content:'import "@syn/p5";\nexport const v=3;\n'}]);
   const failing=createMockHost(dir,{prefetch:async()=>{throw new Error("cancelled");}});(failing.host as Record<string,unknown>).carryClosures=(on:boolean)=>{failing.events.push("carry:"+on);};
-  await expect(loadGenerationGraphV1(failing.host)).rejects.toThrow("cancelled");
+  await expect(graphOfV1(failing.host)).rejects.toThrow("cancelled");
   expect(failing.events).toEqual(["shared","carry:true","prefetch","carry:false"]);
  }finally{clean(dir);}
 },60000);
@@ -69,7 +70,7 @@ test("nothing is asked and nothing is prepared when the plan names no stale owne
   await seed(dir,ringFiles(6));
   const requests:Request[]=[],asked:Request[]=[],mock=createMockHost(dir,{prefetch:async request=>{requests.push(request);}});
   (mock.host as Record<string,unknown>).builderIdle=async(request:Request)=>{asked.push(request);return true;};
-  await loadGenerationGraphV1(mock.host);
+  (await loadGenerationGraphV1(mock.host)).graph;
   expect(mock.events).toEqual(["shared","builder:wait","builder:held","builder:released"]);expect(asked).toEqual([]);expect(requests).toEqual([]);
  }finally{clean(dir);}
 },60000);

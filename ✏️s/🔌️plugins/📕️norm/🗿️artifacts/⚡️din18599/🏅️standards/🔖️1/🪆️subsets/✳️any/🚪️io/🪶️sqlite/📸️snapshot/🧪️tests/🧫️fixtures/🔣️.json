@@ -20,7 +20,9 @@
       "thetaICoolC": 26.5,
       "occupants": 4294967295,
       "internalGainsWM2": 7.25,
-      "lightingPowerWM2": 10.5
+      "lightingPowerWM2": 10.5,
+      "thermalMassClass": "Custom",
+      "cWirkWhM2k": 77.25
     },
     {
       "id": "duplicate zone",
@@ -33,7 +35,9 @@
       "thetaICoolC": -1.5,
       "occupants": 0,
       "internalGainsWM2": -2.25,
-      "lightingPowerWM2": -4.5
+      "lightingPowerWM2": -4.5,
+      "thermalMassClass": "Heavy",
+      "cWirkWhM2k": -3.5
     }
   ],
   "elements": [

@@ -315,6 +315,8 @@
     "PolicyDescriptions": {
       "const": {
         "en": {
+          "probe": "The kind of probe that tells whether a claim holder is alive without waiting.",
+          "freshProbe": "The kind of probe that admits a new claim directory without waiting.",
           "version": "The version of the policy.",
           "directory": "The directory of the claim documents.",
           "chunkOwners": "How many owners one claim chunk covers.",
@@ -332,6 +334,8 @@
           "lockNameCharacters": "The most trailing characters of an owner name in the name of its lock file."
         },
         "de": {
+          "probe": "Die Art der Abfrage, die ohne Warten zeigt, ob ein Halter eines Anspruchs lebt.",
+          "freshProbe": "Die Art der Abfrage, die ein neues Anspruchsverzeichnis ohne Warten zulässt.",
           "version": "Die Version der Richtlinie.",
           "directory": "Das Verzeichnis der Anspruchsdokumente.",
           "chunkOwners": "Wie viele Eigentümer ein Anspruchsabschnitt abdeckt.",

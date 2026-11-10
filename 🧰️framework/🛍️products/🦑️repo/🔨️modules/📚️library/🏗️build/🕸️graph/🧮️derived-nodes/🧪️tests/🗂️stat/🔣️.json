@@ -1,0 +1,196 @@
+{
+ "racy": 2000,
+ "steps": [
+  {
+   "now": 100000,
+   "files": {
+    "a/x.ts": {
+     "size": 3,
+     "mtime": 1000,
+     "ino": 11,
+     "content": "aaa"
+    },
+    "a/y.ts": {
+     "size": 3,
+     "mtime": 2000,
+     "ino": 12,
+     "content": "bbb"
+    },
+    "b/z.ts": {
+     "size": 3,
+     "mtime": 99500,
+     "ino": 13,
+     "content": "ccc"
+    }
+   },
+   "query": [
+    "a/x.ts",
+    "a/y.ts",
+    "b/z.ts",
+    "a/none.ts"
+   ]
+  },
+  {
+   "now": 101000,
+   "files": {
+    "a/x.ts": {
+     "size": 3,
+     "mtime": 1000,
+     "ino": 11,
+     "content": "aaa"
+    },
+    "a/y.ts": {
+     "size": 3,
+     "mtime": 2000,
+     "ino": 12,
+     "content": "bbb"
+    },
+    "b/z.ts": {
+     "size": 3,
+     "mtime": 99500,
+     "ino": 13,
+     "content": "ccc"
+    }
+   },
+   "query": [
+    "a/x.ts",
+    "a/y.ts",
+    "b/z.ts"
+   ]
+  },
+  {
+   "now": 110000,
+   "files": {
+    "a/x.ts": {
+     "size": 3,
+     "mtime": 1000,
+     "ino": 11,
+     "content": "aaa"
+    },
+    "a/y.ts": {
+     "size": 4,
+     "mtime": 2500,
+     "ino": 12,
+     "content": "bbbb"
+    },
+    "b/z.ts": {
+     "size": 3,
+     "mtime": 99500,
+     "ino": 13,
+     "content": "ccc"
+    }
+   },
+   "query": [
+    "a/x.ts",
+    "a/y.ts",
+    "b/z.ts"
+   ]
+  },
+  {
+   "now": 120000,
+   "files": {
+    "a/x.ts": {
+     "size": 3,
+     "mtime": 1000,
+     "ino": 14,
+     "content": "aaa"
+    },
+    "a/y.ts": {
+     "size": 4,
+     "mtime": 2500,
+     "ino": 12,
+     "content": "bbbb"
+    },
+    "b/z.ts": {
+     "size": 3,
+     "mtime": 99500,
+     "ino": 13,
+     "content": "ccc"
+    }
+   },
+   "query": [
+    "a/x.ts",
+    "a/y.ts",
+    "b/z.ts"
+   ]
+  },
+  {
+   "now": 130000,
+   "files": {
+    "a/x.ts": {
+     "size": 3,
+     "mtime": 1000,
+     "ino": 14,
+     "content": "aaa"
+    },
+    "a/y.ts": {
+     "size": 4,
+     "mtime": 2500,
+     "ino": 12,
+     "content": "bbbb"
+    },
+    "b/z.ts": {
+     "size": 3,
+     "mtime": 99500,
+     "ino": 13,
+     "content": "CCC"
+    }
+   },
+   "query": [
+    "a/x.ts",
+    "a/y.ts",
+    "b/z.ts"
+   ]
+  },
+  {
+   "now": 140000,
+   "files": {
+    "a/x.ts": {
+     "size": 3,
+     "mtime": 1000,
+     "ino": 14,
+     "content": "aaa"
+    },
+    "b/z.ts": {
+     "size": 3,
+     "mtime": 99500,
+     "ino": 13,
+     "content": "CCC"
+    }
+   },
+   "query": [
+    "a/x.ts",
+    "a/y.ts",
+    "b/z.ts"
+   ]
+  },
+  {
+   "now": 150000,
+   "files": {
+    "a/x.ts": {
+     "size": 3,
+     "mtime": 1000,
+     "ino": 14,
+     "content": "aaa"
+    },
+    "a/y.ts": {
+     "size": 4,
+     "mtime": 2500,
+     "ino": 12,
+     "content": "bbbb"
+    },
+    "b/z.ts": {
+     "size": 3,
+     "mtime": 99500,
+     "ino": 13,
+     "content": "CCC"
+    }
+   },
+   "query": [
+    "a/x.ts",
+    "a/y.ts",
+    "b/z.ts"
+   ]
+  }
+ ]
+}

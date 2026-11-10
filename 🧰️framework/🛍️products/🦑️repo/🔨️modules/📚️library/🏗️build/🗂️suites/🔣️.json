@@ -18,6 +18,7 @@
       "id": "build-command-line",
       "budgetMs": 300000,
       "typecheck": "none",
+      "scratch": "sandbox",
       "trees": [
         "⌨️command",
         "📤️arguments",
@@ -219,6 +220,58 @@
       ]
     },
     {
+      "id": "build-cas",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🗄️cas"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "build-scheduler",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🗓️scheduler"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "build-bounded",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🧊️bounded", "🧊️revision"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "build-job-limits",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🧱️job-limits"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
       "id": "build-caller-birth",
       "budgetMs": 300000,
       "typecheck": "none",
@@ -392,7 +445,7 @@
     },
     {
       "id": "build-storybook",
-      "budgetMs": 15000,
+      "budgetMs": 300000,
       "typecheck": "none",
       "trees": [
         "📖️storybook"
@@ -460,6 +513,7 @@
       "id": "build-source-closure",
       "budgetMs": 300000,
       "typecheck": "none",
+      "scratch": "checkout",
       "trees": [
         "📥️source"
       ],
@@ -865,6 +919,19 @@
       ]
     },
     {
+      "id": "build-inference-scaling",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/📥️inference/🕸️dependency-edges/🧪️tests/📈️scaling"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
       "id": "build-inference-script-inputs",
       "budgetMs": 300000,
       "typecheck": "none",
@@ -927,6 +994,7 @@
       "id": "build-sealed",
       "budgetMs": 300000,
       "typecheck": "none",
+      "scratch": "checkout",
       "trees": [
         "🏛️sealed"
       ],

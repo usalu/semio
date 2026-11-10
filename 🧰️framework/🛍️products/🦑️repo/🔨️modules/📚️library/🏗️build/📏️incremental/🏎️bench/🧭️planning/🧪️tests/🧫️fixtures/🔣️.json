@@ -1,0 +1,52 @@
+{
+ "version": 1,
+ "about": "Recorded graph lines of real plans (NORM-COMPLETE-VISUAL-EUROCODE-PLUGINS generated logs rt-main-2 and rt-main-3, shortened) with the milliseconds since the start; expected values are hand-counted.",
+ "cases": [
+  {
+   "id": "refresh-with-workers", "wallMs": 130000,
+   "lines": [
+    [1200, "graph: fact index of generation 301: 664000 facts of 4933 projects, 58.8 MB expanded (11.5 % of the 512 MB limit), 10.8 MB packed"],
+    [3000, "graph: refreshing 340 projects (generation 304)"],
+    [3100, "graph: 13 stale facts (readdir 7, file 4, digest 1, lstat 1) leave 340 projects stale"],
+    [9000, "graph: asking the host for up to 11 worker processes for 335 projects; projects are inferred in this process meanwhile"],
+    [9500, "graph: inferring projects with 1 worker processes (2048 MB each)"],
+    [40000, "graph: worker 0 restarted after 1926 MB"],
+    [60000, "graph: worker 0 restarted after 1257 MB"],
+    [100000, "graph: 297 of 335 projects inferred by 1 worker processes in 563 s (0 failed, 0 lost, 8 restarts)"],
+    [101000, "graph: generation 304 published, 1631 projects refreshed in 1117 s (3302 kept their edges)"],
+    [101500, "graph: fact index of generation 304: 674885 facts of 4934 projects, 60.6 MB expanded (11.8 % of the 512 MB limit), 11.3 MB packed"],
+    [101600, "graph: 1052 derived results asked again after 13 stale facts: 1051 unchanged, 1 changed"],
+    [129000, "graph: 1009 projects planned by a child process that has exited"]
+   ],
+   "expected": {"phaseMs": {"facts": 3000, "verification": 6000, "inference": 92000, "planning": 29000}, "counters": {"facts": 1338885, "staleFacts": 13, "projectsStale": 340, "closuresVerified": 1052, "closuresReused": 1051, "closuresChanged": 1, "projectsInferred": 297, "workerRestartMb": 3183}}
+  },
+  {
+   "id": "warm-noop", "wallMs": 4000,
+   "lines": [
+    [900, "graph: fact index of generation 304: 674885 facts of 4934 projects, 60.6 MB expanded (11.8 % of the 512 MB limit), 11.3 MB packed"],
+    [1500, "graph: generation 304 was sealed by a peer after this command began and already covers it, nothing is checked again"]
+   ],
+   "expected": {"phaseMs": {"facts": 1500, "verification": 0, "inference": 0, "planning": 2500}, "counters": {"facts": 674885}}
+  }
+ ],
+ "report": {
+  "version": 1, "started": "2026-11-09T00:30:00.000Z",
+  "host": {"cpus": 8, "memoryMb": 15848, "swapMb": 7549, "loadPerCore": 1.2},
+  "results": [
+   {"scenario": "warm-noop", "status": "ran", "samples": [
+    {"run": 1, "exit": 0, "wallMs": 4000, "phaseMs": {"facts": 1500, "verification": 0, "inference": 0, "planning": 2500}, "closures": {"verified": null, "reused": null, "changed": null}, "peakRssMb": 3000, "swapMb": 7500, "oomKills": 0, "minAvailableMb": 400, "storeMb": null},
+    {"run": 2, "exit": 0, "wallMs": 6000, "phaseMs": {"facts": 1500, "verification": 0, "inference": 0, "planning": 4500}, "closures": {"verified": null, "reused": null, "changed": null}, "peakRssMb": 3100, "swapMb": 7600, "oomKills": 0, "minAvailableMb": 300, "storeMb": null}
+   ]},
+   {"scenario": "store-disk", "status": "ran", "samples": [
+    {"run": 1, "exit": 0, "wallMs": 0, "phaseMs": {"facts": 0, "verification": 0, "inference": 0, "planning": 0}, "closures": {"verified": null, "reused": null, "changed": null}, "peakRssMb": null, "swapMb": null, "oomKills": null, "minAvailableMb": null, "storeMb": 52000}
+   ]}
+  ]
+ },
+ "badReports": [
+  {"id": "negative-wall", "patch": {"results": [{"scenario": "x", "status": "ran", "samples": [{"run": 1, "exit": 0, "wallMs": -1, "phaseMs": {"facts": 0, "verification": 0, "inference": 0, "planning": 0}, "closures": {"verified": null, "reused": null, "changed": null}, "peakRssMb": null, "swapMb": null, "oomKills": null, "minAvailableMb": null, "storeMb": null}]}]}},
+  {"id": "unknown-status", "patch": {"results": [{"scenario": "x", "status": "weird", "samples": []}]}},
+  {"id": "extra-field", "patch": {"surprise": true}}
+ ],
+ "median": {"values": [3, null, 1, 2], "expected": 2},
+ "oom": {"journal": "Nov 09 kernel: Out of memory: Killed process 12 (bun)\nNov 09 kernel: other\nNov 09 kernel: oom-kill:constraint=CONSTRAINT_NONE", "expected": 2}
+}

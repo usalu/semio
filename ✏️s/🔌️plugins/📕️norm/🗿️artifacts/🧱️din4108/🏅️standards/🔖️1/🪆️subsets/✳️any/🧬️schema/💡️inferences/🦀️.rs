@@ -247,7 +247,6 @@ pub fn evaluate_scoped(document: &Din4108Snapshot, scope: Scope<'_>) -> CheckRep
     if scope.part("integrity") {
         push_referential_integrity(&mut report, document);
     }
-    let t_ext = document.climate_zone.design_external_temperature_c();
 
     for (_, zone) in document.zones.iter().enumerate().filter(|(i, _)| scope.admits("zones", *i)) {
         report.push(part_2::check_summer_heat(zone, document.climate_zone, &document.elements, &document.usage));
@@ -293,9 +292,9 @@ pub fn evaluate_scoped(document: &Din4108Snapshot, scope: Scope<'_>) -> CheckRep
     for (_, element) in document.elements.iter().enumerate().filter(|(i, _)| scope.admits("elements", *i)) {
         report.push(part_2::check_minimum_r(element, &document.usage, document.t_int_c));
         report.push(part_2::check_surface_mass(element));
-        report.push(part_2::check_f_rsi(element, document.t_int_c, t_ext));
-        report.push(part_3::check_glaser(element, document.t_int_c, document.rh_int, document.climate_zone));
-        report.push(part_3::check_drying_reserve(element, document.t_int_c, document.rh_int, document.climate_zone));
+        report.push(part_2::check_f_rsi(element));
+        report.push(part_3::check_glaser(element));
+        report.push(part_3::check_drying_reserve(element));
         report.push(part_6::check_u_value(element, &document.usage, document.t_int_c));
         report.push(part_6::check_u_prime(element, &document.thermal_bridges, opaque_area, &document.usage, document.t_int_c));
         for li in 0..element.layers.len() {

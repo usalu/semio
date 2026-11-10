@@ -1,4 +1,5 @@
 import {chmod,lstat,mkdir,readdir,readFile,rename,rmdir,stat,unlink,utimes,writeFile} from "node:fs/promises";
+import {nativeDirectoryProtocolV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {nativePartitionOfV1,nativeStatfsV1,nativeStorageBackendOfDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {isAbsolute,join,relative,resolve,sep} from "node:path";
 import {CACHE_GC_LIMITS_V1} from "../🧬️schema/🟦️.ts";
@@ -29,12 +30,13 @@ export function cachePidAliveV1(pid:number):boolean{
  try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}
 }
 
-/** 🔐️ Proves a SQLite lease file is unheld: an exclusive transaction without waiting only succeeds when no process holds a shared or exclusive lock. */
+/** 🔐️ Proves a SQLite lease file is unheld: an exclusive transaction without waiting only succeeds when no process holds a shared or exclusive lock; the probe gives the file its times back, so asking never counts as using it. */
 export async function cacheSqliteFreeV1(file:string):Promise<boolean>{
  const {Database}={ Database: SqliteDatabaseV1 };let database:InstanceType<typeof Database>|undefined;
+ const before=await lstat(file).catch(()=>undefined);
  try{database=new Database(file,{create:false,readwrite:true});database.exec("PRAGMA busy_timeout=0");database.exec("BEGIN EXCLUSIVE");database.exec("ROLLBACK");return true;}
  catch(error){return !/locked|busy/iu.test(String((error as Error).message));}
- finally{try{database?.close();}catch{}}
+ finally{try{database?.close();}catch{}if(before)await utimes(file,before.atime,before.mtime).catch(()=>undefined);}
 }
 
 /** 🕰️ Proves that reading a file moves its access time on the volume of a directory: a probe file is dated two days back and read once. A volume mounted without access times (`noatime`, the default of Windows) never does, so the recency of a cache that is only read there says nothing about whether somebody uses it. */
@@ -100,7 +102,7 @@ async function partitionStateV1(directory:string,ports:CacheRunnerPortsV1,deep:b
  let outer;try{outer=await lstat(directory);}catch{return{state:"absent",usedBytes:null,capacityBytes:null,partial:false,walked:false};}
  const inner=join(directory,mount);let child;try{child=await lstat(inner);}catch{child=undefined;}
  const platform=ports.platform??process.platform,declaration=nativeStorageBackendOfDirectoryV1(directory,{platform}),backing=declaration.backingFilename,mounted=declaration.capabilities.includes("mounted-volume")?child?.isDirectory()===true&&child.dev!==outer.dev:nativePartitionOfV1(inner,platform)?.attached===true;
- if(mounted){const row=await nativeStatfsV1(inner,{platform});return{state:"mounted",usedBytes:(row.blocks-row.bfree)*row.bsize,capacityBytes:row.blocks*row.bsize,partial:false,walked:false};}
+ if(mounted){const row=await nativeStatfsV1(inner,{platform,...(deep?{}:{maximumAgeMilliseconds:nativeDirectoryProtocolV1().usage.statusMaximumAgeMilliseconds})});return{state:"mounted",usedBytes:(row.blocks-row.bfree)*row.bsize,capacityBytes:row.blocks*row.bsize,partial:false,walked:false};}
  if(await exists(join(directory,backing)))return{state:"detached",usedBytes:null,capacityBytes:null,partial:false,walked:false};
  if(!child)return{state:"absent",usedBytes:null,capacityBytes:null,partial:false,walked:false};
  if(!deep)return{state:"directory",usedBytes:null,capacityBytes:null,partial:false,walked:false};

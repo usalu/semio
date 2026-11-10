@@ -202,7 +202,7 @@ fn check_geometry_shape_and_volume(
     match &obj.shape {
         Some(shape) => match helpers::evaluate_bounding_box(shape, geometry) {
             Ok(bbox) => {
-                let volume = bbox.volume_m3();
+                let volume = helpers::evaluate_solid_volume(shape, geometry).map_or(0.0, |v| v.volume_m3);
                 let dx = bbox.max[0] - bbox.min[0];
                 let dy = bbox.max[1] - bbox.min[1];
                 let dz = bbox.max[2] - bbox.min[2];
@@ -215,8 +215,8 @@ fn check_geometry_shape_and_volume(
                         subject(id, format!("geometry.objects.{id}.shape"), id, id),
                         copy("Closed solid positive volume", "Geschlossener Körper mit positivem Volumen"),
                         copy(
-                            format!("Geometry '{id}' bounding volume is {volume:.6} m³ (extents {dx:.4}×{dy:.4}×{dz:.4} m) — must be strictly positive."),
-                            format!("Geometrie '{id}' hat Volumen {volume:.6} m³ (Abmessungen {dx:.4}×{dy:.4}×{dz:.4} m) — muss streng positiv sein."),
+                            format!("Geometry '{id}' solid volume is {volume:.6} m³ (extents {dx:.4}×{dy:.4}×{dz:.4} m) — must be strictly positive."),
+                            format!("Geometrie '{id}' hat Körpervolumen {volume:.6} m³ (Abmessungen {dx:.4}×{dy:.4}×{dz:.4} m) — muss streng positiv sein."),
                         ),
                         CheckStatus::Fail,
                         q_vol(volume.max(0.0)),
@@ -512,7 +512,7 @@ fn check_geometry_ports_and_bindings(
 /// 📐️ Positive extent helper used by tests/oracles.
 
 pub fn solid_volume_m3(obj: &GeometryObject, catalogue: &GeometryCatalogue) -> Option<f64> {
-    obj.shape.as_ref().and_then(|s| helpers::evaluate_bounding_box(s, catalogue).ok().map(|b| b.volume_m3()))
+    obj.shape.as_ref().and_then(|s| helpers::evaluate_solid_volume(s, catalogue).ok().map(|v| v.volume_m3))
 }
 
 pub fn has_reference_cycle(node: &GeometryNode, catalogue: &GeometryCatalogue, stack: &mut HashSet<String>) -> bool {

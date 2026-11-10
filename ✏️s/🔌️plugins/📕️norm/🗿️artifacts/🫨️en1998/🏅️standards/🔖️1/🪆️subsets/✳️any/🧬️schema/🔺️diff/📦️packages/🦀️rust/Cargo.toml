@@ -26,6 +26,10 @@ semio-framework-schema-registry = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-en1998-diff-typescript = { workspace = true }
+semio-s-artifact-norm-en1998-diff-graphql = { workspace = true }
+semio-s-artifact-norm-en1998-diff-json-schema = { workspace = true }
+semio-s-artifact-norm-en1998-diff-proto = { workspace = true }
 semio-s-artifact-norm-en1998-model = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 

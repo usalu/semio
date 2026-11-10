@@ -1,0 +1,400 @@
+{
+  "oracle": "shapely polygon booleans on z-sections + scipy.integrate.quad, scipy ConvexHull, closed forms; ISO 16757-2 7.1 solid volume",
+  "volumes": [
+    {
+      "id": "box-1x2x3",
+      "geometry": {
+        "node": "primitive",
+        "kind": "box",
+        "parameters": {
+          "width": 1.0,
+          "height": 2.0,
+          "depth": 3.0
+        }
+      },
+      "solidVolumeM3": 6.0,
+      "closedFormM3": 6.0,
+      "note": "box",
+      "convexHullVolumeM3": 6.0
+    },
+    {
+      "id": "cylinder-r1-h2",
+      "geometry": {
+        "node": "primitive",
+        "kind": "cylinder",
+        "parameters": {
+          "radius": 1.0,
+          "height": 2.0
+        }
+      },
+      "solidVolumeM3": 6.283182845654976,
+      "closedFormM3": 6.283185307179586,
+      "note": "cylinder",
+      "convexHullVolumeM3": 6.283182843022388
+    },
+    {
+      "id": "sphere-r1.5",
+      "geometry": {
+        "node": "primitive",
+        "kind": "sphere",
+        "parameters": {
+          "radius": 1.5
+        }
+      },
+      "solidVolumeM3": 14.137161396800419,
+      "closedFormM3": 14.137166941154067,
+      "note": "sphere",
+      "convexHullVolumeM3": 14.137166941154067
+    },
+    {
+      "id": "box-2x1x1-rotated-45-about-z",
+      "geometry": {
+        "node": "transform",
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotationDeg": [
+          0.0,
+          0.0,
+          45.0
+        ],
+        "child": {
+          "node": "primitive",
+          "kind": "box",
+          "parameters": {
+            "width": 2.0,
+            "height": 1.0,
+            "depth": 1.0
+          }
+        }
+      },
+      "solidVolumeM3": 2.0,
+      "closedFormM3": 2.0,
+      "note": "rotation",
+      "convexHullVolumeM3": 2.0
+    },
+    {
+      "id": "cylinder-r0.5-h3-rotated-90-about-x",
+      "geometry": {
+        "node": "transform",
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotationDeg": [
+          90.0,
+          0.0,
+          0.0
+        ],
+        "child": {
+          "node": "primitive",
+          "kind": "cylinder",
+          "parameters": {
+            "radius": 0.5,
+            "height": 3.0
+          }
+        }
+      },
+      "solidVolumeM3": 2.3561935661334004,
+      "closedFormM3": 2.356194490192345,
+      "note": "rotation",
+      "convexHullVolumeM3": 2.3561935661333835
+    },
+    {
+      "id": "union-of-two-unit-boxes-5m-apart",
+      "geometry": {
+        "node": "boolean",
+        "operator": "union",
+        "children": [
+          {
+            "node": "primitive",
+            "kind": "box",
+            "parameters": {
+              "width": 1.0,
+              "height": 1.0,
+              "depth": 1.0
+            }
+          },
+          {
+            "node": "transform",
+            "translation": [
+              5.0,
+              5.0,
+              5.0
+            ],
+            "rotationDeg": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "child": {
+              "node": "primitive",
+              "kind": "box",
+              "parameters": {
+                "width": 1.0,
+                "height": 1.0,
+                "depth": 1.0
+              }
+            }
+          }
+        ]
+      },
+      "solidVolumeM3": 2.0,
+      "closedFormM3": 2.0,
+      "note": "disjoint union"
+    },
+    {
+      "id": "intersection-of-two-unit-boxes-offset-0.5",
+      "geometry": {
+        "node": "boolean",
+        "operator": "intersection",
+        "children": [
+          {
+            "node": "primitive",
+            "kind": "box",
+            "parameters": {
+              "width": 1.0,
+              "height": 1.0,
+              "depth": 1.0
+            }
+          },
+          {
+            "node": "transform",
+            "translation": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "rotationDeg": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "child": {
+              "node": "primitive",
+              "kind": "box",
+              "parameters": {
+                "width": 1.0,
+                "height": 1.0,
+                "depth": 1.0
+              }
+            }
+          }
+        ]
+      },
+      "solidVolumeM3": 0.125,
+      "closedFormM3": 0.125,
+      "note": "overlap"
+    },
+    {
+      "id": "difference-unit-box-minus-half-box",
+      "geometry": {
+        "node": "boolean",
+        "operator": "difference",
+        "children": [
+          {
+            "node": "primitive",
+            "kind": "box",
+            "parameters": {
+              "width": 1.0,
+              "height": 1.0,
+              "depth": 1.0
+            }
+          },
+          {
+            "node": "primitive",
+            "kind": "box",
+            "parameters": {
+              "width": 0.5,
+              "height": 1.0,
+              "depth": 1.0
+            }
+          }
+        ]
+      },
+      "solidVolumeM3": 0.5,
+      "closedFormM3": 0.5,
+      "note": "difference"
+    },
+    {
+      "id": "union-of-two-unit-spheres-1m-apart",
+      "geometry": {
+        "node": "boolean",
+        "operator": "union",
+        "children": [
+          {
+            "node": "primitive",
+            "kind": "sphere",
+            "parameters": {
+              "radius": 1.0
+            }
+          },
+          {
+            "node": "transform",
+            "translation": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "rotationDeg": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "child": {
+              "node": "primitive",
+              "kind": "sphere",
+              "parameters": {
+                "radius": 1.0
+              }
+            }
+          }
+        ]
+      },
+      "solidVolumeM3": 7.068581160192505,
+      "closedFormM3": 7.068583470577034,
+      "note": "lens closed form"
+    },
+    {
+      "id": "cylinder-with-square-hole",
+      "geometry": {
+        "node": "boolean",
+        "operator": "difference",
+        "children": [
+          {
+            "node": "primitive",
+            "kind": "cylinder",
+            "parameters": {
+              "radius": 1.0,
+              "height": 2.0
+            }
+          },
+          {
+            "node": "transform",
+            "translation": [
+              0.5,
+              -0.5,
+              0.5
+            ],
+            "rotationDeg": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "child": {
+              "node": "primitive",
+              "kind": "box",
+              "parameters": {
+                "width": 1.0,
+                "height": 3.0,
+                "depth": 1.0
+              }
+            }
+          }
+        ]
+      },
+      "solidVolumeM3": 4.283182802872991,
+      "closedFormM3": null,
+      "note": "difference"
+    },
+    {
+      "id": "two-boxes-one-rotated-45-about-z",
+      "geometry": {
+        "node": "boolean",
+        "operator": "union",
+        "children": [
+          {
+            "node": "primitive",
+            "kind": "box",
+            "parameters": {
+              "width": 2.0,
+              "height": 1.0,
+              "depth": 1.0
+            }
+          },
+          {
+            "node": "transform",
+            "translation": [
+              1.0,
+              0.5,
+              0.0
+            ],
+            "rotationDeg": [
+              0.0,
+              0.0,
+              45.0
+            ],
+            "child": {
+              "node": "primitive",
+              "kind": "box",
+              "parameters": {
+                "width": 2.0,
+                "height": 1.0,
+                "depth": 1.0
+              }
+            }
+          }
+        ]
+      },
+      "solidVolumeM3": 3.75,
+      "closedFormM3": null,
+      "note": "rotated overlap"
+    },
+    {
+      "id": "rotated-cylinder-inside-sphere",
+      "geometry": {
+        "node": "boolean",
+        "operator": "intersection",
+        "children": [
+          {
+            "node": "transform",
+            "translation": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "rotationDeg": [
+              0.0,
+              0.0,
+              90.0
+            ],
+            "child": {
+              "node": "primitive",
+              "kind": "cylinder",
+              "parameters": {
+                "radius": 0.5,
+                "height": 2.0
+              }
+            }
+          },
+          {
+            "node": "transform",
+            "translation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotationDeg": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "child": {
+              "node": "primitive",
+              "kind": "sphere",
+              "parameters": {
+                "radius": 1.0
+              }
+            }
+          }
+        ]
+      },
+      "solidVolumeM3": 0.4313028339616862,
+      "closedFormM3": null,
+      "note": "rotated overlap"
+    }
+  ]
+}

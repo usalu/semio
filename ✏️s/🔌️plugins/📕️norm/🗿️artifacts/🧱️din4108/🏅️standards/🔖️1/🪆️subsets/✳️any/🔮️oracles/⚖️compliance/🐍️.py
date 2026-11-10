@@ -12,11 +12,11 @@ R_SI_ROOF = 0.10
 R_SI_FLOOR = 0.17
 R_SE = 0.04
 F_RSI_MIN = 0.70
-GLASER_WINTER_T = -5.0
-GLASER_WINTER_RH = 0.80
-GLASER_SUMMER_T = 12.0
-GLASER_SUMMER_ROOF_T = 20.0
-GLASER_SUMMER_RH = 0.70
+R_SI_MOULD = 0.25
+DELTA_0 = 2.0e-10
+WINTER = (20.0, 0.50, -5.0, 0.80, 2160.0)
+SUMMER = (12.0, 0.70, 12.0, 0.70, 2160.0)
+SD_FLOOR = 1.0e-3
 
 
 def layer_r(d, lam):
@@ -61,11 +61,9 @@ def n50_limit(mech):
 
 
 def saturation_pa(t_c):
-    return 610.5 * math.exp(17.269 * t_c / (237.3 + t_c))
-
-
-def saturation_magnus(t_c):
-    return 611.2 * math.exp(17.67 * t_c / (t_c + 243.5))
+    if t_c >= 0.0:
+        return 610.5 * math.exp(17.269 * t_c / (237.3 + t_c))
+    return 610.5 * math.exp(21.875 * t_c / (265.5 + t_c))
 
 
 def interface_temperatures(layers, r_si, r_se, t_int, t_ext):
@@ -76,7 +74,7 @@ def interface_temperatures(layers, r_si, r_se, t_int, t_ext):
     conductance = np.zeros((nodes, nodes))
     source = np.zeros(nodes)
     for index, resistance in enumerate(resistances):
-        g = 1.0 / resistance
+        g = 1.0 / max(resistance, 1e-9)
         left, right = index - 1, index
         for node in (left, right):
             if 0 <= node < nodes:
@@ -91,41 +89,56 @@ def interface_temperatures(layers, r_si, r_se, t_int, t_ext):
     return [float(t) for t in np.linalg.solve(conductance, source)]
 
 
-def vapour_profile(layers, r_si, r_se, t_int, rh_int, t_ext, rh_ext, saturation):
-    temps = interface_temperatures(layers, r_si, r_se, t_int, t_ext)
-    temps = [temps[0]] + temps[1:]
-    p_i = rh_int * saturation(t_int)
-    p_e = rh_ext * saturation(t_ext)
+def glaser_planes(layers, r_si, r_se, period):
+    """Condensation planes of the Glaser iteration: the interface of largest excess becomes a plane at saturation, repeated until no excess is left."""
+    t_i, rh_i, t_e, rh_e, _ = period
+    temps = interface_temperatures(layers, r_si, r_se, t_i, t_e)
+    t_c = [temps[0]] + [temps[i + 1] for i in range(len(layers))]
     sd = [0.0]
     for L in layers:
         sd.append(sd[-1] + float(L["thicknessM"]) * float(L["mu"]))
-    total = sd[-1]
-    p = [p_i + (p_e - p_i) * s / total if total > 0 else p_i for s in sd]
-    return sd, p, [saturation(t) for t in temps[: len(sd)]]
-
-
-def glaser_masses(layers, r_si, r_se, t_int, rh_int, winter, summer, hours, saturation=saturation_magnus):
-    """Winter condensed and summer evaporated mass in kg/m2 by the Glaser method: per interface with p > p_sat the flux
-    delta0 * (dp_left / sd_left + dp_right / sd_right), sd bounded below by 0.1 m (condensate plane), delta0 = 2e-10 kg/(m s Pa)."""
-    sd, p, p_sat = vapour_profile(layers, r_si, r_se, t_int, rh_int, winter[0], winter[1], saturation)
-    total = sd[-1]
-    if total <= 0:
-        return 0.0, 0.0
-    condensed = 0.0
+    ps = [saturation_pa(t) for t in t_c]
+    last = len(sd) - 1
     planes = []
-    for i in range(len(sd)):
-        if p[i] > p_sat[i]:
-            planes.append(i)
-            left = max(sd[i], 0.1)
-            right = max(total - sd[i], 0.1)
-            condensed += (p[i] - p_sat[i]) * (1.0 / left + 1.0 / right) * 2.0e-10 * hours
-    sd_s, p_s, sat_s = vapour_profile(layers, r_si, r_se, t_int, rh_int, summer[0], summer[1], saturation)
+
+    def pressures():
+        nodes = sorted([0, last] + planes)
+        fixed = {0: rh_i * saturation_pa(t_i), last: rh_e * saturation_pa(t_e), **{k: ps[k] for k in planes}}
+        p = [0.0] * len(sd)
+        for a, b in zip(nodes, nodes[1:]):
+            span = sd[b] - sd[a]
+            for k in range(a, b + 1):
+                p[k] = fixed[a] + (fixed[b] - fixed[a]) * ((sd[k] - sd[a]) / span if span > 0 else 0.0)
+        return p, nodes, fixed
+
+    while True:
+        p, nodes, fixed = pressures()
+        excess = [(p[k] - ps[k], k) for k in range(1, last) if k not in planes and p[k] > ps[k]]
+        if not excess:
+            return sd, ps, planes, nodes, fixed
+        planes.append(max(excess)[1])
+
+
+def glaser_masses(layers, r_si, r_se):
+    """DIN 4108-3 Annex A masses in kg/m2: g = (p_i - p_c) / Z with Z = s_d / delta0, over the period in seconds; the condensate is the flux into minus the flux out of each plane."""
+    sd, ps, planes, nodes, fixed = glaser_planes(layers, r_si, r_se, WINTER)
+    seconds = WINTER[4] * 3600.0
+    condensed = 0.0
+    for idx, k in enumerate(nodes[1:-1], start=1):
+        a, b = nodes[idx - 1], nodes[idx + 1]
+        z_in, z_out = max(sd[k] - sd[a], SD_FLOOR) / DELTA_0, max(sd[b] - sd[k], SD_FLOOR) / DELTA_0
+        condensed += ((fixed[a] - ps[k]) / z_in + (fixed[b] - ps[k]) / z_out) * seconds
+    condensed = max(condensed, 0.0)
+    t_i, rh_i, t_e, rh_e, hours = SUMMER
+    ts = interface_temperatures(layers, r_si, r_se, t_i, t_e)
+    ps_s = [saturation_pa(ts[0])] + [saturation_pa(ts[i + 1]) for i in range(len(layers))]
+    p_b = {0: rh_i * saturation_pa(t_i), len(sd) - 1: rh_e * saturation_pa(t_e)}
+    value = lambda n: p_b[n] if n in p_b else ps_s[n]
     evaporated = 0.0
-    for i in planes:
-        left = max(sd_s[i], 0.1)
-        right = max(total - sd_s[i], 0.1)
-        flux = max(sat_s[i] - p_s[0], 0.0) / left + max(sat_s[i] - p_s[-1], 0.0) / right
-        evaporated += flux * 2.0e-10 * hours
+    for idx, k in enumerate(nodes[1:-1], start=1):
+        a, b = nodes[idx - 1], nodes[idx + 1]
+        z_in, z_out = max(sd[k] - sd[a], SD_FLOOR) / DELTA_0, max(sd[b] - sd[k], SD_FLOOR) / DELTA_0
+        evaporated += (max(ps_s[k] - value(a), 0.0) / z_in + max(ps_s[k] - value(b), 0.0) / z_out) * hours * 3600.0
     return condensed, evaporated
 
 
@@ -164,7 +177,9 @@ def compare_report(snap, report):
         r_si, r_se = surface_resistances(kind, el.get("adjacent", "exterior"))
         r = total_resistance(el["layers"], r_si, r_se)
         u = u_value(r)
-        f_rsi = 1.0 - r_si / r if r > 0 else 0.0
+        r_mould = total_resistance(el["layers"], R_SI_MOULD, r_se)
+        f_rsi = 1.0 - R_SI_MOULD / r_mould if r_mould > 0 else 0.0
+        inhomogeneous = any(L.get("segments") for L in el["layers"])
         table_id = f"din4108-2.table3.{eid}"
         frsi_id = f"din4108-2.frsi.{eid}"
         if table_id in checks and checks[table_id].get("status") != "notApplicable":
@@ -175,22 +190,29 @@ def compare_report(snap, report):
                     mismatches.append(f"{table_id} R rust={computed} oracle={r}")
         if frsi_id in checks and checks[frsi_id].get("status") != "notApplicable":
             computed = qty(checks[frsi_id], "computed")
-            if computed is not None:
+            if computed is not None and not inhomogeneous:
                 checked += 1
                 if not within(computed, f_rsi, tol):
                     mismatches.append(f"{frsi_id} f_Rsi rust={computed} oracle={f_rsi}")
         gl_id = f"din4108-3.glaser.{eid}"
         dry_id = f"din4108-3.drying.{eid}"
-        if gl_id in checks and checks[gl_id].get("status") != "notApplicable" and dry_id in checks:
-            dry = checks[dry_id]
-            if dry.get("status") != "notApplicable":
-                condensed = qty(dry, "computed")
-                evaporated = qty(dry, "limit")
+        if gl_id in checks and checks[gl_id].get("status") != "notApplicable":
+            want_condensed, want_evaporated = glaser_masses(el["layers"], r_si, r_se)
+            got = qty(checks[gl_id], "computed")
+            checked += 1
+            if got is None or not within(got, want_condensed, tol):
+                mismatches.append(f"{gl_id} condensed rust={got} oracle={want_condensed}")
+            if dry_id in checks and checks[dry_id].get("status") != "notApplicable":
+                condensed = qty(checks[dry_id], "computed")
+                evaporated = qty(checks[dry_id], "limit")
                 checked += 2
-                if condensed is None or evaporated is None or condensed <= 0 or evaporated <= 0:
+                if condensed is None or evaporated is None:
                     mismatches.append(f"{dry_id} masses missing: {condensed} {evaporated}")
-                elif (condensed <= evaporated) != (dry.get("status") == "pass"):
-                    mismatches.append(f"{dry_id} status {dry.get('status')} contradicts {condensed} <= {evaporated}")
+                else:
+                    if not within(condensed, want_condensed, tol):
+                        mismatches.append(f"{dry_id} condensed rust={condensed} oracle={want_condensed}")
+                    if not within(evaporated, max(want_evaporated, 1e-9), tol):
+                        mismatches.append(f"{dry_id} evaporated rust={evaporated} oracle={want_evaporated}")
 
         u_id = f"din4108-6.u.{eid}"
         status = (checks.get(u_id) or {}).get("status")

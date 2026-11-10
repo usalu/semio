@@ -102,7 +102,7 @@ test("on Windows the private working set table prices the tree, a table that is 
  }
  const lines:string[]=[],calls:string[][]=[],run:HostCommandRunnerV1=async(command,args)=>{calls.push([command,...args]);return args[3]===observers.platforms.win32.footprint.arguments[3]?"":fixture.win32.table;};
  expect(await observeTreeMegabytesV1(100,run,"win32",undefined,line=>{lines.push(line);})).toBe(76);
- expect(calls.map(call=>call[4])).toEqual([observers.platforms.win32.footprint.arguments[3],observers.platforms.win32.resident.arguments[3]]);expect(lines.length).toBe(2);expect(lines[0]).toContain("empty process table");
+ expect(calls.map(call=>call[4])).toEqual([observers.platforms.win32.footprint.arguments[3],observers.platforms.win32.resident.arguments[3]]);expect(lines.length).toBe(2);expect(lines[0]).toContain("process table is empty");
 });
 
 test("the learned peaks are stamped with the measure: a store of another measure is empty, a written store reads back",async()=>{

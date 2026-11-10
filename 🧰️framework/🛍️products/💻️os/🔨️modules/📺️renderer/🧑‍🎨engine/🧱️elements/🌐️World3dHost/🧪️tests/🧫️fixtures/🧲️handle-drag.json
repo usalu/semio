@@ -143,6 +143,102 @@
         0
       ],
       "s": null
+    },
+    {
+      "name": "oblique ray onto a tilted axis",
+      "rayOrigin": [
+        4,
+        -3,
+        6
+      ],
+      "rayDirection": [
+        -1,
+        1,
+        -2
+      ],
+      "axisOrigin": [
+        1,
+        1,
+        0
+      ],
+      "axis": [
+        1,
+        1,
+        1
+      ],
+      "s": -0.989743318610788
+    },
+    {
+      "name": "perspective ray beside a y axis",
+      "rayOrigin": [
+        0,
+        0,
+        10
+      ],
+      "rayDirection": [
+        0.1,
+        0.2,
+        -1
+      ],
+      "axisOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "s": 1.9801980198019802
+    },
+    {
+      "name": "axis pointing against the world z",
+      "rayOrigin": [
+        -2,
+        7,
+        3
+      ],
+      "rayDirection": [
+        0.5,
+        -1,
+        -0.25
+      ],
+      "axisOrigin": [
+        0,
+        0,
+        1
+      ],
+      "axis": [
+        0,
+        0,
+        -1
+      ],
+      "s": -0.4
+    },
+    {
+      "name": "ray along the axis has no parameter",
+      "rayOrigin": [
+        0,
+        0,
+        9
+      ],
+      "rayDirection": [
+        0,
+        0,
+        -1
+      ],
+      "axisOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "s": null
     }
   ],
   "pick": [
@@ -197,6 +293,52 @@
       "y": 10,
       "radiusPx": 12,
       "expected": null
+    },
+    {
+      "name": "exactly on the radius counts",
+      "handles": [
+        {
+          "id": "handle:a",
+          "x": 10,
+          "y": 10
+        }
+      ],
+      "x": 22,
+      "y": 10,
+      "radiusPx": 12,
+      "expected": "handle:a"
+    },
+    {
+      "name": "no handles",
+      "handles": [],
+      "x": 10,
+      "y": 10,
+      "radiusPx": 12,
+      "expected": null
+    },
+    {
+      "name": "a nearer later handle beats an earlier one",
+      "handles": [
+        {
+          "id": "handle:a",
+          "x": 10,
+          "y": 10
+        },
+        {
+          "id": "handle:b",
+          "x": 14,
+          "y": 10
+        },
+        {
+          "id": "handle:c",
+          "x": 13.5,
+          "y": 10
+        }
+      ],
+      "x": 13.6,
+      "y": 10,
+      "radiusPx": 12,
+      "expected": "handle:c"
     }
   ],
   "sequences": [
@@ -490,6 +632,528 @@
       "dispatches": [
         null,
         null
+      ]
+    },
+    {
+      "name": "a release after travel commits at the unchanged parameter",
+      "events": [
+        {
+          "kind": "press",
+          "handle": "handle:a",
+          "s": 2
+        },
+        {
+          "kind": "move",
+          "s": 3,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            3,
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "release",
+          "s": 3,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            3,
+            0,
+            0
+          ]
+        }
+      ],
+      "dispatches": [
+        null,
+        {
+          "trigger": "delta",
+          "input": {
+            "handle": "handle:a",
+            "s": 3,
+            "origin": 2,
+            "modifiers": {
+              "shift": false,
+              "alt": false,
+              "ctrl": false
+            },
+            "at": [
+              3,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "trigger": "commit",
+          "input": {
+            "handle": "handle:a",
+            "s": 3,
+            "origin": 2,
+            "modifiers": {
+              "shift": false,
+              "alt": false,
+              "ctrl": false
+            },
+            "at": [
+              3,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a second press re-arms on the new handle",
+      "events": [
+        {
+          "kind": "press",
+          "handle": "handle:a",
+          "s": 1
+        },
+        {
+          "kind": "press",
+          "handle": "handle:b",
+          "s": 5
+        },
+        {
+          "kind": "move",
+          "s": 6,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            6,
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "release",
+          "s": 6,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            6,
+            0,
+            0
+          ]
+        }
+      ],
+      "dispatches": [
+        null,
+        null,
+        {
+          "trigger": "delta",
+          "input": {
+            "handle": "handle:b",
+            "s": 6,
+            "origin": 5,
+            "modifiers": {
+              "shift": false,
+              "alt": false,
+              "ctrl": false
+            },
+            "at": [
+              6,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "trigger": "commit",
+          "input": {
+            "handle": "handle:b",
+            "s": 6,
+            "origin": 5,
+            "modifiers": {
+              "shift": false,
+              "alt": false,
+              "ctrl": false
+            },
+            "at": [
+              6,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "escape after travel aborts at the last parameter and never commits",
+      "events": [
+        {
+          "kind": "press",
+          "handle": "handle:a",
+          "s": 2
+        },
+        {
+          "kind": "move",
+          "s": 3,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            3,
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "move",
+          "s": 4,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            4,
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "cancel",
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "kind": "release",
+          "s": 4,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            4,
+            0,
+            0
+          ]
+        }
+      ],
+      "dispatches": [
+        null,
+        {
+          "trigger": "delta",
+          "input": {
+            "handle": "handle:a",
+            "s": 3,
+            "origin": 2,
+            "modifiers": {
+              "shift": false,
+              "alt": false,
+              "ctrl": false
+            },
+            "at": [
+              3,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "trigger": "delta",
+          "input": {
+            "handle": "handle:a",
+            "s": 4,
+            "origin": 2,
+            "modifiers": {
+              "shift": false,
+              "alt": false,
+              "ctrl": false
+            },
+            "at": [
+              4,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "trigger": "abort",
+          "input": {
+            "handle": "handle:a",
+            "s": 4,
+            "origin": 2,
+            "modifiers": {
+              "shift": false,
+              "alt": false,
+              "ctrl": false
+            },
+            "at": [
+              1,
+              2,
+              3
+            ]
+          }
+        },
+        null
+      ]
+    }
+  ],
+  "payload": [
+    {
+      "name": "input merges over the authored phase",
+      "authored": {
+        "phase": "stream"
+      },
+      "input": {
+        "handle": "handle:a",
+        "s": 2.5,
+        "origin": 2,
+        "modifiers": {
+          "shift": false,
+          "alt": false,
+          "ctrl": false
+        },
+        "at": [
+          2.5,
+          0,
+          0
+        ]
+      },
+      "expected": {
+        "phase": "stream",
+        "handle": "handle:a",
+        "s": 2.5,
+        "origin": 2,
+        "modifiers": {
+          "shift": false,
+          "alt": false,
+          "ctrl": false
+        },
+        "at": [
+          2.5,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "input wins over a colliding authored key",
+      "authored": {
+        "phase": "stream",
+        "s": 0
+      },
+      "input": {
+        "handle": "handle:a",
+        "s": 3,
+        "origin": 2,
+        "modifiers": {
+          "shift": false,
+          "alt": false,
+          "ctrl": false
+        },
+        "at": [
+          3,
+          0,
+          0
+        ]
+      },
+      "expected": {
+        "phase": "stream",
+        "handle": "handle:a",
+        "s": 3,
+        "origin": 2,
+        "modifiers": {
+          "shift": false,
+          "alt": false,
+          "ctrl": false
+        },
+        "at": [
+          3,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "no authored arguments",
+      "authored": null,
+      "input": {
+        "handle": "handle:a",
+        "s": 3,
+        "origin": 2,
+        "modifiers": {
+          "shift": false,
+          "alt": false,
+          "ctrl": false
+        },
+        "at": [
+          3,
+          0,
+          0
+        ]
+      },
+      "expected": {
+        "handle": "handle:a",
+        "s": 3,
+        "origin": 2,
+        "modifiers": {
+          "shift": false,
+          "alt": false,
+          "ctrl": false
+        },
+        "at": [
+          3,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "targets": [
+    {
+      "name": "visible axis markers in layer order",
+      "viewProj": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "width": 200,
+      "height": 100,
+      "layer": {
+        "items": [
+          {
+            "kind": "marker",
+            "id": "handle:a",
+            "position": [
+              0.5,
+              0.25,
+              0.5
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "text": {
+              "en": "A",
+              "de": "A"
+            }
+          },
+          {
+            "kind": "marker",
+            "id": "plain",
+            "position": [
+              0,
+              0,
+              0.5
+            ],
+            "text": {
+              "en": "Plain",
+              "de": "Plain"
+            }
+          },
+          {
+            "kind": "marker",
+            "id": "behind",
+            "position": [
+              0,
+              0,
+              2
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "text": {
+              "en": "Behind",
+              "de": "Behind"
+            }
+          },
+          {
+            "kind": "marker",
+            "id": "handle:b",
+            "position": [
+              -1,
+              -1,
+              0
+            ],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "text": {
+              "en": "B",
+              "de": "B"
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "id": "handle:a",
+          "x": 150,
+          "y": 37.5,
+          "origin": [
+            0.5,
+            0.25,
+            0.5
+          ],
+          "axis": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "id": "handle:b",
+          "x": 0,
+          "y": 100,
+          "origin": [
+            -1,
+            -1,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
       ]
     }
   ]

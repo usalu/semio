@@ -5,6 +5,7 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {formatHostCapacityV1,hostCapacityErrorV1,type HostCapacityPolicyV1,type HostSampleV1} from "../📏️decision/🟦️.ts";
 import {hostProfileV1} from "../🪞️profile/🟦️.ts";
 import {refuseProcessV1} from "../../../📖️texts/🟦️.ts";
+import {isRepoErrorV1,renderRepoErrorV1} from "../../../📦️packages/🟦️typescript/🏗️build/🗣️language/🚨️error/🟦️.ts";
 
 const totalEnvironment=schema.definitions.Protocol.const.totalEnvironment;
 
@@ -139,10 +140,10 @@ export function parseWindowsCountersV1(text:string):HostCountersV1{
 
 const noticedV1=new WeakMap<object,Set<string>>(),standardErrorV1={};
 /** 📣️ Says once per process and sink, in every language, that this host is blind where the gate cannot learn or measure: nothing fails, so the line is the only signal. Never throws. */
-function noticeOnceV1(key:string,message:"treeUnobserved"|"footprintFallback"|"countersPartial",values:Readonly<Record<string,string|number>>,notify?:(line:string)=>void):void{
+function noticeOnceV1(key:string,message:"treeUnobserved"|"footprintFallback"|"countersPartial",values:Readonly<Record<string,string|number|((language:"en"|"de")=>string)>>,notify?:(line:string)=>void):void{
  const sink=notify??standardErrorV1,seen=noticedV1.get(sink)??new Set<string>();noticedV1.set(sink,seen);
  if(seen.has(key))return;seen.add(key);
- try{for(const language of["en","de"] as const){const line=formatHostCapacityV1(language,message,values);if(notify)notify(line);else process.stderr.write(line+"\n");}}catch{}
+ try{for(const language of["en","de"] as const){const line=formatHostCapacityV1(language,message,Object.fromEntries(Object.entries(values).map(([name,value])=>[name,typeof value==="function"?value(language):value])));if(notify)notify(line);else process.stderr.write(line+"\n");}}catch{}
 }
 
 /** 🌍️ Reads the raw counters of the probed platform; the open file table and the attached images are optional facts that fall back to `null` instead of failing the sample. */
@@ -252,7 +253,7 @@ export function parseSmapsRollupV1(text:string,fields:readonly string[]=OBSERVER
 
 /** 👁️ Observes what the process tree under one pid holds, in the footprint by default (`HostMemoryMeasureV1`): `footprint` on macOS (one call for the whole tree, the process table names its members), `/proc/<pid>/smaps_rollup` on Linux (no external tool), one PowerShell table of private working sets on Windows; a platform whose footprint source cannot be read says so once in every language and reads the resident set instead. null when the process is gone or, on Windows, when PowerShell cannot answer at all, which is announced once in every language (the gate then learns nothing from the run and keeps the declared sizes). */
 export async function observeTreeMegabytesV1(pid:number,run:HostCommandRunnerV1=runHostCommandV1,platform:HostSampleV1["platform"]=osPlatform() as HostSampleV1["platform"],proc:Readonly<{read:HostTextReaderV1;list:()=>Promise<readonly string[]>}>={read:readHostTextV1,list:()=>readdir("/proc")},notify?:(line:string)=>void,measure:HostMemoryMeasureV1="footprint"):Promise<number|null>{
- const reason=(error:unknown):string=>String((error as Error)?.message??error).split("\n")[0]!.slice(0,LIMITS.reasonCharacters),fallback=(why:string):void=>noticeOnceV1("footprintFallback."+platform,"footprintFallback",{platform,reason:why},notify);
+ const reason=(error:unknown)=>(language:"en"|"de"):string=>(isRepoErrorV1(error)?renderRepoErrorV1(error,language):String((error as Error)?.message??error)).split("\n")[0]!.slice(0,LIMITS.reasonCharacters),fallback=(why:(language:"en"|"de")=>string):void=>noticeOnceV1("footprintFallback."+platform,"footprintFallback",{platform,reason:why},notify);
  if(platform==="win32"){
   const table=async(source:Readonly<{command:string;arguments:readonly string[]}>,strict:boolean):Promise<number|null>=>{const rows=parseProcessTableV1(await run(source.command,source.arguments));if(strict&&!rows.length)throw refuseProcessV1("invalid","capacity.empty-process-table");return treeMegabytesV1(rows,pid);};
   if(measure==="footprint")try{return await table(OBSERVERS.platforms.win32.footprint,true);}catch(error){fallback(reason(error));}
@@ -265,13 +266,13 @@ export async function observeTreeMegabytesV1(pid:number,run:HostCommandRunnerV1=
   const members=treePidsV1(rows,pid);if(!members.length)return null;
   const linux=OBSERVERS.platforms.linux,resident=new Map(rows.map(row=>[row.pid,row.rssKilobytes] as const));let unread=0;
   const kilobytes=await Promise.all(members.map(async member=>{try{const text=await proc.read(`${linux.processDirectory}/${member}/${linux.footprint.file}`),value=text===null?undefined:parseSmapsRollupV1(text,linux.footprint.fields);if(value!==undefined)return value;}catch{}unread++;return resident.get(member)??0;}));
-  if(unread===members.length)fallback(`${linux.footprint.file} unreadable`);
+  if(unread===members.length)fallback(()=>`${linux.footprint.file} unreadable`);
   return Math.floor(kilobytes.reduce((total,value)=>total+value,0)/1024);
  }
  const table=OBSERVERS.platforms.darwin.table,rows=parseProcessTableV1(await run(table.command,table.arguments));
  if(measure==="resident")return treeMegabytesV1(rows,pid);
  const members=treePidsV1(rows,pid);if(!members.length)return null;
- const tool=OBSERVERS.platforms.darwin.footprint;let failure="footprint printed no process";
+ const tool=OBSERVERS.platforms.darwin.footprint;let failure:(language:"en"|"de")=>string=()=>"footprint printed no process";
  const text=await run(tool.command,[...tool.arguments,...members.flatMap(member=>[tool.pidFlag,String(member)])]).catch((error:unknown)=>{failure=reason(error);const partial=(error as {stdout?:unknown})?.stdout;return typeof partial==="string"?partial:"";}),bytes=parseFootprintV1(text);
  if(!bytes.size){fallback(failure);return treeMegabytesV1(rows,pid);}
  const resident=new Map(rows.map(row=>[row.pid,row.rssKilobytes*1024] as const));

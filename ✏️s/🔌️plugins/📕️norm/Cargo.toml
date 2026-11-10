@@ -11,6 +11,7 @@ members = [
     "📇️registry/🧬️contract/🖥️app-surface/🧰️entity-editing/🧭️interaction-topology/📦️packages/🦀️rust",
     "🧮️mechanics/🧱️applied/📦️packages/🦀️rust",
     "⚖️compliance/📜️annex-and-tables/🔖️ndp/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/din4108/📦️packages/🦀️rust",
     "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1990/📦️packages/🦀️rust",
     "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1991/📦️packages/🦀️rust",
     "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1992/📦️packages/🦀️rust",

@@ -9,7 +9,8 @@ import Ajv from "ajv";
 import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../../🔏️key/🟦️.ts";
 import cacheSchema from "../../../🧬️schema/🔣️.json";
-import {digestFileV1,emitUnitEventV1,listObjectsV1,lookupBuildRunV1,lookupUnitV1,publishBuildRunV1,pruneEntriesV1,publishUnitV1,removeObjectsV1,restoreBuildRunV1,restoreUnitV1,treeDigestV1,type BuildEntryV1,type UnitEntryV1} from "../../🟦️.ts";
+import {casObjectPathV1} from "../../../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
+import {digestFileV1,emitUnitEventV1,lookupBuildRunV1,lookupUnitV1,publishBuildRunV1,pruneEntriesV1,publishUnitV1,restoreBuildRunV1,restoreUnitV1,treeDigestV1,type BuildEntryV1,type UnitEntryV1} from "../../🟦️.ts";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
 
@@ -36,7 +37,9 @@ for(const[index,scenario]of [...corpus.scenarios,...corpus.runs].entries()){
  test((index<corpus.scenarios.length?"scenario ":"build script run scenario ")+(index+1)+": "+scenario.name,()=>{
   const root=join(base,"s"+index),cache=join(root,"cache"),roots:Record<string,string>={laneA:join(root,"laneA"),laneB:join(root,"laneB")};
   for(const lane of Object.values(roots))for(const[path,text]of Object.entries(scenario.tree)){mkdirSync(dirname(join(lane,path)),{recursive:true});writeFileSync(join(lane,path),text);}
-  mkdirSync(cache,{recursive:true});
+  mkdirSync(cache,{recursive:true});const host=join(root,"host"),hostObjects=join(host,"v1","o");process.env.SEMIO_CAS_ROOT=host;
+  const removeHost=(digests:string[])=>digests.filter(digest=>{try{rmSync(casObjectPathV1(host,digest),{force:false});return true;}catch{return false;}}).length;
+  const listHost=()=>(existsSync(hostObjects)?readdirSync(hostObjects):[]).flatMap(shard=>readdirSync(join(hostObjects,shard)).map(name=>({digest:shard+name,bytes:statSync(join(hostObjects,shard,name)).size})));
   const fill=(text:string,lane="A")=>text.replaceAll("{laneA}",roots.laneA!).replaceAll("{laneB}",roots.laneB!).replaceAll("{outA}",join(roots.laneA!,"out")).replaceAll("{outB}",join(roots.laneB!,"out")).replaceAll("{lane}",roots["lane"+lane]!).replaceAll("{out}",join(roots["lane"+lane]!,"out"));
   let last:UnitEntryV1|undefined,lastRun:BuildEntryV1|undefined;
   const objectOf=(name:string)=>last!.outputs.find(row=>row.name===name)!.sha256;
@@ -109,14 +112,14 @@ for(const[index,scenario]of [...corpus.scenarios,...corpus.runs].entries()){
      expect(streams.stdout,label).toBe(fill(step.expect.stdout,lane));expect(streams.stderr,label).toBe(fill(step.expect.stderr,lane));
     }
    }
-   else if(step.op==="removeObject"){expect(removeObjectsV1(cache,[objectOf(step.output)]),label).toBe(step.expect);}
-   else if(step.op==="removeDigests"){expect(removeObjectsV1(cache,(step.digests as string[]).map(digest=>digest.startsWith("{object:")?objectOf(digest.slice(8,-1)):digest)),label).toBe(step.expect);}
+   else if(step.op==="removeObject"){expect(removeHost([objectOf(step.output)]),label).toBe(step.expect);}
+   else if(step.op==="removeDigests"){expect(removeHost((step.digests as string[]).map(digest=>digest.startsWith("{object:")?objectOf(digest.slice(8,-1)):digest)),label).toBe(step.expect);}
    else if(step.op==="prune"){expect(pruneEntriesV1(cache,Date.now()),label).toEqual(step.expect);}
    else if(step.op==="plant"){const path=join(cache,step.path);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,step.content);if(step.ageMilliseconds){const when=new Date(Date.now()-step.ageMilliseconds);utimesSync(path,when,when);}}
    else if(step.op==="exists"){expect(existsSync(join(cache,step.path)),label).toBe(step.expect);}
-   else if(step.op==="objects"){const rows=listObjectsV1(cache);expect(rows.length,label).toBe(step.expect.count);for(const row of rows){expect(row.digest).toMatch(/^[a-f0-9]{64}$/u);expect(row.bytes).toBeGreaterThanOrEqual(0);}}
+   else if(step.op==="objects"){const rows=listHost();expect(rows.length,label).toBe(step.expect.count);for(const row of rows){expect(row.digest).toMatch(/^[a-f0-9]{64}$/u);expect(row.bytes).toBeGreaterThanOrEqual(0);}}
    else if(step.op==="audit"){
-    const [seen]=ask([{kind:"audit",root:cache,layout,forbidden:[roots.laneA,roots.laneB]}]);
+    const [seen]=ask([{kind:"audit",root:cache,objects:hostObjects,layout,forbidden:[roots.laneA,roots.laneB]}]);
     expect(seen,label).toEqual(step.expect);
     for(const kind of [layout.entries])for(const shard of existsSync(join(cache,kind))?readdirSync(join(cache,kind)):[])for(const key of readdirSync(join(cache,kind,shard)))for(const file of readdirSync(join(cache,kind,shard,key)))expect(validator("Entry")(JSON.parse(readFileSync(join(cache,kind,shard,key,file),"utf8"))),label+" "+file).toBe(true);
    }

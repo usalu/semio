@@ -1,0 +1,35 @@
+import{readFileSync,readdirSync,statSync,mkdtempSync,rmSync}from"node:fs";
+import{join,resolve}from"node:path";
+import{heapStats}from"bun:jsc";
+const THRESH=Number(process.env.THRESH??3000);const live:{ref:WeakRef<any>,kind:string,stack:string,at:number}[]=[];const marked=new WeakSet<object>();
+const patch=(proto:any,method:string,kind:string)=>{const orig=proto[method];proto[method]=function(this:any,...a:any[]){const r=orig.apply(this,a);if(this.size>=THRESH&&!marked.has(this)){marked.add(this);live.push({ref:new WeakRef(this),kind,stack:(new Error().stack??"").split("\n").slice(2,9).map(l=>l.trim().replace(/\(?file:\/\/\/?/,"(").replace(/.*🏗️build\//,"")).join(" | "),at:this.size});}return r;};};
+patch(Map.prototype,"set","Map");patch(Set.prototype,"add","Set");
+
+const B=resolve("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build"),G=join(B,"🕸️graph");
+const gen=await import(join(G,"🕰️generations/🟨️.mjs")),cut=await import(join(G,"🕰️generations/✂️cutoff/🟨️.mjs")),memo=await import(join(B,"🧭️invocation/🕸️graph/🧠️memo/🧮️derive/🟦️.ts"));
+const cl=await import(join(G,"🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs")),obs=await import(join(B,"👁️observation/🟨️.mjs")),cas=await import(join(B,"🗄️cas/🗃️store/🟦️.ts"));
+const dir=resolve(".cache/b/g/m/generations/x"),file=readdirSync(dir).filter(n=>n.endsWith(".facts.br")).map(n=>({n,s:statSync(join(dir,n))})).sort((a,b)=>b.s.size-a.s.size)[0];
+let index:any=gen.unpackFactIndexV1(readFileSync(join(dir,file.n)),512*1024*1024);
+const limit=Number(process.argv[2]??1200),derived=index.rows.filter((r:any)=>r.kind==="derived").slice(0,limit);
+const pseudoRows=new Map<string,any>();for(const row of derived)pseudoRows.set(cut.derivedOwnerNameV1(row),row);
+index=undefined;
+let deriver:any=await memo.openPlannerDeriverV1(process.cwd());
+const hold=async(rows:any[])=>true;
+const cacheRoot=mkdtempSync(join(resolve(".🧬semio/🦑️repo/⚡️cache/tests"),"settle-heap-"));
+let settler:any=cl.createClosureSettlerV1({workspace:{workspaceRoot:process.cwd(),cacheRoot,blobs:cas.createCasStoreV1()}});
+const snap=(label:string)=>{Bun.gc(true);const h=heapStats(),m=process.memoryUsage();console.log(label,JSON.stringify({rssMB:Math.round(m.rss/1048576),heapMB:Math.round(h.heapSize/1048576),extraMB:Math.round(h.extraMemorySize/1048576),objects:h.objectCount,strings:h.objectTypeCounts.string,arrays:h.objectTypeCounts.Array,Sets:h.objectTypeCounts.Set,Maps:h.objectTypeCounts.Map}));};
+snap("before");
+let ticks=0;let result:any=await settler.settle({pseudoRows,derive:deriver,hold,progress:async()=>{if(process.env.GC_EVERY&&++ticks%Number(process.env.GC_EVERY)===0)Bun.gc(true);}});
+snap("after settle");
+Bun.gc(true);const out:any[]=[];for(const l of live){const o=l.ref.deref();if(o)out.push({size:o.size,kind:l.kind,stack:l.stack});}out.sort((a,b)=>b.size-a.size);for(const o of out.slice(0,60))console.log("[COLL]",o.kind,o.size,o.stack);
+let r:any=result;r.answers=new Map();r.held=new Map();r.kept=new Set();r.changed=new Map();
+const sizes=obs.inferenceCacheSizesV1();console.log("inference cache sizes",JSON.stringify(sizes));
+obs.releaseInferenceMemoryV1();snap("releaseInferenceMemoryV1");
+const bounded=await import(join(B,"🧊️bounded/🟨️.mjs"));console.log("bounded",JSON.stringify(bounded.boundedCacheStatsV1().filter((c:any)=>c.entries>0).map((c:any)=>[c.name,c.entries,Math.round(c.bytes/1048576)])));
+bounded.shrinkBoundedCachesV1(0);snap("shrinkBoundedCachesV1(0)");
+const wr=new WeakRef(deriver.scripts),wd=new WeakRef(deriver),wres=new WeakRef(result as any);r=undefined;result=undefined;settler=null;deriver=null;await new Promise(r=>setTimeout(r,50));snap("settler+deriver dropped");console.log("alive scripts",!!wr.deref(),"deriver",!!wd.deref(),"result",!!wres.deref());
+const mem=await import(join(B,"🧠️memory/🟨️.mjs"));console.log("interner",JSON.stringify(mem.graphStringInternerV1.stats()));mem.graphStringInternerV1.clear();snap("interner cleared");
+const out2:any[]=[];for(const l of live){const o=l.ref.deref();if(o)out2.push({size:o.size,kind:l.kind,stack:l.stack});}out2.sort((a,b)=>b.size-a.size);for(const o of out2.slice(0,40))console.log("[COLL2]",o.kind,o.size,o.stack.slice(0,160));
+globalThis.gc?.();
+
+rmSync(cacheRoot,{recursive:true,force:true});process.exit(0);

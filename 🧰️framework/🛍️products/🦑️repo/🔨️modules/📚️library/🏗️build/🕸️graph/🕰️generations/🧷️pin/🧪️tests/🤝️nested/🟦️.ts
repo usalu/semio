@@ -4,6 +4,7 @@ import{mkdtempSync,readFileSync,realpathSync,rmSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{loadGenerationGraphV1}from"../../../🔌️load/🟨️.mjs";
+const graphOfV1=async(...input:Parameters<typeof loadGenerationGraphV1>)=>(await loadGenerationGraphV1(...input)).graph;
 import{readGenerationPointerV1}from"../../../🟨️.mjs";
 import{applyOps,createMockHost,seed}from"../../../🧪️tests/🏃️world/🟦️.ts";
 import{encodeGenerationPinV1,generationPinStateV1,readGenerationPinV1}from"../../🟨️.mjs";
@@ -18,7 +19,7 @@ const dead=()=>new Promise<void>(()=>{});
 
 async function parentOf(dir:string,closure=["a"]){
  await chain(dir);const parent=createMockHost(dir,{stamp:true}),sealed:Sealed[]=[];(parent.host as any).sealed=(record:Sealed)=>{sealed.push(record);};
- const graph=await loadGenerationGraphV1(parent.host,{closure});
+ const graph=(await loadGenerationGraphV1(parent.host,{closure})).graph;
  const record=sealed.at(-1)!,pin=readGenerationPinV1(encodeGenerationPinV1({owner:process.pid,generation:record.generation,manifest:record.manifest,owners:record.owners,covered:record.covered,atMs:record.atMs}));
  return{parent,graph,record,pin};
 }
@@ -37,19 +38,19 @@ test("a nested command reads exactly the generation of its Original while peers 
  const dir=scratch();
  try{
   const{graph,pin,record}=await parentOf(dir);
-  await edit(dir,"c",2);const peer=createMockHost(dir,{stamp:true});await loadGenerationGraphV1(peer.host,{closure:["a"]});
+  await edit(dir,"c",2);const peer=createMockHost(dir,{stamp:true});(await loadGenerationGraphV1(peer.host,{closure:["a"]})).graph;
   expect(peer.log).toHaveLength(1);expect(pointer(dir).generation).toBeGreaterThan(record.generation);
   const nested=createMockHost(dir,{custody:{tail:dead()}}),reseal:Sealed[]=[];(nested.host as any).sealed=(row:Sealed)=>{reseal.push(row);};
-  const started=Date.now(),served=await loadGenerationGraphV1(nested.host,{closure:["a"],pin});
+  const started=Date.now(),served=(await loadGenerationGraphV1(nested.host,{closure:["a"],pin})).graph;
   expect(Date.now()-started).toBeLessThan(5000);
   expect(nested.log).toHaveLength(0);expect(nested.holdsLog).toHaveLength(0);expect(nested.events.filter(event=>event.startsWith("builder"))).toEqual([]);
   expect(served).toEqual(graph);
-  const newest=createMockHost(dir,{stamp:true}),current=await loadGenerationGraphV1(newest.host,{closure:["a"]});
+  const newest=createMockHost(dir,{stamp:true}),current=(await loadGenerationGraphV1(newest.host,{closure:["a"]})).graph;
   expect(current).not.toEqual(graph);
   expect(nested.said.map(row=>row.key)).toEqual(["pinned"]);expect(nested.said[0]!.text).toContain("pinned by the invoking build");expect(nested.said[0]!.text).toContain(`generation ${record.generation}`);
   expect(reseal.at(-1)).toMatchObject({generation:record.generation,manifest:record.manifest,atMs:pin.covered.atMs});
   expect([...reseal.at(-1)!.covered!].sort()).toEqual(["a","b","c"]);
-  const german=createMockHost(dir,{language:"de",custody:{tail:dead()}});await loadGenerationGraphV1(german.host,{closure:["b"],pin});
+  const german=createMockHost(dir,{language:"de",custody:{tail:dead()}});(await loadGenerationGraphV1(german.host,{closure:["b"],pin})).graph;
   expect(german.said[0]!.text).toContain("gepinnte Generation");
  }finally{rmSync(dir,{recursive:true,force:true});}
 },60000);
@@ -59,15 +60,15 @@ test("a nested command whose closure needs an owner the pinned generation did no
  try{
   const{pin,record}=await parentOf(dir);
   for(const[closure,count,names]of[[["d"],2,"d, e"],[["a","d"],2,"d, e"],[["e"],1,"e"]] as [string[],number,string][]){
-   const nested=createMockHost(dir,{custody:{tail:dead()}}),error=await refusal(loadGenerationGraphV1(nested.host,{closure,pin}));
+   const nested=createMockHost(dir,{custody:{tail:dead()}}),error=await refusal(graphOfV1(nested.host,{closure,pin}));
    expect(error.code).toBe("GENERATION_PIN_REFUSED");expect(error.reason).toBe("uncovered");
    expect(error.message).toContain(`generation ${record.generation} does not cover ${count} of the projects it needs (${names})`);expect(error.message).toContain("deckt");expect(error.message).toContain("plant keinen eigenen Graphen");
    expect(nested.log).toHaveLength(0);expect(nested.holdsLog).toHaveLength(0);expect(nested.events.filter(event=>event.startsWith("builder"))).toEqual([]);
   }
-  const unknown=createMockHost(dir,{custody:{tail:dead()}}),error=await refusal(loadGenerationGraphV1(unknown.host,{closure:["zz"],pin}));
+  const unknown=createMockHost(dir,{custody:{tail:dead()}}),error=await refusal(graphOfV1(unknown.host,{closure:["zz"],pin}));
   expect(error.reason).toBe("uncovered");expect(error.message).toContain("(zz)");
   const everything=createMockHost(dir,{custody:{tail:dead()}});
-  expect((await refusal(loadGenerationGraphV1(everything.host,{pin}))).message).toContain("does not cover 2 of the projects it needs (d, e)");
+  expect((await refusal(graphOfV1(everything.host,{pin}))).message).toContain("does not cover 2 of the projects it needs (d, e)");
   expect(everything.log).toHaveLength(0);
  }finally{rmSync(dir,{recursive:true,force:true});}
 },60000);
@@ -76,11 +77,11 @@ test("a pin of the whole graph serves every closure and the whole graph",async()
  const dir=scratch();
  try{
   await chain(dir);const parent=createMockHost(dir,{stamp:true}),sealed:Sealed[]=[];(parent.host as any).sealed=(row:Sealed)=>{sealed.push(row);};
-  const graph=await loadGenerationGraphV1(parent.host),record=sealed.at(-1)!;expect(record.covered).toBeUndefined();
+  const graph=(await loadGenerationGraphV1(parent.host)).graph,record=sealed.at(-1)!;expect(record.covered).toBeUndefined();
   const pin=readGenerationPinV1(encodeGenerationPinV1({owner:process.pid,generation:record.generation,manifest:record.manifest,owners:record.owners,covered:record.covered,atMs:record.atMs}));
-  await edit(dir,"a",9);const peer=createMockHost(dir,{stamp:true});await loadGenerationGraphV1(peer.host);
+  await edit(dir,"a",9);const peer=createMockHost(dir,{stamp:true});(await loadGenerationGraphV1(peer.host)).graph;
   const nested=createMockHost(dir,{custody:{tail:dead()}});
-  expect(await loadGenerationGraphV1(nested.host,{pin})).toEqual(graph);expect(await loadGenerationGraphV1(createMockHost(dir,{custody:{tail:dead()}}).host,{closure:["d"],pin})).toBeDefined();
+  expect((await loadGenerationGraphV1(nested.host,{pin})).graph).toEqual(graph);expect((await loadGenerationGraphV1(createMockHost(dir,{custody:{tail:dead()}}).host,{closure:["d"],pin})).graph).toBeDefined();
   expect(nested.log).toHaveLength(0);
  }finally{rmSync(dir,{recursive:true,force:true});}
 },60000);
@@ -90,12 +91,12 @@ test("a retired generation, another repository identity and a forged manifest re
  try{
   const{pin,record}=await parentOf(dir);
   const gone=readGenerationPinV1(encodeGenerationPinV1({owner:process.pid,generation:record.generation,manifest:"f".repeat(64),owners:record.owners,covered:record.covered,atMs:record.atMs}));
-  const retired=createMockHost(dir,{custody:{tail:dead()}}),first=await refusal(loadGenerationGraphV1(retired.host,{closure:["a"],pin:gone}));
+  const retired=createMockHost(dir,{custody:{tail:dead()}}),first=await refusal(graphOfV1(retired.host,{closure:["a"],pin:gone}));
   expect(first.reason).toBe("retired");expect(first.message).toContain("is no longer kept");expect(first.message).toContain("wird nicht mehr aufbewahrt");
-  const stranger=createMockHost(dir,{identity:"0".repeat(64),custody:{tail:dead()}}),second=await refusal(loadGenerationGraphV1(stranger.host,{closure:["a"],pin}));
+  const stranger=createMockHost(dir,{identity:"0".repeat(64),custody:{tail:dead()}}),second=await refusal(graphOfV1(stranger.host,{closure:["a"],pin}));
   expect(second.reason).toBe("identity");expect(second.message).toContain("another repository identity");
   const renumbered=readGenerationPinV1(encodeGenerationPinV1({owner:process.pid,generation:record.generation+7,manifest:record.manifest,owners:record.owners,covered:record.covered,atMs:record.atMs}));
-  expect((await refusal(loadGenerationGraphV1(createMockHost(dir,{custody:{tail:dead()}}).host,{closure:["a"],pin:renumbered}))).reason).toBe("identity");
+  expect((await refusal(graphOfV1(createMockHost(dir,{custody:{tail:dead()}}).host,{closure:["a"],pin:renumbered}))).reason).toBe("identity");
   for(const host of[retired,stranger])expect(host.log).toHaveLength(0);
  }finally{rmSync(dir,{recursive:true,force:true});}
 },60000);
@@ -106,7 +107,7 @@ test("without a bound pin a nested command behaves as before: it verifies the li
   const{graph,pin,record}=await parentOf(dir);
   await edit(dir,"c",3);
   const orphan=generationPinStateV1({SEMIO_BUILD_GENERATION_PIN:JSON.stringify(pin),SEMIO_BUILD_INVOCATION_PID:String(process.pid+1)});expect(orphan.state).toBe("foreign");
-  const plain=createMockHost(dir,{stamp:true}),served=await loadGenerationGraphV1(plain.host,{closure:["a"]});
+  const plain=createMockHost(dir,{stamp:true}),served=(await loadGenerationGraphV1(plain.host,{closure:["a"]})).graph;
   expect(plain.log.map(row=>row.full)).toEqual([["c"]]);expect(served).not.toEqual(graph);expect(pointer(dir).generation).toBeGreaterThan(record.generation);
  }finally{rmSync(dir,{recursive:true,force:true});}
 },60000);
@@ -116,15 +117,15 @@ test("the slice of a selected task closure is served from the pin and refuses a 
  try{
   await chain(dir);const parent=createMockHost(dir,{stamp:true}),sealed:Sealed[]=[];(parent.host as any).sealed=(row:Sealed)=>{sealed.push(row);};
   const slice=(project:string)=>({selection:{kind:"tasks",tasks:[{project,target:"build"}]},roots:[project]});
-  const graph=await loadGenerationGraphV1(parent.host,{slice:slice("a")}),record=sealed.at(-1)!;
+  const graph=(await loadGenerationGraphV1(parent.host,{slice:slice("a")})).graph,record=sealed.at(-1)!;
   expect([...record.covered!].sort()).toEqual(["a","b","c"]);
   const pin=readGenerationPinV1(encodeGenerationPinV1({owner:process.pid,generation:record.generation,manifest:record.manifest,owners:record.owners,covered:record.covered,atMs:record.atMs}));
-  await edit(dir,"b",5);const peer=createMockHost(dir,{stamp:true});await loadGenerationGraphV1(peer.host,{slice:slice("a")});
+  await edit(dir,"b",5);const peer=createMockHost(dir,{stamp:true});(await loadGenerationGraphV1(peer.host,{slice:slice("a")})).graph;
   const nested=createMockHost(dir,{custody:{tail:dead()}});
-  expect(await loadGenerationGraphV1(nested.host,{slice:slice("b"),pin})).toBeDefined();expect(nested.log).toHaveLength(0);
-  const again=createMockHost(dir,{custody:{tail:dead()}});expect(await loadGenerationGraphV1(again.host,{slice:slice("a"),pin})).toEqual(graph);
-  const outside=createMockHost(dir,{custody:{tail:dead()}}),error=await refusal(loadGenerationGraphV1(outside.host,{slice:slice("d"),pin}));
+  expect((await loadGenerationGraphV1(nested.host,{slice:slice("b"),pin})).graph).toBeDefined();expect(nested.log).toHaveLength(0);
+  const again=createMockHost(dir,{custody:{tail:dead()}});expect((await loadGenerationGraphV1(again.host,{slice:slice("a"),pin})).graph).toEqual(graph);
+  const outside=createMockHost(dir,{custody:{tail:dead()}}),error=await refusal(graphOfV1(outside.host,{slice:slice("d"),pin}));
   expect(error.reason).toBe("uncovered");expect(error.message).toContain("(d, e)");expect(outside.log).toHaveLength(0);
-  const unknown=createMockHost(dir,{custody:{tail:dead()}});expect((await refusal(loadGenerationGraphV1(unknown.host,{slice:slice("zz"),pin}))).message).toContain("(zz)");
+  const unknown=createMockHost(dir,{custody:{tail:dead()}});expect((await refusal(graphOfV1(unknown.host,{slice:slice("zz"),pin}))).message).toContain("(zz)");
  }finally{rmSync(dir,{recursive:true,force:true});}
 },60000);

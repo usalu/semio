@@ -15,6 +15,18 @@ pub const R_SI_ROOF: f64 = 0.10;
 /// 🧱 Interior surface resistance for floors (downward heat flow) [m²K/W].
 pub const R_SI_FLOOR: f64 = 0.17;
 
+/// 🦠 DIN 4108-2 §6.2 surface resistance of the mould criterion [m²K/W].
+pub const R_SI_MOULD: f64 = 0.25;
+
+/// 🦠 DIN 4108-2 §6.2 interior temperature of the mould criterion [°C].
+pub const MOULD_T_INT_C: f64 = 20.0;
+
+/// 🦠 DIN 4108-2 §6.2 exterior temperature of the mould criterion [°C].
+pub const MOULD_T_EXT_C: f64 = -5.0;
+
+/// 📐️ EN ISO 6946 §6.7.2.4 largest R'_T/R''_T ratio for which the combined method is valid.
+pub const COMBINED_METHOD_MAX_RATIO: f64 = 1.5;
+
 /// 🦠 DIN 4108-2 mould criterion — temperature factor at interior surface.
 pub const F_RSI_MINIMUM: f64 = 0.70;
 
@@ -47,27 +59,6 @@ pub(super) fn window_field_path(zone_id: &str, window_id: &str, field: &str) -> 
 pub(super) fn bridge_field_path(bridge_id: &str, field: &str) -> String {
     format!("thermalBridges[id={bridge_id}].{field}")
 }
-
-/// ❄️ DIN 4108-3 Annex A — winter exterior climate for Glaser condensation assessment.
-pub const GLASER_WINTER_T_EXT_C: f64 = -5.0;
-
-/// ❄️ DIN 4108-3 Annex A — winter exterior relative humidity.
-pub const GLASER_WINTER_RH_EXT: f64 = 0.80;
-
-/// 🏠 DIN 4108-3 Annex A — interior design temperature for Glaser.
-pub const GLASER_INTERIOR_T_C: f64 = 20.0;
-
-/// 🏠 DIN 4108-3 Annex A — interior relative humidity for Glaser.
-pub const GLASER_INTERIOR_RH: f64 = 0.50;
-
-/// ☀️ DIN 4108-3 Annex A — summer exterior temperature (walls / floors).
-pub const GLASER_SUMMER_T_EXT_C: f64 = 12.0;
-
-/// ☀️ DIN 4108-3 Annex A — summer exterior relative humidity.
-pub const GLASER_SUMMER_RH_EXT: f64 = 0.70;
-
-/// ☀️ DIN 4108-3 Annex A — summer exterior temperature for roofs (elevated).
-pub const GLASER_SUMMER_ROOF_T_EXT_C: f64 = 20.0;
 
 /// 🧱 ISO 6946 surface resistances with heat-flow direction from inclination (0° horizontal … 90° vertical).
 pub fn surface_resistances_inclined(kind: &str, adjacent: &str, inclination_deg: f64) -> (f64, f64) {
@@ -113,31 +104,47 @@ pub fn layer_resistance_lower(layer: &LayerDocument) -> f64 {
     }
 }
 
-/// 📐️ ISO 6946 §6.7 upper bound R_T,upper = 1/Σ(f_j/R_Tj) with sections from the first inhomogeneous layer.
+/// 📐️ EN ISO 6946 §6.7.2 upper limit R'_T = 1/Σ(f_a·f_b·…/R_T,combination) over every section combination of all inhomogeneous layers (homogeneous layers form one section).
 pub fn total_resistance_upper(layers: &[LayerDocument], r_si: f64, r_se: f64) -> f64 {
-    let Some(primary) = layers.iter().find(|layer| !layer.segments.is_empty()) else {
-        return r_si + r_se + layers.iter().map(layer_resistance).sum::<f64>();
-    };
-    let mut sum_f_over_r = 0.0;
-    for (j, seg) in primary.segments.iter().enumerate() {
-        if seg.fraction <= 0.0 {
-            continue;
-        }
-        let mut r_tj = r_si + r_se;
-        for layer in layers {
+    let sections: Vec<Vec<(f64, f64)>> = layers
+        .iter()
+        .map(|layer| {
             if layer.segments.is_empty() {
-                r_tj += layer_resistance(layer);
+                vec![(1.0, layer_resistance(layer))]
             } else {
-                let section = layer.segments.get(j).unwrap_or(seg);
-                if section.lambda <= 0.0 {
-                    r_tj = f64::INFINITY;
-                    break;
-                }
-                r_tj += layer.thickness_m / section.lambda;
+                layer
+                    .segments
+                    .iter()
+                    .filter(|seg| seg.fraction > 0.0)
+                    .map(|seg| (seg.fraction, if seg.lambda > 0.0 { layer.thickness_m / seg.lambda } else { f64::INFINITY }))
+                    .collect()
             }
+        })
+        .collect();
+    if sections.iter().any(Vec::is_empty) {
+        return f64::INFINITY;
+    }
+    let mut index = vec![0usize; sections.len()];
+    let mut sum_f_over_r = 0.0;
+    loop {
+        let (fraction, r_t) = sections
+            .iter()
+            .zip(&index)
+            .fold((1.0, r_si + r_se), |(f, r), (options, i)| (f * options[*i].0, r + options[*i].1));
+        if r_t > 0.0 && r_t.is_finite() {
+            sum_f_over_r += fraction / r_t;
         }
-        if r_tj > 0.0 && r_tj.is_finite() {
-            sum_f_over_r += seg.fraction / r_tj;
+        let mut k = 0;
+        while k < index.len() {
+            index[k] += 1;
+            if index[k] < sections[k].len() {
+                break;
+            }
+            index[k] = 0;
+            k += 1;
+        }
+        if k == index.len() {
+            break;
         }
     }
     if sum_f_over_r <= 0.0 {
@@ -152,18 +159,22 @@ pub fn total_resistance_lower(layers: &[LayerDocument], r_si: f64, r_se: f64) ->
     r_si + r_se + layers.iter().map(layer_resistance_lower).sum::<f64>()
 }
 
-/// 📐️ Total resistance R_T [m²K/W] — series for homogeneous stacks; (R_upper+R_lower)/2 for ISO 6946 §6.7.
+/// 📐️ EN ISO 6946 §6.7.2.4 ratio R'_T/R''_T of the upper to the lower limit; `None` for homogeneous stacks.
+pub fn combined_method_ratio(layers: &[LayerDocument], r_si: f64, r_se: f64) -> Option<f64> {
+    if layers.iter().all(|layer| layer.segments.is_empty()) {
+        return None;
+    }
+    let ratio = total_resistance_upper(layers, r_si, r_se) / total_resistance_lower(layers, r_si, r_se);
+    ratio.is_finite().then_some(ratio)
+}
+
+/// 📐️ Total resistance R_T [m²K/W] — series for homogeneous stacks; (R'_T+R''_T)/2 of EN ISO 6946 §6.7.2.4 otherwise.
 pub fn total_resistance(layers: &[LayerDocument], r_si: f64, r_se: f64) -> f64 {
     if layers.iter().any(|layer| !layer.segments.is_empty()) {
         0.5 * (total_resistance_upper(layers, r_si, r_se) + total_resistance_lower(layers, r_si, r_se))
     } else {
         r_si + r_se + layers.iter().map(layer_resistance).sum::<f64>()
     }
-}
-
-/// 🧭 Facade exterior temperature adjustment from azimuth (north colder) [K] — continuous cosine.
-pub fn facade_temp_adjustment_k(orientation_deg: f64) -> f64 {
-    -2.0 * orientation_deg.to_radians().cos()
 }
 
 /// 📉️ U = 1/R_T [W/(m²K)].

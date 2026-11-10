@@ -1,6 +1,7 @@
 /** 🔑️ Contract: beneath a real issued lease control, the waits of the slice custody and of the prefetch claims go through the REAL queued lease kernel, which admits only the control's own signal: a waiter behind an overlapping claim, and a prefetch that joins a running peer claim, wait and move on when the holder releases (no derived abort signal ever reaches the kernel), and cancelling the control ends a waiter promptly and leaves no claim behind. */
 import {afterAll,expect,test} from "bun:test";
 import {mkdirSync,mkdtempSync,realpathSync,rmSync} from "node:fs";
+import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {acquireQueuedResourceLease,acquireResourceLease,acquireFreshResourceLeaseV1} from "@semio-tech/process/leases";
 import{resourceLeasePathV1}from"@semio-tech/process/leases";
@@ -22,7 +23,7 @@ function issued(original:Original,directory:string,name:string){
  const controller=new AbortController(),control=createIssuedResourceControlV1(original,"test:custody-kernel:"+name,120000,controller.signal);
  return{controller,control,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,tryAcquire:acquireResourceLease as never,acquireFresh:acquireFreshResourceLeaseV1 as never,directory,control})};
 }
-const scratch=()=>{const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Owned test artifacts directory required");mkdirSync(artifacts,{recursive:true});const root=realpathSync(mkdtempSync(join(artifacts,"custody-kernel-")));roots.push(root);return root;};
+const scratch=()=>{const root=realpathSync(mkdtempSync(join(tmpdir(),"ck-")));roots.push(root);return root;};
 
 test("fresh custody waits only for directory admission and preserves immediate real collision refusal",async()=>withBuildTestInvocationV1(async original=>{
  const root=scratch(),directory=join(root,"leases"),controller=new AbortController(),control=createIssuedResourceControlV1(original,"test:fresh-custody-admission",30000,controller.signal),lease=createQueuedClaimLeasePortV1({directory,control,acquire:acquireQueuedResourceLease as never,tryAcquire:acquireResourceLease as never,acquireFresh:acquireFreshResourceLeaseV1 as never});

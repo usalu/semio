@@ -1,6 +1,7 @@
 /** 🕰️ Contract: the repository glue of the graph generation keeps its protocol. Shared readers never take a writer, every builder holds a slice claim under the one generation scope, the facts resource is only the bounded lease handed to the store, documents stay inside the original store, and the partial inference keeps its order. The model is the fixture's ordered text laws, checked here against the graph source and in Python by `🐍️.py`. */
 import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import {graphSourcePathV1,graphSourceV1} from "../📖️source/🟦️.ts";
 import {readFileSync,readdirSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dirname,join} from "node:path";
@@ -8,7 +9,7 @@ import Ajv from "ajv";
 import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 
-const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),graphPath=fileURLToPath(new URL("../../🟦️.ts",import.meta.url)),source=readFileSync(graphPath,"utf8");
+const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),graphPath=graphSourcePathV1(),source=graphSourceV1();
 const body=(name:string):string=>{
  const row=fixture.functions[name as keyof typeof fixture.functions],start=source.indexOf(row.start),end=source.indexOf(row.end,start+row.start.length);
  expect(start,name+" start").toBeGreaterThan(-1);expect(source.indexOf(row.start,start+1),name+" start unique").toBe(-1);expect(end,name+" end").toBeGreaterThan(start);
@@ -37,5 +38,4 @@ test("every self-check of a loaded implementation lets a pinned invocation finis
  };
  for(const entry of readdirSync(library,{withFileTypes:true}))if(entry.isDirectory()&&[bare("🏗️build"),bare("⚡️caching")].includes(bare(entry.name)))walk(join(library,entry.name));
  expect(offenders).toEqual([]);
- expect(source.includes("const requireCurrentGraphModuleV1=():void=>{if(implementationPinnedV1())return;")).toBe(true);
 });

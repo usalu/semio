@@ -12,6 +12,7 @@ import {BUILD_HOST_CAPACITY_POLICY_V1,buildCapacityAskV1,buildCapacityDeferredV1
 import {sizeHostRequestV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {runCapacityCommandV1} from "../⌨️command/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
+import toolRegistry from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🔣️.json";
 
 const roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(tmpdir(),"hb-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
@@ -22,7 +23,8 @@ const fast=readHostCapacityPolicyV1({...buildPolicy.hostCapacity,wait:{...buildP
 test("The authored host capacity policy is schema-valid and covers exactly the gated catalogue operations plus the ad-hoc command block",()=>{
  expect(BUILD_HOST_CAPACITY_POLICY_V1).toEqual(readHostCapacityPolicyV1(buildPolicy.hostCapacity));
  const names=new Set(catalog.operations.map(row=>row.name));
- for(const row of BUILD_HOST_CAPACITY_POLICY_V1.operations)expect(names.has(row.name)||row.name==="command",row.name).toBe(true);
+ const toolOperations=new Set([...JSON.stringify(toolRegistry).matchAll(/"operation":\s*"([^"]+)"/gu)].map(match=>match[1]!));
+ for(const row of BUILD_HOST_CAPACITY_POLICY_V1.operations)expect(names.has(row.name)||row.name==="command"||toolOperations.has(row.name),row.name).toBe(true);
  for(const light of ["tools","reset","cache","preflight","capacity"])expect(BUILD_HOST_CAPACITY_POLICY_V1.operations.some(row=>row.name===light),light).toBe(false);
  for(const heavy of ["run","run-many","affected","exec","watch","cargo","show","graph","dependencies"])expect(BUILD_HOST_CAPACITY_POLICY_V1.operations.some(row=>row.name===heavy),heavy).toBe(true);
 });
@@ -36,7 +38,7 @@ test("A grant rewrites the parallelism option and never touches what follows the
 });
 
 test("A heavy invocation runs under a reduced grant with rewritten arguments and inherited environment, then restores the environment",async()=>{
- const directory=fresh(),environment:NodeJS.ProcessEnv={SEMIO_BUILD_PARALLEL:"10"},lines:string[]=[];
+ const directory=fresh(),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",SEMIO_BUILD_PARALLEL:"10"},lines:string[]=[];
  const result=await withBuildCapacityV1(["--tool=bazel","run","@x/y:typecheck","--parallel=10"],environment,async granted=>{
   expect(granted.handle).toMatchObject({jobs:2,inherited:false});
   expect(granted.args).toEqual(["--tool=bazel","run","@x/y:typecheck","--parallel=2"]);
@@ -55,16 +57,16 @@ test("A heavy invocation runs under a reduced grant with rewritten arguments and
 });
 
 test("Light commands and fixed-block operations leave the arguments and the parallelism alone, light ones without touching the gate",async()=>{
- const directory=join(fresh(),"gate"),environment:NodeJS.ProcessEnv={SEMIO_BUILD_PARALLEL:"7"};
- await withBuildCapacityV1(["cache","status"],environment,async granted=>{expect(granted).toEqual({args:["cache","status"],handle:undefined});},{directory,policy:fast,strip});
+ const directory=join(fresh(),"gate"),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",SEMIO_BUILD_PARALLEL:"7"};
+ await withBuildCapacityV1(["cache","status"],environment,async granted=>{expect(granted).toMatchObject({args:["cache","status"],handle:undefined,limit:undefined});},{directory,policy:fast,strip});
  expect(existsSync(directory)).toBe(false);
  await withBuildCapacityV1(["show","projects"],environment,async granted=>{expect(granted.args).toEqual(["show","projects"]);expect(environment.SEMIO_BUILD_PARALLEL).toBe("7");expect(granted.handle).toMatchObject({jobs:1,reservedMegabytes:5120});},{directory,policy:fast,strip,sample:async()=>({host:host(),swappedOutMegabytes:0})});
 });
 
 test("Law: `dependencies ensure` asks for no capacity up front (a fresh receipt never queues), only the installer asks, and sync and lock still ask",async()=>{
  expect(fixture.deferred.map(item=>buildCapacityDeferredV1(item.args)),"fixture rows").toEqual(fixture.deferred.map(item=>item.deferred));
- const directory=join(fresh(),"gate"),environment:NodeJS.ProcessEnv={},sample=async()=>({host:host(),swappedOutMegabytes:0});
- await withBuildCapacityV1(["dependencies","ensure"],environment,async granted=>{expect(granted).toEqual({args:["dependencies","ensure"],handle:undefined});},{directory,policy:fast,strip,sample});
+ const directory=join(fresh(),"gate"),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8"},sample=async()=>({host:host(),swappedOutMegabytes:0});
+ await withBuildCapacityV1(["dependencies","ensure"],environment,async granted=>{expect(granted).toMatchObject({args:["dependencies","ensure"],handle:undefined,limit:undefined});},{directory,policy:fast,strip,sample});
  expect(existsSync(directory),"no gate entry for the fresh path").toBe(false);
  await withBuildCapacityV1(["dependencies","ensure"],environment,async granted=>{expect(granted.handle).toMatchObject({reservedMegabytes:6144});},{directory,policy:fast,strip,sample,admitDeferred:true});
  for(const args of [["dependencies","sync","--all"],["dependencies","lock","--all"]])await withBuildCapacityV1(args,environment,async granted=>{expect(granted.handle,args.join(" ")).toMatchObject({reservedMegabytes:6144});},{directory,policy:fast,strip,sample});
@@ -74,14 +76,14 @@ test("Law: `dependencies ensure` asks for no capacity up front (a fresh receipt 
 });
 
 test("Law: a native dashboard launch asks for no capacity (it only hands the terminal to the installed binary), a dashboard build still does",async()=>{
- const directory=join(fresh(),"gate"),environment:NodeJS.ProcessEnv={},sample=async()=>({host:host(),swappedOutMegabytes:0});
- for(const args of fixture.nativeLaunch.free)await withBuildCapacityV1(args,environment,async granted=>{expect(granted,args.join(" ")).toEqual({args,handle:undefined});},{directory,policy:fast,strip,sample});
+ const directory=join(fresh(),"gate"),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8"},sample=async()=>({host:host(),swappedOutMegabytes:0});
+ for(const args of fixture.nativeLaunch.free)await withBuildCapacityV1(args,environment,async granted=>{expect(granted,args.join(" ")).toMatchObject({args,handle:undefined,limit:undefined});},{directory,policy:fast,strip,sample});
  expect(existsSync(directory),"no gate entry for a launch").toBe(false);
  for(const args of fixture.nativeLaunch.asking)await withBuildCapacityV1(args,environment,async granted=>{expect(granted.handle,args.join(" ")).toBeDefined();},{directory,policy:fast,strip,sample});
 });
 
 test("A nested invocation inherits the grant of its parent through the environment and waits for nothing",async()=>{
- const directory=fresh(),environment:NodeJS.ProcessEnv={};
+ const directory=fresh(),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8"};
  await withBuildCapacityV1(["run","@x/y:build","--parallel=2"],environment,async outer=>{
   const nested:NodeJS.ProcessEnv={...environment};
   await withBuildCapacityV1(["run","@x/z:build","--parallel=2"],nested,async inner=>expect(inner.handle).toMatchObject({inherited:true,id:outer.handle!.id}),{directory,policy:fast,strip,sample:async()=>({host:host({availableMegabytes:7000}),swappedOutMegabytes:0})});
@@ -89,7 +91,7 @@ test("A nested invocation inherits the grant of its parent through the environme
 });
 
 test("An interrupt while waiting cancels the wait and leaves nothing in the queue",async()=>{
- const directory=fresh(),environment:NodeJS.ProcessEnv={},emitter=new EventEmitter();
+ const directory=fresh(),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8"},emitter=new EventEmitter();
  const sample=async()=>({host:host({availableMegabytes:6600}),swappedOutMegabytes:0}),control=createCapacityControlV1(emitter as never);
  const waiting=withBuildCapacityV1(["run","@x/y:build","--parallel=2"],environment,async()=>"never",{directory,policy:fast,strip,sample,control:control.control,write:()=>undefined});
  await sleep(80);
@@ -104,10 +106,10 @@ test("An interrupt while waiting cancels the wait and leaves nothing in the queu
 test("repo capacity status prints one line per fact in English and German and a JSON snapshot on request",async()=>{
  const directory=fresh(),english:string[]=[],german:string[]=[],json:string[]=[];
  const sample=async()=>({host:host(),swappedOutMegabytes:0}),context=(environment:NodeJS.ProcessEnv,write:(line:string)=>void)=>({environment,write,directory,policy:fast,sample});
- await withBuildCapacityV1(["run","@x/y:build","--parallel=2"],{},async()=>{
+ await withBuildCapacityV1(["run","@x/y:build","--parallel=2"],{LANG:"en_US.UTF-8"},async()=>{
   expect(await runCapacityCommandV1(["status"],context({LANG:"en_US.UTF-8"},line=>english.push(line)))).toBe(0);
   expect(await runCapacityCommandV1(["status"],context({LANG:"de_DE.UTF-8"},line=>german.push(line)))).toBe(0);
-  expect(await runCapacityCommandV1(["status","--json"],context({},line=>json.push(line)))).toBe(0);
+  expect(await runCapacityCommandV1(["status","--json"],context({LANG:"en_US.UTF-8"},line=>json.push(line)))).toBe(0);
  },{directory,policy:fast,strip,sample:async()=>({host:host(),swappedOutMegabytes:0}),pid:process.pid});
  expect(english[0]).toMatch(/^\[capacity\] \d+ MB available of \d+ MB \(floor \d+ MB, -?\d+ MB spare\), pressure \w+, swap \S+ MB, load \S+, open files \S+, attached images \S+; 1 running, 0 waiting$/u);
  expect(english[1]).toMatch(/^\[capacity\]   running \S+ run: 2 job\(s\), \d+ MB reserved, \S+ MB observed, pid \d+, since \d+s$/u);
@@ -119,9 +121,9 @@ test("repo capacity status prints one line per fact in English and German and a 
 test("repo capacity status marks a grant that is lent back in English and German and in the JSON snapshot",async()=>{
  const directory=fresh(),english:string[]=[],german:string[]=[],json:string[]=[];
  const sample=async()=>({host:host(),swappedOutMegabytes:0}),context=(environment:NodeJS.ProcessEnv,write:(line:string)=>void)=>({environment,write,directory,policy:fast,sample});
- await withBuildCapacityV1(["run","@x/y:build","--parallel=2"],{},async()=>{
+ await withBuildCapacityV1(["run","@x/y:build","--parallel=2"],{LANG:"en_US.UTF-8"},async()=>{
   const file=join(directory,"grants",readdirSync(join(directory,"grants"))[0]!);writeFileSync(file,JSON.stringify({...JSON.parse(readFileSync(file,"utf8")),lentSinceMs:Date.now()}));
-  await runCapacityCommandV1(["status"],context({LANG:"en_US.UTF-8"},line=>english.push(line)));await runCapacityCommandV1(["status"],context({LANG:"de_DE.UTF-8"},line=>german.push(line)));await runCapacityCommandV1(["status","--json"],context({},line=>json.push(line)));
+  await runCapacityCommandV1(["status"],context({LANG:"en_US.UTF-8"},line=>english.push(line)));await runCapacityCommandV1(["status"],context({LANG:"de_DE.UTF-8"},line=>german.push(line)));await runCapacityCommandV1(["status","--json"],context({LANG:"en_US.UTF-8"},line=>json.push(line)));
  },{directory,policy:fast,strip,sample,pid:process.pid});
  expect(english[1]).toMatch(/^\[capacity\]   lent \S+ run: its process only waits in a queue, so the \d+ MB reserved and \d+ core\(s\) count for nobody/u);
  expect(german[1]).toContain("verliehen");expect(JSON.parse(json.join("\n")).grants[0].lentSinceMs).toBeGreaterThan(0);
@@ -142,17 +144,18 @@ test("repo capacity run admits an arbitrary command, hands it the grant and retu
 test("Measured demand closes the loop: runs report their peak, the class learns it, and the next request of that class reserves its learned share while the build tool envelope stays at the default",async()=>{
  const directory=fresh(),learning=readHostCapacityPolicyV1({...buildPolicy.hostCapacity,wait:{...buildPolicy.hostCapacity.wait,pollMilliseconds:10,progressMilliseconds:20,sampleMaximumAgeMilliseconds:0,heartbeatMilliseconds:20}});
  const reserved:number[]=[],envelopes:number[]=[],lines:string[]=[],ports={directory,policy:learning,strip,write:(line:string)=>lines.push(line),sample:async()=>({host:host({availableMegabytes:30000}),swappedOutMegabytes:0}),observe:async()=>600,now:Date.now};
- for(let index=0;index<5;index++)await withBuildCapacityV1(["run","@x/y:typecheck","--parallel=1"],{},async granted=>{reserved.push(granted.handle!.reservedMegabytes);envelopes.push(granted.handle!.plan.memoryMegabytes);await sleep(120);},ports);
+ for(let index=0;index<5;index++)await withBuildCapacityV1(["run","@x/y:typecheck","--parallel=1"],{LANG:"en_US.UTF-8"},async granted=>{reserved.push(granted.handle!.reservedMegabytes);envelopes.push(granted.handle!.plan.memoryMegabytes);await sleep(120);},ports);
  expect(reserved[0]).toBe(1536+4096);
  expect(reserved.at(-1)!).toBeLessThan(reserved[0]!/2);
  expect(reserved.at(-1)!).toBeGreaterThanOrEqual(learning.estimates.minimumMegabytes);
  expect(new Set(envelopes)).toEqual(new Set([4096]));
+
  expect(lines.some(line=>/^\[capacity\] run: sized at \d+% of the default from \d+ earlier run\(s\) of its class$/u.test(line))).toBe(true);
  const german:string[]=[];
  await withBuildCapacityV1(["run","@x/y:typecheck","--parallel=1"],{LANG:"de_DE.UTF-8"},async()=>undefined,{...ports,write:line=>german.push(line)});
- expect(german.some(line=>/^\[capacity\] run: auf \d+% des Standardwerts bemessen, aus \d+ früheren Läufen seiner Klasse$/u.test(line))).toBe(true);
+ expect(german.some(line=>/^\[capacity\] run: auf \d+ % des Standardwerts bemessen, aus \d+ früheren Läufen seiner Klasse$/u.test(line))).toBe(true);
  const other:number[]=[];
- await withBuildCapacityV1(["run","@x/other:typecheck","--parallel=1"],{},async granted=>{other.push(granted.handle!.reservedMegabytes);},ports);
+ await withBuildCapacityV1(["run","@x/other:typecheck","--parallel=1"],{LANG:"en_US.UTF-8"},async granted=>{other.push(granted.handle!.reservedMegabytes);},ports);
  expect(other[0]).toBeLessThan(reserved[0]!);
 },60000);
 
@@ -160,19 +163,19 @@ test("Law: failed, cancelled and non-zero-exit runs never lower what a class lea
  const directory=fresh(),learning=readHostCapacityPolicyV1({...buildPolicy.hostCapacity,wait:{...buildPolicy.hostCapacity.wait,pollMilliseconds:10,progressMilliseconds:20,sampleMaximumAgeMilliseconds:0,heartbeatMilliseconds:20}});
  let peak=3000,code:number|undefined=0;
  const ports=()=>({directory,policy:learning,strip,write:()=>undefined,sample:async()=>({host:host({availableMegabytes:30000}),swappedOutMegabytes:0}),observe:async()=>peak,now:Date.now,exitCode:()=>code}),args=["run","@x/y:typecheck","--parallel=1"],samples=()=>(JSON.parse(readFileSync(join(directory,"estimates.json"),"utf8")).classes["run"].samples as {ratioBasisPoints:number;peakAtMilliseconds?:number;activeMilliseconds:number}[]);
- for(let index=0;index<4;index++)await withBuildCapacityV1(args,{},async()=>{await sleep(100);},ports());
+ for(let index=0;index<4;index++)await withBuildCapacityV1(args,{LANG:"en_US.UTF-8"},async()=>{await sleep(100);},ports());
  expect(samples().length).toBe(4);
  expect(samples().every(row=>row.peakAtMilliseconds!==undefined&&row.peakAtMilliseconds<=row.activeMilliseconds),"every completed run records when it peaked").toBe(true);
  peak=200;code=1;
- await withBuildCapacityV1(args,{},async()=>{await sleep(100);},ports());
+ await withBuildCapacityV1(args,{LANG:"en_US.UTF-8"},async()=>{await sleep(100);},ports());
  expect(samples().length,"a run that exited non-zero with a small peak teaches nothing").toBe(4);
  code=0;
- await expect(withBuildCapacityV1(args,{},async()=>{await sleep(100);throw Error("died");},ports())).rejects.toThrow("died");
+ await expect(withBuildCapacityV1(args,{LANG:"en_US.UTF-8"},async()=>{await sleep(100);throw Error("died");},ports())).rejects.toThrow("died");
  expect(samples().length,"a run that threw with a small peak teaches nothing").toBe(4);
- await expect(withBuildCapacityV1(args,{},async()=>{await sleep(60);throw Object.assign(Error("stopped"),{code:"cancelled"});},ports())).rejects.toThrow("stopped");
+ await expect(withBuildCapacityV1(args,{LANG:"en_US.UTF-8"},async()=>{await sleep(60);throw Object.assign(Error("stopped"),{code:"cancelled"});},ports())).rejects.toThrow("stopped");
  expect(samples().length,"a cancelled run with a small peak teaches nothing").toBe(4);
  peak=16000;
- await expect(withBuildCapacityV1(args,{},async()=>{await sleep(100);throw Error("died late");},ports())).rejects.toThrow("died late");
+ await expect(withBuildCapacityV1(args,{LANG:"en_US.UTF-8"},async()=>{await sleep(100);throw Error("died late");},ports())).rejects.toThrow("died late");
  expect(samples().length,"a failed run whose partial peak already exceeds the estimate raises the class").toBe(5);
  expect(Math.max(...samples().map(row=>row.ratioBasisPoints))).toBeGreaterThan(10000);
 },30000);
@@ -203,3 +206,22 @@ test("A person at a terminal and an explicit interactive standing rank first, ag
  expect(standing({SEMIO_LEASE_PRIORITY:"background"},"human")).toBe("background");
  expect(standing({SEMIO_LEASE_PRIORITY:"urgent"},"human")).toBe("interactive");
 });
+
+test("The grant carries a memory limit equal to its reservation, and a job stopped at that limit makes the next reservation of its class larger instead of smaller",async()=>{
+ const learning=readHostCapacityPolicyV1({...buildPolicy.hostCapacity,wait:{...buildPolicy.hostCapacity.wait,pollMilliseconds:10,progressMilliseconds:20,sampleMaximumAgeMilliseconds:0,heartbeatMilliseconds:20}});
+ const sequence=async(kill:boolean)=>{
+  const directory=fresh(),reserved:number[]=[],limits:number[]=[],ports={directory,policy:learning,strip,write:()=>undefined,sample:async()=>({host:host({availableMegabytes:30000}),swappedOutMegabytes:0}),observe:async()=>600,now:Date.now};
+  for(let index=0;index<5;index++)await withBuildCapacityV1(["run","@x/y:typecheck","--parallel=1"],{LANG:"en_US.UTF-8"},async granted=>{
+   reserved.push(granted.handle!.reservedMegabytes);limits.push(granted.limit!.memoryMegabytes);
+   expect(granted.limit).toMatchObject({kind:"job",swapMegabytes:0,memoryMegabytes:granted.handle!.reservedMegabytes});
+   if(kill)granted.report({kind:"memory-exceeded",enforcement:"cgroup-v2",limitMegabytes:granted.limit!.memoryMegabytes,peakMegabytes:granted.limit!.memoryMegabytes,exitCode:null,signal:"SIGKILL",durationMilliseconds:1});
+   await sleep(120);
+  },ports);
+  expect(limits).toEqual(reserved);
+  return reserved;
+ };
+ const measured=await sequence(false),killed=await sequence(true);
+ expect(measured.at(-1)!).toBeLessThan(measured[0]!/2);
+ expect(killed.at(-1)!).toBeGreaterThan(measured.at(-1)!*2);
+ await withBuildCapacityV1(["cache","status"],{LANG:"en_US.UTF-8"},async granted=>{expect(granted.limit).toBeUndefined();expect(granted.handle).toBeUndefined();granted.report({kind:"ok",enforcement:"fake",limitMegabytes:1,peakMegabytes:1,exitCode:0,signal:null,durationMilliseconds:1});},{directory:fresh(),policy:fast,strip});
+},60000);

@@ -193,55 +193,25 @@ pub mod part_2 {
         }
     }
 
-    pub fn evaluate_bounding_box(node: &GeometryNode, catalogue: &GeometryCatalogue) -> Result<BoundingBox, NormError> {
-        match node {
-            GeometryNode::Primitive { kind, parameters } => match kind.as_str() {
-                "box" => {
-                    let w = *parameters.get("width").ok_or_else(|| NormError::IncompleteInput { field: "width".into() })?;
-                    let h = *parameters.get("height").ok_or_else(|| NormError::IncompleteInput { field: "height".into() })?;
-                    let d = *parameters.get("depth").ok_or_else(|| NormError::IncompleteInput { field: "depth".into() })?;
-                    Ok(BoundingBox::from_size(w, h, d))
-                }
-                "cylinder" => {
-                    let r = *parameters.get("radius").ok_or_else(|| NormError::IncompleteInput { field: "radius".into() })?;
-                    let h = *parameters.get("height").ok_or_else(|| NormError::IncompleteInput { field: "height".into() })?;
-                    Ok(BoundingBox::from_size(2.0 * r, h, 2.0 * r))
-                }
-                "sphere" => {
-                    let r = *parameters.get("radius").ok_or_else(|| NormError::IncompleteInput { field: "radius".into() })?;
-                    Ok(BoundingBox::from_size(2.0 * r, 2.0 * r, 2.0 * r))
-                }
-                _ => Err(NormError::OutOfScope { clause: ClauseId::new("ISO 16757", "2", "7.1") }),
-            },
-            GeometryNode::Transform { translation, child, .. } => {
-                let mut bbox = evaluate_bounding_box(child, catalogue)?;
-                bbox.min[0] += translation[0];
-                bbox.min[1] += translation[1];
-                bbox.min[2] += translation[2];
-                bbox.max[0] += translation[0];
-                bbox.max[1] += translation[1];
-                bbox.max[2] += translation[2];
-                Ok(bbox)
-            }
-            GeometryNode::Boolean { children, .. } => {
-                let mut iter = children.iter();
-                let first = iter.next().ok_or_else(|| NormError::IncompleteInput { field: "boolean_children".into() })?;
-                let mut acc = evaluate_bounding_box(first, catalogue)?;
-                for child in iter {
-                    let next = evaluate_bounding_box(child, catalogue)?;
-                    acc.min[0] = acc.min[0].min(next.min[0]);
-                    acc.min[1] = acc.min[1].min(next.min[1]);
-                    acc.min[2] = acc.min[2].min(next.min[2]);
-                    acc.max[0] = acc.max[0].max(next.max[0]);
-                    acc.max[1] = acc.max[1].max(next.max[1]);
-                    acc.max[2] = acc.max[2].max(next.max[2]);
-                }
-                Ok(acc)
-            }
-            GeometryNode::Reference { geometry_id } => {
-                catalogue.objects.get(geometry_id).and_then(|obj| obj.shape.as_ref()).map_or_else(|| Err(NormError::InvalidValue { field: "geometry_id".into(), reason: "unresolved reference".into() }), |shape| evaluate_bounding_box(shape, catalogue))
-            }
+    fn solid_error(error: crate::solid_volume::SolidError) -> NormError {
+        use crate::solid_volume::SolidError;
+        match error {
+            SolidError::Missing(field) => NormError::IncompleteInput { field: field.into() },
+            SolidError::UnknownKind => NormError::OutOfScope { clause: ClauseId::new("ISO 16757", "2", "7.1") },
+            SolidError::EmptyBoolean => NormError::IncompleteInput { field: "boolean_children".into() },
+            SolidError::Unresolved => NormError::InvalidValue { field: "geometry_id".into(), reason: "unresolved reference".into() },
+            SolidError::Cycle => NormError::InvalidValue { field: "geometry_id".into(), reason: "reference cycle".into() },
         }
+    }
+
+    /// 📦️ Exact world bounds with rotations applied (ISO 16757-2 7.1).
+    pub fn evaluate_bounding_box(node: &GeometryNode, catalogue: &GeometryCatalogue) -> Result<BoundingBox, NormError> {
+        crate::solid_volume::bounding_box(node, catalogue).map_err(solid_error)
+    }
+
+    /// 🧊️ Solid volume with primitive closed forms, rigid transforms and boolean algebra (ISO 16757-2 7.1).
+    pub fn evaluate_solid_volume(node: &GeometryNode, catalogue: &GeometryCatalogue) -> Result<crate::solid_volume::SolidVolume, NormError> {
+        crate::solid_volume::solid_volume(node, catalogue).map_err(solid_error)
     }
 
     pub fn validate_geometry_graph(object: &GeometryObject, catalogue: &GeometryCatalogue, visited: &mut HashSet<String>) -> Vec<String> {

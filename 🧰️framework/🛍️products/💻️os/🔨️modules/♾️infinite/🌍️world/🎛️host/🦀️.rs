@@ -15,7 +15,7 @@ use semio_os_infinite_world_bridge::{advance_world3d_view_revision, append_compo
 use semio_os_infinite_world_bridge::{gumball_commit_action, is_click_gesture, pick_gumball_handle_at, reset_gumball_preview};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use semio_os_infinite_world_bridge::world3d_standard_material_for_mesh;
-use semio_os_infinite_world_interaction::{append_box_wireframe, append_vortex_arrow_draws, begin_world_placeholder_mesh, brush_preview_mesh_id, declare_scene_mesh_source, environment_authored_material, environment_clear_color, environment_explicit_clear_color, environment_scene_lighting, ghost_mesh_id, mark_world_dynamic_fault, preview_scale, retained_gumball_preview_model, pump_world_placeholder_mesh, step_world_placeholder_mesh_batch, sync_terrain, world_interaction_active_census, world_marquee_overlay_points, WorldAuthorityState};
+use semio_os_infinite_world_interaction::{append_box_wireframe, append_vortex_arrow_draws, begin_world_placeholder_mesh, brush_preview_mesh_id, declare_scene_mesh_source, environment_authored_material, environment_clear_color, environment_explicit_clear_color, environment_scene_lighting, ghost_mesh_id, mark_world_dynamic_fault, preview_scale, retained_gumball_preview_model, pump_world_placeholder_mesh, step_world_placeholder_mesh_batch, sync_terrain, world_interaction_active_census, world_marquee_overlay_points, WorldAuthorityState, WorldHandleBindings};
 #[cfg(any(test, feature = "testkit"))]
 use semio_os_infinite_world_interaction::{marquee_select_action, pick_instance_at, pick_paint_hit, pick_select_action, pick_surface_at, pick_vortex_at, start_gumball_drag};
 use semio_ui_declaration::layout::ActionDescriptor;
@@ -222,6 +222,11 @@ impl World3dState {
 
     pub fn dynamic_retirement_is_idle(&self) -> bool {
         self.retirement.dynamic_retirement.is_none()
+    }
+
+    /// 🧲️ Hands the surface the actions its document node binds to the `delta`, `commit` and `abort` moments of a handle drag, each with its authored arguments; a node that binds none of them turns the handle drag off.
+    pub fn set_handle_drag_bindings(&mut self, delta: Option<ActionDescriptor>, commit: Option<ActionDescriptor>, abort: Option<ActionDescriptor>) {
+        self.authority.stage_handle_bindings(WorldHandleBindings { delta, commit, abort });
     }
 
     /// 🌍️ Selects the language the modelling overlays (annotations, legend, their accessible text) are written in: German, else English.

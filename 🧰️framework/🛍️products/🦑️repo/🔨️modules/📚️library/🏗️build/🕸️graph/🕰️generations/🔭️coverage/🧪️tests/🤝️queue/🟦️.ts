@@ -6,6 +6,7 @@ import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{testPythonV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{loadGenerationGraphV1}from"../../../🔌️load/🟨️.mjs";
+const graphOfV1=async(...input:Parameters<typeof loadGenerationGraphV1>)=>(await loadGenerationGraphV1(...input)).graph;
 import{readGenerationPointerV1}from"../../../🟨️.mjs";
 import{decodeVerifiedScopeV1}from"../../🟨️.mjs";
 import{applyOps,createMockHost,seed}from"../../../🧪️tests/🏃️world/🟦️.ts";
@@ -22,11 +23,11 @@ const gate=()=>{let open!:()=>void;const wait=new Promise<void>(resolve=>{open=r
 const builds=(...hosts:{log:unknown[]}[])=>hosts.reduce((sum,host)=>sum+host.log.length,0);
 
 async function queue(stamped:boolean,dir:string){
- await chain(dir);const custody={tail:Promise.resolve()},cold=createMockHost(dir,{stamp:stamped,custody});await loadGenerationGraphV1(cold.host);
+ await chain(dir);const custody={tail:Promise.resolve()},cold=createMockHost(dir,{stamp:stamped,custody});(await loadGenerationGraphV1(cold.host)).graph;
  await edit(dir,"c",2);
  const door=gate(),first=createMockHost(dir,{stamp:stamped,custody,gate:door.wait,ownerDelayMs:120}),second=createMockHost(dir,{stamp:stamped,custody}),third=createMockHost(dir,{stamp:stamped,custody}),fourth=createMockHost(dir,{stamp:stamped,custody});
- const one=loadGenerationGraphV1(first.host,{closure:["a"]});await sleep(40);
- const rest=[loadGenerationGraphV1(second.host,{closure:["a"]}),loadGenerationGraphV1(third.host,{closure:["a"]}),loadGenerationGraphV1(fourth.host,{closure:["b"]})];await sleep(60);
+ const one=graphOfV1(first.host,{closure:["a"]});await sleep(40);
+ const rest=[graphOfV1(second.host,{closure:["a"]}),graphOfV1(third.host,{closure:["a"]}),graphOfV1(fourth.host,{closure:["b"]})];await sleep(60);
  door.open();while(first.log.length===0)await sleep(2);await edit(dir,"b",3);
  const graphs=await Promise.all([one,...rest]);
  return{first,second,third,fourth,graphs,custody};
@@ -43,7 +44,7 @@ test("requests queued before the builder observed are served by its sealed gener
   expect(Object.values(expected.served).filter(kind=>kind==="covered")).toHaveLength(2);
   expect((graphs[1] as any).projects.a).toEqual((graphs[0] as any).projects.a);
   const sealed=stamp(dir)!;expect(sealed).toBeDefined();expect([...decodeVerifiedScopeV1(["a","b","c","d","e"],sealed)].sort()).toEqual(["a","b","c"]);
-  const later=createMockHost(dir,{stamp:true,custody});await loadGenerationGraphV1(later.host,{closure:["a"]});
+  const later=createMockHost(dir,{stamp:true,custody});(await loadGenerationGraphV1(later.host,{closure:["a"]})).graph;
   expect(later.log.map(row=>row.full)).toEqual([["b"]]);
  }finally{rmSync(dir,{recursive:true,force:true});}
 },60000);
@@ -60,11 +61,11 @@ test("without verified stamps every woken waiter verifies the live tree again an
 test("a closure that is only partly covered computes just the open owners and the stamp keeps the older time",async()=>{
  const dir=scratch();
  try{
-  await chain(dir);const custody={tail:Promise.resolve()};await loadGenerationGraphV1(createMockHost(dir,{stamp:true,custody}).host);
+  await chain(dir);const custody={tail:Promise.resolve()};(await loadGenerationGraphV1(createMockHost(dir,{stamp:true,custody}).host)).graph;
   await edit(dir,"c",2);await edit(dir,"e",2);
   const door=gate(),course=createMockHost(dir,{stamp:true,custody,gate:door.wait}),print=createMockHost(dir,{stamp:true,custody}),dash=createMockHost(dir,{stamp:true,custody});
-  const one=loadGenerationGraphV1(course.host,{closure:["a"]});await sleep(40);
-  const two=loadGenerationGraphV1(print.host,{closure:["a","d"]}),three=loadGenerationGraphV1(dash.host,{closure:["d"]});await sleep(60);door.open();
+  const one=graphOfV1(course.host,{closure:["a"]});await sleep(40);
+  const two=graphOfV1(print.host,{closure:["a","d"]}),three=graphOfV1(dash.host,{closure:["d"]});await sleep(60);door.open();
   await Promise.all([one,two,three]);
   const expected=model["mixed-closures-partial-coverage"];
   expect(course.log.map(row=>row.full)).toEqual([["c"]]);expect([...print.log,...dash.log].map(row=>row.full)).toEqual([["e"]]);expect(print.said.concat(dash.said).some(row=>row.key==="covered")).toBe(true);
@@ -76,11 +77,11 @@ test("a closure that is only partly covered computes just the open owners and th
 test("a holder that fails releases the custody; the next waiter builds, nothing was stamped by the failed one",async()=>{
  const dir=scratch();
  try{
-  await chain(dir);const custody={tail:Promise.resolve()};await loadGenerationGraphV1(createMockHost(dir,{stamp:true,custody}).host);
+  await chain(dir);const custody={tail:Promise.resolve()};(await loadGenerationGraphV1(createMockHost(dir,{stamp:true,custody}).host)).graph;
   await edit(dir,"c",2);
   const door=gate(),crashed=createMockHost(dir,{stamp:true,custody,gate:async()=>{await door.wait();throw Error("crashed holder");}}),next=createMockHost(dir,{stamp:true,custody});
-  const failing=loadGenerationGraphV1(crashed.host,{closure:["a"]}).then(()=>"served",error=>String(error.message));await sleep(40);
-  const waiting=loadGenerationGraphV1(next.host,{closure:["a"]});await sleep(40);door.open();
+  const failing=graphOfV1(crashed.host,{closure:["a"]}).then(()=>"served",error=>String(error.message));await sleep(40);
+  const waiting=graphOfV1(next.host,{closure:["a"]});await sleep(40);door.open();
   expect(await failing).toBe("crashed holder");await waiting;
   expect(crashed.events.at(-1)).toBe("builder:released");expect(next.log.map(row=>row.full)).toEqual([["c"]]);
   const expected=model["crash-of-the-holder"];expect(expected.served.r1).toBe("crashed");expect(builds(crashed,next)).toBe(expected.builds);
@@ -101,10 +102,10 @@ test("a killed process holding the builder lease leaves nothing held",async()=>{
 for(const language of["en","de"] as const)test("a waiter reports its wait and the newest generation while it queues: "+language,async()=>{
  const dir=scratch();
  try{
-  await chain(dir);const custody={tail:Promise.resolve()};await loadGenerationGraphV1(createMockHost(dir,{stamp:true,custody}).host);
+  await chain(dir);const custody={tail:Promise.resolve()};(await loadGenerationGraphV1(createMockHost(dir,{stamp:true,custody}).host)).graph;
   await edit(dir,"c",2);
   const door=gate(),holder=createMockHost(dir,{stamp:true,custody,gate:door.wait}),waiter=createMockHost(dir,{stamp:true,custody,language,waitNoticeMilliseconds:25});
-  const one=loadGenerationGraphV1(holder.host,{closure:["a"]});await sleep(40);const two=loadGenerationGraphV1(waiter.host,{closure:["a"]});while(!waiter.events.includes("builder:wait"))await sleep(2);await sleep(150);
+  const one=graphOfV1(holder.host,{closure:["a"]});await sleep(40);const two=graphOfV1(waiter.host,{closure:["a"]});while(!waiter.events.includes("builder:wait"))await sleep(2);await sleep(150);
   const notices=waiter.said.filter(row=>row.key==="waiting");expect(notices.length).toBeGreaterThanOrEqual(2);
   expect(notices[0]!.text).toContain(language==="en"?"waiting for the graph build of a peer":"wartet auf den Graph-Aufbau");expect(notices[0]!.text.toLowerCase()).toContain("generation");
   door.open();await Promise.all([one,two]);const after=waiter.said.length;await sleep(80);expect(waiter.said.length).toBe(after);
@@ -114,8 +115,8 @@ for(const language of["en","de"] as const)test("a waiter reports its wait and th
 test("requests that need no custody are served verified exactly like the model",async()=>{
  const dir=scratch();
  try{
-  await chain(dir);const custody={tail:Promise.resolve()},cold=createMockHost(dir,{stamp:true,custody});await loadGenerationGraphV1(cold.host);
-  const clean=createMockHost(dir,{stamp:true,custody});await loadGenerationGraphV1(clean.host,{closure:["a"]});await loadGenerationGraphV1(clean.host,{closure:["d"]});
+  await chain(dir);const custody={tail:Promise.resolve()},cold=createMockHost(dir,{stamp:true,custody});(await loadGenerationGraphV1(cold.host)).graph;
+  const clean=createMockHost(dir,{stamp:true,custody});(await loadGenerationGraphV1(clean.host,{closure:["a"]})).graph;(await loadGenerationGraphV1(clean.host,{closure:["d"]})).graph;
   expect(clean.events.filter(event=>event==="builder:held")).toEqual([]);expect(Object.values(model["clean-needs-no-custody"].served)).toEqual(["verified","verified"]);
  }finally{rmSync(dir,{recursive:true,force:true});}
 },60000);

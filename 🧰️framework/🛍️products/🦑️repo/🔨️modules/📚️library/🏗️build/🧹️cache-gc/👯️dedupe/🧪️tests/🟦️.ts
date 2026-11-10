@@ -79,9 +79,9 @@ test("a dry run finds exactly what an independent hashlib census finds and chang
 
 test("replacing keeps bytes, mode and times, leaves recent and volatile files alone and distinct inodes untouched in content",async()=>{
  fixture();
- const stats=(path:string)=>{const info=statSync(join(root,path));return{ino:info.ino,mode:info.mode&0o777,mtimeMs:info.mtimeMs,content:readFileSync(join(root,path),"utf8")};};
+ const stats=(path:string)=>{const info=statSync(join(root,path)),content=readFileSync(join(root,path),"utf8");utimesSync(join(root,path),info.atime,info.mtime);return{ino:info.ino,mode:info.mode&0o777,mtimeMs:info.mtimeMs,content};};
  const paths=["a/x1","a/x1-link","b/x2","c/deep/x3","a/y1","b/y2","a/unique","d/recent1","d/recent2","e/one.log","e/two.log","f/z1","f/z2"],before=Object.fromEntries(paths.map(path=>[path,stats(path)]));
- const copy=async(source:string,destination:string)=>{copyFileSync(source,destination);return true;};
+ const copy=async(source:string,destination:string)=>{const info=statSync(source);copyFileSync(source,destination);utimesSync(source,info.atime,info.mtime);return true;};
  const outcome=await dedupeTreeV1(request(false),ports(),copy);
  expect(outcome.replaced).toBe(3);expect(outcome.failed).toEqual([]);expect(outcome.freedBytes).toBe(3*SIZE);
  const after=Object.fromEntries(paths.map(path=>[path,stats(path)]));
@@ -141,7 +141,7 @@ test("the dedupe command reports and replaces in the declared places in both lan
  const workspace=mkdtempSync(join(tmpdir(),"ddw-"));
  try{
   for(const name of["a","b","c"]){const full=join(workspace,".cache/b/a/m/out",name,"blob");mkdirSync(join(full,".."),{recursive:true});writeFileSync(full,"S".repeat(SIZE));const time=(now-3*DAY)/1000;utimesSync(full,time,time);}
-  const run=async(args:string[])=>{const out:string[]=[];const code=await runCacheLedgerCommandV1(args,{workspace,environment:{},write:line=>out.push(line),partitions,machinePolicy},ports());return{code,out:out.join("\n")};};
+  const run=async(args:string[])=>{const out:string[]=[];const code=await runCacheLedgerCommandV1(args,{workspace,environment:{SEMIO_LANGUAGE:"en"},write:line=>out.push(line),partitions,machinePolicy},ports());return{code,out:out.join("\n")};};
   const english=await run(["dedupe","--dry-run","--lang=en"]),german=await run(["dedupe","--dry-run","--lang=de"]);
   expect(english.code).toBe(0);expect(english.out).toContain("1 groups of identical files, 3 files");expect(english.out).toContain("would replace 2 by clones");expect(english.out).toContain("Skipping there");
   expect(german.out).toContain("würde 2 durch Klone ersetzen");expect(german.out).toContain("Überspringe there");
@@ -164,7 +164,7 @@ test("the dedupe command explains zero replacements and an unreadable free space
  const workspace=mkdtempSync(join(tmpdir(),"ddx-"));
  try{
   for(const name of["a","b","c"]){const full=join(workspace,".cache/b/a/m/out",name,"blob");mkdirSync(join(full,".."),{recursive:true});writeFileSync(full,"S".repeat(SIZE));const time=(now-3*DAY)/1000;utimesSync(full,time,time);}
-  const run=async(args:string[],extra:Record<string,unknown>)=>{const out:string[]=[];const code=await runCacheLedgerCommandV1(args,{workspace,environment:{},write:line=>out.push(line),partitions,machinePolicy,...extra},ports());return{code,out:out.join("\n")};};
+  const run=async(args:string[],extra:Record<string,unknown>)=>{const out:string[]=[];const code=await runCacheLedgerCommandV1(args,{workspace,environment:{SEMIO_LANGUAGE:"en"},write:line=>out.push(line),partitions,machinePolicy,...extra},ports());return{code,out:out.join("\n")};};
   const noClone=async()=>false,copy=async(source:string,destination:string)=>{copyFileSync(source,destination);return true;};
   const english=await run(["dedupe","--lang=en"],{clone:noClone,freeBytes:()=>1000}),german=await run(["dedupe","--lang=de"],{clone:noClone,freeBytes:()=>1000});
   expect(english.code).toBe(0);expect(english.out).toContain("cannot make copy-on-write clones");expect(english.out).toContain("Replaced 0 files");expect(german.out).toContain("keine Copy-on-Write-Klone");

@@ -4,12 +4,13 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 /** 🧬️ Identifies immutable parser implementation bytes independently of any workspace data. */
 export const sourceHash = createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).digest("hex");
-const facts = new Map(), limit = 16 * 1024 * 1024;
+const facts = new Map(), limit = 16 * 1024 * 1024, HEAP_PER_TEXT_BYTE = 4;
+const chargeOf = (key, result) => HEAP_PER_TEXT_BYTE * (Buffer.byteLength(key) + Buffer.byteLength(JSON.stringify(result))) + 256;
 let bytes = 0, hits = 0, misses = 0;
 
 /** 🧺️ Keeps one immutable fact under the bounded in-process budget, evicting the oldest first. */
 function remember(key, result) {
-  const size = Buffer.byteLength(key) + Buffer.byteLength(JSON.stringify(result)) + 192;
+  const size = chargeOf(key, result);
   if (size > limit) return;
   while (bytes + size > limit) { const oldest = facts.keys().next().value; bytes -= facts.get(oldest).bytes; facts.delete(oldest); }
   facts.set(key, { value: result, bytes: size }); bytes += size;
@@ -96,7 +97,7 @@ export function commandUrlReferences(path, source) {
     compiler.forEachChild(node, visit);
   };
   visit(compiler.createSourceFile(path, source, compiler.ScriptTarget.Latest, false));
-  const result = Object.freeze([...urls]), size = Buffer.byteLength(key) + Buffer.byteLength(JSON.stringify(result)) + 192;
+  const result = Object.freeze([...urls]), size = chargeOf(key, result);
   if (size <= limit) {
     while (bytes + size > limit) { const oldest = facts.keys().next().value; bytes -= facts.get(oldest).bytes; facts.delete(oldest); }
     facts.set(key, { value: result, bytes: size }); bytes += size;

@@ -11,6 +11,7 @@ import {graphQueueRequestedAtV1,graphQueueYieldPolicyV1,graphQueueYieldRoundV1,g
 import {runWithStaleReexecV1} from "../../../../🧷️format-stamps/🔄️reexec/🟨️.mjs";
 import {formatStampProtocolV1} from "../../../../🧷️format-stamps/🟨️.mjs";
 import {loadGenerationGraphV1} from "../../🔌️load/🟨️.mjs";
+const graphOfV1=async(...input:Parameters<typeof loadGenerationGraphV1>)=>(await loadGenerationGraphV1(...input)).graph;
 import {applyOps,createMockHost,seed} from "../../🧪️tests/🏃️world/🟦️.ts";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 
@@ -100,7 +101,7 @@ test("a command that only waits for a peer's graph build yields at the next noti
  const dir=join(sandbox,"queue-world"),files:Record<string,string>={};
  for(const[name,imports]of[["a",["@syn/b"]],["b",[]]] as [string,string[]][]){files[`pkg/${name}/project.json`]=JSON.stringify({name,package:`@syn/${name}`,uses:[]});files[`pkg/${name}/src/index.ts`]=imports.map(spec=>`import "${spec}";`).join("\n")+"\nexport const v=1;\n";}
  await seed(dir,files);const custody={tail:Promise.resolve()};
- await loadGenerationGraphV1(createMockHost(dir,{stamp:true,custody}).host);
+ (await loadGenerationGraphV1(createMockHost(dir,{stamp:true,custody}).host)).graph;
  await applyOps(dir,[{op:"write",path:"pkg/b/src/index.ts",content:"export const v=2;\n"}]);
  const ticket=join(sandbox,"load-ticket.json"),saved={ticket:process.env[names.ticket],at:process.env[names.requestedAt],round:process.env[names.round]};
  let open!:()=>void;const gate=new Promise<void>(resolve=>{open=resolve;});
@@ -109,16 +110,16 @@ test("a command that only waits for a peer's graph build yields at the next noti
   const holder=createMockHost(dir,{stamp:true,custody,gate:()=>gate}),without=createMockHost(dir,{stamp:true,custody,waitNoticeMilliseconds:25});
   const exits:number[]=[];for(const row of[holder,without])Object.assign(row.host,{yieldAfterMilliseconds:30,exitProcess:(code:number)=>{exits.push(code);}});
   delete process.env[names.ticket];
-  const one=loadGenerationGraphV1(holder.host,{closure:["a"]});await sleep(40);const two=loadGenerationGraphV1(without.host,{closure:["a"]});await sleep(200);
+  const one=graphOfV1(holder.host,{closure:["a"]});await sleep(40);const two=graphOfV1(without.host,{closure:["a"]});await sleep(200);
   expect(exits).toEqual([]);expect(existsSync(ticket)).toBe(false);
   open();await Promise.all([one,two]);
   await applyOps(dir,[{op:"write",path:"pkg/b/src/index.ts",content:"export const v=3;\n"}]);
   let again!:()=>void;const second=new Promise<void>(resolve=>{again=resolve;});
   const holder2=createMockHost(dir,{stamp:true,custody,gate:()=>second,waitNoticeMilliseconds:600000});Object.assign(holder2.host,{yieldAfterMilliseconds:30,exitProcess:(code:number)=>{exits.push(code);}});
-  const four=loadGenerationGraphV1(holder2.host,{closure:["a"]});await sleep(40);
+  const four=graphOfV1(holder2.host,{closure:["a"]});await sleep(40);
   const offered=createMockHost(dir,{stamp:true,custody,waitNoticeMilliseconds:25});Object.assign(offered.host,{yieldAfterMilliseconds:30,exitProcess:(code:number)=>{exits.push(code);}});
   const asked=Date.now()+50;process.env[names.ticket]=ticket;process.env[names.requestedAt]=String(asked);process.env[names.round]="1";
-  const three=loadGenerationGraphV1(offered.host,{closure:["a"]});while(exits.length===0)await sleep(5);
+  const three=graphOfV1(offered.host,{closure:["a"]});while(exits.length===0)await sleep(5);
   const written=JSON.parse(readFileSync(ticket,"utf8"));
   expect(exits[0]).toBe(75);expect(written).toMatchObject({version:1,pointer:join(dir,".gen","current.json"),requestedAt:asked,round:1});expect(Number.isInteger(written.generation)).toBe(true);
   expect(offered.said.some(row=>row.key==="waiting")).toBe(true);

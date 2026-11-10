@@ -1,0 +1,20 @@
+{
+ "version": 1,
+ "files": {
+  "tools/one.mjs": "import \"./a.mjs\";\nexport const one = 1;\n",
+  "tools/two.mjs": "import \"./b.mjs\";\nexport const two = 2;\n",
+  "tools/a.mjs": "export const a = 1;\n",
+  "tools/b.mjs": "export const b = 2;\n",
+  "tools/c.mjs": "export const c = 3;\n"
+ },
+ "entries": ["tools/one.mjs", "tools/two.mjs"],
+ "differential": {"entry": "tools/hub.mjs", "modules": 40, "extras": ["{workspaceRoot}/extra"]},
+ "question": ["/tools/a.mjs"],
+ "steps": [
+  {"name": "the first worker derives every entry", "edit": {}, "forget": false, "derived": 2, "loaded": 0, "stale": 0, "closures": [["tools/a.mjs", "tools/one.mjs"], ["tools/b.mjs", "tools/two.mjs"]]},
+  {"name": "a second worker over the same store derives nothing", "edit": {}, "forget": true, "derived": 0, "loaded": 2, "stale": 0, "closures": [["tools/a.mjs", "tools/one.mjs"], ["tools/b.mjs", "tools/two.mjs"]]},
+  {"name": "an edit to the input of one entry derives only that entry", "edit": {"tools/b.mjs": "import \"./c.mjs\";\nexport const b = 2;\n"}, "forget": true, "derived": 1, "loaded": 1, "stale": 1, "closures": [["tools/a.mjs", "tools/one.mjs"], ["tools/b.mjs", "tools/c.mjs", "tools/two.mjs"]]},
+  {"name": "the stored entry was replaced: another worker derives nothing", "edit": {}, "forget": true, "derived": 0, "loaded": 2, "stale": 0, "closures": [["tools/a.mjs", "tools/one.mjs"], ["tools/b.mjs", "tools/c.mjs", "tools/two.mjs"]]},
+  {"name": "a damaged record costs one derivation, not the entry", "edit": {}, "forget": true, "damage": "tools/one.mjs", "derived": 1, "loaded": 1, "stale": 0, "closures": [["tools/a.mjs", "tools/one.mjs"], ["tools/b.mjs", "tools/c.mjs", "tools/two.mjs"]]}
+ ]
+}

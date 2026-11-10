@@ -329,6 +329,8 @@ Feature: Apply every typed DIN V 18599 mutation against an independent Python im
       | change-zone-theta-i-cool-c    | 🟥change-zone-theta-i-cool-c | ✅apply  |
       | change-zone-internal-gains-w-m2 | 🟧change-zone-internal-gains-w-m2 | ✅apply  |
       | change-zone-lighting-power-w-m2 | 🟨change-zone-lighting-power-w-m2 | ✅apply  |
+      | change-zone-thermal-mass | 🧊change-zone-thermal-mass | ✅apply  |
+      | change-zone-thermal-mass | 🧊change-zone-thermal-mass | ✅apply  |
       | insert-element                | 🆕insert-element | ✅apply  |
       | remove-element                | 🚮remove-element | ✅apply  |
       | change-element-label-en       | 🟩change-element-label-en | ✅apply  |
@@ -383,6 +385,8 @@ Feature: Apply every typed DIN V 18599 mutation against an independent Python im
       | change-zone-theta-i-cool-c    | 🟥change-zone-theta-i-cool-c | ✅apply  |
       | change-zone-internal-gains-w-m2 | 🟧change-zone-internal-gains-w-m2 | ✅apply  |
       | change-zone-lighting-power-w-m2 | 🟨change-zone-lighting-power-w-m2 | ✅apply  |
+      | change-zone-thermal-mass | 🧊change-zone-thermal-mass | ✅apply  |
+      | change-zone-thermal-mass | 🧊change-zone-thermal-mass | ✅apply  |
       | insert-element                | 🆕insert-element | ✅apply  |
       | remove-element                | 🚮remove-element | ✅apply  |
       | change-element-label-en       | 🟩change-element-label-en | ✅apply  |

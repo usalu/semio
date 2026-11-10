@@ -93,3 +93,29 @@ fn the_pmv_checks_of_the_example_documents_report_the_oracle_vote() {
         }
     }
 }
+
+const CROSS_CHECKS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🔮️cross-checks/🔣️.json");
+
+#[test]
+fn the_pmv_inversion_reproduces_the_brentq_roots_of_every_category_also_outside_16_to_30_celsius() {
+    let rows = serde_json::from_str::<Value>(CROSS_CHECKS).expect("cross-check vectors")["inversion"].as_array().cloned().expect("inversion");
+    let limit = |cat: u64| [0.2, 0.5, 0.7, 1.0][cat as usize - 1];
+    let mut outside = 0;
+    for row in rows {
+        let cool = row["side"] == "upper";
+        let found = part_1::invert_t_op_for_pmv(number(&row, "rh"), number(&row, "v"), number(&row, "met"), number(&row, "clo"), limit(row["category"].as_u64().expect("category")), cool);
+        match row["referenceC"].as_f64() {
+            Some(reference) => {
+                close(found.unwrap_or_else(|| panic!("a root exists for {row}")), reference, 5e-3, &format!("{row}"));
+                outside += usize::from(!(16.0..=30.0).contains(&reference));
+            }
+            None => assert!(found.is_none(), "no root for {row}"),
+        }
+    }
+    assert!(outside >= 3, "the vectors cover roots outside the old bracket");
+}
+
+#[test]
+fn the_pmv_inversion_reports_no_root_for_an_unreachable_limit() {
+    assert!(part_1::invert_t_op_for_pmv(50.0, 0.1, 1.2, 0.5, 3.5, true).is_none());
+}

@@ -84,7 +84,7 @@ export async function withImplementationPinV1(body){const parent=pinContextV1.ge
 export function pinnedAuthorityReadV1(key,read){const rows=pinContextV1.getStore()?.active===true?pinContextV1.getStore().authority:undefined;if(!rows)return read();if(!rows.has(key))rows.set(key,read());return rows.get(key);}
 /** 🧽️ Forgets the authority snapshot so the next read starts a new consistent view; a graph load calls it before it reads its authority. */
 export function clearPinnedAuthorityV1(){pinContextV1.getStore()?.authority?.clear();}
-function unchanged(path,row){try{return capture(path,row.byteLength,false).sha256===row.sha256;}catch(error){if(error?.message==="Bounded physical Source revision required"||error?.code==="ENOENT")return false;throw error;}}
+function unchanged(path,row){try{return capture(path,row.byteLength,false).sha256===row.sha256;}catch(error){if(error?.message?.startsWith("Bounded physical Source revision required")||error?.code==="ENOENT")return false;throw error;}}
 function current(){if(implementationPinnedV1())return;if(ownUnchanged())return;if(!unchanged(ownPath,loaded)||loadedSchema&&!unchanged(ownSchemaPath,loadedSchema))throw staleImplementationV1("Stale loaded Source revision reader; restart required");}
 /** 🔏️ Streams one finite ordinary Source revision; returned DATA grants no physical resource custody. */
 export function captureBoundedSourceRevisionV1(path,maximumBytes,retainText=false){

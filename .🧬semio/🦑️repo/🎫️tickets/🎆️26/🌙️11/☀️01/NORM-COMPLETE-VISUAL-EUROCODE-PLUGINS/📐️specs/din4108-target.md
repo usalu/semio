@@ -10,7 +10,7 @@ Every row needs a language-agnostic vector (JSON input, expected values) and a t
 |---|---|---|---|---|
 | 2.1 | Table 3 | Minimum thermal resistance R_min of opaque elements by kind (wall, roof, floor, adjacency) and surface mass, heated at 19 °C and above or at 12 to 19 °C | `din4108-2.table3.<element>` | done |
 | 2.2 | 5.2.1 | Surface mass m' of the element against the Table 3 row | `din4108-2.mass.<element>` | done |
-| 2.3 | 6.2 | Mould criterion: temperature factor f_Rsi = 1 - R_si/R_T >= 0.70 at the design external temperature of the climate region | `din4108-2.frsi.<element>` | done |
+| 2.3 | 6.2 | Mould criterion: temperature factor f_Rsi = 1 - R_si/R_T >= 0.70 with R_si = 0.25 m2K/W at theta_i 20 C and theta_e -5 C (fixed by the standard, independent of the climate region) | `din4108-2.frsi.<element>` | done (lane din4108-fix) |
 | 2.4 | 5.3 | Heat transmission loss of the zone H_T against the allowance by usage | `din4108-2.zone-ht.<zone>` | done |
 | 2.5 | 8 | Summer heat protection by the solar input value: S_vorh = sum(A_w g F_C F_w F_i)/A_G <= S_zul, S_zul = sum(S_x) by climate region, construction weight, night ventilation, solar-control glazing, passive cooling | `din4108-2.summer.<zone>` | done |
 | 2.6 | 8 | Zones missing: summer heat protection cannot be demonstrated | `din4108-2.summer.none` | done |
@@ -18,7 +18,7 @@ Every row needs a language-agnostic vector (JSON input, expected values) and a t
 
 ## DIN 4108-3 Moisture protection (Glaser)
 
-Boundary conditions (DIN 4108-3 climate, EN ISO 13788): winter -5 °C / 80 % (shifted by facade orientation, see `glaser_boundary`), interior from the document (default 20 °C / 50 %), summer from the climate region design temperature (minus 16 K for walls and floors, minus 8 K for roofs, plus orientation shift) at 70 %.
+Boundary conditions (DIN 4108-3:2018 Annex A, fixed, independent of climate region, orientation and the document interior): condensation period 20 C / 50 % to -5 C / 80 %, 90 d; evaporation period 12 C / 70 % on both sides, 90 d. Saturation pressure by the Magnus form over water at and above 0 C and over ice below (EN ISO 13788 Eq. 4 and 5). Flux g = (p_i - p_c)/Z, Z = s_d/delta0, delta0 = 2.0e-10 kg/(m s Pa), masses over the period in seconds. Values marked `unverified` in `fleet-1108-din4108-fix.md` await the printed text.
 
 | Id | Clause | Content | Check id | Status |
 |---|---|---|---|---|
@@ -42,7 +42,7 @@ Boundary conditions (DIN 4108-3 climate, EN ISO 13788): winter -5 °C / 80 % (sh
 | Id | Part | Content | Check id | Status |
 |---|---|---|---|---|
 | 5.1 | 4 | Design lambda of each layer and segment from the catalogue | `din4108-4.lambda.<element>.<layer>` | done |
-| 5.2 | 6 / EN ISO 6946 | U-value (including inhomogeneous layers by upper and lower bound, Delta U corrections) against the limit | `din4108-6.u.<element>` | done |
+| 5.2 | 6 / EN ISO 6946 | U-value (inhomogeneous layers by the combined method R_T = (R'_T + R''_T)/2 over all section combinations, localized warning when R'_T/R''_T > 1.5, Delta U corrections) against the limit | `din4108-6.u.<element>` | done (lane din4108-fix) |
 | 5.3 | 7 | Airtightness n50 against 1.5 (with ventilation) or 3.0 per hour | `din4108-7.n50` | done |
 | 5.4 | 10 | Application type, compressive, water and tensile class of each layer | `din4108-10.app.<element>.<layer>` | done |
 | 5.5 | 1 | Reference integrity: unique ids, zone references, catalogue materials | `din4108.integrity.*` | done |

@@ -55,7 +55,7 @@ React host (World3dHost + Interpreter), minimal:
 - Language-agnostic fixture `World3dHost/🧪️tests/🧫️fixtures/🧲️handle-drag.json` (6 parameter vectors, 3 pick vectors, 5 event sequences); test `🧑‍🎨engine/🧪️tests/🧲️world-handle-drag/🟦️.ts`: 14 pass, 0 fail (`repo --service=off tools exec --light bun -- test`, absolute path). Independent numpy oracle `TICKET/🧰️scripts/handle-drag-oracle.py` matches all parameter vectors.
 - All edited TS files transpile (`bun build --no-bundle`); that is syntax only.
 
-NOT done: wgpu. Its world surface runs through the GPU pick and the intent queue (`♾️infinite/🌍️world/🧵️interaction`, `handle_world3d_pointer_*`, `WorldGumballState`) with no access to the retained node's bindings; a handle drag there needs new drag state in the world authority plus a binding dispatch path, which I did not write blind. The pure gesture and the fixture are ready to be ported to Rust against the same JSON.
+wgpu: done in the continuation below (the earlier "not done" is superseded).
 
 Unvalidated (all gated): TypeScript types of every edit above (`@semio-tech/framework-os-dev:typecheck`), the Rust marker codec and fixture (`@semio-tech/ui-scene-rs:test`), the norm app-surface compile with the new field (shared lane norm build), and the actual React drag in a browser: whether the orbit camera rig also takes the press on a handle and rotates during the drag is unknown and may need the host to suppress orbit while a session is active.
 
@@ -64,3 +64,19 @@ Gate: `TICKET/🧰️scripts/handle-drag-gate.sh` runs typecheck then ui-scene-r
 ## #220 outliner drag-drop
 
 Skipped: `drop_target_action` (`Interpreter/🎯️targets/🧊️wgpu/🧩️retained-ui-engine/📋️receipts-drop-and-clipboard/🦀️.rs:238`) only reads `Stack` nodes, the norm outliner rows carry no drop bindings, and norm defines no reparent or reorder mutation for a drop to dispatch. A blind renderer edit would be speculative; not on the edit/undo/persist path.
+
+## #52 handle drag, wgpu continuation (2026-11-08, no build run; source-checked, rustfmt-parsed)
+
+Path: node bindings -> `SceneSlot.intent` -> `World3dState.set_handle_drag_bindings` -> `WorldInteractionAuthority.handles`; handles come from the painted annotation layer; the authority arm fires the same `delta`/`commit`/`abort` bindings with `{handle, s, origin, modifiers, at}` merged over the authored `{phase}`.
+
+Schema-first / contract (one implementation of each rule):
+- `🎬️action/🧭️intent-address-and-sequencer`: `UiIntentBindings.args` (authored arguments per trigger, previously dropped), `args_for`, `descriptor_for(trigger, input)`, and `intent_payload` (the one input-over-authored merge, now also used by `UiIntentCommand::payload`). `🌳️reconcile/🧾️record-routing-and-actions` fills `args`; the one test literal got `args: Vec::new()`.
+- `🎯️targets/🧊️wgpu/📨️scene_slots`: `SceneSlot.intent` (borrow of the node's `UiIntentBindings`).
+- `Interpreter/.../🖱️scene-interaction`: after a World3d slot paints, `stage_world3d_handle_drag_bindings` stages the three bindings (none bound clears and turns the arm off).
+- World: new module `🌍️world/🧵️interaction/🧲️handle-drag/🦀️.rs` (Rust twin of the TS solver: `world3d_handle_drag_parameter`, `world3d_handle_pick`, `world3d_handle_drag_step`, `world3d_handle_targets`, `world3d_handle_drag_descriptor`, `WorldHandleDrag`), `WorldInteractionAuthority.handles`, `WorldAuthorityState::stage_handle_scene/stage_handle_bindings`, `World3dState::set_handle_drag_bindings`, staging call in `🎛️host/🎬️render` (projects only layers carrying an axis marker). Interaction crate stays within its boundary budget (about 3.6k of 4k lines, 9 of 32 files).
+- Orbit/camera: the arm sits in `step()` before the Cancel/gumball/marquee/camera arms, consumes the left press on a handle (and its moves, release, host cancel) so no gumball pick, marquee or camera plan sees it; `world3d_cancel_owed` counts an armed drag so a closing shell aborts it. React: mouse-left never orbits (`mouseButtons.LEFT = null`), but `useWorldHandleDrag` now exposes `handleDragActive` and `WorldOrbitGated.controlsGate` includes it (touch rotate).
+- Back-pressure: a dispatch with no output credit returns `OutputBlocked` without touching drag state, the intent retries.
+
+Language-agnostic tests: `World3dHost/🧪️tests/🧫️fixtures/🧲️handle-drag.json` now has 10 parameter, 6 pick, 7 sequence, 3 payload and 1 target vectors. Independent numpy oracle `🧰️scripts/handle-drag-oracle.py` checks parameter, pick, targets, sequences and payload merge: `oracle ok`. TS `🧲️world-handle-drag` (light bun): 23 pass, 0 fail. Rust: new `🧪️tests/🧲️handle-drag/🦀️.rs` (6 tests, registered as `world_interaction_handle_drag`, needs feature `testkit`) reads the same JSON; not executed (no build). The pure Rust functions were compiled with a real rustc (nightly toolchain, scratch file) and reproduce all parameter, pick and sequence-state vectors.
+
+Not validated (gated build): the type check of the cross-crate edits (ui-action, reconcile, scene_slots, ui-engine, world interaction/host), `world_interaction_handle_drag`, and a live drag in the native shell. Escape: `handle_keyboard_async` (Shell `🖐️pointer/⌨️keyboard-and-palette/⌨️keyboard`) checks first whether any World3d surface has a handle drag in flight (`WorldAuthorityState::handle_drag_armed`) and, if so, enqueues a world `Cancel` intent and consumes the key before dialogs, menus and chord dispatch; the arm emits Abort after travel (never Commit, nothing when no travel), same as React. Fixture sequence `escape after travel aborts ...` plus Rust test `escape_aborts_without_a_commit`; oracle ok, TS 24 pass. Not compiled.

@@ -1,12 +1,19 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the Iso16757 editor: which value-tree path raises which concrete kind.
 
-use semio_s_plugin_norm_app_surface::{IdRemoval, InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
+use semio_s_plugin_norm_app_surface::{IdRemoval, InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldArgument, SetFieldArgumentSource, SetFieldRule};
 use crate::Iso16757Mutation;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 /// 📚 Every path a Iso16757 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
-    set_field_arguments: &[],
+    set_field_arguments: &[
+        SetFieldArgument { path: "scriptLimits.maxSteps", kind: "change-script-limits", argument: "newMaxRecursion", source: SetFieldArgumentSource::Sibling("maxRecursion") },
+        SetFieldArgument { path: "scriptLimits.maxSteps", kind: "change-script-limits", argument: "newTimeoutMs", source: SetFieldArgumentSource::Sibling("timeoutMs") },
+        SetFieldArgument { path: "scriptLimits.maxRecursion", kind: "change-script-limits", argument: "newMaxSteps", source: SetFieldArgumentSource::Sibling("maxSteps") },
+        SetFieldArgument { path: "scriptLimits.maxRecursion", kind: "change-script-limits", argument: "newTimeoutMs", source: SetFieldArgumentSource::Sibling("timeoutMs") },
+        SetFieldArgument { path: "scriptLimits.timeoutMs", kind: "change-script-limits", argument: "newMaxSteps", source: SetFieldArgumentSource::Sibling("maxSteps") },
+        SetFieldArgument { path: "scriptLimits.timeoutMs", kind: "change-script-limits", argument: "newMaxRecursion", source: SetFieldArgumentSource::Sibling("maxRecursion") },
+    ],
     move_item: &[],
     set_field: &[
         SetFieldRule { path: "selection.classId", kind: "change-selection-class", selectors: &[], value: "newClassId" },
@@ -115,6 +122,20 @@ fn resolve_geometry_remove(document: &Iso16757Snapshot, path: &str) -> Result<Op
         return Err(format!("unknown geometry object '{id}'"));
     }
     payload_of("retire-geometry-object", DslValue::object([("id".to_string(), DslValue::String(id.to_string()))])).map(|mutation| Some(vec![mutation]))
+}
+
+/// 📐️ The numeric geometry leaves an editor sets: primitive dimensions, placement translation and rotation of any shape node, space and surface bound corners and port positions and directions.
+fn geometry_leaf(path: &str) -> bool {
+    let Some((id, leaf)) = path.strip_prefix("geometry.objects.").and_then(|rest| rest.split_once('.')) else { return false };
+    let indexed = leaf.ends_with(']');
+    let node = leaf.starts_with("shape.") || leaf.starts_with("symbolic.");
+    !id.is_empty()
+        && ((node && (leaf.contains(".parameters.") || (indexed && (leaf.contains(".translation[") || leaf.contains(".rotationDeg["))))) || (indexed && ((leaf.starts_with("spaces[") || leaf.starts_with("surfaces[")) && leaf.contains(".bounds.") || leaf.starts_with("ports[") && (leaf.contains(".position[") || leaf.contains(".direction[")))))
+}
+
+/// 🖊️ Whether `path` has an editor setter: a leaf inside a typed rule of [`EDIT_RULES`] or a numeric geometry leaf resolved by [`resolve_edit`] as one atomic object replacement.
+pub fn can_set_field(path: &str) -> bool {
+    EDIT_RULES.can_set_field(path) || geometry_leaf(path)
 }
 
 /// 🎯️ Resolves an editor edit into concrete kind mutations: the numeric geometry and script-limit leaves by their facet, row-id removals first, every other path through [`EDIT_RULES`].

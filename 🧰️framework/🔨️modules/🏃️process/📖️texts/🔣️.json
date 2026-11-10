@@ -18,6 +18,10 @@
       "en": "A renewable original control requires its nonrenewable maximum as the requested budget",
       "de": "Eine erneuerbare ursprüngliche Steuerung verlangt ihr nicht erneuerbares Maximum als angefordertes Budget"
     },
+    "routing.stalled-worker": {
+      "en": "Script work stalled for {minutes} minutes without progress and was cancelled; the service keeps running (retry: {retry})",
+      "de": "Skriptarbeit stand {minutes} Minuten ohne Fortschritt still und wurde abgebrochen; der Dienst läuft weiter (Wiederholung: {retry})"
+    },
     "script.suite-sources-missing": {
       "en": "Test suite sources are missing (bun test would silently skip them): {missing}",
       "de": "Quellen der Testsuite fehlen (bun test würde sie stillschweigend überspringen): {missing}"

@@ -18,6 +18,7 @@ export type SourceObservationV1 =
  | Readonly<{kind:"analysis";path:string;fact:SourceAnalysisFactV1}>
  | Readonly<{kind:"exists"|"fileExists"|"directoryExists";path:string;fact:boolean}>
  | Readonly<{kind:"stamp";path:string;fact:string}>
+ | Readonly<{kind:"field";path:string;fact:Readonly<{format:string;pointer:string;digest:string;paths?:readonly string[]}>}>
  | Readonly<{kind:"stat"|"lstat"|"readdir"|"realpath"|"realpathNative"|"resolve"|"readdirNames"|"directories"|"typescriptText"|"typescriptRealpath"|"registry";path:string;fact:string}>;
 /** 🎟️ Names the immutable parser handle; structural copies remain refused by the runtime registry. */
 export type SourceAnalysisProviderV1 = Readonly<{id:string;revision:string}>;
@@ -77,7 +78,7 @@ export function recordClosureFactV1(path:string,answer:string):void;
 /** 🕊️ Drops every in-process cache a graph construction filled; safe only when no inference runs. */
 export function releaseInferenceMemoryV1():void;
 /** 📏️ The entry counts of the in-process caches a graph construction fills. */
-export function inferenceCacheSizesV1():{interned:number;verifiedBlockRows:number;settledReads:number;projectImages:number;publications:number;registryFiles:number};
+export function inferenceCacheSizesV1():{interned:number;rowStore:{rows:number;strings:number;characters:number;bytes:number};analysisImages:number;analysisBytes:number;settledReadBytes:number;fileRecordImageBytes:number;verifiedBlockRows:number;settledReads:number;projectImages:number;publications:number;registryFiles:number};
 export function recordRegistryOwnerV1(workspaceRoot:string,name:string,row:{root:string;manifest:string}|undefined|null):void;
 /** ❓️ Whether recorded rows still hold, sharing the checks of the running inference round. */
 export function observationRowsHoldV1(rows:readonly unknown[]):boolean;
@@ -138,3 +139,34 @@ export function requireCurrentObservationV1():void;
 export function observationBlockBudgetAdmitsV1(used:number,next:number,maximum:number):boolean;
 /** 🧱️ Names the canonical file of one persisted observation block below an inference directory. */
 export function inferenceObservationBlockPathV1(directory:string,digest:string):string;
+
+export function withObservedWorldV1<T>(port: Pick<typeof import("node:fs"), "statSync"|"lstatSync"|"readFileSync"|"readdirSync"|"realpathSync"|"existsSync">, body: () => T): T;
+export function importObservedModuleV1(path: string): Promise<unknown> | undefined;
+
+/** 🧩️ Reads one field of a data file and records only the digest of the extracted value. */
+export function observedFieldV1(path:string,format:string,pointer:string,options?:Readonly<{paths?:readonly string[]}>):unknown;
+/** 🔌️ Registers one more field extraction format. */
+export function registerFieldExtractorV1(format:string,extract:(text:string,pointer:string,path:string,readOther:(path:string)=>string)=>unknown):void;
+/** 📍️ The value at an RFC 6901 JSON pointer, `undefined` when a step is absent. */
+export function jsonPointerValueV1(document:unknown,pointer:string):unknown;
+/** 🧲️ Merges stored row arrays into the running observation scope by reference. */
+export function retainObservedRowsV1(rows:readonly unknown[]):void;
+/** 🫧️ Runs a synchronous computation with its observations returned, not recorded into the running scope. */
+export function observeDetachedSyncV1<T>(compute:()=>T):Readonly<{value:T;rows:readonly unknown[];layers:readonly (readonly unknown[])[]}>;
+/** 🔁️ Runs a computation inside a caller-owned validation round. */
+export function withObservationPassRoundV1<T>(round:Map<unknown,unknown>,compute:()=>T):T;
+
+/** 🔢️ How many distinct observation rows the running inference recording at `cachePath` holds. */
+export function observedInferenceRowsV1(cachePath:string):number;
+/** 🧹️ Forgets the row counter of a finished inference. */
+export function forgetObservedInferenceRowsV1(cachePath:string):void;
+
+/** 🫧️ The verdict on the shared rows of one reused computation, row by row with `step` awaited between rows. */
+export function observationLayerHoldsAsyncV1(layer:readonly unknown[],step:()=>Promise<void>):Promise<boolean>;
+/** 🫧️ Whether every recorded fact still holds, row by row with `step` awaited between rows. */
+export function observationRowsHoldAsyncV1(rows:readonly unknown[],step:()=>Promise<void>):Promise<boolean>;
+
+/** 🗂️ Declares the absolute directories whose entry sets are proven unchanged, so recorded listings and absences in them hold without a probe. */
+export function useStableDirectoriesV1(directories:ReadonlySet<string>):void;
+/** 🔢️ How many directory listings this process made. */
+export function observationProbeCountsV1():{readdir:number};

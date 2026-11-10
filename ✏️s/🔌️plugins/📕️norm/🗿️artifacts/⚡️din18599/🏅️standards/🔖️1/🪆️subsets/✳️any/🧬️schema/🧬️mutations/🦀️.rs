@@ -44,6 +44,7 @@ use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_theta_i_heat_c;
 use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_theta_i_cool_c;
 use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_internal_gains_w_m2;
 use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_lighting_power_w_m2;
+use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_thermal_mass;
 use semio_s_artifact_norm_din18599_mut_element_rows::insert_element;
 use semio_s_artifact_norm_din18599_mut_element_rows::remove_element;
 use semio_s_artifact_norm_din18599_mut_element_rows::change_element_label_en;
@@ -95,6 +96,7 @@ pub enum Din18599Mutation {
     ChangeZoneThetaICoolC(change_zone_theta_i_cool_c::ChangeZoneThetaICoolC),
     ChangeZoneInternalGainsWM2(change_zone_internal_gains_w_m2::ChangeZoneInternalGainsWM2),
     ChangeZoneLightingPowerWM2(change_zone_lighting_power_w_m2::ChangeZoneLightingPowerWM2),
+    ChangeZoneThermalMass(change_zone_thermal_mass::ChangeZoneThermalMass),
     InsertElement(insert_element::InsertElement),
     RemoveElement(remove_element::RemoveElement),
     ChangeElementLabelEn(change_element_label_en::ChangeElementLabelEn),
@@ -139,6 +141,7 @@ pub const KINDS: &[&str] = &[
     "change-zone-theta-i-cool-c",
     "change-zone-internal-gains-w-m2",
     "change-zone-lighting-power-w-m2",
+    "change-zone-thermal-mass",
     "insert-element",
     "remove-element",
     "change-element-label-en",
