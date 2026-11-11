@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {createServer} from "node:net";
 import {join,resolve} from "node:path";
@@ -9,7 +9,7 @@ import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import committed from "../🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {clientProtocolV1,factsV1,groupV1,machineEnvironmentV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,workerPartsV1,workerServiceV1,type FleetGroupV1,type FleetPlatformV1,type FleetTopologyV1} from "../🟦️.ts";
+import {applyFleetAddressEnvironmentV1,clientProtocolV1,factsV1,groupV1,machineEnvironmentV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,workerPartsV1,workerServiceV1,type FleetGroupV1,type FleetPlatformV1,type FleetTopologyV1} from "../🟦️.ts";
 import {checkReachabilityV1,parseTopologyArgumentsV1,preflightLanguagesV1,preflightTextV1,preflightV1,PREFLIGHT_LIMITS_V1,renderEnvironmentV1,renderFactsV1,runTopologyCommandAsyncV1,runTopologyCommandV1,type PreflightProbesV1,type ReachabilityPortsV1} from "../⌨️command/🟦️.ts";
 import {parseReplicaArgumentsV1} from "../../🔁️replica/⌨️command/🟦️.ts";
 import type {StatusReportV1} from "../../🔁️replica/🟦️.ts";
@@ -36,20 +36,158 @@ const variant=(change:(copy:any)=>void):FleetTopologyV1=>{
 };
 const smbFleet=variant(copy=>{copy.groups[1].server={platform:"linux",protocol:"nfs",network:"10.2.0.0/16"};copy.groups[1].nfs.export="/srv/store-b";copy.groups[2].server.protocol="smb";});
 
-test("the committed topology is accepted by Ajv and by the repository validator and has five symmetric groups",()=>{
+test("the committed topology is accepted by Ajv and by the repository validator, g1 is the macOS group server, and every host, network and cache name stays a placeholder",()=>{
  expect(accepts(committed)).toBe(true);
  expect(validateJsonSchemaSubset({$ref:"#/definitions/Topology"},committed,schema)).toEqual([]);
  const read=readTopologyV1();
  expect(read.groups.map(group=>group.id)).toEqual(["g1","g2","g3","g4","g5"]);
- for(const group of read.groups){
+ const g1=read.groups[0]!;
+ expect(g1.nfs).toEqual({host:"nfs.g1.semio.internal",export:"/Users/Shared/semio-store"});
+ expect(g1.server).toEqual({platform:"macos",protocol:"nfs",network:"10.0.1.0/24"});
+ expect(g1.cache).toEqual({endpoint:"http://cache.g1.semio.internal:6090",instance:"semio"});
+ for(const group of read.groups.slice(1)){
   expect(group.nfs).toEqual({host:`nfs.${group.id}.semio.internal`,export:"/srv/semio-store"});
+  expect(group.server).toEqual({platform:"linux",protocol:"nfs",network:`10.0.${group.id.slice(1)}.0/24`});
   expect(group.cache).toEqual({endpoint:`http://cache.${group.id}.semio.internal:6090`,instance:"semio"});
+ }
+ for(const group of read.groups){
   expect(group.peers).toEqual(Object.fromEntries(read.groups.filter(other=>other.id!==group.id).map(other=>[other.id,`/mnt/semio-peers/${other.id}`])));
  }
  expect(read.worktree).toEqual({linux:"/srv/semio",macos:"/Users/Shared/semio",windows:"C:\\semio"});
  expect(read.storeMount).toEqual({linux:"/mnt/semio-store",macos:"/Volumes/semio-store",windows:"S:\\"});
  expect(read.replica).toEqual({pollMilliseconds:250,scanSeconds:900,debounceMilliseconds:150,retentionDays:14,bootstrapMinutes:60});
 });
+
+test("address environment variables replace one group's host, network and cache endpoint, the file stays unchanged, and the Python oracle agrees",()=>{
+ const environment={SEMIO_FLEET_GROUP:"g1",SEMIO_FLEET_NFS_HOST:"203.0.113.10",SEMIO_FLEET_NETWORK:"203.0.113.0/24"};
+ const overlaid=applyFleetAddressEnvironmentV1(readTopologyV1(),environment),group=overlaid.groups[0]!;
+ expect(group.nfs.host).toBe("203.0.113.10");
+ expect(group.server.network).toBe("203.0.113.0/24");
+ expect(group.cache.endpoint).toBe("http://203.0.113.10:6090");
+ expect(overlaid.groups[1]!.nfs.host).toBe("nfs.g2.semio.internal");
+ expect(readTopologyV1().groups[0]!.nfs.host).toBe("nfs.g1.semio.internal");
+ expect(()=>applyFleetAddressEnvironmentV1(readTopologyV1(),{SEMIO_FLEET_GROUP:"g1",SEMIO_FLEET_NFS_HOST:"203.0.113.10"})).toThrow("set together");
+ expect(applyFleetAddressEnvironmentV1(readTopologyV1(),{SEMIO_FLEET_GROUP:"zz",SEMIO_FLEET_NFS_HOST:"203.0.113.10",SEMIO_FLEET_NETWORK:"203.0.113.0/24"}).groups[0]!.nfs.host).toBe("nfs.g1.semio.internal");
+ expect(runTopologyCommandV1(["server-plan","--group","g1","--part","exports"],{platform:"darwin",environment})).toContain("-network 203.0.113.0 -mask 255.255.255.0");
+ expect(runTopologyCommandV1(["facts","--group","g1","--platform","macos","--shell","sh"],{platform:"darwin",environment:{}})).toContain("FLEET_NFS_HOST='nfs.g1.semio.internal'");
+ expect(provisionShell).toContain("SEMIO_FLEET_NFS_HOST");
+ expect(provisionShell).toContain("SEMIO_FLEET_GROUP, SEMIO_FLEET_NFS_HOST and SEMIO_FLEET_NETWORK are set together");
+ if(!python)return;
+ const topologyFile=join(import.meta.dirname,"..",readdirSync(join(import.meta.dirname,"..")).find(name=>name.endsWith(".json"))!);
+ const result=Bun.spawnSync([python,"-I",oracle,"address",topologyFile],{env:{...process.env,...environment},stdout:"pipe",stderr:"pipe"});
+ expect(result.exitCode,result.stderr.toString()).toBe(0);
+ expect(JSON.parse(result.stdout.toString())).toEqual({endpoint:"http://203.0.113.10:6090",host:"203.0.113.10",network:"203.0.113.0/24"});
+ const partial=Bun.spawnSync([python,"-I",oracle,"address",topologyFile],{env:{...process.env,SEMIO_FLEET_GROUP:"g1",SEMIO_FLEET_NFS_HOST:"203.0.113.10",SEMIO_FLEET_NETWORK:""},stderr:"pipe"});
+ expect(partial.exitCode).toBe(1);
+ expect(partial.stderr.toString()).toContain("set together");
+});
+
+test("unresolved peer hosts are left out of the macOS exports before nfsd checkexports, and the Python oracle writes the same exports",()=>{
+ const sample=["/Users/Shared/semio-store -mapall=ueli -network 203.0.113.0 -mask 255.255.255.0","/Users/Shared/semio-store -ro -mapall=ueli nfs.g2.semio.internal nfs.g3.semio.internal peer.example","# kept","/Users/Shared/semio-store -ro -mapall=ueli missing.example",""].join("\n");
+ const root=mkdtempSync(join(tmpdir(),"semio-exports-")),file=join(root,"exports"),original=join(root,"original"),seen=join(root,"seen");
+ writeFileSync(original,sample);writeFileSync(file,sample);
+ const filter=provisionShell.slice(provisionShell.indexOf("filter_unresolved_exports() ("),provisionShell.indexOf("\nCLEANUP_MOUNT"));
+ const run=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nsay(){ printf '%s\\n' "$*"; }\nfail(){ printf '%s\\n' "$*" >&2; exit 1; }\nhost_resolves(){ printf '%s\\n' "$1" >> "$SEEN"; case ",peer.example," in *,"$1",*) return 0;; *) return 1;; esac; }\n${filter}\nfilter_unresolved_exports "$1"`, "filter", file],{env:{...process.env,SEEN:seen},stdout:"pipe",stderr:"pipe"});
+ expect(run.exitCode,run.stderr.toString()+run.stdout.toString()).toBe(0);
+ const filtered=readFileSync(file,"utf8");
+ const oracleRun=Bun.spawnSync([python!,"-I",oracle,"exports",original,"peer.example"],{stdout:"pipe",stderr:"pipe"});
+ expect(oracleRun.exitCode,oracleRun.stderr.toString()).toBe(0);
+ expect(filtered).toBe(oracleRun.stdout.toString());
+ expect(filtered).toBe("/Users/Shared/semio-store -mapall=ueli -network 203.0.113.0 -mask 255.255.255.0\n/Users/Shared/semio-store -ro -mapall=ueli peer.example\n# kept\n");
+ expect(readFileSync(seen,"utf8")).toBe("nfs.g2.semio.internal\nnfs.g3.semio.internal\npeer.example\nmissing.example\n");
+ expect(run.stdout.toString()).toContain("WARNING: nfs.g2.semio.internal does not resolve");
+ expect(run.stdout.toString()).toContain("missing.example has no reachable client, so the export line was left out");
+ expect(provisionShell.indexOf("filter_unresolved_exports /etc/exports")).toBeLessThan(provisionShell.indexOf("nfsd checkexports"));
+ expect(provisionShell).toContain('"SEMIO_WORKSPACE_ROOT=$WORKTREE"');
+ expect(provisionPowerShell).toContain("$env:SEMIO_WORKSPACE_ROOT = $Worktree");
+ const runner=provisionShell.slice(provisionShell.indexOf("run_as() {"),provisionShell.indexOf("\nfleet() {"));
+ const rooted=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nWORKER_USER=root\nWORKER_HOME=/tmp\nLANGUAGE_CHOICE=en\nWORKTREE=/tmp/fleet-root\n${runner}\nrun_as /usr/bin/printenv SEMIO_WORKSPACE_ROOT`],{stdout:"pipe",stderr:"pipe"});
+ expect(rooted.exitCode,rooted.stderr.toString()).toBe(0);
+ expect(rooted.stdout.toString().trim()).toBe("/tmp/fleet-root");
+ const fleetBody=provisionShell.slice(provisionShell.indexOf("fleet() {"),provisionShell.indexOf("\nreplica() {"));
+ const invoked=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nmkdir -p /tmp/fleet-root\nWORKTREE=/tmp/fleet-root\nTOPOLOGY_RELATIVE=topo\nrun_as(){ printf '%s\\n' "$PWD"; printf '%s\\n' "$2"; }\n${fleetBody}\nfleet facts\n`],{stdout:"pipe",stderr:"pipe"});
+ expect(invoked.exitCode,invoked.stderr.toString()).toBe(0);
+ const [directory,script]=invoked.stdout.toString().trim().split("\n");
+ expect(directory).toBe("/tmp/fleet-root");
+ expect(script.startsWith("/tmp/fleet-root/topo/")).toBe(true);
+ expect(script.endsWith("script.ts")).toBe(true);
+ rmSync(root,{recursive:true,force:true});
+});
+
+test("a refused launchctl setenv stays a warning and the LaunchDaemon plist carries the fleet environment, and the Python oracle writes the same plist",()=>{
+ const sample=["<plist>","<key>EnvironmentVariables</key><dict><key>HOME</key><string>h</string></dict>","<key>EnvironmentVariables</key><dict>untouched</dict>","</plist>",""].join("\n");
+ const environmentText=["export SEMIO_FLEET_GROUP=g1","export SEMIO_REMOTE_CACHE_ENDPOINT=http://203.0.113.10:6090",'export SEMIO_NOTE=a&b<c>d"e',""].join("\n");
+ const root=mkdtempSync(join(tmpdir(),"semio-plist-")),plistFile=join(root,"daemon.plist"),environmentFile=join(root,"environment");
+ writeFileSync(plistFile,sample);writeFileSync(environmentFile,environmentText);
+ const functions=provisionShell.slice(provisionShell.indexOf("xml_escape() {"),provisionShell.indexOf('\nsay "step 5: cache environment"'));
+ const rendered=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nWORKTREE=/Users/Shared/semio\nLANGUAGE_CHOICE=en\nENVIRONMENT=$(cat "$ENVIRONMENT_FILE")\n${functions}\nplist_with_environment < "$PLIST_FILE"`],{env:{...process.env,ENVIRONMENT_FILE:environmentFile,PLIST_FILE:plistFile},stdout:"pipe",stderr:"pipe"});
+ expect(rendered.exitCode,rendered.stderr.toString()).toBe(0);
+ const oracleRun=Bun.spawnSync([python!,"-I",oracle,"plist",plistFile,environmentFile,"/Users/Shared/semio","en"],{stdout:"pipe",stderr:"pipe"});
+ expect(oracleRun.exitCode,oracleRun.stderr.toString()).toBe(0);
+ expect(rendered.stdout.toString()).toBe(oracleRun.stdout.toString());
+ const plist=rendered.stdout.toString();
+ expect(plist).toContain("<key>SEMIO_WORKSPACE_ROOT</key><string>/Users/Shared/semio</string><key>SEMIO_LANGUAGE</key><string>en</string><key>SEMIO_FLEET_GROUP</key><string>g1</string>");
+ expect(plist).toContain("<key>SEMIO_NOTE</key><string>a&amp;b&lt;c&gt;d&quot;e</string>");
+ expect(plist).toContain("<key>EnvironmentVariables</key><dict>untouched</dict>");
+ expect(plist.indexOf("SEMIO_WORKSPACE_ROOT")).toBeLessThan(plist.indexOf("<key>HOME</key>"));
+ const refusal=provisionShell.slice(provisionShell.indexOf('  while IFS= read -r line; do\n    [ -n "$line" ] || continue\n    assignment='),provisionShell.indexOf('\nfi\n\nsay "step 6:'));
+ const refused=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nsay(){ printf 'SAY %s\\n' "$*"; }\nlaunchctl(){ printf 'SET %s=%s\\n' "$2" "$3"; return 150; }\nwrite_block(){ printf 'BLOCK %s\\n' "$1"; }\nENVIRONMENT=$'export SEMIO_FLEET_GROUP=g1\\nexport SEMIO_FLEET_NFS_HOST=203.0.113.10'\n${refusal}`],{stdout:"pipe",stderr:"pipe"});
+ expect(refused.exitCode,refused.stderr.toString()+refused.stdout.toString()).toBe(0);
+ const lines=refused.stdout.toString().trim().split("\n");
+ expect(lines).toEqual(["SET SEMIO_FLEET_GROUP=g1","SAY WARNING: launchctl setenv SEMIO_FLEET_GROUP was refused: System Integrity Protection does not allow it. The variable is in /etc/zshenv, /etc/profile and the LaunchDaemon environment","SET SEMIO_FLEET_NFS_HOST=203.0.113.10","SAY WARNING: launchctl setenv SEMIO_FLEET_NFS_HOST was refused: System Integrity Protection does not allow it. The variable is in /etc/zshenv, /etc/profile and the LaunchDaemon environment","BLOCK /etc/zshenv","BLOCK /etc/profile"]);
+ for(const line of ["install_daemon \"$SERVICE_TARGET\"","install_daemon \"$COMPACT_TARGET\"","install_daemon \"$CACHE_TARGET\"","install_daemon \"$RELAY_TARGET\""])expect(provisionShell).toContain(`${line} "$(`);
+ expect(provisionShell.split("| plist_with_environment)").length-1).toBe(4);
+ rmSync(root,{recursive:true,force:true});
+});
+
+test("macOS launchd jobs get a log file the service account can write before they load, and the Python oracle names the same logs",()=>{
+ const plist=["<plist>","<key>StandardOutPath</key><string>/var/log/semio-fleet-cache.log</string>","<key>StandardErrorPath</key><string>/var/log/semio-fleet-cache.log</string>","<key>StandardOutPath</key><string>/var/log/semio-fleet-relay.log</string>","</plist>",""].join("\n");
+ const root=mkdtempSync(join(tmpdir(),"semio-logs-")),file=join(root,"daemon.plist");
+ writeFileSync(file,plist);
+ const body=provisionShell.slice(provisionShell.indexOf("ensure_daemon_logs() {"),provisionShell.indexOf("\ninstall_daemon() {"));
+ const loader=provisionShell.slice(provisionShell.indexOf("load_daemon() {"),provisionShell.indexOf("\ninstall_nfs_server() {"));
+ const created=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nsay(){ printf 'SAY %s\\n' "$*"; }\nmkdir(){ :; }\ninstall(){ printf 'INSTALL %s\\n' "$6"; }\nchown(){ printf 'CHOWN %s\\n' "$*"; }\nchmod(){ :; }\nWORKER_USER=ueli\n${body}\nensure_daemon_logs "$1"`,"logs",file],{stdout:"pipe",stderr:"pipe"});
+ expect(created.exitCode,created.stderr.toString()+created.stdout.toString()).toBe(0);
+ const oracleRun=Bun.spawnSync([python!,"-I",oracle,"logs",file],{stdout:"pipe",stderr:"pipe"});
+ expect(oracleRun.exitCode,oracleRun.stderr.toString()).toBe(0);
+ const installed=created.stdout.toString().split("\n").filter(line=>line.startsWith("INSTALL ")).map(line=>line.slice(8));
+ expect(installed).toEqual(oracleRun.stdout.toString().trim().split("\n"));
+ expect(installed).toEqual(["/var/log/semio-fleet-cache.log","/var/log/semio-fleet-relay.log"]);
+ const present=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nsay(){ printf 'SAY %s\\n' "$*"; }\nlaunchctl(){ if [ "$1" = print ]; then return 0; fi; printf 'KICK %s\\n' "$3"; }\nmkdir(){ :; }\ninstall(){ printf 'INSTALL %s\\n' "$6"; }\nchown(){ :; }\nchmod(){ :; }\nWORKER_USER=ueli\n${body}\n${loader}\nload_daemon "$1"`,"logs",file],{stdout:"pipe",stderr:"pipe"});
+ expect(present.exitCode,present.stderr.toString()+present.stdout.toString()).toBe(0);
+ expect(present.stdout.toString()).toContain("SAY service log /var/log/semio-fleet-cache.log");
+ expect(present.stdout.toString()).toContain("KICK system/daemon");
+ expect(present.stdout.toString()).toContain("SAY already loaded daemon");
+ rmSync(root,{recursive:true,force:true});
+});
+
+test("a node_modules symlink that leaves the worktree is removed and the Python oracle makes the same decision",()=>{
+ const root=mkdtempSync(join(tmpdir(),"semio-namespace-")),inside=join(root,"inside"),outside=mkdtempSync(join(tmpdir(),"semio-outside-"));
+ mkdirSync(inside,{recursive:true});
+ const body=provisionShell.slice(provisionShell.indexOf("release_foreign_namespace() {"),provisionShell.indexOf('\nrelease_foreign_namespace "$WORKTREE/node_modules"'));
+ const decide=(link:string)=>{
+  const oracleRun=Bun.spawnSync([python!,"-I",oracle,"namespace",root,link],{stdout:"pipe",stderr:"pipe"});
+  expect(oracleRun.exitCode,oracleRun.stderr.toString()).toBe(0);
+  const run=Bun.spawnSync([bash!,"-c",`set -euo pipefail\nsay(){ printf 'SAY %s\\n' "$*"; }\n${body}\nrelease_foreign_namespace "$1" "$2"\nif [ -e "$1" ]; then printf 'keep\\n'; else printf 'remove\\n'; fi`,"namespace",link,root],{stdout:"pipe",stderr:"pipe"});
+  expect(run.exitCode,run.stderr.toString()+run.stdout.toString()).toBe(0);
+  const decision=run.stdout.toString().trim().split("\n").at(-1);
+  expect(decision).toBe(oracleRun.stdout.toString().trim());
+  return decision;
+ };
+ const foreign=join(root,"node_modules");
+ symlinkSync(outside, foreign);
+ expect(decide(foreign)).toBe("remove");
+ expect(existsSync(foreign)).toBe(false);
+ symlinkSync(inside, foreign);
+ expect(decide(foreign)).toBe("keep");
+ rmSync(foreign);
+ mkdirSync(foreign);
+ expect(decide(foreign)).toBe("keep");
+ rmSync(root,{recursive:true,force:true});
+ rmSync(outside,{recursive:true,force:true});
+});
+
+
 
 test("the fixture topology is accepted and every invalid case is refused, and Ajv and the repository validator agree",()=>{
  expect(accepts(fixture.topology)).toBe(true);

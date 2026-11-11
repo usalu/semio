@@ -119,7 +119,7 @@ pub fn acted(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce()->Resul
 pub fn produced<O>(cx:&mut StepContext<'_>,d:RetirementDemand,output:&mut Option<O>,produce:impl FnOnce()->Result<O,ValueError>)->Result<bool,OriginalTurnFailure>{if output.is_some(){return Err(ValueError::invariant("destination is occupied").into())}if !funds(cx,d){return Ok(false)}*output=Some(produce()?);paid(cx,d)?;Ok(true)}
 /// 🎟️ Births one owner into the caller's output slot over the caller's resident admission; `Ok(true)` once born, settled and reset.
 pub fn born<O>(cx:&mut StepContext<'_>,output:&mut Option<O>,admission:&mut OriginalConstructionAdmission,failure:&mut Option<OriginalConstructionFailure>,d:RetirementDemand,construct:impl FnOnce(&mut NativeConstructionScope<'_,'_>)->Result<O,ValueError>)->Result<bool,OriginalTurnFailure>{
- if output.is_some(){return if admission.terminal_is_empty(){Ok(true)}else{admission.reset_step(cx)}}
+ if output.is_some()&&!admission.settling(){return if admission.terminal_is_empty(){Ok(true)}else{admission.reset_step(cx)}}
  if failure.is_some(){return Err(ValueError::invariant("original construction retained a failed birth").into())}
  let status=admit_original_construction(cx,output,admission,construction(d),1,|native,_|{let result=construct(native).map(|owner|(owner,receipt(d)));RetainedWorkOutcome{work:u128::from(result.is_ok()),result}})?;
  match status{OriginalConstructionStatus::Ready=>admission.reset_step(cx),OriginalConstructionStatus::Pending=>Ok(false),OriginalConstructionStatus::Failed=>{if !admission.take_failure_into_step(failure,cx)?{return Ok(false)}Err(ValueError::invariant("original construction failed; its causes remain retained").into())}}

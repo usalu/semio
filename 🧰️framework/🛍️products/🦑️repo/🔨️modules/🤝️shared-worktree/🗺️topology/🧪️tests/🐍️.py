@@ -2,7 +2,11 @@
 """🐍️ Independent oracle of the fleet topology. It shares no code with `../🟦️.ts`: it validates a topology structurally with the standard library and recomputes the environment of a machine from the topology alone.
 usage: 🐍️.py check                          validate the committed topology and the fixture (valid accepted, every invalid case refused, environments recomputed)
        🐍️.py env <topology.json|fixture.json> <group>    print the environment of one group as JSON
+       🐍️.py plist <plist> <environment> <worktree> <language>    insert the fleet environment into the first EnvironmentVariables dict, the same way the macOS provision script does
+       🐍️.py logs <plist>    print the unique StandardOutPath and StandardErrorPath values
+       🐍️.py namespace <root> <link>    print keep or remove for a node_modules link
 Python 3.9 compatible."""
+from pathlib import Path
 import copy,glob,json,os,re,sys
 HERE=os.path.dirname(os.path.abspath(__file__))
 HOST=r"[a-z0-9][a-z0-9.-]{0,251}[a-z0-9]"
@@ -118,11 +122,17 @@ def check():
     if [g["id"] for g in committed["groups"]]!=["g%d"%n for n in range(1,6)]: failures.append("committed: groups must be g1..g5")
     for group in committed["groups"]:
         n=group["id"]
-        if group["nfs"]!={"host":"nfs.%s.semio.internal"%n,"export":"/srv/semio-store"}: failures.append("committed: nfs of "+n)
-        if group["server"]!={"platform":"linux","protocol":"nfs","network":"10.0.%s.0/24"%n[1:]}: failures.append("committed: server of "+n)
-        if group["cache"]!={"endpoint":"http://cache.%s.semio.internal:6090"%n,"instance":"semio"}: failures.append("committed: cache of "+n)
+        if n=="g1":
+            if group["nfs"]!={"host":"nfs.g1.semio.internal","export":"/Users/Shared/semio-store"}: failures.append("committed: nfs of g1")
+            if group["server"]!={"platform":"macos","protocol":"nfs","network":"10.0.1.0/24"}: failures.append("committed: server of g1")
+            if group["cache"]!={"endpoint":"http://cache.g1.semio.internal:6090","instance":"semio"}: failures.append("committed: cache of g1")
+            if environment(committed,n)!={NAMES["endpoint"]:"http://cache.g1.semio.internal:6090",NAMES["access"]:"read-write",NAMES["instance"]:"semio"}: failures.append("committed: environment of g1")
+        else:
+            if group["nfs"]!={"host":"nfs.%s.semio.internal"%n,"export":"/srv/semio-store"}: failures.append("committed: nfs of "+n)
+            if group["server"]!={"platform":"linux","protocol":"nfs","network":"10.0.%s.0/24"%n[1:]}: failures.append("committed: server of "+n)
+            if group["cache"]!={"endpoint":"http://cache.%s.semio.internal:6090"%n,"instance":"semio"}: failures.append("committed: cache of "+n)
+            if environment(committed,n)!={NAMES["endpoint"]:"http://cache.%s.semio.internal:6090"%n,NAMES["access"]:"read-write",NAMES["instance"]:"semio"}: failures.append("committed: environment of "+n)
         if group["peers"]!={m["id"]:"/mnt/semio-peers/"+m["id"] for m in committed["groups"] if m["id"]!=n}: failures.append("committed: peers of "+n)
-        if environment(committed,n)!={NAMES["endpoint"]:"http://cache.%s.semio.internal:6090"%n,NAMES["access"]:"read-write",NAMES["instance"]:"semio"}: failures.append("committed: environment of "+n)
     if len(committed["worktree"]["windows"])>15: failures.append("committed: windows worktree root is not short")
     if committed["worktree"]!={"linux":"/srv/semio","macos":"/Users/Shared/semio","windows":"C:\\semio"}: failures.append("committed: worktree")
     if committed["storeMount"]!={"linux":"/mnt/semio-store","macos":"/Volumes/semio-store","windows":"S:\\"}: failures.append("committed: storeMount")
@@ -136,7 +146,116 @@ def check():
         if not problems(mutate(fixture["topology"],change)): failures.append("accepted: "+change["name"])
     return failures
 
+
+def apply_address(topology, environment):
+    def present(name):
+        value=environment.get(name)
+        return value if isinstance(value,str) and value!="" else None
+    group_id,host,network,endpoint=present("SEMIO_FLEET_GROUP"),present("SEMIO_FLEET_NFS_HOST"),present("SEMIO_FLEET_NETWORK"),present("SEMIO_FLEET_CACHE_ENDPOINT")
+    if group_id is None and host is None and network is None and endpoint is None: return topology
+    if group_id is None or host is None or network is None: raise ValueError("SEMIO_FLEET_GROUP, SEMIO_FLEET_NFS_HOST and SEMIO_FLEET_NETWORK are set together")
+    if not any(isinstance(group,dict) and group.get("id")==group_id for group in topology["groups"]): return topology
+    def rewritten(current):
+        match=re.fullmatch(r"(https?://)"+HOST+r"(:[0-9]{1,5})?", current)
+        if match is None: raise ValueError("cache endpoint invalid")
+        return match.group(1)+host+(match.group(2) or "")
+    groups=[]
+    for group in topology["groups"]:
+        if group.get("id")!=group_id:
+            groups.append(group); continue
+        copied=copy.deepcopy(group)
+        copied["nfs"]["host"]=host
+        copied["server"]["network"]=network
+        copied["cache"]["endpoint"]=endpoint or rewritten(group["cache"]["endpoint"])
+        groups.append(copied)
+    copied=copy.deepcopy(topology)
+    copied["groups"]=groups
+    return copied
+
+def xml_escape(value):
+    return value.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace('"',"&quot;")
+
+def plist_environment(plist, environment_text, worktree, language):
+    plist=plist.rstrip("\n")
+    extra="<key>SEMIO_WORKSPACE_ROOT</key><string>"+xml_escape(worktree)+"</string><key>SEMIO_LANGUAGE</key><string>"+xml_escape(language)+"</string>"
+    for line in environment_text.splitlines():
+        if line=="": continue
+        if line.startswith("export "): line=line[len("export "):]
+        name,value=line.split("=",1)
+        extra+="<key>"+xml_escape(name)+"</key><string>"+xml_escape(value)+"</string>"
+    marker="<key>EnvironmentVariables</key><dict>"
+    return plist.replace(marker, marker+extra, 1)
+
+
+def daemon_logs(text):
+    return sorted(set(re.findall(r"<key>Standard(?:Out|Error)Path</key><string>([^<]*)</string>", text)))
+
+
+def foreign_namespace(root, link):
+    import os
+    if not os.path.islink(link):
+        return "keep"
+    target = os.readlink(link)
+    if not target.startswith("/"):
+        target = os.path.join(root, target)
+    resolved = os.path.realpath(target) if os.path.isdir(target) else os.path.abspath(target)
+    root = os.path.realpath(root)
+    if resolved == root or resolved.startswith(root + os.sep):
+        return "keep"
+    return "remove"
+
+def filter_exports(text, resolves):
+    kept_lines=[]
+    for line in text.splitlines():
+        if line=="" or line.startswith("#"):
+            kept_lines.append(line)
+            continue
+        tokens=line.split()
+        kept=[tokens[0]]
+        network=False
+        hosts=False
+        index=1
+        while index<len(tokens):
+            token=tokens[index]
+            if token in ("-network","-mask"):
+                kept.extend((token, tokens[index+1]))
+                network=network or token=="-network"
+                index+=2
+                continue
+            if token.startswith("-"):
+                kept.append(token)
+                index+=1
+                continue
+            if resolves(token):
+                kept.append(token)
+                hosts=True
+            index+=1
+        if network or hosts: kept_lines.append(" ".join(kept))
+    return ("\n".join(kept_lines)+("\n" if kept_lines else ""))
+
 if __name__=="__main__":
+    if len(sys.argv)==3 and sys.argv[1]=="address":
+        data=load(sys.argv[2])
+        try: applied=apply_address(data.get("topology", data), os.environ)
+        except ValueError as error:
+            print(error, file=sys.stderr); sys.exit(1)
+        group_id=os.environ.get("SEMIO_FLEET_GROUP","")
+        found=[group for group in applied["groups"] if group["id"]==group_id]
+        print(json.dumps({} if not found else {"endpoint":found[0]["cache"]["endpoint"],"host":found[0]["nfs"]["host"],"network":found[0]["server"]["network"]},sort_keys=True))
+        sys.exit(0)
+    if len(sys.argv)==6 and sys.argv[1]=="plist":
+        print(plist_environment(Path(sys.argv[2]).read_text(), Path(sys.argv[3]).read_text(), sys.argv[4], sys.argv[5]), end="")
+        sys.exit(0)
+    if len(sys.argv)==3 and sys.argv[1]=="logs":
+        for path in daemon_logs(Path(sys.argv[2]).read_text()): print(path)
+        sys.exit(0)
+    if len(sys.argv)==4 and sys.argv[1]=="namespace":
+        print(foreign_namespace(sys.argv[2], sys.argv[3]))
+        sys.exit(0)
+    if len(sys.argv)==4 and sys.argv[1]=="exports":
+        names=set(filter(None, sys.argv[3].split(",")))
+        print(filter_exports(Path(sys.argv[2]).read_text(), lambda host: host in names), end="")
+        sys.exit(0)
     if len(sys.argv)==2 and sys.argv[1]=="check":
         found=check()
         for line in found: print(line)

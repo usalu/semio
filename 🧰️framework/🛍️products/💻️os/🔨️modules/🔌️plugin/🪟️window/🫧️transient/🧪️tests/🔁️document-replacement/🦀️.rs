@@ -3,6 +3,14 @@ mod document_window_replacement_tests {
     #[doc(hidden)]
 pub fn grant(demand:semio_framework_value::RetirementDemand,items:usize)->semio_framework_value::retained_clone::RetainedCloneGrant{semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)}}
 
+    fn caller() -> semio_framework_job::OriginalJobFixtureCaller {
+        semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), stock(), || Some(1000), 1500, 10_000)
+    }
+    fn stock() -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 1 << 10, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 } }
+    fn registry_step(caller: &mut semio_framework_job::OriginalJobFixtureCaller, registries: &mut ArtifactFixedRegistry<WindowTransientOwnerRegistry>, cursor: &mut usize, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, semio_framework::Fault> {
+        caller.turn(stock(), |cx| Ok(retire_document_window_registry_step(registries, cursor, cx, grant, closing))).unwrap()
+    }
+
     #[test]
     fn retained_window_input_document_scope_renewal_cancels_old_and_admits_new_work() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🪟️window/🫧️transient/🧪️tests/🧫️fixtures/🪟️retained-window-input/🔣️.json"))).unwrap();
@@ -52,16 +60,17 @@ pub fn grant(demand:semio_framework_value::RetirementDemand,items:usize)->semio_
         let held = blocked.capture(Some(&view)).unwrap().unwrap();
         let mut ready = WindowTransientOwnerRegistry::for_document_generation(2);
         ready.register::<RetirementWindow>().unwrap();
+        let mut caller = caller();
         let mut registries = ArtifactFixedRegistry::new();
         registries.insert_admitted(1, blocked);
         registries.insert_admitted(2, ready);
         let mut maintenance_cursor = 0;
         let mut close_cursor = 0;
-        assert_eq!(retire_document_window_registry_step(&mut registries, &mut maintenance_cursor, RetainedCloneGrant::default(),false).unwrap(), PluginLifecycleStep::Progress(Default::default()));
+        assert_eq!(registry_step(&mut caller,&mut registries,&mut maintenance_cursor,RetainedCloneGrant::default(),false).unwrap(), PluginLifecycleStep::Progress(Default::default()));
         assert_eq!(maintenance_cursor, 0);
         for _ in 0..p["maximumTurns"].as_u64().unwrap() {
             if registries.get(2).is_none(){break;}
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retire_document_window_registry_step(&mut registries, &mut maintenance_cursor,grant,false).unwrap());
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry_step(&mut caller,&mut registries,&mut maintenance_cursor,grant,false).unwrap());
             if let Some(progress)=step.progress(){assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}
             assert!(registries.get(1).is_some());
         }
@@ -70,7 +79,7 @@ pub fn grant(demand:semio_framework_value::RetirementDemand,items:usize)->semio_
         assert_eq!(close_cursor, 0);
         drop(held);
         for _ in 0..p["maximumTurns"].as_u64().unwrap() {
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retire_document_window_registry_step(&mut registries, &mut close_cursor,grant,true).unwrap());
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry_step(&mut caller,&mut registries,&mut close_cursor,grant,true).unwrap());
             if let Some(progress)=step.progress(){assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}
             if matches!(step,PluginLifecycleStep::Complete(_)) {
                 break;
@@ -78,22 +87,25 @@ pub fn grant(demand:semio_framework_value::RetirementDemand,items:usize)->semio_
         }
         assert!(registries.is_empty());
         assert_eq!(registries.empty_backing_byte_demand(),Some(0));
+        caller.retire(stock());
     }
 
     #[test]
     fn original_displaced_window_registry_retains_empty_physical_backing_until_exact_release(){
         let(mut registries,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(ArtifactFixedRegistry::<WindowTransientOwnerRegistry>::new);
         let backing=registries.empty_backing_byte_demand().unwrap();assert!(backing>0);assert_eq!((birth.requested_bytes,birth.released_bytes),(backing,0));
+        let mut caller = caller();
         let pointer=registries.slots.as_ptr();let mut cursor=0;
         let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:backing,maximum_depth:1,..Default::default()};
         assert_eq!(retire_document_window_registry_demands(&registries,cursor,0,false).unwrap(),RetirementDemand::default());
         assert_eq!(retire_document_window_registry_demands(&registries,cursor,0,true).unwrap(),RetirementDemand{release_bytes:backing,depth:1,..Default::default()});
         for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_release_bytes:backing-1,..grant},RetainedCloneGrant{maximum_release_bytes:0,maximum_capacity_bytes:backing,maximum_copy_bytes:backing,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retire_document_window_registry_step(&mut registries,&mut cursor,denied,true).unwrap());
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry_step(&mut caller,&mut registries,&mut cursor,denied,true).unwrap());
             assert_eq!(step,PluginLifecycleStep::Progress(Default::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(registries.slots.as_ptr(),pointer);assert_eq!(registries.empty_backing_byte_demand(),Some(backing));assert_eq!(cursor,0);
         }
-        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retire_document_window_registry_step(&mut registries,&mut cursor,grant,true).unwrap());
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry_step(&mut caller,&mut registries,&mut cursor,grant,true).unwrap());
         assert_eq!(step,PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:backing,..Default::default()}));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,backing));assert_eq!(registries.empty_backing_byte_demand(),Some(0));
         let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(registries));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        caller.retire(stock());
     }
 }

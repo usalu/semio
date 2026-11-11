@@ -45,6 +45,7 @@ impl NativeDecodeContinuation{
 impl Drop for NativeDecodeContinuation{fn drop(&mut self){assert!(std::thread::panicking()||self.ledger.as_ref().is_none_or(|ledger|!ledger.is_bound())&&!self.work.has_live_actions(),"native decoder continuation retains original paired ledger or pending work")}}
 
 
+thread_local!{static TRANSITIONS:std::cell::Cell<u64>=const{std::cell::Cell::new(0)};}
 /// 🧮️ One caller-owned budget persists from input scanning through final typed construction.
 pub struct NativeDecodeControl<'a> { work:work::Work<'a>, ledger:Option<semio_framework_value_native_encoding::native_receiving::NativeAllocationLedger>, scope_maximum:Option<usize>, construction:Option<&'a mut OriginalConstructionLoan<'a>>, allocation:allocation::Binding<'a>, receiving:bool, retirement:Option<&'a mut NativeDecodeRetirementRecipient>, maximum_bytes:usize, completed:usize, total:usize, started:bool, stage:u64, depth:usize, callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool, source:Option<semio_framework_value_control_contract::OriginalSourceTurnWitness<'a>> }
 struct StageScope<'owner,'control>{control:&'owner mut NativeDecodeControl<'control>,parent:(usize,usize,bool,u64)}
@@ -54,6 +55,10 @@ impl std::fmt::Debug for NativeDecodeControl<'_>{fn fmt(&self,f:&mut std::fmt::F
 impl Drop for NativeDecodeControl<'_>{fn drop(&mut self){assert!(std::thread::panicking()||self.ledger.as_ref().is_none_or(|ledger|!ledger.is_bound())&&!self.work.has_live_actions(),"native decoder control retains original paired ledger or pending work")}}
 
 impl<'a> NativeDecodeControl<'a> {
+    /// 🔁️ Counts one admitted zero-quote phase transition of the current turn thread; the snapshot cursor reads it to tell a transition from a stall.
+    pub fn record_transition(){TRANSITIONS.with(|count|count.set(count.get().wrapping_add(1)))}
+    /// 🔁️ Reads the phase transitions recorded on this thread so far.
+    pub fn transitions()->u64{TRANSITIONS.with(std::cell::Cell::get)}
 
     /// 🫴️ Runs a child against both original authorities with caller-owned unwind custody.
     pub fn with_encoding_receiver<T,E>(&mut self,frame:&mut Option<semio_framework_value_native_encoding::native_receiving::NativeEncodingReceiverFrame>,result:&mut semio_framework_value_call::NativeCallFailure<T,E>,operation:impl FnOnce(usize,&mut dyn FnMut(crate::native_encoding::NativeEncodeProgress)->bool,&mut dyn NativeSendAllocationLoan,&mut semio_framework_value_native_encoding::native_receiving::NativeEncodingReceiverWork<'_,'_,'_>,Option<&mut semio_framework_value_native_encoding::native_receiving::NativeEncodingReceiverConstruction<'_,'_>>,&mut Option<T>,&mut Option<E>))->Result<(),ValueError>{

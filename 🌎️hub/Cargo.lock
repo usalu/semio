@@ -6281,6 +6281,9 @@ dependencies = [
  "semio-framework-job-context",
  "semio-framework-job-failure",
  "semio-framework-job-payload",
+ "semio-framework-job-return-budget",
+ "semio-framework-job-return-escrow-publication",
+ "semio-framework-value-control-contract",
  "semio-framework-value-retained-clone",
 ]
 
@@ -18338,6 +18341,7 @@ dependencies = [
  "semio-plugin-instance-stores",
  "semio-plugin-interaction",
  "semio-plugin-job",
+ "semio-plugin-job-receiving",
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
@@ -38022,7 +38026,6 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
- "semio-framework-job",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema",

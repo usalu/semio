@@ -75,3 +75,18 @@ fn pending_shared_close_stays_pending_without_charge_under_an_insufficient_grant
     let tally=close(true);
     assert_eq!((tally.starved,tally.starved_work),(1,0));assert_eq!(tally.recovered,1);assert_eq!(RECOVERS.with(std::cell::Cell::get),1);
 }
+
+#[test]
+fn recovery_admission_charges_nothing_and_refuses_a_grant_below_the_recorded_quote(){
+    warm();let quote=RetirementDemand{copy_bytes:8,capacity_bytes:0,release_bytes:0,depth:2};
+    drive(RetainedCloneGrant{maximum_items:8,maximum_copy_bytes:64,maximum_capacity_bytes:64,maximum_release_bytes:64,maximum_depth:8},WORK,|effect|{
+        let boundary=effect.action_boundary();let before=effect.performed_work();let remaining=effect.remaining_work_units().unwrap();
+        assert!(effect.admits_recovery(quote,1,boundary).unwrap());
+        assert!(effect.admits_recovery(RetirementDemand{depth:9,..quote},1,boundary).unwrap()==false);
+        assert!(!effect.admits_recovery(quote,remaining+1,boundary).unwrap());
+        let mut narrow=effect.reborrow(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:2},remaining).unwrap();
+        assert!(!narrow.admits_recovery(quote,1,boundary).unwrap());
+        assert_eq!(narrow.performed_work(),before);
+        RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0})
+    });
+}

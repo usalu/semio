@@ -27,7 +27,7 @@ impl MountedPagePublication{
   let result=(||->Result<RetainedCloneStep,Exit>{
    let grant=effect.grant();let body=grant.maximum_copy_bytes;
    if let Some(owner)=self.interaction_close.as_mut(){if !owner.terminal_is_empty(){return Exit::resume(owner.step(body,effect))}let copy=size_of_val(&self.interaction_close);if !plugin_grant_funds(RetirementDemand{copy_bytes:copy,depth:1,..Default::default()},grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}self.interaction_close=None;Exit::pay(effect,1)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))}
-   if !self.ui_copy.terminal_is_empty(){return Exit::resume(self.ui_copy.close_step(effect))}
+   if !self.ui_copy.terminal_is_empty(){return Ok(self.ui_copy.close_step(effect).result?)}
    let d=self.close_demands(body)?;
    if !plugin_grant_funds(d,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
    if let Some(owner)=self.failure_close.as_mut(){if !owner.terminal_is_empty(){return Exit::resume(owner.step(body,effect))}self.failure_close=None;}

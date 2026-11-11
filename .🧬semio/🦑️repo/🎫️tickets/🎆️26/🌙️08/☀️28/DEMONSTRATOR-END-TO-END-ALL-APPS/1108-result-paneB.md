@@ -1,9 +1,14 @@
 # Lane paneB result (energie pane smoke)
 
-- Marker `lock-sync-1107-ok` already existed in `🗑️generated/1105b` (empty, 11-07 04:12); go102.sh only gates on it. Nothing created.
-- Run: `SLOT_HANG_SECS=100 C/1105b-tools/energie/go102.sh 201` -> `W-energie-t201` (rc 1, txt in `🗑️generated/1105b`). Waited ~25 min in the capacity queue, then compiled.
-- Compile red, only `semio-plugin-instance-dispatch` (3 errs): `staging/🎟️producers:57:598` E0283; `staging/⌨️typed-command:69:85` missing `key_retirement` in `PendingLatestWinsCommand`; `staging/📤️emit/🎟️original:50:264` E0283. Claimed by gen3dfinal2 (00:07, edited 00:37); no FIXED in claims log at 00:55. Energy crates themselves compiled up to that point with no errors listed.
-- No source edits by paneB. No test verdict (the test loops PANE_SMOKE_LOCALES en and de inside Rust).
-- Rerun when gen3dfinal2 logs FIXED: `SLOT_HANG_SECS=100 C/1105b-tools/energie/go102.sh <n>` (n > 201).
+- Marker `lock-sync-1107-ok` already existed (empty, 11-07); go102.sh only gates on it. Not created.
+- t201: red in instance-dispatch (gen3dfinal2, since fixed W-gen3dfinal2-3).
+- t202 (rc 1): cargo source admission refused `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🌱️initialization/🦀️.rs`: dangling `#[cfg(test)]` as the last line of the file owned no item. EDIT (paneB, unclaimed energy crate): removed that trailing attribute (the `#[cfg(test)]#[path=...]mod tests;` line above it stays).
+- t203 (`SLOT_HANG_SECS=100 go102.sh 203`): running; stuck >40 min in door.capacity (host swapping, 4-5 ahead). Verdict pending: Monitor on `W-energie-t203.rc`.
+- Rerun: `SLOT_HANG_SECS=100 C/1105b-tools/energie/go102.sh <n>`.
 
-STATUS: BLOCKED instance-dispatch 3 compile errs owned by gen3dfinal2; en: no verdict, de: no verdict
+- t203 (rc 1, after ~55 min in the capacity queue): source admission refused `.../🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs`, same dangling trailing `#[cfg(test)]` (also present in HEAD). EDIT (paneB): removed it. A scan of all energy `.rs` files found no other file ending in a bare cfg attribute.
+- t204: queued ~1.5 h at door.capacity, CANCELLED on coordinator order (blocks closeshared snapshot-projection fix); children and wrapper TERMed, rc 130. Claim released.
+- t205 (rc 101, ~1.5 h of queueing): `semio-plugin-instance-typed-ops` E0433 x4: `staging/🪆️child-group/🦀️.rs` used stale ident `semio_framework_plugin_retained_command` (crate is `semio-plugin-retained-command`; the same file already used the new ident once). EDIT (paneB, claimed in log; paneA had released typed-ops): replaced the stale ident, 0 left in file.
+- t206: `SLOT_HANG_SECS=100 go102.sh 206` started; Monitor on `W-energie-t206.rc`. Slots/capacity queues are long (about 1 h each); no test verdict yet.
+
+STATUS: PENDING W-energie-t206 queued; en: no verdict, de: no verdict

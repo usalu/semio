@@ -70,7 +70,7 @@ impl OriginalActorInputReceiving {
     /// 🌱️ Construction declares limits but admits no parser, source loan or byte owner.
     pub const fn new(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits)->Self{Self{binding:None,pointer:0,length:0,capture:OriginalCallerReturnPlace::empty(),decoder:ManuallyDrop::new(OriginalJsonOutputSource::new(policy,limits)),input:ManuallyDrop::new(None),outcome:ManuallyDrop::new(None),settlement:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),event:ManuallyDrop::new(None),job:ManuallyDrop::new(None),job_retirement:ManuallyDrop::new(None),job_id:None,failed:false,outcome_failed:false,settlement_failed:false,closing:false,returning:false,returned:false}}
     /// 🎟️ The containing Source pays the frame before binding its exact wire and caller.
-    pub(crate) fn new_bound(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits,wire:&[u8],cx:&StepContext<'_>)->Self{let mut owner=Self::new(policy,limits);owner.binding=Some(OriginalSourceBinding::borrow(cx));owner.pointer=wire.as_ptr() as usize;owner.length=wire.len();owner}
+    pub fn new_bound(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits,wire:&[u8],cx:&StepContext<'_>)->Self{let mut owner=Self::new(policy,limits);owner.binding=Some(OriginalSourceBinding::borrow(cx));owner.pointer=wire.as_ptr() as usize;owner.length=wire.len();owner}
     fn validate(&self,wire:Option<&[u8]>,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{
         cx.original_source_parent()?.validate_borrowed_context(cx)?;
         if self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(invalid())}

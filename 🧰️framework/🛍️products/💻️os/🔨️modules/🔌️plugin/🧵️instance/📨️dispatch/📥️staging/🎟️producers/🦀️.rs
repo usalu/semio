@@ -77,21 +77,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             8=>{let owner=self.media.reserved_mount.as_mut().unwrap();if !owner.terminal_is_empty(){cx.with_original_retirement(|cx|owner.close_step(&self.tools.tool_cancellations,cx))?;return Ok(false)}let d=RetirementDemand{copy_bytes:size_of::<Option<Box<OriginalEmissionAdmission<A>>>>(),release_bytes:size_of::<OriginalEmissionAdmission<A>>(),depth:1,..Default::default()};cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|_|{self.media.reserved_mount.take();RetainedWorkOutcome{result:Ok::<_,semio_framework_job::OriginalTurnPrimary>(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}}))?;},            _=>return Err(ValueError::invariant("reserved mount has an invalid original phase").into())
         }Ok(false)
     }
-    /// 📋️ Drives one framework reserved action through its original preparation, permit and producer handoff; `None` keeps every owner for the next turn.
-    pub async fn advance_original_reserved_action(&mut self,action:&str,args:Option<&DslValue>,decoded_items:usize,maximum:usize,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
-        let mut wire_args=args.cloned();
-        if !self.as_render().advance_reserved_action(action,&mut wire_args,meta,maximum,cx)?{return Ok(None)}
-        if self.media.pending_reserved_producer_permit.is_none(){
-            let source=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?);
-            let Some(permit)=self.admit_reserved_emit_producer(action,meta,cx)?else{return Ok(None)};
-            *self.media.pending_reserved_producer_permit=Some((permit,source));return Ok(None)
-        }
-        let mut produced=None;
-        if !self.as_render().handoff_reserved_producer(&mut produced,cx)?{return Ok(None)}
-        let (job,completion,admission)=produced.expect("reserved handoff completed with its producer");
-        let (authority,_)=self.media.pending_reserved_producer_permit.take().expect("reserved action retains its permit");
-        self.dispatch_reserved_original_producer(action,&[],decoded_items,job,completion,meta,Some(admission),authority,cx).await.map(Some).map_err(Into::into)
-    }
     pub async fn admit_framework_reserved_spawn(&mut self, verb: &str, raw: &[u8], decoded_items: usize, meta: &ActionMeta,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<FrameworkReservedCommitPermit>, semio_framework_job::OriginalTurnFailure> {
         let proof = self.tools.qualified_tool_proof(&*self.stores, verb)?;
         if !matches!(proof, QualifiedToolView::FrameworkOwned(_) | QualifiedToolView::AppOwned(_)) {
@@ -199,18 +184,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         self.tools.finish_reserved_emit_producer(&mut self.pending,permit);caller.retire(grant);retained
     }
 
-    /// 🧷️ Preserves the mounted original reserved source across refused worker birth.
-    #[cfg(test)]
-    pub(crate) async fn test_reserved_original_before_birth(&mut self,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        let mut permit=None;for _ in 0..128{permit=self.admit_reserved_emit_producer("cut",meta,cx)?;if permit.is_some(){break}}
-        let permit=permit.expect("original fixture reserved permit");let operation=permit.operation;let id=operation.operation.0;
-        let job=ArtifactReservedToolJob::new(FrameworkCutJob::new(Vec::new(),0));let original=job.test_source_identity();let completion=ArtifactToolCompletion::<A>::new();
-        self.dispatch_reserved_original_producer("cut",&[],0,job,completion,meta,None,permit,cx).await?;
-        let mounted=self.tools.tool_operations.get_mut(id).expect("actual original reserved producer mounted");assert!(mounted.reserved_producer.is_some()&&!mounted.terminal_seen);assert!(mounted.session.is_none()&&mounted.session_rejected.is_none());let before=cx.retained_progress();
-        let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(Default::default(),|same|mounted.drive_worker_step(same)));result?;assert_eq!(cx.retained_progress(),before);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(mounted.session_rejected.is_none());assert_eq!(mounted.reserved_producer.as_ref().unwrap().test_source_identity(),original);
-        mounted.drive_worker_step(cx)?;let retained=mounted.session_rejected.is_some()&&mounted.session.is_none()&&mounted.stage==MountedTypedCommandFullOperationStage::Worker&&mounted.reserved_producer.as_ref().unwrap().test_source_identity()==original&&mounted.reserved_producer.as_ref().unwrap().test_bound_operation()==Some(operation);
-        mounted.user_cancel_requested=true;mounted.terminal_seen=true;mounted.cancellation_lease.as_ref().unwrap().cancel();Ok(retained)
-    }
 
     /// 🧫️ Observes busy original completion retention without exposing producer authority.
     #[cfg(test)]
@@ -237,57 +210,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         retained
     }
 
-    pub(crate) async fn mount_original_emit_publication(&mut self,verb:&str,emit:Emit<A::Mutation,A::ConfigMutation,A::DraftMutation>,meta:&ActionMeta,authority:Option<(semio_framework_job::Operation,ToolCancellationLease,semio_framework_value::native_encoding::NativeEncodeContinuation)>, cx:&mut semio_framework_job::StepContext<'_>)->Result<InvocationResult,Fault>{
-        self.mount_original_reserved_owners(verb,Some(ArtifactToolCompletionValue::Emit(Ok(emit),EphemeralEmit::default())),None,None,meta,authority, cx).await
-    }
-
-    /// 🎒️ Installs original reserved producer and completion owners before fallible publication capture.
-    pub(crate) async fn mount_original_reserved_owners(&mut self,verb:&str,publication:Option<ArtifactToolCompletionValue<A>>,reserved_producer:Option<ArtifactReservedToolJob>,completion:Option<ArtifactToolCompletion<A>>,meta:&ActionMeta,authority:Option<(semio_framework_job::Operation,ToolCancellationLease,semio_framework_value::native_encoding::NativeEncodeContinuation)>, cx:&mut semio_framework_job::StepContext<'_>)->Result<InvocationResult,Fault>{
-        let revision=self.stores.store.content_revision_now();
-        let generation=semio_framework_job::Generation(self.stores.store.generation_now());
-        let base_revision=semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap()));
-        let(operation,lease,identity)=match authority{
-            Some((operation,lease,identity))=>(operation,Some(lease),Some(identity)),
-            None=>{let operation_id=self.media.admit_typed_operation_slot(&*self.pending, &*self.tools).ok_or_else(||plugin_sdk_fault("every fixed publication slot already retains an original operation"))?;let operation=semio_framework_job::Operation::new(operation_id,base_revision,generation,operation_id.0);(operation,None,None)}
-        };
-        let operation_id=operation.operation.0;
-        let reservation=self.tools.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS];
-        if !self.tools.tool_operations.can_insert(operation_id)||reservation.is_some_and(|owner|owner!=operation_id){return Err(plugin_sdk_fault("original emission lost its exact pre-admitted publication slot"));}
-        let mounted=MountedTypedCommandFullOperation::<A>{
-            verb:verb.into(),meta:meta.clone(),operation,source_identity:semio_framework_job::OriginalSourceBinding::borrow(cx),original_emission_caller:None,original_emission_decoder:None,original_emission_body:None,canonical_revision:revision,artifact_generation:generation.0,
-            config_generation:self.stores.config_store.generation_now(),draft_generation:self.stores.draft_store.generation_now(),presence_generation:0,transient_generation:0,
-            window_config_authority:None,window_transient_authority:None,publication_lanes:&[],contract:None,
-            session:None,session_rejected:None,producer_source:None,producer_request:None,producer_request_retirement:None,reserved_producer,reserved_construction:Default::default(),completion,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:lease,identity,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},terminal_seen:true,worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,original_retirement_receipt:None,
-            publication,publication_ownership_progress:None,actor_capture:None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),worker_resume_pending:false,tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(),pending_stream_abort:None,stream_abort_resident:Default::default(),stream_abort_completed:false,pending_child_publication:None,
-            owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,
-            captured_child_content:Some(std::sync::Arc::new(ChildContentView::clone(&*self.child_composition.child_content_root))),captured_child_content_generation:self.child_composition.child_content_generation,
-            page_publication:semio_framework_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None, diagnostics:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,
-            ui_pending:true,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,
-            command_logged:false,interaction_revalidated:false,retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault:None,stage:MountedTypedCommandFullOperationStage::Publishing,
-        };
-        self.tools.tool_operations.insert_admitted(operation_id,Box::new(mounted));
-        self.tools.release_reserved_emit_slot(operation_id);
-        let capture:Result<_,Fault>=async{
-            if self.tools.live_runtime_instance_id!=Some(meta.instance_id){return Err(plugin_sdk_fault("original emission does not belong to its mounted live app instance"));}
-            let proof=self.tools.qualified_tool_proof(&*self.stores, verb)?;
-            let window_config=self.stores.window_config_store.capture(meta.view_state.as_deref()).await?;
-            let window_transient=self.stores.window_transient_store.capture(meta.view_state.as_deref())?;
-            Ok((proof.publication_lanes(),proof.contract().max_output_bytes,window_config,window_transient,self.stores.presence_store.generation().await,self.stores.transient_store.generation().await))
-        }.await;
-        let mounted=self.tools.tool_operations.get_mut(operation_id).expect("original completed output remains in its exact admitted slot");
-        match capture{
-            Ok((lanes,maximum_identity_bytes,window_config,window_transient,presence,transient))=>{
-                if let Some(lease)=mounted.cancellation_lease.as_ref().filter(|_|mounted.identity.is_none()){let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|!lease.token.is_cancelled_now()&&!lease.publication_claim.is_cancelled();mounted.identity=Some(semio_framework_value::NativeEncodeControl::new(maximum_identity_bytes,&mut observer).pause().map_err(|(error,_)|error.to_fault())?);}
-                mounted.publication_lanes=lanes;mounted.window_config_authority=window_config;mounted.window_transient_authority=window_transient;
-                mounted.presence_generation=presence;mounted.transient_generation=transient;
-                if let Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))=mounted.publication.as_mut(){let inline=take_inline_interaction_verbs(&mut emit.effects);if !inline.is_empty(){self.tools.typed_inline_interaction_verbs.push((operation_id,inline));}}
-            }
-            Err(fault)=>{mounted.terminal_fault.get_or_insert_with(||ArtifactBoundedToolFault::from_fault(&fault));if let Some(lease)=mounted.cancellation_lease.as_ref(){lease.cancel();}}
-        }
-        let mut result=ToolOperations::<A>::empty_result(verb, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await;
-        result.output=DslValue::Object(vec![("operationId".into(),DslValue::String(operation_id.to_string())),("generation".into(),DslValue::String(operation.generation.0.to_string()))]);
-        Ok(result)
-    }
     /// 🧷️ Drives the stepped clipboard `cut` mount until its producer settles into its admitted operation, or `None` while the turns stay unfunded.
     #[cfg(any(test,feature="artifact-app-testing"))]
     pub async fn test_mount_reserved_cut(&mut self,meta:&ActionMeta,turns:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::Operation>,semio_framework_job::OriginalTurnFailure>{

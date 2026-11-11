@@ -114,6 +114,12 @@ impl<A:ArtifactApp> ReservedPreparation<A>{
   if owner.phase()=="sourceClose"{funded(cx,Default::default(),|effect|RetainedWorkPoll::Complete(owner.return_original(&mut self.action_returned,effect)))?;return Ok(false)}
   funded(cx,Default::default(),|effect|{let result=owner.advance(effect).map(|step|{*self.raw_wire=step.output;RetainedCloneStep::Progress(step.progress)});RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()})})?;Ok(self.raw_wire.is_some()&&self.action_returned.is_some())
  }
+ /// 🤝️ Moves the built job, its completion and its wire admission out in one paid step so the caller owns them before dispatch.
+ pub fn handoff(&mut self,output:&mut Option<(ArtifactReservedToolJob,ArtifactToolCompletion<A>,semio_framework::ToolWireAdmission)>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  self.validate(self.revision,cx)?;if output.is_some(){return Ok(true)}if self.job.is_none()||self.completion.is_none()||self.admission.is_none(){return Err(ValueError::invariant("reserved handoff requires its built job, completion and wire admission").into())}
+  let bytes=size_of::<(ArtifactReservedToolJob,ArtifactToolCompletion<A>,semio_framework::ToolWireAdmission)>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
+  *output=Some((self.job.take().unwrap(),self.completion.take().unwrap(),self.admission.take().unwrap()));cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;Ok(true)
+ }
  pub fn advance_builder(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(self.revision,cx)?;if self.job.is_some(){return Ok(true)}if self.body.is_none(){A::build_reserved_tool_job(&mut self.request,&mut self.body,&mut self.wire_construction,cx)?;return Ok(false)}ArtifactReservedToolJob::admit_boxed_original(&mut self.body,&mut self.job,cx)
  }

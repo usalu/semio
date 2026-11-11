@@ -71,7 +71,13 @@ json_string() { printf '%s' "$1" | sed -n "s/.*\"$2\"[[:space:]]*:[[:space:]]*\"
 TOPOLOGY_TEXT=$(tr -d '\n\r' < "$TOPOLOGY_JSON")
 WORKTREE=$(json_string "$(json_object "$TOPOLOGY_TEXT" worktree)" "$PLATFORM")
 GROUP_NFS=$(printf '%s' "$TOPOLOGY_TEXT" | sed -n "s/.*{[[:space:]]*\"id\"[[:space:]]*:[[:space:]]*\"$GROUP_ID\"[[:space:]]*,[[:space:]]*\"nfs\"[[:space:]]*:[[:space:]]*{\([^}]*\)}.*/\1/p")
-NFS_SOURCE="$(json_string "$GROUP_NFS" host):$(json_string "$GROUP_NFS" export)"
+NFS_HOST=$(json_string "$GROUP_NFS" host)
+NFS_EXPORT=$(json_string "$GROUP_NFS" export)
+if [ -n "${SEMIO_FLEET_GROUP:-}${SEMIO_FLEET_NFS_HOST:-}${SEMIO_FLEET_NETWORK:-}${SEMIO_FLEET_CACHE_ENDPOINT:-}" ]; then
+  { [ -n "${SEMIO_FLEET_GROUP:-}" ] && [ -n "${SEMIO_FLEET_NFS_HOST:-}" ] && [ -n "${SEMIO_FLEET_NETWORK:-}" ]; } || fail "SEMIO_FLEET_GROUP, SEMIO_FLEET_NFS_HOST and SEMIO_FLEET_NETWORK are set together"
+  if [ "$SEMIO_FLEET_GROUP" = "$GROUP_ID" ]; then NFS_HOST=$SEMIO_FLEET_NFS_HOST; fi
+fi
+NFS_SOURCE="$NFS_HOST:$NFS_EXPORT"
 { [ -n "$WORKTREE" ] && [ "$NFS_SOURCE" != ":" ]; } || fail "the topology has no worktree for $PLATFORM or no group $GROUP_ID: $TOPOLOGY_JSON"
 GROUP_SERVER=$(printf '%s' "$TOPOLOGY_TEXT" | sed -n "s/.*{[[:space:]]*\"id\"[[:space:]]*:[[:space:]]*\"$GROUP_ID\"[[:space:]]*,[[:space:]]*\"nfs\"[[:space:]]*:[[:space:]]*{[^}]*}[[:space:]]*,[[:space:]]*\"server\"[[:space:]]*:[[:space:]]*{\([^}]*\)}.*/\1/p")
 SERVER_PLATFORM=$(json_string "$GROUP_SERVER" platform)
@@ -90,6 +96,51 @@ if [ -f "$MACHINE" ]; then
   JOINED=1
 fi
 
+host_resolves() {
+  local answer
+  answer=$(dscacheutil -q host -a name "$1" 2>/dev/null || true)
+  printf '%s\n' "$answer" | grep -q '^ip_address:'
+}
+filter_unresolved_exports() (
+  source=$1
+  temporary=$(mktemp)
+  while IFS= read -r line || [ -n "$line" ]; do
+    case $line in
+      ""|\#*) printf '%s\n' "$line" >> "$temporary"; continue ;;
+    esac
+    noglob=0
+    case $- in *f*) noglob=1 ;; esac
+    set -f
+    set -- $line
+    [ "$noglob" = 1 ] || set +f
+    kept=$1
+    shift
+    network=0
+    hosts=0
+    while [ $# -gt 0 ]; do
+      token=$1
+      shift
+      case $token in
+        -network|-mask)
+          [ $# -gt 0 ] || fail "export option $token needs a value: $line"
+          next=$1
+          shift
+          kept="$kept $token $next"
+          [ "$token" != "-network" ] || network=1
+          ;;
+        -*) kept="$kept $token" ;;
+        *)
+          if host_resolves "$token"; then kept="$kept $token"; hosts=1
+          else say "WARNING: $token does not resolve, so it is left out of the export until that peer exists"; fi
+          ;;
+      esac
+    done
+    if [ "$network" = 1 ] || [ "$hosts" = 1 ]; then printf '%s\n' "$kept" >> "$temporary"
+    else say "WARNING: $line has no reachable client, so the export line was left out"; fi
+  done < "$source"
+  cat "$temporary" > "$source"
+  rm -f "$temporary"
+)
 CLEANUP_MOUNT=""; CLEANUP_DIRECTORY=""
 cleanup() {
   [ -z "$CLEANUP_MOUNT" ] || umount "$CLEANUP_MOUNT" 2>/dev/null || true
@@ -99,11 +150,17 @@ cleanup() {
 trap cleanup EXIT
 
 LANGUAGE_CHOICE=${SEMIO_LANGUAGE:-en}
-run_as() {
-  if [ "$WORKER_USER" = root ]; then env "PATH=$WORKER_HOME/.local/bin:$PATH" "SEMIO_LANGUAGE=$LANGUAGE_CHOICE" "$@"; else sudo -u "$WORKER_USER" -H env "PATH=$WORKER_HOME/.local/bin:$PATH" "SEMIO_LANGUAGE=$LANGUAGE_CHOICE" "$@"; fi
+fleet_address_env() {
+  [ -z "${SEMIO_FLEET_GROUP:-}" ] || printf 'SEMIO_FLEET_GROUP=%s\n' "$SEMIO_FLEET_GROUP"
+  [ -z "${SEMIO_FLEET_NFS_HOST:-}" ] || printf 'SEMIO_FLEET_NFS_HOST=%s\n' "$SEMIO_FLEET_NFS_HOST"
+  [ -z "${SEMIO_FLEET_NETWORK:-}" ] || printf 'SEMIO_FLEET_NETWORK=%s\n' "$SEMIO_FLEET_NETWORK"
+  [ -z "${SEMIO_FLEET_CACHE_ENDPOINT:-}" ] || printf 'SEMIO_FLEET_CACHE_ENDPOINT=%s\n' "$SEMIO_FLEET_CACHE_ENDPOINT"
 }
-fleet() { (cd "$WORKTREE/$TOPOLOGY_RELATIVE" && run_as repo ./📜️script.ts "$@"); }
-replica() { local operation=$1; shift; (cd "$FLEET_REPLICA_DIRECTORY" && run_as repo ./📜️script.ts "$operation" "$@"); }
+run_as() {
+  if [ "$WORKER_USER" = root ]; then env "PATH=$WORKER_HOME/.local/bin:$PATH" "SEMIO_LANGUAGE=$LANGUAGE_CHOICE" "SEMIO_WORKSPACE_ROOT=$WORKTREE" ${SEMIO_FLEET_GROUP:+SEMIO_FLEET_GROUP=$SEMIO_FLEET_GROUP} ${SEMIO_FLEET_NFS_HOST:+SEMIO_FLEET_NFS_HOST=$SEMIO_FLEET_NFS_HOST} ${SEMIO_FLEET_NETWORK:+SEMIO_FLEET_NETWORK=$SEMIO_FLEET_NETWORK} ${SEMIO_FLEET_CACHE_ENDPOINT:+SEMIO_FLEET_CACHE_ENDPOINT=$SEMIO_FLEET_CACHE_ENDPOINT} "$@"; else sudo -u "$WORKER_USER" -H env "PATH=$WORKER_HOME/.local/bin:$PATH" "SEMIO_LANGUAGE=$LANGUAGE_CHOICE" "SEMIO_WORKSPACE_ROOT=$WORKTREE" ${SEMIO_FLEET_GROUP:+SEMIO_FLEET_GROUP=$SEMIO_FLEET_GROUP} ${SEMIO_FLEET_NFS_HOST:+SEMIO_FLEET_NFS_HOST=$SEMIO_FLEET_NFS_HOST} ${SEMIO_FLEET_NETWORK:+SEMIO_FLEET_NETWORK=$SEMIO_FLEET_NETWORK} ${SEMIO_FLEET_CACHE_ENDPOINT:+SEMIO_FLEET_CACHE_ENDPOINT=$SEMIO_FLEET_CACHE_ENDPOINT} "$@"; fi
+}
+fleet() { (cd "$WORKTREE" && run_as repo "$WORKTREE/$TOPOLOGY_RELATIVE/📜️script.ts" "$@"); }
+replica() { local operation=$1; shift; (cd "$WORKTREE" && run_as repo "$FLEET_REPLICA_DIRECTORY/📜️script.ts" "$operation" "$@"); }
 fill() { sed -e "s|__WORKER_USER__|$WORKER_USER|" -e "s|__WORKER_HOME__|$WORKER_HOME|"; }
 server_part() { fleet server-plan --group "$GROUP_ID" --part "$1"; }
 sha256_of() { if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d' ' -f1; else shasum -a 256 "$1" | cut -d' ' -f1; fi; }
@@ -127,6 +184,18 @@ write_block() {
   if cmp -s "$tmp" "$file"; then say "unchanged $file"; CHANGED=0; else cat "$tmp" > "$file"; say "updated $file"; CHANGED=1; fi
   rm -f "$tmp"
 }
+ensure_daemon_logs() {
+  local plist=$1 path
+  [ -f "$plist" ] || return 0
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    mkdir -p "$(dirname "$path")"
+    if [ -e "$path" ]; then chown "$WORKER_USER" "$path"; chmod 644 "$path"
+    else install -m 644 -o "$WORKER_USER" /dev/null "$path"; created=1; say "service log $path"; fi
+  done <<EOF
+$(sed -nE 's/.*<key>Standard(Out|Error)Path<\/key><string>([^<]*)<\/string>.*/\2/p' "$plist" | sort -u)
+EOF
+}
 install_daemon() {
   local target=$1 label
   label=$(basename "$target" .plist)
@@ -135,9 +204,11 @@ install_daemon() {
   if [ "$CHANGED" = 1 ]; then launchctl bootout "system/$label" 2>/dev/null || true; fi
 }
 load_daemon() {
-  local label
+  local label created=0
   label=$(basename "$1" .plist)
-  if launchctl print "system/$label" >/dev/null 2>&1; then say "already loaded $label"; else launchctl bootstrap system "$1"; say "loaded $label"; fi
+  ensure_daemon_logs "$1"
+  if launchctl print "system/$label" >/dev/null 2>&1; then say "already loaded $label"; [ "$created" = 0 ] || launchctl kickstart -k "system/$label"
+  else launchctl bootstrap system "$1"; say "loaded $label"; fi
 }
 install_nfs_server() {
   command -v exportfs >/dev/null 2>&1 && return 0
@@ -314,6 +385,24 @@ else
   NEEDS_NATIVE=1
 fi
 
+release_foreign_namespace() {
+  local link=$1 root=$2 target resolved
+  [ -L "$link" ] || return 0
+  root=$(cd "$root" && pwd -P)
+  target=$(readlink "$link")
+  case "$target" in
+    /*) ;;
+    *) target=$root/$target ;;
+  esac
+  if [ -d "$target" ]; then resolved=$(cd "$target" && pwd -P); else resolved=$target; fi
+  case "$resolved/" in
+    "$root/"*) return 0 ;;
+  esac
+  rm "$link"
+  say "removed $link: it pointed outside $root, so the launcher publishes the workspace links itself"
+}
+
+release_foreign_namespace "$WORKTREE/node_modules" "$WORKTREE"
 say "step 3: standalone repo launcher (built from the checkout; the native bootstrap comes last)"
 if [ -x "$WORKER_HOME/.local/bin/repo" ]; then
   say "repo launcher present for $WORKER_USER"
@@ -398,6 +487,7 @@ elif [ "$SERVER" = 1 ]; then
   install -d -o "$WORKER_USER" "$FLEET_SERVER_DIRECTORY" "$FLEET_SERVER_CACHE_DIRECTORY"
   install -d -m 0750 -o "$WORKER_USER" /etc/semio
   write_block /etc/exports "$(server_part exports | fill)"
+  filter_unresolved_exports /etc/exports
   write_block /etc/nfs.conf "$(server_part nfs-conf)"
   NFS_CONF_CHANGED=$CHANGED
   nfsd checkexports || fail "/etc/exports is not valid: nothing was exported"
@@ -421,15 +511,41 @@ fi
 say "step 4b: clock"
 check_time_sync
 
+xml_escape() {
+  local value=$1
+  value=${value//&/&amp;}
+  value=${value//</&lt;}
+  value=${value//>/&gt;}
+  value=${value//\"/&quot;}
+  printf '%s' "$value"
+}
+plist_with_environment() {
+  local plist extra line name value marker
+  plist=$(cat)
+  extra="<key>SEMIO_WORKSPACE_ROOT</key><string>$(xml_escape "$WORKTREE")</string><key>SEMIO_LANGUAGE</key><string>$(xml_escape "$LANGUAGE_CHOICE")</string>"
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    line=${line#export }
+    name=${line%%=*}
+    value=${line#*=}
+    extra="${extra}<key>$(xml_escape "$name")</key><string>$(xml_escape "$value")</string>"
+  done <<< "${ENVIRONMENT:-}"
+  marker="<key>EnvironmentVariables</key><dict>"
+  printf '%s' "${plist/$marker/$marker$extra}"
+}
 say "step 5: cache environment"
 ENVIRONMENT=$(fleet env --group "$GROUP_ID" --shell sh | grep '^export ')
+ADDRESS_EXPORTS=$(fleet_address_env | sed 's/^/export /')
+[ -z "$ADDRESS_EXPORTS" ] || ENVIRONMENT="$ENVIRONMENT
+$ADDRESS_EXPORTS"
 if [ "$PLATFORM" = linux ]; then
   install_text /etc/profile.d/semio-fleet.sh 644 "$ENVIRONMENT"
 else
   while IFS= read -r line; do
+    [ -n "$line" ] || continue
     assignment=${line#export }
-    launchctl setenv "${assignment%%=*}" "${assignment#*=}"
-    say "launchctl setenv ${assignment%%=*}"
+    if launchctl setenv "${assignment%%=*}" "${assignment#*=}"; then say "launchctl setenv ${assignment%%=*}"
+    else say "WARNING: launchctl setenv ${assignment%%=*} was refused: System Integrity Protection does not allow it. The variable is in /etc/zshenv, /etc/profile and the LaunchDaemon environment"; fi
   done <<< "$ENVIRONMENT"
   write_block /etc/zshenv "$ENVIRONMENT"
   write_block /etc/profile "$ENVIRONMENT"
@@ -450,8 +566,8 @@ if [ "$PLATFORM" = linux ]; then
   systemctl daemon-reload
   systemctl enable "$INSTANCE"
 else
-  install_daemon "$SERVICE_TARGET" "$(fleet worker-service --group "$GROUP_ID" --platform macos | fill)"
-  install_daemon "$COMPACT_TARGET" "$(fleet worker-service --group "$GROUP_ID" --platform macos --part compact-definition --role "$ROLE" | fill)"
+  install_daemon "$SERVICE_TARGET" "$(fleet worker-service --group "$GROUP_ID" --platform macos | fill | plist_with_environment)"
+  install_daemon "$COMPACT_TARGET" "$(fleet worker-service --group "$GROUP_ID" --platform macos --part compact-definition --role "$ROLE" | fill | plist_with_environment)"
 fi
 
 if [ "$SERVER" = 1 ]; then
@@ -472,8 +588,8 @@ if [ "$SERVER" = 1 ]; then
   else
     chown "$WORKER_USER" "$TOKENS"; chmod 600 "$TOKENS"
     CACHE_TARGET=$(server_part cache-target); RELAY_TARGET=$(server_part relay-target)
-    install_daemon "$CACHE_TARGET" "$(server_part cache-unit | fill)"
-    install_daemon "$RELAY_TARGET" "$(server_part relay-unit | fill)"
+    install_daemon "$CACHE_TARGET" "$(server_part cache-unit | fill | plist_with_environment)"
+    install_daemon "$RELAY_TARGET" "$(server_part relay-unit | fill | plist_with_environment)"
   fi
 fi
 

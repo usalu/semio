@@ -70,6 +70,8 @@ impl ProbeMutationReceiving{
  fn perform(effect:&mut RetainedAllocationEffect<'_>)->Result<(),ValueError>{if effect.performed(1)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"probe mutation work is not funded"))}}
 }
 impl OpBinaryReceivingCursor<ProbeMutation> for ProbeMutationReceiving{
+ /// ⛽️ One step performs its own unit before the parser, the parser's grammar unit and its own unit after a ready or refused parse.
+ const STEP_WORK:u64=3;
  fn demands(&self,source:&[u8],body:usize)->Result<RetirementDemand,ValueError>{
   self.validate(source)?;if self.closing{return self.close_demand(body)}if self.failed{return Err(invalid("probe mutation retains its failed original call"))}
   if self.ready{return Ok(Default::default())}if self.native.is_none(){return Ok(fixed(size_of::<Option<(NativeAllocationIdentity,Option<u64>)>>()))}

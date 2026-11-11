@@ -257,5 +257,3 @@ pub mod io;
 
 #[path="🌱️initialization/🦀️.rs"]
 pub mod original_genesis;
-
-#[cfg(test)]

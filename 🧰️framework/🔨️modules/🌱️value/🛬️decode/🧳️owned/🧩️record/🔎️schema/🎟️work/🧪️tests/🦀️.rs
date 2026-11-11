@@ -69,8 +69,10 @@ fn close(bank:&mut Bank,native:&mut NativeDecodeControl<'_>,matcher:&mut Matcher
 fn starve_ack(bank:&mut Bank,native:&mut NativeDecodeControl<'_>,matcher:&mut Matcher,input:RetainedCloneRef<'_,KeySource>,fuel:u64,trace:&mut Trace)->Result<(),ValueError>{
  let grant=RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:16};
  bank.wallet.lock().unwrap().deny=true;
+ let epoch=NativeDecodeControl::transitions();
  let polled=bank.run_with_turn(native,|turn,native|Ok(matcher.advance_nested(input,native,turn.witness(),4096,fuel,grant)));
  bank.wallet.lock().unwrap().deny=false;
+ assert_eq!(NativeDecodeControl::transitions(),epoch,"denied acknowledgement must not record a transition");
  if let RetainedWorkPoll::Complete(outcome)=polled?{outcome.result.map_err(|_|ValueError::invariant("starved acknowledgement refused"))?;}
  assert_eq!(format!("{:?}",matcher.selection()?),"KeyAcknowledgement","starved acknowledgement must stay retryable");trace.steps.push("starved acknowledgement retryable".into());
  Ok(())
@@ -86,9 +88,9 @@ fn turn(bank:&mut Bank,native:&mut NativeDecodeControl<'_>,matcher:&mut Matcher,
   },
   NativeAdvanceSelection::Nested=>{
    let quote=matcher.demands(input,4096,fuel)?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quote.copy_bytes,maximum_capacity_bytes:quote.capacity_bytes,maximum_release_bytes:quote.release_bytes,maximum_depth:quote.depth.max(1)};
-   let before=format!("{:?}",matcher.selection()?);
-   let polled=bank.run_with_turn(native,|turn,native|Ok(matcher.advance_nested(input,native,turn.witness(),4096,fuel,grant)))?;
-   if let RetainedWorkPoll::Complete(outcome)=polled{let work=outcome.work;let step=outcome.result.map_err(|_|ValueError::invariant("matcher nested action refused"))?;assert!(before!="KeyAcknowledgement"||work>0||step!=RetainedCloneStep::Progress(Default::default()),"admitted acknowledgement made zero progress and charged zero work");trace.steps.push(format!("nested {before} work={work}"));}
+   let before=format!("{:?}",matcher.selection()?);let work_quote=matcher.nested_work_demand(input)?.min(fuel);let epoch=NativeDecodeControl::transitions();
+   let polled=bank.run_with_turn(native,|turn,native|Ok(matcher.advance_nested(input,native,turn.witness(),4096,work_quote,grant)))?;
+   if let RetainedWorkPoll::Complete(outcome)=polled{let work=outcome.work;outcome.result.map_err(|_|ValueError::invariant("matcher nested action refused"))?;if before=="KeyAcknowledgement"{assert_eq!(work,u128::from(work_quote),"acknowledgement quote must equal its actual work");if work_quote==0{assert_eq!(NativeDecodeControl::transitions(),epoch+1,"admitted zero-quote acknowledgement must record one transition");assert_ne!(format!("{:?}",matcher.selection()?),"KeyAcknowledgement","zero-quote acknowledgement must change selection");trace.steps.push("zero-quote acknowledgement transition".into());}else{assert_eq!(NativeDecodeControl::transitions(),epoch,"charged acknowledgement records no transition");}}trace.steps.push(format!("nested {before} work={work}"));}
   },
  }
  Ok(())

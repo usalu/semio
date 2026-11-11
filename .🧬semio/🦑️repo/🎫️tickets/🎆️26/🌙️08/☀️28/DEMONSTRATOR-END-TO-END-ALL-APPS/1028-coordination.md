@@ -478,3 +478,4 @@ Brief: `1028-brief.md`. Official run: `1028-tools/act.sh <label>` → `🗑️ge
 - 21:58 (11/10) instance-jobs compiles (W-instance-16 + W-instjobs2-3). PENDING after instdocs FIXED: instance check, generation3d own-manifest native+wasm, proc smoke en/de (1108-result-instance.md next steps).
 - 22:37 (11/10) DISK: removed remaining .🧬semio/🌐hub s14/s15 overlay+scratch repo copies (~83 GB, no open files, not fleet-owned).
 - 00:51 (11/11) actprep: checklist 1110-activation-checklist.md. Blockers: hub/ext markers, disk 78<100 GB prefreeze (repo cache images 160 GB fixed, rust 96 GB image only 38 GB used), graph regen needed, 35 [DEBUG] lines in 17 files, descriptors channel 24 (refresh before canary).
+- 02:57 (11/11) DISK: removed orphaned ~/.cache/semio/cas/v1/{o,l} (207 GB, untouched since 11-10 03:21, not in repo cache ledger).

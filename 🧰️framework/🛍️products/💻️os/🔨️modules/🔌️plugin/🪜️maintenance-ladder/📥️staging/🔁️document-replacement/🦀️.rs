@@ -20,9 +20,9 @@ use semio_ui_contract::*;
 /// 🔁️ Shared document replacement invalidates concrete window transients and retains displaced owners.
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// 🪟️ Preserves the caller's original full policy through every displaced document generation.
-    pub fn retire_document_windows_step(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+    pub fn retire_document_windows_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
         let cursor = if closing { &mut self.close.close_window_retirement_cursor } else { &mut self.maintenance.maintenance_window_retirement_cursor };
-        retire_document_window_registry_step(&mut self.stores.retired_window_transient_stores, cursor, grant, closing)
+        retire_document_window_registry_step(&mut self.stores.retired_window_transient_stores, cursor, cx, grant, closing)
     }
 }
 
@@ -49,7 +49,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
 
 /// ♻️ Advances one displaced document's windows fairly even while another owner is blocked.
 #[doc(hidden)]
-pub fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<WindowTransientOwnerRegistry>, cursor: &mut usize, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+pub fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<WindowTransientOwnerRegistry>, cursor: &mut usize, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
     let demand=retire_document_window_registry_demands(registries,*cursor,grant.maximum_copy_bytes,closing).map_err(|error|plugin_sdk_fault(error.into_message()))?;
     if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
     let Some((index,generation))=registries.next_id_from(*cursor)else{
@@ -62,7 +62,7 @@ pub fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegist
         drop(registries.remove(generation));*cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
         return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));
     }
-    let step=retired.close_step(grant)?;
+    let Some((step,performed))=cx.with_original_effect(grant,|_,effect|retired.close_step(effect)).map_err(|error|plugin_sdk_fault(error.into_message()))? else{return Ok(PluginLifecycleStep::Progress(Default::default()))};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));let step=step?;
     if step.progress().is_some_and(|progress|!progress.fits(grant))||matches!(step,PluginLifecycleStep::Complete(_))&&!retired.terminal_is_empty(){return Err(plugin_sdk_fault("displaced window transient violated its original grant or terminal ownership"));}
     if step.progress().is_none_or(|progress|progress==RetainedCloneProgress::default()){
         let bytes=size_of::<usize>();

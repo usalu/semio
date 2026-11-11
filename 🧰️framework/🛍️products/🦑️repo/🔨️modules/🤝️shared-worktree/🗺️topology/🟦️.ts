@@ -71,6 +71,19 @@ export function readTopologyV1(value:unknown=topologyJson):FleetTopologyV1{
  return Object.freeze(topology);
 }
 
+const FLEET_GROUP_ENVIRONMENT_V1="SEMIO_FLEET_GROUP",FLEET_HOST_ENVIRONMENT_V1="SEMIO_FLEET_NFS_HOST",FLEET_NETWORK_ENVIRONMENT_V1="SEMIO_FLEET_NETWORK",FLEET_CACHE_ENVIRONMENT_V1="SEMIO_FLEET_CACHE_ENDPOINT";
+const environmentText=(environment:Readonly<Record<string,string|undefined>>,name:string):string|undefined=>{const value=environment[name];return value===undefined||value===""?undefined:value;};
+const endpointWithHost=(endpoint:string,host:string):string=>{const url=new URL(endpoint);return `${url.protocol}//${host}${url.port===""?"":`:${url.port}`}`;};
+
+/** 🌐️ Replaces one group's host, worker network and cache endpoint from `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_NFS_HOST`, `SEMIO_FLEET_NETWORK` and optional `SEMIO_FLEET_CACHE_ENDPOINT`. The three required names are set together. Absent names leave the topology as read. A group id that is not in this topology leaves it unchanged. The values are checked with `readTopologyV1`. */
+export function applyFleetAddressEnvironmentV1(topology:FleetTopologyV1,environment:Readonly<Record<string,string|undefined>>):FleetTopologyV1{
+ const groupId=environmentText(environment,FLEET_GROUP_ENVIRONMENT_V1),host=environmentText(environment,FLEET_HOST_ENVIRONMENT_V1),network=environmentText(environment,FLEET_NETWORK_ENVIRONMENT_V1),endpoint=environmentText(environment,FLEET_CACHE_ENVIRONMENT_V1);
+ if(groupId===undefined&&host===undefined&&network===undefined&&endpoint===undefined)return topology;
+ if(groupId===undefined||host===undefined||network===undefined)throw Error("SEMIO_FLEET_GROUP, SEMIO_FLEET_NFS_HOST and SEMIO_FLEET_NETWORK are set together");
+ if(!topology.groups.some(group=>group.id===groupId))return topology;
+ return readTopologyV1({...topology,groups:topology.groups.map(group=>group.id===groupId?{...group,nfs:{...group.nfs,host},server:{...group.server,network},cache:{...group.cache,endpoint:endpoint??endpointWithHost(group.cache.endpoint,host)}}:group)});
+}
+
 /** 🔎️ Resolves one group by id and refuses an unknown one. */
 export function groupV1(topology:FleetTopologyV1,groupId:string):FleetGroupV1{
  const group=topology.groups.find(candidate=>candidate.id===groupId);

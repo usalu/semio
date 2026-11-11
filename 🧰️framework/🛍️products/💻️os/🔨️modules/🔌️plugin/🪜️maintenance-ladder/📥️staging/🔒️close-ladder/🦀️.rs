@@ -39,11 +39,8 @@ pub fn released(bytes: usize) -> RetainedCloneProgress {
 
 /// 🏷️ A declared-tool close poll keeps a pending effect as an unfunded retry and surfaces a settled failure as the plugin fault.
 #[doc(hidden)]
-pub fn declared_poll(poll: semio_framework_value::OriginalRetirementPoll) -> Result<RetainedCloneStep, Fault> {
-    match poll {
-        semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(RetainedCloneStep::Progress(Default::default())),
-        semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| plugin_sdk_fault(error.to_string())),
-    }
+pub fn declared_poll(step: Result<RetainedCloneStep, semio_framework_value::ValueError>) -> Result<RetainedCloneStep, Fault> {
+    step.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| plugin_sdk_fault(error.to_string()))
 }
 
 #[doc(hidden)]
@@ -509,12 +506,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
     }
 
     /// ♻️ Retains the exact final presence root until its independently paid retirement finishes.
-    pub fn detach_peer_presence_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
+    pub fn detach_peer_presence_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
         let demand=peer_presence_detach_demand(&*self.roster,grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
         if let Some(owner)=self.roster.peer_presence_close.as_mut(){
             if !owner.terminal_is_empty(){
-                let step=owner.close_step(grant).map_err(plugin_retirement_fault)?;
+                let Some((step,performed))=cx.with_original_effect(grant,|_,effect|owner.close_step(effect)).map_err(plugin_retirement_fault)? else{return Ok(RetainedCloneStep::Progress(Default::default()))};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));let step=step.map_err(plugin_retirement_fault)?;
                 return Ok(RetainedCloneStep::Progress(step.progress().unwrap_or_default()))
             }
             self.roster.peer_presence_close.take();
@@ -589,7 +586,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         if self.stores.retired_window_transient_stores.empty_backing_byte_demand() != Some(0) { return CloseRung::WindowRetirements; }
         if self.close.close_owned_stage < ORIGINAL_STORE_LANES.len() as u8 || self.close.close_owned_advance_ready { return CloseRung::OwnedStores; }
         if !self.retained_fields_own_terminal_is_empty() { return CloseRung::RetainedFields; }
-        if self.tools.pending_tool_lease_admission.is_some()||self.media.pending_media_import_permit.is_some(){return CloseRung::ToolLeaseAdmission;}
+        if self.tools.pending_tool_lease_admission.is_some(){return CloseRung::ToolLeaseAdmission;}
         if self.pending.pending_document_window_admission.is_some(){return CloseRung::DocumentWindowAdmission;}
         if self.tools.tool_cancellations.ready() && self.close.close_cancellation_cursor < CANCELLATION_SLOT_SPAN { return CloseRung::CancellationSlots; }
         if !self.tools.tool_cancellations.terminal_is_empty() { return CloseRung::CancellationIssuer; }

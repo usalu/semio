@@ -128,7 +128,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
 
     fn maintenance_stage_step(&mut self,stage:u8,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if stage==26{return self.pending.close_document_window_admission(cx, false)}
-        if stage==17{let before=cx.retained_progress();self.tools.latest_wins_keys.advance(cx)?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
+        if stage==17{let before=cx.retained_progress();if let Some((advanced,performed))=cx.with_original_effect(grant,|_,effect|self.tools.latest_wins_keys.advance(effect))?{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));cx.consume_retained(advanced?.progress())?;}return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
         if stage==18{
             let before=cx.retained_progress();let complete=self.tools.tool_cancellations.cleanup_slot(self.maintenance.maintenance_cancellation_cursor,cx,true)?;
             let progress=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
@@ -195,12 +195,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         }
         let result=(||->Result<PluginLifecycleStep,Fault>{
         let value_fault = plugin_retirement_fault;
+        let polled=|exit:semio_framework_value::RetirementPollExit|match exit{semio_framework_value::RetirementPollExit::Pending(_)=>Ok(RetainedCloneStep::Progress(Default::default())),semio_framework_value::RetirementPollExit::Failed(failure)=>Err(value_fault(semio_plugin_ownership::bounded_ownership::plugin_failure_error(failure)))};
         match stage {
             MAINTENANCE_CHILD_ROOT_STAGE => unreachable!("original child retirement handled before the fault-only ladder"),
             5 => {
                 let Some((index, generation)) = self.roster.peer_presence_retirements.next_id_from(self.maintenance.maintenance_peer_presence_cursor) else { return Ok(idle()) };
                 let authority = || maintenance_fault("interactive-job.maintenance-peer-presence-authority", "live peer-presence retirement authority changed during one fixed step");
-                match self.roster.peer_presence_retirements.get_mut(generation).ok_or_else(authority)?.close_step(grant).map_err(value_fault)? {
+                let Some(closed)=Self::effected(cx,grant,|effect|self.roster.peer_presence_retirements.get_mut(generation).map(|owner|owner.close_step(effect)))? else { return Ok(idle()) };
+                match closed.ok_or_else(authority)?.map_err(value_fault)? {
                     PluginLifecycleStep::Progress(progress) => {
                         self.maintenance.maintenance_peer_presence_cursor = if progress == RetainedCloneProgress::default() { (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS } else { index };
                         Ok(PluginLifecycleStep::Progress(progress))
@@ -222,7 +224,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             6 => {
                 let Some((index, generation)) = self.roster.presence_peer_retirements.next_id_from(self.maintenance.maintenance_presence_peer_cursor) else { return Ok(idle()) };
                 let authority = || maintenance_fault("interactive-job.maintenance-presence-peer-authority", "live app-typed presence retirement authority changed during one fixed step");
-                match self.roster.presence_peer_retirements.get_mut(generation).ok_or_else(authority)?.close_step(grant).map_err(value_fault)? {
+                let Some(closed)=Self::effected(cx,grant,|effect|self.roster.presence_peer_retirements.get_mut(generation).map(|owner|owner.close_step(effect)))? else { return Ok(idle()) };
+                match closed.ok_or_else(authority)?.or_else(polled)? {
                     RetainedCloneStep::Progress(progress) => {
                         self.maintenance.maintenance_presence_peer_cursor = if progress == RetainedCloneProgress::default() { (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS } else { index };
                         Ok(PluginLifecycleStep::Progress(progress))
@@ -247,10 +250,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
 
             17 => unreachable!("original latest-wins key advance handled before the fault-only ladder"),
             18 => unreachable!("original cancellation cleanup requires its actual caller"),
-            19 => self.stores.presence_store.maintenance_local_reads_step(grant).map(progressed).map_err(value_fault),
+            19 => match Self::effected(cx,grant,|effect|self.stores.presence_store.maintenance_local_reads_step(effect))? { Some(poll) => semio_plugin_ownership::bounded_ownership::plugin_settle_value(poll).map(progressed).map_err(value_fault), None => Ok(idle()) },
             MAINTENANCE_CHILD_MEMBER_STAGE => unreachable!("original child retirement handled before the fault-only ladder"),
-            21 => self.retire_document_windows_step(grant, false),
-            22 => self.stores.window_transient_store.maintenance_step(grant),
+            21 => self.retire_document_windows_step(cx, grant, false),
+            22 => match Self::effected(cx,grant,|effect|self.stores.window_transient_store.maintenance_step(effect))? { Some(step) => step, None => Ok(idle()) },
 
             24 => unreachable!("original archive handled before the fault-only ladder"),
             MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE => unreachable!("original lane displaced retirement handled before the fault-only ladder"),
@@ -258,6 +261,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             _ => unreachable!("fixed maintenance stage"),
         }
         })();result.map_err(Into::into)
+    }
+
+    /// 🪙️ Runs one effect-taking step inside the turn's own performed-work effect and posts its performed work; `None` means the Work quote was not admitted and nothing ran.
+    fn effected<R>(cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->R)->Result<Option<R>,Fault>{
+        let Some((value,performed))=cx.with_original_effect(grant,|_,effect|run(effect)).map_err(plugin_retirement_fault)? else { return Ok(None) };
+        cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));Ok(Some(value))
     }
 
     /// 🧭️ Walks one mounted peer roster through decode, validation, atomic publication and outcome hand-off, or through its cleanup once faulted.
@@ -269,7 +278,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         let faulted = publication.is_faulted();
         let ready = !faulted && publication.stage == PeerRosterPublicationStage::Ready;
         let step = if faulted {
-            match cx.with_original_effect(grant, |_, effect| publication.close_step(effect)).map_err(value_fault)? { Some((result, performed)) => { cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX)); result? } None => PluginLifecycleStep::Progress(RetainedCloneProgress::default()) }
+            match Self::effected(cx, grant, |effect| publication.close_step(effect))? { Some(result) => result?, None => PluginLifecycleStep::Progress(RetainedCloneProgress::default()) }
         } else if ready {
             PluginLifecycleStep::Complete(RetainedCloneProgress::default())
         } else {
@@ -422,7 +431,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 active.state = State::RetiringRejectedMembers;
                 Ok(PluginLifecycleStep::Progress(item))
             }
-            State::ValidatingClosure => active.drive_closure(grant).map_err(Into::into),
+            State::ValidatingClosure => active.drive_closure(grant,cx.replacement_capture().ok_or_else(||maintenance_fault("interactive-job.replacement-identity","owned document replacement closure requires its current replacement identity"))?).map_err(Into::into),
             State::PreparingCandidateViews => active.drive_candidate_views(grant).map_err(Into::into),
             State::RetiringRejectedMembers | State::RetiringCommittedMembers => {
                 if active.retained_store.is_some() && active.retained_disposer.is_none() {
@@ -535,7 +544,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             None=>self.ingest.document_archive_loads.empty_backing_byte_demand().map_or(Default::default(),|bytes|RetirementDemand{release_bytes:bytes,depth:1,..Default::default()})
         };
         if self.shared().document_archive_target(closing).is_none()&&(!closing||self.ingest.document_archive_loads.empty_backing_byte_demand().is_none_or(|bytes|bytes==0)){return Ok(PluginLifecycleStep::Complete(Default::default()))}
-        if closing&&self.shared().document_archive_target(closing).is_none()&&self.ingest.document_archive_loads.empty_backing_byte_demand().is_some_and(|bytes|bytes!=0){let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,grant);if cx.retirement_should_yield()||!semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}let turn=self.ingest.document_archive_loads.close_empty_backing_step(grant);cx.consume_fuel(turn.work);let step=match turn.result{Ok(step)=>step,Err(error)=>return Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error).debit_original(cx))};let progress=step.progress();cx.consume_retained(progress).map_err(|error|semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;return Ok(PluginLifecycleStep::Progress(progress))}
+        if closing&&self.shared().document_archive_target(closing).is_none()&&self.ingest.document_archive_loads.empty_backing_byte_demand().is_some_and(|bytes|bytes!=0){let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,grant);if cx.retirement_should_yield()||!semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}let Some((turn,performed))=cx.with_original_effect(grant,|_,effect|self.ingest.document_archive_loads.close_empty_backing_step(effect))? else{return Ok(PluginLifecycleStep::Progress(Default::default()))};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));let step=match turn.result{Ok(step)=>step,Err(error)=>return Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error).debit_original(cx))};let progress=step.progress();cx.consume_retained(progress).map_err(|error|semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;return Ok(PluginLifecycleStep::Progress(progress))}
         semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|{
             let step=self.drive_document_archive_original(same,grant,closing)?;
             let terminal=self.shared().document_archive_target(closing).is_none()&&(!closing||self.ingest.document_archive_loads.empty_backing_byte_demand().is_none_or(|bytes|bytes==0));

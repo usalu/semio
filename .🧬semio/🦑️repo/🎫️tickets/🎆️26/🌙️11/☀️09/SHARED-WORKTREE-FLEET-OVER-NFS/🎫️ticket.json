@@ -1,11 +1,13 @@
 {
   "title": "Shared Worktree Fleet over NFS",
   "emoji": "🤝️",
-  "status": "closed",
+  "status": "open",
   "description": "Make the monorepo ready for one logical worktree edited live by 50+ machines (macOS, Windows, Linux) in about 5 groups of 10, each group with its own NFS server and cache server. Shared files are exactly the files the root .gitignore does not ignore; ignored files stay local. Replaces branches, merges and merge queues with a local replica per machine plus an event journal and content-addressed blobs on the group NFS store, relayed between groups. All build results go through the group cache server.",
   "summary": "Built and verified the shared-worktree fleet: local replica per machine, event journal and content-addressed blobs on the group NFS store, relays between groups, provisioning for Linux, macOS and Windows, preflight, docs and CI aligned. Verified by five suites, a real-tree rehearsal, a 50-machine 5-group rehearsal and a Linux VM run over kernel NFS 4.2. Not yet confirmed: real Windows machine, real hosts, owner files. See scale-report.md, linux-nfs-report.md, windows-ci-report.md, provisioning-review.md, rehearsal-report.md, review-sync-correctness.md, owner-file-changes.md.",
   "goal": "aioptimizedrepo",
-  "sessions": [],
+  "sessions": [
+    "40e7bf97-6892-4904-8125-4c1d9594fb48"
+  ],
   "interactions": [
     {
       "kind": "ticket.open",
@@ -168,6 +170,16 @@
           "path": "🧰️framework/🛍️products/🦑️repo/README.md"
         }
       ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-11 03:57:07",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "cursor-chat",
+      "checkpoint": "ff42158b9733c2ef40b30b1a47fdba2c7c77ace2",
+      "prompt": "Stand this Mac up as group g1 server: NFS store, cache, relay and its own replica. Fix macOS nfsd defects found on the first real group server.",
+      "llm": "grok-4"
     }
   ]
 }

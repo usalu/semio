@@ -196,7 +196,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         let fuel=cx.fuel_remaining();
         let Some((poll,_))=cx.with_original_effect(grant,|cx,effect|{let actual=StepTurn{actual:std::sync::Mutex::new(&mut *cx),closing:true};active.close_step(effect,&actual)})? else{return Ok(idle())};
         let turn=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn,semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};        let progress=match &turn.result {Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
-        let observed=u64::try_from(active.last_turn_native_work()).unwrap_or(u64::MAX);
+        let observed=u128::from(active.last_turn_native_work());
         match receive_archive(cx,grant,fuel,turn,progress,observed)? {
             RetainedCloneStep::Complete(progress) => {
                 if !active.inputs_are_empty() {
@@ -234,7 +234,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                 let actual=StepTurn{actual:std::sync::Mutex::new(&mut *cx),closing:false};
                 let turn=match active.work.with_loan(&mut (&actual as &dyn semio_plugin_document_media::ArchiveWorkTurn),|loan|decoder.step(&archive.parent_spr,&actual,grant,&mut active.decoded_history,loan)){Ok(turn)=>turn,Err(error)=>semio_framework_value::RetainedWorkOutcome{work:0,result:Err(semio_framework_value::OriginalRetirementFailure::from_work_refusal(error))}};drop(actual);
                 let progress=decoder.take_receipt().map_or_else(||match &turn.result {Err(error)=>error.retained_progress(),_=>Default::default()},|(_,progress)|progress);
-                let observed=u64::try_from(decoder.last_turn_native_work()).unwrap_or(u64::MAX);
+                let observed=u128::from(decoder.last_turn_native_work());
                 let step=receive_archive(cx,grant,fuel,turn,progress,observed)?;
                 match step {
                     protocol::RetainedHistorySourceStep::Fault => Err(document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, format!("document archive parent SPR was rejected: {:?}", decoder.fault())).with_retained_progress(progress).into()),

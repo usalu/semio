@@ -6,7 +6,7 @@ struct MediaFaultReceiving {
     pub entries: Vec<(String, String)>,
 }
 struct MediaFaultProjection {
-    pub fault: MediaControlled<Fault>,
+    pub fault: semio_framework_value::retirement::controlled::ControlledRetirement<Fault>,
 }
 impl MediaFaultProjection {
     pub fn fault(&self) -> Option<&Fault> {
@@ -20,7 +20,7 @@ impl MediaFaultProjection {
     }
 }
 /// 🎟️ Retires an admitted media result one effect at a time; a pending poll keeps the owner for the next turn.
-fn close_media_projection<T:MediaRetireOwned>(value:&mut MediaControlled<T>,effect:&mut MediaEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+fn close_media_projection<T:semio_framework_value::retirement::RetireOwned>(value:&mut semio_framework_value::retirement::controlled::ControlledRetirement<T>,effect:&mut MediaEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
     let body=effect.grant().maximum_copy_bytes;
     value.step(body,effect)
 }
@@ -28,7 +28,7 @@ fn close_media_projection<T:MediaRetireOwned>(value:&mut MediaControlled<T>,effe
 #[derive(semio_framework_value::RetireOwned)]
 enum MediaOutputValue{Artifact(MediaArtifact),Fault(Fault)}
 /// 🧳️ Owns one admitted media output until its caller performs paid publication or retirement.
-struct MediaOutputProjection{pub value:MediaControlled<MediaOutputValue>}
+struct MediaOutputProjection{pub value:semio_framework_value::retirement::controlled::ControlledRetirement<MediaOutputValue>}
 impl MediaOutputProjection{
     pub fn artifact(&self)->Option<&MediaArtifact>{match self.value.original(){Some(MediaOutputValue::Artifact(value))=>Some(value),_=>None}}
     pub fn fault(&self)->Option<&Fault>{match self.value.original(){Some(MediaOutputValue::Fault(value))=>Some(value),_=>None}}
@@ -57,7 +57,7 @@ pub fn receive_media_output(owner:&mut MediaOwner<'_, '_>,exporter:impl FnOnce(&
     })().map_err(Into::into)}));
     turn.result.map_err(media_snapshot_error)?;
     let value=output.ok_or_else(media_projection_error)?;
-    Ok(MediaOutputProjection{value:MediaControlled::new(value).ok().unwrap()})
+    Ok(MediaOutputProjection{value:semio_framework_value::retirement::controlled::ControlledRetirement::new(value).ok().unwrap()})
 }
 struct MediaFaultTextExtent<'a, 'control> {
     pub bytes: usize,
@@ -209,5 +209,5 @@ pub fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, own
     })().map_err(Into::into) }));
     turn.result.map_err(media_snapshot_error)?;
     let fault = output.ok_or_else(media_projection_error)?;
-    Ok(MediaFaultProjection { fault: MediaControlled::new(fault).ok().unwrap() })
+    Ok(MediaFaultProjection { fault: semio_framework_value::retirement::controlled::ControlledRetirement::new(fault).ok().unwrap() })
 }

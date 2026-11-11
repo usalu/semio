@@ -78,7 +78,7 @@ impl PrivateChildPublicationInput {
             if self.issuer.ready() { self.metadata = self.issuer.take_ready(grant)?; return Ok(structural()); }
             let source = self.source.as_ref().and_then(OwnedChildEmit::metadata).ok_or_else(|| input_error("private child retains its original metadata"))?;
             let expected = source.genesis.as_ref().map(|genesis| &genesis.reference).or(existing).ok_or_else(|| input_error("private child requires its exact declared target"))?;
-            return self.issuer.advance(PrivateChildMemberMetadataSource { expected, parent_id, parent_dialect, key: MemberKeyRef { owner: &source.owner, slot: &source.slot, child_id: &source.child_id }, actor, transaction, group_id }, effect).map(input_pending);
+            return self.issuer.advance(PrivateChildMemberMetadataSource { expected, parent_id, parent_dialect, key: MemberKeyRef { owner: &source.owner, slot: &source.slot, child_id: &source.child_id }, actor, transaction, group_id }, grant).map(input_pending);
         }
         if self.source().is_some_and(|source| source.genesis.is_none()) { self.ready = true; return Ok(structural()); }
         if self.declaration < declarations.len() {

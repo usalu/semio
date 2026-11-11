@@ -28,7 +28,11 @@ const STEP_WORK:u64=4;
 
 const FRAME_WORK:u64=16;
 
-fn fuel(steps:usize)->Result<u64,ValueError>{u64::try_from(steps).ok().and_then(|steps|steps.checked_add(1)?.checked_mul(STEP_WORK)?.checked_add(FRAME_WORK)).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"Probe JSON work quote overflow"))}
+/// 🪜️ Worst-case grammar steps per input byte: a string is scanned twice (measure, write) and each value costs a token, a push and a pop step.
+const STEPS_PER_BYTE:u64=8;
+
+/// 📐️ Quotes the whole owner-less turn: the linear steps per byte plus the member-name comparison steps (at most one per byte pair), each charged at STEP_WORK.
+fn fuel(bytes:usize)->Result<u64,ValueError>{u64::try_from(bytes).ok().and_then(|bytes|bytes.checked_add(1)).and_then(|bytes|bytes.checked_mul(STEPS_PER_BYTE)?.checked_add(bytes.checked_mul(bytes)?)?.checked_mul(STEP_WORK)?.checked_add(FRAME_WORK)).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"Probe JSON work quote overflow"))}
 
 /// 🔁️ One close action costs one begin turn and at most one recovery turn of its pending reply.
 const ACTION_TURNS:usize=2;
@@ -53,9 +57,9 @@ pub(crate) fn validate_with(value:&DslValue,checkpoint:&mut impl FnMut(usize)->R
  node(value,0,checkpoint)
 }
 
-fn admit_inline<T>(body:&mut NativeSnapshotBodyWallet)->Result<(),ValueError>{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:std::mem::size_of::<T>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1})}
+fn admit_inline<T>(body:&mut NativeSnapshotBodyWallet)->Result<(),ValueError>{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<T>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1})}
 
-fn record_inline<T>(body:&mut NativeSnapshotBodyWallet)->Result<(),ValueError>{body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<T>(),..Default::default()})}
+fn record_inline<T>(body:&mut NativeSnapshotBodyWallet)->Result<(),ValueError>{body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<T>(),..Default::default()})}
 
 fn admit_turn(body:&NativeSnapshotBodyWallet,demand:semio_framework_value::RetirementDemand)->Result<(),ValueError>{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth})}
 

@@ -53,6 +53,8 @@ fn child_primary(failure:semio_framework_value_native_owned::native_decoding::Na
 pub struct OriginalConstructionAdmission{binding:Option<super::OriginalSourceBinding>,authority:Option<semio_framework_value_native_owned::native_decoding::OriginalEffectAuthority<ConstructionProducer>>,frame:semio_framework_value_native_owned::native_decoding::NativeReceivingEffect,source:Option<super::OriginalNativeReceivingOutcome>,child:Option<Result<RetainedCloneProgress,super::OriginalReceivingPrimary>>,failed_taken:bool,complete:bool,captured:bool}
 impl OriginalConstructionAdmission{
  fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(ValueError::invariant("constructor changed its actual Source").into())}Ok(())}
+ /// 🧾️ True while a born candidate still owns its unsettled Source outcome, which the next constructor call must settle before any reset.
+ pub fn settling(&self)->bool{self.source.is_some()}
  pub fn has_failure(&self)->bool{self.failed_taken||self.source.as_ref().is_some_and(|source|source.call.is_err()||source.source_refusal.is_some())||self.child.as_ref().is_some_and(Result::is_err)}
  /// 🔁️ Explicitly retires a completed attempt before its caller advances to another construction.
  pub fn reset_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.has_failure()||self.source.is_some()||self.child.is_some()||self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty{return Err(ValueError::invariant("constructor still owns an unfinished attempt").into())}if !self.complete{return Ok(true)}if construction_metadata(cx,std::mem::size_of::<bool>(),1)?{self.complete=false;return Ok(true)}Ok(false)}
@@ -156,32 +158,6 @@ pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut O
  Ok(if admission.has_failure(){OriginalConstructionStatus::Failed}else{OriginalConstructionStatus::Pending})
 }
 
-/// 🧭️ Drives bind, construct and settle as far as this turn allows over the caller's resident admission and output: `Ok(true)` when settled, `Ok(false)` when the next turn must continue with the same admission and output; a quote above the operation ceiling is a typed refusal. A turn commits only when it funds the exact quote of the constructor plus its settle metadata, so both then finish in the same turn.
-pub fn admit_original_construction_settled<O>(context:&mut StepContext<'_>,admission:&mut OriginalConstructionAdmission,output:&mut Option<O>,demand:OriginalConstructionDemand,work:u64,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_, '_>,&mut Option<usize>)->semio_framework_value_retained_clone::RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<bool,OriginalTurnFailure>{
- let mut construct=Some(construct);
- let(complete,total)=original_construction_reserve::<O>(demand,work)?;
- let(overhead_items,overhead_copy,overhead_fuel)=original_construction_settle_overhead();let settle=OriginalConstructionDemand{items:complete.items+overhead_items,copy_bytes:complete.copy_bytes+overhead_copy,..complete};let fuel_floor=total+overhead_fuel;
- let(ceiling,ceiling_fuel)=context.original_turn_ceiling();
- if !settle.fits(ceiling)||fuel_floor>ceiling_fuel{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original construction quote exceeds the largest grant any turn can have").into())}
- let mut committed=false;
- loop{
-  if output.is_some()&&admission.terminal_is_empty(){return Ok(true)}
-  if output.is_none()&&!admission.terminal_is_empty(){
-   if !committed&&(context.retirement_should_yield()||context.fuel_remaining()<fuel_floor||!settle.fits(context.retained_grant())){return Ok(false)}
-   committed=true;
-  }
-  let fuel=context.fuel_remaining();
-  let status=admit_original_construction(context,output,admission,demand,work,|scope,actual|match construct.take(){
-   Some(construct)=>construct(scope,actual),
-   None=>semio_framework_value_retained_clone::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original constructor ran twice")),work:0},
-  })?;
-  match status{
-   OriginalConstructionStatus::Ready=>{admission.reset_step(context)?;return Ok(true)}
-   OriginalConstructionStatus::Failed=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original construction failed; its complete causes remain in the admission").into()),
-   OriginalConstructionStatus::Pending=>if context.fuel_remaining()==fuel{return Ok(false)},
-  }
- }
-}
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

@@ -117,19 +117,23 @@ function Set-ClientCache {
 }
 
 function Invoke-Fleet([string[]]$Arguments) {
-    Push-Location (Join-Path $Worktree $TopologyRelative)
+    $env:SEMIO_WORKSPACE_ROOT = $Worktree
+    $script = Join-Path (Join-Path $Worktree $TopologyRelative) '📜️script.ts'
+    Push-Location $Worktree
     try {
-        $lines = & repo './📜️script.ts' @Arguments
-        if ($LASTEXITCODE -ne 0) { throw "repo ./📜️script.ts $($Arguments -join ' ') failed with exit code $LASTEXITCODE" }
+        $lines = & repo $script @Arguments
+        if ($LASTEXITCODE -ne 0) { throw "repo $script $($Arguments -join ' ') failed with exit code $LASTEXITCODE" }
         return $lines
     } finally { Pop-Location }
 }
 
 function Invoke-Replica([string[]]$Arguments) {
-    Push-Location $FLEET_REPLICA_DIRECTORY
+    $env:SEMIO_WORKSPACE_ROOT = $Worktree
+    $script = Join-Path $FLEET_REPLICA_DIRECTORY '📜️script.ts'
+    Push-Location $Worktree
     try {
-        & repo './📜️script.ts' @Arguments
-        if ($LASTEXITCODE -ne 0) { throw "repo ./📜️script.ts $($Arguments -join ' ') failed with exit code $LASTEXITCODE" }
+        & repo $script @Arguments
+        if ($LASTEXITCODE -ne 0) { throw "repo $script $($Arguments -join ' ') failed with exit code $LASTEXITCODE" }
     } finally { Pop-Location }
 }
 

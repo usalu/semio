@@ -137,10 +137,11 @@ How the three servers differ:
 ### The one file the operator edits
 
 `🗺️topology/🔣️.json` is the only file the operator edits to make the fleet real. The hosts in it are placeholders
-(`nfs.gN.semio.internal`, `cache.gN.semio.internal`, `10.0.N.0/24`). Per group set `nfs.host`, `nfs.export`,
-`server.platform`, `server.protocol`, `server.network` (CIDR of the group's workers; `server.directory` on Windows),
-`cache.endpoint` and `cache.instance`; per fleet the canonical `worktree` and `storeMount` per OS and the `replica`
-timings. Everything else is derived from it and never edited by hand: the mount lines, exports, fstab blocks, units,
+(`nfs.gN.semio.internal`, `cache.gN.semio.internal`, `10.0.N.0/24`). Per group set `nfs.export`,
+`server.platform`, `server.protocol` and, on Windows, `server.directory`; per fleet the canonical `worktree` and `storeMount` per OS and the `replica`
+timings. The machine's own host, worker network and cache endpoint are not written into this file. Set `SEMIO_FLEET_GROUP`,
+`SEMIO_FLEET_NFS_HOST` and `SEMIO_FLEET_NETWORK` together (and `SEMIO_FLEET_CACHE_ENDPOINT` when the cache URL is not
+`http://<that host>:<the port already in the file>`). The commands and the provisioning script apply them for that run and leave the file as it is. Everything else is derived from it and never edited by hand: the mount lines, exports, fstab blocks, units,
 LaunchDaemons, Scheduled Task XML, firewall rules, the cache environment of every machine, the scripts' checks (they
 refuse a topology file that differs from the one in the worktree) and the Python oracle in `🧪️tests`. After the
 edit run `validate` (offline, checks shape and the server rules), then `validate --reachable` from a machine of each
@@ -312,9 +313,9 @@ the `relay-peers` part to copy the other groups into its still empty store.
 
 ## Day 0
 
-1. **Topology.** Edit `🗺️topology/🔣️.json` (the one file, see "The one file the operator edits"): group ids (`g1` to `g5`), NFS host and export,
-   server platform, protocol and network, cache endpoint and instance, peer mount points per group, the canonical worktree
-   path and store mount per OS, the replica timings. Run `validate`, then `validate --reachable`. The topology is a shared source file, so after the first machine has seeded, edits to it propagate
+1. **Topology.** Edit `🗺️topology/🔣️.json` (the one file, see "The one file the operator edits"): group ids (`g1` to `g5`), the NFS export,
+   server platform and protocol, peer mount points per group, the canonical worktree
+   path and store mount per OS, and the replica timings. Leave the placeholder host, network and cache name in the file, and set `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_NFS_HOST` and `SEMIO_FLEET_NETWORK` on the machine. Run `validate`, then `validate --reachable`. The topology is a shared source file, so after the first machine has seeded, edits to it propagate
    like any other file; change it on one machine and let it replicate.
 2. **Canonical path.** Cache hits across machines need identical checkout paths, so every replica lives at the
    worktree path that the topology fixes for its OS (default `/srv/semio`, `/Users/Shared/semio`, `C:\semio`). Do

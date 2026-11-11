@@ -40,7 +40,7 @@ impl<M:semio_framework_value::retirement::RetireOwned+Send+'static> OriginalTypi
  pub fn admission_demands(ledger:&TypingLedger<M>,request:&OriginalTypingEditRequest<M>)->RetirementDemand{let extent=request.window.len().saturating_mul(ledger.original_resident_count().max(1).ilog2()as usize+1).saturating_mul(2).saturating_add(request.tool.len()).saturating_add(request.buffer.len());RetirementDemand{capacity_bytes:size_of::<Self>(),..movement((2*size_of::<Self>()+2*size_of::<OriginalTypingEditRequest<M>>()+size_of::<bool>()).saturating_add(extent))}}
  pub fn admit(ledger:&mut TypingLedger<M>,request:&mut Option<OriginalTypingEditRequest<M>>,output:&mut Option<Box<Self>>,admission:&mut OriginalConstructionAdmission,failure:&mut Option<OriginalConstructionFailure>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   let _=cx.original_source_parent()?;
-  if output.is_some(){return if admission.terminal_is_empty(){Ok(true)}else{admission.reset_step(cx)}}
+  if output.is_some()&&!admission.settling(){return if admission.terminal_is_empty(){Ok(true)}else{admission.reset_step(cx)}}
   if failure.is_some(){return Err(invalid().into())}
   let input=request.as_ref().ok_or_else(invalid)?;if ledger.original_write_pending()||ledger.retained_read_pending(&input.window){return Ok(false)}
   if !Owners::<M>::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original typing edit has no controlled retirement").into())}

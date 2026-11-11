@@ -7,7 +7,7 @@ import {join,resolve} from "node:path";
 import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import texts from "../📖️texts/🔣️.json" with {type:"json"};
 import type {StatusReportV1} from "../../🔁️replica/🟦️.ts";
-import {factsV1,groupV1,machineEnvironmentV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,workerPartsV1,workerServiceV1,type FleetGroupV1,type FleetPlatformV1,type FleetTopologyV1} from "../🟦️.ts";
+import {applyFleetAddressEnvironmentV1,factsV1,groupV1,machineEnvironmentV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,workerPartsV1,workerServiceV1,type FleetGroupV1,type FleetPlatformV1,type FleetTopologyV1} from "../🟦️.ts";
 
 type Operation="env"|"mount-plan"|"server-plan"|"worker-service"|"facts"|"validate"|"preflight";
 
@@ -73,16 +73,18 @@ const part=(parts:Readonly<Record<string,string>>,name:string):string=>{
  return body;
 };
 
-/** 🚀️ Runs one operation and returns the text to print: `env`, `mount-plan`, `server-plan`, `worker-service`, `facts` (the values for the provisioning scripts) or `validate`; `--platform` and `--shell` default from `context.platform` (this process), `--part` picks one piece of a plan, `--role server` (worker-service) renders the group server's variant with `compact --collect-blobs`, `--file` validates another topology file. */
-export function runTopologyCommandV1(args:readonly string[],context:Readonly<{platform?:string;topology?:unknown}>={}):string{
+const topologyOf=(value:unknown,environment:Readonly<Record<string,string|undefined>>|undefined):FleetTopologyV1=>applyFleetAddressEnvironmentV1(readTopologyV1(value),environment??process.env);
+
+/** 🚀️ Runs one operation and returns the text to print: `env`, `mount-plan`, `server-plan`, `worker-service`, `facts` (the values for the provisioning scripts) or `validate`; `--platform` and `--shell` default from `context.platform` (this process), `--part` picks one piece of a plan, `--role server` (worker-service) renders the group server's variant with `compact --collect-blobs`, `--file` validates another topology file. `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_NFS_HOST` and `SEMIO_FLEET_NETWORK` (optional `SEMIO_FLEET_CACHE_ENDPOINT`) replace that group's address for this run; the topology file is not written. */
+export function runTopologyCommandV1(args:readonly string[],context:Readonly<{platform?:string;topology?:unknown;environment?:Readonly<Record<string,string|undefined>>}>={}):string{
  const {operation,values,flags}=parseTopologyArgumentsV1(args);
  if(operation==="preflight")throw Error("preflight needs the asynchronous runTopologyCommandAsyncV1");
  if(operation==="validate"){
   if(flags.has("--reachable")||values["--timeout"]!==undefined)throw Error("--reachable and --timeout need the asynchronous runTopologyCommandAsyncV1");
-  const topology=readTopologyV1(values["--file"]===undefined?context.topology:JSON.parse(readFileSync(values["--file"],"utf8")));
+  const topology=topologyOf(values["--file"]===undefined?context.topology:JSON.parse(readFileSync(values["--file"],"utf8")),context.environment);
   return `valid fleet topology: ${topology.groups.length} groups (${topology.groups.map(group=>group.id).join(", ")})`;
  }
- const topology=readTopologyV1(context.topology),group=need(values,"--group"),current=platformV1(context.platform),
+ const topology=topologyOf(context.topology,context.environment),group=need(values,"--group"),current=platformV1(context.platform),
   shell=choose(values,"--shell",SHELLS,current==="windows"?"powershell":"sh"),platform=choose(values,"--platform",PLATFORMS,current),selected=values["--part"],role=choose(values,"--role",ROLES,"worker");
  if(operation==="env")return renderEnvironmentV1(machineEnvironmentV1(topology,group),shell);
  if(operation==="facts")return renderFactsV1(factsV1(topology,group,platform),shell);
@@ -146,14 +148,14 @@ export async function runTopologyCommandAsyncV1(args:readonly string[],context:R
  if(operation==="preflight"){
   const timeout=values["--timeout"]??"5000",timeoutMilliseconds=Number(timeout);
   if(!/^[0-9]+$/u.test(timeout)||timeoutMilliseconds<100||timeoutMilliseconds>60000)throw Error("--timeout must be a whole number of milliseconds from 100 to 60000");
-  const report=await preflightV1(readTopologyV1(context.topology),{platform:platformV1(context.platform),group:values["--group"],worktree:values["--worktree"],store:values["--store"],timeoutMilliseconds,languages:preflightLanguagesV1(values["--lang"],context.environment??process.env),signal:context.signal,progress:context.progress,probes:context.probes});
+  const report=await preflightV1(topologyOf(context.topology,context.environment),{platform:platformV1(context.platform),group:values["--group"],worktree:values["--worktree"],store:values["--store"],timeoutMilliseconds,languages:preflightLanguagesV1(values["--lang"],context.environment??process.env),signal:context.signal,progress:context.progress,probes:context.probes});
   return {text:report.text,exitCode:report.ok?0:1};
  }
- if(operation!=="validate"||(!flags.has("--reachable")&&values["--timeout"]===undefined))return {text:runTopologyCommandV1(args,context),exitCode:0};
+ if(operation!=="validate"||(!flags.has("--reachable")&&values["--timeout"]===undefined))return {text:runTopologyCommandV1(args,{platform:context.platform,topology:context.topology,environment:context.environment}),exitCode:0};
  if(!flags.has("--reachable"))throw Error("--timeout needs --reachable");
  const timeout=values["--timeout"]??"3000",timeoutMilliseconds=Number(timeout);
  if(!/^[0-9]+$/u.test(timeout)||timeoutMilliseconds<100||timeoutMilliseconds>60000)throw Error("--timeout must be a whole number of milliseconds from 100 to 60000");
- const offline=runTopologyCommandV1(["validate",...values["--file"]===undefined?[]:["--file",values["--file"]]],context),topology=readTopologyV1(values["--file"]===undefined?context.topology:JSON.parse(readFileSync(values["--file"],"utf8")));
+ const offline=runTopologyCommandV1(["validate",...values["--file"]===undefined?[]:["--file",values["--file"]]],{platform:context.platform,topology:context.topology,environment:context.environment}),topology=topologyOf(values["--file"]===undefined?context.topology:JSON.parse(readFileSync(values["--file"],"utf8")),context.environment);
  const report=await checkReachabilityV1(topology,{timeoutMilliseconds,signal:context.signal,progress:context.progress,ports:context.ports});
  return {text:`${offline}\n${report.text}`,exitCode:report.ok?0:1};
 }

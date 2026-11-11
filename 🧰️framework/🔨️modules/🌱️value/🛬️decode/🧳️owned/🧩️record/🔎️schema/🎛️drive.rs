@@ -20,7 +20,7 @@ impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
  /// 📐️ Quotes only the selected action of the resident matcher.
  pub fn demands(&self,input:RetainedCloneRef<'_,I>,body:usize,_maximum:u64)->Result<RetirementDemand,ValueError>{Ok(match self.selection()?{S::Complete|S::KeyPost|S::CheckpointRecovery=>Default::default(),S::KeyAcknowledgement=>self.key_backing.get().ok_or_else(invalid)?.acknowledgement().acknowledgement_demand()?,S::KeyBirth=>self.key_birth_demand()?,S::KeyStart=>self.key_start_demand()?,S::KeyAction=>self.key_action_quote(input)?.0,S::KeyMetadata(operation)=>{let action=self.key_metadata_demand(operation)?;let post=OriginalConstructionCompletion::demand();RetirementDemand{copy_bytes:action.copy_bytes.checked_add(post.copy_bytes.checked_mul(2).ok_or_else(invalid)?).ok_or_else(invalid)?,capacity_bytes:action.capacity_bytes.checked_add(post.capacity_bytes.checked_mul(2).ok_or_else(invalid)?).ok_or_else(invalid)?,release_bytes:action.release_bytes.checked_add(post.release_bytes.checked_mul(2).ok_or_else(invalid)?).ok_or_else(invalid)?,depth:action.depth.max(post.depth),..action}},S::KeySettlement=>match self.settlement()?{Settle::Outcome=>self.key_action_result_demand()?,Settle::Request=>self.key_clear_request_demand()},S::KeyError=>self.key_error_demand()?,S::KeyBind=>self.key_bind_demand()?,S::PendingSlot=>self.pending_slot_demand()?,S::CompareLeaf=>self.compare_leaf_demand(body)?,S::CaptureFrame=>self.capture_frame_demand()?,S::ApplyFrame=>self.apply_frame_demand()?,S::PopFrame=>self.pop_frame_demand()?,S::FinishPopped=>self.finish_popped_demand()?,S::Finish=>self.finish_match_demand()?})}
  /// ⏱️ Quotes the Work of the selected nested original Source action.
- pub fn nested_work_demand(&self,input:RetainedCloneRef<'_,I>)->Result<u64,ValueError>{match self.selection()?{S::KeyAction=>Ok(self.key_action_quote(input)?.1),S::KeyAcknowledgement|S::CheckpointRecovery|S::KeyMetadata(_)=>Ok(1),_=>Err(invalid())}}
+ pub fn nested_work_demand(&self,input:RetainedCloneRef<'_,I>)->Result<u64,ValueError>{match self.selection()?{S::KeyAction=>Ok(self.key_action_quote(input)?.1),S::KeyAcknowledgement=>Ok(u64::from(!self.acknowledgement_started()?)),S::CheckpointRecovery|S::KeyMetadata(_)=>Ok(1),_=>Err(invalid())}}
  /// 🧭️ Selects the resident original Source action or one separately funded local action.
  pub fn select_advance(&self,_input:RetainedCloneRef<'_,I>,body:usize,maximum:u64)->Result<NativeAdvanceSelection,ValueError>{let selection=self.selection()?;if matches!(selection,S::KeyAction|S::KeyAcknowledgement|S::CheckpointRecovery|S::KeyMetadata(_)){return Ok(NativeAdvanceSelection::Nested)}let work=self.local_work(selection,body)?;if work>maximum{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"schema matcher action exceeds its original work ceiling"))}Ok(NativeAdvanceSelection::Local{work})}
  /// 🪢️ Polls only the resident original key Source action or its acknowledgement.
@@ -34,16 +34,17 @@ impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
    Err(error)=>failed(error),
   }
  }
- /// 🧾️ Settles the resident acknowledgement within one call so a finalizing step never reports zero progress and zero work; work already reported by an earlier pending poll stays charged there.
+ fn acknowledgement_started(&self)->Result<bool,ValueError>{Ok(self.key_backing.get().ok_or_else(invalid)?.acknowledgement().acknowledgement_pending())}
+ /// 🧾️ Settles the resident acknowledgement within one call charging exactly its quote: one unit when it starts, none when only settlement remains (then one transition is recorded).
  fn advance_acknowledgement(&mut self,control:&mut NativeDecodeControl<'_>)->Poll{
   use semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectState as State;
-  let mut total=0u128;
+  let mut started=match self.acknowledgement_started(){Ok(started)=>started,Err(error)=>return failed(error)};
+  let quote=u128::from(!started);let mut total=0u128;
   loop{
    match self.key_advance_acknowledgement(control){
     Err(error)=>return failed(error),
-    Ok(State::Pending{work:0})=>return engine::RetainedWorkPoll::Pending{work:total},
-    Ok(State::Pending{work})=>total=total.saturating_add(work),
-    Ok(State::Ready{work})=>return idle(total.saturating_add(work)),
+    Ok(State::Pending{work})=>{total=total.saturating_add(work);let now=match self.acknowledgement_started(){Ok(now)=>now,Err(error)=>return failed(error)};if work==0&&now==started{return engine::RetainedWorkPoll::Pending{work:total}}started=now}
+    Ok(State::Ready{work})=>{let work=total.saturating_add(work);if work!=quote{return failed(ValueError::invariant("acknowledgement work differs from its exact quote"))}if work==0{NativeDecodeControl::record_transition()}return idle(work)}
    }
   }
  }

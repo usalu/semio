@@ -16,4 +16,25 @@ Rerun statik: `SLOT_HANG_SECS=100 $C/1105b-tools/statik/retry.sh <n>` (fem3d pan
 
 Verdicts: verfolgen en NOT RUN, verfolgen de NOT RUN, statik en NOT RUN, statik de NOT RUN (the pane test loops en and de itself via PANE_SMOKE_LOCALES).
 
-STATUS: BLOCKED upstream semio-plugin-instance-dispatch (gen3dfinal2: producers:57 E0283, typed-command:69 key_retirement, emit/original:50 E0283); verfolgen en/de and statik en/de not run
+
+## 01:55 (11/11)
+gen3dfinal2 FIXED-verified instance-dispatch (W-gen3dfinal2-3). W-paneD-g2 (gis) started 01:46 but sat in the capacity queue (7 ahead) when the turn ended; the child dies with the turn, so rerun it (command above, label g3) and then statik/retry.sh.
+
+STATUS: BLOCKED capacity queue only; upstream instance-dispatch now fixed; verfolgen en/de and statik en/de not run
+
+## 04:35 (11/11) update
+- g3/g4 compile reds were upstream and peers' (job construction duplicate, stash/ff artifacts), then semio-framework-value-snapshot-projection owned/🦀️.rs (closeshared). Per coordinator, queued g5 and statik-400 (and the leftover statik-301 retry chain) were cancelled so closeshared's fix runs first. No edits by paneD.
+- Rerun after `closeshared FIXED-verified`: gis `W-paneD-g6`, then `statik/retry.sh 500`.
+
+
+## 06:30 (11/11) edits
+closeshared fix landed; W-paneD-g6 (gis) and W-statik-500 now both red only in semio-plugin-instance-render (unclaimed after gen3dfinal released). Edits (claimed):
+- instance-render staging `🪟️projections/🦀️.rs`: removed the duplicated `use semio_plugin_instance_extension::InstanceExtension;` (E0252).
+- instance-jobs `👷️jobs/📥️staging/🏷️reserved/🦀️.rs`: added `ReservedPreparation::handoff(output, cx)` (moves job + completion + wire admission out in one paid step with a grant check; caller `reserved-jobs/🦀️.rs:191` and dispatch producers:90 already expect it).
+Check: `W-paneD-c1` (`chk.sh`, native, instance-jobs + instance-render) queued. Then rerun gis `W-paneD-g7` and `statik/retry.sh 600`.
+
+
+## 07:55 (11/11)
+W-paneD-c1 still in the cargo capacity door (6 ahead, host load 20-30) after ~90 min; W-statik-501 retry chain queued behind it. Edits are on disk and claimed (see above). On rc0 of c1: gis `W-paneD-g7`, then `statik/retry.sh 600` (kill the stale statik-50x chain first by pid tree).
+
+STATUS: UNVERIFIED W-paneD-c1 queued (instance-render projections import + ReservedPreparation::handoff); verfolgen en/de and statik en/de not run

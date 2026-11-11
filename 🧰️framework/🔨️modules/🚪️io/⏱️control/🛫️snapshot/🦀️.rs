@@ -116,6 +116,7 @@ pub(super) trait SnapshotAdmission:Sized{
  fn quote_frame(&mut self,demand:semio_framework_value::RetirementDemand)->Result<Option<RetainedCloneGrant>,ValueError>;
  fn submit_frame(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>;
  fn checkpoint(&mut self)->Result<(),ValueError>;
+ fn transitions(&self)->u64;
  fn prepare_action(&mut self)->Result<bool,ValueError>;
  fn commit_action(&mut self)->Result<(),ValueError>;
  fn cancel_action(&mut self)->Result<(),ValueError>;
@@ -123,7 +124,8 @@ pub(super) trait SnapshotAdmission:Sized{
  fn with_retirement_owner<T,E:From<ValueError>>(&mut self,bytes:usize,operation:impl FnOnce(&mut Self)->(Result<T,E>,Option<Box<dyn ErasedSnapshotRetirement>>))->Result<T,E>; fn retire_effect(&mut self,driver:&mut NativeSnapshotBodyWallet,performed:&mut RetainedCloneProgress,demand:RetirementDemand,maximum_work:u64,operation:&mut dyn FnMut(&mut RetainedAllocationEffect<'_>)->(OriginalRetirementPoll,usize))->(RetainedWorkOutcome<RetainedCloneStep,NativeSnapshotFailure>,RetainedCloneProgress);
 }
 macro_rules! snapshot_admission{
- ($native:ty,$quote:expr,$submit:expr,$retire:path)=>{impl SnapshotAdmission for $native{
+ ($native:ty,$quote:expr,$submit:expr,$retire:path,$transitions:expr)=>{impl SnapshotAdmission for $native{
+  fn transitions(&self)->u64{($transitions)()}
   fn quote_frame(&mut self,demand:semio_framework_value::RetirementDemand)->Result<Option<RetainedCloneGrant>,ValueError>{($quote)(self,demand)}
   fn submit_frame(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{($submit)(self,grant,progress)}
   fn checkpoint(&mut self)->Result<(),ValueError>{<$native>::checkpoint(self)}
@@ -135,8 +137,8 @@ macro_rules! snapshot_admission{
   fn retire_effect(&mut self,driver:&mut NativeSnapshotBodyWallet,performed:&mut RetainedCloneProgress,demand:RetirementDemand,maximum_work:u64,operation:&mut dyn FnMut(&mut RetainedAllocationEffect<'_>)->(OriginalRetirementPoll,usize))->(RetainedWorkOutcome<RetainedCloneStep,NativeSnapshotFailure>,RetainedCloneProgress){$retire(self,driver,performed,demand,maximum_work,operation)}
  }};
 }
-snapshot_admission!(NativeEncodeControl<'_>,|native:&mut NativeEncodeControl<'_>,demand:semio_framework_value::RetirementDemand|native.construction_grant(demand).map(Some),|native:&mut NativeEncodeControl<'_>,grant:RetainedCloneGrant,progress:RetainedCloneProgress|native.submit_constructed_progress(grant,progress),retire_encode);
-snapshot_admission!(semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,|native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,demand:semio_framework_value::RetirementDemand|{let (grant,mut action)=super::hold_construction(native,demand)?;native.cancel_constructed_action(&mut action)?;Ok(Some(grant))},|native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant,progress:RetainedCloneProgress|{if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"constructed progress exceeds its original grant"))}let demand=RetirementDemand{copy_bytes:progress.copied_bytes,capacity_bytes:progress.retained_capacity_bytes,release_bytes:progress.released_bytes,depth:usize::from(grant.maximum_depth>0)};let (_,mut action)=super::hold_construction(native,demand)?;native.settle_constructed_progress(&mut action,progress)},retire_decode);
+snapshot_admission!(NativeEncodeControl<'_>,|native:&mut NativeEncodeControl<'_>,demand:semio_framework_value::RetirementDemand|native.construction_grant(demand).map(Some),|native:&mut NativeEncodeControl<'_>,grant:RetainedCloneGrant,progress:RetainedCloneProgress|native.submit_constructed_progress(grant,progress),retire_encode,||0);
+snapshot_admission!(semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,|native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,demand:semio_framework_value::RetirementDemand|{let (grant,mut action)=super::hold_construction(native,demand)?;native.cancel_constructed_action(&mut action)?;Ok(Some(grant))},|native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant,progress:RetainedCloneProgress|{if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"constructed progress exceeds its original grant"))}let demand=RetirementDemand{copy_bytes:progress.copied_bytes,capacity_bytes:progress.retained_capacity_bytes,release_bytes:progress.released_bytes,depth:usize::from(grant.maximum_depth>0)};let (_,mut action)=super::hold_construction(native,demand)?;native.settle_constructed_progress(&mut action,progress)},retire_decode,semio_framework_value_native_owned::native_decoding::NativeDecodeControl::transitions);
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
@@ -266,7 +268,7 @@ fn retire_encode(native:&mut NativeEncodeControl<'_>,driver:&mut NativeSnapshotB
    Err(_)=>Err(pending_retirement()),
   }
  };
- let turn=native.effect_allocated(driver.grant,&mut driver.progress,selected,None,&mut state.view(),&mut failure,&mut run);*performed=driver.progress;
+ let turn=native.effect_allocated(driver.grant,&mut driver.progress,selected,(demand.capacity_bytes!=0).then_some(demand.capacity_bytes),&mut state.view(),&mut failure,&mut run);*performed=driver.progress;
  let outcome=match(turn.result,child){
   (Ok(Some(())),Some(child))=>RetainedWorkOutcome{work:turn.work,result:child.result.map_err(NativeSnapshotFailure::from)},
   (Ok(_),_)=>RetainedWorkOutcome{work:turn.work,result:Err(pending_retirement().into())},
@@ -361,7 +363,7 @@ pub(super) fn drive_cursor<T:RetireOwned,O:RetireOwned,N:SnapshotAdmission,E:Int
     loop{
      let mut child=driver.remaining_grant();child.maximum_depth-=1;
      if child.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot cursor exhausted original item grant").into())}
-     native.checkpoint()?;
+     native.checkpoint()?;let epoch=native.transitions();
      let mut body=NativeSnapshotBodyWallet::new(child);
      let turn=match std::panic::catch_unwind(std::panic::AssertUnwindSafe(||advance(frame.intermediate.original_mut().unwrap().as_mut().unwrap(),frame.output.original_mut().unwrap(),&mut frame.action_marker,&mut frame.action_failure,native,&mut body))){
       Ok(turn)=>turn,
@@ -370,7 +372,8 @@ pub(super) fn drive_cursor<T:RetireOwned,O:RetireOwned,N:SnapshotAdmission,E:Int
      let ready=frame.output.original().is_some_and(Option::is_some);let progress=body.progress();
      let result=report_work(turn.result.map_err(Into::into),&mut work,turn.work);post(result,&mut driver,performed,progress)?;frame.action_marker=Default::default();
      if ready{break}
-     if progress==RetainedCloneProgress::default()&&turn.work==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot cursor original grant cannot admit its frontier").into())}
+     let moved=native.transitions()!=epoch;
+     if progress==RetainedCloneProgress::default()&&turn.work==0&&!moved{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot cursor original grant cannot admit its frontier").into())}
     }
     retire_inputs(&mut frame,native,&mut driver,performed,&mut work)?;
     publish_output(&mut frame,output,native,&mut driver,performed,&mut work)?;

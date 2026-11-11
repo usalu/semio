@@ -85,7 +85,7 @@ impl RetainedExtensionFaultReply{
  /// 🛑️ The registered terminal cancellation reply keeps its already canceled original caller.
  pub fn new_terminal_cancellation(cause:ExtensionInvocationCause)->Self{let mut reply=Self::new(cause);reply.terminal_cancellation=true;reply}
  pub fn debit(cx:&mut StepContext<'_>,progress:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{cx.consume_retained(progress)?;cx.consume_fuel(1);Ok(())}
- fn close_owner<T:RetireOwned>(owner:&mut ControlledRetirement<T>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut StepContext<'_>)->Result<semio_framework_value::RetainedCloneStep,OriginalTurnFailure>{
+ fn close_owner<T:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<T>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut StepContext<'_>)->Result<semio_framework_value::RetainedCloneStep,OriginalTurnFailure>{
   let body=grant.maximum_copy_bytes;
   let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|owner.step(body,effect))?else{return Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))};
   cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));

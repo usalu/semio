@@ -11,7 +11,6 @@ use semio_plugin_instance_extension::InstanceExtension;
 use semio_framework::{Fault, FaultFrom, ViewModel};
 use semio_ui_contract::*;
 use semio_ui_layout::layout::{ContextMenuItemSpec, ContextMenuRequest, WindowEngagement, WindowMeasure};
-use semio_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, ReferenceSpaceMember};
 use crate::render_bundle::RenderCtx;
 

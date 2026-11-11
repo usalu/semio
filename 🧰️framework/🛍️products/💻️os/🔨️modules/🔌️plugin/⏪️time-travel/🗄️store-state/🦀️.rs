@@ -409,8 +409,8 @@ where
                 let cx=receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history preview requires its original Job receiving issuer").into_fault())?;
                 if self.preview_source_advancing(){
                     self.snapshot_custody_available(2)?;
-                    let outcome=cx.with_original_effect(grant,|_,effect|self.preview_source.as_mut().unwrap().advance(effect)).map_err(ValueError::into_fault)?;
-                    TimeTravelStoreOutput::Previewed(match outcome{Some((result,performed))=>{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));let progress=result.map_err(ValueError::into_fault)?.progress();cx.consume_retained(progress).map_err(ValueError::into_fault)?;TimeTravelPreviewStep::Progress(progress)},None=>TimeTravelPreviewStep::Pending})
+                    let stepped=receive_step(cx,|native|self.preview_source.as_mut().unwrap().advance_chained(native,grant).map(|step|step.progress()).map_err(ValueError::into_fault),|result|match result{Ok(progress)=>*progress,Err(fault)=>fault.retained_progress,_=>Default::default()})?;
+                    TimeTravelStoreOutput::Previewed(match stepped{Some(result)=>TimeTravelPreviewStep::Progress(result?),None=>TimeTravelPreviewStep::Pending})
                 }else{
                     let stepped=receive_step(cx,|native|self.step_preview(store,deadline_us,clock,grant,native),|result|match result{Ok(TimeTravelPreviewStep::Progress(p)|TimeTravelPreviewStep::Completed(_,p))=>*p,Ok(TimeTravelPreviewStep::Refused(error))=>error.retained_progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
                     match stepped{Some(result)=>{if let Some(work)=self.preview_job.as_mut().and_then(|job|job.take_preparation_work()){cx.consume_fuel(work)}TimeTravelStoreOutput::Previewed(result?)},None=>TimeTravelStoreOutput::Previewed(TimeTravelPreviewStep::Pending)}
