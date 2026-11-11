@@ -510,6 +510,15 @@ ensure_native_toolchain
   expect(existsSync(join(generated, "outer-empty", "cc"))).toBe(false);
 });
 
+test("a fresh checkout syncs the dependency scopes before workspace:setup, because the planner of every later run imports typescript from them", () => {
+  const bootstrap = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap");
+  const unix = readFileSync(join(bootstrap, "🐚️.sh"), "utf8"), windows = readFileSync(join(bootstrap, "🔵️.ps1"), "utf8");
+  expect(unix.indexOf("  repo run repo-mcp:install || return 1")).toBeLessThan(unix.indexOf("  repo dependencies sync --all || return 1"));
+  expect(unix.indexOf("  repo dependencies sync --all || return 1")).toBeLessThan(unix.indexOf("  repo run workspace:setup || return 1"));
+  expect(windows.indexOf('"run", "repo-mcp:install"')).toBeLessThan(windows.indexOf('"dependencies", "sync", "--all"'));
+  expect(windows.indexOf('"dependencies", "sync", "--all"')).toBeLessThan(windows.indexOf('"run", "workspace:setup"'));
+});
+
 test("Windows debugger setup continues when install privileges are missing", () => {
   const windows = readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1"), "utf8");
   expect(windows).toContain('run", "@semio-tech/repo-developer-tools:setup-debugger"');

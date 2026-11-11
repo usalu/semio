@@ -1,0 +1,317 @@
+{
+  "version": 1,
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "preflight.language": {
+      "en": "Unknown language: {language}. Use en or de.",
+      "de": "Unbekannte Sprache: {language}. Erlaubt sind en und de."
+    },
+    "preflight.group": {
+      "en": "No group: pass --group <id> or run the preflight on a machine that has joined (.cache/f/machine.json).",
+      "de": "Keine Gruppe: --group <id> angeben oder den Preflight auf einer Maschine ausführen, die beigetreten ist (.cache/f/machine.json)."
+    },
+    "preflight.header": {
+      "en": "Preflight of {origin} (group {group}, {role}, {platform}); it only reads, apart from one probe file in the store that is removed at once.",
+      "de": "Preflight von {origin} (Gruppe {group}, {role}, {platform}); er liest nur, abgesehen von einer Probedatei im Speicher, die sofort wieder gelöscht wird."
+    },
+    "preflight.role.worker": {
+      "en": "worker",
+      "de": "Worker"
+    },
+    "preflight.role.server": {
+      "en": "group server",
+      "de": "Gruppenserver"
+    },
+    "preflight.summary.ok": {
+      "en": "All {total} checks passed.",
+      "de": "Alle {total} Prüfungen bestanden."
+    },
+    "preflight.summary.warn": {
+      "en": "{total} checks, {warn} with warnings, none failed: the machine works, look at the warnings.",
+      "de": "{total} Prüfungen, {warn} mit Warnungen, keine fehlgeschlagen: Die Maschine funktioniert, die Warnungen sollten angesehen werden."
+    },
+    "preflight.summary.fail": {
+      "en": "{total} checks, {fail} failed and {warn} with warnings: fix the failures before the machine joins the fleet.",
+      "de": "{total} Prüfungen, {fail} fehlgeschlagen und {warn} mit Warnungen: Die Fehler beheben, bevor die Maschine am Verbund teilnimmt."
+    },
+    "preflight.summary.cancelled": {
+      "en": "Preflight cancelled after {total} checks.",
+      "de": "Preflight nach {total} Prüfungen abgebrochen."
+    },
+    "preflight.name.identity": {
+      "en": "identity",
+      "de": "Identität"
+    },
+    "preflight.name.mount": {
+      "en": "store mount",
+      "de": "Speicher-Einbindung"
+    },
+    "preflight.name.options": {
+      "en": "mount options",
+      "de": "Mount-Optionen"
+    },
+    "preflight.name.write": {
+      "en": "store writable",
+      "de": "Speicher beschreibbar"
+    },
+    "preflight.name.cache": {
+      "en": "cache endpoint",
+      "de": "Cache-Endpunkt"
+    },
+    "preflight.name.clock": {
+      "en": "clock skew",
+      "de": "Zeitabweichung"
+    },
+    "preflight.name.timesync": {
+      "en": "time synchronisation",
+      "de": "Zeitsynchronisation"
+    },
+    "preflight.name.limits": {
+      "en": "inotify limits",
+      "de": "inotify-Grenzen"
+    },
+    "preflight.name.longpaths": {
+      "en": "long paths",
+      "de": "Lange Pfade"
+    },
+    "preflight.name.clientcache": {
+      "en": "client caches",
+      "de": "Client-Caches"
+    },
+    "preflight.name.disk.worktree": {
+      "en": "free disk (worktree)",
+      "de": "Freier Speicherplatz (Arbeitsverzeichnis)"
+    },
+    "preflight.name.disk.store": {
+      "en": "free disk (store)",
+      "de": "Freier Speicherplatz (Speicher)"
+    },
+    "preflight.name.service.replica": {
+      "en": "replica daemon",
+      "de": "Replica-Daemon"
+    },
+    "preflight.name.service.compact": {
+      "en": "daily compaction",
+      "de": "Tägliche Verdichtung"
+    },
+    "preflight.name.service.cache": {
+      "en": "cache service",
+      "de": "Cache-Dienst"
+    },
+    "preflight.name.service.relay": {
+      "en": "relay service",
+      "de": "Relay-Dienst"
+    },
+    "preflight.name.native-build": {
+      "en": "native build",
+      "de": "Native Build"
+    },
+    "preflight.name.replica": {
+      "en": "replica status",
+      "de": "Replica-Status"
+    },
+    "preflight.check.error": {
+      "en": "The check itself failed: {error}",
+      "de": "Die Prüfung selbst ist fehlgeschlagen: {error}"
+    },
+    "preflight.identity.ok": {
+      "en": "origin {origin} of group {group} as {role}, store {store}",
+      "de": "Origin {origin} der Gruppe {group} als {role}, Speicher {store}"
+    },
+    "preflight.identity.missing": {
+      "en": "{file} does not exist: this machine has not joined; run the provisioning script",
+      "de": "{file} existiert nicht: Diese Maschine ist nicht beigetreten; das Provisioning-Skript ausführen"
+    },
+    "preflight.identity.group": {
+      "en": "machine.json says group {actual}, expected {expected}",
+      "de": "machine.json nennt die Gruppe {actual}, erwartet wird {expected}"
+    },
+    "preflight.mount.ok": {
+      "en": "{mount} is {type} from {source}",
+      "de": "{mount} ist {type} von {source}"
+    },
+    "preflight.mount.local": {
+      "en": "{path} is the local store of the group server",
+      "de": "{path} ist der lokale Speicher des Gruppenservers"
+    },
+    "preflight.mount.missing": {
+      "en": "nothing is mounted at {mount}",
+      "de": "an {mount} ist nichts eingebunden"
+    },
+    "preflight.mount.absent": {
+      "en": "the store folder {path} of the group server does not exist",
+      "de": "der Speicherordner {path} des Gruppenservers existiert nicht"
+    },
+    "preflight.mount.remote": {
+      "en": "{mount} of the group server is a {type} mount: the server must hold the store on a local disk",
+      "de": "{mount} des Gruppenservers ist eine {type}-Einbindung: Der Server muss den Speicher auf einer lokalen Platte halten"
+    },
+    "preflight.mount.source": {
+      "en": "{mount} comes from {actual}, expected {expected}",
+      "de": "{mount} stammt von {actual}, erwartet wird {expected}"
+    },
+    "preflight.mount.unsupported": {
+      "en": "the topology has no mount for this machine: {error}",
+      "de": "die Topologie hat für diese Maschine keine Einbindung: {error}"
+    },
+    "preflight.options.skip": {
+      "en": "not applicable here (group server, Windows or no mount)",
+      "de": "hier nicht anwendbar (Gruppenserver, Windows oder keine Einbindung)"
+    },
+    "preflight.options.ok": {
+      "en": "the correctness options are in effect: {options}",
+      "de": "die Korrektheits-Optionen gelten: {options}"
+    },
+    "preflight.options.wrong": {
+      "en": "wrong options in effect: {wrong}; unmount and mount again with the mount plan (stop the replica service first)",
+      "de": "falsche Optionen gelten: {wrong}; aushängen und mit dem Mount-Plan neu einbinden (zuerst den Replica-Dienst anhalten)"
+    },
+    "preflight.options.unreadable": {
+      "en": "the client does not show {keys}; they were set by the mount command, confirm with a save on another machine (it must appear within about a second)",
+      "de": "der Client zeigt {keys} nicht an; sie wurden vom Mount-Befehl gesetzt, mit einer Speicherung auf einer anderen Maschine bestätigen (sie muss nach etwa einer Sekunde erscheinen)"
+    },
+    "preflight.write.ok": {
+      "en": "a probe file in {path} was created, read back and removed in {milliseconds} ms",
+      "de": "eine Probedatei in {path} wurde in {milliseconds} ms angelegt, zurückgelesen und gelöscht"
+    },
+    "preflight.write.failed": {
+      "en": "cannot write in {path}: {error}",
+      "de": "in {path} kann nicht geschrieben werden: {error}"
+    },
+    "preflight.cache.ok": {
+      "en": "{endpoint}/healthz answered ok in {milliseconds} ms",
+      "de": "{endpoint}/healthz antwortete ok in {milliseconds} ms"
+    },
+    "preflight.cache.bad": {
+      "en": "{endpoint}/healthz answered HTTP {status} without status ok",
+      "de": "{endpoint}/healthz antwortete mit HTTP {status} ohne Status ok"
+    },
+    "preflight.cache.unreachable": {
+      "en": "{endpoint} is not reachable: {error}",
+      "de": "{endpoint} ist nicht erreichbar: {error}"
+    },
+    "preflight.clock.ok": {
+      "en": "this clock is {seconds} s from the clock of {server}",
+      "de": "diese Uhr weicht {seconds} s von der Uhr von {server} ab"
+    },
+    "preflight.clock.warn": {
+      "en": "this clock is {seconds} s from the clock of {server} (warning from 2 s); events more than 60 s ahead are held back, so check NTP, chrony or w32time",
+      "de": "diese Uhr weicht {seconds} s von der Uhr von {server} ab (Warnung ab 2 s); Ereignisse, die mehr als 60 s vorausgehen, werden zurückgehalten, daher NTP, chrony oder w32time prüfen"
+    },
+    "preflight.clock.fail": {
+      "en": "this clock is {seconds} s from the clock of {server}: from 30 s on two machines can differ by the 60 s after which events are held back; fix the time synchronisation",
+      "de": "diese Uhr weicht {seconds} s von der Uhr von {server} ab: Ab 30 s können zwei Maschinen um die 60 s abweichen, nach denen Ereignisse zurückgehalten werden; die Zeitsynchronisation reparieren"
+    },
+    "preflight.clock.reference": {
+      "en": "this is the group server, the clock reference of its group; see the time synchronisation check",
+      "de": "dies ist der Gruppenserver, die Zeitreferenz seiner Gruppe; siehe die Prüfung der Zeitsynchronisation"
+    },
+    "preflight.clock.unreachable": {
+      "en": "cannot be measured: {endpoint} is not reachable",
+      "de": "nicht messbar: {endpoint} ist nicht erreichbar"
+    },
+    "preflight.clock.nodate": {
+      "en": "cannot be measured: {endpoint} sent no Date header",
+      "de": "nicht messbar: {endpoint} sandte keinen Date-Header"
+    },
+    "preflight.timesync.ok": {
+      "en": "the operating system keeps the clock synchronised",
+      "de": "das Betriebssystem hält die Uhr synchron"
+    },
+    "preflight.timesync.no": {
+      "en": "the clock is not synchronised: enable chrony or systemd-timesyncd (Linux), Date & Time (macOS) or the Windows Time service (w32time)",
+      "de": "die Uhr ist nicht synchronisiert: chrony oder systemd-timesyncd (Linux), Datum & Uhrzeit (macOS) oder den Windows-Zeitdienst (w32time) aktivieren"
+    },
+    "preflight.timesync.unknown": {
+      "en": "the synchronisation state cannot be read here (timedatectl or systemsetup missing or needs root)",
+      "de": "der Synchronisationszustand ist hier nicht lesbar (timedatectl oder systemsetup fehlt oder braucht root)"
+    },
+    "preflight.limits.ok": {
+      "en": "{found}",
+      "de": "{found}"
+    },
+    "preflight.limits.low": {
+      "en": "too low: {low}; needed {wanted} (sysctl.d file of the mount plan; in a container the host sets them)",
+      "de": "zu niedrig: {low}; benötigt {wanted} (sysctl.d-Datei des Mount-Plans; in einem Container setzt der Host sie)"
+    },
+    "preflight.longpaths.ok": {
+      "en": "LongPathsEnabled is 1",
+      "de": "LongPathsEnabled ist 1"
+    },
+    "preflight.longpaths.off": {
+      "en": "LongPathsEnabled is not 1: the deep paths of the tree fail to open; run the provisioning script and restart the shell",
+      "de": "LongPathsEnabled ist nicht 1: Die tiefen Pfade des Baums lassen sich nicht öffnen; das Provisioning-Skript ausführen und die Shell neu starten"
+    },
+    "preflight.clientcache.smb": {
+      "en": "the SMB client caches are off (directory, file information and file not found lifetimes are 0)",
+      "de": "die SMB-Client-Caches sind aus (Lebensdauer für Verzeichnis, Dateiinformation und Datei-nicht-gefunden ist 0)"
+    },
+    "preflight.clientcache.nfs": {
+      "en": "the Client for NFS cache values are 0 (set by reasoning: the value names were not verified on a Windows machine, confirm with a save on another machine)",
+      "de": "die Cache-Werte des Client for NFS sind 0 (per Überlegung gesetzt: die Wertnamen wurden auf keiner Windows-Maschine überprüft, mit einer Speicherung auf einer anderen Maschine bestätigen)"
+    },
+    "preflight.clientcache.wrong": {
+      "en": "not switched off: {wrong}; run the provisioning script",
+      "de": "nicht abgeschaltet: {wrong}; das Provisioning-Skript ausführen"
+    },
+    "preflight.disk.ok": {
+      "en": "{free} free on {path}",
+      "de": "{free} frei auf {path}"
+    },
+    "preflight.disk.warn": {
+      "en": "{free} free on {path}, below the recommended {recommended}",
+      "de": "{free} frei auf {path}, unter den empfohlenen {recommended}"
+    },
+    "preflight.disk.fail": {
+      "en": "{free} free on {path}, below the minimum {minimum}",
+      "de": "{free} frei auf {path}, unter dem Minimum von {minimum}"
+    },
+    "preflight.service.ok": {
+      "en": "{name} is running",
+      "de": "{name} läuft"
+    },
+    "preflight.service.down": {
+      "en": "{name} is not running: start it (see the start part of the plan)",
+      "de": "{name} läuft nicht: starten (siehe den start-Teil des Plans)"
+    },
+    "preflight.compact.ok": {
+      "en": "{name} is scheduled",
+      "de": "{name} ist geplant"
+    },
+    "preflight.compact.missing": {
+      "en": "{name} is not scheduled: the journal of this origin grows without compaction; run the provisioning script",
+      "de": "{name} ist nicht geplant: Das Journal dieses Origin wächst ohne Verdichtung; das Provisioning-Skript ausführen"
+    },
+    "preflight.native.ok": {
+      "en": "bootstrap complete ({marker})",
+      "de": "Bootstrap abgeschlossen ({marker})"
+    },
+    "preflight.native.pending": {
+      "en": "pending: the native bootstrap has not completed ({marker} is missing), so this machine syncs but cannot build yet; run the provisioning script again to retry it, the log is {log}",
+      "de": "ausstehend: Der native Bootstrap ist nicht abgeschlossen ({marker} fehlt), diese Maschine synchronisiert, kann aber noch nicht bauen; das Provisioning-Skript erneut ausführen, um ihn zu wiederholen, das Log ist {log}"
+    },
+    "preflight.replica.ok": {
+      "en": "daemon running, {files} files, {origins} origins, queue {incoming} incoming and {outgoing} outgoing",
+      "de": "Daemon läuft, {files} Dateien, {origins} Origins, Warteschlange {incoming} eingehend und {outgoing} ausgehend"
+    },
+    "preflight.replica.unreachable": {
+      "en": "the replica cannot reach the store {store}",
+      "de": "das Replikat erreicht den Speicher {store} nicht"
+    },
+    "preflight.replica.stopped": {
+      "en": "the replica daemon is not running",
+      "de": "der Replica-Daemon läuft nicht"
+    },
+    "preflight.replica.rejoin": {
+      "en": "these origins need a new join: {origins}",
+      "de": "diese Origins brauchen einen neuen Beitritt: {origins}"
+    },
+    "preflight.replica.behind": {
+      "en": "far behind: {origins}",
+      "de": "weit zurück: {origins}"
+    }
+  }
+}

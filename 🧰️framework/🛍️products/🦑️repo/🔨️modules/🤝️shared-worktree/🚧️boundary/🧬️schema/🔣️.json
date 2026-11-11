@@ -1,0 +1,237 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/shared-worktree/boundary/v1",
+ "title": "Shared worktree boundary: the scan result, the refusal reasons and the language-agnostic vectors of the gitignore matcher and the path policy",
+ "definitions": {
+  "Refusal": {
+   "enum": [
+    "not-nfc",
+    "too-long",
+    "component-too-long",
+    "illegal-character",
+    "trailing-dot-or-space",
+    "reserved-name",
+    "case-collision",
+    "unsafe-link"
+   ]
+  },
+  "ScanEntry": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "bytes",
+    "executable",
+    "kind",
+    "mtimeMs",
+    "path"
+   ],
+   "properties": {
+    "path": {
+     "type": "string",
+     "minLength": 1
+    },
+    "kind": {
+     "enum": [
+      "file",
+      "link"
+     ]
+    },
+    "bytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "mtimeMs": {
+     "type": "number",
+     "minimum": 0
+    },
+    "executable": {
+     "type": "boolean"
+    },
+    "target": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "Refused": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "path",
+    "reason"
+   ],
+   "properties": {
+    "path": {
+     "type": "string",
+     "minLength": 1
+    },
+    "reason": {
+     "$ref": "#/definitions/Refusal"
+    }
+   }
+  },
+  "Scan": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "entries",
+    "refused"
+   ],
+   "properties": {
+    "entries": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/ScanEntry"
+     }
+    },
+    "refused": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Refused"
+     }
+    }
+   }
+  },
+  "IgnoreCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "directory",
+    "ignored",
+    "path"
+   ],
+   "properties": {
+    "path": {
+     "type": "string",
+     "minLength": 1
+    },
+    "directory": {
+     "type": "boolean"
+    },
+    "ignored": {
+     "type": "boolean"
+    }
+   }
+  },
+  "IgnoreGroup": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "cases",
+    "name"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1
+    },
+    "lines": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "source": {
+     "enum": [
+      "repository"
+     ]
+    },
+    "cases": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/IgnoreCase"
+     }
+    }
+   }
+  },
+  "PathCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "path",
+    "refusal"
+   ],
+   "properties": {
+    "path": {
+     "type": "string",
+     "minLength": 1
+    },
+    "times": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "suffix": {
+     "type": "string"
+    },
+    "refusal": {
+     "enum": [
+      null,
+      "not-nfc",
+      "too-long",
+      "component-too-long",
+      "illegal-character",
+      "trailing-dot-or-space",
+      "reserved-name"
+     ]
+    }
+   }
+  },
+  "LinkCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "path",
+    "refusal",
+    "target"
+   ],
+   "properties": {
+    "path": {
+     "type": "string",
+     "minLength": 1
+    },
+    "target": {
+     "type": "string"
+    },
+    "refusal": {
+     "enum": [
+      null,
+      "unsafe-link"
+     ]
+    }
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "ignore",
+    "links",
+    "paths",
+    "version"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "ignore": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/IgnoreGroup"
+     }
+    },
+    "paths": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/PathCase"
+     }
+    },
+    "links": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/LinkCase"
+     }
+    }
+   }
+  }
+ }
+}

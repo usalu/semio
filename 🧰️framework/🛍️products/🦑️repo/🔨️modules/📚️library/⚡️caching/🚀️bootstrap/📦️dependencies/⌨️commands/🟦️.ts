@@ -9,6 +9,7 @@ export class SyncScript extends Script {
     if (args.length && !(args.length===1 && args[0]==="--all") && !(args.length===2 && args[0]==="--scope")) throw new Error("Dependency synchronization accepts --all or --scope <owner>");
     checkScriptInvocation(this.invocation);
     const selection=args[0]==="--all"||!args.length?{kind:"all" as const}:{kind:"scope" as const,owner:args[0]==="--scope"?args[1]!:"."};
+    (await import("../../../../🏗️build/🚀️bootstrap/🟦️.ts")).publishBuildBootstrapSourcesV1(findWorkspaceRoot(getWorkspaceRoot()));
     const phaseControl=createIssuedResourceControlV1(this.invocation,"bun:dependency-storage",0);
     await withJavascriptDependencyStorageV1(findWorkspaceRoot(getWorkspaceRoot()),this.invocation,phaseControl,(store,control)=>prepareJavascriptDependencies(this.mode,findWorkspaceRoot(getWorkspaceRoot()),store,control,selection));
   }

@@ -878,20 +878,14 @@
  },
  "workflow": [
   {
-   "name": "pull-request-same-repository",
+   "name": "dispatch-on-main-reads-only-and-compares-against-the-given-base",
    "github": {
-    "event_name": "pull_request",
-    "ref": "refs/pull/7/merge",
+    "event_name": "workflow_dispatch",
+    "ref": "refs/heads/main",
     "sha": "cccccccccccccccccccccccccccccccccccccccc",
     "event": {
      "repository": {
       "default_branch": "main"
-     },
-     "pull_request": {
-      "number": 7,
-      "base": {
-       "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-      }
      }
     }
    },
@@ -902,7 +896,12 @@
     "SEMIO_REMOTE_CACHE_READ_TOKEN": "r",
     "SEMIO_REMOTE_CACHE_WRITE_TOKEN": "w"
    },
-   "inputs": {},
+   "inputs": {
+    "tool": "bazel",
+    "scope": "affected",
+    "base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "targets": "build"
+   },
    "expected": {
     "env": {
      "SEMIO_REMOTE_CACHE_ENDPOINT": "https://cache.example.test",
@@ -910,39 +909,38 @@
      "SEMIO_REMOTE_CACHE_UPLOAD": "false",
      "SEMIO_REMOTE_CACHE_TOKEN": "r",
      "BUILD_TOOL": "bazel",
-     "TARGETS": "build,test"
+     "TARGETS": "build"
     },
     "range": "--base=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --head=HEAD",
-    "group": "build-system-pull_request-7",
-    "cancel": "true",
+    "group": "build-system-refs/heads/main",
+    "cancel": "false",
     "steps": {
-     "smoke: Save the Bun store (default branch)": false,
+     "smoke: Save the Bun store (default branch)": true,
      "affected: Restore the local cache (no remote cache configured)": false,
      "affected: Save the local cache (default branch, no remote cache configured)": false
     }
    }
   },
   {
-   "name": "pull-request-from-fork-has-no-secrets-or-endpoint",
+   "name": "dispatch-on-main-without-endpoint-saves-the-github-cache",
    "github": {
-    "event_name": "pull_request",
-    "ref": "refs/pull/9/merge",
+    "event_name": "workflow_dispatch",
+    "ref": "refs/heads/main",
     "sha": "cccccccccccccccccccccccccccccccccccccccc",
     "event": {
      "repository": {
       "default_branch": "main"
-     },
-     "pull_request": {
-      "number": 9,
-      "base": {
-       "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-      }
      }
     }
    },
    "vars": {},
    "secrets": {},
-   "inputs": {},
+   "inputs": {
+    "tool": "bazel",
+    "scope": "affected",
+    "base": "",
+    "targets": ""
+   },
    "expected": {
     "env": {
      "SEMIO_REMOTE_CACHE_ENDPOINT": "",
@@ -952,13 +950,13 @@
      "BUILD_TOOL": "bazel",
      "TARGETS": "build,test"
     },
-    "range": "--base=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --head=HEAD",
-    "group": "build-system-pull_request-9",
-    "cancel": "true",
+    "range": "--base=origin/main --head=HEAD",
+    "group": "build-system-refs/heads/main",
+    "cancel": "false",
     "steps": {
-     "smoke: Save the Bun store (default branch)": false,
+     "smoke: Save the Bun store (default branch)": true,
      "affected: Restore the local cache (no remote cache configured)": true,
-     "affected: Save the local cache (default branch, no remote cache configured)": false
+     "affected: Save the local cache (default branch, no remote cache configured)": true
     }
    }
   },
@@ -992,8 +990,8 @@
      "BUILD_TOOL": "bazel",
      "TARGETS": "build,test"
     },
-    "range": "--base=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb --head=HEAD",
-    "group": "build-system-push-refs/heads/main",
+    "range": "--base=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb --head=cccccccccccccccccccccccccccccccccccccccc",
+    "group": "build-system-refs/heads/main",
     "cancel": "false",
     "steps": {
      "smoke: Save the Bun store (default branch)": true,
@@ -1030,8 +1028,8 @@
      "BUILD_TOOL": "bazel",
      "TARGETS": "build,test"
     },
-    "range": "--base=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb --head=HEAD",
-    "group": "build-system-push-refs/heads/main",
+    "range": "--base=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb --head=cccccccccccccccccccccccccccccccccccccccc",
+    "group": "build-system-refs/heads/main",
     "cancel": "false",
     "steps": {
      "smoke: Save the Bun store (default branch)": true,
@@ -1062,7 +1060,7 @@
      "SEMIO_REMOTE_CACHE_ACCESS": "read-write"
     },
     "range": "--all",
-    "group": "build-system-push-refs/heads/main",
+    "group": "build-system-refs/heads/main",
     "cancel": "false",
     "steps": {
      "affected: Save the local cache (default branch, no remote cache configured)": true
@@ -1103,7 +1101,7 @@
      "TARGETS": "test"
     },
     "range": "--all",
-    "group": "build-system-workflow_dispatch-refs/heads/feature",
+    "group": "build-system-refs/heads/feature",
     "cancel": "false",
     "steps": {
      "smoke: Save the Bun store (default branch)": false,
@@ -1139,7 +1137,7 @@
      "SEMIO_REMOTE_CACHE_ACCESS": "read-only"
     },
     "range": "--base=origin/main --head=HEAD",
-    "group": "build-system-workflow_dispatch-refs/heads/feature",
+    "group": "build-system-refs/heads/feature",
     "cancel": "false",
     "steps": {
      "affected: Restore the local cache (no remote cache configured)": true,

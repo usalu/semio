@@ -27,6 +27,7 @@ import {requireCurrentFormatStampsV1} from "../../🧷️format-stamps/🟨️.m
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import {pendingCrateManifestV1,buildGraphGenerationIdentityV1} from "../🏷️retention/🟦️.ts";
+import {remoteGenerationExchangeV1} from "../🕰️generations/🌐️remote-exchange/🟦️.ts";
 import {buildWalkDescendsV1,graphMemberPredicateV1,workspaceBuildFilesV1,buildGraphMembersV1,portableInputs} from "../📁️workspace/🟦️.ts";
 import {inventoryDirectoriesV1} from "../🕊️release/🟦️.ts";
 import {graphDeclarationV1,graphFormatStampsV1,loadedGraphImplementationRowsV1,GRAPH_LIMITS_V1} from "../🔐️authority/🟦️.ts";
@@ -108,7 +109,9 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     observationV1.useStableDirectoriesV1(state.stable);
     return live;
   };
+  const exchange=remoteGenerationExchangeV1({environment:process.env,workspace:root,identity:async()=>buildGraphGenerationIdentityV1(registry)});
   return {
+    ...exchange?{exchange}:{},
     workspaceRoot:root,separator:sep,language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,namedInputs:graphDeclarationV1("../🔣️policy.json").namedInputs,registryDigest,signal:invocation.control.signal,verbose:process.env.SEMIO_GRAPH_PHASES==="1"||process.env.SEMIO_BUILD_PROFILE_INPUTS==="1",
     async externalDependencies(){const{nxBuildEngineInputsV1}=await import("../../../🟨️.mjs");return["generic","native"].flatMap(family=>nxBuildEngineInputsV1(family as "generic"|"native").flatMap(row=>(row as {externalDependencies?:readonly string[]}).externalDependencies??[]));},
     async preflight(){const{canonicalTestAggregatePolicyV1:policy,requireCanonicalTestAggregateV1}=await import("../../../⚡️caching/🗂️suites/🧮️aggregate/🟦️.ts");let text:string;try{text=await readFile(join(root,policy.root,"📋️project.json"),"utf8");}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return;throw error;}requireCanonicalTestAggregateV1(JSON.parse(text),policy.root);},

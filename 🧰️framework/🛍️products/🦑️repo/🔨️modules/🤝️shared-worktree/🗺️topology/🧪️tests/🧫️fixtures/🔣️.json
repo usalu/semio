@@ -1,0 +1,58 @@
+{
+ "version": 1,
+ "variables": {
+  "endpoint": "SEMIO_REMOTE_CACHE_ENDPOINT",
+  "access": "SEMIO_REMOTE_CACHE_ACCESS",
+  "instance": "SEMIO_REMOTE_CACHE_INSTANCE"
+ },
+ "topology": {
+  "version": 1,
+  "worktree": {"linux": "/srv/semio", "macos": "/Users/Shared/semio", "windows": "C:\\semio"},
+  "storeMount": {"linux": "/mnt/semio-store", "macos": "/Volumes/semio-store", "windows": "S:\\"},
+  "groups": [
+   {"id": "a1", "nfs": {"host": "nfs.a1.example.test", "export": "/srv/store-a"}, "server": {"platform": "linux", "protocol": "nfs", "network": "10.1.0.0/24"}, "cache": {"endpoint": "http://cache.a1.example.test:6090", "instance": "main"}, "peers": {"b2": "/mnt/peers/b2", "c3": "/mnt/peers/c3"}},
+   {"id": "b2", "nfs": {"host": "nfs.b2.example.test", "export": "/Users/Shared/store-b"}, "server": {"platform": "macos", "protocol": "nfs", "network": "10.2.0.0/16"}, "cache": {"endpoint": "http://cache.b2.example.test:7000", "instance": "alt"}, "peers": {"a1": "/mnt/peers/a1", "c3": "/mnt/peers/c3"}},
+   {"id": "c3", "nfs": {"host": "nfs.c3.example.test", "export": "/store-c"}, "server": {"platform": "windows", "protocol": "nfs", "network": "10.3.0.0/24", "directory": "C:\\store-c"}, "cache": {"endpoint": "https://cache.c3.example.test", "instance": "main"}, "peers": {"a1": "/mnt/peers/a1", "b2": "/mnt/peers/b2"}}
+  ],
+  "replica": {"pollMilliseconds": 250, "scanSeconds": 900, "debounceMilliseconds": 150, "retentionDays": 14, "bootstrapMinutes": 60}
+ },
+ "environments": {
+  "a1": {"SEMIO_REMOTE_CACHE_ENDPOINT": "http://cache.a1.example.test:6090", "SEMIO_REMOTE_CACHE_ACCESS": "read-write", "SEMIO_REMOTE_CACHE_INSTANCE": "main"},
+  "b2": {"SEMIO_REMOTE_CACHE_ENDPOINT": "http://cache.b2.example.test:7000", "SEMIO_REMOTE_CACHE_ACCESS": "read-write", "SEMIO_REMOTE_CACHE_INSTANCE": "alt"},
+  "c3": {"SEMIO_REMOTE_CACHE_ENDPOINT": "https://cache.c3.example.test", "SEMIO_REMOTE_CACHE_ACCESS": "read-write", "SEMIO_REMOTE_CACHE_INSTANCE": "main"}
+ },
+ "invalid": [
+  {"name": "wrong version", "path": ["version"], "value": 2},
+  {"name": "unknown top-level key", "path": ["extra"], "value": 1},
+  {"name": "relative linux worktree", "path": ["worktree", "linux"], "value": "srv/semio"},
+  {"name": "windows worktree without drive", "path": ["worktree", "windows"], "value": "\\semio"},
+  {"name": "windows store mount below the drive root", "path": ["storeMount", "windows"], "value": "S:\\data"},
+  {"name": "windows worktree below a deep path", "path": ["worktree", "windows"], "value": "C:\\work\\semio"},
+  {"name": "windows worktree root too long", "path": ["worktree", "windows"], "value": "C:\\a-very-long-root"},
+  {"name": "missing server section", "path": ["groups", 0, "server"], "remove": true},
+  {"name": "server network without prefix", "path": ["groups", 0, "server", "network"], "value": "10.1.0.0"},
+  {"name": "server network with a prefix above 32", "path": ["groups", 0, "server", "network"], "value": "10.1.0.0/33"},
+  {"name": "server network with an octet above 255", "path": ["groups", 0, "server", "network"], "value": "10.1.256.0/24"},
+  {"name": "server platform that is no fleet platform", "path": ["groups", 0, "server", "platform"], "value": "freebsd"},
+  {"name": "server protocol that is no protocol", "path": ["groups", 0, "server", "protocol"], "value": "ftp"},
+  {"name": "smb served by a linux server", "path": ["groups", 0, "server", "protocol"], "value": "smb"},
+  {"name": "smb group next to a macos server", "path": ["groups", 2, "server", "protocol"], "value": "smb"},
+  {"name": "directory on a linux server", "path": ["groups", 0, "server", "directory"], "value": "C:\\store-a"},
+  {"name": "windows server without directory", "path": ["groups", 2, "server", "directory"], "remove": true},
+  {"name": "windows server with a multi-segment share name", "path": ["groups", 2, "nfs", "export"], "value": "/srv/store-c"},
+  {"name": "macos server exporting outside the user and volume folders", "path": ["groups", 1, "nfs", "export"], "value": "/srv/store-b"},
+  {"name": "missing cache section", "path": ["groups", 0, "cache"], "remove": true},
+  {"name": "cache endpoint with another scheme", "path": ["groups", 0, "cache", "endpoint"], "value": "ftp://cache.a1.example.test"},
+  {"name": "cache endpoint with a path", "path": ["groups", 0, "cache", "endpoint"], "value": "http://cache.a1.example.test:6090/x"},
+  {"name": "export that is not absolute", "path": ["groups", 1, "nfs", "export"], "value": "srv/store-b"},
+  {"name": "group mounting itself", "path": ["groups", 0, "peers", "a1"], "value": "/mnt/peers/a1"},
+  {"name": "missing peer", "path": ["groups", 0, "peers", "c3"], "remove": true},
+  {"name": "peer that is no group", "path": ["groups", 2, "peers", "d4"], "value": "/mnt/peers/d4"},
+  {"name": "duplicate group id", "path": ["groups", 1, "id"], "value": "a1"},
+  {"name": "zero poll interval", "path": ["replica", "pollMilliseconds"], "value": 0},
+  {"name": "fractional scan interval", "path": ["replica", "scanSeconds"], "value": 1.5},
+  {"name": "zero bootstrap interval", "path": ["replica", "bootstrapMinutes"], "value": 0},
+  {"name": "missing bootstrap interval", "path": ["replica", "bootstrapMinutes"], "remove": true},
+  {"name": "no groups", "path": ["groups"], "value": []}
+ ]
+}

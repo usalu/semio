@@ -3,6 +3,7 @@ import{readLiveHostCapacityReservationV1}from"../../../../../../🔨️modules/�
 import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{totalmem,freemem}from"node:os";
 import{mkdirSync,readFileSync,renameSync,writeFileSync}from"node:fs";
+import{execFileSync}from"node:child_process";
 import{dirname}from"node:path";
 import{cgroupMemoryHeadroomV1}from"../🧱️job-limits/🐧️cgroup/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
@@ -73,8 +74,30 @@ export function createMemoryPortsV1(){
  });
 }
 
+/** 🍎️ The memory a macOS host can give out in bytes from the text of `vm_stat`: the free and the inactive pages (the file cache the kernel returns on demand); `os.freemem()` counts the free pages alone, which on a host that runs for days is a few megabytes whatever is reclaimable, so a governor reading it would see no headroom ever. Undefined for a text that names no page size, free or inactive count. */
+export function darwinAvailableBytesV1(text){
+ const size=/page size of (\d+) bytes/u.exec(text),pages=name=>{const found=new RegExp("^"+name+":\\s+(\\d+)\\.","mu").exec(text);return found?Number(found[1]):undefined;},free=pages("Pages free"),inactive=pages("Pages inactive");
+ return size&&free!==undefined&&inactive!==undefined?(free+inactive)*Number(size[1]):undefined;
+}
+
+/** 🐧️ The memory a Linux host can give out in bytes from the text of `/proc/meminfo` (`MemAvailable`), undefined where the kernel does not report it. */
+export function linuxAvailableBytesV1(text){
+ const found=/^MemAvailable:\s+(\d+)\s+kB/mu.exec(text);
+ return found?Number(found[1])*1024:undefined;
+}
+
+/** 🌡️ The reader of the memory the host can still give out: `MemAvailable` on Linux, free plus inactive pages on macOS (`vm_stat`), the operating system's own free memory elsewhere and wherever the platform source cannot be read; an answer is kept for `maximumAgeMilliseconds` so a governor that samples every few hundred milliseconds does not start a process per sample. The sources are ports. */
+export function createAvailableMemoryV1({platform=process.platform,read=path=>readFileSync(path,"utf8"),run=()=>execFileSync("vm_stat",{encoding:"utf8",timeout:2000}),free=freemem,now=()=>performance.now(),maximumAgeMilliseconds=1000}={}){
+ let at=-Infinity,value=0;
+ const source=()=>{try{if(platform==="linux")return linuxAvailableBytesV1(read("/proc/meminfo"));if(platform==="darwin")return darwinAvailableBytesV1(run());}catch{}return undefined;};
+ return()=>{const time=now();if(time-at>=maximumAgeMilliseconds||at===-Infinity){const found=source();value=Number.isFinite(found)&&found>=0?found:free();at=time;}return value;};
+}
+
+/** 🌡️ The reader of this host. */
+export const availableMemoryBytesV1=createAvailableMemoryV1();
+
 /** 📏️ The bytes the service process and its pool may still take: where the environment declares a memory limit (`SEMIO_GRAPH_MEMORY_LIMIT_MB`, a private harness or a platform without cgroups) that limit less the resident memory of this process, otherwise the headroom of the cgroup they share (`memory.max` of the smallest enclosing limit minus `memory.current`) less the safety margin, a declared share of the limit; where no cgroup is readable the host answers with its total and free memory under the same margin. */
-export function serviceMemoryHeadroomBytesV1({ports,policy=P,cgroup=cgroupMemoryHeadroomV1,free=freemem,total=totalmem,environment=process.env,usage=()=>process.memoryUsage().rss}={}){
+export function serviceMemoryHeadroomBytesV1({ports,policy=P,cgroup=cgroupMemoryHeadroomV1,free=availableMemoryBytesV1,total=totalmem,environment=process.env,usage=()=>process.memoryUsage().rss}={}){
  const declared=Number(environment[policy.limitEnvironment]);
  if(Number.isFinite(declared)&&declared>0){const limit=declared*MEGABYTE;return Math.floor(limit-usage()-limit*policy.safetyMarginBasisPoints/10000);}
  const reading=cgroup(ports),limit=reading!==undefined&&Number.isFinite(reading.limitBytes)?reading.limitBytes:total(),current=reading!==undefined?reading.currentBytes:total()-free();

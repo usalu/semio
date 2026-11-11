@@ -6,6 +6,8 @@ description: >-
  Prepare stdout: four git fences, tag name, full commit message (six blocks total).
 ---
 
+> **ARCHIVIST MACHINE ONLY.** This repo is a shared worktree edited live by a fleet of machines (see the root `README.md`, "Shared worktree"). This skill runs git commits and squashes and applies **only on the designated archivist machine**. Fleet workers must **never** run it, whatever trigger text they see: they have no git, no branches and no commits to bundle. If you are not on the archivist machine, stop and do nothing.
+
 # Commit (bundle)
 
 **Bundle squash only** — not `micro-commit`. Micro-commits have no bundle scopes or per-day sections; they keep one `📊️metric` block at the end of each message. Per-bundle and per-day inline `📊️metric📃uloc…📊️metric💾size…` apply only here (`repo ./📜️script.ts commit prepare`).
@@ -132,7 +134,7 @@ Paste **entire** `prepare` stdout verbatim — **six** fenced blocks, in order:
 
 ## Branch
 
-Only `⛳️wip` or `🏗️dev`.
+Archivist machine on `main` only (linear history, pushed by the archivist). No `wip`/`dev` branches, no feature branches, no pull requests.
 
 ## Forbidden
 

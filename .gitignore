@@ -648,3 +648,36 @@ nul
 x/
 
 /.r/
+
+#--------------------------------------MACHINE-STATE (never replicated)--------------------------------------
+# Shared worktree fleet: the replica daemon shares exactly the files this file does not ignore, so per-machine
+# state must be ignored here. Keep this section LAST: a negation (`!`) placed after it would silently re-share
+# the paths below, and the `!**/🧫️fixtures/**` and `!…/*.plan.md` rescues above cannot reach them.
+# Process ids and SQLite lease/claim files of the local holder.
+*.pid
+/holder/
+# Nested Nx workspace data (the root-anchored `.nx/...` rules above do not match nested directories).
+**/.nx/
+# Nested `.semio` runtime state (`/.semio/` above is root-only), e.g. 🌎️hub/📦️packages/🦀️rust/.semio/hub.
+**/.semio/
+# SQLite side files.
+*.sqlite-wal
+*.sqlite-shm
+*.db-wal
+*.db-shm
+*.db-journal
+# OS and editor droppings (`.DS_Store`, `*~` and `.*.swp` are covered above).
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+# Tool caches and generated build state.
+*.tsbuildinfo
+.ruff_cache/
+.eslintcache
+/bazel-*
+CMakeCache.txt
+CMakeFiles/
+compile_commands.json
+# Dependency-install symlink: dot plus eleven hex digits, points to an absolute `.cache/.../node_modules` path.
+.[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]

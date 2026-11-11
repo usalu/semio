@@ -2,7 +2,7 @@ import{createBoundedCacheV1}from"../../../🧊️bounded/🟨️.mjs";
 import{createHash}from"node:crypto";
 import{join}from"node:path";
 import{graphQueueRequestedAtV1,graphQueueYieldsV1,yieldGraphQueueV1}from"../🛌️yield/🟨️.mjs";
-import{GENERATION_POLICY_V1,canonicalJsonV1,compareCodePointsV1,createAnswersV1,createGenerationStoreV1,readGenerationExternalInputsV1,resolveGenerationExternalInputV1,rowKeyV1}from"../🟨️.mjs";
+import{GENERATION_POLICY_V1,canonicalJsonV1,compareCodePointsV1,createAnswersV1,createGenerationStoreV1,createNodeFilePortV1,readGenerationExternalInputsV1,resolveGenerationExternalInputV1,rowKeyV1}from"../🟨️.mjs";
 import{createGraphPhaseClockV1}from"../../⏱️phases/🟨️.mjs";
 import{decodeVerifiedScopeV1}from"../🔭️coverage/🟨️.mjs";
 import{readPinnedGenerationV1}from"../🧷️pin/🟨️.mjs";
@@ -43,6 +43,9 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   changeRemoved:"removed",
   changeChanged:"changed",
   merged:"graph: generation {generation} published, {computed} projects refreshed in {seconds} s ({carried} kept their edges) and merged onto the generation a peer published meanwhile ({theirs} projects of peers kept)",
+  restored:"graph: generation {generation} ({owners} projects) restored from the remote cache, {documents} documents ({megabytes} MB) downloaded in {seconds} s",
+  uploaded:"graph: generation {generation} ({owners} projects) uploaded to the remote cache, {documents} documents ({megabytes} MB) in {seconds} s",
+  exchangeFailed:"graph: the remote cache did not exchange the generation ({reason}), going on without it",
  }),
  de:Object.freeze({
   current:"Graph: Generation {generation} wird ohne Prüfung geliefert (Graph-Richtlinie current)",
@@ -77,6 +80,9 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   changeRemoved:"entfernt",
   changeChanged:"geändert",
   merged:"Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert ({carried} behielten ihre Kanten) und auf die Generation eines anderen Prozesses zusammengeführt ({theirs} Projekte anderer Prozesse übernommen)",
+  restored:"Graph: Generation {generation} ({owners} Projekte) aus dem Remote-Cache wiederhergestellt, {documents} Dokumente ({megabytes} MB) in {seconds} s geladen",
+  uploaded:"Graph: Generation {generation} ({owners} Projekte) in den Remote-Cache hochgeladen, {documents} Dokumente ({megabytes} MB) in {seconds} s",
+  exchangeFailed:"Graph: der Remote-Cache hat die Generation nicht ausgetauscht ({reason}), es geht ohne sie weiter",
  }),
 });
 
@@ -298,6 +304,23 @@ export async function expandStreamV1(entries,expand,{maximumProjects,maximumByte
  return result;
 }
 
+/** ⬇️ Lets an empty generation store take the generation another machine of the group uploaded to the shared remote cache; a refusal or a failure only says so and the build goes on. */
+async function restoreRemoteGenerationV1(host,options){
+ const started=Date.now(),outcome=await host.exchange.restore({root:options.root,fs:options.fs??createNodeFilePortV1(),signal:host.signal});
+ if(outcome.status==="restored")host.say("restored",{generation:outcome.generation,owners:outcome.owners,documents:outcome.documents,megabytes:Math.round(outcome.bytes/1048576),seconds:Math.round((Date.now()-started)/1000)});
+ else if(outcome.status==="failed"||outcome.status==="incomplete")host.say("exchangeFailed",{reason:outcome.reason??outcome.status});
+}
+
+/** ⬆️ Offers the newest sealed generation to the shared remote cache of the group (only a machine whose access may write); `ifAbsent` offers it only when the cache holds none. */
+async function publishRemoteGenerationV1(host,ifAbsent){
+ if(!host.exchange?.upload)return;
+ await host.withShared(async(store,control)=>{
+  const options=host.storeOptions(store,control),started=Date.now(),outcome=await host.exchange.publish({root:options.root,fs:options.fs??createNodeFilePortV1(),signal:host.signal,ifAbsent});
+  if(outcome.status==="uploaded")host.say("uploaded",{generation:outcome.generation,owners:outcome.owners,documents:outcome.documents,megabytes:Math.round(outcome.bytes/1048576),seconds:Math.round((Date.now()-started)/1000)});
+  else if(outcome.status==="failed"||outcome.status==="incomplete"||outcome.status==="oversized")host.say("exchangeFailed",{reason:outcome.reason??outcome.status});
+ });
+}
+
 /** 🕰️ Loads the all-workspace graph (a command whose front door offered a yield ticket and that only waits for a peer's build ends instead of waiting: see `../🛌️yield`), the closure of some projects, or the slice of a selected scope (tasks or literal owners) from the newest sealed generation; `lean` answers only project and target names. A shared reader verifies and serves it without ever taking a writer; only a stale or missing generation enters the builder custody, where a holder that finds the work done by a peer serves that generation. Complete derived answers stay within this load and store root; each fresh attempt rechecks their support and compares them to its current rows.
  * `host` binds the repository: `release()` (optional: drops the in-process caches a construction filled, called once the graph is assembled so a process that goes on to run for hours keeps only the graph), `identity()`, `implementationRows()`, `withShared(body)`, `withBuilder(body)`, `storeOptions(store, control)`, `membership(previous, signal)`, `discoverPart(spec, signal)`, `expand(projects, control)`, `expansionLimits`, `readGraph(value)`, `readLean(value)`, `clock(control)`, `say(key, fields)` and the constants `workspaceRoot`, `namedInputs`, `registryDigest`, `signal`.
  */
@@ -306,9 +329,9 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
  await host.preflight?.();
  const requestedAt=graphQueueRequestedAtV1()??Date.now(),identity=await host.identity(),roots=slice?[...new Set(slice.roots)]:closure?[...new Set(closure)]:undefined,rows=pin===undefined?await host.implementationRows():[],implementation=implementationDigestV1(rows),scoped=scopeImplementationRowsV1(rows),limits=host.expansionLimits??{maximumProjects:GENERATION_POLICY_V1.expansionMaximumProjects,maximumBytes:GENERATION_POLICY_V1.expansionMaximumBytes};
  host.scope?.(roots===undefined&&pin===undefined);
- const answersByRoot=new Map();let pointer;
+ const answersByRoot=new Map();let pointer,published=false;
  const attempt=async(builder,store,control)=>{
-  const options=host.storeOptions(store,control);let answers=answersByRoot.get(options.root);if(!answers)answersByRoot.set(options.root,answers=createAnswersV1({root:options.root,fs:options.fs,durable:options.durableAnswers!==false,workspaceRoot:host.workspaceRoot}));
+  const options=host.storeOptions(store,control);if(builder&&host.exchange)await restoreRemoteGenerationV1(host,options);let answers=answersByRoot.get(options.root);if(!answers)answersByRoot.set(options.root,answers=createAnswersV1({root:options.root,fs:options.fs,durable:options.durableAnswers!==false,workspaceRoot:host.workspaceRoot}));
   const engine=createGenerationStoreV1({...options,answers}),progress=createGenerationProgressV1(host.clock(control));
   const compute=builder?async(spec,signal)=>{announceGenerationBuildV1(host,spec,rows);const wanted=spec.owners.length+spec.discover.length;let inferred=0;if(wanted)await progress({phase:"owners",done:0,total:wanted});await host.releaseCutoff?.();const part=await host.discoverPart(spec,signal,control,()=>{if(wanted&&inferred<wanted-1)progress({phase:"owners",done:++inferred,total:wanted}).catch(()=>undefined);},(running,decision)=>progress({phase:"owners",done:inferred,total:wanted,running,decision}).catch(()=>undefined));if(wanted)await progress({phase:"owners",done:wanted,total:wanted});announceWithheldProjectsV1(host,part);await host.release?.();return shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part,stubs:spec.stubs,implementation:scoped});}:async()=>{throw Error("A shared graph reader never computes");};
   pointer=join(options.root,GENERATION_POLICY_V1.pointer);
@@ -316,6 +339,7 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
   const closeFn=slice?async(current)=>{const global=await engine.readGlobal(current.manifest);return sliceClosureV1({owners:Object.fromEntries(Object.entries(current.manifest.owners).map(([name,row])=>[name,row.root])),external:Object.keys(global.externalNodes??{}),fragment:name=>engine.readFragment(current.manifest.owners[name]).then(value=>{if(!value)throw Object.assign(Error("Fragment of "+name+" is missing"),{code:"GENERATION_INCOMPLETE"});return sliceViewV1(value);}),selection:slice.selection,roots:slice.roots,providers:slice.providers??[]});}:undefined;
   const started=Date.now(),result=pin!==undefined?await readPinnedGenerationV1({engine,pin,identity,roots,closure:closeFn,signal:host.signal}):roots?await engine.refreshClosure({...base,roots,closure:closeFn}):await engine.refresh(base);
   engine.dropIndexes();if(typeof builder==="object")await builder.release();
+  if(result.served==="built"&&result.published)published=true;
   if(result.needsBuild)return{needsBuild:true,pending:result.pending,generation:(await engine.read(host.signal))?.pointer.generation??-1};
   const generation=result.current.manifest.generation;
   if(result.served==="current")host.say(result.current.manifest.implementation===implementation?"current":"stale",{generation});
@@ -334,7 +358,7 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
   return{graph,result,stats:generationLoadStatsV1(result,Date.now()-started)};
  };
  const first=await host.withShared((store,control)=>attempt(false,store,control));
- if(!first.needsBuild){await host.release?.();return{graph:first.graph,stats:first.stats};}
+ if(!first.needsBuild){await host.release?.();await publishRemoteGenerationV1(host,true);return{graph:first.graph,stats:first.stats};}
  const queued=Date.now();
  const request=first.pending?.dirty.length?{generation:first.pending.generation,dirty:first.pending.dirty,roots:first.pending.roots,structural:first.pending.structural,implementation}:undefined;
  if(host.prefetch&&request&&!await host.builderIdle?.(request)){host.carryClosures?.(true);try{await host.prefetch(request);}finally{host.carryClosures?.(false);}}
@@ -342,6 +366,7 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
  const notice=setInterval(()=>{if(held)return;host.say("waiting",{seconds:Math.round((Date.now()-queued)/1000),generation:first.generation});if(pointer!==undefined&&graphQueueYieldsV1({queuedMs:Date.now()-queued,yieldAfterMilliseconds:host.yieldAfterMilliseconds}))yieldGraphQueueV1({generation:first.generation,pointer,requestedAt,queuedMs:Date.now()-queued,exit:host.exitProcess});},host.waitNoticeMilliseconds??GENERATION_POLICY_V1.waitNoticeMilliseconds);notice.unref?.();
  let built,want=first.pending;try{for(let round=1;;round++){built=await host.withBuilder((store,control,claim)=>{held=true;return attempt(claim??true,store,control);},want);if(!built.needsBuild)break;held=false;want={...built.pending,structural:built.pending.structural||round>=CUSTODY_POLICY_V1.widenRounds};}}finally{clearInterval(notice);}
  await host.release?.();
+ if(published)await publishRemoteGenerationV1(host,false);
  return{graph:built.graph,stats:built.stats};
 }
 

@@ -3,8 +3,8 @@
 # #region 🔖️Header
 # Zero-touch macOS/Linux bootstrap: the native C/C++ toolchain (apt-get, dnf, pacman, zypper or Homebrew; pinned Zig when Linux cannot install packages), the Node.js
 # the build tool runs on (`package.json` engines.node), rustup with the `rust-toolchain.toml` pin, .NET, and uv (the pinned Go that builds the launcher is fetched by the launcher installer from the Go rows of the same pins, and the repository provisions it into its tools partition afterwards),
-# then the `repo` launcher built from the checkout (it provisions the pinned JavaScript runtime itself, so no Bun is installed here)
-# and `workspace:setup` (which installs packages). Every downloaded installer is pinned and sha256-verified before it runs,
+# then the `repo` launcher built from the checkout (it provisions the pinned JavaScript runtime itself, so no Bun is installed here),
+# the dependency scopes (`repo dependencies sync --all`, as the CI jobs of a fresh checkout do: the planner of every later `repo run` imports `typescript` from them) and `workspace:setup`. Every downloaded installer is pinned and sha256-verified before it runs,
 # from `🧬️schema/🔣️.json` next to this script; the runtime pins live in the launcher registry.
 # 🧭️Invoke from a fresh clone: `bash "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh" setup` (full
 # bootstrap); `repo ./📜️script.ts setup native rust` installs only Rust and its C/C++ compiler.
@@ -1281,6 +1281,8 @@ repo_bootstrap() {
   export PATH="$LOCAL_BIN:$PATH"
   hash -r
   repo --help >/dev/null || return 1
+  log "Installing the dependency scopes (the planner of every later run needs them)…"
+  repo dependencies sync --all || return 1
   log "workspace:setup…"
   repo run workspace:setup || return 1
   repo run @semio-tech/repo-developer-tools:setup-debugger || log "Native debugger setup needs noninteractive install privileges or a working LLDB already on PATH. Setup continues."

@@ -1,64 +1,27 @@
 ---
 name: merging
-description: Expert procedure for merging commits in the monorepo, ensuring standardized commit messages and proper attribution.
+description: Importing an external git history (vendor or upstream tree) on the archivist machine. There is nothing else to merge in the fleet.
 ---
 
-# Merging Commits
+> **ARCHIVIST MACHINE ONLY.** This repo is a shared worktree edited live by a fleet of machines (see the root `README.md`, "Shared worktree"). There are no branches, merges, pull requests or merge queue for daily work, and `.git` is never shared. Fleet workers must **never** run git for this; if you are not on the archivist machine, stop and do nothing.
 
-Follow this procedure to merge commits while maintaining monorepo standards.
+# Merging
 
-## 1. Gather Information
+## What remains true
 
-1. **Identify Merged Commits**: Use `git log` to find the commits being merged.
-2. **Determine Current User**: Get your emoji and alias from `.repo/🧑️‍💻️/{{user}}/contributor.json`.
-3. **Identify Co-authors**: If the merged commits have authors other than yourself, add them as `Co-authored-by`. If you are not the author of the merged commits, ensure you are also listed appropriately.
-4. **Identify Tickets**: Find the tickets associated with the changes. Ticket information is located in `.repo/🎫️/YY/MM/DD/TICKETSLUG/ticket.json`.
-5. **Identify Areas**: Determine the specific areas (bundles/technologies) the commits affect.
+- **Fleet work needs no merge.** Concurrent edits are replicated live; same-file races resolve last-writer-wins. Nothing is integrated afterwards.
+- **History stays linear on `main`.** The archivist commits its replica on a timer (see `.agents/skills/commit/SKILL.md`). It never creates merge commits, feature branches or release branches (releases are tags on `main`).
 
-## 2. Format Commit Message
+## The one case: importing an external git history
 
-The commit message MUST follow this strict scheme:
+Use this only when a tree with its own git history (a vendor or upstream project, a repo that is being absorbed) must enter the repo.
 
-```
-{{dev-emoji}}{{dev-alias}}🎆️{{YY}}🌙️{{MM}}☀️{{DD}}🔀️
-🎆️{{YY}}🌙️{{MM}}☀️{{DD}}
-- {{ticket-emoji}} {{ticket-title}}
-{{co-authored-by}}
-{{signed-off-by}}
-```
+1. On the archivist machine, fetch the external history into a throw-away location **outside** the shared worktree (for example a bare clone under `.cache/`, which is ignored and never replicated).
+2. Export the wanted tree state (`git archive` or a checkout into a temporary directory) and copy the files into their target folder in the archivist's replica. Respect the root `.gitignore`: ignored paths are not shared.
+3. From here on the files are ordinary edits: the replica daemon copies them to the fleet like any other change, and the archivist's next timer commit archives them as a normal linear commit on `main`.
+4. Record the provenance (upstream URL, commit hash, license) in the commit bullets or the folder's README, because the external history itself is not kept.
+5. Delete the throw-away clone.
 
-### Components:
+Do not use `git merge`, `git subtree`, `git pull` or a rebase of the foreign history onto `main`. Do not run any of this on a fleet worker.
 
-- **Header**: Your emoji and alias followed by the current date and the merge emoji (🔀️).
-- **Date Line**: The date of the changes being merged. If multiple dates, list them chronologically (newest first).
-- **Ticket Line**:
-  - Use the appropriate emoji from `dictionary.csv` based on the ticket's domain or content.
-  - The title should be the official ticket title from `ticket.json`.
-- **Co-authored-by**: `Co-authored-by: Name <email>` for every contributor other than the committer.
-- **Signed-off-by**: `Signed-off-by: Name <email>` for the current committer.
-
-## 3. Example
-
-```
-🐙️ueli🎆️26🌙️04☀️07🔀️
-🎆️26🌙️04☀️07
-- 🔌️Add Max Children to Port and Type Connector
-- 📚️Refactor UI Levels from Stories to Storybook Decorator
-🎆️26🌙️04☀️06
-- 📊️Server Baseline Diffs Studio Adapter E2e Tests
-- 🔖️Use Mod Instead of Region for Rust Sections
-- 🧪️Consolidate Server Into Bin Rs With Integration Tests
-- ⌛️Fix Mcp App Scene and Diagram Without Timeout
-🎆️26🌙️04☀️03
-- 💍️Fix Type Connector Ring Detail Panel
-- 🍩️Fix Workbench Piece Addition to Show Correct Type 3D Model in Scene
-Co-authored-by: Kinan Sarakbi <kinan.sarak@gmail.com>
-Signed-off-by: Ueli Saluz <ueli@semio-tech.com>
-```
-
-## 4. Verification
-
-1. Ensure all ticket emojis are accurate according to `dictionary.csv`.
-2. Verify all co-authors are included if applicable.
-3. Check that the date format uses the specific emojis: 🎆️ (Year), 🌙️ (Month), ☀️ (Day).
-4. Ensure the header ends with the merge emoji 🔀️.
+Related: `.agents/skills/commit/SKILL.md`, `.agents/skills/micro-commit/SKILL.md`.

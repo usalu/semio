@@ -1,0 +1,146 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/topology/v1",
+ "title": "Shared worktree fleet topology: groups, NFS stores, cache servers, peers and per-OS canonical paths",
+ "definitions": {
+  "Host": {
+   "description": "A lowercase DNS host name.",
+   "type": "string",
+   "pattern": "^[a-z0-9][a-z0-9.-]{0,251}[a-z0-9]$"
+  },
+  "GroupId": {
+   "description": "A group identifier.",
+   "type": "string",
+   "pattern": "^[a-z][a-z0-9]{0,15}$"
+  },
+  "UnixPath": {
+   "description": "An absolute POSIX path of plain ASCII segments.",
+   "type": "string",
+   "pattern": "^/[A-Za-z0-9._/-]{1,200}$"
+  },
+  "WindowsPath": {
+   "description": "An absolute Windows path of plain ASCII segments below a drive letter.",
+   "type": "string",
+   "pattern": "^[A-Za-z]:\\\\[A-Za-z0-9._\\\\-]{1,200}$"
+  },
+  "WindowsRoot": {
+   "description": "A short Windows worktree root: a drive letter and one directory of at most twelve characters (C:\\semio), so that the deep emoji paths of the tree stay far from the 260-character limit.",
+   "type": "string",
+   "pattern": "^[A-Za-z]:\\\\[A-Za-z0-9._-]{1,12}$"
+  },
+  "Cidr": {
+   "description": "An IPv4 network in CIDR notation: the machines of the group that the server exports to.",
+   "type": "string",
+   "pattern": "^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[12]?[0-9])$"
+  },
+  "WindowsDrive": {
+   "description": "A bare Windows drive root such as S:\\.",
+   "type": "string",
+   "pattern": "^[A-Za-z]:\\\\$"
+  },
+  "Worktree": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["linux", "macos", "windows"],
+   "properties": {
+    "linux": {"$ref": "#/definitions/UnixPath"},
+    "macos": {"$ref": "#/definitions/UnixPath"},
+    "windows": {"$ref": "#/definitions/WindowsRoot"}
+   }
+  },
+  "StoreMount": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["linux", "macos", "windows"],
+   "properties": {
+    "linux": {"$ref": "#/definitions/UnixPath"},
+    "macos": {"$ref": "#/definitions/UnixPath"},
+    "windows": {"$ref": "#/definitions/WindowsDrive"}
+   }
+  },
+  "Nfs": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["host", "export"],
+   "properties": {
+    "host": {"$ref": "#/definitions/Host"},
+    "export": {"$ref": "#/definitions/UnixPath"}
+   }
+  },
+  "Server": {
+   "description": "The group server: its operating system, the protocol it shares the store with and the network of its workers. On a windows server `nfs.export` is the single-segment share name (/semio-store) and `directory` the local folder; on linux and macos the export is the local folder and `directory` is absent. A smb server is windows only and serves windows workers only.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["platform", "protocol", "network"],
+   "properties": {
+    "platform": {"type": "string", "enum": ["linux", "macos", "windows"]},
+    "protocol": {"type": "string", "enum": ["nfs", "smb"]},
+    "network": {"$ref": "#/definitions/Cidr"},
+    "directory": {"$ref": "#/definitions/WindowsPath"}
+   }
+  },
+  "Cache": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["endpoint", "instance"],
+   "properties": {
+    "endpoint": {
+     "type": "string",
+     "pattern": "^https?://[a-z0-9][a-z0-9.-]{0,251}[a-z0-9](:[0-9]{1,5})?$"
+    },
+    "instance": {
+     "type": "string",
+     "pattern": "^[A-Za-z0-9._-]{1,64}$"
+    }
+   }
+  },
+  "Group": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["id", "nfs", "server", "cache", "peers"],
+   "properties": {
+    "id": {"$ref": "#/definitions/GroupId"},
+    "nfs": {"$ref": "#/definitions/Nfs"},
+    "server": {"$ref": "#/definitions/Server"},
+    "cache": {"$ref": "#/definitions/Cache"},
+    "peers": {
+     "description": "The other groups by id, each mounted read-only at this path on a linux group server (a macos server mounts them at /Volumes/semio-peers/<id>, a windows server reads their UNC paths).",
+     "type": "object",
+     "additionalProperties": false,
+     "patternProperties": {
+      "^[a-z][a-z0-9]{0,15}$": {"$ref": "#/definitions/UnixPath"}
+     }
+    }
+   }
+  },
+  "Replica": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["pollMilliseconds", "scanSeconds", "debounceMilliseconds", "retentionDays", "bootstrapMinutes"],
+   "properties": {
+    "pollMilliseconds": {"type": "integer", "minimum": 50, "maximum": 60000},
+    "scanSeconds": {"type": "integer", "minimum": 1, "maximum": 3600},
+    "debounceMilliseconds": {"type": "integer", "minimum": 10, "maximum": 10000},
+    "retentionDays": {"type": "integer", "minimum": 1, "maximum": 3650},
+    "bootstrapMinutes": {"type": "integer", "minimum": 1, "maximum": 10080}
+   }
+  },
+  "Topology": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "worktree", "storeMount", "groups", "replica"],
+   "properties": {
+    "version": {"type": "integer", "const": 1},
+    "worktree": {"$ref": "#/definitions/Worktree"},
+    "storeMount": {"$ref": "#/definitions/StoreMount"},
+    "groups": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 64,
+     "items": {"$ref": "#/definitions/Group"}
+    },
+    "replica": {"$ref": "#/definitions/Replica"}
+   }
+  }
+ }
+}

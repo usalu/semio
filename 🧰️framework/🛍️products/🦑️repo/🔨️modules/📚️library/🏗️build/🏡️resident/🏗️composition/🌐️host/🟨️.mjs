@@ -11,6 +11,9 @@ import {graphServiceHeapBytesV1,GRAPH_MEMORY_POLICY_V1} from "../../../🧠️me
 import {placeServiceOutsideJobsV1,prepareServiceGroupV1,releaseOwnServiceGroupV1,runsInServiceGroupV1,serviceLaunchArgumentsV1,sweepEmptyServiceGroupsV1} from "../../../🧱️job-limits/🐧️cgroup/🟦️.ts";
 import {appendServiceExitRowV1} from "../../🧾️exit-log/🟨️.mjs";
 
+/** 🪵️ One service log line on stderr, which the detached service redirects to its log file. */
+export function writeHostServiceLogV1(event,detail){process.stderr.write(new Date().toISOString()+" "+event+(detail===undefined?"":" "+detail)+"\n");}
+
 /** ▶ Runs the host service until it closes; resolves the exit code (75 when the memory bound forced a restart, else 0). `loadGraph({root,signal})` returns the neutral build graph of one workspace. */
 export async function runHostForegroundV1({implementation,loadGraph,loadSlice,identify,stale,capture,taskState,environment=process.env,platform=process.platform,policy,signal,log=()=>{},admission,workerMemory=()=>[],workerBusy=()=>0}){
  const runtime=hostEndpointsV1(implementation,environment,platform);

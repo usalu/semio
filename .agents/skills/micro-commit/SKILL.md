@@ -5,6 +5,8 @@ description: >-
  Default level from micro-commit.json (prepare-only). Reply with commit message only in one ``` fence; preserve every newline from stdout.
 ---
 
+> **ARCHIVIST MACHINE ONLY.** This repo is a shared worktree edited live by a fleet of machines (see the root `README.md`, "Shared worktree"). This skill runs git commits and applies **only on the designated archivist machine**. Fleet workers must **never** run it, whatever trigger text they see (`g`, `go`, `c`, `commit`, `+1`, `bump`): they have no git and nothing to commit. If you are not on the archivist machine, stop and do nothing.
+
 # Micro Commit
 
 **Not bundle commit** — no bundle scope lines, no `🎆️YY🌙️MM☀️DD` day sections, no per-bundle or per-day metrics on headers. One timestamp line (`🎆️…⏰️…`) plus bullets; script adds a **`📊️metric` footer** (`📃uloc` + `💾size`) at the end. For squashed bundles with per-area and per-day metrics, use `.agents/skills/commit/SKILL.md`.
@@ -117,7 +119,7 @@ Signed-off-by: Name <email@example.com>
 
 Counter (from formatted `…🚩️NNN` **or** numeric GitKraken subjects + WIP epoch from history/tags), timestamp line, bullets, **📊️metric** metrics (repo totals `📊️metric📃uloc…` then `📊️metric💾size…`, then per-language pairs `📊️metric{emoji}{slug}📃uloc…` / `📊️metric{emoji}{slug}💾size…` — optional `📈️`/`📉️` net (`➕️−➖️`), `➗️` percent change vs previous bloc (*100), then `➕️` `✏️` `➖️` `🟰️` with zeros omitted; **🟰️** = ➕️+✏️+➖️; languages sorted by uloc bloc), Signed-off-by, validation, GitKraken files. You only author bullets; do not hand-write the metrics block or line 1.
 
-After commit, hooks reset to an **empty** `.git/gkcommittemplate.txt` and point `commit.template` at it (GitKraken reuses the last message if that file is missing). Run `g` / `prepare` for the next change set. `repo ./📜️script.ts setup git` installs hooks (post-commit, post-checkout, post-merge, post-rewrite, prepare-commit-msg).
+No git hooks are installed by this repo (root `README.md`, "Shared worktree"); `repo ./📜️script.ts setup git` only removes legacy hooks. If GitKraken keeps showing the last message, reopen the Commit panel. Run `g` / `prepare` for the next change set.
 
 ## GitKraken (do not mention unless commit fails)
 
@@ -125,7 +127,7 @@ Line 1 = full `🐙️ueli🎆️26🌙️06☀️04🚩️300` (panel may show 
 
 ## Branch
 
-Only `⛳️wip` or `🏗️dev`.
+Archivist on `main` only (linear history). No `wip`/`dev` branches, no feature branches, no pull requests.
 
 ## Forbidden
 

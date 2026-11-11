@@ -176,7 +176,7 @@ const repositoryRoot=(()=>{
  return path;
 })();
 const workflowText=readFileSync(join(repositoryRoot,".github","workflows","build-system.yml"),"utf8");
-const workflow=parseYaml(workflowText) as {on:Record<string,unknown>;permissions:Record<string,string>;concurrency:{group:string;"cancel-in-progress":string};env:Record<string,string>;jobs:Record<string,{name?:string;needs?:string|string[];"runs-on"?:string;"timeout-minutes"?:number;env?:Record<string,string>;strategy?:{matrix:{include:Record<string,string>[]}};steps:Step[];outputs?:Record<string,string>}>};
+const workflow=parseYaml(workflowText) as {on:Record<string,unknown>;permissions:Record<string,string>;concurrency:{group:string;"cancel-in-progress":boolean|string};env:Record<string,string>;jobs:Record<string,{name?:string;needs?:string|string[];"runs-on"?:string;"timeout-minutes"?:number;env?:Record<string,string>;strategy?:{matrix:{include:Record<string,string>[]}};steps:Step[];outputs?:Record<string,string>}>};
 type Step={id?:string;name?:string;if?:string|boolean;uses?:string;with?:Record<string,string>;run?:string;shell?:string;env?:Record<string,string>;"continue-on-error"?:boolean};
 const actions=Object.fromEntries(["repo-launcher","cache-proof"].map(name=>[name,parseYaml(readFileSync(join(repositoryRoot,".github","actions",name,"action.yml"),"utf8")) as {runs:{steps:Step[]}}]));
 
@@ -281,7 +281,7 @@ test("workflow dry-run render: remote cache access, token, range and cache steps
   for(const [name,expected] of Object.entries(scenario.expected.env))expect(environment[name],`${scenario.name} ${name}`).toBe(expected);
   const range=planStep(scenario);
   expect(range,`${scenario.name} range`).toBe(scenario.expected.range);
-  const group=interpolate(workflow.concurrency.group,contextOf(scenario)),cancel=interpolate(workflow.concurrency["cancel-in-progress"],contextOf(scenario));
+  const group=interpolate(workflow.concurrency.group,contextOf(scenario)),cancel=interpolate(String(workflow.concurrency["cancel-in-progress"]),contextOf(scenario));
   expect(group,`${scenario.name} group`).toBe(scenario.expected.group);expect(cancel,`${scenario.name} cancel`).toBe(scenario.expected.cancel);
   const ran:Record<string,boolean>={};
   for(const [jobName,job] of Object.entries(workflow.jobs)){

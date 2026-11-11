@@ -49,7 +49,7 @@ func createWorkspaceDirectoryLink(source, destination string) error {
 }
 
 func publishWorkspaceDirectoryLink(source, destination string) error {
-	return os.Link(source, destination)
+	return os.Rename(source, destination)
 }
 
 // 🖥️systemLanguages lists the macOS preferred languages by the command and pattern of the language protocol; other Unix systems state theirs in the environment.

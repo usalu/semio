@@ -196,7 +196,7 @@ PY
   fi
   actual="$(sha256_of "$partial/$archive")"
   [ "$actual" = "$sha" ] || fail "Checksum mismatch for $archive (pinned $sha, received $actual); nothing was unpacked." "Prüfsumme von $archive stimmt nicht (gepinnt $sha, erhalten $actual); nichts wurde entpackt."
-  say "Unpacking Go $version…" "Entpacke Go $version…"
+  say "Unpacking Go ${version}…" "Entpacke Go ${version}…"
   mkdir "$partial/unpacked"
   if command -v tar >/dev/null 2>&1 && tar -xzf "$partial/$archive" -C "$partial/unpacked"; then
     :

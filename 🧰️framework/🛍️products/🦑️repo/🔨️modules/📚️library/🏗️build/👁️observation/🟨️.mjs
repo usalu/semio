@@ -131,11 +131,11 @@ function projectObservationHoldsV1(row,parent){
  parent=inferenceValidationScopes.getStore()??parent;
  const factText=JSON.stringify(row.fact);
  if(factText.length>8192)return row.kind==="file"?fileFactHolds(row.path,row.fact)&&JSON.stringify(facts.file(row.path)?.sha256??null)===JSON.stringify(row.fact.sha256??null):current([row]);
- let checks=parent&&projectChecks.get(parent),rows=parent&&rowChecks.get(parent);if(parent&&!checks){checks=new Map();projectChecks.set(parent,checks);}if(parent&&!rows){rows=new Map();rowChecks.set(parent,rows);}
+ let checks=parent&&projectChecks.get(parent),rows=parent&&rowChecks.get(parent);if(parent&&!checks){checks=new Map();projectChecks.set(parent,checks);}if(parent&&!rows){rows=new WeakMap();rowChecks.set(parent,rows);}
  const shared=rows?.get(row);if(shared!==undefined)return shared;
- const key=observationIdentityV1(row),fact=JSON.stringify(row.fact),previous=checks?.get(key);if(previous?.fact===fact){rows?.set(row,previous.holds);return previous.holds;}
+ const key=rowTableV1.id(row),previous=checks?.get(key);if(previous!==undefined){rows?.set(row,previous);return previous;}
  const holds=row.kind==="file"?fileFactHolds(row.path,row.fact)&&JSON.stringify(facts.file(row.path)?.sha256??null)===JSON.stringify(row.fact.sha256??null):current([row]);
- checks?.set(key,{fact,holds});rows?.set(row,holds);return holds;
+ checks?.set(key,holds);rows?.set(row,holds);return holds;
 }
 
 /** 📛️ The identity every persisted project record of this process is written under: its record stamp and the authority digest of its module loads, equal in every process whose records another may reuse. */

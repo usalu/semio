@@ -1,0 +1,1138 @@
+{
+ "version": 1,
+ "gitignore": ".cache\nignored/\n*.log\n",
+ "ignorePatterns": [
+  ".cache",
+  "ignored",
+  "*.log"
+ ],
+ "folds": [
+  {
+   "name": "counter-decides-and-order-is-irrelevant",
+   "events": [
+    {
+     "version": 1,
+     "hlc": "1731000000000-000001-b",
+     "operation": "put",
+     "path": "p.txt",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+     "bytes": 3,
+     "executable": false,
+     "base": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "version": 1,
+     "hlc": "1731000000000-000000-a",
+     "operation": "put",
+     "path": "p.txt",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+     "bytes": 3,
+     "executable": false,
+     "base": null
+    }
+   ],
+   "manifest": {
+    "p.txt": {
+     "hlc": "1731000000000-000001-b",
+     "operation": "put",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+     "bytes": 3,
+     "executable": false
+    }
+   }
+  },
+  {
+   "name": "delete-is-a-tombstone-that-wins-by-hlc",
+   "events": [
+    {
+     "version": 1,
+     "hlc": "1731000000000-000000-a",
+     "operation": "put",
+     "path": "p.txt",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+     "bytes": 3,
+     "executable": false,
+     "base": null
+    },
+    {
+     "version": 1,
+     "hlc": "1731000000000-000001-b",
+     "operation": "put",
+     "path": "p.txt",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+     "bytes": 3,
+     "executable": false,
+     "base": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "version": 1,
+     "hlc": "1731000000000-000002-a",
+     "operation": "delete",
+     "path": "p.txt",
+     "base": "2222222222222222222222222222222222222222222222222222222222222222"
+    }
+   ],
+   "manifest": {
+    "p.txt": {
+     "hlc": "1731000000000-000002-a",
+     "operation": "delete"
+    }
+   }
+  },
+  {
+   "name": "late-older-put-loses-to-the-tombstone",
+   "events": [
+    {
+     "version": 1,
+     "hlc": "1731000000000-000002-a",
+     "operation": "delete",
+     "path": "p.txt",
+     "base": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "version": 1,
+     "hlc": "1731000000000-000000-a",
+     "operation": "put",
+     "path": "p.txt",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+     "bytes": 3,
+     "executable": false,
+     "base": null
+    },
+    {
+     "version": 1,
+     "hlc": "1731000000000-000001-b",
+     "operation": "put",
+     "path": "p.txt",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+     "bytes": 3,
+     "executable": false,
+     "base": "1111111111111111111111111111111111111111111111111111111111111111"
+    }
+   ],
+   "manifest": {
+    "p.txt": {
+     "hlc": "1731000000000-000002-a",
+     "operation": "delete"
+    }
+   }
+  },
+  {
+   "name": "origin-breaks-a-full-tie",
+   "events": [
+    {
+     "version": 1,
+     "hlc": "1731000000000-000000-b",
+     "operation": "put",
+     "path": "t.txt",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+     "bytes": 3,
+     "executable": false,
+     "base": null
+    },
+    {
+     "version": 1,
+     "hlc": "1731000000000-000000-c",
+     "operation": "put",
+     "path": "t.txt",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+     "bytes": 3,
+     "executable": false,
+     "base": null
+    }
+   ],
+   "manifest": {
+    "t.txt": {
+     "hlc": "1731000000000-000000-c",
+     "operation": "put",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+     "bytes": 3,
+     "executable": false
+    }
+   }
+  },
+  {
+   "name": "link-then-put-by-hlc",
+   "events": [
+    {
+     "version": 1,
+     "hlc": "1731000000000-000004-a",
+     "operation": "put",
+     "path": "l",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+     "bytes": 3,
+     "executable": true,
+     "base": null
+    },
+    {
+     "version": 1,
+     "hlc": "1731000000000-000003-a",
+     "operation": "link",
+     "path": "l",
+     "target": "p.txt",
+     "base": null
+    }
+   ],
+   "manifest": {
+    "l": {
+     "hlc": "1731000000000-000004-a",
+     "operation": "put",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+     "bytes": 3,
+     "executable": true
+    }
+   }
+  },
+  {
+   "name": "independent-paths-fold-independently",
+   "events": [
+    {
+     "version": 1,
+     "hlc": "1731000000000-000000-a",
+     "operation": "put",
+     "path": "p.txt",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+     "bytes": 3,
+     "executable": false,
+     "base": null
+    },
+    {
+     "version": 1,
+     "hlc": "1731000000000-000000-b",
+     "operation": "put",
+     "path": "t.txt",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+     "bytes": 3,
+     "executable": false,
+     "base": null
+    },
+    {
+     "version": 1,
+     "hlc": "1731000000000-000003-a",
+     "operation": "link",
+     "path": "l",
+     "target": "p.txt",
+     "base": null
+    }
+   ],
+   "manifest": {
+    "p.txt": {
+     "hlc": "1731000000000-000000-a",
+     "operation": "put",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+     "bytes": 3,
+     "executable": false
+    },
+    "t.txt": {
+     "hlc": "1731000000000-000000-b",
+     "operation": "put",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+     "bytes": 3,
+     "executable": false
+    },
+    "l": {
+     "hlc": "1731000000000-000003-a",
+     "operation": "link",
+     "target": "p.txt"
+    }
+   }
+  }
+ ],
+ "scenarios": [
+  {
+   "name": "edit-on-a-appears-on-b",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "src/main.txt",
+     "text": "one"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "src/main.txt": "one"
+    },
+    "converged": [
+     "a",
+     "b"
+    ]
+   }
+  },
+  {
+   "name": "emoji-and-nested-paths-travel",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "🧩️ parts/ünï/日本語.txt",
+     "text": "emoji"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "🧩️ parts/ünï/日本語.txt": "emoji"
+    },
+    "converged": [
+     "a",
+     "b"
+    ]
+   }
+  },
+  {
+   "name": "second-edit-replaces-the-first",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "f.txt",
+     "text": "v1"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "f.txt",
+     "text": "version two"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "f.txt": "version two"
+    },
+    "converged": [
+     "a",
+     "b"
+    ]
+   }
+  },
+  {
+   "name": "delete-propagates-and-prunes-empty-directories",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "deep/dir/file.txt",
+     "text": "x"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "remove",
+     "path": "deep/dir/file.txt"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "absent": [
+     "deep/dir/file.txt",
+     "deep/dir",
+     "deep"
+    ],
+    "converged": [
+     "a",
+     "b"
+    ]
+   }
+  },
+  {
+   "name": "concurrent-edit-converges-and-keeps-the-loser",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "shared.txt",
+     "text": "base"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "shared.txt",
+     "text": "from a"
+    },
+    {
+     "machine": "b",
+     "op": "write",
+     "path": "shared.txt",
+     "text": "from b"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "b",
+     "op": "publish"
+    },
+    {
+     "machine": "a",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "shared.txt": "from a"
+    },
+    "converged": [
+     "a",
+     "b"
+    ],
+    "lost": {
+     "b": 1,
+     "a": 0
+    },
+    "lostTexts": {
+     "b": [
+      "from b"
+     ]
+    }
+   }
+  },
+  {
+   "name": "ignored-files-never-leave-the-machine",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "ignored/secret.txt",
+     "text": "s"
+    },
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "debug.log",
+     "text": "l"
+    },
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "kept.txt",
+     "text": "k"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "kept.txt": "k"
+    },
+    "absent": [
+     "ignored/secret.txt",
+     "debug.log"
+    ],
+    "absentFromStore": [
+     "ignored/",
+     "debug.log",
+     "secret.txt"
+    ],
+    "converged": [
+     "a",
+     "b"
+    ],
+    "absentOn": [
+     "b"
+    ]
+   }
+  },
+  {
+   "name": "three-machines-converge",
+   "machines": [
+    "a",
+    "b",
+    "c"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "one.txt",
+     "text": "1"
+    },
+    {
+     "machine": "b",
+     "op": "write",
+     "path": "two.txt",
+     "text": "2"
+    },
+    {
+     "machine": "c",
+     "op": "write",
+     "path": "three.txt",
+     "text": "3"
+    },
+    {
+     "machine": "*",
+     "op": "settle"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "one.txt": "1",
+     "two.txt": "2",
+     "three.txt": "3"
+    },
+    "converged": [
+     "a",
+     "b",
+     "c"
+    ]
+   }
+  },
+  {
+   "name": "recreated-file-after-delete-wins",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "r.txt",
+     "text": "old"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "remove",
+     "path": "r.txt"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "r.txt",
+     "text": "new"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "r.txt": "new"
+    },
+    "converged": [
+     "a",
+     "b"
+    ]
+   }
+  },
+  {
+   "name": "offline-edit-newer-than-the-remote-event-is-published-and-wins",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "x.txt",
+     "text": "base"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "b",
+     "op": "write",
+     "path": "x.txt",
+     "text": "b offline and newer",
+     "mtime": "future"
+    },
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "x.txt",
+     "text": "a published earlier"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "follow"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "x.txt": "b offline and newer"
+    },
+    "converged": [
+     "a",
+     "b"
+    ],
+    "lost": {
+     "a": 0,
+     "b": 0
+    },
+    "keptOn": [
+     "b"
+    ]
+   }
+  },
+  {
+   "name": "offline-edit-older-than-the-remote-event-goes-to-lost",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "x.txt",
+     "text": "base"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "b",
+     "op": "write",
+     "path": "x.txt",
+     "text": "b offline and older"
+    },
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "x.txt",
+     "text": "a published later"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "x.txt": "a published later"
+    },
+    "converged": [
+     "a",
+     "b"
+    ],
+    "lost": {
+     "a": 0,
+     "b": 1
+    },
+    "lostTexts": {
+     "b": [
+      "b offline and older"
+     ]
+    }
+   }
+  },
+  {
+   "name": "local-delete-loses-to-a-remote-put-and-publishes-nothing",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "x.txt",
+     "text": "base"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "b",
+     "op": "remove",
+     "path": "x.txt"
+    },
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "x.txt",
+     "text": "a edited again"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "b",
+     "op": "publish"
+    },
+    {
+     "machine": "a",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "x.txt": "a edited again"
+    },
+    "converged": [
+     "a",
+     "b"
+    ],
+    "lost": {
+     "a": 0,
+     "b": 0
+    },
+    "silent": [
+     "b"
+    ]
+   }
+  },
+  {
+   "name": "newer-local-edit-beats-a-remote-delete",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "x.txt",
+     "text": "base"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "remove",
+     "path": "x.txt"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "write",
+     "path": "x.txt",
+     "text": "b rewrote it later",
+     "mtime": "future"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "follow"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "x.txt": "b rewrote it later"
+    },
+    "converged": [
+     "a",
+     "b"
+    ],
+    "lost": {
+     "a": 0,
+     "b": 0
+    },
+    "keptOn": [
+     "b"
+    ]
+   }
+  },
+  {
+   "name": "older-local-edit-loses-to-a-remote-delete",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "x.txt",
+     "text": "base"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "b",
+     "op": "write",
+     "path": "x.txt",
+     "text": "b edited long ago"
+    },
+    {
+     "machine": "a",
+     "op": "remove",
+     "path": "x.txt"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "absent": [
+     "x.txt"
+    ],
+    "absentOn": [
+     "a",
+     "b"
+    ],
+    "converged": [
+     "a",
+     "b"
+    ],
+    "lost": {
+     "a": 0,
+     "b": 1
+    },
+    "lostTexts": {
+     "b": [
+      "b edited long ago"
+     ]
+    }
+   }
+  },
+  {
+   "name": "both-machines-offline-the-first-to-publish-wins-the-other-goes-to-lost",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "x.txt",
+     "text": "base"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "x.txt",
+     "text": "a offline"
+    },
+    {
+     "machine": "b",
+     "op": "write",
+     "path": "x.txt",
+     "text": "b offline"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "b",
+     "op": "publish"
+    },
+    {
+     "machine": "a",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "x.txt": "a offline"
+    },
+    "converged": [
+     "a",
+     "b"
+    ],
+    "lost": {
+     "a": 0,
+     "b": 1
+    },
+    "lostTexts": {
+     "b": [
+      "b offline"
+     ]
+    }
+   }
+  },
+  {
+   "name": "both-machines-offline-with-newer-edits-converge-on-the-last-publisher",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "x.txt",
+     "text": "base"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "x.txt",
+     "text": "a offline newer",
+     "mtime": "future"
+    },
+    {
+     "machine": "b",
+     "op": "write",
+     "path": "x.txt",
+     "text": "b offline newer",
+     "mtime": "future"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "a",
+     "op": "follow"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "x.txt": "b offline newer"
+    },
+    "converged": [
+     "a",
+     "b"
+    ],
+    "lost": {
+     "a": 0,
+     "b": 0
+    },
+    "keptOn": [
+     "b"
+    ]
+   }
+  }
+ ],
+ "conflicts": [
+  {
+   "name": "local edit one millisecond newer than the remote event wins",
+   "localMtimeMs": 1731000000001,
+   "remoteHlc": "1731000000000-000000-a",
+   "winner": "local"
+  },
+  {
+   "name": "local edit with the very same millisecond loses",
+   "localMtimeMs": 1731000000000,
+   "remoteHlc": "1731000000000-000000-a",
+   "winner": "remote"
+  },
+  {
+   "name": "local edit older than the remote event loses",
+   "localMtimeMs": 1730999999000,
+   "remoteHlc": "1731000000000-000003-a",
+   "winner": "remote"
+  },
+  {
+   "name": "the counter and the origin do not matter, only the wall time",
+   "localMtimeMs": 1731000000500,
+   "remoteHlc": "1731000000499-999999-zzz",
+   "winner": "local"
+  },
+  {
+   "name": "a local delete has no modification time and loses to a remote put",
+   "localMtimeMs": null,
+   "remoteHlc": "1731000000000-000000-a",
+   "winner": "remote"
+  },
+  {
+   "name": "a local delete loses even to an ancient remote event",
+   "localMtimeMs": null,
+   "remoteHlc": "0000000000001-000000-a",
+   "winner": "remote"
+  }
+ ]
+}

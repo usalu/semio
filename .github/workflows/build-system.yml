@@ -1,6 +1,6 @@
 # 🏗️ Build system CI: proves that a fresh checkout reaches a green, cached, incremental build with zero manual setup on
-# Linux, macOS and Windows, with Bazel as the default implementation and Nx kept honest on a sample. Triggered by every pull
-# request, every push to main and by hand.
+# Linux, macOS and Windows, with Bazel as the default implementation and Nx kept honest on a sample. Triggered by every push to main
+# (the archivist machine's pushes: there are no pull requests) and by hand.
 #
 # Language: the entry has no default language and refuses to run when none resolves, so the workflow sets SEMIO_LANGUAGE=en for
 # every job (runners may have no locale) and one smoke step runs in German (de).
@@ -10,7 +10,7 @@
 # flags, logs or directories. The only other program is the CI report (`$CI_REPORT`), which reads what `repo` printed
 # (CacheStatus, DryRunPlan, exported JUnit XML) and holds every implementation-specific judgement, with its own tests.
 #
-#   plan     - the revision range for `affected` (pull request: base..merge commit; push: before..sha; new branch: all).
+#   plan     - the revision range for `affected` (push: previous commit on main .. pushed sha; first push: all).
 #   smoke    - per operating system: the launcher built from the checkout (it provisions the pinned runtime), `--help`, `preflight`, `tools setup`, `dependencies
 #              sync --all`, then the cache proof: empty the local cache, run one target (store grows), run it again (store
 #              unchanged, served from the cache).
@@ -50,7 +50,7 @@
 #
 # Caches. The shared remote cache is configured only by the repository variable SEMIO_REMOTE_CACHE_ENDPOINT (or a secret of
 # the same name) and the secrets SEMIO_REMOTE_CACHE_READ_TOKEN / SEMIO_REMOTE_CACHE_WRITE_TOKEN; with no endpoint it is off.
-# Pull requests (and forks, which get no secrets) read only: access read-only, upload off, read token. Only pushes to the
+# Manual dispatches read only: access read-only, upload off, read token. Only pushes to the
 # default branch write: access read-write, upload on, write token. Without an endpoint the local task cache travels through
 # the GitHub cache instead (restored always, saved only by the default branch); its directory is whatever `cache status`
 # prints for the selected implementation, so the workflow names no implementation path. The Bun store always travels.
@@ -60,7 +60,6 @@
 name: build system
 
 on:
-  pull_request:
   push:
     branches: [main]
   workflow_dispatch:
@@ -88,8 +87,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: build-system-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: build-system-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   NODE_VERSION: 24.15.0
@@ -123,14 +122,14 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
           SCOPE: ${{ inputs.scope }}
-          PULL_BASE: ${{ github.event.pull_request.base.sha }}
           PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_SHA: ${{ github.sha }}
           DISPATCH_BASE: ${{ inputs.base }}
         run: |
           zero=0000000000000000000000000000000000000000
+          case "$DISPATCH_BASE" in *[!A-Za-z0-9._/@^~+-]*) echo "::error::the base must be a revision name without spaces or line breaks"; exit 1 ;; esac
           case "$EVENT" in
-            pull_request) range="--base=$PULL_BASE --head=HEAD" ;;
-            push) if [ -z "$PUSH_BEFORE" ] || [ "$PUSH_BEFORE" = "$zero" ]; then range="--all"; else range="--base=$PUSH_BEFORE --head=HEAD"; fi ;;
+            push) if [ -z "$PUSH_BEFORE" ] || [ "$PUSH_BEFORE" = "$zero" ]; then range="--all"; else range="--base=$PUSH_BEFORE --head=$PUSH_SHA"; fi ;;
             *) if [ "$SCOPE" = all ]; then range="--all"; else range="--base=${DISPATCH_BASE:-origin/main} --head=HEAD"; fi ;;
           esac
           echo "range=$range" >> "$GITHUB_OUTPUT"
@@ -198,7 +197,7 @@ jobs:
           tool: ${{ env.BUILD_TOOL }}
           target: ${{ env.PROOF_TARGET }}
       - name: Save the Bun store (default branch)
-        if: ${{ success() && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && steps.bun-store.outputs.cache-hit != 'true' }}
+        if: ${{ success() && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && steps.bun-store.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/b/d/m/bun-cache
@@ -514,12 +513,15 @@ jobs:
           echo "AFFECTED_RANGE=$range" >> "$GITHUB_ENV"
       - name: Select what is affected
         run: |
-          repo --tool="$BUILD_TOOL" affected --targets="$TARGETS" $AFFECTED_RANGE --dry-run > "$RUNNER_TEMP/plan.out"
+          read -ra range <<< "$AFFECTED_RANGE"
+          repo --tool="$BUILD_TOOL" affected --targets="$TARGETS" "${range[@]}" --dry-run > "$RUNNER_TEMP/plan.out"
           repo "$CI_REPORT" plan --plan "$RUNNER_TEMP/plan.out" --targets "$TARGETS" --label "$BUILD_TOOL ${{ matrix.name }} $AFFECTED_RANGE" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Record the cache before the run
         run: repo --tool="$BUILD_TOOL" cache status > "$RUNNER_TEMP/cache-before.out"
       - name: Build and test what is affected
-        run: repo --tool="$BUILD_TOOL" affected --targets="$TARGETS" $AFFECTED_RANGE
+        run: |
+          read -ra range <<< "$AFFECTED_RANGE"
+          repo --tool="$BUILD_TOOL" affected --targets="$TARGETS" "${range[@]}"
       - name: Report the cache hit rate
         if: ${{ !cancelled() }}
         run: |
@@ -537,7 +539,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
       - name: Save the local cache (default branch, no remote cache configured)
-        if: ${{ success() && env.SEMIO_REMOTE_CACHE_ENDPOINT == '' && steps.cache-dir.outputs.directory != '' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+        if: ${{ success() && env.SEMIO_REMOTE_CACHE_ENDPOINT == '' && steps.cache-dir.outputs.directory != '' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.cache-dir.outputs.directory }}
@@ -589,8 +591,9 @@ jobs:
           echo "AFFECTED_RANGE=$range" >> "$GITHUB_ENV"
       - name: Both implementations must select the same tasks
         run: |
-          repo --tool=nx affected --targets="$TARGETS" $AFFECTED_RANGE --dry-run > "$RUNNER_TEMP/plan-first.out"
-          repo --tool=bazel affected --targets="$TARGETS" $AFFECTED_RANGE --dry-run > "$RUNNER_TEMP/plan-second.out"
+          read -ra range <<< "$AFFECTED_RANGE"
+          repo --tool=nx affected --targets="$TARGETS" "${range[@]}" --dry-run > "$RUNNER_TEMP/plan-first.out"
+          repo --tool=bazel affected --targets="$TARGETS" "${range[@]}" --dry-run > "$RUNNER_TEMP/plan-second.out"
           repo "$CI_REPORT" parity --first "$RUNNER_TEMP/plan-first.out" --second "$RUNNER_TEMP/plan-second.out" --targets "$TARGETS" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Prove the local cache under nx on the sample target
         uses: ./.github/actions/cache-proof
@@ -618,9 +621,11 @@ jobs:
           persist-credentials: false
       - name: Name the report files (the runner context is not available in a job-level env)
         run: |
-          echo "BENCH_BASELINE=$RUNNER_TEMP/bench-baseline.json" >> "$GITHUB_ENV"
-          echo "BENCH_REPORT=$RUNNER_TEMP/bench-report.json" >> "$GITHUB_ENV"
-          echo "BENCH_MARKDOWN=$RUNNER_TEMP/bench-report.md" >> "$GITHUB_ENV"
+          {
+            echo "BENCH_BASELINE=$RUNNER_TEMP/bench-baseline.json"
+            echo "BENCH_REPORT=$RUNNER_TEMP/bench-report.json"
+            echo "BENCH_MARKDOWN=$RUNNER_TEMP/bench-report.md"
+          } >> "$GITHUB_ENV"
       - uses: ./.github/actions/repo-launcher
         with:
           node-version: ${{ env.NODE_VERSION }}

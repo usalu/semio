@@ -41,7 +41,7 @@ test("dashboard CI host and gate vectors are closed and independently ordered",(
 test("every native host runs actual dashboard editing language cold install and journey gates",()=>{
  const workflow=document(".github/workflows/dashboard.yml");
  expect(workflow.permissions).toEqual({contents:"read"});
- expect(workflow.on).toHaveProperty("pull_request");expect(workflow.on).toHaveProperty("push");expect(workflow.on).toHaveProperty("workflow_dispatch");
+ expect(workflow.on).not.toHaveProperty("pull_request");expect(workflow.on.push).toEqual({branches:["main"]});expect(workflow.on).toHaveProperty("workflow_dispatch");
  expect(workflow.env.SEMIO_LANGUAGE).toBe("en");expect(workflow.env.SEMIO_BUILD_MODE).toBe("prototype");
  const job=workflow.jobs.native;expect(job.strategy['fail-fast']).toBe(false);expect(job.strategy.matrix.include).toEqual(cases.hosts);
  expect(job['runs-on']).toBe('$'+'{{ matrix.runner }}');expect(job['timeout-minutes']).toBeGreaterThan(0);

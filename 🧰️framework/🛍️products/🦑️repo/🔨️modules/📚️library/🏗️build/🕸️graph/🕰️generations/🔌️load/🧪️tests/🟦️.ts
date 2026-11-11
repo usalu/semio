@@ -79,6 +79,19 @@ test("a current policy serves the newest generation without verification or a bu
  }finally{clean(dir);}
 },60000);
 
+test("a builder asks the remote exchange to restore first and publishes what it built; a served load only offers, and a read-only machine never writes",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(3));const mock=createMockHost(dir),calls:string[]=[],outcome={status:"uploaded",generation:0,owners:3,documents:4,bytes:2097152};
+  (mock.host as any).exchange={upload:true,restore:async()=>{calls.push("restore");return{status:"absent"};},publish:async(options:{ifAbsent:boolean})=>{calls.push(options.ifAbsent?"offer":"publish");return outcome;}};
+  await loadGenerationGraphV1(mock.host);expect(calls).toEqual(["restore","publish"]);
+  expect(mock.said.map(row=>row.text)).toContain("graph: generation 0 (3 projects) uploaded to the remote cache, 4 documents (2 MB) in 0 s");
+  calls.length=0;await loadGenerationGraphV1(mock.host);expect(calls).toEqual(["offer"]);
+  const readOnly=createMockHost(dir);(readOnly.host as any).exchange={upload:false,restore:async()=>({status:"absent"}),publish:async()=>{throw Error("read-only machines never write");}};
+  await loadGenerationGraphV1(readOnly.host);
+ }finally{clean(dir);}
+},60000);
+
 test("a closure reads and expands only its own projects and never enters the builder while its facts hold",async()=>{
  const dir=scratch();
  try{

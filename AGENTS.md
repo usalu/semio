@@ -49,8 +49,10 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
 - You SHOULD implement everything async when it makes sense.
 - You MUST take decisions for maximum performance.
 - You MUST work simultaneously with others on the same files.
-  - You MUST NOT use any modifying git command such as `git commit`, `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
-    - You MUST NOT use git worktrees.
+  - The repo is one shared worktree that a replica daemon copies live to 50+ machines (about one second). Files change under you: re-read a file before you edit it. Concurrent writes to the same file resolve last-writer-wins.
+  - You MUST NOT use any git command that modifies the repository or the working tree, such as `git commit`, `git stash`, `git stash pop`, `git checkout`, `git switch`, `git reset`, `git clean`, `git restore`, `git rebase`, `git merge`, … because every working-tree change is replicated to all machines within about a second, so others will lose their work. There are no branches, pull requests or merges, `.git` is never shared and no git hooks are installed.
+    - Exception: the single archivist machine, when you are explicitly told that you run on it, commits the replica to `main` (linear history), tags releases and pushes, only through the `commit` and `micro-commit` skills. It still never branches, merges, rebases, stashes or checks out.
+    - You MUST NOT use git worktrees: the shared worktree is the only one, and a second worktree would be replicated or fall out of sync.
   - You SHOULD NOT stop because of detecting others are working on the same area.
     - You SHOULD ignore unrelated recent changes and keep on focusing on your own task.
 - You are working on a greenfield repo.

@@ -313,6 +313,7 @@
           "-c",
           "core.fsmonitor=false",
           "diff",
+          "--no-renames",
           "--name-only",
           "-z",
           "HEAD"
@@ -336,6 +337,7 @@
           "-c",
           "core.fsmonitor=false",
           "diff",
+          "--no-renames",
           "--name-only",
           "-z",
           "HEAD"
@@ -360,6 +362,7 @@
           "-c",
           "core.fsmonitor=false",
           "diff",
+          "--no-renames",
           "--name-only",
           "-z",
           "HEAD"
@@ -420,6 +423,7 @@
           "-c",
           "core.fsmonitor=false",
           "diff",
+          "--no-renames",
           "--name-only",
           "-z",
           "HEAD"
@@ -556,6 +560,7 @@
           "-c",
           "core.fsmonitor=false",
           "diff",
+          "--no-renames",
           "--name-only",
           "-z",
           "HEAD"

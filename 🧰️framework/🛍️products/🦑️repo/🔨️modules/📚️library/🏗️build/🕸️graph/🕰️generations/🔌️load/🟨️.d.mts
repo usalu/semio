@@ -1,5 +1,5 @@
 import type {GenerationStaleReasonV1,GenerationComputeResultV1,GenerationComputeSpecV1,GenerationGraphPolicyV1,GenerationMembershipV1,GenerationRowV1,GenerationStoreOptionsV1,FrontierV1,GenerationManifestV1} from "../🟨️.mjs";
-export declare const GENERATION_MESSAGES_V1:Readonly<Record<"en"|"de",Readonly<Record<"current"|"verified"|"waiting"|"covered"|"pinned"|"building"|"published"|"indexed"|"swept"|"closure"|"cold"|"stale"|"planned"|"summary"|"reason"|"reasonStamp"|"reasonInput"|"reasonListing"|"reasonData"|"reasonAnalysis"|"reasonFact"|"reasonDerived"|"cutoff"|"reasonMembership"|"reasonMore"|"pendingCrate"|"withheldDependency"|"withheldSource"|"changeAdded"|"changeRemoved"|"changeChanged"|"merged",string>>>>;
+export declare const GENERATION_MESSAGES_V1:Readonly<Record<"en"|"de",Readonly<Record<"current"|"verified"|"waiting"|"covered"|"pinned"|"building"|"published"|"indexed"|"swept"|"closure"|"cold"|"stale"|"planned"|"summary"|"reason"|"reasonStamp"|"reasonInput"|"reasonListing"|"reasonData"|"reasonAnalysis"|"reasonFact"|"reasonDerived"|"cutoff"|"reasonMembership"|"reasonMore"|"pendingCrate"|"withheldDependency"|"withheldSource"|"changeAdded"|"changeRemoved"|"changeChanged"|"merged"|"restored"|"uploaded"|"exchangeFailed",string>>>>;
 export function renderGenerationMessageV1(key:keyof typeof GENERATION_MESSAGES_V1["en"],fields:Readonly<Record<string,string|number>>,language:"en"|"de"):string;
 /** 🚧️ One project the graph withholds: where it is declared, the digest of the observed bytes, the English reason and, for a test project that waits for projects the snapshot lacks, their names. */
 export interface WithheldProjectV1{readonly root:string;readonly project?:string;readonly source:string;readonly sha256:string;readonly reason:string;readonly missing?:readonly string[]}
@@ -43,6 +43,8 @@ export interface GenerationHostV1{
  clock(control:unknown):Parameters<typeof createGenerationProgressV1>[0];
  say(key:keyof typeof GENERATION_MESSAGES_V1["en"],fields:Readonly<Record<string,string|number>>):void;
  /** 📌️ Told once a load served a graph: the sealed generation, its manifest digest, the owners of that manifest in code point order and the owners (every owner when undefined) the load served from it. */
+ /** 🌐️ The generation exchange with the shared remote cache of the machine group; absent while no remote cache is configured. */
+ exchange?:import("../🌐️remote-exchange/🟦️.ts").GenerationExchangeV1;
  sealed?(record:{generation:number;manifest:string;owners:readonly string[];covered:ReadonlySet<string>|undefined;atMs:number}):void;
 }
 export type GenerationLoadStatsV1=Readonly<{staleFacts:number;closuresVerified:number;ownersReinferred:number;ownersCutOff:number;doubtfulFacts:number;verifiedMilliseconds:number}>;

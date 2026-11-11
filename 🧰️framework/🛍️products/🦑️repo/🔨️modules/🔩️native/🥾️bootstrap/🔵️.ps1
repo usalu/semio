@@ -671,6 +671,7 @@ if (-not $SkipRepoBootstrap) {
     $repoPath = Get-CommandPathOrThrow -Label "repo" -Candidates @("repo.exe")
     if ([IO.Path]::GetFullPath($repoPath) -ine [IO.Path]::GetFullPath($repoReceipt.executable)) { throw "Current process PATH must select the installed native repository command." }
     Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("--help") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("dependencies", "sync", "--all") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("run", "workspace:setup") -WorkingDirectory $repoRoot
     try {
         Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("run", "@semio-tech/repo-developer-tools:setup-debugger") -WorkingDirectory $repoRoot

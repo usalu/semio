@@ -7,19 +7,19 @@
 ---
 
 Write an indepth refactor plan for our monorepo (find all violations, come up with new mechanisms if necessary, everything end to end, etc).
-Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit:
+Use the latest `main` of github.com/usalu/semio (pushed by the archivist machine, there are no other branches) at this commit:
 
 ---
 
 Find all architectural inconsistencies regarding XXX.
 Create an exhaustive plan for a workforce of parallel agents as giant downloadable markdown file.
-Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit:
+Use the latest `main` of github.com/usalu/semio (pushed by the archivist machine, there are no other branches) at this commit:
 
 ---
 
 We want to make our software XXX-first.
 What architectural changes do you recommend?
-Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit:
+Use the latest `main` of github.com/usalu/semio (pushed by the archivist machine, there are no other branches) at this commit:
 
 ---
 
@@ -27,7 +27,7 @@ Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for work fleets of maximum possible parallel agents.
 Plan for a main Opus 5.5 High agent for plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 Everything end to end (ignore everything inside ./compose folder).
-Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit:
+Use the latest `main` of github.com/usalu/semio (pushed by the archivist machine, there are no other branches) at this commit:
 
 ---
 
@@ -35,7 +35,7 @@ Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for work fleets of maximum possible parallel agents.
 Plan for a main GPT 5.6 Sol Extra-High agent for plan coordination, use multiple GPT 5.6 Terra Extra-High agents for task execution, use multiple GPT 5.6 Luna Extra-High agents for read-only exploration and audits.
 Everything end to end (ignore everything inside ./compose folder).
-Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit:
+Use the latest `main` of github.com/usalu/semio (pushed by the archivist machine, there are no other branches) at this commit:
 
 ---
 
@@ -549,10 +549,9 @@ kill $(lsof -t -i:9876)
 
 We are building a general tool that abstracts source control managment tools like git.
 It should provide task-focused and simplified
-The workflow in git is:
-Every person has a working branch `{{contributor-name}}/latest`.
-Whenever a person starts working `{{contributor-name}}/latest` is fast-forwarded to the latest `main`.
-Every time a person finished working, then a temporary branch `{{contributor}}/YY/MM/DD` is created at the current `{{contributor-name}}/latest`
+The workflow in the shared worktree is:
+All persons and agents edit one shared worktree that a replica daemon copies live to every machine; there are no personal branches.
+Only the archivist machine uses git: it commits the replica on a timer to the linear `main`, pushes it and tags releases `rYY.MM-V`.
 
 We want to develop a general hook system that works accross all ai tools (claude code, vscode agent, cursor agent, windsurf agent, droid). One go binary exposes general hooks that can be reused accross platforms. How would you design the system? It needs to be compatible with the following apis:
 https://code.visualstudio.com/docs/copilot/customization/hooks
@@ -564,11 +563,12 @@ https://docs.factory.ai/cli/configuration/hooks-guide
 ## Later
 
 repo:
-Write scripts to handle all git interactions and make them available as vscode launch (create archive branch `{{contributor}}/<{{YY}}/{{MM}}/{{DD}}`, checkout to `main` squash merge `{{contributor}}/latest>` into `main`), etc
+Write scripts for the archivist machine only (available as vscode launch): commit the replica to `main`, push `main` (at most once an hour), tag a release `rYY.MM-V`, import an external git history (see `.agents/skills/merging/SKILL.md`).
+Fleet machines have no git scripts: their sync is the replica daemon (`join`, `run`).
 
-- Merge (prioritize me)
-- Merge (prioritize main)
-- Pull # fast forwards `{{contributor}}/latest>` to `main`
+- Import (archivist only, external history)
+- Push (archivist only)
+- Tag (archivist only)
 
 sketchpad:
 
@@ -2973,9 +2973,8 @@ You MUST adjust the repo implementation, tests and extend all entities and sourc
 All tickets MUST have an `emoji` that summarizes the ticket.
 Adjust all implementations, tests and extend all existing tickets manually with a fitting emoji.
 
-Create a git hook that automatically creates a commit messages. If the commit contains new tickets `.repo/🎫️/{{YY}}/{{MM}}/{{DD}}/*/ticket.json` add them to the description. Only change the commit message for branches that match `{{dev-emoji}}{{dev-alias}}/🏗️dev`
+Create a commit message generator (a script of the archivist machine, not a git hook: no git hooks are installed) that creates the commit message of the archivist's commit. If the commit contains new tickets `.repo/🎫️/{{YY}}/{{MM}}/{{DD}}/*/ticket.json` add them to the description. The archivist commits only on `main`.
 
-scheme:
 
 ```tpl
 {{.DevEmoji}}{{.DevAlias}}🎆️{{.Year}}🌙️{{.Month}}☀️{{.Day}}🚩️{{.CommitCountSinceLastMerge}}

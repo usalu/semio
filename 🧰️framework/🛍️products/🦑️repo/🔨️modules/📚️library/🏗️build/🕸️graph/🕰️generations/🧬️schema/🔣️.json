@@ -94,7 +94,10 @@
           "changeAdded": "added",
           "changeRemoved": "removed",
           "changeChanged": "changed",
-          "merged": "graph: generation {generation} published, {computed} projects refreshed in {seconds} s ({carried} kept their edges) and merged onto the generation a peer published meanwhile ({theirs} projects of peers kept)"
+          "merged": "graph: generation {generation} published, {computed} projects refreshed in {seconds} s ({carried} kept their edges) and merged onto the generation a peer published meanwhile ({theirs} projects of peers kept)",
+          "restored": "graph: generation {generation} ({owners} projects) restored from the remote cache, {documents} documents ({megabytes} MB) downloaded in {seconds} s",
+          "uploaded": "graph: generation {generation} ({owners} projects) uploaded to the remote cache, {documents} documents ({megabytes} MB) in {seconds} s",
+          "exchangeFailed": "graph: the remote cache did not exchange the generation ({reason}), going on without it"
         },
         "de": {
           "current": "Graph: Generation {generation} wird ohne Prüfung geliefert (Graph-Richtlinie current)",
@@ -128,7 +131,10 @@
           "changeAdded": "hinzugefügt",
           "changeRemoved": "entfernt",
           "changeChanged": "geändert",
-          "merged": "Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert ({carried} behielten ihre Kanten) und auf die Generation eines anderen Prozesses zusammengeführt ({theirs} Projekte anderer Prozesse übernommen)"
+          "merged": "Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert ({carried} behielten ihre Kanten) und auf die Generation eines anderen Prozesses zusammengeführt ({theirs} Projekte anderer Prozesse übernommen)",
+          "restored": "Graph: Generation {generation} ({owners} Projekte) aus dem Remote-Cache wiederhergestellt, {documents} Dokumente ({megabytes} MB) in {seconds} s geladen",
+          "uploaded": "Graph: Generation {generation} ({owners} Projekte) in den Remote-Cache hochgeladen, {documents} Dokumente ({megabytes} MB) in {seconds} s",
+          "exchangeFailed": "Graph: der Remote-Cache hat die Generation nicht ausgetauscht ({reason}), es geht ohne sie weiter"
         }
       }
     },

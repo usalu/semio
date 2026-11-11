@@ -1,0 +1,218 @@
+{
+  "version": 1,
+  "languages": ["en", "de"],
+  "messages": {
+    "error.syntax": {
+      "en": "Expected seed|join|run|status|snapshot|relay|compact|verify|bootstrap-archive|bootstrap-settle.",
+      "de": "Erwartet wird seed|join|run|status|snapshot|relay|compact|verify|bootstrap-archive|bootstrap-settle."
+    },
+    "error.bootstrap.identity": {
+      "en": "bootstrap-archive needs the identity of the group server in .cache/f/machine.json: join the server first.",
+      "de": "bootstrap-archive braucht die Identität des Gruppenservers in .cache/f/machine.json: tritt zuerst mit dem Server bei."
+    },
+    "error.bootstrap.empty": {
+      "en": "The store holds no shared files yet; there is nothing to archive or to settle against.",
+      "de": "Der Speicher enthält noch keine geteilten Dateien; es gibt nichts zu archivieren und nichts, wogegen abgeglichen werden könnte."
+    },
+    "error.bootstrap.joined": {
+      "en": "This worktree is already joined ({file} exists). bootstrap-settle only prepares a worktree that was extracted from the bootstrap archive and has not joined yet.",
+      "de": "Dieses Arbeitsverzeichnis ist bereits beigetreten ({file} existiert). bootstrap-settle bereitet nur ein aus dem Bootstrap-Archiv entpacktes Arbeitsverzeichnis vor, das noch nicht beigetreten ist."
+    },
+    "error.bootstrap.store": {
+      "en": "Replica store not found: {store}",
+      "de": "Replica-Speicher nicht gefunden: {store}"
+    },
+    "bootstrap.archive.start": {
+      "en": "Writing the bootstrap archive of {worktree} into the store {store}",
+      "de": "Schreibe das Bootstrap-Archiv von {worktree} in den Speicher {store}"
+    },
+    "bootstrap.archive.done": {
+      "en": "Bootstrap archive written: {files} files ({bytes}), {skipped} skipped because they differ from the store, sha256 {sha256}.",
+      "de": "Bootstrap-Archiv geschrieben: {files} Dateien ({bytes}), {skipped} übersprungen, weil sie vom Speicher abweichen, sha256 {sha256}."
+    },
+    "bootstrap.settle.start": {
+      "en": "Comparing the shared files of {worktree} with the store {store}",
+      "de": "Vergleiche die geteilten Dateien von {worktree} mit dem Speicher {store}"
+    },
+    "bootstrap.settle.done": {
+      "en": "Settled: {kept} files already match the store, {moved} differing files were moved to {folder}.",
+      "de": "Abgeglichen: {kept} Dateien passen bereits zum Speicher, {moved} abweichende Dateien wurden nach {folder} verschoben."
+    },
+    "error.option": {
+      "en": "Unknown option for {operation}: {option}",
+      "de": "Unbekannte Option für {operation}: {option}"
+    },
+    "error.value": {
+      "en": "A value is required for {option}.",
+      "de": "Für {option} ist ein Wert nötig."
+    },
+    "error.repeated": {
+      "en": "{option} was given more than once.",
+      "de": "{option} wurde mehrfach angegeben."
+    },
+    "error.number": {
+      "en": "{option} must be a whole number from {minimum} to {maximum}.",
+      "de": "{option} muss eine ganze Zahl von {minimum} bis {maximum} sein."
+    },
+    "error.language": {
+      "en": "Unknown language {language}; use en or de.",
+      "de": "Unbekannte Sprache {language}; verwende en oder de."
+    },
+    "error.identity": {
+      "en": "This machine has no identity yet: pass --group and --origin (seed or join then writes .cache/f/machine.json).",
+      "de": "Diese Maschine hat noch keine Identität: gib --group und --origin an (seed oder join schreibt dann .cache/f/machine.json)."
+    },
+    "error.peers": {
+      "en": "{option} must list unique <group>=<directory> pairs separated by commas, for example g1=/data/store-g1.",
+      "de": "{option} muss eindeutige Paare <Gruppe>=<Verzeichnis> mit Komma getrennt nennen, zum Beispiel g1=/data/store-g1."
+    },
+    "error.group": {
+      "en": "relay needs --group <id> or a machine identity in .cache/f/machine.json.",
+      "de": "relay braucht --group <id> oder eine Maschinenidentität in .cache/f/machine.json."
+    },
+    "error.busy": {
+      "en": "Another replica daemon (pid {pid}) already runs in this worktree.",
+      "de": "In diesem Arbeitsverzeichnis läuft bereits ein anderer Replica-Daemon (pid {pid})."
+    },
+    "error.refused": {
+      "en": "The worktree holds {count} shared files that differ from the store, for example {paths}. Join into an empty worktree or one whose shared files match the store.",
+      "de": "Das Arbeitsverzeichnis enthält {count} geteilte Dateien, die vom Speicher abweichen, zum Beispiel {paths}. Tritt einem leeren Arbeitsverzeichnis bei oder einem, dessen geteilte Dateien zum Speicher passen."
+    },
+    "seed.start": {
+      "en": "Seeding the store {store} from {worktree} as origin {origin} of group {group}",
+      "de": "Befülle den Speicher {store} aus {worktree} als Ursprung {origin} der Gruppe {group}"
+    },
+    "seed.done": {
+      "en": "Seeded {files} files ({bytes}).",
+      "de": "{files} Dateien ({bytes}) eingespielt."
+    },
+    "join.start": {
+      "en": "Joining {worktree} from the store {store} as origin {origin} of group {group}",
+      "de": "Trete {worktree} über den Speicher {store} als Ursprung {origin} der Gruppe {group} bei"
+    },
+    "join.done": {
+      "en": "Joined: {files} paths, {adopted} already matched, {queued} still queued.",
+      "de": "Beigetreten: {files} Pfade, {adopted} passten bereits, {queued} noch in der Warteschlange."
+    },
+    "run.start": {
+      "en": "Replicating {worktree} through {store} as origin {origin} of group {group}; stop with Ctrl+C.",
+      "de": "Repliziere {worktree} über {store} als Ursprung {origin} der Gruppe {group}; beenden mit Strg+C."
+    },
+    "run.stopped": {
+      "en": "Replica stopped; state saved.",
+      "de": "Replica beendet; Zustand gespeichert."
+    },
+    "status.header": {
+      "en": "Replica {origin} of group {group}, store {store}: {state}",
+      "de": "Replica {origin} der Gruppe {group}, Speicher {store}: {state}"
+    },
+    "status.reachable": {
+      "en": "reachable",
+      "de": "erreichbar"
+    },
+    "status.unreachable": {
+      "en": "unreachable",
+      "de": "nicht erreichbar"
+    },
+    "status.daemon.running": {
+      "en": "Daemon: running (pid {pid})",
+      "de": "Daemon: läuft (pid {pid})"
+    },
+    "status.daemon.stopped": {
+      "en": "Daemon: not running",
+      "de": "Daemon: läuft nicht"
+    },
+    "status.queue": {
+      "en": "{files} files tracked; queued: {incoming} incoming, {outgoing} outgoing; {lost} overwritten files kept in .cache/f/lost",
+      "de": "{files} Dateien verfolgt; wartend: {incoming} eingehend, {outgoing} ausgehend; {lost} überschriebene Dateien in .cache/f/lost aufbewahrt"
+    },
+    "status.refused": {
+      "en": "{refused} paths are refused by the path policy and not shared (verify lists them).",
+      "de": "{refused} Pfade lehnt die Pfadregel ab, sie werden nicht geteilt (verify listet sie auf)."
+    },
+    "status.origin": {
+      "en": "{origin}: {events} events ({bytes}) behind, last event {age} ago",
+      "de": "{origin}: {events} Ereignisse ({bytes}) zurück, letztes Ereignis vor {age}"
+    },
+    "status.origin.rejoin": {
+      "en": "{origin}: its segments were compacted past this replica; join again.",
+      "de": "{origin}: seine Segmente wurden über diese Replica hinaus verdichtet; tritt erneut bei."
+    },
+    "snapshot.created": {
+      "en": "written",
+      "de": "geschrieben"
+    },
+    "snapshot.existing": {
+      "en": "already present",
+      "de": "bereits vorhanden"
+    },
+    "snapshot.done": {
+      "en": "Snapshot of {entries} paths {state}: {file}",
+      "de": "Schnappschuss von {entries} Pfaden {state}: {file}"
+    },
+    "snapshot.empty": {
+      "en": "The store holds no events yet; no snapshot written.",
+      "de": "Der Speicher enthält noch keine Ereignisse; kein Schnappschuss geschrieben."
+    },
+    "relay.start": {
+      "en": "Relaying {peers} peer groups into {store} for group {group}; stop with Ctrl+C.",
+      "de": "Spiegle {peers} Partnergruppen nach {store} für Gruppe {group}; beenden mit Strg+C."
+    },
+    "relay.done": {
+      "en": "Relay round finished: {bytes} of journal copied.",
+      "de": "Relay-Runde beendet: {bytes} Journal kopiert."
+    },
+    "relay.stopped": {
+      "en": "Relay stopped.",
+      "de": "Relay beendet."
+    },
+    "compact.done": {
+      "en": "Compacted: {segments} segments, {blobs} blobs, {snapshots} old snapshots and {staging} stale staging files removed ({bytes}).",
+      "de": "Verdichtet: {segments} Segmente, {blobs} Blobs, {snapshots} alte Schnappschüsse und {staging} verwaiste Zwischendateien entfernt ({bytes})."
+    },
+    "verify.ok": {
+      "en": "No drift: {checked} shared paths agree with the state and the store.",
+      "de": "Keine Abweichung: {checked} geteilte Pfade stimmen mit Zustand und Speicher überein."
+    },
+    "verify.drift": {
+      "en": "Drift on {count} paths ({checked} shared paths checked).",
+      "de": "Abweichung bei {count} Pfaden ({checked} geteilte Pfade geprüft)."
+    },
+    "verify.item": {
+      "en": "  {kind}: {path}",
+      "de": "  {kind}: {path}"
+    },
+    "verify.refused": {
+      "en": "{count} paths are refused by the path policy and not shared:",
+      "de": "{count} Pfade lehnt die Pfadregel ab, sie werden nicht geteilt:"
+    },
+    "verify.refused.item": {
+      "en": "  {reason}: {path}",
+      "de": "  {reason}: {path}"
+    },
+    "verify.more": {
+      "en": "  ... and {count} more",
+      "de": "  ... und {count} weitere"
+    },
+    "verify.kind.missing-local": {
+      "en": "missing locally",
+      "de": "lokal fehlend"
+    },
+    "verify.kind.extra-local": {
+      "en": "extra locally",
+      "de": "lokal überzählig"
+    },
+    "verify.kind.content": {
+      "en": "content differs",
+      "de": "Inhalt weicht ab"
+    },
+    "verify.kind.target": {
+      "en": "link target differs",
+      "de": "Linkziel weicht ab"
+    },
+    "verify.kind.state": {
+      "en": "state differs",
+      "de": "Zustand weicht ab"
+    }
+  }
+}

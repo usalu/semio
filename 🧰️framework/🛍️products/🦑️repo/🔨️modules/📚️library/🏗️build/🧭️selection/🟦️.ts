@@ -47,7 +47,7 @@ function shellArgument(value:string):string { return process.platform==="win32"?
 /** 🧾️ Plans the git queries that define the changed-file set every build tool shares for `affected`. */
 export function buildChangedFilesCommandsV1(head:readonly string[]):readonly (readonly string[])[] {
   const base=buildOptionV1(head,"base")??"HEAD",revision=buildOptionV1(head,"head"),uncommitted=buildBooleanOptionV1(head,"uncommitted")??false,untracked=buildBooleanOptionV1(head,"untracked")??false,commands:string[][]=[];
-  if(!untracked||uncommitted)commands.push(["-c","core.fsmonitor=false","diff","--name-only","-z",uncommitted?"HEAD":base,...(revision&&!uncommitted?[revision]:[])]);
+  if(!untracked||uncommitted)commands.push(["-c","core.fsmonitor=false","diff","--no-renames","--name-only","-z",uncommitted?"HEAD":base,...(revision&&!uncommitted?[revision]:[])]);
   if(untracked||!uncommitted&&!revision)commands.push(["-c","core.fsmonitor=false","ls-files","--others","--exclude-standard","-z"]);
   return commands;
 }

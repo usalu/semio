@@ -1,0 +1,159 @@
+{
+ "version": 1,
+ "tick": [
+  {"id": "wall-ahead", "last": {"ms": 1000, "counter": 5}, "wallMs": 2000, "expect": {"ms": 2000, "counter": 0}},
+  {"id": "same-millisecond", "last": {"ms": 2000, "counter": 0}, "wallMs": 2000, "expect": {"ms": 2000, "counter": 1}},
+  {"id": "wall-behind", "last": {"ms": 2000, "counter": 3}, "wallMs": 1500, "expect": {"ms": 2000, "counter": 4}},
+  {"id": "from-zero", "last": {"ms": 0, "counter": 0}, "wallMs": 1788000000000, "expect": {"ms": 1788000000000, "counter": 0}},
+  {"id": "counter-resets-when-wall-advances", "last": {"ms": 2000, "counter": 999998}, "wallMs": 2001, "expect": {"ms": 2001, "counter": 0}},
+  {"id": "last-counter", "last": {"ms": 2000, "counter": 999998}, "wallMs": 2000, "expect": {"ms": 2000, "counter": 999999}},
+  {"id": "counter-overflow", "last": {"ms": 2000, "counter": 999999}, "wallMs": 2000, "expect": null}
+ ],
+ "merge": [
+  {"id": "received-behind", "last": {"ms": 2000, "counter": 3}, "received": "0000000002000-000002-beta", "wallMs": 2000, "expect": {"ms": 2000, "counter": 3}},
+  {"id": "received-older-ms", "last": {"ms": 1788000000000, "counter": 3}, "received": "1787999999000-000009-beta", "wallMs": 1788000000000, "expect": {"ms": 1788000000000, "counter": 3}},
+  {"id": "received-same-ms-higher-counter", "last": {"ms": 1788000000000, "counter": 2}, "received": "1788000000000-000005-beta", "wallMs": 1788000000000, "expect": {"ms": 1788000000000, "counter": 5}},
+  {"id": "received-same-ms-lower-counter", "last": {"ms": 1788000000000, "counter": 7}, "received": "1788000000000-000005-beta", "wallMs": 1788000000000, "expect": {"ms": 1788000000000, "counter": 7}},
+  {"id": "received-ahead-within-limit", "last": {"ms": 1788000000000, "counter": 0}, "received": "1788000030000-000007-beta", "wallMs": 1788000000000, "expect": {"ms": 1788000030000, "counter": 7}},
+  {"id": "received-exactly-sixty-seconds-ahead", "last": {"ms": 1788000000000, "counter": 0}, "received": "1788000060000-000001-beta", "wallMs": 1788000000000, "expect": {"ms": 1788000060000, "counter": 1}},
+  {"id": "received-one-millisecond-too-far-ahead", "last": {"ms": 1788000000000, "counter": 0}, "received": "1788000060001-000000-beta", "wallMs": 1788000000000, "expect": null},
+  {"id": "received-far-future", "last": {"ms": 1788000000000, "counter": 0}, "received": "1789000000000-000000-beta", "wallMs": 1788000000000, "expect": null},
+  {"id": "received-malformed", "last": {"ms": 1788000000000, "counter": 0}, "received": "not-an-hlc", "wallMs": 1788000000000, "expect": null}
+ ],
+ "format": [
+  {"id": "plain", "clock": {"ms": 1788000000000, "counter": 1}, "originId": "alpha", "hlc": "1788000000000-000001-alpha"},
+  {"id": "padded", "clock": {"ms": 5, "counter": 123456}, "originId": "node-1", "hlc": "0000000000005-123456-node-1"},
+  {"id": "digit-origin", "clock": {"ms": 1788000000999, "counter": 999999}, "originId": "0abc", "hlc": "1788000000999-999999-0abc"}
+ ],
+ "parse": [
+  {"id": "plain", "hlc": "1788000000000-000001-alpha", "expect": {"ms": 1788000000000, "counter": 1, "originId": "alpha"}},
+  {"id": "origin-with-dashes", "hlc": "0000000000005-123456-node-1-b", "expect": {"ms": 5, "counter": 123456, "originId": "node-1-b"}},
+  {"id": "empty-origin", "hlc": "1788000000000-000001-", "expect": null},
+  {"id": "short-counter", "hlc": "1788000000000-1-alpha", "expect": null},
+  {"id": "short-ms", "hlc": "178800000000-000001-alpha", "expect": null},
+  {"id": "uppercase-origin", "hlc": "1788000000000-000001-Alpha", "expect": null},
+  {"id": "leading-dash-origin", "hlc": "1788000000000-000001--alpha", "expect": null},
+  {"id": "underscore-origin", "hlc": "1788000000000-000001-al_pha", "expect": null},
+  {"id": "origin-of-forty-one", "hlc": "1788000000000-000001-abcdefghijklmnopqrstuvwxyz0123456789abcde", "expect": null}
+ ],
+ "wins": [
+  {"id": "no-current", "candidate": "1788000000100-000000-alpha", "current": null, "expect": true},
+  {"id": "equal-never-wins", "candidate": "1788000000100-000000-alpha", "current": "1788000000100-000000-alpha", "expect": false},
+  {"id": "later-ms", "candidate": "1788000000101-000000-alpha", "current": "1788000000100-000009-zulu", "expect": true},
+  {"id": "earlier-ms", "candidate": "1788000000099-000009-zulu", "current": "1788000000100-000000-alpha", "expect": false},
+  {"id": "higher-counter-beats-origin", "candidate": "1788000000100-000001-alpha", "current": "1788000000100-000000-zulu", "expect": true},
+  {"id": "lower-counter-loses-despite-origin", "candidate": "1788000000100-000000-zulu", "current": "1788000000100-000001-alpha", "expect": false},
+  {"id": "same-ms-greater-origin-wins", "candidate": "1788000000100-000000-beta", "current": "1788000000100-000000-alpha", "expect": true},
+  {"id": "same-ms-smaller-origin-loses", "candidate": "1788000000100-000000-alpha", "current": "1788000000100-000000-beta", "expect": false},
+  {"id": "longer-origin-with-same-prefix-wins", "candidate": "1788000000100-000000-node-10", "current": "1788000000100-000000-node-1", "expect": true},
+  {"id": "digit-origin-before-letter-origin", "candidate": "1788000000100-000000-1abc", "current": "1788000000100-000000-abc", "expect": false}
+ ],
+ "origins": {
+  "valid": ["a", "node-1", "0abc", "a-b-c", "abcdefghijklmnopqrstuvwxyz0123456789abcd"],
+  "invalid": ["", "-a", "A", "a_b", "a/b", "a.b", "a b", "abcdefghijklmnopqrstuvwxyz0123456789abcde", "ä"]
+ },
+ "valid": [
+  {"id": "put", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "a.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 3, "executable": false, "base": null}},
+  {"id": "put-executable-with-base", "value": {"version": 1, "hlc": "1788000000100-000001-alpha", "operation": "put", "path": "bin/run.sh", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 0, "executable": true, "base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+  {"id": "put-unicode-path", "value": {"version": 1, "hlc": "1788000000100-000002-alpha", "operation": "put", "path": "🧬️schema/é.json", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "bytes": 9007199254740991, "executable": false, "base": null}},
+  {"id": "delete", "value": {"version": 1, "hlc": "1788000000200-000000-alpha", "operation": "delete", "path": "a.txt", "base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+  {"id": "delete-unknown-base", "value": {"version": 1, "hlc": "1788000000200-000001-alpha", "operation": "delete", "path": "a.txt", "base": null}},
+  {"id": "link", "value": {"version": 1, "hlc": "1788000000300-000000-alpha", "operation": "link", "path": "latest", "target": "../a.txt", "base": null}}
+ ],
+ "invalid": [
+  {"id": "not-an-object", "value": "put"},
+  {"id": "null", "value": null},
+  {"id": "array", "value": []},
+  {"id": "missing-version", "value": {"hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a.txt", "base": null}},
+  {"id": "version-two", "value": {"version": 2, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a.txt", "base": null}},
+  {"id": "hlc-short-ms", "value": {"version": 1, "hlc": "178800000010-000000-alpha", "operation": "delete", "path": "a.txt", "base": null}},
+  {"id": "hlc-uppercase-origin", "value": {"version": 1, "hlc": "1788000000100-000000-Alpha", "operation": "delete", "path": "a.txt", "base": null}},
+  {"id": "hlc-leading-dash-origin", "value": {"version": 1, "hlc": "1788000000100-000000--alpha", "operation": "delete", "path": "a.txt", "base": null}},
+  {"id": "hlc-missing", "value": {"version": 1, "operation": "delete", "path": "a.txt", "base": null}},
+  {"id": "operation-rename", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "rename", "path": "a.txt", "base": null}},
+  {"id": "put-missing-sha256", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "a.txt", "bytes": 3, "executable": false, "base": null}},
+  {"id": "put-missing-bytes", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "a.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "executable": false, "base": null}},
+  {"id": "put-missing-executable", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "a.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 3, "base": null}},
+  {"id": "put-negative-bytes", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "a.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": -1, "executable": false, "base": null}},
+  {"id": "put-fractional-bytes", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "a.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1.5, "executable": false, "base": null}},
+  {"id": "put-uppercase-sha256", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "a.txt", "sha256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "bytes": 3, "executable": false, "base": null}},
+  {"id": "put-short-sha256", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "a.txt", "sha256": "abcdef", "bytes": 3, "executable": false, "base": null}},
+  {"id": "put-with-target", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "a.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 3, "executable": false, "target": "b", "base": null}},
+  {"id": "delete-with-sha256", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "base": null}},
+  {"id": "delete-with-bytes", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a.txt", "bytes": 3, "base": null}},
+  {"id": "link-missing-target", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "link", "path": "a.txt", "base": null}},
+  {"id": "link-empty-target", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "link", "path": "a.txt", "target": "", "base": null}},
+  {"id": "link-with-sha256", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "link", "path": "a.txt", "target": "b", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "base": null}},
+  {"id": "extra-key", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a.txt", "base": null, "note": "x"}},
+  {"id": "path-empty", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "", "base": null}},
+  {"id": "path-absolute", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "/etc/passwd", "base": null}},
+  {"id": "path-backslash", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a\\b.txt", "base": null}},
+  {"id": "path-parent-component", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a/../b.txt", "base": null}},
+  {"id": "path-leading-parent", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "../b.txt", "base": null}},
+  {"id": "path-dot-component", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a/./b.txt", "base": null}},
+  {"id": "path-trailing-slash", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a/", "base": null}},
+  {"id": "path-double-slash", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a//b", "base": null}},
+  {"id": "path-nul", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a\u0000b", "base": null}},
+  {"id": "base-missing", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a.txt"}},
+  {"id": "base-not-a-hash", "value": {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "delete", "path": "a.txt", "base": "xyz"}}
+ ],
+ "fold": [
+  {"id": "put-then-delete", "initial": {}, "events": [
+    {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "a.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 3, "executable": false, "base": null},
+    {"version": 1, "hlc": "1788000000200-000000-alpha", "operation": "delete", "path": "a.txt", "base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}],
+   "manifest": {"a.txt": {"hlc": "1788000000200-000000-alpha", "operation": "delete"}}, "winners": [1]},
+  {"id": "same-ms-different-origin-tie", "initial": {}, "events": [
+    {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "f", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1, "executable": false, "base": null},
+    {"version": 1, "hlc": "1788000000100-000000-beta", "operation": "put", "path": "f", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 2, "executable": false, "base": null}],
+   "manifest": {"f": {"hlc": "1788000000100-000000-beta", "operation": "put", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 2, "executable": false}}, "winners": [1]},
+  {"id": "same-ms-different-origin-tie-reversed", "initial": {}, "events": [
+    {"version": 1, "hlc": "1788000000100-000000-beta", "operation": "put", "path": "f", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 2, "executable": false, "base": null},
+    {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "f", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1, "executable": false, "base": null}],
+   "manifest": {"f": {"hlc": "1788000000100-000000-beta", "operation": "put", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 2, "executable": false}}, "winners": [0]},
+  {"id": "counter-beats-origin", "initial": {}, "events": [
+    {"version": 1, "hlc": "1788000000100-000001-alpha", "operation": "put", "path": "f", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1, "executable": false, "base": null},
+    {"version": 1, "hlc": "1788000000100-000000-beta", "operation": "put", "path": "f", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 2, "executable": false, "base": null}],
+   "manifest": {"f": {"hlc": "1788000000100-000001-alpha", "operation": "put", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1, "executable": false}}, "winners": [0]},
+  {"id": "tombstone-blocks-older-put", "initial": {}, "events": [
+    {"version": 1, "hlc": "1788000000300-000000-alpha", "operation": "delete", "path": "f", "base": null},
+    {"version": 1, "hlc": "1788000000200-000000-beta", "operation": "put", "path": "f", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 2, "executable": false, "base": null}],
+   "manifest": {"f": {"hlc": "1788000000300-000000-alpha", "operation": "delete"}}, "winners": [0]},
+  {"id": "newer-put-resurrects", "initial": {}, "events": [
+    {"version": 1, "hlc": "1788000000300-000000-alpha", "operation": "delete", "path": "f", "base": null},
+    {"version": 1, "hlc": "1788000000400-000000-beta", "operation": "put", "path": "f", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 2, "executable": true, "base": null}],
+   "manifest": {"f": {"hlc": "1788000000400-000000-beta", "operation": "put", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 2, "executable": true}}, "winners": [1]},
+  {"id": "initial-manifest", "initial": {
+    "x": {"hlc": "1788000000100-000000-alpha", "operation": "put", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 3, "executable": false},
+    "keep": {"hlc": "1788000000050-000000-alpha", "operation": "put", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 1, "executable": false}}, "events": [
+    {"version": 1, "hlc": "1788000000050-000000-beta", "operation": "put", "path": "x", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "bytes": 9, "executable": false, "base": null},
+    {"version": 1, "hlc": "1788000000500-000000-beta", "operation": "link", "path": "y", "target": "x", "base": null},
+    {"version": 1, "hlc": "1788000000600-000000-beta", "operation": "delete", "path": "z", "base": null},
+    {"version": 1, "hlc": "1788000000700-000000-alpha", "operation": "put", "path": "x", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 3, "executable": true, "base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}],
+   "manifest": {
+    "x": {"hlc": "1788000000700-000000-alpha", "operation": "put", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 3, "executable": true},
+    "keep": {"hlc": "1788000000050-000000-alpha", "operation": "put", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 1, "executable": false},
+    "y": {"hlc": "1788000000500-000000-beta", "operation": "link", "target": "x"},
+    "z": {"hlc": "1788000000600-000000-beta", "operation": "delete"}}, "winners": [1, 2, 3]},
+  {"id": "duplicate-replay", "initial": {}, "events": [
+    {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "f", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1, "executable": false, "base": null},
+    {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "f", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1, "executable": false, "base": null}],
+   "manifest": {"f": {"hlc": "1788000000100-000000-alpha", "operation": "put", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1, "executable": false}}, "winners": [0]},
+  {"id": "superseded-within-batch", "initial": {}, "events": [
+    {"version": 1, "hlc": "1788000000100-000000-alpha", "operation": "put", "path": "g", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1, "executable": false, "base": null},
+    {"version": 1, "hlc": "1788000000200-000000-beta", "operation": "put", "path": "g", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 2, "executable": false, "base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+    {"version": 1, "hlc": "1788000000150-000000-alpha", "operation": "put", "path": "g", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "bytes": 3, "executable": false, "base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}],
+   "manifest": {"g": {"hlc": "1788000000200-000000-beta", "operation": "put", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 2, "executable": false}}, "winners": [1]},
+  {"id": "several-paths-ordered-by-hlc", "initial": {}, "events": [
+    {"version": 1, "hlc": "1788000000030-000000-gamma", "operation": "put", "path": "ü/é.txt", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "bytes": 5, "executable": false, "base": null},
+    {"version": 1, "hlc": "1788000000010-000000-alpha", "operation": "put", "path": "d/e/f.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1, "executable": false, "base": null},
+    {"version": 1, "hlc": "1788000000020-000000-beta", "operation": "put", "path": "d/e/g.txt", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 2, "executable": true, "base": null}],
+   "manifest": {
+    "ü/é.txt": {"hlc": "1788000000030-000000-gamma", "operation": "put", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "bytes": 5, "executable": false},
+    "d/e/f.txt": {"hlc": "1788000000010-000000-alpha", "operation": "put", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1, "executable": false},
+    "d/e/g.txt": {"hlc": "1788000000020-000000-beta", "operation": "put", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "bytes": 2, "executable": true}}, "winners": [1, 2, 0]},
+  {"id": "link-replaced-by-put", "initial": {
+    "l": {"hlc": "1788000000100-000000-alpha", "operation": "link", "target": "t"}}, "events": [
+    {"version": 1, "hlc": "1788000000100-000000-beta", "operation": "put", "path": "l", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1, "executable": false, "base": null}],
+   "manifest": {"l": {"hlc": "1788000000100-000000-beta", "operation": "put", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bytes": 1, "executable": false}}, "winners": [0]}
+ ]
+}

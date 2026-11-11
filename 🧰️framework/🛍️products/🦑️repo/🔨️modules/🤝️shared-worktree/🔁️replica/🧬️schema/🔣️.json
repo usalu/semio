@@ -1,0 +1,283 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:shared-worktree-replica:v1",
+  "title": "Shared Worktree Replica Local State",
+  "description": "🔁️ The closed documents of the replica daemon: the machine identity, the local state of the shared tree, the read positions, the clock, the daemon lock, the NDJSON progress events, the status report and the verify report. Every document lives under `.cache/f/` of the worktree except the progress events, which only travel on stdout, and the home marker, which the origin writes into its home store.",
+  "oneOf": [
+    { "$ref": "#/definitions/Machine" },
+    { "$ref": "#/definitions/State" },
+    { "$ref": "#/definitions/StateLogLine" },
+    { "$ref": "#/definitions/Cursor" },
+    { "$ref": "#/definitions/Clock" },
+    { "$ref": "#/definitions/Lock" },
+    { "$ref": "#/definitions/Home" },
+    { "$ref": "#/definitions/ProgressEvent" },
+    { "$ref": "#/definitions/Status" },
+    { "$ref": "#/definitions/VerifyReport" }
+  ],
+  "definitions": {
+    "OriginId": {
+      "description": "Unique per machine; the only writer below origins/<id>/ in its home store.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+    },
+    "GroupId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+    },
+    "Hlc": {
+      "type": "string",
+      "pattern": "^[0-9]{13}-[0-9]{6}-[a-z0-9][a-z0-9-]{0,39}$"
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "Machine": {
+      "description": "machine.json: who this machine is and where its group store is mounted.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "originId", "groupId", "storeRoot"],
+      "properties": {
+        "version": { "const": 1 },
+        "originId": { "$ref": "#/definitions/OriginId" },
+        "groupId": { "$ref": "#/definitions/GroupId" },
+        "storeRoot": { "type": "string", "minLength": 1 }
+      }
+    },
+    "Operation": {
+      "enum": ["put", "delete", "link"]
+    },
+    "QueueEntry": {
+      "description": "The winning store state of one path that is not yet materialised.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hlc", "operation"],
+      "properties": {
+        "hlc": { "$ref": "#/definitions/Hlc" },
+        "operation": { "$ref": "#/definitions/Operation" },
+        "sha256": { "$ref": "#/definitions/Sha256" },
+        "bytes": { "$ref": "#/definitions/Count" },
+        "executable": { "type": "boolean" },
+        "target": { "type": "string", "minLength": 1 }
+      }
+    },
+    "StateEntry": {
+      "description": "What the local tree holds for one path, the event it came from and the file system observation that lets the next scan skip rehashing. seenMs is the wall time at which the content was observed; an entry whose mtimeMs lies within 2 seconds of seenMs (or has no seenMs) is racy and is always rehashed. A delete is a tombstone with mtimeMs 0.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hlc", "operation", "mtimeMs"],
+      "properties": {
+        "hlc": { "$ref": "#/definitions/Hlc" },
+        "operation": { "$ref": "#/definitions/Operation" },
+        "sha256": { "$ref": "#/definitions/Sha256" },
+        "bytes": { "$ref": "#/definitions/Count" },
+        "executable": { "type": "boolean" },
+        "target": { "type": "string", "minLength": 1 },
+        "mtimeMs": { "type": "number", "minimum": 0 },
+        "seenMs": { "type": "number", "minimum": 0 }
+      }
+    },
+    "State": {
+      "description": "state.json: the last full checkpoint of path to local entry, plus the queue of store winners waiting for materialisation. generation numbers the checkpoint; state.log only counts when its header carries the same generation.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "generation", "files", "queue"],
+      "properties": {
+        "version": { "const": 1 },
+        "generation": { "$ref": "#/definitions/Count" },
+        "files": { "type": "object", "additionalProperties": { "$ref": "#/definitions/StateEntry" } },
+        "queue": { "type": "object", "additionalProperties": { "$ref": "#/definitions/QueueEntry" } }
+      }
+    },
+    "StateLogLine": {
+      "description": "One line of state.log, the append-only delta beside state.json: first the header naming the checkpoint generation it extends, then one line per changed entry of files or queue (entry null = removed). Replayed in order over the checkpoint; a torn last line is ignored.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["generation"],
+          "properties": { "generation": { "$ref": "#/definitions/Count" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "path", "entry"],
+          "properties": {
+            "kind": { "const": "files" },
+            "path": { "type": "string", "minLength": 1 },
+            "entry": { "oneOf": [{ "$ref": "#/definitions/StateEntry" }, { "type": "null" }] }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "path", "entry"],
+          "properties": {
+            "kind": { "const": "queue" },
+            "path": { "type": "string", "minLength": 1 },
+            "entry": { "oneOf": [{ "$ref": "#/definitions/QueueEntry" }, { "type": "null" }] }
+          }
+        }
+      ]
+    },
+    "Position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["segment", "bytes"],
+      "properties": {
+        "segment": { "$ref": "#/definitions/Count" },
+        "bytes": { "$ref": "#/definitions/Count" }
+      }
+    },
+    "Cursor": {
+      "description": "cursor.json: the next unread position per origin.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "cursors"],
+      "properties": {
+        "version": { "const": 1 },
+        "cursors": { "type": "object", "additionalProperties": { "$ref": "#/definitions/Position" } }
+      }
+    },
+    "Clock": {
+      "description": "clock.json: the last issued or observed hybrid logical clock value.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "ms", "counter"],
+      "properties": {
+        "version": { "const": 1 },
+        "ms": { "$ref": "#/definitions/Count" },
+        "counter": { "$ref": "#/definitions/Count" }
+      }
+    },
+    "Lock": {
+      "description": "daemon.lock: created exclusively by the one daemon of a worktree; a lock whose pid is gone is stale.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "pid", "startedMs", "originId"],
+      "properties": {
+        "version": { "const": 1 },
+        "pid": { "type": "integer", "minimum": 1 },
+        "startedMs": { "$ref": "#/definitions/Count" },
+        "originId": { "$ref": "#/definitions/OriginId" }
+      }
+    },
+    "Home": {
+      "description": "origins/<originId>/home.json: written by the origin itself on its first publish; a relay pulls the origin only from the store of this group.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "group"],
+      "properties": {
+        "version": { "const": 1 },
+        "group": { "$ref": "#/definitions/GroupId" }
+      }
+    },
+    "EventName": {
+      "enum": ["started", "stopped", "scan", "progress", "published", "applied", "overwritten", "kept", "refused", "skipped", "blocked", "unstable", "store-unreachable", "store-reachable", "ignore-reloaded", "clock-refused", "clock-skew", "blob-missing", "rejoin-required", "relayed", "snapshot", "compacted", "error"]
+    },
+    "ProgressEvent": {
+      "description": "One NDJSON line on stdout.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "event"],
+      "properties": {
+        "version": { "const": 1 },
+        "event": { "$ref": "#/definitions/EventName" },
+        "stage": { "type": "string" },
+        "path": { "type": "string" },
+        "origin": { "type": "string" },
+        "originId": { "type": "string" },
+        "groupId": { "type": "string" },
+        "hlc": { "type": "string" },
+        "reason": { "type": "string" },
+        "message": { "type": "string" },
+        "lost": { "type": "string" },
+        "count": { "$ref": "#/definitions/Count" },
+        "done": { "$ref": "#/definitions/Count" },
+        "total": { "$ref": "#/definitions/Count" },
+        "bytes": { "$ref": "#/definitions/Count" },
+        "seconds": { "$ref": "#/definitions/Count" }
+      }
+    },
+    "OriginLag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "behindEvents", "behindBytes", "lastHlc", "ageSeconds", "rejoinRequired"],
+      "properties": {
+        "origin": { "$ref": "#/definitions/OriginId" },
+        "behindEvents": { "$ref": "#/definitions/Count" },
+        "behindBytes": { "$ref": "#/definitions/Count" },
+        "lastHlc": { "oneOf": [{ "$ref": "#/definitions/Hlc" }, { "type": "null" }] },
+        "ageSeconds": { "oneOf": [{ "$ref": "#/definitions/Count" }, { "type": "null" }] },
+        "rejoinRequired": { "type": "boolean" }
+      }
+    },
+    "Status": {
+      "description": "The report of `status`: lag per origin, queue sizes and the number of preserved overwritten files.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "originId", "groupId", "storeRoot", "reachable", "daemon", "files", "queue", "lost", "refused", "origins"],
+      "properties": {
+        "version": { "const": 1 },
+        "originId": { "$ref": "#/definitions/OriginId" },
+        "groupId": { "$ref": "#/definitions/GroupId" },
+        "storeRoot": { "type": "string", "minLength": 1 },
+        "reachable": { "type": "boolean" },
+        "daemon": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["running", "pid"],
+          "properties": {
+            "running": { "type": "boolean" },
+            "pid": { "oneOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }] }
+          }
+        },
+        "files": { "$ref": "#/definitions/Count" },
+        "queue": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["incoming", "outgoing"],
+          "properties": {
+            "incoming": { "$ref": "#/definitions/Count" },
+            "outgoing": { "oneOf": [{ "$ref": "#/definitions/Count" }, { "type": "null" }] }
+          }
+        },
+        "lost": { "$ref": "#/definitions/Count" },
+        "refused": { "oneOf": [{ "$ref": "#/definitions/Count" }, { "type": "null" }], "description": "Paths the path policy refuses to share (too long, not NFC, illegal characters, case collisions, unsafe links); counted by `status --deep`, which scans the tree, otherwise null." },
+        "origins": { "type": "array", "items": { "$ref": "#/definitions/OriginLag" } }
+      }
+    },
+    "Drift": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "kind"],
+      "properties": {
+        "path": { "type": "string" },
+        "kind": { "enum": ["missing-local", "extra-local", "content", "target", "state"] },
+        "expected": { "type": "string" },
+        "actual": { "type": "string" }
+      }
+    },
+    "VerifyReport": {
+      "description": "The report of `verify`: ok means local tree, state and folded store agree on every shared path.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "ok", "checked", "total", "truncated", "drift", "refusedTotal", "refused"],
+      "properties": {
+        "version": { "const": 1 },
+        "ok": { "type": "boolean" },
+        "checked": { "$ref": "#/definitions/Count" },
+        "total": { "$ref": "#/definitions/Count" },
+        "truncated": { "type": "boolean" },
+        "drift": { "type": "array", "items": { "$ref": "#/definitions/Drift" } },
+        "refusedTotal": { "$ref": "#/definitions/Count" },
+        "refused": { "type": "array", "description": "Paths the path policy refuses to share; they are not drift.", "items": { "type": "object", "additionalProperties": false, "required": ["path", "reason"], "properties": { "path": { "type": "string" }, "reason": { "type": "string" } } } }
+      }
+    }
+  }
+}

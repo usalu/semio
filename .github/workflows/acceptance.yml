@@ -12,7 +12,7 @@
 # judged on whatever host ran them, and the report states the host class).
 # Scope. The scenarios edit and restore tracked source files of the checkout, which is why the step passes `--in-place`: the checkout of a job is private to it. A cancelled job
 # restores every edit before it stops, and a killed one leaves a journal that the next run on the same checkout applies first.
-# Triggers. Schedule and manual dispatch only: the first cold build of a product takes up to an hour and must not run on pull requests. `schedule` only fires for the workflow
+# Triggers. Schedule and manual dispatch only: the first cold build of a product takes up to an hour and must not run on every push to `main`. `schedule` only fires for the workflow
 # file on the default branch.
 # Every action is pinned to a full commit SHA. No write permission, no credential left in the workspace.
 

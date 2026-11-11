@@ -1,14 +1,13 @@
 name: Native Dashboard
 on:
-  pull_request:
   push:
     branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: dashboard-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: dashboard-${{ github.ref }}
+  cancel-in-progress: false
 env:
   NODE_VERSION: 24.15.0
   SEMIO_LANGUAGE: en

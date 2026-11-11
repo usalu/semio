@@ -1023,23 +1023,24 @@ erDiagram
 
 ### 🔀 Version
 
+All contributors edit one shared worktree that the replica daemon replicates; there are no contributor branches, no squash-merges and no pull requests. Only the archivist machine touches git: it commits the whole replica on a timer to the linear `main`, pushes at most once an hour, and tags releases on `main`.
+
 ```mermaid
 sequenceDiagram
 Contributor->>+repo: checkin
-repo->>+git: fast foward `contributor/latest` to  `main`
+repo->>+replica: settle (the machine's replica is current with the journal)
+replica->>-repo: ✅ journal position
+repo->>-Contributor: ✅ version = journal position
+Note over Contributor,replica: edits are replicated live, last writer wins
+Archivist->>+repo: checkpoint (timer)
+repo->>+git: commit the replica to `main` (linear, never branches)
+git->>-repo: ✅ commit sha
+repo->>-Archivist: ✅
+Archivist->>+repo: version (release)
+repo->>+git: tag `rYY.MM-V` on `main`, push
 git->>-repo: ✅
-repo->>-Contributor: ✅
-Contributor->>+repo: checkpoint
-repo->>+git: commit to `contributor/latest`
-git->>-repo: ✅
-repo->>-Contributor: ✅
-Contributor->>+repo: checkout
-repo->>+git: create branch `contributor/backup`
-git->>-repo: ✅
-repo->>+git: squashmerge `contributor/latest` to  `main`
-git->>-repo: ✅
-repo->>+git: `contributor/backup` to `contributor/YY/MM/DD`
-git->>-repo: ✅
+repo->>-Archivist: ✅
+```
 repo->>-Contributor: ✅
 ```
 
@@ -1096,38 +1097,37 @@ event:
     client: "{{client-id}}"
 
   version:
-    starting: # e.g. in git pre-commit on main branch.
+    starting: # e.g. in the archivist's release script, before it tags a commit on `main`.
       DATA:
-        new-checkpoint-description: "{{checkpoint-description}}" # e.g. in git commit message
+        new-checkpoint-description: "{{checkpoint-description}}" # e.g. in the archivist commit message
 
   checkpoint:
-    starting: # e.g. in git pre-commit
+    starting: # e.g. in the archivist's commit script, before it commits the replica
       DATA:
-        new-checkpoint-description: "{{checkpoint-description}}" # e.g. in git commit message
-    ended: # e.g. in git post-commit
+        new-checkpoint-description: "{{checkpoint-description}}" # e.g. in the archivist commit message
+    ended: # e.g. in the archivist's commit script, after the commit (no git hook)
       DATA:
-        old-checkpoint: "{{checkpoint-id}}" # e.g. in git commit sha
-        new-checkpoint: "{{checkpoint-id}}" # e.g. in git commit sha
-        new-checkpoint-description: "{{checkpoint-description}}" # e.g. in git commit message
+        old-checkpoint: "{{checkpoint-id}}" # e.g. the previous commit sha on `main`
+        new-checkpoint: "{{checkpoint-id}}" # e.g. the new commit sha on `main`
+        new-checkpoint-description: "{{checkpoint-description}}" # e.g. in the archivist commit message
 
   checkin:
     starting:
       DATA:
-        checkin-version: "{{version-id}}" # target version id to use as starting checkpoint
+        checkin-version: "{{version-id}}" # target version id (journal position) to settle the replica on
     ended:
       DATA:
-        version: "{{version-id}}" # new checkin checkpoint id
+        version: "{{version-id}}" # journal position the replica is settled on
 
   checkout:
     starting:
       DATA:
         checkout-checkpoint-description: "{{checkout-description}}"
-        checkout-checkpoints: ["{{checkpoint-id-between-checkin-and-checkout}}"] # e.g. in git commit sha of squash checkpoints between checkin and checkout
-        archive: ["{{archive-checkpoint-id}}"] # e.g. in git branch name of the archive branch e.g. "kinan/2026/02/24"
+        checkout-checkpoints: ["{{checkpoint-id-between-checkin-and-checkout}}"] # e.g. the archivist commit shas on `main` between checkin and checkout
     ended:
       DATA:
-        id: "{{checkpoint-id}}" # e.g. in new git commit sha of squash checkpoints between checkin and checkout
-      description: "{{checkout-description}}" # e.g. in git commit message
+        id: "{{checkpoint-id}}" # e.g. the last archivist commit sha on `main` at checkout
+      description: "{{checkout-description}}" # e.g. in the archivist commit message
 
   session:
     DATA:
@@ -1391,7 +1391,6 @@ event <|-- event.checkout
 class event.checkout.starting {
   checkoutCheckpointDescription
   checkoutCheckpoints
-  archive
 }
 event.checkout <|-- event.checkout.starting
 
@@ -1722,7 +1721,6 @@ event <|-- event.checkout
 class event.checkout.starting {
   checkoutCheckpointDescription
   checkoutCheckpoints
-  archive
 }
 event.checkout <|-- event.checkout.starting
 
@@ -3462,7 +3460,7 @@ The session event grammar contains at least the following typed families:
 - `session.tool.starting`
 - `session.tool.ended`
 
-and release/checkpoint/checkin/checkout event families.
+and release/checkpoint/checkin/checkout event families. In the shared-worktree model a checkpoint is a commit of the archivist machine on `main` and a release is a tag on `main`; both are emitted by the archivist's scripts and the replica, never by git hooks, and there are no archive branches.
 
 ### 19.3 Starting/ended pairing law
 

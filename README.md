@@ -64,13 +64,13 @@ Let me walk you through 🚶️
      - [🧰️ repo](#-repo-)
      - [🔬️ coda](#-coda-)
      - [🧩️ elements](#-elements-)
-   - [🔀️ Git](#-git-)
+   - [🔀️ Shared worktree](#-shared-worktree-)
      - [🎛️ Dashboard Git](#-dashboard-git-)
      - [🔍️ ripgrep](#-ripgrep-)
      - [💬️ Discord](#-discord-)
      - [📢️ Release](#-release-)
      - [🏷️ Tag](#%EF%B8%8F-tag-)
-     - [🌿️ Branch](#-branch-)
+     - [🌿️ Branch model](#-branch-model-)
      - [🗃️ Commit](#%EF%B8%8F-commit-)
    - [🔀️ Tools](#-git-)
 1. [🧑️💻️ Development](#-development-)
@@ -497,21 +497,35 @@ A research project introducing an AI-first design assistant, bridging the semant
 
 Shared React UI components and layouts used across the browser-based applications within the monorepo.
 
-## 🔀️ [Git](https://github.com/usalu/semio.git) [↑](#-repo-)
+## 🔀️ Shared worktree [↑](#-repo-)
 
-### 🎛️ Dashboard Git [↑](#-git-)
+The repo is edited as **one shared worktree**: every machine of the fleet holds a local replica, and a replica daemon copies every file that the root `.gitignore` does not ignore to all other machines within about a second, through a journal on the group's NFS server. Ignored files (`.cache`, `node_modules`, `dist`, …) never leave the machine. There are no feature branches, merges, pull requests or merge queue for daily work, and fleet machines do not need git at all. The architecture, commands and operator setup are in [Shared worktree fleet](🧰️framework/🛍️products/🦑️repo/README.md#shared-worktree-fleet) and in the operator runbook of the `🤝️shared-worktree` module.
+
+**Join the fleet.** A machine is provisioned once with the module's provision script (it mounts the group's NFS export and installs the worker service), and then runs `join --group <id> --origin <id>` of the replica script (`repo ./📜️script.ts join …` in `🔁️replica`). The first machine of a fleet runs `seed` instead. Afterwards the replica daemon (`run`) keeps the machine in sync.
+
+**What to expect.**
+
+- A save on one machine appears on all others within about a second. Treat the tree like many agents editing one folder: files change under you, so re-read a file before you edit it.
+- If two machines write the same file, the later write wins on every machine and nothing blocks. The overwritten local bytes stay on the loser's machine in `.cache/f/lost/`.
+- What is shared is defined by the root `.gitignore` and nothing else. A new generated or machine-local path must be ignored there before it is created, or it is replicated to everyone.
+- All build results go through the group's cache server (`SEMIO_REMOTE_CACHE_*`, rendered by the topology `env` command). Cache hits across machines need the canonical per-OS worktree path of the topology.
+- Lockfiles are shared too: install with frozen or locked flags unless you intend to change dependencies.
+- Dependency bumps are normal edits in the shared worktree (change the manifest, update the lockfile, run the checks). Dependabot cannot work here because it needs branches and pull requests, so `.github/dependabot.yml` opens none (`open-pull-requests-limit: 0`); security alerts stay visible on GitHub.
+- History is taken by the archivist machine only: it commits its replica on a timer and pushes `main`. Nobody else runs mutating git commands.
+
+### 🎛️ Dashboard Git [↑](#-shared-worktree-)
 
 Choose **New Task** and search **Git Status**, **Git Diff**, **Git History**, **Git Revision** or **Line History**. Each form accepts the relevant workspace path or revision and keeps results in retained task output. Use **Workspace Terminal** for other Git operations; its input, output and process controls stay in the dashboard.
 
-### 🔍️ ripgrep [↑](#-git-)
+### 🔍️ ripgrep [↑](#-shared-worktree-)
 
 The devcontainer installs [ripgrep](https://github.com/BurntSushi/ripgrep) (`rg`) for zero-touch codebase searching 🔎️
 
 It is the fastest way to find anything in this monorepo ⚡️
 
-### 💬️ Discord [↑](#-git-)
+### 💬️ Discord [↑](#-shared-worktree-)
 
-Most git events are synchronized with our [repo channel](https://discord.com/channels/1338232508264747130/1339164626658525246) 💬️
+The git events of the archivist machine (its commits and pushes to `main`) are synchronized with our [repo channel](https://discord.com/channels/1338232508264747130/1339164626658525246) 💬️
 
 It is perfect to find the latest activities and the history 🔍️
 
@@ -554,23 +568,19 @@ We have two different types of tags:
 - `rYY.MM-V` for [releases](#-release-) (e.g `r21.06-1`,`r23.07-2`,`r24.12-1`, `r25.07-1`, …)
 - `COMPONENT-vMAJOR.MINOR.PATCH` for [bundles](#-bundles-) which follow the [semver](https://semver.org/) versioning scheme (e.g [`engine-v4.0.2`](#-composeengine-), [`sketchpad-v1.0.0`](#-composedesktop-), [`grasshopper-v5.4.0-beta`](#-composegrasshopper-), …)
 
-### 🌿️ Branch [↑](#-gitstyle-)
+### 🌿️ Branch model [↑](#-shared-worktree-)
 
-The `main` branch is compressed (squashed history) and acts as the canonical integration branch 🗜️
+There is one logical worktree and no per-contributor, feature or bug-fix branches: all fleet machines edit the same files, and same-file races resolve last-writer-wins (see [Shared worktree](#-shared-worktree-)) 🛠️
 
-If a release receives updates after `main` already progressed, create a parallel `release/rYY.MM-V` branch for that release and keep it compressed as well 🧵️
+The `main` branch exists only in the archivist machine's `.git/`. It is compressed (squashed history) and is the history of the shared tree, not an integration branch 🗜️
 
-Every [contributor](#-contributor-) has their own `FIRSTNAME` general-purpose development branch 🛠️
+A [release](#-release-) is a tag `rYY.MM-V` that the archivist sets on a commit of `main`. There is no release branch: a follow-up for an already released version is a normal edit in the shared worktree and becomes the next release tag 🏷️
 
 Use [Dashboard Git](#-dashboard-git-) to inspect branch history and revisions.
 
-Other branches are created for [bundles](#-bundles-), [specific features](https://github.com/usalu/semio/labels/enhancement) or [bug fixes](https://github.com/usalu/semio/labels/bug) 🐛️
+### 🗃️ Commit [↑](#-shared-worktree-)
 
-Usually one person works on one feature at a time and hence the `-NAME` suffix 📛️
-
-### 🗃️ Commit [↑](#-gitstyle-)
-
-Commit messages follow this format:
+Only the archivist machine commits. It commits the whole replica on a timer; fleet workers neither commit nor push. Archivist commit messages follow this format:
 
 ```
 MAIN-TASK-SYMBOL SUMMARY WORK-SYMBOL
@@ -579,24 +589,22 @@ MAIN-TASK-SYMBOL SUMMARY WORK-SYMBOL
 The first symbol encodes the main task of the commit and the last symbol encodes the amount of work (`🪛️` < `🔨️` < `🛠️` < `🏗️`) 🧰️
 
 <details>
-<summary><strong>📦️ Commit as much as you like ✅️</strong></summary>
+<summary><strong>📦️ The archivist commits as much as it likes ✅️</strong></summary>
 
 Are you worried about committing all those binary application files (`.zip`, `.gh`, `.blend`, `.glb`, `.3dm`, …) or the intermediate versions between your [ai](#ai) edits?
 
-Well, normally you should be 💾️
-
-But as we archive and squash all commits on every [native-build](#-release-) nothing is lost or polluted 💯️
+The archivist commits the replica as it is, and as we archive and squash all commits on every [native-build](#-release-) nothing is lost or polluted 💯️
 
 </details>
 
 <details>
-<summary><strong>⌛️ Push around once an hour ✅️</strong></summary>
+<summary><strong>⌛️ The archivist pushes around once an hour ✅️</strong></summary>
 
-Pushing regularly keeps you extra safe from losing your work 🛟️
+Pushes of the archivist are the only git events other services (like [Discord](https://discord.com/channels/1338232508264747130/1339164626658525246)) see 🔄️
 
-There are a few services (like [Discord](https://discord.com/channels/1338232508264747130/1339164626658525246)) that are automatically updating to what happens in the [repo](#-repo-) 🔄️
+To keep our inbox notifications low, it pushes not more than once an hour ⬆️
 
-To keep our inbox notifications low, we try to push not more than once an hour ⬆️
+Your work is not lost between pushes: it lives in every replica and in the group's journal on the NFS server 🛟️
 
 </details>
 
@@ -615,7 +623,7 @@ The recommended way to develop is using the devcontainer which provides a consis
 
 **Getting Started:**
 
-1. Clone the repository
+1. Join the [shared worktree](#-shared-worktree-): a fleet machine is provisioned with the module's provision script and runs `join`. Cloning the repository is only for the archivist machine and for outside contributors
 2. Start the checked-in devcontainer with your container runtime
 3. Wait for container build and setup to complete
 4. Run `repo dashboard` inside the container
@@ -705,6 +713,8 @@ script overrides it.
 
 ## 🪟️ Windows Setup [↑](#-development)
 
+A fleet machine does not clone: it is provisioned and joins the [shared worktree](#-shared-worktree-) at the canonical worktree path of the topology (on Windows `C:\semio` by default, which is also short), and the native bootstrap below then runs inside that replica. The clone below is for the archivist machine and for a checkout outside the fleet.
+
 Native Windows bootstrap uses the checked-in script from a regular terminal; the cache partitions
 are directories and the script does not require administrator elevation. Clone with long paths enabled
 and keep the clone root short, for example `C:\src\semio`. The script keeps `core.longpaths` in the
@@ -774,7 +784,7 @@ repo cargo --store=shared --configuration=prototype -- check -p <crate> --lib
 - **Cargo** is only reachable through `repo cargo`: raw `cargo` and `rustc` are refused at the compiler ingress gate in `.cargo/config.toml`, and private target directories are not allowed.
 - **Caches** are fixed-capacity partitions `.cache/b/<d,t,g,o,p,l,n>` (dependencies, tools, graph, observations, products, leases, Nx). On macOS each one is a case-sensitive APFS disk image `fixed.dmg` mounted at `m`; on Linux it is an unprivileged directory (`fixed.dir`, swapped atomically with `renameat2`, so `.cache` must sit on a native case-sensitive file system, in the devcontainer on its own volume); on Windows too a directory (journaled write-through swap, NTFS per-directory case sensitivity; not run on Windows, and no elevated terminal is demanded except once for the machine-wide long-path setting and the optional Windows feature). macOS images are created silenced (no FSEvents log, no Spotlight index) and the policy is re-applied whenever one is opened. `repo preflight` checks the host first: free space, the atomic directory swap, case sensitivity and the native toolchain the build needs (a Rust compiler or rustup, found through `SEMIO_RUSTC`, the `PATH` or the cargo directory, and the C linker of the platform: `cc` on Linux, `cc` plus the installed command line developer tools on macOS, the MSVC build tools on Windows); every missing piece is named with its remedy in English and German. `repo tools setup toolchains|all` then builds ahead of time what would otherwise be built on first use: the native core that lets Node call the system (`node-native-core`, one `rustc` call into the user cache) and, in the compiler store, the memory-admitting rustc scheduler and the unit-cache compiler wrapper (a native executable on Windows). If every `repo` call refuses at startup (pending publication, ambiguous image association), follow the [recovery steps](🧰️framework/🛍️products/🦑️repo/README.md#-recovery) instead of deleting files by hand.
 - **Dependencies and waiting.** `dependencies sync --all` took about 31 minutes on 2026-10-20 (an earlier attempt ran 7,000 s without finishing): the verification passes are no longer quadratic. Ordinary `repo` calls check a sealed dependency generation receipt (seconds) instead of walking the workspace several times (36 to 58 s per tree pass), and fall back to the complete walk on any mismatch; a sealed receipt has not been seen in a live run yet. A new workspace package cannot be resolved until `dependencies lock --all` and `dependencies sync --all` ran, and the tree must stay untouched while a sync runs. A wait for a cache image shows a `lease-queue` line with position, holder pid and mode; a `remains active on …` line is a running walk, not a wait. Details and open items are in the [repo docs](🧰️framework/🛍️products/🦑️repo/README.md#-build-and-run).
-- **CI.** `.github/workflows/build-system.yml` runs on pull requests, pushes to `main` and by hand on Ubuntu, macOS and Windows: pinned Bun with a verified SHA-256, `repo --help`, `preflight`, `tools setup all`, `dependencies sync --all`, a cache proof for Nx and Bazel on `@teaching/architecture-course:test`, and that target under both tools. It has never run.
+- **CI.** `.github/workflows/build-system.yml` runs on the archivist's pushes to `main` (affected range: previous commit on `main` to the pushed commit) and by hand; there are no pull requests. It runs on Ubuntu, macOS and Windows: pinned Bun with a verified SHA-256, `repo --help`, `preflight`, `tools setup all`, `dependencies sync --all`, a cache proof for Nx and Bazel on `@teaching/architecture-course:test`, and that target under both tools. It has never run.
 - **Developer dashboard.** Open the dashboard, choose **New Task**, select the owning command and complete its typed form. The dashboard controls startup, output, readiness, cancellation and restart. Add recurring operations to their project target or ticket `🎮️commands.json`; the [daily workflow](🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md#-daily-work) covers tests, builds, servers, debugging and source navigation. Start it with `repo dashboard`; builds, tests and checks by agents and automation use `repo …`, and no editor or IDE configuration registers commands.
 - **Go** code lives in member directories with one `🐹️.go` leaf (`📦️packages/🐹️go/<member>/🐹️.go`, tests in `🧪️tests/<case>/🐹️.go`); run it through the package `📜️script.ts` or `repo run <project>:test`, not plain `go test`.
 - **Zero-touch.** The build CLI boots from a fresh clone without `node_modules`, so its import closure uses relative imports only; check it with `repo --help` after touching the build library. Bootstrap works unchanged in the devcontainer and on native Windows, macOS and Linux. `repo ./📜️script.ts verify zero-touch` is the law behind that rule: it walks nine closures and fails on a bare workspace specifier or an external package.
@@ -819,7 +829,7 @@ Especially when your guess is wrong then the [model](#-models-) might have found
 
 Secondly, if the model can't find the bug then it will often try to remove functionality, add try catch blocks, add logging and other things that fastly turn your codebase into a mess 💣️
 
-Therefore, it is often a good idea that after you found the bug, reset your branch and create a new ticket where you define exactly how to fix the bug 🪛️
+Therefore, it is often a good idea that after you found the bug, revert your changes and create a new ticket where you define exactly how to fix the bug 🪛️
 
 ## ⌨️ Tools [↑](#-ai-)
 
@@ -888,7 +898,7 @@ All automation, CI runs, and agent workflows are controlled through the canonica
 The repository framework owns the build graph, task selection, configuration, inputs, outputs, progress, and cancellation. All entry points use `repo`: `repo run <project>:<task>`, `repo run-many --targets=test --projects=<projects>`, and `repo graph`. The root `📋️project.json` and package manifests use the owned project schema and `repo:script` executor.
 
 Nx remains the default build tool (`defaultTool` in `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json`); see [Build](#-build-) for Bazel, tool provisioning, dependencies, cargo and cache recovery. The shared flags `--skip-cache`, `--skip-remote-cache`, `--exclude-dependencies`, `--parallel`, `--configuration`, and `--output=stream` are translated by the selected backend. Bazel qualification does not change the default automatically.
-Git hooks are not installed by this repo; choose `workspace:lint`, `workspace:format` and `workspace:test` in the dashboard before pushing. Choose `workspace:setup-git` in the dashboard to remove installed pre-commit or post-commit hooks that would block commits, rebases, or squashes.
+Git hooks are not installed by this repo; choose `workspace:lint`, `workspace:format` and `workspace:test` in the dashboard when you finish a change; a fleet worker has no push step, because saved files are replicated. Choose `workspace:setup-git` in the dashboard to remove installed pre-commit or post-commit hooks that would block commits, rebases, or squashes.
 
 # 🏘️ Examples [↑](#-overview)
 

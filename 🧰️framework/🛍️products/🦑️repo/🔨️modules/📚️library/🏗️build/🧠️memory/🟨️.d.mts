@@ -11,6 +11,10 @@ export function graphChildHeapBytesV1(policy?:GraphMemoryPolicyV1):number;
 export function graphServiceHeapBytesV1(policy?:GraphMemoryPolicyV1):number;
 export interface MemoryPortsV1{readonly sample:()=>number;readonly collect:()=>void}
 export function createMemoryPortsV1():MemoryPortsV1;
+export function darwinAvailableBytesV1(text:string):number|undefined;
+export function linuxAvailableBytesV1(text:string):number|undefined;
+export function createAvailableMemoryV1(ports?:{platform?:string;read?:(path:string)=>string;run?:()=>string;free?:()=>number;now?:()=>number;maximumAgeMilliseconds?:number}):()=>number;
+export const availableMemoryBytesV1:()=>number;
 export function serviceMemoryHeadroomBytesV1(options?:{ports?:unknown;policy?:GraphMemoryPolicyV1;cgroup?:(ports?:unknown)=>{limitBytes:number;currentBytes:number}|undefined;free?:()=>number;total?:()=>number;environment?:Readonly<Record<string,string|undefined>>;usage?:()=>number}):number;
 export interface MemoryGovernorOptionsV1{workers:number;headroom?:()=>number;estimateBytes?:number;peaks?:GraphOwnerPeaksV1;decide?:(decision:{key:string;used:number;budget:number;kind?:string})=>void;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;now?:()=>number;signal?:AbortSignal;report?:(line:string)=>void;environment?:Readonly<Record<string,string|undefined>>;policy?:GraphMemoryPolicyV1}
 export interface MemoryGovernorStatsV1{waits:number;waitedMilliseconds:number;peakOwners:number;ownerCostMegabytes:number;kinds:Readonly<Record<string,number>>}
