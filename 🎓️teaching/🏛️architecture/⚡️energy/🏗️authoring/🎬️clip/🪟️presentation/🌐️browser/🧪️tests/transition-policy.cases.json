@@ -1,0 +1,4 @@
+{
+  "id": "incidental-transitions-disabled",
+  "css": "*,*::before,*::after{transition:none!important}"
+}

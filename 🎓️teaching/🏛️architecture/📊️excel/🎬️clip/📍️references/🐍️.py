@@ -16,6 +16,10 @@ _nk = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagi
 _nd = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🐍️")
 _draft = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🐍️")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+_snapshot = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️snapshot")
+_live_scene = importlib.import_module("🎓️teaching.🧰️interop.🎬️scene.🐍️")
+_keyed = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️keyed")
+
 _m = _visuals._engine
 _S = {}
 
@@ -38,15 +42,15 @@ def _put(shape, point, edge="c"):
     return shape.shift(np.array([point[0], point[1], 0.0]) - anchor)
 
 
-class Beat2_References(_visuals.ClipScene):
+class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
     """📍 Teach references on the Nakagin workbook: pointer, relative fill, absolute and its mistake, mixed, sheet, 3D, names, and the deleted sheet."""
 
     TITLE = {"en": "Cell References", "de": "Zellbezüge"}
     NARRATION = [
         ["hook", "The nominal width of program A sits in one cell; the casing drawing stays the physical reference. What follows when it changes?",
          "Die nominale Breite von Programm A steht in einer Zelle; die Gehäusezeichnung bleibt Referenz. Was folgt, wenn sie sich ändert?"],
-        ["pointer", "A reference is an address, not a number. D3 points to B2 and B3, so a wider capsule gives a larger roof area.",
-         "Ein Bezug ist eine Adresse, keine Zahl. D3 zeigt auf B2 und B3, eine breitere Kapsel ergibt also eine größere Dachfläche."],
+        ["pointer", "A reference is an address, not a number. D3 points to B2 and B3, so a larger nominal width gives a larger nominal roof area.",
+         "Ein Bezug ist eine Adresse, keine Zahl. D3 zeigt auf B2 und B3: Eine größere Nennbreite ergibt eine größere nominale Dachfläche."],
         ["relative", "One formula per surface is tedious. Write U·A once in F3 and fill it down: the formula travels with the row.",
          "Für jedes Bauteil eine eigene Formel ist mühsam. U·A einmal in F3 schreiben und nach unten ausfüllen: Die Formel wandert mit der Zeile."],
         ["shift", "Copied one row down, D3*E3 becomes D4*E4. Relative parts shift by the offset, here one row.",
@@ -199,6 +203,11 @@ class Beat2_References(_visuals.ClipScene):
         """💬 A text label placed by an edge."""
         return _put(self.text(string, (0, 0, 0), size=size, color=color, width=width), point, edge)
 
+    def _basis_labels(self):
+        """📐 Distinguish nominal workbook dimensions from the physical casing."""
+        return _m.VGroup(self._say(self.tr("Workbook · nominal", "Arbeitsmappe · Nennmaße"), (-2.85, 3.1), size=SMALL, color=MUTED),
+                         self._say(self.tr("Drawing · physical casing", "Zeichnung · reale Hülle"), (4.0, 3.1), size=SMALL, color=MUTED))
+
     def _edit(self, *events, book=None):
         """🧮 A new workbook state from authored edit events."""
         return _xl.apply(book if book is not None else _S["book"], list(events))
@@ -256,6 +265,12 @@ class Beat2_References(_visuals.ClipScene):
             left, top, right, bottom = window.rect(f"{column}{row}")
             return _m.VGroup(_m.Rectangle(width=right - left, height=top - bottom, stroke_color=color, stroke_width=3.2, fill_opacity=0).move_to([(left + right) / 2, (top + bottom) / 2, 0]))
         return self.live(build, lambda: int(round(tracker.get_value())))
+
+    def _row_sequence(self, views, target, seconds):
+        """📈 Reveal row views before advancing their shared tracker."""
+        reveal = _m.AnimationGroup(*[_m.FadeIn(view) for view in views], run_time=0.5)
+        advance = self.row.animate(run_time=seconds - 0.5, rate_func=_m.linear).set_value(target)
+        return _m.Succession(reveal, advance)
 
     def _formula_card(self, formulas, point, *, caption=None, width=5.4, colors=None):
         """🧾 A card with one or more coloured formulas below an optional caption."""
@@ -320,6 +335,7 @@ class Beat2_References(_visuals.ClipScene):
             return cache[key]
 
         faces = self.live(lambda: self._faces(), lambda: self._faces_key())
+        faces_display = _keyed.create(lambda: (faces.update(0), faces)[1], self._faces_key, self.camera)
 
         win = self._window(base, SHEET, "A:D", (1, 10), "B2")
         win.bind("B2", lambda: _xl.display(self.w.get_value(), '0.00 "m"', lang))
@@ -328,6 +344,7 @@ class Beat2_References(_visuals.ClipScene):
             win.bind(a1, lambda a1=a1: _xl.display(at_width(self.w.get_value())[(SHEET, a1)], '0.0 "m²"', lang))
         dep_frames = [self.xl_ref_frame(win, a1, color=DATA, dashed=True) for a1 in dependants]
         tower = self._tower(lit=self._type_slots(None, "A"))
+        tower_display = _snapshot.capture(tower, self.camera)
         blue, red = _visuals._workbook.REFERENCE_COLORS[0], _visuals._workbook.REFERENCE_COLORS[1]
         width_text = _xl.display(width0, '0.00 "m"', lang)
         origin = tower.capsules[sorted(self._type_slots(None, "A"))[0]].get_center()
@@ -335,7 +352,8 @@ class Beat2_References(_visuals.ClipScene):
         cell_token = self._tok(width_text, "cell", blue, win.point("B2"))
         lift = _morph.morph(dimension_token, cell_token, ghost=0.25, path_arc=0.5, run_time=1.6)
         self.add(dimension_token)
-        self.step("hook", _m.FadeIn(win), win.select("D3"), _m.FadeIn(tower), *(_m.FadeIn(f) for f in dep_frames), lift, seconds=3.0)
+        basis = self._basis_labels()
+        self.step("hook", _m.FadeIn(basis), _m.FadeIn(win), win.select("D3"), _m.FadeIn(tower_display), *(_m.FadeIn(f) for f in dep_frames), lift, seconds=3.0)
         self._drop(cell_token, lift.ghost_mobject)
         self.play(self.w.animate.set_value(width0 + 0.5), run_time=1.2)
         self.w.set_value(width0)
@@ -351,14 +369,18 @@ class Beat2_References(_visuals.ClipScene):
         edge_tokens = [self._tok(self._cell(base, a1, values=vals0), "cell", color, win.point(a1)) for a1, color in (("B2", blue), ("B3", red))]
         dimension_tokens = [self._tok(self._cell(base, a1, values=vals0), "number", color, drawing.dims[name].get_center()) for (a1, color), name in zip((("B2", blue), ("B3", red)), ("width", "length"))]
         self.add(*face_shapes, *edge_tokens)
-        self.step("pointer", _m.FadeOut(tower), *(_m.FadeOut(f) for f in dep_frames), _m.FadeIn(faces), _morph.scatter(face_shapes, area_tokens, lag=0.15, path_arc=0.5, run_time=1.8, pairs_fn=lambda s, d: [(s, d[0])], dip=0.15),
+        self.step("pointer", _m.FadeOut(tower_display), *(_m.FadeOut(f) for f in dep_frames), _m.FadeIn(faces_display), _morph.scatter(face_shapes, area_tokens, lag=0.15, path_arc=0.5, run_time=1.8, pairs_fn=lambda s, d: [(s, d[0])], dip=0.15),
                   _morph.scatter(edge_tokens, dimension_tokens, lag=0.3, path_arc=0.5, run_time=1.8), seconds=3.0)
         formula = self.xl_formula_text("=B2*B3", at=(RIGHT_X - 0.9, -2.15, 0), size=LABEL, ink=INK)
         marks = [mark for _, _, mark in formula.refs]
         rest = [part for part in formula.submobjects if all(part is not mark for mark in marks)]
         self.play(_morph.scatter(dimension_tokens, marks, lag=0.2, path_arc=0.4, run_time=1.0), *(_m.FadeIn(part) for part in rest), *(_m.FadeOut(token) for token in area_tokens), run_time=1.2)
         self.formula_pieces = [*marks, *rest]
+        win.edit(None)
+        input_frames = [self.xl_ref_frame(win, a1, color=color) for a1, color in (("B2", blue), ("B3", red))]
+        self.add(*input_frames)
         self.play(self.w.animate.set_value(width0 + 0.5), run_time=1.2)
+        self.remove(*input_frames)
         self.w.set_value(width0)
         win.edit(None)
 
@@ -368,7 +390,7 @@ class Beat2_References(_visuals.ClipScene):
         self.row.set_value(3)
         self.st["mode"], self.st["card"] = "row", False
         handle = self.xl_fill_handle(win2, "F3", to="F8")
-        self.step("relative", _m.FadeOut(win), *(_m.FadeOut(piece) for piece in self.formula_pieces), _m.FadeIn(win2), _m.FadeIn(handle), seconds=1.5)
+        self.step("relative", _m.FadeOut(basis), _m.FadeOut(win), *(_m.FadeOut(piece) for piece in self.formula_pieces), _m.FadeIn(win2), _m.FadeIn(handle), seconds=1.5)
         win2.edit("=D3*E3")
         win2.select("F3")
         shift_card = self._formula_card([("F3", "=D3*E3"), ("F4", "=D4*E4", "↓ Δ " + self.tr("row", "Zeile") + " +1")], (RIGHT_X, 1.45), caption=self.tr("Copied one row down", "Eine Zeile nach unten kopiert"))
@@ -392,7 +414,8 @@ class Beat2_References(_visuals.ClipScene):
         surface_shapes = [_morph.silhouette(self._surface(faces, name, face)) for name, face in SURFACES]
         value_chips = [self._tok(self._cell(base, f"F{r}", values=vals0), "cell", DATA, win2.point(f"F{r}"), size=0.6) for r in range(3, 10)]
         self.add(*surface_shapes)
-        self.step("lights", _m.FadeOut(shift_card), _m.FadeOut(handle), _m.FadeIn(cursor), self.row.animate.set_value(8).set_rate_func(_m.linear),
+        cursor_reveal = self._row_sequence((cursor,), 8, 4.5)
+        self.step("lights", _m.FadeOut(shift_card), _m.FadeOut(handle), cursor_reveal,
                   _morph.scatter(surface_shapes, value_chips, lag=0.5, path_arc=0.5, run_time=1.0, limit=4.4, pairs_fn=lambda s, d: [(s, d[0])], dip=0.15), seconds=4.5)
         self.row.set_value(8)
         self._drop(*value_chips)
@@ -467,8 +490,9 @@ class Beat2_References(_visuals.ClipScene):
         self.add(delta_chip)
         loss_cells0 = [self._tok(self._cell(_S["b_abs"], f"G{r}", values=v_abs), "cell", DATA, win4.point(f"G{r}"), size=0.55) for r in range(3, 10)]
         loss_faces0 = [self._tok(self._cell(_S["b_abs"], f"G{r}", values=v_abs), "number", DATA, self._centre(faces, name, face) + np.array([0.0, -0.18, 0]), size=0.55) for r, (name, face) in zip(range(3, 10), SURFACES)]
-        self.step("absolute", _morph.split(delta_chip, [inside_chip, outside_chip], lag=0.4, path_arc=0.5, run_time=1.6), _morph.scatter(loss_cells0, loss_faces0, lag=0.55, path_arc=0.5, run_time=0.9, limit=4.8), _m.FadeOut(card), _m.FadeOut(win3), _m.FadeOut(frame), _m.FadeIn(win4), _m.FadeIn(frame4), _m.FadeIn(cursor4),
-                  self.row.animate.set_value(9).set_rate_func(_m.linear), seconds=5.0)
+        win4.edit(None)
+        reveal4 = self._row_sequence((win4, cursor4), 9, 5.0)
+        self.step("absolute", _morph.split(delta_chip, [inside_chip, outside_chip], lag=0.4, path_arc=0.5, run_time=1.6), _morph.scatter(loss_cells0, loss_faces0, lag=0.55, path_arc=0.5, run_time=0.9, limit=4.8), _m.FadeOut(card), _m.FadeOut(win3), _m.FadeOut(frame), _m.FadeIn(frame4), reveal4, seconds=5.0)
         self.row.set_value(9)
         self._drop(inside_chip, outside_chip, *loss_faces0)
         win4.edit(None)
@@ -517,7 +541,7 @@ class Beat2_References(_visuals.ClipScene):
         self.loss_labels = loss_labels
         fixed.edit(None)
 
-        self._stage_two_way(fixed, fix_card, faces)
+        self._stage_two_way(fixed, fix_card, faces, faces_display)
         self._stage_sheets()
         self._stage_failures()
         self._stage_names_and_recap()
@@ -530,7 +554,7 @@ class Beat2_References(_visuals.ClipScene):
         index = next(t.index for t in _nk.towers() if t.key == tower_key)
         return self._type_slots(index, type_key)
 
-    def _stage_two_way(self, fixed, fix_card, faces):
+    def _stage_two_way(self, fixed, fix_card, faces, faces_display):
         """✖️ Mixed references: first U-value by temperature difference, then the tower-by-type count table."""
         base = _S["book"]
         vals = _xl.evaluate(base)
@@ -546,8 +570,7 @@ class Beat2_References(_visuals.ClipScene):
         grid = self._edit(*events)
         vg = _xl.evaluate(grid)
         order = [f"{c}{r}" for r in (19, 20, 21) for c in "CDE"]
-        blank = self._edit(*({"type": "clear-cell", "sheet": "Program", "cell": a1} for a1 in order), book=grid)
-        flux = self._window(blank, "Program", "A:E", (18, 21), "C19")
+        flux = self._window(grid, "Program", "A:E", (18, 21), "C19")
         self.pos2 = _m.ValueTracker(-1)
         for index, a1 in enumerate(order):
             flux.bind(a1, lambda a1=a1, index=index: self._cell(grid, a1, "Program", vg) if self.pos2.get_value() + 0.01 >= index else "")
@@ -563,17 +586,18 @@ class Beat2_References(_visuals.ClipScene):
         label_sources = [_morph.silhouette(self._surface(faces, name, face)) for name, face in (("roof", "top"), ("wall_left", "left"), ("window", "front"))]
         label_targets = [self._tok(label, "cell", DATA, flux.point(f"A{row}"), size=0.6) for row, label, _ in rows]
         self.add(*label_sources)
-        self.step("mixed2", _morph.scatter(label_sources, label_targets, lag=0.4, path_arc=0.5, run_time=1.8, pairs_fn=lambda s, d: [(s, d[0])]), _m.FadeOut(fixed), _m.FadeOut(faces),*(_m.FadeOut(chip) for chip in cell_chips), _m.FadeIn(flux), self.pos2.animate.set_value(8).set_rate_func(_m.linear), seconds=6.0)
+        flux.edit(None)
+        flux_refs = [self.xl_ref_frame(flux, a1, color=color) for a1, color in (("B19", DATA), ("C18", SERV))]
+        self.step("mixed2", *(_m.FadeIn(frame) for frame in flux_refs), _morph.scatter(label_sources, label_targets, lag=0.4, path_arc=0.5, run_time=1.8, pairs_fn=lambda s, d: [(s, d[0])]), _m.FadeOut(fixed), _m.FadeOut(faces_display),*(_m.FadeOut(chip) for chip in cell_chips), _m.FadeIn(flux), self.pos2.animate.set_value(8).set_rate_func(_m.linear), seconds=6.0)
         self._drop(*label_targets, seconds=0.3)
         centre_cells = [self._tok(_xl.display(vg[("Program", f"D{row}")], "0.0", self.language()), "cell", DATA, flux.point(f"D{row}"), size=0.7) for row, _, _ in rows]
         self.add(*centre_cells)
         self.play(_m.FadeIn(chart), _morph.scatter(centre_cells, bars, lag=0.25, path_arc=0.4, run_time=1.6), run_time=2.0)
         self._absorb(chart, *bars)
-        flux.edit(None)
+        self.remove(*flux_refs)
 
         cells = [f"{c}{r}" for r in (11, 12) for c in "BCDE"]
-        cleared = self._edit(*({"type": "clear-cell", "sheet": "Program", "cell": a1} for a1 in cells))
-        win5 = self._window(cleared, "Program", "A:E", (10, 13), "B11")
+        win5 = self._window(base, "Program", "A:E", (10, 13), "B11")
         self.pos = _m.ValueTracker(-1)
         for col in "BCDE":
             win5.bind(f"{col}13", lambda col=col: self._cell(base, f"{col}13", "Program", vals) if self.pos.get_value() + 0.01 >= 7 else "")
@@ -596,17 +620,17 @@ class Beat2_References(_visuals.ClipScene):
             text = self.tr("Tower ", "Turm ") + self._cell(base, f"A{a1[1:]}", "Program", vals) + " · " + self._cell(base, f"{a1[0]}10", "Program", vals) + ": " + self._cell(base, a1, "Program", vals)
             return _m.VGroup(self._say(text, (RIGHT_X, 2.35), size=LABEL, color=DATA))
 
-        label = self.live(caption, lambda: int(round(self.pos.get_value())))
-        tower_live = _m.VGroup(self.live(tower, lambda: int(round(self.pos.get_value()))), label)
+        label = _keyed.create(caption, lambda: int(round(self.pos.get_value())), self.camera)
+        tower_live = _m.Group(_keyed.create(tower, lambda: int(round(self.pos.get_value())), self.camera), label)
         self.pos.set_value(0)
         self.play(_m.FadeOut(flux), _m.FadeOut(chart), _m.FadeIn(win5), _m.FadeIn(tower_live), run_time=0.6)
+        win5.edit(None)
         counted = self._tower(lit=self._tower_cell(base, "B11"))
         capsule_shapes = [_morph.silhouette(counted.capsules[key]) for key in sorted(self._tower_cell(base, "B11"))]
         count_token = self._tok(self._cell(base, "B11", "Program", vals), "number", DATA, win5.point("B11"))
         self.add(*capsule_shapes)
         self.step("mixed", _morph.gather(capsule_shapes, count_token, lag=0.06, path_arc=0.5, run_time=1.8), seconds=2.0)
         self._drop(count_token)
-        win5.edit(None)
         self.pos.set_value(0)
         plays = []
         for index in range(1, len(cells)):

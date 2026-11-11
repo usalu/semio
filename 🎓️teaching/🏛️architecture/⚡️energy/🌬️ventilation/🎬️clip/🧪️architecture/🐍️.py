@@ -6,6 +6,7 @@ import json
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 from manim import *
@@ -20,7 +21,7 @@ CASES = json.loads(Path(__file__).with_name("🔣️.cases.json").read_text(enco
 def helpers(chapter):
     """🔬 Load authored geometry without voice timing or scene side effects."""
     tree = ast.parse((CHAPTERS / chapter / "🐍️.py").read_text(encoding="utf-8"))
-    names = {"_room", "_stand", "_remember", "_level", "_house_section", "_pf_house", "_to_scene", "_poly", "_shoelace", "_vent_room", "_open_sash", "_clip_above", "_clip_below"}
+    names = {"_room", "_stand", "_remember", "_level", "_house_section", "_pf_house", "_to_scene", "_poly", "_shoelace", "_vent_room", "_open_sash", "_clip_above", "_clip_below", "_scale_marks"}
     tree.body = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in names]
     scope = dict(globals())
     scope.update(vars(VISUALS))
@@ -67,12 +68,40 @@ class VentilationArchitecture(unittest.TestCase):
                         row = int(round((0.5 - (y - center[1]) / raster["frame_height"]) * raster["pixel_height"]))
                         self.assertTrue(np.all(pixels[row - 1:row + 2, column - 1:column + 2] == 0))
                 person = api["_stand"](center, h, center[0], t=t)
-                target = case["occupant_ratio"] * (h - t)
+                target = CASES["occupant_visible_height_m"] * (h - t) / CASES["clear_storey_m"]
                 figure = person.get_points_defining_boundary()
                 self.assertAlmostEqual(figure[:, 1].max() - figure[:, 1].min(), target, delta=0.02 * target)
                 self.assertGreaterEqual(person.height, 0.95 * target)
                 self.assertLessEqual(person.height, 1.5 * target)
                 self.assertAlmostEqual(person.get_bottom()[1], room[1].get_top()[1], delta=0.01 * target)
+
+    def test_occupants_use_clear_room_metres(self):
+        for case in CASES["rooms"]:
+            api = helpers(case["chapter"])
+            with self.subTest(chapter=case["chapter"]), patch.dict(api, {"staffage_motion": lambda cast, **kwargs: kwargs}):
+                result = api["_stand"](np.array(case["center"]), case["height"], case["center"][0], t=case["thickness"])
+                np.testing.assert_allclose(result["unit"], (case["height"] - case["thickness"]) / CASES["clear_storey_m"])
+
+    def test_embedded_devices_use_the_architectural_metre(self):
+        root = CHAPTERS.parents[1]
+        scenes = [(CHAPTERS / "📦️volume" / "🐍️.py", "_use_glyph", "shared-mvhr-normal", {"_USE_UNIT": CASES["embedded_devices"]["mini_room_metre"]}, CASES["embedded_devices"]["mini_room_metre"]),
+                  (root / "❄️cooling" / "🎬️clip" / "⚖️heating-comparison" / "🐍️.py", "_build_ahu", "ventilation-mechanical-mvhr", {"house": {"w_height": 2 * CASES["embedded_devices"]["house_storey"]}, "storey": CASES["embedded_devices"]["house_storey"], "room_metre": VISUALS.room_metre}, CASES["embedded_devices"]["house_storey"] / CASES["embedded_devices"]["clear_storey_m"])]
+        scenes.append((root / "❄️cooling" / "🎬️clip" / "⚖️heating-comparison" / "🐍️.py", "_build_ahu", "physics-fundamentals-evaporator", {"metres": CASES["embedded_devices"]["house_storey"] / CASES["embedded_devices"]["clear_storey_m"]}, CASES["embedded_devices"]["house_storey"] / CASES["embedded_devices"]["clear_storey_m"]))
+        for path, function, cast, scope, expected in scenes:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            body = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == function)
+            call = next(node for node in ast.walk(body) if isinstance(node, ast.Call) and node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == cast)
+            unit = next(keyword.value for keyword in call.keywords if keyword.arg == "unit")
+            np.testing.assert_allclose(eval(compile(ast.Expression(unit), str(path), "eval"), scope), expected)
+
+    def test_scale_labels_stay_in_the_frame(self):
+        api = helpers("📦️volume")
+        api["math_label"] = lambda *args, **kwargs: Text("Passive house with ventilation system " * 3, font_size=36)
+        case = CASES["scale_labels"]
+        _, labels, _ = api["_scale_marks"]({"x": 0, "y_of": lambda value: value}, [(1, "long", WHITE)], x_text=case["x_text"])
+        self.assertLessEqual(labels[0].get_right()[0], config.frame_width / 2 - case["safe_margin"] + 1e-6)
+        source = (CHAPTERS / "📦️volume" / "🐍️.py").read_text(encoding="utf-8")
+        self.assertIn(r'tr(r"\text{' + case["expected_en"] + r'} \approx 0.5"', source)
 
     def test_small_symbolic_rooms_without_windows(self):
         for chapter in ("🪟️natural", "❓️need", "⚙️mechanical", "📦️volume"):

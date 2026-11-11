@@ -1,0 +1,44 @@
+{
+  "languages": [
+    "en",
+    "de"
+  ],
+  "audience": "speaker",
+  "size": [
+    854,
+    480
+  ],
+  "fps": 15,
+  "audio": {
+    "layout": "stereo",
+    "rate": 48000
+  },
+  "lessons": [
+    "physical_fundamentals",
+    "ventilation",
+    "heating",
+    "cooling",
+    "energy_balance",
+    "bim_information",
+    "bim_objects",
+    "bim_representations",
+    "bim_models",
+    "bim_exchange",
+    "bim_consistency",
+    "grasshopper_anatomy",
+    "grasshopper_capsule",
+    "grasshopper_tower",
+    "grasshopper_casting",
+    "grasshopper_trees",
+    "excel_anatomy",
+    "excel_references",
+    "excel_program",
+    "excel_energy",
+    "optimization_extrema",
+    "optimization_sampling",
+    "optimization_experiments",
+    "optimization_index",
+    "optimization_pareto",
+    "optimization_algorithms"
+  ]
+}

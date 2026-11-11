@@ -846,7 +846,7 @@ class Beat4_WattVergleich(Scene):
          "Times 25 square meters and 20 kelvin: about 715, 120 and 55 watts flow through the wall.",
          "Mal 25 m² und 20 K fließen rund 715 W, 120 W und 55 W durch die Wand."),
         ("compare",
-         "The uninsulated wall loses as much as 0.8 toasters, the insulated one about one resting person, the highly insulated one about one and a half tealights.",
+         "Heat loss equals 0.8 toasters uninsulated, one resting person insulated, or 1.5 tealights highly insulated.",
          "Die ungedämmte Wand verliert so viel wie 0,8 Toaster, die gedämmte etwa einen ruhenden Menschen, die hochgedämmte eineinhalb Teelichter."),
     ]
 
@@ -1259,7 +1259,7 @@ class Beat6_Waermebruecken(Scene):
         psi = {k: (real - v) / CORNER_H for k, v in hu.items()}
         x_name, x_l, x_bar, k_bar = -1.2, 1.0, 1.8, 0.556
         y_rows = {"e": 1.35, "a": 0.75, "i": 0.15}
-        names = {"e": tr("External dimension", "Außenmaß"), "a": tr("Centreline dimension", "Achsmaß"), "i": tr("Internal dimension", "Innenmaß")}
+        names = {"e": tr("Outside", "Außenmaß"), "a": tr("Centreline", "Achsmaß"), "i": tr("Inside", "Innenmaß")}
         heads = VGroup(
             math_label(r"l\;[\mathrm{m}]", np.array([x_l, 2.0, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="center"),
             math_label(rf"U \cdot l \cdot h\;[\mathrm{{W/K}}],\; h = {label_number(CORNER_H)}\,\mathrm{{m}}",

@@ -1,0 +1,11 @@
+{
+  "languages": [
+    "en",
+    "de"
+  ],
+  "reveal": 0.1,
+  "grow": 1.7,
+  "sample_min": 0.1,
+  "sample_max": 0.9,
+  "tolerance": 2
+}

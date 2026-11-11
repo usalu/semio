@@ -21,6 +21,8 @@ _draft = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim
 _art = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 _engine = importlib.import_module("manim")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+_snapshot = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️snapshot")
+_keyed = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️keyed")
 
 INK, MUTED, ARCH, STRUCT, SERV, DATA, GOOD, WARN = _visuals.INK, _visuals.MUTED, _visuals.ARCH, _visuals.STRUCT, _visuals.SERV, _visuals.DATA, _visuals.GOOD, _visuals.WARN
 LABEL, SMALL = 19.2, 16.2
@@ -148,7 +150,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
 
     def _live_capsule(self):
         """♻️ The capsule redrawn whenever its state changes."""
-        return self.live(lambda: self._drawing() if self.s.show else _engine.VGroup(), self._key)
+        return _keyed.create(lambda: self._drawing() if self.s.show else _engine.VGroup(), self._key, self.camera)
 
     def _drawing(self):
         """💊 The capsule at the outer size of B2:B4 with the interior floor, its hatch, the fittings and the perimeter, all from the state dictionary and the engine values."""
@@ -237,6 +239,18 @@ class Beat1_Anatomy(_visuals.ClipScene):
         self._after.clear()
         gone and self.play(_engine.FadeOut(*gone), run_time=0.3)
         gone and self.remove(*gone)
+
+    def _handoff(self, window, capsule, update):
+        """🔄 Hide the old workbook and capsule before changing their state."""
+        self.play(_engine.FadeOut(window), _engine.FadeOut(capsule))
+        update()
+        capsule.update(0)
+
+    def _repair_window(self, window, book, line, capsule):
+        """🩹 Finish workbook recalculation before restoring the capsule."""
+        self.play(window.recalculate(book), _engine.FadeOut(line))
+        self._state(err=False, floor=True, floor_color=GOOD, interior=True, fit=len(self._fittings), fixchip=None)
+        capsule.update(0)
 
     def _fly(self, src, dst, ghosted=True, **kwargs):
         """🕊️ A token flies to its partner with chip and text travelling together, so it stays readable mid-flight."""
@@ -330,12 +344,14 @@ class Beat1_Anatomy(_visuals.ClipScene):
         self._one = one.path + (one.item,)
         lit_one = lambda key: key == self._one
         tower = self.tower_axon(**TOWER_FIT, lit=lit_one)
+        tower_display = _snapshot.capture(tower, self.camera)
         chip = self._chip(self.tr("capsules in the building: ", "Kapseln im Gebäude: ") + self.number(len(_nk.slots()), 0), (0.0, -2.42, 0.0))
         mark = _engine.VGroup(self.leader(tower.capsules[self._one].get_center(), (2.3, -1.5, 0.0), None, color=DATA), self._say(self.tr("one Type A capsule", "eine Kapsel Typ A"), (2.45, -1.5), size=SMALL, color=DATA, edge="l"))
-        self.step("hook", _engine.FadeIn(tower), _engine.FadeIn(chip), _engine.FadeIn(mark), seconds=2.0)
+        self.step("hook", _engine.FadeIn(tower_display), _engine.FadeIn(chip), _engine.FadeIn(mark), seconds=2.0)
 
         window = self._window(book, selected="A1")
         small = self.tower_axon(**SIDE_FIT, lit=lit_one)
+        small_display = _snapshot.capture(small, self.camera)
         body = _morph.silhouette(tower)
         stripes = _engine.VGroup(*[_engine.Square(0.14, fill_color=_draw.type_color(letter), fill_opacity=1.0, stroke_width=0) for letter in "ABCD"]).arrange(_engine.RIGHT, buff=0.06)
         stripes.move_to(window.title.get_center() + np.array([1.9, 0.0, 0.0]))
@@ -343,15 +359,15 @@ class Beat1_Anatomy(_visuals.ClipScene):
         filetok = self._tok(filename, window.title.get_center(), DATA)
         count = self._tok(self.number(len(_nk.slots()), 0) + " " + self.tr("capsules", "Kapseln"), window.title.get_center() + np.array([2.6, 0.0, 0.0]), DATA, "number")
         self._clause("workbook", [_engine.FadeOut(chip), _engine.FadeOut(mark), _engine.FadeIn(window)],
-                     lambda: (self.add(body), self.remove(tower)), [_morph.morph(body, filetok, path_arc=0.4, run_time=1.6)],
-                     [_engine.TransformFromCopy(filetok, count)], [_engine.FadeOut(filetok), _engine.FadeIn(small), _engine.FadeIn(stripes)])
+                     lambda: (self.add(body), self.remove(tower_display)), [_morph.morph(body, filetok, path_arc=0.4, run_time=1.6)],
+                     [_engine.TransformFromCopy(filetok, count)], [_engine.FadeOut(filetok), _engine.FadeIn(small_display), _engine.FadeIn(stripes)])
         kinds = [(letter, next(s for s in _nk.slots() if s.type == letter)) for letter in "ABCD"]
         srcs = [small.capsules[slot.path + (slot.item,)].copy() for _, slot in kinds]
         dsts = [_morph.token("", kind="item", color=_draw.type_color(letter)).move_to(window.tabs[f"Type {letter}"].get_center()) for letter, _ in kinds]
         self.add(*srcs)
         self._clause("sheets", [_morph.scatter(srcs, dsts, lag=0.25, path_arc=0.5, run_time=2.0, pairs_fn=_morph.capsule_pairs)],
                      [_engine.FadeOut(*dsts), _engine.FadeOut(count), _engine.FadeOut(stripes), _engine.LaggedStart(*[_engine.Indicate(tab) for tab in window.tabs.values()], lag_ratio=0.25)])
-        live_tower = small
+        live_tower = small_display
         self.s.show = True
         capsule = self._live_capsule()
         self.add(capsule)
@@ -465,10 +481,19 @@ class Beat1_Anatomy(_visuals.ClipScene):
         self._state(delta=True)
         strip = _draft.polygon(self._strip_points(), GOOD, 0.55, GOOD, _draft.W_THIN)
         change = self._tok(self._delta_chip, np.array([6.1, -1.0, 0.0]), GOOD, "number")
-        self._clause("recalc", [_engine.FadeOut(window3), _engine.FadeIn(window4), window4.select("B9"), _ramp(self.s.iw, base_iw, self._outer["width"], 3.0)],
+        window_frame = {}
+        def freeze_window():
+            window_frame["display"] = _keyed.create(lambda: (window4.update(0), window4)[1], lambda: round(self.s.iw.get_value(), 3), self.camera)
+            self.remove(window4, *window4.get_family())
+            self.add(window_frame["display"])
+        def restore_window():
+            self.remove(window_frame.pop("display"))
+            window4.update(0)
+            self.add(window4)
+        self._clause("recalc", [_engine.FadeOut(window3), _engine.FadeIn(window4), window4.select("B9")], freeze_window,
+                     [_ramp(self.s.iw, base_iw, self._outer["width"], 3.0)], restore_window,
                      lambda: self.add(strip), [_morph.morph(strip, change, pairs=[(strip, change[0])], path_arc=0.5, run_time=1.5)], lambda: self._after.append(change))
-        self.s.iw.set_value(base_iw)
-        self._state(area=False, interior=False, delta=False)
+        self._handoff(window4, capsule, lambda: (self.s.iw.set_value(base_iw), self._state(area=False, interior=False, delta=False)))
 
         window5 = self._window(book, selected="B9", rows=(4, 16))
         sources, users = sorted(a for s, a in _xl.precedents(book, (SHEET, "B9")) if s == SHEET and window5.visible(a)), sorted(a for s, a in _xl.dependents(book, (SHEET, "B9")) if s == SHEET and window5.visible(a))
@@ -476,59 +501,57 @@ class Beat1_Anatomy(_visuals.ClipScene):
         centre = lambda a1: window5.cell(a1).get_center()
         used = [self._tok(self._gauge(window5, a1), centre(a1), tone) for a1, tone in (("B5", BLUE), ("B6", RED))]
         result = [self._tok(self._gauge(window5, "B9"), centre("B9"), GOOD, "number") for _ in users]
-        self._clause("trace", [_engine.FadeOut(window4), _engine.FadeIn(window5), _engine.FadeIn(arrows)], lambda: (self.add(*used), self._veil(window5, "B9", on=True)),
+        self._clause("trace", [_engine.FadeIn(capsule), _engine.FadeIn(window5), _engine.FadeIn(arrows)], lambda: (self.add(*used), self._veil(window5, "B9", on=True)),
                      [_morph.travel(tok, _engine.Line(centre(a1), centre("B9")), run_time=1.2) for tok, a1 in zip(used, ("B5", "B6"))], [_engine.FadeOut(*used)],
                      lambda: (self._veil(window5, "B9", on=False), self.add(*result), self._veil(window5, *users, on=True)), [_morph.travel(tok, _engine.Line(centre("B9"), centre(a1)), run_time=1.2) for tok, a1 in zip(result, users)], [_engine.FadeOut(*result)], lambda: self._veil(window5, *users, on=False))
         self.play(_engine.FadeOut(arrows), run_time=0.01)
 
         window6 = self._window(_xl.apply(book, [{"type": "clear-cell", "sheet": SHEET, "cell": "B6"}]), selected="B15", rows=(6, 15))
-        self._state(err=True, floor=False, interior=True)
-        self._state(fixchip=self.tr("fix: type the length into B6", "Behebung: Länge in B6 eintippen"))
+        self._handoff(window5, capsule, lambda: self._state(err=True, floor=False, interior=True, fixchip=self.tr("fix: type the length into B6", "Behebung: Länge in B6 eintippen")))
         error = self._tip_aside(self.xl_error(window6, "B15", "#DIV/0!"))
-        self._clause("div0", [_engine.FadeOut(window5)], [_engine.FadeIn(window6), _engine.FadeIn(error)], *self._ship(window6, "B15", "#DIV/0!"))
+        self._clause("div0", [_engine.FadeIn(capsule), _engine.FadeIn(window6), _engine.FadeIn(error)], *self._ship(window6, "B15", "#DIV/0!"))
         self.play(_engine.FadeOut(error), run_time=0.01)
 
         window7 = self._window(_xl.apply(book, [{"type": "set-cell", "sheet": SHEET, "cell": "G16", "formula": "=SUMM(G12:G15)"}]), selected="G16", cols="C:G", rows=(10, 16))
-        self._state(err=False, floor=True, floor_color=MUTED, interior=False, fit=len(self._fittings))
-        self._state(fixchip=self.tr("fix: write SUM correctly", "Behebung: SUMME richtig schreiben"))
+        self._handoff(window6, capsule, lambda: self._state(err=False, floor=True, floor_color=MUTED, interior=False, fit=len(self._fittings), fixchip=self.tr("fix: write SUM correctly", "Behebung: SUMME richtig schreiben")))
         error = self._tip_aside(self.xl_error(window7, "G16", "#NAME?"))
         wrong, right = (self.xl_formula_text(text, language=lang, at=(3.0, 2.1, 0.0), ink=INK) for text in ("=SUMM(G12:G15)", "=SUM(G12:G15)"))
-        self._clause("name", [_engine.FadeOut(window6)], [_engine.FadeIn(window7), _engine.FadeIn(error), _engine.FadeIn(wrong)], *self._ship(window7, "G16", "#NAME?"),
+        self._clause("name", [_engine.FadeIn(capsule), _engine.FadeIn(window7), _engine.FadeIn(error), _engine.FadeIn(wrong)], *self._ship(window7, "G16", "#NAME?"),
                      [_engine.FadeOut(error)], [_morph.retext(wrong, right, run_time=1.4)])
         self.play(_engine.FadeOut(right), run_time=0.3)
 
         window8 = self._window(_xl.apply(book, [{"type": "delete-row", "sheet": SHEET, "index": 6}]), selected="B8", rows=(5, 14))
-        self._state(err=True, floor=False, interior=True, fit=0)
-        self._state(fixchip=self.tr("deleted: ", "gelöscht: ") + _xl.shown(book, values, SHEET, "A6", lang) + self.tr(" · undo", " · Rückgängig"))
+        self._handoff(window7, capsule, lambda: self._state(err=True, floor=False, interior=True, fit=0, fixchip=self.tr("deleted: ", "gelöscht: ") + _xl.shown(book, values, SHEET, "A6", lang) + self.tr(" · undo", " · Rückgängig")))
         error = self._tip_aside(self.xl_error(window8, "B8", "#REF!"))
         gone = [self._tok(_xl.shown(book, values, SHEET, a1, lang), window8.cell(a1).get_center(), tone) for a1, tone in (("A6", RED), ("B6", RED))]
-        self._clause("ref", [_engine.FadeOut(window7)], [_engine.FadeIn(window8), _engine.FadeIn(error)], lambda: self.add(*gone),
+        self._clause("ref", [_engine.FadeIn(capsule), _engine.FadeIn(window8), _engine.FadeIn(error)], lambda: self.add(*gone),
                      [*[_morph.travel(tok, _engine.Line(tok.get_center(), tok.get_center() + np.array([-0.4 + 0.8 * i, -1.3, 0.0])), run_time=1.3) for i, tok in enumerate(gone)], _engine.FadeOut(*gone)],
                      *self._ship(window8, "B8", "#REF!"))
         self.play(_engine.FadeOut(error), run_time=0.01)
 
         broken = _xl.apply(book, [{"type": "set-cell", "sheet": SHEET, "cell": "B6", "value": f"{self.number(self._base_il, 1)} m"}])
         window9 = self._window(broken, selected="B9", rows=(4, 13))
-        self._state(fixchip=self.tr("fix: type the number without the unit", "Behebung: Zahl ohne Einheit eintippen"))
+        self._handoff(window8, capsule, lambda: self._state(fixchip=self.tr("fix: type the number without the unit", "Behebung: Zahl ohne Einheit eintippen")))
         error = self._tip_aside(self.xl_error(window9, "B9", "#VALUE!"))
-        self._clause("value", [_engine.FadeOut(window8)], [_engine.FadeIn(window9), _engine.FadeIn(error)], *self._ship(window9, "B9", "#VALUE!"))
+        self._clause("value", [_engine.FadeIn(capsule), _engine.FadeIn(window9), _engine.FadeIn(error)], *self._ship(window9, "B9", "#VALUE!"))
         self.play(_engine.FadeOut(error), run_time=0.01)
 
-        self._state(err=False, floor=True, floor_color=GOOD, interior=True, fit=len(self._fittings), fixchip=None)
         fixed = _xl.display(self._base_il, '0.00 "m"', lang)
         back, line = self._tok(fixed, window9.cell("B6").get_center(), RED), self._tok(fixed, self._lines().side, RED)
         self.add(back)
-        self._clause("repair", [self._fly(back, line, path_arc=0.5, run_time=1.3)], [window9.recalculate(book), _engine.FadeOut(line)])
+        self._clause("repair", [self._fly(back, line, path_arc=0.5, run_time=1.3)], lambda: self._repair_window(window9, book, line, capsule))
 
         self._state(show=False)
         panel, pulse = self._legend(window9, lang)
         sky = self.tower_axon(**SIDE_FIT, lit=lit_one)
+        sky_display = _snapshot.capture(sky, self.camera)
         tab = _morph.token("", kind="item", color=_draw.type_color("A")).move_to(window9.tabs[SHEET].get_center())
         target = sky.capsules[self._one].copy()
+        highlighted = sky.capsules[self._one].copy()
         pairs = [(whole, part) for part, whole in _morph.capsule_pairs(target, tab)]
         self._clause("legend", [pulse], [_engine.FadeOut(panel)], lambda: self.add(tab),
-                     [_engine.FadeOut(window9, scale=0.3), _engine.FadeIn(sky)], [_morph.morph(tab, target, pairs=pairs, path_arc=0.4, run_time=1.8)],
-                     lambda: self.remove(target), [_engine.Indicate(sky.capsules[self._one], scale_factor=1.6)])
+                     [_engine.FadeOut(window9, scale=0.3), _engine.FadeIn(sky_display)], [_morph.morph(tab, target, pairs=pairs, path_arc=0.4, run_time=1.8)],
+                     lambda: (self.remove(target), self.add(highlighted)), [_engine.Indicate(highlighted, scale_factor=1.6)], lambda: self.remove(highlighted))
 
     def _legend(self, window, lang):
         """📖 Eight terms in one language, each row lit together with a coloured frame around the part of the window it names."""

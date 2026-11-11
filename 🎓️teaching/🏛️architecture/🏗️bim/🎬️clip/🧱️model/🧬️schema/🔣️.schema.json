@@ -547,7 +547,8 @@
                 "related_connection_type": {
                   "const": "ATPATH"
                 }
-              }
+              },
+              "type": "object"
             }
           }
         },
@@ -581,7 +582,11 @@
             "if": {
               "required": [
                 "connection"
-              ]
+              ],
+              "properties": {
+                "connection": true
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -589,9 +594,11 @@
                   "const": "IfcRelConnectsElements"
                 },
                 "related": {
-                  "maxItems": 1
+                  "maxItems": 1,
+                  "type": "array"
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -603,7 +610,8 @@
               },
               "required": [
                 "class"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "required": [
@@ -611,21 +619,32 @@
               ],
               "properties": {
                 "related": {
-                  "maxItems": 1
-                }
+                  "maxItems": 1,
+                  "type": "array"
+                },
+                "path_connection": true
               },
               "not": {
                 "required": [
                   "connection"
-                ]
-              }
+                ],
+                "properties": {
+                  "connection": true
+                },
+                "type": "object"
+              },
+              "type": "object"
             }
           },
           {
             "if": {
               "required": [
                 "path_connection"
-              ]
+              ],
+              "properties": {
+                "path_connection": true
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -633,9 +652,11 @@
                   "const": "IfcRelConnectsPathElements"
                 },
                 "related": {
-                  "maxItems": 1
+                  "maxItems": 1,
+                  "type": "array"
                 }
-              }
+              },
+              "type": "object"
             }
           }
         ]
@@ -1333,7 +1354,8 @@
             },
             "required": [
               "basis"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "required": [
@@ -1343,7 +1365,8 @@
               "source": {
                 "$ref": "#/$defs/evidence_source"
               }
-            }
+            },
+            "type": "object"
           }
         }
       ]
@@ -1377,13 +1400,31 @@
       "description": "A characteristic imposed load of a zone with the EN 1991-1-1 occupancy category id (staffage load cases, structure/load-cases) it is checked against.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["value", "unit", "basis", "category"],
+      "required": [
+        "value",
+        "unit",
+        "basis",
+        "category"
+      ],
       "properties": {
-        "value": { "type": "number", "exclusiveMinimum": 0 },
-        "unit": { "const": "kN/m²" },
-        "basis": { "$ref": "#/$defs/basis" },
-        "source": { "type": "string", "minLength": 1 },
-        "category": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+        "value": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "unit": {
+          "const": "kN/m²"
+        },
+        "basis": {
+          "$ref": "#/$defs/basis"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
       }
     },
     "axes": {
@@ -1539,7 +1580,8 @@
             },
             "required": [
               "basis"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "required": [
@@ -1549,7 +1591,8 @@
               "source": {
                 "$ref": "#/$defs/evidence_source"
               }
-            }
+            },
+            "type": "object"
           }
         }
       ]
@@ -1583,7 +1626,8 @@
                 "unit": {
                   "const": "m"
                 }
-              }
+              },
+              "type": "object"
             }
           ]
         }
@@ -1787,13 +1831,19 @@
                   },
                   "required": [
                     "ownership"
-                  ]
+                  ],
+                  "type": "object"
                 },
                 "then": {
                   "required": [
                     "thickness",
                     "walking_outline"
-                  ]
+                  ],
+                  "properties": {
+                    "thickness": true,
+                    "walking_outline": true
+                  },
+                  "type": "object"
                 },
                 "else": {
                   "not": {
@@ -1801,12 +1851,20 @@
                       {
                         "required": [
                           "thickness"
-                        ]
+                        ],
+                        "properties": {
+                          "thickness": true
+                        },
+                        "type": "object"
                       },
                       {
                         "required": [
                           "walking_outline"
-                        ]
+                        ],
+                        "properties": {
+                          "walking_outline": true
+                        },
+                        "type": "object"
                       }
                     ]
                   }
@@ -2597,27 +2655,52 @@
                           "unit": {
                             "const": "m"
                           }
-                        }
+                        },
+                        "type": "object"
                       }
                     ]
                   }
                 }
               },
               "maxItems": 2,
-              "prefixItems": [
+              "oneOf": [
                 {
-                  "properties": {
-                    "role": {
-                      "const": "wearing"
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "prefixItems": [
+                    {
+                      "properties": {
+                        "role": {
+                          "const": "wearing"
+                        }
+                      },
+                      "type": "object"
                     }
-                  }
+                  ]
                 },
                 {
-                  "properties": {
-                    "role": {
-                      "const": "bedding"
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "prefixItems": [
+                    {
+                      "properties": {
+                        "role": {
+                          "const": "wearing"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "role": {
+                          "const": "bedding"
+                        }
+                      },
+                      "type": "object"
                     }
-                  }
+                  ]
                 }
               ]
             },
@@ -2654,31 +2737,51 @@
           "if": {
             "required": [
               "panel_operations"
-            ]
+            ],
+            "properties": {
+              "panel_operations": true
+            },
+            "type": "object"
           },
           "then": {
             "required": [
               "panel_stations"
-            ]
+            ],
+            "properties": {
+              "panel_stations": true
+            },
+            "type": "object"
           }
         },
         {
           "if": {
             "required": [
               "panel_glazing_stations"
-            ]
+            ],
+            "properties": {
+              "panel_glazing_stations": true
+            },
+            "type": "object"
           },
           "then": {
             "required": [
               "panel_stations"
-            ]
+            ],
+            "properties": {
+              "panel_stations": true
+            },
+            "type": "object"
           }
         },
         {
           "if": {
             "required": [
               "layer_binding"
-            ]
+            ],
+            "properties": {
+              "layer_binding": true
+            },
+            "type": "object"
           },
           "then": {
             "required": [
@@ -2689,8 +2792,11 @@
             "properties": {
               "kind": {
                 "const": "flooring"
-              }
-            }
+              },
+              "parts": true,
+              "base_level": true
+            },
+            "type": "object"
           }
         }
       ]
@@ -2942,7 +3048,9 @@
                 "properties": {
                   "thickness": {
                     "$ref": "#/$defs/positive"
-                  }
+                  },
+                  "finish_thickness": true,
+                  "finish_direction": true
                 }
               }
             },
@@ -2958,7 +3066,8 @@
             },
             "required": [
               "class"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "properties": {
@@ -2994,7 +3103,8 @@
                       },
                       "required": [
                         "parts"
-                      ]
+                      ],
+                      "type": "object"
                     },
                     "then": {
                       "anyOf": [
@@ -3004,21 +3114,28 @@
                           ],
                           "properties": {
                             "embedded_slabs": {
-                              "minItems": 1
+                              "minItems": 1,
+                              "type": "array"
                             }
-                          }
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "section_sweep"
-                          ]
+                          ],
+                          "properties": {
+                            "section_sweep": true
+                          },
+                          "type": "object"
                         }
                       ]
                     }
                   }
                 ]
               }
-            }
+            },
+            "type": "object"
           }
         },
         {
@@ -3034,12 +3151,17 @@
             },
             "required": [
               "class"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "required": [
               "type"
-            ]
+            ],
+            "properties": {
+              "type": true
+            },
+            "type": "object"
           }
         },
         {
@@ -3051,7 +3173,8 @@
             },
             "required": [
               "class"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "properties": {
@@ -3066,20 +3189,36 @@
                         {
                           "required": [
                             "slab"
-                          ]
+                          ],
+                          "properties": {
+                            "slab": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "curtain_wall"
-                          ]
+                          ],
+                          "properties": {
+                            "curtain_wall": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "curtain_path"
-                          ]
+                          ],
+                          "properties": {
+                            "curtain_path": true
+                          },
+                          "type": "object"
                         }
                       ]
-                    }
+                    },
+                    "properties": {
+                      "wall": true
+                    },
+                    "type": "object"
                   },
                   {
                     "required": [
@@ -3091,20 +3230,37 @@
                         {
                           "required": [
                             "wall"
-                          ]
+                          ],
+                          "properties": {
+                            "wall": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "curtain_wall"
-                          ]
+                          ],
+                          "properties": {
+                            "curtain_wall": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "curtain_path"
-                          ]
+                          ],
+                          "properties": {
+                            "curtain_path": true
+                          },
+                          "type": "object"
                         }
                       ]
-                    }
+                    },
+                    "properties": {
+                      "slab": true,
+                      "outline": true
+                    },
+                    "type": "object"
                   },
                   {
                     "required": [
@@ -3116,19 +3272,33 @@
                         {
                           "required": [
                             "wall"
-                          ]
+                          ],
+                          "properties": {
+                            "wall": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "slab"
-                          ]
+                          ],
+                          "properties": {
+                            "slab": true
+                          },
+                          "type": "object"
                         }
                       ]
-                    }
+                    },
+                    "properties": {
+                      "curtain_wall": true,
+                      "curtain_path": true
+                    },
+                    "type": "object"
                   }
                 ]
               }
-            }
+            },
+            "type": "object"
           }
         },
         {
@@ -3143,7 +3313,8 @@
             },
             "required": [
               "class"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "required": [
@@ -3161,30 +3332,46 @@
                     "properties": {
                       "points": {
                         "minItems": 2,
-                        "maxItems": 2
-                      }
+                        "maxItems": 2,
+                        "type": "array"
+                      },
+                      "tube": true
                     },
                     "not": {
                       "anyOf": [
                         {
                           "required": [
                             "parts"
-                          ]
+                          ],
+                          "properties": {
+                            "parts": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "size"
-                          ]
+                          ],
+                          "properties": {
+                            "size": true
+                          },
+                          "type": "object"
                         }
                       ]
-                    }
+                    },
+                    "type": "object"
                   },
                   "attributes": {
                     "required": [
                       "diameter"
-                    ]
+                    ],
+                    "properties": {
+                      "diameter": true
+                    },
+                    "type": "object"
                   }
-                }
+                },
+                "type": "object"
               },
               {
                 "properties": {
@@ -3199,22 +3386,41 @@
                         {
                           "required": [
                             "points"
-                          ]
+                          ],
+                          "properties": {
+                            "points": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "tube"
-                          ]
+                          ],
+                          "properties": {
+                            "tube": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "size"
-                          ]
+                          ],
+                          "properties": {
+                            "size": true
+                          },
+                          "type": "object"
                         }
                       ]
-                    }
+                    },
+                    "properties": {
+                      "kind": true,
+                      "parts": true,
+                      "base_level": true
+                    },
+                    "type": "object"
                   }
-                }
+                },
+                "type": "object"
               },
               {
                 "properties": {
@@ -3233,39 +3439,64 @@
                     "properties": {
                       "kind": {
                         "const": "ramp_finish"
-                      }
+                      },
+                      "ramp_finish": true,
+                      "base_level": true
                     },
                     "not": {
                       "anyOf": [
                         {
                           "required": [
                             "parts"
-                          ]
+                          ],
+                          "properties": {
+                            "parts": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "points"
-                          ]
+                          ],
+                          "properties": {
+                            "points": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "tube"
-                          ]
+                          ],
+                          "properties": {
+                            "tube": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "size"
-                          ]
+                          ],
+                          "properties": {
+                            "size": true
+                          },
+                          "type": "object"
                         }
                       ]
-                    }
+                    },
+                    "type": "object"
                   }
                 },
                 "required": [
                   "predefined_type"
-                ]
+                ],
+                "type": "object"
               }
-            ]
+            ],
+            "properties": {
+              "historical_evidence": true,
+              "material": true
+            },
+            "type": "object"
           }
         },
         {
@@ -3277,7 +3508,8 @@
             },
             "required": [
               "class"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "properties": {
@@ -3290,10 +3522,21 @@
                 "not": {
                   "required": [
                     "centre"
-                  ]
-                }
+                  ],
+                  "properties": {
+                    "centre": true
+                  },
+                  "type": "object"
+                },
+                "properties": {
+                  "base_level": true,
+                  "top_level": true,
+                  "glazing_paths": true
+                },
+                "type": "object"
               }
-            }
+            },
+            "type": "object"
           }
         },
         {
@@ -3305,7 +3548,8 @@
             },
             "required": [
               "class"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "required": [
@@ -3323,21 +3567,33 @@
                     "not": {
                       "required": [
                         "parts"
-                      ]
+                      ],
+                      "properties": {
+                        "parts": true
+                      },
+                      "type": "object"
                     },
                     "properties": {
                       "points": {
                         "minItems": 2,
-                        "maxItems": 2
-                      }
-                    }
+                        "maxItems": 2,
+                        "type": "array"
+                      },
+                      "tube": true
+                    },
+                    "type": "object"
                   },
                   "attributes": {
                     "required": [
                       "diameter"
-                    ]
+                    ],
+                    "properties": {
+                      "diameter": true
+                    },
+                    "type": "object"
                   }
-                }
+                },
+                "type": "object"
               },
               {
                 "properties": {
@@ -3350,32 +3606,55 @@
                     ],
                     "properties": {
                       "parts": {
-                        "minItems": 1
-                      }
+                        "minItems": 1,
+                        "type": "array"
+                      },
+                      "kind": true,
+                      "axis": true,
+                      "base_level": true
                     },
                     "not": {
                       "anyOf": [
                         {
                           "required": [
                             "points"
-                          ]
+                          ],
+                          "properties": {
+                            "points": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "tube"
-                          ]
+                          ],
+                          "properties": {
+                            "tube": true
+                          },
+                          "type": "object"
                         },
                         {
                           "required": [
                             "size"
-                          ]
+                          ],
+                          "properties": {
+                            "size": true
+                          },
+                          "type": "object"
                         }
                       ]
-                    }
+                    },
+                    "type": "object"
                   }
-                }
+                },
+                "type": "object"
               }
-            ]
+            ],
+            "properties": {
+              "historical_evidence": true,
+              "material": true
+            },
+            "type": "object"
           }
         },
         {
@@ -3387,19 +3666,28 @@
             },
             "required": [
               "class"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "not": {
               "required": [
                 "predefined_type"
-              ]
+              ],
+              "properties": {
+                "predefined_type": true
+              },
+              "type": "object"
             }
           },
           "else": {
             "required": [
               "predefined_type"
-            ]
+            ],
+            "properties": {
+              "predefined_type": true
+            },
+            "type": "object"
           }
         },
         {
@@ -3411,7 +3699,8 @@
             },
             "required": [
               "class"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "required": [
@@ -3427,30 +3716,49 @@
                 ],
                 "properties": {
                   "parts": {
-                    "minItems": 1
-                  }
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "kind": true,
+                  "base_level": true
                 },
                 "not": {
                   "anyOf": [
                     {
                       "required": [
                         "points"
-                      ]
+                      ],
+                      "properties": {
+                        "points": true
+                      },
+                      "type": "object"
                     },
                     {
                       "required": [
                         "tube"
-                      ]
+                      ],
+                      "properties": {
+                        "tube": true
+                      },
+                      "type": "object"
                     },
                     {
                       "required": [
                         "size"
-                      ]
+                      ],
+                      "properties": {
+                        "size": true
+                      },
+                      "type": "object"
                     }
                   ]
-                }
-              }
-            }
+                },
+                "type": "object"
+              },
+              "historical_evidence": true,
+              "material": true
+            },
+            "type": "object"
           }
         },
         {
@@ -3459,19 +3767,25 @@
               "geometry": {
                 "required": [
                   "end_plane"
-                ]
+                ],
+                "properties": {
+                  "end_plane": true
+                },
+                "type": "object"
               }
             },
             "required": [
               "geometry"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "properties": {
               "class": {
                 "const": "IfcColumn"
               }
-            }
+            },
+            "type": "object"
           }
         },
         {
@@ -3483,7 +3797,8 @@
             },
             "required": [
               "class"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "required": [
@@ -3507,22 +3822,44 @@
                     {
                       "required": [
                         "points"
-                      ]
+                      ],
+                      "properties": {
+                        "points": true
+                      },
+                      "type": "object"
                     },
                     {
                       "required": [
                         "tube"
-                      ]
+                      ],
+                      "properties": {
+                        "tube": true
+                      },
+                      "type": "object"
                     },
                     {
                       "required": [
                         "size"
-                      ]
+                      ],
+                      "properties": {
+                        "size": true
+                      },
+                      "type": "object"
                     }
                   ]
-                }
-              }
-            }
+                },
+                "properties": {
+                  "parts": true,
+                  "base_level": true,
+                  "kind": true,
+                  "mounting": true
+                },
+                "type": "object"
+              },
+              "material": true,
+              "historical_evidence": true
+            },
+            "type": "object"
           }
         },
         {
@@ -3538,7 +3875,8 @@
             "required": [
               "class",
               "predefined_type"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "properties": {
@@ -3548,7 +3886,9 @@
                     "properties": {
                       "kind": {
                         "const": "flooring"
-                      }
+                      },
+                      "parts": true,
+                      "base_level": true
                     },
                     "required": [
                       "kind",
@@ -3558,8 +3898,13 @@
                     "not": {
                       "required": [
                         "ramp_finish"
-                      ]
-                    }
+                      ],
+                      "properties": {
+                        "ramp_finish": true
+                      },
+                      "type": "object"
+                    },
+                    "type": "object"
                   },
                   {
                     "properties": {
@@ -3568,7 +3913,8 @@
                       },
                       "base_level": {
                         "const": 0
-                      }
+                      },
+                      "ramp_finish": true
                     },
                     "required": [
                       "kind",
@@ -3578,8 +3924,13 @@
                     "not": {
                       "required": [
                         "parts"
-                      ]
-                    }
+                      ],
+                      "properties": {
+                        "parts": true
+                      },
+                      "type": "object"
+                    },
+                    "type": "object"
                   }
                 ]
               },
@@ -3592,17 +3943,25 @@
                     "not": {
                       "contains": {
                         "const": "services"
-                      }
-                    }
+                      },
+                      "type": "array"
+                    },
+                    "type": "array"
                   }
-                }
+                },
+                "type": "object"
               }
             },
             "not": {
               "required": [
                 "system"
-              ]
-            }
+              ],
+              "properties": {
+                "system": true
+              },
+              "type": "object"
+            },
+            "type": "object"
           }
         },
         {
@@ -3618,18 +3977,21 @@
                       "domains": {
                         "contains": {
                           "const": "architecture"
-                        }
+                        },
+                        "type": "array"
                       }
                     },
                     "required": [
                       "domains"
-                    ]
+                    ],
+                    "type": "object"
                   }
                 },
                 "required": [
                   "class",
                   "metadata"
-                ]
+                ],
+                "type": "object"
               },
               {
                 "not": {
@@ -3639,24 +4001,31 @@
                         "domains": {
                           "contains": {
                             "const": "services"
-                          }
+                          },
+                          "type": "array"
                         }
                       },
                       "required": [
                         "domains"
-                      ]
+                      ],
+                      "type": "object"
                     }
                   },
                   "required": [
                     "metadata"
-                  ]
+                  ],
+                  "type": "object"
                 }
               },
               {
                 "not": {
                   "required": [
                     "system"
-                  ]
+                  ],
+                  "properties": {
+                    "system": true
+                  },
+                  "type": "object"
                 }
               }
             ]
@@ -3672,8 +4041,16 @@
                     "not": {
                       "required": [
                         "ramp_finish"
-                      ]
-                    }
+                      ],
+                      "properties": {
+                        "ramp_finish": true
+                      },
+                      "type": "object"
+                    },
+                    "properties": {
+                      "parts": true
+                    },
+                    "type": "object"
                   },
                   {
                     "required": [
@@ -3682,12 +4059,21 @@
                     "not": {
                       "required": [
                         "parts"
-                      ]
-                    }
+                      ],
+                      "properties": {
+                        "parts": true
+                      },
+                      "type": "object"
+                    },
+                    "properties": {
+                      "ramp_finish": true
+                    },
+                    "type": "object"
                   }
                 ]
               }
-            }
+            },
+            "type": "object"
           }
         },
         {
@@ -3696,12 +4082,17 @@
               "geometry": {
                 "required": [
                   "surface_regions"
-                ]
+                ],
+                "properties": {
+                  "surface_regions": true
+                },
+                "type": "object"
               }
             },
             "required": [
               "geometry"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "properties": {
@@ -3721,9 +4112,11 @@
                       "$ref": "#/$defs/point2"
                     }
                   }
-                }
+                },
+                "type": "object"
               }
-            }
+            },
+            "type": "object"
           }
         },
         {
@@ -3735,7 +4128,8 @@
             },
             "required": [
               "class"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "properties": {
@@ -3743,9 +4137,15 @@
                 "required": [
                   "structural_offsets",
                   "walking_offsets"
-                ]
+                ],
+                "properties": {
+                  "structural_offsets": true,
+                  "walking_offsets": true
+                },
+                "type": "object"
               }
-            }
+            },
+            "type": "object"
           }
         },
         {
@@ -3754,12 +4154,17 @@
               "geometry": {
                 "required": [
                   "structural_joints"
-                ]
+                ],
+                "properties": {
+                  "structural_joints": true
+                },
+                "type": "object"
               }
             },
             "required": [
               "geometry"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "properties": {
@@ -3772,7 +4177,8 @@
                   "IfcRailing"
                 ]
               }
-            }
+            },
+            "type": "object"
           }
         }
       ]
@@ -3904,12 +4310,19 @@
             },
             "required": [
               "class"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "required": [
               "filling"
-            ]
+            ],
+            "properties": {
+              "filling": {
+                "$ref": "#/$defs/filling"
+              }
+            },
+            "type": "object"
           }
         },
         {
@@ -3921,7 +4334,8 @@
             },
             "required": [
               "class"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "properties": {
@@ -3934,17 +4348,32 @@
                     {
                       "required": [
                         "panel_stations"
-                      ]
+                      ],
+                      "properties": {
+                        "panel_stations": true
+                      },
+                      "type": "object"
                     },
                     {
                       "required": [
                         "panel_layout"
-                      ]
+                      ],
+                      "properties": {
+                        "panel_layout": true
+                      },
+                      "type": "object"
                     }
                   ]
+                },
+                "type": "object",
+                "properties": {
+                  "transoms": true,
+                  "panel_stations": true,
+                  "panel_layout": true
                 }
               }
-            }
+            },
+            "type": "object"
           },
           "else": {
             "if": {
@@ -3958,7 +4387,8 @@
               },
               "required": [
                 "class"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -3966,22 +4396,41 @@
                   "not": {
                     "required": [
                       "transoms"
-                    ]
+                    ],
+                    "properties": {
+                      "transoms": true
+                    },
+                    "type": "object"
                   },
                   "oneOf": [
                     {
                       "required": [
                         "panel_stations"
-                      ]
+                      ],
+                      "properties": {
+                        "panel_stations": true
+                      },
+                      "type": "object"
                     },
                     {
                       "required": [
                         "panel_layout"
-                      ]
+                      ],
+                      "properties": {
+                        "panel_layout": true
+                      },
+                      "type": "object"
                     }
-                  ]
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "transoms": true,
+                    "panel_stations": true,
+                    "panel_layout": true
+                  }
                 }
-              }
+              },
+              "type": "object"
             }
           }
         }
@@ -4847,19 +5296,31 @@
           "if": {
             "required": [
               "core_edge_width"
-            ]
+            ],
+            "properties": {
+              "core_edge_width": true
+            },
+            "type": "object"
           },
           "then": {
             "required": [
               "core_edge_material"
-            ]
+            ],
+            "properties": {
+              "core_edge_material": true
+            },
+            "type": "object"
           }
         },
         {
           "if": {
             "required": [
               "panel_layout"
-            ]
+            ],
+            "properties": {
+              "panel_layout": true
+            },
+            "type": "object"
           },
           "then": {
             "properties": {
@@ -4872,35 +5333,60 @@
                 {
                   "required": [
                     "panel_stations"
-                  ]
+                  ],
+                  "properties": {
+                    "panel_stations": true
+                  },
+                  "type": "object"
                 },
                 {
                   "required": [
                     "sash_width"
-                  ]
+                  ],
+                  "properties": {
+                    "sash_width": true
+                  },
+                  "type": "object"
                 },
                 {
                   "required": [
                     "sash_depth"
-                  ]
+                  ],
+                  "properties": {
+                    "sash_depth": true
+                  },
+                  "type": "object"
                 },
                 {
                   "required": [
                     "track_web"
-                  ]
+                  ],
+                  "properties": {
+                    "track_web": true
+                  },
+                  "type": "object"
                 },
                 {
                   "required": [
                     "side_wings"
-                  ]
+                  ],
+                  "properties": {
+                    "side_wings": true
+                  },
+                  "type": "object"
                 },
                 {
                   "required": [
                     "mullion_width"
-                  ]
+                  ],
+                  "properties": {
+                    "mullion_width": true
+                  },
+                  "type": "object"
                 }
               ]
-            }
+            },
+            "type": "object"
           }
         }
       ]
@@ -4953,12 +5439,17 @@
             },
             "required": [
               "datum"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "required": [
               "opening"
-            ]
+            ],
+            "properties": {
+              "opening": true
+            },
+            "type": "object"
           }
         }
       ]
@@ -5035,7 +5526,8 @@
             },
             "required": [
               "source_kind"
-            ]
+            ],
+            "type": "object"
           },
           "then": {
             "properties": {
@@ -5044,7 +5536,8 @@
                   "const": "original_attested"
                 }
               }
-            }
+            },
+            "type": "object"
           }
         }
       ]
@@ -5112,13 +5605,19 @@
                   "U"
                 ]
               }
-            }
+            },
+            "type": "object"
           },
           "then": {
             "required": [
               "web",
               "toe"
-            ]
+            ],
+            "properties": {
+              "web": true,
+              "toe": true
+            },
+            "type": "object"
           }
         }
       ]
@@ -5292,7 +5791,8 @@
                 "unit": {
                   "const": "m"
                 }
-              }
+              },
+              "type": "object"
             }
           ]
         },
@@ -5331,9 +5831,11 @@
                         },
                         "value": {
                           "minimum": 0,
-                          "maximum": 1
+                          "maximum": 1,
+                          "type": "number"
                         }
-                      }
+                      },
+                      "type": "object"
                     }
                   ]
                 }
@@ -5354,9 +5856,11 @@
                         },
                         "value": {
                           "minimum": 0,
-                          "maximum": 1
+                          "maximum": 1,
+                          "type": "number"
                         }
-                      }
+                      },
+                      "type": "object"
                     }
                   ]
                 }
@@ -5374,7 +5878,8 @@
                       "unit": {
                         "const": "m"
                       }
-                    }
+                    },
+                    "type": "object"
                   }
                 ]
               },
@@ -5730,7 +6235,7 @@
       "pattern": "^(?:https://[^\\s]+|(?:VS-\\d+(?:\\.\\d+)*|(?:CSIC2022|SAB2024|Savoye-as-[Bb]uilt|SavoyeAsBuilt2024|FLC)(?:[-A-Za-z0-9.]+)?|CMN2021|Author46|ArchitectureVivante1931(?:[-A-Za-z0-9.]+)?|teaching-services-original)(?:[; /][^\\r\\n]+)?)$(?![\\s\\S])"
     },
     "flooring_layer_binding": {
-      "description": "Declared source parts retain the original Reference. Occupied material follows the bound host finish reserves, actual declared structural owners, explicit wearing depths and materials.",
+      "description": "Original explicit flooring parts are the reference material allocation. A shared editable layer rebuilds its actual host reserves while preserving wearing material/depth overrides and fixed structural joint ownership.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -5757,7 +6262,8 @@
                 "unit": {
                   "const": "m"
                 }
-              }
+              },
+              "type": "object"
             }
           ]
         },
@@ -5792,7 +6298,8 @@
                       "unit": {
                         "const": "m"
                       }
-                    }
+                    },
+                    "type": "object"
                   }
                 ]
               },
@@ -5806,7 +6313,8 @@
                       "unit": {
                         "const": "m"
                       }
-                    }
+                    },
+                    "type": "object"
                   }
                 ]
               },
@@ -5817,8 +6325,7 @@
           },
           "description": "Explicit source-qualified wearing choices for constrained reference structural-cap bands; edited support thickness never silently redefines these material/depth choices."
         }
-      },
-      "description": "Original explicit flooring parts are the reference material allocation. A shared editable layer rebuilds its actual host reserves while preserving wearing material/depth overrides and fixed structural joint ownership."
+      }
     },
     "structural_joint": {
       "type": "object",

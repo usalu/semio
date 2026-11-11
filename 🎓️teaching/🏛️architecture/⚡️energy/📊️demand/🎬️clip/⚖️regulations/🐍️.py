@@ -328,7 +328,7 @@ def _gauge(symbol: str, *, color, length=1.9, thickness=0.32):
 def _stand(floor_y: float, room_h: float, x: float):
     """🧍 Breathing thermal occupant at true scale — 1.75 m in a 2.5 m storey is 70 % of the clear height, feet on the slab's top edge."""
     cast = "shared-person-winter"
-    return staffage_motion(cast, unit=0.7 * room_h / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]))
+    return staffage_motion(cast, unit=room_metre(room_h), anchor=np.array([x, floor_y, 0.0]))
 
 
 def _lamp(top, height: float):

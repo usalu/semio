@@ -136,3 +136,4 @@ def partition(api,model,wall,parts,state,air=False,progress=None,cancel=None):
 def producers():
     """🧬 Include every first-party junction producer in source and private memo identity."""
     return (_layers,_on_path,path_material_layers,context,_analytic,_operand,_volume,_scope,partition)
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

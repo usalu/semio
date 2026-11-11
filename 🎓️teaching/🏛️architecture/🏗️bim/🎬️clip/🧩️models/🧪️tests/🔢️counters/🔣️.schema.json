@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BIM live counter animation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "languages",
+    "count",
+    "tolerance"
+  ],
+  "properties": {
+    "languages": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "en",
+          "de"
+        ]
+      }
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "tolerance": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

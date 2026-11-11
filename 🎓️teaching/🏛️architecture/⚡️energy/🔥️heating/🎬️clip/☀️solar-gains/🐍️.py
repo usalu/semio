@@ -627,7 +627,7 @@ class Beat3_GWert(Scene):
 
         panes, frames = _glazing(0.0, -1.35, 1.75)
         x_block_outer, x_block_inner = -0.165, 0.165
-        side_out = Text("außen", font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to([-6.1, 1.9, 0])
+        side_out = Text(tr("outside", "außen"), font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to([-6.1, 1.9, 0])
         side_in = Text(tr("inside", "innen"), font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to([6.1, 2.1, 0])
         self.play(Create(panes), FadeIn(frames), FadeIn(side_out), FadeIn(side_in), run_time=1.2)
         hold_for(self, N, "section", used=1.2 + 0.3)
@@ -899,7 +899,7 @@ class Beat5_Verschattung(Scene):
             section_material(Rectangle(width=t, height=ceiling_y - floor_y - t)).move_to(
                 [room_end_x + t / 2, (ceiling_y + floor_y - t) / 2, 0]),
         )
-        lbl_out = Text("außen", font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to([-6.2, 0.35, 0])
+        lbl_out = Text(tr("outside", "außen"), font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to([-6.2, 0.35, 0])
         lbl_in = Text(tr("inside", "innen"), font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to([-1.55, 1.6, 0])
         material = section_assembly(masonry, room)
         self.play(FadeIn(material), Create(glazing), run_time=1.6)

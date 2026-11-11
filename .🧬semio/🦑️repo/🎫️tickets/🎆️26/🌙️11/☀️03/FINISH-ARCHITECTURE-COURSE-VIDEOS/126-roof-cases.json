@@ -1,0 +1,10 @@
+{
+  "languages": ["en", "de"],
+  "inputStart": 2.5,
+  "inputEnd": 3.0,
+  "length": 4.0,
+  "labels": {
+    "en": ["Workbook · nominal", "Drawing · physical casing"],
+    "de": ["Arbeitsmappe · Nennmaße", "Zeichnung · reale Hülle"]
+  }
+}

@@ -9,6 +9,14 @@ export function presentationWindowSettled(stack: Element, contentClipPath: strin
   return actual.replace(numbers, "#") === normalized.clipPath.replace(numbers, "#") && a.length === b.length && a.every((value, index) => Math.abs(Number(value) - Number(b[index])) < .01);
 }
 
+/** 📐 Request fresh owned silhouette geometry after an ancestor camera transform. */
+export function requestCameraRemeasure(root: Document): void {
+  for (const stack of root.querySelectorAll("[data-presentation-window]")) {
+    const value = Number(stack.getAttribute("data-silhouette-remeasure") ?? 0);
+    stack.setAttribute("data-silhouette-remeasure", String(value + 1));
+  }
+}
+
 /** 🪡 Wait until every shared-border root has painted its current layout. */
 export function presentationBordersSettled(document: Document): boolean {
   const roots = document.querySelectorAll("[data-shared-border-root]");

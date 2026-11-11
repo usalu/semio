@@ -1014,7 +1014,15 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
     def _step_excerpt(self, s):
         """⌨️ Five STEP lines of the selected piloti with their token spans, the element line last; the property set is bound to the type, so no occurrence-level binding line is shown."""
         raw = _model.step_excerpt(SELECTED, s.model)
-        names = ("rel_type", "prop_LoadBearing", "solid", "profile", "element")
+        entities = raw["entities"]
+        def named(prefix):
+            if prefix in entities:
+                return prefix
+            found = [key for key in entities if key.startswith(prefix) and key[len(prefix):].isdigit()]
+            if not found:
+                raise KeyError(prefix)
+            return min(found, key=lambda key: int(key[len(prefix):]))
+        names = ("rel_type", "prop_LoadBearing", named("solid"), named("profile"), "element")
         indices = [raw["entities"][name] for name in names]
         remap = {old: new for new, old in enumerate(indices)}
         return {"lines": [raw["lines"][i] for i in indices], "spans": [{**sp, "line": remap[sp["line"]]} for sp in raw["spans"] if sp["line"] in remap]}

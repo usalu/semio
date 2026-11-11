@@ -20,6 +20,7 @@ _fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️ener
 _model = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
 _sheet = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.📏️sheet.🐍️")
 _engine = importlib.import_module("manim")
+_moving = importlib.import_module("🎓️teaching.🧰️interop.🎬️scene.🐍️")
 
 INK, MUTED, ARCH, STRUCT, SERV = _visuals.INK, _visuals.MUTED, _visuals.ARCH, _visuals.STRUCT, _visuals.SERV
 DATA, GOOD, WARN, CONCRETE = _visuals.DATA, _visuals.GOOD, _visuals.WARN, _visuals.CONCRETE
@@ -27,8 +28,8 @@ P, polygon, region, segments, polyline, circle_points, mix, hatch = (_drafting.P
                                                                      _drafting.circle_points, _drafting.mix, _drafting.hatch)
 BACKGROUND = _drafting.BACKGROUND
 frame_box = _panels.frame_box
-(VGroup, FadeIn, FadeOut, Indicate, LaggedStart, AnimationGroup, Succession, ValueTracker, Dot, Circle, Rectangle, Flash, Line, Arrow, ReplacementTransform) = (
-    getattr(_engine, name) for name in ("VGroup", "FadeIn", "FadeOut", "Indicate", "LaggedStart", "AnimationGroup", "Succession", "ValueTracker",
+(VGroup, FadeIn, FadeOut, Indicate, LaggedStart, AnimationGroup, Succession, ValueTracker, Wait, Dot, Circle, Rectangle, Flash, Line, Arrow, ReplacementTransform) = (
+    getattr(_engine, name) for name in ("VGroup", "FadeIn", "FadeOut", "Indicate", "LaggedStart", "AnimationGroup", "Succession", "ValueTracker", "Wait",
                                          "Dot", "Circle", "Rectangle", "Flash", "Line", "Arrow", "ReplacementTransform"))
 LINEAR, SMOOTH = _engine.linear, _engine.smooth
 DISCIPLINES = ("architecture", "structure", "services")
@@ -59,7 +60,7 @@ STAR = "*"
 KIND_LABELS = {"SOLIDWALL": ("screen", "Schirm"), "ROOF": ("roof", "Dach"), "voids": ("void", "Öffnung"), "render": ("render", "Putz")}
 
 
-class Beat4_PartialModels(_visuals.ClipScene):
+class Beat4_PartialModels(_moving.RefreshMoving, _visuals.ClipScene):
     """📚 Animate three discipline models, their federation, a clash check and the translation to a structural analysis model with English and German narration."""
 
     TITLE = {"en": "Models Share a Schema", "de": "Modelle teilen ein Schema"}
@@ -219,6 +220,10 @@ class Beat4_PartialModels(_visuals.ClipScene):
         """⏳ Stages of ``(seconds, [animations])`` as one animation and its total length."""
         return Succession(*[AnimationGroup(*animations, run_time=seconds) for seconds, animations in stages]), sum(seconds for seconds, _ in stages)
 
+    def _reveal_then(self, fades, updates, seconds, reveal):
+        """⏱️ Complete a reveal before changing its live descendants within one stage."""
+        return Succession(AnimationGroup(*fades,run_time=reveal),AnimationGroup(*updates,run_time=seconds-reveal))
+
     def _show(self, key, *stages):
         """🎬 Play the stages with the clause ``key``."""
         counts = {name: self.number(len(self.info[name]["element_guids"]), 0) for name in DISCIPLINES}
@@ -297,7 +302,9 @@ class Beat4_PartialModels(_visuals.ClipScene):
     def _lit(self, drawing, tags, color=DATA):
         """💡 One light-up per drawn part of the tags, one after another."""
         keys = [key for tag in tags for key in self._keys(drawing, tag)]
-        return LaggedStart(*[Indicate(drawing.parts[key], color=color, scale_factor=1.0) for key in keys], lag_ratio=min(0.6, 3.0 / max(len(keys), 1)))
+        if not keys:
+            return Wait(0.01)
+        return LaggedStart(*[Indicate(drawing.parts[key], color=color, scale_factor=1.0) for key in keys], lag_ratio=min(0.6, 3.0 / len(keys)))
 
     def _flash(self, group, color):
         """🔦 Show a ghosted group briefly in a bright colour."""
@@ -357,7 +364,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
             tracker = ValueTracker(0)
             row = self._class_row(tracker, ifc_class, text, y0-index%page_size*pitch, COLORS[name])
             group.add(row)
-            animations.extend([FadeIn(row,run_time=.15),tracker.animate(rate_func=LINEAR).set_value(counts[ifc_class]),self._lit(drawing,self._tags(name,ifc_class))])
+            animations.extend([self._reveal_then([FadeIn(row)],[tracker.animate(rate_func=LINEAR).set_value(counts[ifc_class])],seconds,.15),self._lit(drawing,self._tags(name,ifc_class))])
             steps.append((seconds,animations))
         return group, steps
 
@@ -403,7 +410,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
                          self._counter(trackers[name], (RIGHT + 2.75, y + 0.17, 0), size=24.0),
                          self.label("objects", "Objekte", (RIGHT + 2.75, y - 0.2, 0), size=16.2, color=MUTED, anchor="r"))
             rows.add(row)
-            steps.append(AnimationGroup(FadeIn(row, shift=_engine.LEFT * 0.2, run_time=0.4), trackers[name].animate(rate_func=LINEAR).set_value(len(self.info[name]["element_guids"])),
+            steps.append(AnimationGroup(self._reveal_then([FadeIn(row, shift=_engine.LEFT * 0.2)],[trackers[name].animate(rate_func=LINEAR).set_value(len(self.info[name]["element_guids"]))],1.0,.4),
                                         Indicate(whole.layers[name], color=DATA, scale_factor=1.0), lag_ratio=0.0))
         sizes = [len(self.info[name]["element_guids"]) for name in DISCIPLINES]
         unique = len(set().union(*[set(info["element_guids"]) for info in self.info.values()]))
@@ -415,7 +422,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         self._show("whole",
                    (1.0, [LaggedStart(*[FadeIn(whole.layers[name], shift=_engine.UP * 0.1) for name in ("structure", "architecture", "services")], lag_ratio=0.3), FadeIn(heading)]),
                    (2.2, [LaggedStart(*steps, lag_ratio=0.7)]),
-                   (0.9, [FadeIn(summary, run_time=0.2), total.animate(rate_func=LINEAR).set_value(unique), Indicate(whole, color=DATA, scale_factor=1.0)]))
+                   (0.9, [self._reveal_then([FadeIn(summary)],[total.animate(rate_func=LINEAR).set_value(unique)],.9,.2), Indicate(whole, color=DATA, scale_factor=1.0)]))
         self.stage = VGroup(whole, heading, rows, summary)
 
     def _architecture(self):
@@ -493,7 +500,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
                       self.label("infill on the concrete frame: it carries no load", "Ausfachung am Betonrahmen: sie trägt keine Last", (RIGHT, -0.9, 0), size=16.2, color=MUTED, width=5.5))
         link = segments([(cut + (0.05, 0.0, 0), (x0 - 0.2, y0 - height / 2, 0)), (cut + (0.05, 0.0, 0), (x0 - 0.2, y0 + height / 2, 0))], DATA, 1.0, 0.6)
         self._show("buildup", (0.8, [self._leave(), FadeIn(plan)]), (0.6, [FadeIn(mark), FadeIn(link), FadeIn(sides)]),
-                   (1.8, [FadeIn(live, run_time=0.1), grow.animate(rate_func=SMOOTH).set_value(1.0), FadeIn(names, run_time=1.0)]), (0.6, [FadeIn(chip), FadeIn(roof)]))
+                   (0.1, [FadeIn(live)]), (1.7, [grow.animate(rate_func=SMOOTH).set_value(1.0), FadeIn(names, run_time=1.0)]), (0.6, [FadeIn(chip), FadeIn(roof)]))
         self.stage = VGroup(plan, mark, link, sides, live, names, chip, roof)
 
     def _structure(self):
@@ -563,7 +570,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         water = self.live(drops, key=lambda: round(flow.get_value(), 2))
         self.add(water)
         self._show("services", (0.8, [self._leave(self.ghost), FadeIn(services), FadeIn(card)]), *steps, (0.5, [FadeOut(rows), FadeIn(total)]),
-                   (1.1, [FadeIn(hatched), FadeIn(row), FadeIn(names), area.animate(rate_func=LINEAR).set_value(garden["area"]), flow.animate(rate_func=LINEAR).set_value(1.0)]),
+                   (1.1, [FadeIn(hatched), self._reveal_then([FadeIn(row)],[area.animate(rate_func=LINEAR).set_value(garden["area"])],1.1,.2), FadeIn(names), flow.animate(rate_func=LINEAR).set_value(1.0)]),
                    (0.5, [FadeIn(scenario)]))
         self.remove(water)
         self.stage = VGroup(services, self.ghost, card, total, hatched, row, names, scenario)
@@ -711,7 +718,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         first_bay = self.dimension(plan.to_screen(grid_x[0], width), plan.to_screen(grid_x[1], width), self.quantity(spacing, "m"), offset=0.2, color=STRUCT, size=15.5)
         dims.add(first_bay, self.scale_bar((-1.0, 2.5, 0), 0.17, 5.0, steps=2))
         self._show("slab", (0.8, [self._leave(), FadeIn(plan), FadeIn(dims), FadeIn(legend)]),
-                   (0.9, [FadeIn(edge), gross.animate(rate_func=LINEAR).set_value(slab["gross_area"]), FadeIn(formula, run_time=0.2)]),
+                   (0.9, [FadeIn(edge), self._reveal_then([FadeIn(formula)],[gross.animate(rate_func=LINEAR).set_value(slab["gross_area"])],.9,.2)]),
                    (0.9, [FadeIn(hole), FadeIn(opening_labels), cut.animate(rate_func=LINEAR).set_value(slab["void_area"])]),
                    (1.0, [FadeIn(hatched), net.animate(rate_func=LINEAR).set_value(slab["net_area"])]),
                    (0.8, [FadeIn(section), FadeIn(chip), FadeIn(ties), FadeIn(left), FadeIn(right), FadeIn(both)]))
@@ -744,8 +751,8 @@ class Beat4_PartialModels(_visuals.ClipScene):
                          self.label("objects", "Objekte", (RIGHT + 2.1, y + 0.26, 0), size=16.2, color=MUTED, anchor="l", width=0.7),
                          self.text(" · ".join(f"{ifc_class} ×{self.number(count, 0)}" + (STAR if ifc_class == "IfcColumn" else "") for ifc_class, count in classes.items()), (RIGHT - 2.8, y - 0.14, 0), size=15.0, color=INK, anchor="l", width=5.6))
             rows.add(row)
-            lights = LaggedStart(*[Indicate(plan.parts[tag], color=DATA, scale_factor=1.0) for tag in tags], lag_ratio=min(0.5, 2.0 / max(len(tags), 1)))
-            steps.append((0.9, [FadeIn(row, run_time=0.2), tracker.animate(rate_func=LINEAR).set_value(len(tags)), lights]))
+            lights = LaggedStart(*[Indicate(plan.parts[tag], color=DATA, scale_factor=1.0) for tag in tags], lag_ratio=min(0.5, 2.0 / len(tags))) if tags else Wait(0.01)
+            steps.append((0.9, [self._reveal_then([FadeIn(row)],[tracker.animate(rate_func=LINEAR).set_value(len(tags))],.9,.2), lights]))
         grid = VGroup(self.label(f"Structural grid {self.quantity(spacing, 'm')}, sourced", f"Tragraster {self.quantity(spacing, 'm')}, Quelle", (RIGHT, -1.95, 0), size=17.0, color=STRUCT, width=5.6),
                      self._legend((RIGHT - 2.9, -2.3, 0), piloti=True))
         head = self.label("Objects drawn on the ground-floor plan", "Im Grundriss gezeichnete Objekte", (RIGHT, 2.7, 0), size=17.0, color=MUTED, width=5.6)
@@ -790,7 +797,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
                     self.label("Hypothetical routing · native hollow pipe section","Hypothetische Führung · nativer hohler Rohrquerschnitt",(RIGHT,-1.45,0),size=16.2,color=MUTED,width=5.9),self._legend((RIGHT-2.95,-1.69,0),assumed=True))
         chips=VGroup(self.guid_chip(clash["a_tag"],(1.95,-2.17,0),color=SERV),self.guid_chip(clash["b_tag"],(5.15,-2.17,0),color=STRUCT))
         self._show("check",(.8,[self._leave(plan),Indicate(plan.parts[clash["a_tag"]],color=WARN,scale_factor=2),Indicate(plan.parts[clash["b_tag"]],color=WARN,scale_factor=2)]),
-                   (1.2,[FadeIn(marker),FadeIn(link),FadeIn(glass),FadeIn(solid)]),(1.2,[FadeIn(ring,run_time=.1),ring_value.animate(rate_func=SMOOTH).set_value(ring_radius),FadeIn(dimension)]),(.8,[FadeIn(card),FadeIn(chips)]))
+                   (1.2,[FadeIn(marker),FadeIn(link),FadeIn(glass),FadeIn(solid)]),(.1,[FadeIn(ring)]),(1.1,[ring_value.animate(rate_func=SMOOTH).set_value(ring_radius),FadeIn(dimension)]),(.8,[FadeIn(card),FadeIn(chips)]))
         self.stage=VGroup(plan,marker,link,glass,solid,ring,dimension,card,chips)
 
     def _analysis(self, point, scale, projection="axon", **kwargs):
@@ -828,7 +835,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
             note = VGroup(*[self.text(line, (-2.2, y - 0.36 - number * 0.27, 0), size=15.5, color=MUTED, anchor="l", width=5.0) for number, line in enumerate(self._wrap(text, 52))])
             rule = VGroup(self._counter(tracker, (-2.3, y, 0), size=20.0, unit=STAR if "IfcColumn" in origin_name else ""), origin, arrow, goal, note)
             rules.add(rule)
-            steps.append((0.9, [FadeIn(rule), tracker.animate(rate_func=LINEAR).set_value(count), light(),
+            steps.append((0.9, [self._reveal_then([FadeIn(rule)],[tracker.animate(rate_func=LINEAR).set_value(count)],.9,.2), light(),
                                 LaggedStart(*[Indicate(part, color=DATA, scale_factor=1.0) for part in lit_result], lag_ratio=min(0.5, 2.0 / len(lit_result)))]))
         carry = VGroup(Arrow((-2.8, -1.95, 0), (2.8, -1.95, 0), buff=0.0, color=MUTED, stroke_width=2.0, max_tip_length_to_length_ratio=0.1),
                        self.text(self.tr("translation of ", "Übersetzung von ") + f"{self.info['structure']['name'][language]} {self._revision(analysis['source_revision'])}", (0, -1.68, 0), size=16.2, color=MUTED, width=5.5))
@@ -861,8 +868,8 @@ class Beat4_PartialModels(_visuals.ClipScene):
             y, tracker = 2.45 - index * 0.68, ValueTracker(0)
             rows.add(VGroup(self._counter(tracker, (0.95, y, 0), size=21.0, unit=STAR if value == counts["curve_members"] else ""), self.text(name, (1.1, y, 0), size=17.5, color=color, anchor="l", width=5.5),
                             self.label(*text, (1.1, y - 0.28, 0), size=15.5, color=MUTED, anchor="l", width=5.5)))
-            reveal = LaggedStart(*[FadeIn(part) for part in parts], lag_ratio=min(0.6, 1.0 / max(len(parts), 1)))
-            steps.append((1.0, [FadeIn(rows[-1], run_time=0.2), tracker.animate(rate_func=LINEAR).set_value(value), reveal]))
+            reveal = LaggedStart(*[FadeIn(part) for part in parts], lag_ratio=min(0.6, 1.0 / len(parts))) if parts else Wait(0.01)
+            steps.append((1.0, [self._reveal_then([FadeIn(rows[-1])],[tracker.animate(rate_func=LINEAR).set_value(value)],1.0,.2), reveal]))
         void, gross, net = analysis["slab"]["void_area"], analysis["slab"]["gross_area"], analysis["slab"]["net_area"]
         notes = VGroup(*self._lines([self.tr("line member ≠ column solid", "Stabelement ≠ Stützenkörper"), self.tr("surface member ≠ slab solid", "Flächenelement ≠ Deckenkörper")],
                                     (0.95, -0.35, 0), size=17.0, color=INK, pitch=0.32, width=5.6),
@@ -957,7 +964,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         chosen = VGroup(roof, self.label("chosen assumption", "gewählte Annahme", (4.9, ground + height + 0.3, 0), size=15.5, color=DATA), self.label("alternative", "Alternative", (2.2, ground + height + 0.3, 0), size=15.5, color=MUTED))
         pop = LaggedStart(*[FadeIn(glyph) for glyph in supports], lag_ratio=1.0 / len(supports))
         self._show("supports", (0.9, [self._leave(), FadeIn(base), FadeIn(mesh)]),
-                   (1.4, [FadeIn(row, run_time=0.2), count.animate(rate_func=LINEAR).set_value(len(analysis["supports"])), pop]),
+                   (1.4, [self._reveal_then([FadeIn(row)],[count.animate(rate_func=LINEAR).set_value(len(analysis["supports"]))],1.4,.2), pop]),
                    (1.0, [FadeIn(condition), FadeIn(sketches), FadeIn(chosen)]))
         self.stage = VGroup(base, mesh, VGroup(*supports), row, condition, sketches, chosen)
 
@@ -1082,7 +1089,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
                         self.label("together: the unique objects of the three models", "zusammen: die eindeutigen Objekte der drei Modelle", (-1.35, -1.85, 0), size=16.2, color=MUTED, anchor="l", width=6.0))
         legend = VGroup(self.label("Orange: not in the analysis", "Orange: nicht in der Analyse", (-4.55, -2.0, 0), size=16.2, color=WARN), self._legend((-1.35, -2.25, 0), piloti=True))
         self._show("loss", (0.8, [self._leave(), FadeIn(villa)]), (2.8, [LaggedStart(*steps, lag_ratio=0.35), FadeIn(legend)]),
-                   (0.7, [FadeIn(footer), gone.animate(rate_func=LINEAR).set_value(dropped), stays.animate(rate_func=LINEAR).set_value(kept)]))
+                   (0.7, [self._reveal_then([FadeIn(footer)],[gone.animate(rate_func=LINEAR).set_value(dropped),stays.animate(rate_func=LINEAR).set_value(kept)],.7,.2)]))
         self.stage = VGroup(villa, table, links, footer, legend)
 
     def _properties(self):
@@ -1199,7 +1206,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         footer, squares = self._trace_footer(records, kinds), self._kind_chart(fill)
         self._show("trace", (0.9, [self._leave(), FadeIn(struct), FadeIn(result), FadeIn(heads)]),
                    (1.2, [FadeIn(c2), FadeIn(chips)]), (1.0, [FadeIn(one_way)]),
-                   (1.2, [FadeIn(footer), records.animate(rate_func=LINEAR).set_value(len(analysis["losses"])), kinds.animate(rate_func=LINEAR).set_value(len(analysis["loss_groups"])),
-                          FadeIn(squares), fill.animate(rate_func=LINEAR).set_value(1.0)]))
+                   (1.2, [self._reveal_then([FadeIn(footer),FadeIn(squares)],[records.animate(rate_func=LINEAR).set_value(len(analysis["losses"])),
+                          kinds.animate(rate_func=LINEAR).set_value(len(analysis["loss_groups"])),fill.animate(rate_func=LINEAR).set_value(1.0)],1.2,.2)]))
         self.stage = VGroup(struct, result, heads, c2, one_way, chips, footer, squares)
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           

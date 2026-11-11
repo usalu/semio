@@ -226,10 +226,10 @@ class Section(_s.SheetMixin):
                 finishes.setdefault(part["layer"],[]).append(part)
             for layer,parts in finishes.items():
                 colour = _c.surface_color({"kind":layer})
-                cells = _plan.rect_union_cells(_plan.slab_cut({"parts":parts},plane.index,plane.value))
-                shapes = _engine.VGroup(*[_d.polygon([to(h,z) for h,z in rect(a,b,c,d)],colour,opacity) for a,b,c,d in cells])
-                if cells:
-                    shapes.add(_d.segments([(to(*a),to(*b)) for a,b in _plan.cell_edges(cells)],stroke,W_THIN,opacity))
+                rings = _plan.occupied_section_rings(parts,plane.index,plane.value)
+                shapes = _engine.VGroup(*[_d.polygon([to(h,z) for h,z in ring],colour,opacity) for ring in rings])
+                if rings:
+                    shapes.add(_d.segments([(to(*a),to(*b)) for a,b in _plan.ring_edges(rings)],stroke,W_THIN,opacity))
                     put(2.1,0.0,slab["tag"]+":"+layer,shapes)
 
     def _beyond(self, ctx, item, ring_hz, tag, depth, fill=None, stroke=None, opacity_fill=1.0):
@@ -538,15 +538,19 @@ class Section(_s.SheetMixin):
         if use & {"structure", "architecture"}:
             for slab in g["slabs"]:
                 item = _s.pseudo(slab["tag"], "IfcSlab", "slabs", slab["guid"], ("architecture", "structure"))
-                occupied = slab["parts"]+slab.get("finish_parts",[])
+                occupied = [part for part in slab["parts"]+slab.get("finish_parts",[]) if _plan.vertical_prism(part)]
                 for a,b,z0,z1,n in _plan.slab_sides(slab,occupied):
                     add_face(slab["tag"],item,a,b,z0,z1,n,CONCRETE,INK,"slab")
                 finishes = {}
                 for part in slab.get("finish_parts",[]):
                     finishes.setdefault(part["layer"],[]).append(part)
                 for layer,parts in finishes.items():
-                    for a,b,z0,z1,n in _plan.slab_sides({"parts":parts},occupied):
+                    solids = [part for part in parts if _plan.vertical_prism(part)]
+                    for a,b,z0,z1,n in _plan.slab_sides({"parts":solids},occupied):
                         add_face(slab["tag"]+":"+layer,item,a,b,z0,z1,n,_c.surface_color({"kind":layer}),INK,"solid")
+                    for part in parts:
+                        if not _plan.vertical_prism(part):
+                            add_loft(slab["tag"]+":"+layer,item,part,_c.surface_color({"kind":layer}),"solid")
         if use & {"architecture","structure"}:
             for kind in ("stairs","details","furnishings","railings"):
                 for data in g.get(kind,[]):

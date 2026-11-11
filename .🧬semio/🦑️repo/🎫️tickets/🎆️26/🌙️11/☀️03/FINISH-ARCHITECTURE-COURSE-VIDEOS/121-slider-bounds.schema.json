@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "languages",
+    "ids",
+    "minimum_margin",
+    "frame_width",
+    "frame_height"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "languages": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "en",
+          "de"
+        ]
+      },
+      "minItems": 2,
+      "uniqueItems": true
+    },
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "minimum_margin": {
+      "type": "number",
+      "minimum": 0
+    },
+    "frame_width": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "frame_height": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  }
+}

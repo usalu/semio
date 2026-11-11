@@ -1,0 +1,15 @@
+{
+  "files": [
+    "normal.ts",
+    ".authored/hidden.ts",
+    ".pnotcache/keep.ts",
+    ".pdeadbeef/p/generated.ts",
+    ".pd182815b/p/generated.ts"
+  ],
+  "expected": [
+    "normal.ts",
+    ".authored/hidden.ts",
+    ".pnotcache/keep.ts"
+  ],
+  "pattern": "**/*.ts"
+}

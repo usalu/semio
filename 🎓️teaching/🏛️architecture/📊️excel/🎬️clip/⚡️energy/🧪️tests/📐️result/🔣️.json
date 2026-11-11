@@ -1,0 +1,50 @@
+{
+  "languages": [
+    "en",
+    "de"
+  ],
+  "cases": [
+    {
+      "stage": "volume",
+      "cell": "B12",
+      "value": 3.12,
+      "formula": "=air_heat_capacity*air_change*B10",
+      "refs": [
+        "B10"
+      ],
+      "rows": [
+        6,
+        16
+      ]
+    },
+    {
+      "stage": "load",
+      "cell": "B13",
+      "value": 681,
+      "formula": "=(B11+B12)*(theta_i-theta_e)",
+      "refs": [
+        "B11",
+        "B12"
+      ],
+      "rows": [
+        6,
+        16
+      ]
+    },
+    {
+      "stage": "annual",
+      "cell": "B14",
+      "value": 1296,
+      "formula": "=(B11+B12)*heating_degree_days*24/1000",
+      "refs": [
+        "B11",
+        "B12"
+      ],
+      "rows": [
+        6,
+        16
+      ]
+    }
+  ],
+  "b15": "148 kWh/(m²·a)"
+}

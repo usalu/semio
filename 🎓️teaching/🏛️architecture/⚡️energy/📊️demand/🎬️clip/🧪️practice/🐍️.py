@@ -141,13 +141,13 @@ def _din_ref(text: str):
 def _stand(floor_y, room_h, x):
     """🧍 Breathing thermal occupant at true scale — 70 % of the clear room height, feet on the floor line at ``x``."""
     cast = "shared-person-winter"
-    return staffage_motion(cast, unit=0.7 * room_h / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]))
+    return staffage_motion(cast, unit=room_metre(room_h), anchor=np.array([x, floor_y, 0.0]))
 
 
 def _talker(floor_y, room_h, x):
     """🗣️ Breathing thermal speaker at true scale — 70 % of the clear room height, feet on the floor line at ``x``."""
     cast = "shared-person-neutral"
-    return staffage_motion(cast, unit=0.7 * room_h / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]))
+    return staffage_motion(cast, unit=room_metre(room_h), anchor=np.array([x, floor_y, 0.0]))
 
 
 def _heater(floor_y, room_h, x):
@@ -415,7 +415,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
             return [c * f for c, f in zip(SEG_NORM, factors)]
 
         calc_total = sum(SEG_NORM)
-        calc_lbl = _bar_label("berechnet", CALC_CYAN, BAR_Y_CALC + 0.36)
+        calc_lbl = _bar_label(tr("calculated", "berechnet"), CALC_CYAN, BAR_Y_CALC + 0.36)
         meas_lbl = _bar_label(tr("measured", "gemessen"), REAL_ORANGE, BAR_Y_MEAS + 0.36)
         calc_bar = _bar(calc_total, CALC_CYAN, BAR_Y_CALC)
         meas_bar = _bar(0.68, REAL_ORANGE, BAR_Y_MEAS)

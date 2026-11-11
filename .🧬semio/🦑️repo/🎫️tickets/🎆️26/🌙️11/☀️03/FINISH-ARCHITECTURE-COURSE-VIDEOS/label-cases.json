@@ -1,0 +1,22 @@
+[
+  {
+    "file": "🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+    "en": "outside",
+    "de": "außen"
+  },
+  {
+    "file": "🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py",
+    "en": "outdoor",
+    "de": "außen"
+  },
+  {
+    "file": "🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+    "en": "outside 0 °C",
+    "de": "außen 0 °C"
+  },
+  {
+    "file": "📊️demand/🎬️clip/🧪️practice/🐍️.py",
+    "en": "calculated",
+    "de": "berechnet"
+  }
+]

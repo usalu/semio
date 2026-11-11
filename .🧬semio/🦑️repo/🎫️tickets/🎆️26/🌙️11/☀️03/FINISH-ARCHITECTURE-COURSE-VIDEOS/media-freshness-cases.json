@@ -1,0 +1,12 @@
+{
+  "savedPresentation": {
+    "frontend": "v1"
+  },
+  "changedPresentation": {
+    "frontend": "v2"
+  },
+  "expected": {
+    "unchanged": true,
+    "changed": false
+  }
+}

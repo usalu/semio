@@ -2011,18 +2011,18 @@ def subtitle_narration_text(narration: list[Clause], key: str | None = None) -> 
 
 
 def subtitle_text(narration: list[Clause], key: str) -> str:
-    """📄 The German subtitle for one clause — what ``caption_bar()`` displays while it plays."""
-    for section, _, text_de in narration:
+    """📄 The selected display language for one caption clause."""
+    for section, text_en, text_de in narration:
         if section == key:
-            return text_de
+            return tr(text_en, text_de)
     raise KeyError(key)
 
 
 def subtitle_read_seconds(narration: list[Clause], key: str | None = None) -> float:
-    """📖 Minimum on-screen seconds to comfortably read the German subtitle(s)."""
+    """📖 Minimum on-screen seconds to comfortably read the selected captions."""
     words = sum(
-        len(text_de.split()) for section, _, text_de in narration
-        if text_de.strip() and (key is None or section == key)
+        len(tr(text_en, text_de).split()) for section, text_en, text_de in narration
+        if key is None or section == key
     )
     if words <= 0:
         return 0.0

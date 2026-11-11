@@ -108,7 +108,7 @@ def video_status(video_id: str, language: str, audience: str, output: str, state
                          "clip": clip, "fresh": fresh, "declared": job["segment"], "state": state,
                          "state_sha256": hashlib.sha256(canonical(state).encode()).hexdigest()})
     master = folder / "rendered" / f"{output}_{audience}_{language}_{LABEL}.mp4"
-    return {"video": video_id, "segments": segments, "master": master, "settings": config}
+    return {"video": video_id, "segments": segments, "master": master, "content": folder / str(plan[0]["video_index"]) / "content.mp4", "settings": config}
 
 
 def master_fresh(status: dict) -> bool:
@@ -117,9 +117,13 @@ def master_fresh(status: dict) -> bool:
     sidecar = master.with_suffix(".render.json") if master else None
     if not master or not master.is_file() or not sidecar.is_file() or not all(segment["fresh"] for segment in status["segments"]):
         return False
-    recorded = [segment for chapter in json.loads(sidecar.read_text(encoding="utf-8"))["content"]["chapters"] for segment in chapter["segments"]]
+    saved = json.loads(sidecar.read_text(encoding="utf-8"))
+    recorded = [segment for chapter in saved["content"]["chapters"] for segment in chapter["segments"]]
     expected = [{**segment["state"], "segment": segment["declared"]} for segment in status["segments"]]
-    return recorded == expected
+    current = runtime().presentation_state(status["video"], status["settings"], status["settings"]["language"])
+    return (recorded == expected and saved.get("presentation") == current and runtime().state_inputs_current(saved)
+            and runtime().reusable_clip(status["content"], saved["content"])
+            and saved.get("cursor") == runtime()._cursor_hash(status["content"]))
 
 
 def frame(path: Path, at: float, size: tuple[int, int]):

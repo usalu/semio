@@ -734,4 +734,4 @@ def clash_check(model: dict | None = None, include_passed: bool = False, *, prog
                 out.append(nearest)
     out.sort(key=lambda row:(row["status"] != "violation",row["distance"],row["a_tag"],row["b_tag"]))
     return [{"id":f"clash-{i:02d}",**row} for i,row in enumerate(out,1)]
-                                                                                                                                                                                      
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

@@ -811,8 +811,12 @@ def _assembly_items(parts, *, base, groups, plane=None, highlight=None, window=T
                 shape.world_normal = _frozen(normal.copy())
                 shape.semantic_role, shape.semantic_key = role, part_key
                 group.add(shape)
+                owners = [group]
                 if face_groups is not None and role in ("shell", "shell_back"):
-                    face_groups.setdefault(name, _engine.VGroup()).add(shape)
+                    face_group = face_groups.setdefault(name, _engine.VGroup())
+                    face_group.add(shape)
+                    owners.append(face_group)
+                shape._batch_groups = tuple(owners)
                 return shape
             intrinsic = hashlib.blake2b(digest_size=20)
             intrinsic.update(np.asarray((plane.x, plane.y, plane.z) if plane is not None else np.eye(3), float).tobytes())
@@ -1136,6 +1140,32 @@ def _opaque_visible(items, view, padding=0.0):
     return [items[index] for index in result]
 
 
+def _batch_pair(first, second):
+    """🧺 Combine consecutive opaque facets sharing their semantic owners and paint."""
+    a, b = getattr(first, "_batch_groups", ()), getattr(second, "_batch_groups", ())
+    if not a or len(a) != len(b) or any(x is not y for x, y in zip(a, b)):
+        return False
+    if first.submobjects or second.submobjects or first.get_stroke_width() or second.get_stroke_width():
+        return False
+    if not np.all(first.fill_rgbas[:, 3] == 1) or not np.array_equal(first.fill_rgbas, second.fill_rgbas):
+        return False
+    if any(getattr(first, key, None) != getattr(second, key, None) for key in ("paint", "semantic_role", "semantic_key")):
+        return False
+    if not np.array_equal(first.world_normal, second.world_normal):
+        return False
+    amin, amax = first.points[:, :2].min(axis=0), first.points[:, :2].max(axis=0)
+    bmin, bmax = second.points[:, :2].min(axis=0), second.points[:, :2].max(axis=0)
+    if not np.any((amax + .1 < bmin) | (bmax + .1 < amin)):
+        return False
+    facets = getattr(first, "world_facets", ((first.world_vertices, first.world_normal),))
+    first.world_facets = (*facets, *getattr(second, "world_facets", ((second.world_vertices, second.world_normal),)))
+    first.world_vertices = _frozen(np.vstack([first.world_vertices, second.world_vertices]))
+    first.set_points(np.vstack([first.points, second.points]))
+    for group in a:
+        group.remove(second)
+    return True
+
+
 def _paint_ordered(items, view):
     """🖼️ Paint actual opaque material unions before their shaded facets, retaining source holes and physical ordering."""
     bundles = {}
@@ -1162,8 +1192,18 @@ def _paint_ordered(items, view):
             coverage.paint = (item.material, .85, 0, True)
             coverage.semantic_sources = tuple(dict.fromkeys(part for part in parts if part is not None))
             item.paint_owner.add(coverage)
+            if painted and hasattr(painted[-1], "_batch_groups"):
+                del painted[-1]._batch_groups
             painted.append(coverage)
-        painted.append(item.draw(view))
+        shape = item.draw(view)
+        if not painted or not _batch_pair(painted[-1], shape):
+            if painted and hasattr(painted[-1], "_batch_groups"):
+                del painted[-1]._batch_groups
+            painted.append(shape)
+        elif hasattr(shape, "_batch_groups"):
+            del shape._batch_groups
+    if painted and hasattr(painted[-1], "_batch_groups"):
+        del painted[-1]._batch_groups
     return painted
 
 

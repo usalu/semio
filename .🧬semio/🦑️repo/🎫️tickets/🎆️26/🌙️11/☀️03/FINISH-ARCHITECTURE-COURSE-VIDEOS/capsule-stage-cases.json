@@ -1,0 +1,70 @@
+{
+  "width": 2.6,
+  "length": 4.2,
+  "height": 2.4,
+  "back": -0.1,
+  "radius": 0.2,
+  "window_diameter": 1.2,
+  "window_u": 0,
+  "window_v": 1.2,
+  "states": [
+    {
+      "name": "centred",
+      "lift": 0,
+      "expected_center": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "lifted",
+      "lift": 1,
+      "expected_center": [
+        0,
+        2,
+        1.2
+      ]
+    },
+    {
+      "name": "half",
+      "lift": 0.5,
+      "expected_center": [
+        0,
+        1,
+        0.6
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "round": 0,
+      "window": 0,
+      "mode": "box"
+    },
+    {
+      "round": 1,
+      "window": 0,
+      "mode": "rounded"
+    },
+    {
+      "round": 1,
+      "window": 1,
+      "mode": "window"
+    }
+  ],
+  "ghost": {
+    "positions": [
+      -2,
+      2
+    ],
+    "threshold": 0.5,
+    "maxPixelDifference": 2
+  },
+  "ui": {
+    "minimum": 1,
+    "maximum": 3,
+    "panelMultiplier": 50,
+    "maxPixelDifference": 2
+  }
+}

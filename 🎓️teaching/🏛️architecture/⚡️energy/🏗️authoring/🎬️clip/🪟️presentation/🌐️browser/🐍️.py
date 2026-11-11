@@ -233,7 +233,7 @@ def _membership(sources) -> tuple:
             members.add("missing:" + str(root))
             continue
         for directory, children, files in os.walk(root, followlinks=False):
-            children[:] = [name for name in children if name not in (".git", "node_modules") and not os.path.islink(os.path.join(directory, name))]
+            children[:] = [name for name in children if name not in (".git", "node_modules") and not re.fullmatch(r"\.p[0-9a-f]{8}", name) and not os.path.islink(os.path.join(directory, name))]
             applicable = [(prefix, patterns, negative) for prefix, patterns, negative in prefixed
                 if directory == prefix[:-1] or directory.startswith(prefix)]
             if not applicable:

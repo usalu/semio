@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "branch_lengths",
+    "flatten_path",
+    "graft_path",
+    "max_width",
+    "probe",
+    "full_branch_lengths",
+    "full_graft_path"
+  ],
+  "properties": {
+    "branch_lengths": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "flatten_path": {
+      "type": "string"
+    },
+    "graft_path": {
+      "type": "string"
+    },
+    "max_width": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "probe": {
+      "type": "string"
+    },
+    "full_branch_lengths": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "full_graft_path": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

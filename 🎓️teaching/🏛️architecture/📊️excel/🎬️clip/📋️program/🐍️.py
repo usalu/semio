@@ -19,6 +19,9 @@ _draw = importlib.import_module("🎓️teaching.🏛️architecture.🏢️naka
 _art = _visuals._art
 _engine = importlib.import_module("manim")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+_snapshot = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️snapshot")
+_keyed = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️keyed")
+
 _d = _visuals._drafting
 
 INK, MUTED, ARCH, STRUCT, DATA, GOOD, WARN, GLASS = (getattr(_visuals, name) for name in ("INK", "MUTED", "ARCH", "STRUCT", "DATA", "GOOD", "WARN", "GLASS"))
@@ -300,7 +303,7 @@ class Beat3_Program(_visuals.ClipScene):
         def build():
             lit = None if self.litset is None else (lambda k, s=self.litset: k in s)
             return self.tower_axon(**TOWER_FIT, types=False, tint=lambda k: self.paint.get(k), lit=lit, **kw)
-        return self.live(build, lambda: self.stamp.get_value())
+        return _keyed.create(build, lambda: self.stamp.get_value(), self.camera, retain=True)
 
     def capsule_center(self, key):
         """🎯 Screen centre of one capsule of the tower currently drawn."""
@@ -557,8 +560,9 @@ class Beat3_Program(_visuals.ClipScene):
         summary = self.window(self.program_book(self.wb), "Program", "A:E", (3, 8), selected="B4")
         formula = self.wb.cell("Program", "B4").formula
         frames = self.frames(summary, formula)
-        counter = self.live_label(lambda: self.number(round(self.counts.get_value()), 0), (TOWER_AT[0], 2.4, 0), size=S_BODY, color=self.tcol("A"))
-        total_counter = self.live_label(lambda: self.number(round(self.counts.get_value()), 0), (TOWER_AT[0], 2.4, 0), size=S_BODY, color=INK)
+        count_key = lambda: round(self.counts.get_value())
+        counter = _keyed.create(lambda: _engine.VGroup(self.text(self.number(count_key(), 0), (TOWER_AT[0], 2.4, 0), size=S_BODY, color=self.tcol("A"))), count_key, self.camera)
+        total_counter = _keyed.create(lambda: _engine.VGroup(self.text(self.number(count_key(), 0), (TOWER_AT[0], 2.4, 0), size=S_BODY, color=INK)), count_key, self.camera)
         token = re.search(r"\w+\[[^\]]+\]", _x.formula_text(self.wb, "Program", "B4", self.lang)).group(0)
         callout = self.chip(f"{token} = M2:M141", (TOWER_AT[0], -2.42, 0), INK)
         self.counts.set_value(self.vals[("Program", "B4")])
@@ -671,7 +675,7 @@ class Beat3_Program(_visuals.ClipScene):
         pairs = [(self.silhouettes([k for k, s in zip(self.keys, self.slots) if s.tower == i], color=TOWER_COLORS[i]), sums[i]) for i in range(2)]
         self.later(self.collect(pairs, run=0.7, total=2.0))
         total_pill = _morph.token(parts[2], kind="number", color=GOOD).move_to(tw_win.point("F13"))
-        glow = _morph.proxy(tower).set_fill(GOOD, opacity=0.22)
+        glow = _morph.proxy(tower._drawing_ref.value).set_fill(GOOD, opacity=0.22)
         self.later(_engine.FadeOut(*sums, run_time=0.01), when="post", clean=sums)
         self.later(_engine.FadeIn(total_pill, run_time=0.3), when="post")
         self.later(_morph.morph(total_pill, glow, path_arc=0.4, run_time=1.2), when="post", clean=[glow])

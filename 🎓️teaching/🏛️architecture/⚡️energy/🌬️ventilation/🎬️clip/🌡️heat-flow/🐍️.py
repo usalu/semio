@@ -487,7 +487,7 @@ class Beat2_SensibleWaerme(Scene):
             return {"static": VGroup(thermo["group"], thermo["column"], head, where), "read": read}
 
         t_i = tag(tx_i, th_i, r"\theta_{\mathrm{i}}", P_ORANGE, tr("indoor", "innen"))
-        t_e = tag(tx_e, th_e, r"\theta_{\mathrm{e}}", P_CYAN, "außen")
+        t_e = tag(tx_e, th_e, r"\theta_{\mathrm{e}}", P_CYAN, tr("outdoor", "außen"))
         dt_name = _name(r"\Delta\theta = \theta_{\mathrm{i}} - \theta_{\mathrm{e}}", tr("Temperature difference", "Temperaturdifferenz"), P_YELLOW)
         dt_row = _row(dt_name, x0, y_d, 2.9, P_YELLOW, lambda: abs(d()) / 25.0)
         dt_read = math_readout(lambda: rf"\Delta\theta = {label_number(d() + 0.0)}\,\mathrm{{K}}",

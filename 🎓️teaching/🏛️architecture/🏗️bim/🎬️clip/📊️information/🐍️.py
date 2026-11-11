@@ -3,6 +3,7 @@
 import importlib
 import math
 import sys
+from functools import cache
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -35,6 +36,28 @@ INFERRED = _draft.mix(GOOD, WARN, 0.5)
 TONES = {"sourced": GOOD, "assumed": WARN, "inferred": INFERRED, "open": WARN, "derived": MUTED}
 WORDS = {"sourced": ("sourced", "belegt"), "assumed": ("assumed", "angenommen"), "inferred": ("inferred", "gefolgert"), "open": ("open", "offen"),
          "derived": ("derived", "abgeleitet")}
+
+
+@cache
+def period_plan_metres():
+    """🚘 Plan length and track of the handcrafted period car, in metres, at heading zero."""
+    span = _art.staffage_width("bim-information-car")
+    car = _art.staffage("bim-information-car", unit=span)
+    return car.width / span, car.height / span
+
+
+def swept_half_metres():
+    """🛞 Lateral half-width of the period car in metres, the outline the swept path follows."""
+    return period_plan_metres()[1] / 2
+
+
+def clearance_corners(length, width, x, y, heading):
+    """📦 Corners of the assumed clearance rectangle, nose along +x before the heading in degrees."""
+    c, s = math.cos(math.radians(heading)), math.sin(math.radians(heading))
+    half = np.array([length, width]) / 2
+    rotation = np.array([[c, s], [-s, c]])
+    local = np.array([[-half[0], -half[1]], [half[0], -half[1]], [half[0], half[1]], [-half[0], half[1]]])
+    return local @ rotation + np.array([x, y])
 
 
 def _fade(group, alpha):
@@ -208,10 +231,18 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         return _fonts.section_heading(self.tr("Villa Savoye · Ground floor", "Villa Savoye · Erdgeschoss"))
 
     def _car(self, scale, heading=0.0, color=DATA):
-        """🚘 Top view of the handcrafted 1929 saloon scaled uniformly, so its real proportions hold, until it fits inside the model's assumed car length and width, nose along +x before rotation by the heading in degrees. [staffage](../../../🧍️staffage/README.md)"""
+        """🚘 Top view of the handcrafted 1929 saloon at the scene metre scale, nose along +x before rotation by the heading in degrees. [staffage](../../../🧍️staffage/README.md)"""
         car = _art.staffage("bim-information-car", unit=scale, color=color)
-        car.scale(min(self._c["car_length"] * scale / car.width, self._c["car_width"] * scale / car.height))
         return car.move_to(np.zeros(3)).rotate(math.radians(heading), about_point=np.zeros(3))
+
+    def question_car(self, unit, assumed_length, assumed_width):
+        """🚘 Period car at ``unit`` scene units per metre, inside the dashed assumed clearance envelope, both centred on the origin."""
+        length_m, width_m = period_plan_metres()
+        hx, hy = assumed_length * unit / 2, assumed_width * unit / 2
+        corners = [(-hx, -hy, 0), (hx, -hy, 0), (hx, hy, 0), (-hx, hy, 0)]
+        return {"car": self._car(unit), "envelope": _draft.polyline(corners, DATA, _draft.W_THIN, 0.8, closed=True, dash=0.08),
+                "length_m": length_m, "width_m": width_m, "length_scene": length_m * unit, "width_scene": width_m * unit,
+                "envelope_corners": corners}
 
     def _pose(self, t):
         """🧭 Position and heading of the car at fraction ``t`` of its path, interpolated between model samples."""
@@ -225,7 +256,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
     def _driver(self, t):
         """🛣️ Car on the plan with the area it has swept so far."""
         group = _engine.VGroup()
-        half = self._c["car_width"] / 2
+        half = swept_half_metres()
         steps = max(int((t - DRIVE_FROM) * 160), 2)
         left, right = [], []
         for k in range(steps + 1):
@@ -339,8 +370,9 @@ class Beat1_DataToInformation(_visuals.ClipScene):
             keep.add(_draft.polygon(ring, WARN, 0.1), _draft.polyline(ring, WARN, _draft.W_HAIR, 0.8, closed=True, dash=0.08),
                      self._say(self.quantity(lim["min_margin"], "m"), (xa - 0.16 if left else xb + 0.16, cy + 0.68), size=SMALL, color=WARN, edge="r" if left else "l"),
                      _draft.segments([((xa - 0.1 if left else xb + 0.1, cy + 0.68, 0), ((x0 + x1) / 2, cy + 0.68, 0))], WARN, _draft.W_HAIR, 0.9))
+        envelope = _draft.polyline([(car_x - reach, cy - half, 0), (car_x + reach, cy - half, 0), (car_x + reach, cy + half, 0), (car_x - reach, cy + half, 0)],
+                                   DATA, _draft.W_THIN, 0.85, closed=True, dash=0.06)
         car = self._car(k, 270).move_to((car_x, cy, 0))
-        car.scale(w / self._c["car_width"])
         car_dim = _engine.VGroup(self.dimension((car_x - reach, cy, 0), (car_x + reach, cy, 0), None, offset=half + 0.1, color=DATA),
                                  self._say(self.quantity(w, "m"), (car_x, cy + half + 0.3), color=DATA))
         fit = lim["fits"]
@@ -351,7 +383,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
                 margins.add(self.dimension((left, cy, 0), (right, cy, 0), None, offset=-(half + 0.12), color=DATA),
                             self._say(self.quantity(lim["margin"], "m"), ((left + right) / 2, cy - half - 0.36), size=_draft.S_SMALL, color=DATA))
         clear_row = _engine.VGroup(
-            self._math([("s", "s", DATA), (None, "−", None), ("d", "r_1+r_2", WARN), (None, "=", None), ("w", "w", GOOD)], size=24).move_to((cx - 1.7, -1.55, 0)),
+            self._math([("s", "s", DATA), (None, "−", None), ("d", "(r_1+r_2)", WARN), (None, "=", None), ("w", "w", GOOD)], size=24).move_to((cx - 1.7, -1.55, 0)),
             self._math([("s", self._tex(s, "m"), DATA), (None, "−", None), ("d", self._tex(d, "m"), WARN), (None, "=", None), ("w", self._tex(lim["clear_width"], "m"), GOOD)],
                        size=22).move_to((cx + 1.2, -1.55, 0)))
         need_row = self._math([("b", self._tex(w, "m"), WARN), (None, "+ 2 ×", None), ("m", self._tex(lim["min_margin"], "m"), WARN), (None, "=", None),
@@ -359,7 +391,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         need_row.move_to(np.array([0.62 + need_row.width / 2, -1.95, 0.0]))
         verdict = self.badge(self.tr("fits · assumed", "passt · angenommen") if fit else self.tr("does not fit", "passt nicht"), (0.68, 2.84), color=WARN if fit else SERV,
                              size=_draft.S_SMALL, filled=not fit, anchor="l")
-        parts = {"axes": axes, "pil": pil, "span": span, "diam": diam, "clear": clear, "keep": keep, "car": _engine.VGroup(car, car_dim), "margins": margins,
+        parts = {"axes": axes, "pil": pil, "span": span, "diam": diam, "clear": clear, "keep": keep, "car": _engine.VGroup(envelope, car, car_dim), "margins": margins,
                  "formula": clear_row, "need": need_row, "verdict": verdict}
         for name, part in parts.items():
             bay.add(_fade(part, rv.get(name, 1.0)))
@@ -417,10 +449,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
     def _profile_pair(self, item):
         """📐 Closest points of the actual vehicle rectangle and occupied source profile outlines."""
         x,y,heading=item["pose"]
-        c,s=math.cos(math.radians(heading)),math.sin(math.radians(heading))
-        half=np.array([self._c["car_length"],self._c["car_width"]])/2
-        rotation=np.array([[c,s],[-s,c]])
-        car=np.array([[-half[0],-half[1]],[half[0],-half[1]],[half[0],half[1]],[-half[0],half[1]]])@rotation+[x,y]
+        car=clearance_corners(self._c["car_length"],self._c["car_width"],x,y,heading)
         ground=self._g["storeys"]["ground"]
         top=ground+self._m["car"]["height"]["value"]
         pairs=[]
@@ -469,6 +498,9 @@ class Beat1_DataToInformation(_visuals.ClipScene):
                                for part in item["parts"] if part["z0"]<top and part["z1"]>ground
                                for ring in [_model.part_outline_at(part,(max(ground,part["z0"])+min(top,part["z1"]))/2),*part.get("holes",[])]])
         car = self._car(scale, heading).move_to(base + offset)
+        envelope = _draft.polyline([base + scale * np.array([p[0] - px, p[1] - py, 0.0])
+                                    for p in clearance_corners(self._c["car_length"], self._c["car_width"], x, y, heading)],
+                                   WARN, _draft.W_THIN, 0.85, closed=True, dash=0.06)
         near, contact = self._profile_pair(item)
         start = base + np.array([near[0] - px, near[1] - py, 0.0]) * scale
         end = base + np.array([contact[0] - px, contact[1] - py, 0.0]) * scale
@@ -481,7 +513,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
                               self._say(self.tr("column clearance", "Stützenabstand"), (centre[0] + PW / 2 - 0.3, centre[1] + 1.05),
                                         size=SMALL, color=WARN, edge="r"))
         margin_ring = _draft.polyline(_draft.circle_points(base, (item["bounding_radius"] + self._c["min_margin"]) * scale, 48), WARN, _draft.W_THIN, 0.9, closed=True, dash=0.07)
-        return _engine.VGroup(frame, margin_ring, car, pil, gap, label, head)
+        return _engine.VGroup(frame, margin_ring, envelope, car, pil, gap, label, head)
 
     def _wall_detail(self):
         """🪟 Native entrance surround and timber leaves in a horizontal material cut."""
@@ -702,12 +734,13 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         turn = _draft.polyline(_draft.circle_points(at(*path["curve_centre"]), SCALE * c["turning_radius"], 72), DATA, _draft.W_THIN, 0.8, closed=True, dash=0.1)
         headline = self._say(self.tr("Can it reach the entrance?", "Erreicht es den Eingang?"), (PX, 2.75), size=30, width=PW - 0.4)
         car_scale, car_at = 0.62, np.array([PX - 0.2, 1.5, 0.0])
-        big_car = self._car(car_scale).move_to(car_at)
-        car_l, car_w = c["car_length"] * car_scale, c["car_width"] * car_scale
+        card = self.question_car(car_scale, c["car_length"], c["car_width"])
+        big_car, envelope = card["car"].move_to(car_at), card["envelope"].move_to(car_at)
+        car_l, car_w = card["length_scene"], card["width_scene"]
         car_dims = _engine.VGroup(
-            self.dimension((car_at[0] + car_l / 2 + 0.05, car_at[1] - car_w / 2, 0), (car_at[0] + car_l / 2 + 0.05, car_at[1] + car_w / 2, 0), self.quantity(c["car_width"], "m"), offset=-0.25, size=LABEL),
-            self.dimension((car_at[0] - car_l / 2, car_at[1] - car_w / 2 - 0.05, 0), (car_at[0] + car_l / 2, car_at[1] - car_w / 2 - 0.05, 0), self.quantity(c["car_length"], "m"), offset=-0.25, size=LABEL))
-        car_note = self._say(self.tr("A car · generic body, size assumed", "Ein Auto · Karosserie schematisch, Maße angenommen"), (PX, 0.12), size=SMALL, color=MUTED, width=PW - 0.4)
+            self.dimension((car_at[0] + car_l / 2 + 0.05, car_at[1] - car_w / 2, 0), (car_at[0] + car_l / 2 + 0.05, car_at[1] + car_w / 2, 0), self.quantity(card["width_m"], "m"), offset=-0.25, size=LABEL),
+            self.dimension((car_at[0] - car_l / 2, car_at[1] - car_w / 2 - 0.05, 0), (car_at[0] + car_l / 2, car_at[1] - car_w / 2 - 0.05, 0), self.quantity(card["length_m"], "m"), offset=-0.25, size=LABEL))
+        car_note = self._say(self.tr("Period car · clearance envelope assumed", "Historisches Auto · Hüllmaße angenommen"), (PX, 0.12), size=SMALL, color=MUTED, width=PW - 0.4)
         width_info = _model.information(a, "car.width", lang, m)
         car_table = self._rows([
             {"name": width_info["label"], "value": self.quantity(width_info["value"], width_info["unit"]), "basis": (self._word(width_info["basis"]), WARN)},
@@ -717,7 +750,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         question = self._say("?", (at(gap_x, ya)[0], at(gap_x, ya)[1] - 0.32), size=40, color=DATA)
         self.step("question", _engine.LaggedStart(
             _engine.AnimationGroup(*[_engine.FadeOut(part) for part in (provenance, *provenance.rows, *bars, ghost_dim)]),
-            _engine.FadeIn(headline), _engine.FadeIn(big_car), _engine.FadeIn(car_dims), _engine.FadeIn(car_note), _engine.FadeIn(car_table),
+            _engine.FadeIn(headline), _engine.FadeIn(envelope), _engine.FadeIn(big_car), _engine.FadeIn(car_dims), _engine.FadeIn(car_note), _engine.FadeIn(car_table),
             _engine.AnimationGroup(*[_engine.FadeIn(r) for r in car_table.rows]),
             _engine.AnimationGroup(_engine.Indicate(plan.glass, color=GLASS, scale_factor=1.0), _engine.FadeIn(turn)),
             _engine.FadeIn(question), lag_ratio=0.14), seconds=8.0)
@@ -730,7 +763,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
                                                          tuple(round(v.get_value(), 3) for v in st.rv.values())))
         reveal = lambda *names: _engine.AnimationGroup(*[self._ramp(st.rv[n], 0.0, 1.0, 1.4) for n in names])
         self.step("diameter", _engine.AnimationGroup(
-            *self._gone(headline, big_car, car_dims, car_note, car_table, *car_table.rows, question), _engine.FadeIn(frame), _engine.FadeIn(bracket), _engine.FadeIn(link),
+            *self._gone(headline, envelope, big_car, car_dims, car_note, car_table, *car_table.rows, question), _engine.FadeIn(frame), _engine.FadeIn(bracket), _engine.FadeIn(link),
             _engine.FadeIn(bay), reveal("axes", "pil", "span", "diam")), seconds=6.0)
         self.step("clear", reveal("clear", "formula"), seconds=5.5)
         self.step("fits", reveal("car", "margins", "keep", "need", "verdict"), seconds=6.0)

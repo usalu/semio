@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BIM wall buildup animation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "languages",
+    "reveal",
+    "grow",
+    "sample_min",
+    "sample_max",
+    "tolerance"
+  ],
+  "properties": {
+    "languages": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "en",
+          "de"
+        ]
+      },
+      "minItems": 2,
+      "uniqueItems": true
+    },
+    "reveal": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "grow": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "sample_min": {
+      "type": "number"
+    },
+    "sample_max": {
+      "type": "number"
+    },
+    "tolerance": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

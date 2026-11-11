@@ -688,9 +688,9 @@ class ReviewingHeatGains(Scene):
 
         int_room = _gain_room(np.array([0.0, INT_Y, 0.0]))
         floor_y, ceil_y = int_room["y_f"], int_room["y_c"]
-        person = _cast("shared-person-winter", 0.7 * int_room["h"], motion=True,
+        person = _cast("shared-person-winter", staffage_height("shared-person-winter") * room_metre(int_room["h"]), motion=True,
                        anchor=np.array([-0.42, floor_y + 0.01, 0.0]))
-        metre = 0.7 * int_room["h"] / staffage_height("shared-person-winter")
+        metre = room_metre(int_room["h"])
         lamp = _pendant(np.array([0.02, ceil_y, 0.0]), metre)
         desk_y = floor_y + DESK_SURFACE_M * metre
         desk_x = int_room["x_r"] - 0.04 - 1.65 * metre
@@ -1074,9 +1074,9 @@ class UltimateEnergyBalance(Scene):
             r["group"].set_color(GAIN_C)
         ray_paths = [[s, h, p] for r in ray_sets for s, h, p in zip(r["starts"], r["hits"], r["lands"])]
         floor_y = house["bottom_left"][1]
-        person = _cast("shared-person-winter", 0.7 * house["w_height"] / 2, motion=True,
+        person = _cast("shared-person-winter", staffage_height("shared-person-winter") * room_metre(house["w_height"] / 2), motion=True,
                        anchor=np.array([0.0, floor_y + 0.02, 0.0]))
-        metre = 0.7 * house["w_height"] / 2 / staffage_height("shared-person-winter")
+        metre = room_metre(house["w_height"] / 2)
         lamp = _pendant(np.array([0.4, 0.95, 0.0]), metre)
         heater = _cast("shared-radiator-thermostat-front", staffage_height("shared-radiator-thermostat-front") * metre, motion=True,
                        anchor=np.array([0.82, floor_y + 0.05, 0.0]))

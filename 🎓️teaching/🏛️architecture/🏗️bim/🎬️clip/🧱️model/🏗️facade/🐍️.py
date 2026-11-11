@@ -86,3 +86,4 @@ def owned_parts(api,model: dict,obj: dict) -> list:
         if len(_CACHE)>4:
             _CACHE.pop(next(iter(_CACHE)))
     return deepcopy(_CACHE[key][obj["tag"]])
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

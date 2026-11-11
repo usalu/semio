@@ -138,3 +138,4 @@ def parts(api,model,obj,progress=None,cancel=None,exact=False):
 def producers():
     """🧬 Bind every physical construction and dependency producer to the canonical native memo."""
     return (parts,dependencies,_q,_bounds,_overlap,_emit,_cut,_downward_shadows,producers)
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

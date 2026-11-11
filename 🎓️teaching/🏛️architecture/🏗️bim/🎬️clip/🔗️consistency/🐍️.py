@@ -634,7 +634,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         growth = _engine.VGroup(self.text("+" + self.quantity(self.paving_new - self.paving_old, "m", 2) + " *", tip + (0.0, 0.55, 0), size=S_LABEL, color=DATA), self.arrow(tip + (0.0, 0.02, 0), 0.2, DATA, width=3.0))
         self.show("change", new=[event, live, repaired, growth], keep=[old_section, self.storeys, self.chip, self.pointer, self.zoom, self.frame, self.detail_title],
                   extra=[_engine.Succession(_engine.Create(seal), tracker.animate(rate_func=_engine.smooth).set_value(self.paving_new),
-                                            _engine.AnimationGroup(_engine.FadeTransform(old_section, new_section), _engine.Indicate(live, color=DATA)))],
+                                            _engine.AnimationGroup(_engine.FadeOut(old_section), _engine.FadeIn(new_section), _engine.Indicate(live, color=DATA)))],
                   track=[seal], seconds=5.0)
         self.stage = [new_section if item is old_section else item for item in self.stage]
         self.section = new_section

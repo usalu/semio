@@ -1,0 +1,13 @@
+{
+  "frame": {
+    "width": 320,
+    "height": 180,
+    "fps": 6
+  },
+  "positions": [
+    -2,
+    2
+  ],
+  "threshold": 0.5,
+  "maxPixelDifference": 2
+}

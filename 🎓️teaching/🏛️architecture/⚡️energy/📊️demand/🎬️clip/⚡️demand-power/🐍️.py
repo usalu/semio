@@ -286,7 +286,7 @@ def _heated_house(center, scale: float):
 def _stand(floor_y: float, x: float, storey: float):
     """🧍 Breathing thermal occupant at true scale — 70 % of the room height, feet on the floor line at ``x``."""
     cast = "shared-person-winter"
-    return staffage_motion(cast, unit=0.7 * storey / staffage_height(cast), anchor=np.array([x, floor_y + 0.015, 0.0]))
+    return staffage_motion(cast, unit=room_metre(storey), anchor=np.array([x, floor_y + 0.015, 0.0]))
 
 
 def _lamp(top, height: float):

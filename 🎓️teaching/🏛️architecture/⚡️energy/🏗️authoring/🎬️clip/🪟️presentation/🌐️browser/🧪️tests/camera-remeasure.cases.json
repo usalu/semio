@@ -1,0 +1,13 @@
+[
+  {
+    "id": "camera-remeasure-owned-windows",
+    "initial": [
+      "0",
+      "9"
+    ],
+    "expected": [
+      "1",
+      "10"
+    ]
+  }
+]

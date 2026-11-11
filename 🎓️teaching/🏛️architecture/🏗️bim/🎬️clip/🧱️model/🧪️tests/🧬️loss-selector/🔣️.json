@@ -11,12 +11,28 @@
     "IfcBoiler",
     "IfcSpaceHeater",
     "IfcWasteTerminal",
-    "IfcPipeSegment"
+    "IfcPipeSegment",
+    "IfcDoor",
+    "IfcStair",
+    "IfcRailing",
+    "IfcFurnishingElement",
+    "IfcBuildingElementProxy",
+    "IfcFooting",
+    "IfcBeam",
+    "IfcCovering",
+    "IfcChimney",
+    "IfcSanitaryTerminal",
+    "IfcLightFixture"
   ],
   "physical_type_classes": [
     "IfcColumnType",
     "IfcWindowType",
-    "IfcWallType"
+    "IfcWallType",
+    "IfcDoorType",
+    "IfcCurtainWallType",
+    "IfcSlabType",
+    "IfcBuildingElementProxyType",
+    "IfcBeamType"
   ],
   "cases": [
     {
@@ -73,6 +89,18 @@
       "scope": "type",
       "value": "IfcSpaceType",
       "valid": false
+    },
+    {
+      "id": "authored-covering-is-physical-element",
+      "scope": "element",
+      "value": "IfcCovering",
+      "valid": true
+    },
+    {
+      "id": "beam-is-physical-type",
+      "scope": "type",
+      "value": "IfcBeamType",
+      "valid": true
     }
   ]
 }

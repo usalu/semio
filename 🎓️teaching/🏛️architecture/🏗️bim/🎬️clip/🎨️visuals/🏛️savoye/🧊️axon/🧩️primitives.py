@@ -8,6 +8,7 @@ import math
 import numpy as np
 
 _c = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.🧱️core.📐️geometry")
+_model = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
 _surfaces = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🧩️surfaces.🐍️")
 _measure = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.📏️geometry")
 
@@ -43,7 +44,7 @@ class Prim:
 def _face(face):
     kind, coordinates, value, role, *extra = face
     if kind == "poly":
-        rings = [[tuple(map(float, point)) for point in ring] for ring in coordinates]
+        rings = [[tuple(point) for point in ring] for ring in coordinates]
         return kind, rings, None if value is None else tuple(map(float, value)), role
     if kind == "cyl":
         return kind, tuple(map(float, coordinates)), None, role
@@ -113,6 +114,12 @@ def _part_faces(part, role):
     if part.get("surface_appearance") or part.get("surface_finish"):
         return [(*face[:3],_c.face_appearance(part,face[1][0],face[3])) for face in faces]
     return faces
+
+
+def _finish_geometry(part):
+    """🧊 Resolve a native finish solid into its placement and drawable faces."""
+    vertices = np.asarray(_model.part_vertices(part), dtype=float)
+    return vertices.mean(axis=0), float(vertices[:, 2].min()), _part_faces(part, "paving")
 
 
 def _discipline_of(guid, default, model):
@@ -236,7 +243,7 @@ def _surface_prims(item, info, first, roof, ground):
         skin=_surfaces.material_skin(facets)
         if not skin:
             continue
-        points=[p for facet in skin for p in facet["rings"][0]];centre=np.mean(np.asarray(points),axis=0)
+        points=[p for facet in skin for p in facet["rings"][0]];centre=np.mean(np.asarray(points,float),axis=0)
         faces=[_poly(facet["rings"],facet["normal"],facet["material"]["appearance"])for facet in skin]
         out.append(Prim(item["tag"],info,stage,centre[:2],faces,z=min(p[2]for p in points),skin=tuple(facet["material"]for facet in skin)))
     return out
@@ -316,7 +323,7 @@ def prims(model=None) -> list:
     model,g = _c.geometry_context(model)
     context = _ground_context(g,model)
     terrain_key = None if context is None else (context["elevation"],context["outline"],context["source_tags"],context["uniform_surface"])
-    key = (id(g),terrain_key,_build,_ground_context,_stage,_surface_stage,_column_prims,_column_band,_part_faces,_c.part_faces,_c.face_appearance,_surface_prims,_surfaces.producer_token())
+    key = (id(g),terrain_key,_build,_ground_context,_stage,_surface_stage,_column_prims,_column_band,_part_faces,_face,Prim,_c.part_faces,_c.face_appearance,_surface_prims,_surfaces.producer_token())
     hit = _PRIMS.get(key)
     if hit is not None and hit[0] is g:
         return hit[1]
@@ -344,7 +351,8 @@ def _build(g, model) -> list:
         out.extend(_slab_prims(slab, model, stage))
         info = _item(slab["tag"], slab["guid"], "slabs", "IfcSlab", model, ("architecture",))
         for part in slab.get("finish_parts", ()):
-            out.append(Prim(slab["tag"], info, stage + .25, tuple(np.mean(np.asarray(part["outline"]), axis=0)), _part_faces(part, "paving"), alias=(part["layer"],), z=part["z0"]))
+            centre, z, faces = _finish_geometry(part)
+            out.append(Prim(slab["tag"], info, stage + .25, centre[:2], faces, alias=(part["layer"],), z=z))
 
     curtain = g.get("curtain_wall")
     for wall in g["walls"]:

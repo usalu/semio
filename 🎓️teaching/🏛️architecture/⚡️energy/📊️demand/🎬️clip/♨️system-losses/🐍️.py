@@ -300,7 +300,7 @@ def _still(mob):
 def _stand(room, x: float):
     """🧍 Breathing thermal occupant at true scale — 70 % of the clear room height, feet on the floor slab's top edge."""
     cast = "shared-person-winter"
-    return staffage_motion(cast, unit=0.7 * room["h"] / staffage_height(cast), anchor=np.array([x, room["y_f"], 0.0]))
+    return staffage_motion(cast, unit=room_metre(room["h"]), anchor=np.array([x, room["y_f"], 0.0]))
 
 
 def _boiler(center, w: float = 0.80, h: float = 1.0):

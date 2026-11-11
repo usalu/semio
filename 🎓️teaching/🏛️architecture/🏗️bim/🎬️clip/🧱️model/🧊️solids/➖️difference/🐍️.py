@@ -455,3 +455,4 @@ def reference_material_parts(part,cutters,bounds=(),progress=None,cancel=None):
 def producers():
     """🧬 Bind semantic validation, real curve sections and analytic quantity integration to native revisions."""
     return (validate,measure,measure_operand,measure_union,_measure,_stocks,intervals,operand,bounds,translate,difference,reference_material_parts,_metadata,_cutter,_profile_outline,_support_radius,_number,_point,_ring,_validate,_sqrt,_ys,_zlines,_zintervals,_slice,_planes,_plane_kernel,_polyhedron,_zs,_section_xs,_merge,_subtract,_polygon,_circle,_frame,_profile,_leaves,_xs,_stock,producers)
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

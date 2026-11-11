@@ -1,0 +1,20 @@
+[
+  {
+    "id": "paused-translate-finishes",
+    "kind": "transition",
+    "state": "paused",
+    "finish": true
+  },
+  {
+    "id": "running-translate-finishes",
+    "kind": "transition",
+    "state": "running",
+    "finish": true
+  },
+  {
+    "id": "keyframe-stays-frozen",
+    "kind": "keyframe",
+    "state": "paused",
+    "finish": false
+  }
+]

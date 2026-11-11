@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "obstacle",
+    "expected",
+    "note_cases"
+  ],
+  "properties": {
+    "obstacle": {
+      "type": "object",
+      "required": [
+        "z0",
+        "z1"
+      ],
+      "properties": {
+        "z0": {
+          "type": "number"
+        },
+        "z1": {
+          "type": "number"
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "required": [
+        "vehicle_height",
+        "detected"
+      ],
+      "properties": {
+        "vehicle_height": {
+          "type": "number"
+        },
+        "detected": {
+          "type": "boolean"
+        }
+      }
+    },
+    "note_cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "text",
+          "agrees"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "agrees": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

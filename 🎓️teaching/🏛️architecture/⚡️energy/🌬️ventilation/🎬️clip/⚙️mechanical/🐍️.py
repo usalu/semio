@@ -78,6 +78,7 @@ room_section = _manim_module.room_section
 window_glyph = _manim_module.window_glyph
 open_window = _manim_module.open_window
 window_opening = _manim_module.window_opening
+room_metre = _manim_module.room_metre
 staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
 fitted_staffage = _manim_module.fitted_staffage
@@ -183,9 +184,9 @@ def _port(pos, color=P_WHITE):
 
 def _stand(room_c, room_h, x, cast: str = "shared-person-pathlines", t: float = 0.16):
     """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top."""
-    height = 0.7 * (room_h - t)
+    unit = room_metre(room_h - t)
     floor_y = float(room_c[1]) - room_h / 2 + t / 2
-    return staffage_motion(cast, unit=height / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]))
+    return staffage_motion(cast, unit=unit, anchor=np.array([x, floor_y, 0.0]))
 
 
 def _math_chip(src: str, color: str):

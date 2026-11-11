@@ -25,3 +25,4 @@ def coordinate_frame(vertices,faces,*,minimum_basis=1e-7):
     if any(not math.isfinite(v) for p in local for v in p):raise ValueError('Native conditioned coordinates must remain finite')
     if any(origin[i]+value/scale!=points[j][i] for j,p in enumerate(local) for i,value in enumerate(p)):raise ValueError('Native conditioning must preserve each original binary64 coordinate')
     return {'conditioned':True,'origin':origin,'scale':scale,'vertices':local,'minimum_basis':basis}
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

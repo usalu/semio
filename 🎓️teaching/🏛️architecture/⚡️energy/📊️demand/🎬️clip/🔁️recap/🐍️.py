@@ -211,7 +211,7 @@ def _gains(H):
     cx, fy, my = H["cx"], H["floor_y"], H["mid_y"]
     unit = _metre(H)
     person = _stand(H, cx + 0.05)
-    lamp_group = staffage("shared-lamp-winter", unit=0.3 / staffage_height("shared-lamp-winter"))
+    lamp_group = staffage("shared-lamp-winter", unit=unit)
     lamp_group.shift(np.array([cx - 0.9, my, 0.0]) - lamp_group.get_top())
     desk_x = H["hs"]["x_l"] + 0.3 * unit
     desk = staffage("shared-desk", unit=unit, anchor=np.array([desk_x, fy, 0.0]))
@@ -727,7 +727,7 @@ class Beat2_Verlustseite(Scene):
             (lambda: rf"\Delta\theta = {label_number(d_s.get_value())}\,\mathrm{{K}}", P_BLUE),
             (lambda: rf"\Phi = {label_number(u_s.get_value() * a_s.get_value() * d_s.get_value())}\,\mathrm{{W}}", P_WHITE),
         ])
-        heads = [body_text(n, font_size=LABEL_FONT_SIZE, color=c).move_to(card["head_at"]) for n, _a, _u, _d, c in SURFACES]
+        heads = [body_text(tr({"Außenwand": "Exterior wall", "Dach": "Roof", "Fenster": "Windows", "Boden": "Floor"}[n], n), font_size=LABEL_FONT_SIZE, color=c).move_to(card["head_at"]) for n, _a, _u, _d, c in SURFACES]
         self.add(*card["rows"])
         self.play(FadeOut(VGroup(clk["group"], t_card["frame"], t_head, ring_t)), *[FadeOut(r) for r in t_card["rows"]],
                   Create(H["group"]), Create(envelope), run_time=1.4)

@@ -21,6 +21,10 @@ _nkd = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakag
 _draft = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🐍️")
 _engine = importlib.import_module("manim")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+_snapshot = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️snapshot")
+_sprites = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️sprites")
+_keyed = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️keyed")
+_scene_interop = importlib.import_module("🎓️teaching.🧰️interop.🎬️scene.🐍️")
 
 INK, MUTED, GOOD, WARN, DATA, SERV = (getattr(_visuals, name) for name in ("INK", "MUTED", "GOOD", "WARN", "DATA", "SERV"))
 DARK = "#1B2A33"
@@ -41,7 +45,9 @@ IDS = ("w", "l", "h", "r", "d", "wu")
 BOLT_IDS = ("bu", "bvl", "bvh")
 NAMES = {"w": ("Casing width", "Gehäusebreite"), "l": ("Casing length", "Gehäuselänge"), "h": ("Casing height", "Gehäusehöhe"), "r": ("Radius", "Radius"), "d": ("Window Ø", "Fenster Ø"), "wu": ("Offset", "Versatz"),
          "bu": ("Bolt x", "Bolzen x"), "bvl": ("Bolt low", "Bolzen unten"), "bvh": ("Bolt high", "Bolzen oben"), "an": ("Angle", "Winkel"), "back":("Rear datum","Rückseitendatum"), "recess":("Glazing recess","Glasrücksprung"), "wv":("Window height","Fensterhöhe"), "wall":("Reveal depth","Laibungstiefe"), "idx":("Per-slot index","Index je Platz"), "types":("Proposed programs","Vorgeschlagene Programme")}
-SLIDER_AT = {key: (-5.2, 2.35 - 0.8 * index) for index, key in enumerate(IDS)}
+SLIDER_X = -5.0
+SLIDER_AT = {key: (SLIDER_X, 2.35 - 0.8 * index) for index, key in enumerate(IDS)}
+PARAMS_AT = (-0.85, 0.15)
 SLIDER_W = 2.9
 FULL = ("box", "fil", "cut", "cir", "cyl", "ori", "li", "rot")
 PARAM_COLOR = {"w": _nkd.AXIS_X, "l": _nkd.AXIS_Y, "h": _nkd.AXIS_Z, "r": "#9B6FD6", "d": "#E08A1E", "wu": "#14A3A8"}
@@ -85,6 +91,22 @@ def _fade(group, alpha):
     return group
 
 
+def _preview_mode(rounding, window):
+    """🧊 Select the authored box, rounded shell or window preview."""
+    return "window" if window > 0.5 else "rounded" if rounding > 0 else "box"
+
+
+def _preview_key(p, rv, view, origin, scale=SCALE, color=None):
+    """🗝️ Key only values that change visible preview geometry."""
+    mode = _preview_mode(rv["round"], rv["window"])
+    key = (mode, p["width"], p["length"], p["height"], p["back"], rv["lift"], tuple(view), tuple(origin), scale, color)
+    if mode != "box":
+        key += (p["corner_radius"] * rv["round"],)
+    if mode == "window":
+        key += (p["window_diameter"], p["window_u"], p["window_v"], p["glazing_y"])
+    return key
+
+
 class _Seq:
     """🎼 Plays and callables that one clause runs in order: a part is a callable or an ``(animations, seconds)`` pair."""
 
@@ -92,7 +114,7 @@ class _Seq:
         self.parts = parts
 
 
-class Beat2_Capsule(_visuals.ClipScene):
+class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
     """🧩 Build one parametric Nakagin capsule and place it on a core with explicit English and German narration."""
 
     TITLE = {"en": "One Capsule, Parametric", "de": "Eine Kapsel, parametrisch"}
@@ -127,8 +149,8 @@ class Beat2_Capsule(_visuals.ClipScene):
          "Schieben Sie die Breite über die Domain hinaus: Der Slider hält am oberen Ende an, die Hülle wird rot. Die Domain ist eine Entwurfsregel."],
         ["types", "A to D are proposed room-program studies, not historical capsule families. They share the nominal capsule envelope.",
          "A bis D sind vorgeschlagene Raumprogramm-Studien und keine historischen Kapselfamilien. Sie teilen die nominale Kapselhülle."],
-        ["four", "All four studies keep the nominal centred 1.30 metre porthole. Slider edits explore dimensions; they are not surveyed types.",
-         "Alle vier Studien behalten das nominale mittige Bullauge von 1,30 Metern. Slider-Änderungen erkunden Maße; es sind keine vermessenen Typen."],
+        ["four", "All four studies keep the nominal centred 1.30 metre porthole. Earlier slider edits explored dimensions; these are not surveyed types.",
+         "Alle vier Studien behalten das nominale mittige Bullauge von 1,30 Metern. Die vorherigen Slider-Änderungen erkundeten Maße; dies sind keine vermessenen Typen."],
         ["planes", "On the core the capsule needs a target plane on the wall; the base plane must land on it.",
          "Am Kern braucht die Kapsel eine Zielebene an der Wand; die Grundebene muss dort landen."],
         ["orient", "Orient moves the capsule in one step from its base plane A to the target plane B.",
@@ -160,6 +182,106 @@ class Beat2_Capsule(_visuals.ClipScene):
             return None
         return super().play(*animations, **kwargs)
 
+    def _preview_live(self, builder, key):
+        """🖼️ Keep one stable camera image while preview geometry changes."""
+        return _keyed.create(builder, key, self.camera)
+
+    def _preview(self, p, rv, view, v, dims=(), *, scale=SCALE, color=None):
+        """🧊 Draw and reuse parametric geometry separately from its annotations."""
+        w, length, height = p["width"], p["length"], p["height"]
+        mode = _preview_mode(rv["round"], rv["window"])
+        key = _preview_key(p, rv, view, v.point, scale, color)
+        cache = getattr(self, "_preview_cache", None)
+        if cache is None:
+            self._preview_cache = cache = {}
+        if key not in cache:
+            centre = (0.0, (p["back"] + length / 2) * rv["lift"], height / 2 * rv["lift"])
+            at = v(*centre)
+            if mode == "box":
+                base = self.analytical_box_axon(w, length, height, at=at, scale=scale, view=view, dims=False, base=color or _canvas.PREVIEW_FILL)
+                base.view = _nkd.make_view(view, at, scale, (0.0, p["back"] + length / 2, height / 2))
+            else:
+                projected = _nkd.make_view(view, at, scale, (0.0, p["back"] + length / 2, height / 2))
+                base = _nkd.NakaginDrawing3D(projected)
+                mesh = _nkd.capsule_mesh(w, length, height, max(0.001, p["corner_radius"] * rv["round"]), 4)
+                vertices = mesh.V + np.array([0.0, p["back"], 0.0])
+                base.preview_profile = mesh.V[mesh.faces[0]][:,(0,2)]
+                towards = _nkd._basis(projected)[1]
+                faces = []
+                for face, normal, name in zip(mesh.faces, mesh.N, mesh.names):
+                    points = vertices[face]
+                    if float(normal @ towards) > 1e-9:
+                        faces.append((float(points.mean(axis=0) @ towards), points, name, normal))
+                angles = np.linspace(0, 2 * math.pi, 40, endpoint=False)
+                for _, points, name, normal in sorted(faces, key=lambda item: item[0]):
+                    color = _nkd.shade_of(color or _canvas.PREVIEW_FILL, _nkd.tone_of(normal))
+                    outline = [projected(*point) for point in points]
+                    if mode == "window" and name == "front":
+                        ring = [(p["window_u"] + p["window_diameter"] / 2 * math.cos(a), p["window_v"] + p["window_diameter"] / 2 * math.sin(a)) for a in angles]
+                        glass = [projected(x,p["glazing_y"],z) for x,z in ring]
+                        hole = [projected(x,p["front"],z) for x,z in ring]
+                        base.add(_draft.polygon(glass, "#5B8D9E", 0.85, "#344E59", _draft.W_EDGE))
+                        base.add(_draft.region([outline,hole], color, 1.0, "#56666D", _draft.W_THIN))
+                        base.preview_aperture = np.asarray(ring)
+                    else:
+                        base.add(_draft.polygon(outline, color, 1.0, "#56666D" if name in ("front", "back") else None, _draft.W_THIN))
+            base.preview_mode = mode
+            cache[key] = base
+            if len(cache) > 24:
+                cache.pop(next(iter(cache)))
+        drawing = cache[key].copy()
+        drawing.preview_mode = mode
+        drawing.dims = {}
+        spans = {"width": ((-w/2,p["front"],0),(w/2,p["front"],0),w),
+                 "length": ((w/2,p["back"],0),(w/2,p["front"],0),length),
+                 "height": ((-w/2,p["front"],0),(-w/2,p["front"],height),height)}
+        for name in dims:
+            centre = drawing.at(0,p["back"] + length/2,height/2)
+            a,b,value = spans[name]
+            dimension = self._away(drawing.at(*a),drawing.at(*b),self.quantity(value,"m",2),centre,0.4)
+            dimension.measurement_value, dimension.measurement_unit = value, "m"
+            dimension.world_endpoints = np.asarray([a,b])
+            drawing.dims[name] = dimension
+            drawing.add(dimension)
+        return drawing
+
+    def _core_preview(self, core, centre, yaw, capsule):
+        """🧭 Project the physical capsule envelope at its real core pose."""
+        casing = _nk.capsule_casing(capsule)
+        aperture = _nk.capsule_window(capsule, "Slash")
+        p = {"width":casing.width,"length":casing.length,"height":casing.height,"back":casing.back,"front":casing.front,
+             "corner_radius":capsule.corner_radius,"window_diameter":2*aperture.radius,"window_u":aperture.center[0],
+             "window_v":aperture.center[2],"glazing_y":aperture.center[1]}
+        view = (AZIMUTH-yaw,ELEVATION)
+        v = _nkd.make_view(view,core.at(*centre),SCALE_CORE,(0,0,0))
+        return self._preview(p,{"round":1.0,"window":1.0,"lift":0.0},view,v,scale=SCALE_CORE)
+
+    def _static_sprite(self, type_key, yaw, layout, scale, at, alpha):
+        """🖼️ Reuse an actual detailed static capsule independently of overlay changes."""
+        color = _nkd.type_color(type_key)
+        key = (type_key,yaw,layout,scale,color,self.camera.pixel_width,self.camera.pixel_height)
+        cache = getattr(self,"_static_capsules",None)
+        if cache is None:
+            self._static_capsules = cache = {}
+        if key not in cache:
+            vector = self.capsule_axon(_nk.capsule_type(type_key),at=(0,0,0),scale=scale,view=(AZIMUTH-yaw,ELEVATION),base=color,layout=layout,interior="study")
+            cache[key] = _sprites.capture(vector,self.camera)
+        sprite = cache[key].copy()
+        sprite.shift(np.asarray(at,float))
+        sprite.set_opacity(alpha)
+        return sprite
+
+    def _core_static_sprite(self, core, plane_origin, yaw, type_key, alpha, layout):
+        """📍 Place one cached detailed capsule on its authored core plane."""
+        t = _nk.capsule_type(type_key)
+        casing = _nk.capsule_casing(t)
+        r = math.radians(yaw)
+        centre = np.asarray(plane_origin,float) + np.array([-math.sin(r),math.cos(r),0.0]) * (casing.front+casing.back)/2 + np.array([0.0,0.0,t.height/2])
+        sprite = self._static_sprite(type_key,yaw,layout,SCALE_WRAP,core.at(*centre),alpha)
+        normal = _nk.capsule_window(t,layout).normal
+        sprite.facing = core.view.facing((math.cos(r)*normal[0]-math.sin(r)*normal[1],math.sin(r)*normal[0]+math.cos(r)*normal[1],normal[2]))
+        return sprite
+
     def _probe(self, dims=()):
         """🔬 The capsule drawing of the live stage at the current trackers, for morph sources and targets that must sit exactly on it."""
         st = self.st
@@ -168,9 +290,7 @@ class Beat2_Capsule(_visuals.ClipScene):
         view = (st.az.get_value(), ELEVATION)
         v = _nkd.make_view(view, ORIGIN + np.array([0.0, st.oy.get_value(), 0.0]), SCALE, (0, 0, 0))
         w, l, h = p["width"], p["length"], p["height"]
-        params = {"dimensional_basis": "physical", "key": "A", "width": w, "length": l, "height": h, "corner_radius": p["corner_radius"] * rv["round"], "window_diameter": p["window_diameter"],
-                  "window_u": p["window_u"], "window_v": p["window_v"]}
-        drawing = self.capsule_axon(params, at=v(0, (p["back"] + l / 2) * rv["lift"], h / 2 * rv["lift"]), scale=SCALE, view=view, window=rv["window"] > 0.5, dims=dims, base=_canvas.PREVIEW_FILL, dim_offset=0.4)
+        drawing = self._preview(p, rv, view, v, dims)
         for key, name in DIM_NAME.items():
             if name in drawing.dims:
                 for part in drawing.dims[name].get_family():
@@ -184,7 +304,7 @@ class Beat2_Capsule(_visuals.ClipScene):
         keep = (cv["cap"].get_value(), cv["glide"].get_value())
         cv["cap"].set_value(1.0)
         cv["glide"].set_value(glide)
-        group = self._glide()
+        group = self._glide(vector=True)
         cv["cap"].set_value(keep[0])
         cv["glide"].set_value(keep[1])
         return (list(group[2].submobjects) or list(group[3].submobjects))[0]
@@ -316,10 +436,8 @@ class Beat2_Capsule(_visuals.ClipScene):
             group.add(_fade(envelope, rv["env"]))
         drawing = None
         if rv["body"] > 0.02:
-            params = {"dimensional_basis": "physical", "key": "A", "width": w, "length": l, "height": h, "corner_radius": p["corner_radius"] * rv["round"], "window_diameter": p["window_diameter"],
-                      "window_u": p["window_u"], "window_v": p["window_v"]}
             dims = tuple(name for key, name in DIM_NAME.items() if rv["d" + key] > 0.02)
-            drawing = self.capsule_axon(params, at=v(0, (p["back"] + l / 2) * lift, h / 2 * lift), scale=SCALE, view=view, window=rv["window"] > 0.5, dims=dims, base=_canvas.PREVIEW_FILL, dim_offset=0.4)
+            drawing = self._preview(p, rv, view, v, dims)
             for key, name in DIM_NAME.items():
                 if name in drawing.dims:
                     for part in drawing.dims[name].get_family():
@@ -396,7 +514,7 @@ class Beat2_Capsule(_visuals.ClipScene):
         drawing.facing = core.view.facing((math.cos(r)*normal[0]-math.sin(r)*normal[1],math.sin(r)*normal[0]+math.cos(r)*normal[1],normal[2]))
         return _fade(drawing, alpha)
 
-    def _glide(self):
+    def _glide(self, *, vector=False):
         """🏗️ The core viewport of Orient: the core of tower B, base plane A, target plane B and the capsule gliding from A to B and turning with B, from the engine solution."""
         cv = {name: tracker.get_value() for name, tracker in self.st.cv.items()}
         view = (AZIMUTH, ELEVATION)
@@ -412,7 +530,7 @@ class Beat2_Capsule(_visuals.ClipScene):
             start = np.array(self._plane_a["origin"], float) + self._cap_centre
             centre = start + (np.array(placed.center.t) - start) * cv["glide"]
             yaw = yaw_b * cv["glide"]
-            drawing = self.capsule_axon(_nk.capsule_type("A"), at=self._core.at(*centre), scale=SCALE_CORE, view=(AZIMUTH - yaw, ELEVATION), base=_canvas.PREVIEW_FILL)
+            drawing = self.capsule_axon(_nk.capsule_type("A"), at=self._core.at(*centre), scale=SCALE_CORE, view=(AZIMUTH - yaw, ELEVATION), base=_canvas.PREVIEW_FILL) if vector else self._core_preview(self._core, centre, yaw, _nk.capsule_type("A"))
             facing = self._core.view.facing((-math.sin(math.radians(yaw)), math.cos(math.radians(yaw)), 0.0))
             if facing >= 0 or cv["glide"] < 0.5:
                 front.add(_fade(drawing, cv["cap"]))
@@ -452,7 +570,7 @@ class Beat2_Capsule(_visuals.ClipScene):
         picks = solution.tree("li").items()
         view = (AZIMUTH, ELEVATION)
         core = self._core_wrap
-        behind, front, marks, ghost = _engine.VGroup(), _engine.VGroup(), _engine.VGroup(), _engine.VGroup()
+        behind, front, marks, ghost = _engine.Group(), _engine.Group(), _engine.Group(), _engine.Group()
         shown = int(round(wv["count"]))
         for index, slot in enumerate(self._wrap_slots):
             plane = slot.plane
@@ -462,21 +580,21 @@ class Beat2_Capsule(_visuals.ClipScene):
                 marks.add(_fade(self.plane_axes(plane, at=core.at(*plane.origin), scale=SCALE_WRAP, view=view, length=1.2, labels=False, square=False), wv["planes"]))
                 marks.add(_fade(self._tag(str(index), core.at(*plane.origin) + np.array([0.0, 0.3, 0.0]), color="#2B3A44", size=SMALL), wv["planes"]))
             if pick is not None and wv["caps"] > 0.02 and index < shown and index < wv["rev"]:
-                capsule = self._on_core(core, plane.origin, yaw, pick.tag["type"], wv["caps"], layout=pick.tag["family"])
+                capsule = self._core_static_sprite(core, plane.origin, yaw, pick.tag["type"], wv["caps"], pick.tag["family"])
                 (front if capsule.facing >= 0 else ghost).add(capsule)
             elif pick is None and wv["caps"] > 0.5 and index < shown:
                 marks.add(self._tag("!", core.at(*plane.origin) + np.array([0.3, 0.45, 0.0]), color="#B3261E", size=LABEL))
-        strip = _engine.VGroup()
+        strip = _engine.Group()
         for index in range(len(self._wrap_slots)):
             x, y = VP[0] - 1.9 + 3.8 / 7 * index, VP[1] - 2.0
             pick = picks[index] if index < len(picks) else None
             if wv["caps"] > 0.02 and index < shown and (index < wv["rev"] or pick is None):
                 if pick is not None:
-                    strip.add(_fade(self.capsule_axon(_nk.capsule_type(pick.tag["type"]), at=(x, y, 0), scale=0.13, view=view, base=_nkd.type_color(pick.tag["type"]),layout=pick.tag["family"],interior="study"), wv["caps"]))
+                    strip.add(self._static_sprite(pick.tag["type"],0.0,pick.tag["family"],0.13,(x,y,0),wv["caps"]))
                 else:
                     strip.add(self._tag("!", (x, y, 0), color="#B3261E", size=LABEL))
                 strip.add(self._tag(str(index), (x, y - 0.42, 0), color="#2B3A44"))
-        return _engine.VGroup(behind, core, front, ghost, marks, strip)
+        return _engine.Group(behind, core, front, ghost, marks, strip)
 
     def _node(self, oid, at, defn, source, *, width=None, live=False, label=None):
         """🧩 One canvas object of a definition as a widget: slider, panel (live when asked), parameter, toggle or component; the result carries the mobject to add and the widget that owns the grips."""
@@ -664,32 +782,37 @@ class Beat2_Capsule(_visuals.ClipScene):
         self._core_wrap = self.core_axon(study_core, at=WRAP_AT, scale=SCALE_WRAP, view=(AZIMUTH, ELEVATION))
         sheet = self.gh_background(at=SHEET, width=SHEET_W, height=SHEET_H)
         viewport = self._viewport()
-        stage = self.live(lambda: self._stage(), key=lambda: (tuple(round(t.get_value(), 4) for t in vals.values()), round(st.az.get_value(), 3), round(st.oy.get_value(), 3),
+        stage = self._preview_live(lambda: self._stage(), key=lambda: (tuple(round(t.get_value(), 4) for t in vals.values()), round(st.az.get_value(), 3), round(st.oy.get_value(), 3),
                                                               tuple(round(t.get_value(), 3) for t in rv.values())))
-        glide = self.live(lambda: self._glide(), key=lambda: tuple(round(t.get_value(), 3) for t in cv.values()))
-        wrapstage = self.live(lambda: self._wrapstage(), key=lambda: tuple(round(t.get_value(), 3) for t in wv.values()))
+        glide = self._preview_live(lambda: self._glide(), key=lambda: tuple(round(t.get_value(), 3) for t in cv.values()))
+        wrapstage = self._preview_live(lambda: self._wrapstage(), key=lambda: tuple(round(t.get_value(), 3) for t in wv.values()))
         subtitle = self.badge(self.tr("Nakagin Capsule Tower · one capsule", "Nakagin Capsule Tower · eine Kapsel"), (-6.9, 3.35), color=MUTED, size=SMALL, filled=False, anchor="l")
         note = self._say(self.tr("Reference casing · proposed programs", "Referenzgehäuse · vorgeschlagene Programme"), (6.85, 3.45), size=SMALL, color=MUTED, edge="r")
         self.add(sheet, viewport, subtitle, note)
 
-        slider_w = self.gh_slider(self.tr(*NAMES["w"]), value("w"), d.obj("w").settings["min"], d.obj("w").settings["max"], at=(-5.2, 0.6, 0), tracker=vals["w"], width=SLIDER_W)
+        slider_w = self.gh_slider(self.tr(*NAMES["w"]), value("w"), d.obj("w").settings["min"], d.obj("w").settings["max"], at=(SLIDER_X, 0.6, 0), tracker=vals["w"], width=SLIDER_W)
         center = self.gh_component("Center Box", at=(-1.7, 0.6, 0))
         wire_a = self.gh_wire(slider_w.grip_out(), center.grip_in("X"))
         outline = self.gh_group([slider_w, center], self.tr("One definition", "Eine Definition"), color="#9FD0F2")
         show_key = (*slot_b.path, slot_b.item)
         tower = self.tower_axon(**_canvas.building_fit(VP_W, VP_H, centre=VP, top=_canvas.LABEL_ROW, bottom=1.0), view="axon", lit=[show_key])
+        tower_display = _snapshot.capture(tower, self.camera)
         lit = tower.capsules[show_key].get_center()
         callout = _engine.VGroup(_draft.polyline([lit, lit + np.array([-0.9, 0.55, 0.0])], DARK, 2.0, 0.9), self._tag(self.tr("one capsule", "eine Kapsel"), lit + np.array([-1.5, 0.6, 0.0])))
         counts = self.gh_panel([self.tr("Capsules ", "Kapseln ") + str(len(slots)), self.tr("Types ", "Typen ") + str(len(types)), self.tr("Definitions ", "Definitionen ") + "1"],
                                at=(VP[0] - 1.05, VP[1] - 2.2, 0), width=2.6)
-        crowd = [capsule.copy() for capsule in tower.capsules.values()]
+        crowd = [_sprites.capture(capsule, self.camera) for capsule in tower.capsules.values()]
         chosen = tower.capsules[show_key].copy()
         count_copy = counts.copy()
-        lit_back = [capsule.copy().set_color("#FFB000") for capsule in tower.capsules.values()]
-        self.step("hook", _Seq(((_engine.FadeIn(tower), _engine.FadeIn(callout), _engine.FadeIn(slider_w), _engine.FadeIn(outline)), 1.0), lambda: self.add(*crowd),
-                               ((_morph.gather(crowd, counts, run_time=1.0, lag=0.01, limit=2.0),), 2.0), lambda: self.add(chosen),
+        lit_back = [_sprites.capture(capsule.copy().set_color("#FFB000"), self.camera) for capsule in tower.capsules.values()]
+        gather = _engine.AnimationGroup(*[_engine.FadeOut(capsule, target_position=counts, scale=.15) for capsule in crowd],
+                                        _engine.FadeIn(counts, scale=.85), lag_ratio=.01, run_time=2.0)
+        split = _engine.AnimationGroup(*[_engine.FadeIn(capsule, target_position=counts, scale=.15) for capsule in lit_back],
+                                       _engine.FadeOut(count_copy), lag_ratio=.01, run_time=1.8)
+        self.step("hook", _Seq(((_engine.FadeIn(tower_display), _engine.FadeIn(callout), _engine.FadeIn(slider_w), _engine.FadeIn(outline)), 1.0), lambda: self.add(*crowd),
+                               ((gather,), 2.0), lambda: self.add(chosen),
                                ((_morph.morph(chosen, center, run_time=1.4), _engine.FadeIn(wire_a)), 1.4), lambda: self.add(count_copy),
-                               ((_morph.split(count_copy, lit_back, lag=0.01, run_time=1.0, limit=1.8),), 1.8), lambda: self.remove(*lit_back)), seconds=6.2)
+                               ((split,), 1.8), lambda: self.remove(*lit_back)), seconds=6.2)
 
         rv_set = lambda **kw: _engine.AnimationGroup(*[self._to(rv[k], v, 1.2) for k, v in kw.items()])
         for name in ("grid", "lift"):
@@ -720,7 +843,7 @@ class Beat2_Capsule(_visuals.ClipScene):
             rv["dw"].set_value(1.0)
             self.remove(hold["line"])
 
-        self.step("parametric", _Seq(((_engine.AnimationGroup(*self._gone(tower), _engine.FadeOut(callout), _engine.FadeOut(counts), _engine.FadeIn(head_p), _engine.FadeIn(head_d),
+        self.step("parametric", _Seq(((_engine.AnimationGroup(*self._gone(tower_display), _engine.FadeOut(callout), _engine.FadeOut(counts), _engine.FadeIn(head_p), _engine.FadeIn(head_d),
                                                               _engine.FadeIn(head_g), _engine.FadeIn(wire_b)),), 1.2), box_ready,
                                      (lambda: (_morph.morph(hold["chip"], hold["solid"], run_time=1.6),), 1.6), box_born, width_ready,
                                      ((_morph.travel(knob, [slider_w.grip_out().get_center(), center.grip_in("X").get_center()], run_time=1.0),), 1.0), (lambda: (_morph.morph(knob, hold["line"], run_time=1.0),), 1.0), width_done,
@@ -732,10 +855,10 @@ class Beat2_Capsule(_visuals.ClipScene):
                                 for key in IDS])
         card_rows = [(self.tr(*pair), key) for key, pair in (("w", ("Width", "Breite")), ("l", ("Length", "Länge")), ("h", ("Height", "Höhe")), ("r", ("Corner radius", "Eckenradius")),
                                                              ("d", ("Window diameter", "Fensterdurchmesser")), ("wu", ("Window offset", "Fensterversatz")))]
-        params_card = self.live(lambda: self._params_card(card_rows, (-0.95, 0.15)), key=lambda: tuple(round(vals[k].get_value(), 3) for k in IDS))
+        params_card = self.live(lambda: self._params_card(card_rows, PARAMS_AT), key=lambda: tuple(round(vals[k].get_value(), 3) for k in IDS))
         def dims_ready():
             dims = self._probe(("width", "length", "height")).drawing.dims
-            sheet_card = self._params_card(card_rows, (-0.95, 0.15))
+            sheet_card = self._params_card(card_rows, PARAMS_AT)
             hold["src"] = [dims[name] for name in ("width", "length", "height")]
             hold["dst"] = [sheet_card[2 + 3 * index + 2].copy() for index in range(3)]
             self.add(*hold["src"])
@@ -857,8 +980,9 @@ class Beat2_Capsule(_visuals.ClipScene):
         helper_wires = lift_wires + [out_wire]
         fil_grow = [_engine.GrowFromPoint(n.view, fil["fil"].view.get_center()) for key, n in fil.items() if key != "fil"]
         self.step("rounded", _Seq(((lambda: (_morph.gather(helper_nodes, fil["fil"].view, run_time=1.2, lag=0.1, limit=2.2),
-                                              _engine.AnimationGroup(self._ramp(vals["l"], drag, value("l"), 1.2), *fout(helper_wires), box_node.view.animate.move_to((-2.2, 1.0, 0)), *fil_grow, *fin(fil_wires),
-                                                                     self._to(rv["plane2"], 0.0, 1.0), rv_set(dl=0.0, dh=0.0))), 2.4)), shell_ready,
+                                              _engine.Succession(_engine.AnimationGroup(*fout(helper_wires), box_node.view.animate.move_to((-2.2, 1.0, 0)), *fil_grow, *fin(fil_wires),
+                                                                                      self._to(rv["plane2"], 0.0, 1.0), rv_set(dl=0.0, dh=0.0), run_time=1.2),
+                                                                 self._ramp(vals["l"], drag, value("l"), 1.2))), 2.4)), shell_ready,
                                   (lambda: (_morph.morph(hold["box"], hold["shell"], run_time=1.6),), 1.6), shell_done, radius_ready,
                                   ((_morph.travel(radius_token, [sliders["r"].anchor.grip_out().get_center(), self._grip(fil["fil"], "Radius", "in").get_center()], run_time=1.2),), 1.2),
                                   (lambda: (_morph.morph(radius_token, hold["tag"], path_arc=0.3, run_time=1.4),), 1.4), radius_done), seconds=7.0)
@@ -975,10 +1099,10 @@ class Beat2_Capsule(_visuals.ClipScene):
         self.step("limit", _engine.Succession(self._ramp(vals["w"], value("w"), width_hi, 2.4), _engine.AnimationGroup(self._to(rv["hit"], 1.0, 0.4), _engine.FadeIn(limit_badge)),
                                               _engine.AnimationGroup(self._to(rv["over"], 1.0, 0.5), _engine.FadeIn(red_box), _engine.FadeIn(request)), _engine.Wait(1.0)), seconds=7.5)
 
-        table = self._table((-0.85, 1.25))
+        table = self._table((-2.6, 1.25))
         minis = _engine.VGroup()
         for index, t in enumerate(types):
-            x = -2.85 + 1.3 * index
+            x = -4.6 + 1.3 * index
             minis.add(self.capsule_axon(t, at=(x, -1.5, 0), scale=0.2, base=_nkd.type_color(t.key), cutaway=True, interior="study"), self._say(self.tr("Type ", "Typ ") + t.key, (x, -2.2), size=SMALL, color=_nkd.type_color(t.key)))
         order = [types[0], types[1], types[3], types[2]]
         ty = _engine.ValueTracker(0.0)
@@ -997,17 +1121,17 @@ class Beat2_Capsule(_visuals.ClipScene):
             hold["dst"] = [table.rows[t.key][-1].copy() for t in types]
             self.add(*hold["src"])
 
-        self.step("types", _Seq(((_engine.AnimationGroup(*fout([card, limit_badge, red_box, request]), self._to(rv["over"], 0.0, 0.5), _engine.FadeIn(minis), self._ramp(vals["w"], width_hi, value("w"), 1.5),
-                                                         self._to(rv["env"], 0.0, 1.0), self._to(rv["hit"], 0.0, 0.5)),), 1.6), minis_ready,
-                                (lambda: (_morph.scatter(hold["src"], hold["dst"], lag=0.3, run_time=1.2, path_arc=0.5, limit=2.4), _engine.FadeIn(table), _engine.FadeIn(marker)), 2.4),
+        self.step("types", _Seq(((_engine.AnimationGroup(*fout([card, limit_badge, red_box, request]), self._to(rv["over"], 0.0, 0.5), self._ramp(vals["w"], width_hi, value("w"), 1.5),
+                                                         self._to(rv["env"], 0.0, 1.0), self._to(rv["hit"], 0.0, 0.5)),), 1.6), ((_engine.AnimationGroup(*fout(col)),), 0.3), minis_ready,
+                                (lambda: (_morph.scatter(hold["src"], hold["dst"], lag=0.3, run_time=1.2, path_arc=0.5, limit=2.4), _engine.FadeIn(minis), _engine.FadeIn(table), _engine.FadeIn(marker)), 2.4),
                                 lambda: self.remove(*hold["dst"])), seconds=5.0)
 
         steps = [_engine.AnimationGroup(self._ramp(ty, float(i) - 1.0 if i else 0.0, float(i), 0.2), *[self._to(vals[k], v, 2.0) for k, v in _reference_controls(t).items()]) for i, t in enumerate(order)]
-        self.step("four", _engine.AnimationGroup(_engine.FadeIn(typetag), self._to(rv["dd"], 1.0, 1.0), self._to(rv["du"], 1.0, 1.0), _engine.Succession(*steps)), seconds=9.0)
+        self.step("four", _engine.Succession(_engine.AnimationGroup(_engine.FadeIn(typetag), self._to(rv["dd"], 1.0, 1.0), self._to(rv["du"], 1.0, 1.0)), _engine.Succession(*steps)), seconds=9.0)
 
         for key in IDS:
             vals[key].set_value(value(key))
-        cur = col + [table, minis, marker, typetag]
+        cur = [table, minis, marker, typetag]
         self._reg = {}
         apl, apl_wires = self._rig(self._place, self._solve_place, {"apl": (-5.3, 1.95), "pa": (-2.8, 1.95), "tpl": (-5.3, 0.35), "pb": (-2.8, 0.4)}, widths={"pa": 3.2, "pb": 3.2})
         cv["a"].set_value(1.0)
@@ -1073,15 +1197,15 @@ class Beat2_Capsule(_visuals.ClipScene):
             wv["caps"].set_value(1.0)
             self.remove(*placed)
 
-        self.step("listitem", _Seq(((_engine.AnimationGroup(*fout(cur), _engine.FadeOut(glide), _engine.FadeIn(wrapstage), *fin([n.view for n in chain.values()]), *fin(chain_wires),
-                                                            self._to(wv["planes"], 1.0, 1.2)),), 2.0), lambda: self.add(*item_tokens),
+        self.step("listitem", _Seq(((_engine.AnimationGroup(*fout(cur), _engine.FadeOut(glide), _engine.Succession(_engine.FadeIn(wrapstage, run_time=0.5), self._to(wv["planes"], 1.0, 1.2)),
+                                                            *fin([n.view for n in chain.values()]), *fin(chain_wires)),), 2.0), lambda: self.add(*item_tokens),
                                    ((_morph.scatter(item_tokens, placed, lag=0.5, run_time=1.2, path_arc=0.5, limit=3.0, pairs_fn=_morph.capsule_pairs),), 3.0), placed_done), seconds=7.0)
 
         wv["rev"].set_value(4.0)
         notice = self.live(lambda: self._notice(chain["li"]), key=lambda: (self._solve_wrap().state("li"), round(wv["count"].get_value())))
         stray = _morph.token("4", kind="number", color="#E08A1E").move_to(chain["idx"].anchor.get_center() + np.array([0.0, 0.35, 0.0]))
         nothing = _morph.token("null", kind="text", color=RED).move_to(chain["out"].anchor.get_center() + np.array([0.0, -0.8, 0.0]))
-        self.step("outside", _Seq(((self._to(wv["count"], 8.0, 1.5), _engine.FadeIn(notice)), 1.5), lambda: self.add(stray),
+        self.step("outside", _Seq(((_engine.FadeIn(notice),), 0.5), ((self._to(wv["count"], 8.0, 1.5),), 1.5), lambda: self.add(stray),
                                   ((_morph.travel(stray, [stray.get_center(), chain["li"].anchor.get_center() + np.array([-0.2, 0.0, 0.0])], run_time=1.2),), 1.2),
                                   ((_morph.morph(stray, nothing, run_time=1.0),), 1.0), ((_engine.Wait(0.5),), 0.5)), seconds=6.0)
         wrap_types = _nk.capsule_types()

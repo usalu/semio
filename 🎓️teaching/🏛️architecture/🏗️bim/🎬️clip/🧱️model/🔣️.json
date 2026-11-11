@@ -126,8 +126,8 @@
     {
       "id": "physical-datums-r12",
       "text": {
-        "en": "Finished first floor3.17 and roof walking6.60 are separate from structural regions: first17/20/23cm share soffit2.91; roof17/23cm share soffit6.34. Generic finish/fitting parts are local to geometry.base_level; stair step_parts are local to FROM and landing_parts to TO. Upper roof soil blanket is removed; roof_paving events vary the assumed weathering/paving reserve. Car height1.65m is an assumed teaching envelope.",
-        "de": "Fertiger erster Stock3,17 und Dachgehfläche6,60 sind von Tragwerksregionen getrennt:17/20/23cm teilen Untersicht2,91;17/23cm-Dachregionen Untersicht6,34. Allgemeine Belags-/Einbauteile sind lokal zu geometry.base_level; Treppenteile zu FROM und Podeste zu TO. Flächiges Dachsubstrat ist entfernt; roof_paving-Ereignisse variieren die angenommene Abdichtungs-/Belagsreserve. Fahrzeughöhe1,65m ist eine angenommene Lehrhülle."
+        "en": "Finished first floor3.17 and roof walking6.60 are separate from structural regions: first17/20/23cm share soffit2.91; roof17/23cm share soffit6.34. Generic finish/fitting parts are local to geometry.base_level; stair step_parts are local to FROM and landing_parts to TO. Upper roof soil blanket is removed; roof_paving events vary the assumed weathering/paving reserve. Car height is an assumed teaching envelope.",
+        "de": "Fertiger erster Stock3,17 und Dachgehfläche6,60 sind von Tragwerksregionen getrennt:17/20/23cm teilen Untersicht2,91;17/23cm-Dachregionen Untersicht6,34. Allgemeine Belags-/Einbauteile sind lokal zu geometry.base_level; Treppenteile zu FROM und Podeste zu TO. Flächiges Dachsubstrat ist entfernt; roof_paving-Ereignisse variieren die angenommene Abdichtungs-/Belagsreserve. Die Fahrzeughöhe ist eine angenommene Lehrhülle."
       }
     },
     {
@@ -2727077,7 +2727077,7 @@
       "basis": "assumed"
     },
     "height": {
-      "value": 1.65,
+      "value": 1.7,
       "unit": "m",
       "basis": "assumed"
     }

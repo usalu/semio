@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BIM clearance ring animation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reveal",
+    "grow",
+    "radius",
+    "zoom",
+    "point",
+    "tolerance",
+    "languages"
+  ],
+  "properties": {
+    "reveal": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "grow": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "radius": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "zoom": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "point": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "tolerance": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "languages": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "en",
+          "de"
+        ]
+      }
+    }
+  }
+}

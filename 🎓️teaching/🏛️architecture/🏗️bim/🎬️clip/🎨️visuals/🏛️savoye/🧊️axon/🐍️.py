@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import importlib
 import math
+from fractions import Fraction
 
 import numpy as np
 
@@ -115,11 +116,13 @@ class AxonView:
     def __call__(self, x, y=None, z=0.0) -> np.ndarray:
         if y is None:
             x, y, z = (list(x) + [0.0])[:3]
-        return self.point + self.scale * ((np.array([x, y, z], float) - self.centre) @ self.M)
+        return self.project(((x,y,z),))[0]
 
     def project(self, array, dz: float = 0.0) -> np.ndarray:
         """📐 Project an ``(n, 3)`` array of model points at once, optionally lifted by ``dz`` metres."""
-        out = self.point + self.scale * ((np.asarray(array, float).reshape(-1, 3) - self.centre) @ self.M)
+        centre=tuple(Fraction(value) for value in self.centre)
+        delta=np.asarray([[float(Fraction(value)-centre[i]) for i,value in enumerate(point)] for point in array],float).reshape(-1,3)
+        out = self.point + self.scale * (delta @ self.M)
         if dz:
             out[:, 1] += self.scale * dz
         return out
@@ -282,12 +285,12 @@ class _Painter:
         if key not in prim.outlines:
             prim.outlines.clear() if len(prim.outlines)>=4 else None
             prim.outlines[key]=_primitives._surfaces.projected_material_regions(facets,matrix)
-        centre=np.asarray(self.view.centre)@np.asarray(matrix)
+        centre=tuple(sum(Fraction(self.view.centre[i])*matrix[i][j] for i in range(3)) for j in range(2))
         outlines={}
         for region in prim.outlines[key]:
             state,stroke,stroke_opacity,width=styles[region["facet"]]
             for ring in region["rings"]:
-                coordinates=np.asarray(ring)-centre
+                coordinates=np.asarray([[float(p[i]-centre[i]) for i in range(2)] for p in ring])
                 screen=self.view.point+self.view.scale*np.column_stack((.866*coordinates[:,0],.5*coordinates[:,1]+dz,np.zeros(len(ring))))
                 if state=="ghost":
                     group.add(_d.polyline(screen,stroke,1.,.8,True,.07))
@@ -401,13 +404,13 @@ def _bounds(pieces):
             elif face[0] == "segs":
                 pts.append(np.array([p for pair in face[1] for p in pair]))
     stack = np.vstack(pts)
-    return stack.min(axis=0), stack.max(axis=0)
+    return np.asarray(stack.min(axis=0),float), np.asarray(stack.max(axis=0),float)
 
 
 def _lift(prim, zb: float, factor: float):
     """📏 A copy of a piece whose heights above ``zb`` are scaled by ``factor`` (live ``extrude``)."""
     def z(value):
-        return zb + (value - zb) * factor
+        return Fraction(zb) + (Fraction(value) - Fraction(zb)) * Fraction(factor)
 
     faces = []
     for face in prim.faces:
@@ -416,14 +419,14 @@ def _lift(prim, zb: float, factor: float):
             if normal is not None:
                 length = np.linalg.norm(normal)
                 normal = normal/length if length > 1e-12 else face[2]
-            rings = [np.asarray(points, float) for points in face[1]]
-            faces.append(("poly",[np.column_stack([ring[:,:2],z(ring[:,2])]) for ring in rings],normal,face[3]))
+            rings = [[(point[0],point[1],z(point[2])) for point in ring] for ring in face[1]]
+            faces.append(("poly",rings,normal,face[3]))
         elif face[0] == "cyl":
             x, y, z0, z1, r = face[1]
             faces.append(("cyl", (x, y, z(z0), z(z1), r), None, face[3]))
         elif face[0] == "line":
             points = np.asarray(face[1], float)
-            faces.append(("line", np.column_stack([points[:, :2], z(points[:, 2])]), *face[2:]))
+            faces.append(("line", np.column_stack([points[:, :2], [float(z(value)) for value in points[:, 2]]]), *face[2:]))
         else:
             faces.append(("segs", [((a[0], a[1], z(a[2])), (b[0], b[1], z(b[2]))) for a, b in face[1]], *face[2:]))
     return Prim(prim.tag, prim.item, prim.stage, prim.foot, faces, merge=prim.merge, alias=prim.alias, sub=prim.sub, z=prim.z, base=prim.base, skin=prim.skin)
@@ -472,8 +475,9 @@ def _slab_pieces(g, model, slab, e: float, o: float) -> list:
         pieces.append(Prim(slab["tag"], info, STAGE_ROOF, (0, 0), _prism([part["outline"]], z0, z1, "slab"), alias=("structural",)))
     for part in slab.get("finish_parts", ()):
         base = min(p["z0"] for p in slab["parts"])
-        z0, z1 = (base + e * (part[key] - base) + o * LAYER_GAP for key in ("z0", "z1"))
-        pieces.append(Prim(part["layer"], info, STAGE_ROOF, (0, 0), _prism([part["outline"]], z0, z1, "paving"), alias=(slab["tag"],), sub=1))
+        vertices = _c._model.part_vertices(part)
+        mesh = {"mesh": {"vertices": [[x, y, base + e * (z - base) + o * LAYER_GAP] for x, y, z in vertices], "faces": _c._model.part_faces(part)}}
+        pieces.append(Prim(part["layer"], info, STAGE_ROOF, (0, 0), _part_faces(mesh, "paving"), alias=(slab["tag"],), sub=1))
     return pieces
 
 

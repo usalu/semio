@@ -1,0 +1,7 @@
+# Section Order Read-Only Audit
+
+A bounded py-spy sample of current Excel References 126 PID 21400 in animation 10 identified the real visible second width ramp at source line 373: keyed faces update → two native capsule views → Nakagin capsule_axon → section ordering → projected overlap. The two face views have already faded in at the pointer stage. The earlier hypothesis that the faces were necessarily offscreen was retracted; no stop or mutation followed.
+
+In Nakagin visuals/🐍️.py, section order line 1383 already projects and prepares each facet once. The polygon preparation retains bounds, edges, SAT axes, projection extrema, convexity and inside probes. Pairwise SAT at lines 914–919 projects points onto the other polygon's axes; that work depends on the particular pair. Cyclic refinement at 1446 may test both directions of a pair, so an unordered-pair memo could avoid a reverse test, but reversed nonconvex intersection arithmetic has not been proved bit-identical, and each pair is visited at most once per direction. No representative timing or native-pixel equivalence has been established for such a change. No shared-renderer optimization is recommended on this evidence.
+
+This renderer is imported broadly by GH/Excel sources and its source hash participates in their receipts; changing it would invalidate affected source pins and expensive ordering caches. The active v4 model/cache gate remains untouched. Genuine width-dependent native geometry continues rendering; this is a performance observation, not full-source or master acceptance.

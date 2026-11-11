@@ -167,7 +167,7 @@ def _stage(*, scale: float = 1.0):
 
     ti = Text(tr(f"inside {THETA_I} °C", f"innen {THETA_I} °C"), font_size=BODY_FONT_SIZE, color=PASTEL_ORANGE)
     ti.move_to(np.array([(ROOM_X0 + WALL_X0) / 2, LABEL_Y, 0.0]))
-    te = Text(f"außen {THETA_E} °C", font_size=BODY_FONT_SIZE, color=PASTEL_BLUE)
+    te = Text(tr(f"outside {THETA_E} °C", f"außen {THETA_E} °C"), font_size=BODY_FONT_SIZE, color=PASTEL_BLUE)
     te.move_to(np.array([(WALL_X1 + OUT_X1) / 2, LABEL_Y, 0.0]))
     dth = place_math(_dtheta_label(THETA_I - THETA_E), np.array([0.0, ti.get_bottom()[1], 0.0]), "center")
 
@@ -478,7 +478,7 @@ class Beat1_DreiWegeDerWaerme(Scene):
         stage = _stage()
         p = stage["p"]
         ti_cool = Text(tr("inside 19 °C", "innen 19 °C"), font_size=BODY_FONT_SIZE, color=PASTEL_ORANGE).move_to(stage["ti"])
-        te_warm = Text("außen 1 °C", font_size=BODY_FONT_SIZE, color=PASTEL_BLUE).move_to(stage["te"])
+        te_warm = Text(tr("outside 1 °C", "außen 1 °C"), font_size=BODY_FONT_SIZE, color=PASTEL_BLUE).move_to(stage["te"])
         dt = ValueTracker(0.0)
         dth_live = _live(
             lambda: _dtheta_src(dt.get_value()),
@@ -1611,10 +1611,10 @@ class Beat9_WaermestromFormel(Scene):
 
         ti = Text(tr("inside 20 °C", "innen 20 °C"), font_size=LABEL_FONT_SIZE, color=PASTEL_ORANGE)
         ti.next_to(np.array([fl, fcy + fh / 2, 0.0]), UP, buff=0.16, aligned_edge=LEFT)
-        te = Text("außen 0 °C", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE)
+        te = Text(tr("outside 0 °C", "außen 0 °C"), font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE)
         te.move_to(np.array([fl, fcy - fh / 2 - 1.10, 0.0]), aligned_edge=LEFT)
-        te_cold = Text("außen −20 °C", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(te, aligned_edge=LEFT)
-        te_back = Text("außen 0 °C", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(te, aligned_edge=LEFT)
+        te_cold = Text(tr("outside −20 °C", "außen −20 °C"), font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(te, aligned_edge=LEFT)
+        te_back = Text(tr("outside 0 °C", "außen 0 °C"), font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(te, aligned_edge=LEFT)
         dt_live = _live(
             lambda: _dtheta_src(dt_t.get_value()),
             np.array([te_cold.get_right()[0] + 0.40, te.get_bottom()[1], 0.0]),

@@ -54,6 +54,7 @@ unit_text = _manim_module.unit_text
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
 staffage = _manim_module.staffage
+room_metre = _manim_module.room_metre
 staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
 fitted_staffage = _manim_module.fitted_staffage
@@ -100,7 +101,7 @@ def _din_ref(text: str):
 def _person(house, x):
     """🧍 Handcrafted thermal occupant fanning herself, feet on the ground-floor slab."""
     cast = "shared-person-fanning"
-    unit = 0.7 * house["w_height"] / 2 / staffage_height(cast)
+    unit = room_metre(house["w_height"] / 2)
     return staffage_motion(cast, unit=unit, anchor=np.array([x, house["bottom_left"][1], 0.0]))
 
 

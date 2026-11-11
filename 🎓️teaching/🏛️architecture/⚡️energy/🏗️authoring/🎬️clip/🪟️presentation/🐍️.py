@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import json
 import math
+import os
 import re
 from pathlib import Path
 
@@ -139,6 +140,18 @@ def _clean_attempt(work: Path, parent: Path, *, keep_logs: bool) -> None:
     if not keep_logs:
         shutil.rmtree(resolved)
         return
+    logs = []
+    for directory, children, files in os.walk(resolved, followlinks=False):
+        children[:] = [name for name in children if not (Path(directory) / name).is_symlink() and not getattr(Path(directory) / name, "is_junction", lambda: False)()]
+        if re.fullmatch(r"b-[0-9a-f]{8}", Path(directory).name) and "run.log" in files:
+            log = Path(directory) / "run.log"
+            if not log.is_symlink():
+                logs.append(log)
+    for log in sorted(logs)[:16]:
+        name = "browser-" + "-".join(log.relative_to(resolved).parts)
+        with log.open("rb") as stream:
+            stream.seek(max(0, log.stat().st_size - 1024 * 1024))
+            (resolved / name).write_bytes(stream.read())
     for child in resolved.iterdir():
         if child.is_symlink() or getattr(child, "is_junction", lambda: False)():
             child.unlink()

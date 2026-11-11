@@ -72,3 +72,4 @@ def partitioned(api,model,obj):
                 if separate:break
             if not separate:return False
     return True
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

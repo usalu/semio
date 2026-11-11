@@ -12,7 +12,7 @@ import {Tree} from "@presentation/tree";
 import {Popover,PopoverTrigger,PopoverContent} from "@presentation/popover";
 import {interactiveActiveFillClass} from "@presentation/interaction";
 import {windowChromeControlButtonClass} from "@presentation/controls";
-import {presentationBordersSettled,presentationWindowSettled} from "./🟦️settled.ts";
+import {presentationBordersSettled,presentationWindowSettled,requestCameraRemeasure} from "./🟦️settled.ts";
 
 let config:any;
 const root=createRoot(document.getElementById("root")!);
@@ -83,13 +83,14 @@ function App({frame}:{frame:any}) {
     if(!app)return null;
     app.style.transform="";app.style.transformOrigin="0 0";
     const progress=value?.progress??0;
-    if(!progress)return {progress:0,scale:1,translation:[0,0],target:null};
+    if(!progress){requestCameraRemeasure(document);return {progress:0,scale:1,translation:[0,0],target:null}};
     const host=[...document.querySelectorAll("[data-presentation-body]")].find(element=>element.getAttribute("data-presentation-body")===value.video_id),image=host?.querySelector("img"),box=host?.getBoundingClientRect();
     if(!box)throw Error("Content camera requires an actual video body");
     const aspect=image?.naturalWidth&&image?.naturalHeight?image.naturalWidth/image.naturalHeight:1600/900;
     const width=Math.min(box.width,box.height*aspect),height=width/aspect,target={x:box.x+(box.width-width)/2,y:box.y+(box.height-height)/2,width,height};
     const scale=1+progress*(Math.min(1600/width,900/height)-1),translation=[progress*(800-(target.x+width/2)*Math.min(1600/width,900/height)),progress*(450-(target.y+height/2)*Math.min(1600/width,900/height))];
     app.style.transform=`matrix(${scale},0,0,${scale},${translation[0]},${translation[1]})`;
+    requestCameraRemeasure(document);
     return {progress,scale,translation,target};
   },
   debugGeometry(){return [...document.querySelectorAll("[data-presentation-window]")].map(stack=>{const measured=measureWindowSilhouetteMetrics(stack as HTMLElement),expected=createWindowSilhouetteGeometry(measured);return{id:stack.id,measured,expectedBorder:expected.borderPath,actualBorders:[...stack.querySelectorAll("[data-window-silhouette-border] path")].filter(path=>path.getAttribute("d")).map(path=>({path:path.getAttribute("d"),state:path.getAttribute("data-shared-border-state")??path.closest("[data-window-silhouette-border]")?.getAttribute("data-kind")})),expectedClip:expected.contentClipPath,actualClip:(stack.querySelector("[data-window-silhouette-content]") as HTMLElement)?.style.clipPath}})},

@@ -1,0 +1,16 @@
+{
+  "caption": "Heat loss equals 0.8 toasters uninsulated, one resting person insulated, or 1.5 tealights highly insulated.",
+  "bridgeNames": {
+    "en": [
+      "Outside",
+      "Centreline",
+      "Inside"
+    ],
+    "de": [
+      "Außenmaß",
+      "Achsmaß",
+      "Innenmaß"
+    ]
+  },
+  "maxNameWidth": 2
+}

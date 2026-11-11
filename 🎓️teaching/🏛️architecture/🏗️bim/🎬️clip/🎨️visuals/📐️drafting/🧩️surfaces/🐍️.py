@@ -1,4 +1,5 @@
 """🧩 Exact exposed material regions of oriented closed-cell facets without runtime dependencies."""
+from bisect import bisect_right
 from collections import Counter,defaultdict
 from copy import deepcopy
 from fractions import Fraction
@@ -79,6 +80,21 @@ def _regions(operands,check,notify,others=()):
                 for p in (a,b,c,d):
                     if all(max(box[2*k],other[2*k])<=p[k]<=min(box[2*k+1],other[2*k+1])for k in (0,1)):nodes[i].add(p);nodes[j].add(p)
         if offset%128==0:notify("node",offset,len(edges))
+    guides=sorted((min(a[0],b[0]),max(a[0],b[0]),min(a[1],b[1]),max(a[1],b[1]),a,b)for (a,b),weight in weights.items()if not weight and not owned_weights[(a,b)])
+    guide_starts=[guide[0]for guide in guides]
+    for index,(a,b) in enumerate(edges):
+        check();box=bounds[index];direction=_r._sub(b,a)
+        for j in range(bisect_right(guide_starts,box[1])):
+            gx0,gx1,gy0,gy1,c,d=guides[j]
+            if gx1<box[0] or gy0>box[3] or gy1<box[2]:continue
+            second=_r._sub(d,c);delta=_r._sub(c,a);denominator=_r._cross(direction,second)
+            if denominator:
+                first=_r._cross(delta,second)/denominator;following=_r._cross(delta,direction)/denominator
+                if 0<=first<=1 and 0<=following<=1:nodes[index].add((a[0]+first*direction[0],a[1]+first*direction[1]))
+            elif _r._cross(delta,direction)==0:
+                for point in (c,d):
+                    if all(box[2*k]<=point[k]<=box[2*k+1]for k in (0,1)):nodes[index].add(point)
+        if index%128==0:notify("node-guides",index,len(edges))
     atoms=set()
     for points in nodes:
         points=sorted(points);atoms.update(zip(points,points[1:]))
@@ -138,7 +154,7 @@ def material_skin(facets,progress=None,cancelled=None):
         def lift(p):
             """📍 Lift an exact planar boundary once into the original supporting plane."""
             q=[Fraction(0)]*3;q[axes[0]],q[axes[1]]=p;q[drop]=(offset-sum(n[i]*q[i]for i in axes))/n[drop]
-            return [float(v)for v in q]
+            return q
         length=math.sqrt(sum(float(v)**2 for v in n))
         for sign,rows in regions.items():
             for row in rows:
@@ -167,7 +183,7 @@ def projected_material_regions(facets,matrix,progress=None,cancelled=None):
     output=[]
     for group in groups.values():
         for region in _regions(group["rings"],check,notify)[1]:
-            output.append({"rings":[[[float(v)for v in p]for p in ring]for ring in [region["outer"],*region["holes"]]],"material":deepcopy(group["material"]),"facet":group["facet"]})
+            output.append({"rings":[[list(p)for p in ring]for ring in [region["outer"],*region["holes"]]],"material":deepcopy(group["material"]),"facet":group["facet"]})
     notify("complete",len(facets),len(facets));return output
 
 def producer_token():

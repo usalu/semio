@@ -102,7 +102,7 @@ def model_vertical_bounds(g):
     levels = list(g["storeys"].values())+[g["box"]["height"]]
     for slab in g["slabs"]:
         for part in slab["parts"]+slab.get("finish_parts",[]):
-            levels.extend((part["z0"],part["z1"]))
+            levels.extend(vertex[2] for vertex in _c._model.part_vertices(part))
     for kind in ("pilotis","stairs","details","furnishings","railings","foundations","beams","services"):
         for item in g.get(kind,[]):
             for part in item["parts"]:
@@ -158,6 +158,36 @@ def slab_cut(slab, axis, value, clip=None):
             if b-a > 1e-9:
                 cells.append((a,b,part["z0"],part["z1"]))
     return cells
+
+
+def vertical_prism(part) -> bool:
+    """📦 True when a part is an upright outline prism with explicit elevations."""
+    return "outline" in part and "z0" in part and "z1" in part and not any(key in part for key in ("mesh", "section", "top_outline"))
+
+
+def occupied_section_rings(parts, axis, value) -> list:
+    """🧵 Occupied vertical-cut rings, including mesh finish cells that publish no prism outline."""
+    rings = []
+    for part in parts:
+        if vertical_prism(part):
+            for a,b in profile_cut(part["outline"],axis,value):
+                rings.append([(a,part["z0"]),(b,part["z0"]),(b,part["z1"]),(a,part["z1"])])
+            continue
+        rings.extend(_c._model.part_sections(part,value,axis))
+    return [ring for ring in rings if len(ring) >= 3]
+
+
+def ring_edges(rings) -> list:
+    """🧵 Boundary segments of occupied cut rings, removing every shared edge."""
+    edges = {}
+    for ring in rings:
+        for p,q in zip(ring,ring[1:]+ring[:1]):
+            key = tuple(sorted((tuple(round(x,9) for x in p),tuple(round(x,9) for x in q))))
+            if key in edges:
+                del edges[key]
+            else:
+                edges[key] = (p,q)
+    return list(edges.values())
 
 
 def rect_union_cells(rectangles):
@@ -340,7 +370,7 @@ class Plan(_s.SheetMixin):
                 finishes = {}
                 for part in slab.get("finish_parts",[]):
                     colour = _c.surface_color({"kind":part["layer"]})
-                    finishes.setdefault(part["layer"],_engine.VGroup()).add(_d.region([screen(part["outline"])],colour,0.3*opacity,None,0))
+                    finishes.setdefault(part["layer"],_engine.VGroup()).add(_d.region([screen(_c._model.part_footprint(part))],colour,0.3*opacity,None,0))
                 for layer,shapes in finishes.items():
                     put(1.0,slab["tag"]+":"+layer,shapes)
         if level == "ground":
@@ -490,7 +520,8 @@ class Plan(_s.SheetMixin):
                 if not part["z0"] <= ctx["cut_z"] < part["z1"]:
                     continue
                 ring = [view(*p,0.) for p in _c._model.part_outline_at(part,ctx["cut_z"])]
-                group.add(_s.poche([ring],fill,hatch=False,stroke=stroke,width=(W_CUT*.7+bonus)*w,opacity=opacity))
+                if ring:
+                    group.add(_s.poche([ring],fill,hatch=False,stroke=stroke,width=(W_CUT*.7+bonus)*w,opacity=opacity))
             ctx["put"](4.,item["tag"],group)
 
     def _plan_ramps(self, ctx, ramp_arrow):

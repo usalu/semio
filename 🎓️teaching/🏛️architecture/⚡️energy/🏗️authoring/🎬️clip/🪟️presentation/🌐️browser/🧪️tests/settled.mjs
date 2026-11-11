@@ -1,7 +1,7 @@
 /** 🪟 Verify clip readiness against portable compositor and geometry cases. */
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
-import {presentationBordersSettled, presentationWindowSettled} from "../🟦️settled.ts";
+import {presentationBordersSettled, presentationWindowSettled, requestCameraRemeasure} from "../🟦️settled.ts";
 
 const cases = JSON.parse(await readFile(new URL("./settled.cases.json", import.meta.url), "utf8"));
 globalThis.document = {createElement: () => ({style: {clipPath: ""}})};
@@ -19,3 +19,14 @@ for (const sample of JSON.parse(await readFile(new URL("./settled-roots.cases.js
   assert.equal(presentationBordersSettled(document), sample.ready, sample.id);
   console.log("PASS " + sample.id);
 }
+
+for (const sample of JSON.parse(await readFile(new URL("./camera-remeasure.cases.json", import.meta.url), "utf8"))) {
+  const nodes = sample.initial.map(value => ({value, getAttribute() { return this.value; }, setAttribute(_name, next) { this.value = next; }}));
+  requestCameraRemeasure({querySelectorAll: () => nodes});
+  assert.deepEqual(nodes.map(node => node.value), sample.expected, sample.id);
+  console.log("PASS " + sample.id);
+}
+
+await import("./paused-transitions.mjs");
+await import("./paint-barrier.mjs");
+await import("./transition-policy.mjs");

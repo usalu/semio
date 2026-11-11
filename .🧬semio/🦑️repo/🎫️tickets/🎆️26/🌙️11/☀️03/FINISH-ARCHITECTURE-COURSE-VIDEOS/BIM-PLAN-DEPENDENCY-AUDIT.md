@@ -1,0 +1,134 @@
+# BIM Plan Dependency Audit
+
+Native runtime literal source dependency closure using cached attempt source arguments: 120 non-BIM sources examined.
+
+Targets:
+- C:\git\semio\🎓️teaching\🏛️architecture\🏗️bim\🎬️clip\🎨️visuals\🏛️savoye\📋️plan\🐍️.py
+- C:\git\semio\🎓️teaching\🏛️architecture\🏗️bim\🎬️clip\🎨️visuals\🏛️savoye\📏️sheet\🐍️.py
+- C:\git\semio\🎓️teaching\🏛️architecture\🏗️bim\🎬️clip\🎨️visuals\📐️drafting\🧩️surfaces\🐍️.py
+- C:\git\semio\🎓️teaching\🏛️architecture\🏗️bim\🎬️clip\🎨️visuals\📐️drafting\🧩️regions\🐍️.py
+- C:\git\semio\🎓️teaching\🏛️architecture\🏗️bim\🎬️clip\🎨️visuals\🏛️savoye\🧊️axon\🧩️primitives.py
+
+Intersections: []
+
+Sources:
+- 1 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🧲️physics\🎬️clip\🧲️fundamentals\🐍️.py
+- 10 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\❓️need\🐍️.py
+- 101 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\♨️system-losses\🐍️.py
+- 102 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\♨️system-losses\🐍️.py
+- 103 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\♨️system-losses\🐍️.py
+- 104 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🏭️primary-energy\🐍️.py
+- 105 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🏭️primary-energy\🐍️.py
+- 106 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🏭️primary-energy\🐍️.py
+- 107 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🏭️primary-energy\🐍️.py
+- 108 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🏷️certificate\🐍️.py
+- 109 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🏷️certificate\🐍️.py
+- 11 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\❓️need\🐍️.py
+- 110 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🏷️certificate\🐍️.py
+- 111 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🧪️practice\🐍️.py
+- 112 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🧪️practice\🐍️.py
+- 113 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🧪️practice\🐍️.py
+- 12 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\📦️volume\🐍️.py
+- 120 C:\git\semio\🎓️teaching\🏛️architecture\🦗️grasshopper\🎬️clip\🦴️anatomy\🐍️.py
+- 121 C:\git\semio\🎓️teaching\🏛️architecture\🦗️grasshopper\🎬️clip\💊️capsule\🐍️.py
+- 122 C:\git\semio\🎓️teaching\🏛️architecture\🦗️grasshopper\🎬️clip\🗼️tower\🐍️.py
+- 123 C:\git\semio\🎓️teaching\🏛️architecture\🦗️grasshopper\🎬️clip\🫗️casting\🐍️.py
+- 124 C:\git\semio\🎓️teaching\🏛️architecture\🦗️grasshopper\🎬️clip\🌳️trees\🐍️.py
+- 125 C:\git\semio\🎓️teaching\🏛️architecture\📊️excel\🎬️clip\🦴️anatomy\🐍️.py
+- 126 C:\git\semio\🎓️teaching\🏛️architecture\📊️excel\🎬️clip\📍️references\🐍️.py
+- 127 C:\git\semio\🎓️teaching\🏛️architecture\📊️excel\🎬️clip\📋️program\🐍️.py
+- 128 C:\git\semio\🎓️teaching\🏛️architecture\📊️excel\🎬️clip\⚡️energy\🐍️.py
+- 129 C:\git\semio\🎓️teaching\🏛️architecture\🎯️optimization\🎬️clip\📉️extrema\🐍️.py
+- 13 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\📦️volume\🐍️.py
+- 130 C:\git\semio\🎓️teaching\🏛️architecture\🎯️optimization\🎬️clip\🎲️sampling\🐍️.py
+- 131 C:\git\semio\🎓️teaching\🏛️architecture\🎯️optimization\🎬️clip\🧪️experiments\🐍️.py
+- 132 C:\git\semio\🎓️teaching\🏛️architecture\🎯️optimization\🎬️clip\⚖️index\🐍️.py
+- 133 C:\git\semio\🎓️teaching\🏛️architecture\🎯️optimization\🎬️clip\🏆️pareto\🐍️.py
+- 134 C:\git\semio\🎓️teaching\🏛️architecture\🎯️optimization\🎬️clip\🧬️algorithms\🐍️.py
+- 14 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\📦️volume\🐍️.py
+- 15 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\🌡️heat-flow\🐍️.py
+- 16 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\🌡️heat-flow\🐍️.py
+- 17 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\🌡️heat-flow\🐍️.py
+- 18 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\🌡️heat-flow\🐍️.py
+- 19 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\🪟️natural\🐍️.py
+- 2 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🧲️physics\🎬️clip\🧲️fundamentals\🐍️.py
+- 20 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\🪟️natural\🐍️.py
+- 21 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\🪟️natural\🐍️.py
+- 22 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\🪟️natural\🐍️.py
+- 23 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\🪟️natural\🐍️.py
+- 24 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\🪟️natural\🐍️.py
+- 25 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\⚙️mechanical\🐍️.py
+- 26 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\⚙️mechanical\🐍️.py
+- 27 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\⚙️mechanical\🐍️.py
+- 28 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\⚙️mechanical\🐍️.py
+- 29 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\🤝️handoff\🐍️.py
+- 3 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🧲️physics\🎬️clip\🧲️fundamentals\🐍️.py
+- 30 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\🤝️handoff\🐍️.py
+- 31 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧲️fundamentals\🐍️.py
+- 32 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧲️fundamentals\🐍️.py
+- 33 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧲️fundamentals\🐍️.py
+- 34 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧲️fundamentals\🐍️.py
+- 35 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧲️fundamentals\🐍️.py
+- 36 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧲️fundamentals\🐍️.py
+- 37 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧲️fundamentals\🐍️.py
+- 38 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧲️fundamentals\🐍️.py
+- 39 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧲️fundamentals\🐍️.py
+- 4 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🧲️physics\🎬️clip\🧲️fundamentals\🐍️.py
+- 40 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧱️conduction\🐍️.py
+- 41 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧱️conduction\🐍️.py
+- 42 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧱️conduction\🐍️.py
+- 43 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧱️conduction\🐍️.py
+- 44 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧱️conduction\🐍️.py
+- 45 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧱️conduction\🐍️.py
+- 46 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🌬️convection\🐍️.py
+- 47 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\👥️internal-gains\🐍️.py
+- 48 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\👥️internal-gains\🐍️.py
+- 49 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\👥️internal-gains\🐍️.py
+- 5 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🧲️physics\🎬️clip\🧲️fundamentals\🐍️.py
+- 50 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\👥️internal-gains\🐍️.py
+- 51 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\👥️internal-gains\🐍️.py
+- 52 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\☀️solar-gains\🐍️.py
+- 53 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\☀️solar-gains\🐍️.py
+- 54 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\☀️solar-gains\🐍️.py
+- 55 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\☀️solar-gains\🐍️.py
+- 56 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\☀️solar-gains\🐍️.py
+- 59 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\☀️solar-gains\🐍️.py
+- 6 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🧲️physics\🎬️clip\🧲️fundamentals\🐍️.py
+- 60 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧮️calculation\🐍️.py
+- 61 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧮️calculation\🐍️.py
+- 62 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧮️calculation\🐍️.py
+- 63 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧮️calculation\🐍️.py
+- 64 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧮️calculation\🐍️.py
+- 65 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🔥️heating\🎬️clip\🧮️calculation\🐍️.py
+- 66 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\⚖️heating-comparison\🐍️.py
+- 67 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\⚖️heating-comparison\🐍️.py
+- 68 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\⚖️heating-comparison\🐍️.py
+- 69 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\👥️internal-gains\🐍️.py
+- 7 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🧲️physics\🎬️clip\🧲️fundamentals\🐍️.py
+- 70 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\👥️internal-gains\🐍️.py
+- 71 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\👥️internal-gains\🐍️.py
+- 72 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\👥️internal-gains\🐍️.py
+- 73 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\👥️internal-gains\🐍️.py
+- 74 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\💧️transmission-humidity\🐍️.py
+- 77 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\💧️transmission-humidity\🐍️.py
+- 78 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\☀️solar-radiation\🐍️.py
+- 8 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🧲️physics\🎬️clip\🧲️fundamentals\🐍️.py
+- 82 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\☀️solar-radiation\🐍️.py
+- 83 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\📐️system-sizing\🐍️.py
+- 84 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\📐️system-sizing\🐍️.py
+- 85 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\🌤️summer-strategy\🐍️.py
+- 86 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\🌤️summer-strategy\🐍️.py
+- 87 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\❄️cooling\🎬️clip\🌤️summer-strategy\🐍️.py
+- 88 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🔁️recap\🐍️.py
+- 89 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🔁️recap\🐍️.py
+- 9 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\🌬️ventilation\🎬️clip\❓️need\🐍️.py
+- 90 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🔁️recap\🐍️.py
+- 91 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\🔁️recap\🐍️.py
+- 92 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\⚖️regulations\🐍️.py
+- 93 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\⚖️regulations\🐍️.py
+- 94 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\⚖️regulations\🐍️.py
+- 95 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\⚖️regulations\🐍️.py
+- 96 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\⚡️demand-power\🐍️.py
+- 97 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\⚡️demand-power\🐍️.py
+- 98 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\⚡️demand-power\🐍️.py
+- 99 C:\git\semio\🎓️teaching\🏛️architecture\⚡️energy\📊️demand\🎬️clip\⚡️demand-power\🐍️.py

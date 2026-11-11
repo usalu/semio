@@ -25,3 +25,4 @@ def reachable(graph: dict, start: str) -> list:
         for peer in adjacent[node]:
             if peer not in seen:seen.add(peer);pending.append(peer)
     return sorted(seen)
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

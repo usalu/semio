@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","required":["en","de"],"properties":{"en":{"type":"string","minLength":1},"de":{"type":"string","minLength":1}},"additionalProperties":false}

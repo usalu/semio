@@ -17,6 +17,9 @@ _model = importlib.import_module("🎓️teaching.🏛️architecture.🦗️gra
 _nakagin = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🐍️")
 _draw = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🐍️")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+_snapshot = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️snapshot")
+_live_scene = importlib.import_module("🎓️teaching.🧰️interop.🎬️scene.🐍️")
+_keyed = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️keyed")
 _draft = _visuals._drafting
 _canvas = _visuals._canvas
 _art = _visuals._art
@@ -100,7 +103,7 @@ def _gone(*mobs):
     return fades
 
 
-class Beat4_Casting(_visuals.ClipScene):
+class Beat4_Casting(_live_scene.RefreshMoving, _visuals.ClipScene):
     """🎓 Teach implicit type casting on the Nakagin Capsule Tower with explicit English and German narration."""
 
     TITLE = {"en": "Casting: When Types Meet", "de": "Casting: Wenn Typen sich treffen"}
@@ -208,6 +211,14 @@ class Beat4_Casting(_visuals.ClipScene):
     def _lit(self, n):
         """💡 Tower B lit up to ``n`` storeys as a band over the static tower, with count tag and numbered ticks."""
         return _mn.VGroup(self._band(1, n, INK_GOLD), self._count_tag(n), self._ticks(n))
+
+    def _changing_display(self, build, key):
+        """🎞️ Stable display for a continuously changing authored view."""
+        return _keyed.create(build, key, self.camera)
+
+    def _lit_display(self, count):
+        """💡 Stable changing display of the current storey band and label."""
+        return _keyed.create(lambda: self._lit(count()), count, self.camera)
 
     def _sol(self, **overrides):
         """🧪 Evaluate the casting canvas with overrides, cached per override set."""
@@ -331,7 +342,10 @@ class Beat4_Casting(_visuals.ClipScene):
         if n not in self._towers:
             lit = None if n is None else (lambda key: key[1] == 1 and key[2] < n)
             self._towers[n] = self.tower_axon(**self._tower_fit, view="axon", lit=lit, types=True)
-        return self._towers[n].copy()
+        images = self.__dict__.setdefault("_tower_images", {})
+        if n not in images:
+            images[n] = _snapshot.capture(self._towers[n], self.camera)
+        return images[n].copy()
 
     def _ticks(self, n, ghost=None):
         """🔢 Numbered storey ticks beside Tower B: gold up to ``n``, a red ghost number for a storey that dropped out."""
@@ -659,38 +673,44 @@ class Beat4_Casting(_visuals.ClipScene):
         hint = self.gh_bubble(self.tr("Text → Number", "Text → Zahl"), level="remark", target=canvas.w["tn"], width=2.4)
         ghost = self._capsule(ghost=True, dims=())
         leash = _morph.tether(canvas.w["t25"], ghost.get_center(), color=INK_GOLD, width=2.8)
+        ghost_display = _snapshot.capture(ghost, self.camera)
+        del ghost
         self.add(leash)
-        self.step("mismatch", *_gone(*old), _mn.FadeIn(canvas), _mn.FadeIn(hint), _mn.FadeIn(ghost), _mn.FadeIn(title), seconds=1.2)
+        self.step("mismatch", *_gone(*old), _mn.FadeIn(canvas), _mn.FadeIn(hint), _mn.FadeIn(ghost_display), _mn.FadeIn(title), seconds=1.2)
 
         flags = self._flags(canvas, ("tn",), "Text>Number")
         solid = self._capsule()
         built = self._standin(solid, base, INK_TEAL)
+        solid_display = _snapshot.capture(solid, self.camera)
+        del solid
         arrive = self._grip(canvas.w["tn"], "in", "Number").get_center() + np.array([-0.5, 0.45, 0.0])
         quoted = _morph.token('"2.5"', kind="number", color=INK_GOLD, size=1.2).move_to(canvas.w["t25"].get_top() + np.array([0.0, 0.45, 0.0]))
         chip = _morph.token(self._pn(["2.5"])[0], kind="number", color=INK_TEAL, size=1.2).move_to(arrive)
         self.step("text_number", *_gone(leash), _mn.FadeOut(hint), _mn.FadeIn(flags), _mn.FadeIn(quoted), _morph.travel(quoted, self._route(quoted, chip), run_time=1.4),
-                  seconds=self.then((_morph.retext(quoted, chip, run_time=0.7),), 0.7, 1.4, ((_mn.FadeOut(ghost), _morph.morph(chip, built, pairs=[(chip[0], built[0]), (chip[1], built[1])], path_arc=0.4, dip=0.15, run_time=1.5), self._later(_mn.FadeIn(solid), 0.55)), 1.5)))
+                  seconds=self.then((_morph.retext(quoted, chip, run_time=0.7),), 0.7, 1.4, ((_mn.FadeOut(ghost_display), _morph.morph(chip, built, pairs=[(chip[0], built[0]), (chip[1], built[1])], path_arc=0.4, dip=0.15, run_time=1.5), self._later(_mn.FadeIn(solid_display), 0.55)), 1.5)))
 
         value = _mn.ValueTracker(SLIDER)
         count = lambda: _model.cast(value.get_value(), "Integer").value
-        old = (canvas, title, flags, solid, built)
+        old = (canvas, title, flags, solid_display, built)
         canvas = self._view("storeys", self._sol(), trackers={"sl": value}, layout={"slp": (0, 130), "sto2p": (260, 130)}, live={
             "slp": lambda c: self.live(lambda: self.gh_panel(self._pn([_num(round(value.get_value(), 1))]), at=c, width=0.9), key=lambda: round(value.get_value(), 1)),
             "sto2p": lambda c: self.live(lambda: self.gh_panel([str(count())], at=c, width=0.9), key=count)})
+        canvas_display = _keyed.create(lambda: (canvas.update(0), canvas)[1], lambda: round(value.get_value(), 3), self.camera)
         shell = self._tower()
-        tower = self.live(lambda: self._lit(count()), key=count)
+        tower = self._lit_display(count)
         title, flags = self._view_title("storeys"), self._flags(canvas, ("sto2",), "Number>Integer", source=True)
         sl_chip = _morph.token(self._pn([f"{SLIDER:g}"])[0], kind="number", color=INK_GOLD, size=1.2).move_to(canvas.w["sl"].get_top() + np.array([0.0, 0.45, 0.0]))
         landing = self._grip(canvas.w["sto2"], "in", "Integer").get_center() + np.array([-0.5, 0.45, 0.0])
         int_chip = _morph.token(str(count()), kind="number", color=INK_GREEN, size=1.2).move_to(landing)
         dropped = _morph.token(self.tr(".6 dropped", ".6 entfällt"), kind="number", color="#E0807A", size=1.0).move_to(landing + np.array([1.2, 0.0, 0.0]))
         bands = [self._band(i, i, INK_GOLD) for i in range(1, count() + 1)]
-        self.step("storeys", *_gone(*old), _mn.FadeIn(canvas), _mn.FadeIn(shell), _mn.FadeIn(tower), _mn.FadeIn(title), _mn.FadeIn(flags), _mn.FadeIn(sl_chip), _morph.travel(sl_chip, self._route(sl_chip, int_chip), run_time=1.4),
+        self.step("storeys", *_gone(*old), _mn.FadeIn(canvas_display), _mn.FadeIn(shell), _mn.FadeIn(tower), _mn.FadeIn(title), _mn.FadeIn(flags), _mn.FadeIn(sl_chip), _morph.travel(sl_chip, self._route(sl_chip, int_chip), run_time=1.4),
                   seconds=self.then((_morph.retext(sl_chip, int_chip, run_time=0.7), self._later(_mn.FadeIn(dropped, shift=_mn.DOWN * 0.1), 0.2)), 0.7, 1.4, ((_mn.FadeOut(dropped, shift=_mn.DOWN * 0.8), _morph.split(int_chip, bands, lag=0.15, path_arc=-0.3, run_time=1.2)), 1.6)))
 
         line_base, line_live = self._numberline(value)
+        line_display = _keyed.create(lambda: (line_live.update(0), line_live)[1], count, self.camera)
         ramp = lambda a, b: _mn.UpdateFromAlphaFunc(value, lambda mob, alpha: mob.set_value(a + (b - a) * alpha), rate_func=_mn.smooth, run_time=1.0)
-        self.step("ties", _mn.FadeIn(line_base), _mn.FadeIn(line_live), seconds=self.then((self._early(_morph.gather(bands, line_base.dot, lag=0.05, run_time=1.2), 0.4), _mn.Succession(_mn.Wait(1.2), ramp(SLIDER, 2.5), _mn.Wait(0.8), ramp(2.5, 3.5))), 4.0, 0.8))
+        self.step("ties", _mn.FadeIn(line_base), _mn.FadeIn(line_display), seconds=self.then((self._early(_morph.gather(bands, line_base.dot, lag=0.05, run_time=1.2), 0.4), _mn.Succession(_mn.Wait(1.2), ramp(SLIDER, 2.5), _mn.Wait(0.8), ramp(2.5, 3.5))), 4.0, 0.8))
 
         self.play(value.animate.set_value(SLIDER), run_time=0.8)
         floor = _model.evaluate(self._d, {"sl": SLIDER}).items("sto3", "Integer")[0]
@@ -701,7 +721,7 @@ class Beat4_Casting(_visuals.ClipScene):
                           _draft.segments([(self._tick_at(count()) + np.array([-0.05, -0.16, 0]), self._tick_at(count()) + np.array([0.3, 0.16, 0]))], INK_RED, 2.4))
         eleventh = self._band(count(), count(), INK_GOLD)
         self.add(eleventh)
-        self.step("deliberate", *_gone(canvas, tower, title, flags, line_base, line_live, line_base.dot), _mn.FadeIn(canvas2), _mn.FadeIn(tower2), _mn.FadeIn(title2), seconds=self.then((_morph.morph(eleventh, lost, path_arc=0.5, run_time=1.2),), 1.2, 1.2))
+        self.step("deliberate", *_gone(canvas_display, tower, title, flags, line_base, line_display, line_base.dot), _mn.FadeIn(canvas2), _mn.FadeIn(tower2), _mn.FadeIn(title2), seconds=self.then((_morph.morph(eleventh, lost, path_arc=0.5, run_time=1.2),), 1.2, 1.2))
 
         canvas3, title3 = self._view("point-plane", pt), self._view_title("point-plane")
         base_stage = self._stage()
@@ -729,12 +749,12 @@ class Beat4_Casting(_visuals.ClipScene):
 
         spin = _mn.ValueTracker(0.0)
         canvas5, title5 = self._view("explicit", self._sol(), layout={"vx": (0, 100), "vy": (0, 200), "cpl": (260, 100), "capc": (260, 215), "pln": (260, 300), "ore": (520, 150)}), self._view_title("explicit")
-        stage4 = self.live(lambda: self._stage(spin=spin.get_value(), arrows=True, arc=True, legend=True, axes=[self._sol().value("cpl", "Plane")]).over, key=lambda: round(spin.get_value(), 2))
+        stage4 = self._changing_display(lambda: self._stage(spin=spin.get_value(), arrows=True, arc=True, legend=True, axes=[self._sol().value("cpl", "Plane")]).over, lambda: round(spin.get_value(), 2))
         inputs = [_morph.token(label, kind="number", color=color).move_to(canvas5.w[oid].get_top() + np.array([0.0, 0.4, 0.0]))
                   for oid, label, color in (("ore", self.tr("Origin", "Ursprung"), "#E0B84A"), ("vx", self._lb("X-Axis"), "#E08080"), ("vy", self._lb("Y-Axis"), "#80C890"))]
         built_plane = _morph.token("", kind="plane", color=CAP_GOOD, size=1.5).move_to(view0(*plane.origin.t))
         self.step("explicit", *_gone(canvas4, title4, flags4, z_axes), _mn.FadeIn(canvas5), _mn.FadeIn(stage4), _mn.FadeIn(title5), *[self._later(_mn.FadeIn(c), 0.2) for c in inputs],
-                  _mn.UpdateFromAlphaFunc(spin, lambda mob, alpha: mob.set_value(alpha), rate_func=_mn.smooth, run_time=2.4), seconds=self.then((_morph.gather(inputs, built_plane, run_time=1.2),), 1.6, 2.6))
+                  seconds=self.then((_mn.UpdateFromAlphaFunc(spin, lambda mob, alpha: mob.set_value(alpha), rate_func=_mn.smooth, run_time=2.4), _morph.gather(inputs, built_plane, run_time=1.2)), 2.4, 1.0, ((_mn.Wait(0.8),), 0.8)))
 
         sd = self._sol()
         canvas6, world, title6 = self._view("domain", sd), self._domain_world(sd), self._view_title("domain")
@@ -743,14 +763,21 @@ class Beat4_Casting(_visuals.ClipScene):
         length_chip = _morph.token(length, kind="number", color="#E0B84A").move_to(canvas6.w["dom"].get_top() + np.array([0.0, 0.4, 0.0]))
         self.step("domain", *_gone(canvas5, stage4, title5, built_plane), _mn.FadeIn(canvas6), _morph.morph(anchor, world[0], path_arc=0.0, run_time=1.4), _mn.FadeIn(length_chip), _mn.FadeIn(title6), _mn.FadeIn(flags),
                   seconds=self.then((_morph.morph(length_chip, world[1], path_arc=0.4, run_time=1.4),), 1.4, 1.5))
+        world_display = _snapshot.capture(world, self.camera)
+        self.remove(world, *world.get_family())
+        self.add(world_display)
+        del world
 
         canvas7a, canvas7b = self._view("circle-curve", sd, dy=1.0), self._view("box-brep", sd, skip=("bxv", "bxvp"), dy=-1.05)
         world7, title7 = self._geometry_world(sd), self._title_text("Circle → Curve · Box → Brep", "Kreis → Kurve · Box → Brep")
         flags7 = _mn.VGroup(self._flags(canvas7a, ("crv",), "Circle>Curve"), *[self._dashed(canvas7b.w["brp"])])
         box_src = _morph.silhouette(world7[0], color=INK_GOLD)
         box_src.set_fill(INK_GOLD, opacity=0.25)
-        self.step("geometry", *_gone(canvas6, world, title6, flags), _mn.FadeIn(canvas7a), _mn.FadeIn(canvas7b), _mn.FadeIn(world7), _mn.FadeIn(world7.rings), _mn.FadeIn(box_src), _mn.FadeIn(title7), _mn.FadeIn(flags7),
-                  seconds=self.then((_morph.morph(world7.rings, world7.chips[0], path_arc=0.4, run_time=1.4), _morph.morph(box_src, world7.chips[1], path_arc=-0.4, run_time=1.4)), 1.4, 1.6))
+        world7_display = _snapshot.capture(world7, self.camera)
+        world7_rings, world7_chips = world7.rings, world7.chips
+        del world7
+        self.step("geometry", *_gone(canvas6, world_display, title6, flags), _mn.FadeIn(canvas7a), _mn.FadeIn(canvas7b), _mn.FadeIn(world7_display), _mn.FadeIn(world7_rings), _mn.FadeIn(box_src), _mn.FadeIn(title7), _mn.FadeIn(flags7),
+                  seconds=self.then((_morph.morph(world7_rings, world7_chips[0], path_arc=0.4, run_time=1.4), _morph.morph(box_src, world7_chips[1], path_arc=-0.4, run_time=1.4)), 1.4, 1.6))
 
         flag = _mn.ValueTracker(1)
         on = lambda: flag.get_value() > 0.5
@@ -758,26 +785,28 @@ class Beat4_Casting(_visuals.ClipScene):
         canvas9 = self._view("bool-int", self._sol(), zoom=1.15, live={
             "tg": lambda c: self.live(lambda: self.gh_toggle(on(), at=c, name=self._lb(self._d.obj("tg").settings["label"]), scale=1.15), key=on),
             "bip": lambda c: self.live(lambda: self.gh_panel([str(solved().items("bi", "Integer")[0])], at=c, width=0.9), key=on)})
-        world9 = self.live(lambda: self._capsule(window=bool(solved().items("bi", "Integer")[0]), dims=()), key=on)
+        canvas9_display = _keyed.create(lambda: (canvas9.update(0), canvas9)[1], on, self.camera, cache=True)
+        world9 = _keyed.create(lambda: self._capsule(window=bool(solved().items("bi", "Integer")[0]), dims=()), on, self.camera, cache=True)
         title9 = self._view_title("bool-int")
         flip = _mn.UpdateFromAlphaFunc(flag, lambda mob, alpha: mob.set_value(0 if 0.35 < alpha < 0.7 else 1), run_time=2.0)
         one = _morph.token("1", kind="number", color="#7FC48A").move_to(canvas9.w["bip"].get_top() + np.array([0.0, 0.4, 0.0]))
         ring_on = self._ring(sd, self._capsule(dims=()), INK_GREEN, 4.0)
-        self.step("bool_int", *_gone(canvas7a, canvas7b, world7, world7.chips, box_src, world7.rings, title7, flags7), _mn.FadeIn(canvas9), _mn.FadeIn(world9), _mn.FadeIn(title9), flip, self._later(_mn.FadeIn(one), 0.75),
-                  seconds=self.then((_morph.travel(one, self._route(one, ring_on), run_time=1.3),), 1.3, 2.4, ((_morph.morph(one, ring_on, run_time=0.9),), 0.9)))
+        self.step("bool_int", *_gone(canvas7a, canvas7b, world7_display, world7_chips, box_src, world7_rings, title7, flags7), _mn.FadeIn(canvas9_display), _mn.FadeIn(world9), _mn.FadeIn(title9), self._later(_mn.FadeIn(one), 0.75),
+                  seconds=self.then((_morph.travel(one, self._route(one, ring_on), run_time=1.3), flip), 2.0, 2.4, ((_morph.morph(one, ring_on, run_time=0.9),), 0.9)))
 
         level = _mn.ValueTracker(1)
         shown = lambda: int(round(level.get_value()))
         visible = lambda: self._sol(isl=shown()).items("win", "Boolean")[0]
         canvas10 = self._view("int-bool", self._sol(), trackers={"isl": level}, layout={"win": (260, 0), "winp": (260, 150)}, live={
             "winp": lambda c: self.live(lambda: self.gh_panel([_model.describe(visible())], at=c, width=1.2), key=visible)})
-        world10 = self.live(lambda: self._capsule(window=visible(), dims=()), key=visible)
+        canvas10_display = _keyed.create(lambda: (canvas10.update(0), canvas10)[1], shown, self.camera, cache=True)
+        world10 = _keyed.create(lambda: self._capsule(window=visible(), dims=()), visible, self.camera, cache=True)
         title10, flags10 = self._view_title("int-bool"), self._flags(canvas10, ("win",), _model.cast(1.0, "Boolean").rule)
         path = lambda mob, alpha: mob.set_value(1 if alpha < 0.3 else 0 if alpha < 0.65 else 2)
         true_chip = _morph.token("True", kind="number", color="#E0B070").move_to(canvas10.w["winp"].get_top() + np.array([0.0, 0.4, 0.0]))
         ring_two = self._ring(sd, self._capsule(dims=()), INK_ORANGE, 4.0)
-        self.step("int_bool", *_gone(canvas9, world9, title9, ring_on), _mn.FadeIn(canvas10), _mn.FadeIn(world10), _mn.FadeIn(title10), _mn.FadeIn(flags10), self._later(_mn.FadeIn(true_chip), 0.8),
-                  _mn.UpdateFromAlphaFunc(level, path, run_time=2.6), seconds=self.then((_morph.travel(true_chip, self._route(true_chip, ring_two), run_time=1.3),), 1.3, 2.8, ((_morph.morph(true_chip, ring_two, run_time=0.9),), 0.9)))
+        self.step("int_bool", *_gone(canvas9_display, world9, title9, ring_on), _mn.FadeIn(canvas10_display), _mn.FadeIn(world10), _mn.FadeIn(title10), _mn.FadeIn(flags10), self._later(_mn.FadeIn(true_chip), 0.8),
+                  seconds=self.then((_morph.travel(true_chip, self._route(true_chip, ring_two), run_time=1.3), _mn.UpdateFromAlphaFunc(level, path, run_time=2.6)), 2.6, 2.8, ((_morph.morph(true_chip, ring_two, run_time=0.9),), 0.9)))
 
         loc = self._sol()
         canvas11, title11 = self._view("locale", loc, zoom=1.2), self._view_title("locale")
@@ -786,13 +815,14 @@ class Beat4_Casting(_visuals.ClipScene):
         flags11 = self._flags(canvas11, ("tdn",), rule)
         note = self.text(self.tr("a comma is not a decimal point here", "ein Komma ist hier kein Dezimalpunkt"), PORT_AT + np.array([0, -1.75, 0]), size=SMALL, color=INK_RED)
         ghost11 = self._capsule(ghost=True, dims=())
+        ghost11_display = _snapshot.capture(ghost11, self.camera)
         german = self._tag("Grasshopper-Meldung (englisch)", warn.get_bottom() + np.array([0.0, -0.2, 0]), INK_ORANGE) if self.language() == "de" else _mn.VGroup()
         comma = _morph.token(self._pn(["2.5"])[0].replace(".", ","), kind="number", color="#E0B070", size=1.2).move_to(canvas11.w["tde"].get_top() + np.array([0.0, 0.45, 0.0]))
         arrive = canvas11.w["tdn"].get_top() + np.array([-0.6, 0.55, 0.0])
         stop = _morph.token("!", kind="number", color="#E0807A", size=1.4).move_to(arrive + np.array([0.95, 0.0, 0.0]))
         rest = _morph.token("2 5", kind="number", color="#E0B070", size=1.2).move_to(arrive)
         red_comma = _morph.token(",", kind="text", color="#D8362B", size=2.4).move_to(arrive + np.array([0.15, -0.6, 0.0]))
-        self.step("locale", *_gone(canvas10, world10, title10, flags10, ring_two), _mn.FadeIn(canvas11), _mn.FadeIn(warn), _mn.FadeIn(german), _mn.FadeIn(ghost11), _mn.FadeIn(note), _mn.FadeIn(title11), _mn.FadeIn(flags11), self._later(_mn.FadeIn(comma), 0.5), seconds=self.then((_morph.travel(comma, [comma.get_center(), (comma.get_center() + arrive) / 2 + np.array([0.0, 0.5, 0.0]), arrive], run_time=1.0),), 1.0, 1.8, ((_morph.split(comma, [rest, red_comma], lag=0.1, path_arc=0.2, run_time=0.8), _mn.FadeIn(stop, scale=0.6)), 0.9)))
+        self.step("locale", *_gone(canvas10_display, world10, title10, flags10, ring_two), _mn.FadeIn(canvas11), _mn.FadeIn(warn), _mn.FadeIn(german), _mn.FadeIn(ghost11_display), _mn.FadeIn(note), _mn.FadeIn(title11), _mn.FadeIn(flags11), self._later(_mn.FadeIn(comma), 0.5), seconds=self.then((_morph.travel(comma, [comma.get_center(), (comma.get_center() + arrive) / 2 + np.array([0.0, 0.5, 0.0]), arrive], run_time=1.0),), 1.0, 1.8, ((_morph.split(comma, [rest, red_comma], lag=0.1, path_arc=0.2, run_time=0.8), _mn.FadeIn(stop, scale=0.6)), 0.9)))
 
         fail = self._sol()
         canvas12 = self._view("fail", fail, red=("cbx",))
@@ -805,12 +835,14 @@ class Beat4_Casting(_visuals.ClipScene):
         blank = _morph.token("null", kind="number", color="#D8362B", size=1.2).move_to(canvas12.w["cbxp"].get_top() + np.array([0.0, 0.4, 0.0]))
         typea = _morph.token(self.tr("Type A", "Typ A"), kind="number", color="#E0B070", size=1.2).move_to(canvas12.w["typa"].get_top() + np.array([0.0, 0.45, 0.0]))
         at_box = canvas12.w["cbx"].get_left() + np.array([-0.45, 0.6, 0.0])
+        self.remove(ghost11_display)
+        self.add(ghost11)
         self.step("fail", *_gone(canvas11, warn, german, note, title11, flags11, stop, rest, red_comma), _mn.FadeIn(canvas12), _mn.FadeIn(bubble), _mn.FadeIn(explain), _mn.FadeIn(nothing), _mn.FadeIn(title12), _mn.FadeIn(typea),
                   _morph.travel(typea, [typea.get_center(), typea.get_center() + np.array([0.9, 0.4, 0.0]), at_box], run_time=1.2),
                   seconds=self.then((_morph.morph(ghost11, blank, pairs=_morph.capsule_pairs(ghost11, blank), path_arc=0.4, dip=0.15, run_time=1.4),), 1.4, 1.2))
 
         ladder_u = _mn.ValueTracker(0.0)
-        ladder = self.live(lambda: self._order(ladder_u.get_value(), walker=False), key=lambda: round(ladder_u.get_value(), 2))
+        ladder = self._changing_display(lambda: self._order(ladder_u.get_value(), walker=False), lambda: round(ladder_u.get_value(), 2))
         entry = _morph.token(self.tr("Type A", "Typ A"), kind="number", color="#E0807A", size=1.2).move_to(np.array([SHEET_AT[0] + 0.3 - 2.6 - 0.45, SHEET_AT[1] + 1.55, 0.0]))
         walk = lambda mob, alpha: mob.move_to(np.array([entry.get_center()[0], entry.get_center()[1] - 0.95 * min(alpha * 3.0, 3.0), 0.0]))
         self.step("order", *_gone(canvas12, bubble, explain, title12, blank), self._later(_mn.FadeIn(ladder), 0.55), _morph.travel(typea, self._route(typea, entry), run_time=1.2),
@@ -823,10 +855,12 @@ class Beat4_Casting(_visuals.ClipScene):
         flags13 = self._flags(canvas13, ("cbx2",), "Text>Number")
         chip3 = _morph.token(self._pn([_num(item["value"])])[0], kind="number", color=INK_TEAL).move_to(expression.get_right() + np.array([0.55, 0.0, 0.0]))
         built3 = self._standin(fixed, sd, INK_TEAL)
-        self.step("fix", *_gone(ladder, nothing), _mn.FadeIn(canvas13), _mn.FadeIn(title13), _mn.FadeIn(expression), _mn.FadeIn(flags13), _morph.morph(typea, chip3, pairs=[(typea[0], chip3[0]), (typea[1], chip3[1])], path_arc=0.4, run_time=1.2), seconds=self.then((_morph.morph(chip3, built3, pairs=[(chip3[0], built3[0]), (chip3[1], built3[1])], path_arc=0.4, dip=0.15, run_time=1.5), self._later(_mn.FadeIn(fixed), 0.55)), 1.5, 1.2))
+        fixed_display = _snapshot.capture(fixed, self.camera)
+        del fixed
+        self.step("fix", *_gone(ladder, nothing), _mn.FadeIn(canvas13), _mn.FadeIn(title13), _mn.FadeIn(expression), _mn.FadeIn(flags13), _morph.morph(typea, chip3, pairs=[(typea[0], chip3[0]), (typea[1], chip3[1])], path_arc=0.4, run_time=1.2), seconds=self.then((_morph.morph(chip3, built3, pairs=[(chip3[0], built3[0]), (chip3[1], built3[1])], path_arc=0.4, dip=0.15, run_time=1.5), self._later(_mn.FadeIn(fixed_display), 0.55)), 1.5, 1.2))
 
         matrix, legend = self._matrix(), self._legend()
-        self.step("matrix", *_gone(canvas13, fixed, built3, title13, sheet, port, expression, flags13), _mn.FadeIn(matrix), seconds=1.4)
+        self.step("matrix", *_gone(canvas13, fixed_display, built3, title13, sheet, port, expression, flags13), _mn.FadeIn(matrix), seconds=1.4)
 
         cells = _mn.VGroup(*[self._filled(source, target, rules, words) for source, target, rules, words in CELLS])
         background = self._grid_cells()

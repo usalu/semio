@@ -1,0 +1,12 @@
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const canonical = x => Array.isArray(x) ? `[${x.map(canonical).join(',')}]` : x && typeof x === 'object' ? `{${Object.keys(x).sort().map(k => `${JSON.stringify(k)}:${canonical(x[k])}`).join(',')}}` : JSON.stringify(x);
+const sha = x => crypto.createHash('sha256').update(x).digest('hex');
+const master = sha('master bytes');
+const preview = sha('preview bytes');
+const state = 's'.repeat(64);
+const provenance = { casts: {}, records: {} };
+const media = sha(canonical({ sha256: master, states: [state], provenance, version: 1 }));
+const combined = sha(canonical({ sha256: preview, lessons: Array(26).fill(media) }));
+fs.writeFileSync(path.join(__dirname, '🗑️generated', 'preview-freeze-node-oracle.json'), JSON.stringify({ master, preview, state, media, combined }));

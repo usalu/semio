@@ -1,0 +1,20 @@
+{
+  "duration": 1,
+  "lessons": [
+    {
+      "id": "red",
+      "color": "red",
+      "tone": 440
+    },
+    {
+      "id": "green",
+      "color": "green",
+      "tone": null
+    },
+    {
+      "id": "blue",
+      "color": "blue",
+      "tone": 880
+    }
+  ]
+}

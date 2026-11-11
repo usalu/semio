@@ -116,3 +116,4 @@ def material_distance(a,b,*,cancelled=None):
     if len(_CACHE)>64:
         _CACHE.popitem(last=False)
     return best
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

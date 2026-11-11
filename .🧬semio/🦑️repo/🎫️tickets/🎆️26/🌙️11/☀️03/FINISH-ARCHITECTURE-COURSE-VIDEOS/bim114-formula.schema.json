@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Clear width formula",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "spacing",
+          "left",
+          "right",
+          "clear"
+        ],
+        "properties": {
+          "spacing": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "left": {
+            "type": "number",
+            "minimum": 0
+          },
+          "right": {
+            "type": "number",
+            "minimum": 0
+          },
+          "clear": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    }
+  }
+}

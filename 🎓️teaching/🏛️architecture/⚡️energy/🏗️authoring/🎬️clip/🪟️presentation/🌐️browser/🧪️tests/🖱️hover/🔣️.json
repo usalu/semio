@@ -1,0 +1,8 @@
+{
+  "same_owner_schedules": 1,
+  "leave_owner_schedules": 2,
+  "nested_owner_schedules": 4,
+  "detached_owner_schedules": 5,
+  "card_hit_target": "BUTTON",
+  "card_lift_target": "DIV"
+}

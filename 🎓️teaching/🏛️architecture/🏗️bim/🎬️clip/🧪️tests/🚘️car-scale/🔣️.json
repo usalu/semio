@@ -1,0 +1,17 @@
+{
+  "cast": "bim-information-car",
+  "scales": [
+    0.5,
+    1,
+    2
+  ],
+  "headings": [
+    0,
+    90
+  ],
+  "tolerance": 0.000001,
+  "callout_unit": 0.62,
+  "assumed_length_m": 4.6,
+  "assumed_width_m": 1.75,
+  "envelope_gap_m2": 0.01
+}

@@ -156,3 +156,4 @@ def reserve_interfaces(api,model,obj,parts,progress=None,cancel=None):
 def producers():
     """🧬 Bind graph, exact physical stock and Float64 publication identities to canonical native revisions."""
     return (partition,reserve_interfaces,_interface_graph,_graph,_overlap,_intersection,_material,_owned,_publish,producers)
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

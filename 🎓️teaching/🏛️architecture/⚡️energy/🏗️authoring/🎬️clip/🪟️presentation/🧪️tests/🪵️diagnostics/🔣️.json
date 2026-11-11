@@ -1,0 +1,6 @@
+{
+  "nested": "i/b-12345678/run.log",
+  "message": "browser launch failed",
+  "expected": "browser-i-b-12345678-run.log",
+  "limit": 1048576
+}

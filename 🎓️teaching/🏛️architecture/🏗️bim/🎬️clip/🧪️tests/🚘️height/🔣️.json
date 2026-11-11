@@ -1,0 +1,36 @@
+{
+  "obstacle": {
+    "z0": 1.66,
+    "z1": 1.69
+  },
+  "expected": {
+    "vehicle_height": 1.7,
+    "detected": true
+  },
+  "note_cases": [
+    {
+      "text": "Car height1.65m is assumed",
+      "agrees": false
+    },
+    {
+      "text": "Fahrzeughöhe1,65m ist angenommen",
+      "agrees": false
+    },
+    {
+      "text": "Car height1.70m is assumed",
+      "agrees": true
+    },
+    {
+      "text": "Fahrzeughöhe1,70m ist angenommen",
+      "agrees": true
+    },
+    {
+      "text": "Car height is assumed",
+      "agrees": true
+    },
+    {
+      "text": "Die Fahrzeughöhe ist angenommen",
+      "agrees": true
+    }
+  ]
+}

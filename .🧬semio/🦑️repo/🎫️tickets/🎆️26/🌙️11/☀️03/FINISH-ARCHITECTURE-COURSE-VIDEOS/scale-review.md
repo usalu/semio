@@ -1,0 +1,18 @@
+# Staffage Scale Review
+
+Reviewed manifest scene scripts and shared fitting patterns against staffage-only guards, focusing on casts situated together with architecture or people. Fitted_staffage preserves aspect ratio; its fitted scale can still differ from the scene metre. Two concrete mixed-scale candidates were sent to energy_execution for assessment after the active batch.
+
+1. Ventilation volume _use_glyph, passiv branch: shared-mvhr-normal is fitted into 0.5 × 0.24 units while the person and other mini-room casts use _USE_UNIT=0.44 units/m. Cached cast bounds of approximately 0.70 × 0.762 m imply a fit of at most 0.315 units/m, about 28% smaller. The device and person share one room.
+2. Cooling heating-comparison _build_ahu: the cooler is fitted to 0.95 × 0.7 while mounted on a wall alongside the house. Cached bounds approximately 0.31 × 0.455 m imply about 1.54 units/m. The adjacent house storey height 1.2 units at 2.5 m clear height gives 0.48 units/m, approximately 3.2 times smaller. Confirm actual crop/visible bounds and intended schematic emphasis before changing.
+
+Many other fitted casts are isolated comparison icons or conceptual system diagrams, so their independent size is not by itself a shared-architecture defect. The BIM car and shared room metre fixes were already in progress. Static examination cannot prove every runtime grouping or generated geometry scale, and no source was modified.
+
+## Non-energy scenes and shared transforms
+
+Reviewed non-energy scene and helper call sites for staffage, fitted staffage, stretches and width/height fits. No additional confirmed shared-scene scale error was found. BIM information now supplies its plan scale directly to its car. BIM exchange scales the person to an explicit 1.75 m times the section view scale; BIM consistency people are separate review-card symbols. Excel program passes the capsule plan drawing scale directly to its top-view occupant, rotates and translates it. Optimization room uses its shared section metre for occupant, radiator and pendant lamps; experiments use their local drawing scale for the occupant. Optimization index carbon and lamp are explicitly criterion glyphs and extrema devices are icon rows, so their independent dimensions do not assert spatial co-location.
+
+The bridge _place applies the same scalar unit to both axes; fitted_staffage chooses a single minimum fit factor and therefore does not nonuniformly stretch cast geometry. The non-energy stretch search found heatmap raster strips and rulers, not a directly stretched cast; text labels use uniform fit. These are source-level observations, not an exhaustive proof through dynamic aliases or visual runtime inspection. No source edits or test runs were made in this review.
+
+## Semantic suitability
+
+Compared the 99 cast manifest names with their catalog asset IDs and inspected HVAC, power and vehicle usages. No additional confirmed physical-assembly class mismatch was established. BIM information uses vintage-car-1929 for its authored period vehicle. Mechanical ventilation names a decentralised heat-recovery fan and MVHR unit as such; heat-pump casts explicitly name outdoor heat-pump units. Compressor, evaporator, condenser and valve are employed in a conceptual refrigeration-cycle diagram. Primary-energy diagrams use a diesel generator as a symbolic power conversion or electricity-source glyph; this is not evidence that every represented grid source is diesel, and it should be judged as a diagram rather than physical plant specification. The previously identified cooling air-handling mismatch is being corrected by energy_execution. This static comparison cannot validate every dynamic semantic use or unseen frame.

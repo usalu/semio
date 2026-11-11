@@ -19,6 +19,14 @@ _nak = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakag
 _nakd = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🐍️")
 _fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+_snapshot = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️snapshot")
+_keyed = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️keyed")
+
+def _tower_display(drawing, camera, *overlays):
+    """🖼️ Present fixed tower geometry with separately animated overlays."""
+    return _engine.Group(_snapshot.capture(drawing, camera), *overlays)
+
+
 _engine = importlib.import_module("manim")
 
 INK, MUTED, DATA, GOOD, WARN, ARCH = _visuals.INK, _visuals.MUTED, _visuals.DATA, _visuals.GOOD, _visuals.WARN, _visuals.ARCH
@@ -77,6 +85,16 @@ def _rejected_capsules(solution, masks):
 def _rejected_ghosts(rejected, types, reference, to_plane):
     """👻 Draw the evaluated type and physical family at each rejected body plane."""
     return _engine.VGroup(*[_nakd._capsule_lite(_nakd._cap(types[geometry.tag["type"]]),to_plane(plane),reference.view,WARN,layout=geometry.tag["family"]).shift(reference.delta).set_opacity(.35) for _,_,plane,geometry in rejected])
+
+
+def _retire(scene, group):
+    """🧹 Remove a completed group and any children extracted during morphs."""
+    scene.remove(group, *group.get_family())
+
+
+def _release_drawing(display):
+    """🧹 Release the last semantic drawing while preserving its captured pixels."""
+    display._drawing_ref.value = None
 
 
 class Beat3_Tower(_visuals.ClipScene):
@@ -255,19 +273,20 @@ class Beat3_Tower(_visuals.ClipScene):
             return readout
 
         full = fit(self.tower_axon())
-        self.add(full)
-        current["drawing"] = full
+        full_display = _snapshot.capture(full, self.camera)
+        self.add(full_display)
+        current["drawing"] = full_display
         count_note = label(g(f"{total} documented capsules", f"{total} belegte Kapseln"))
         count_token = _morph.token(str(total), kind="number", color=DATA, size=1.5).move_to(np.array([.9, -2.3, 0.0]))
         count_group = e.VGroup(count_note, count_token)
-        stage("hook", canvas("orient"), full, count_group, via={"note": [e.FadeIn(count_note), _morph.gather(sils(full), count_token, run_time=1.6)]}, done=lambda: adopt(count_group))
+        stage("hook", canvas("orient"), full_display, count_group, via={"note": [e.FadeIn(count_note), _morph.gather(sils(full), count_token, run_time=1.6)]}, done=lambda: adopt(count_group))
         badges = {key: self.badge(g(*NAMES[key]), (-5.9 + i * 1.7, -2.3), color=COLORS[key], size=18) for i, key in enumerate(GROUP_KEYS)}
         cards = e.VGroup(*badges.values())
         part_sources = {"core": [_morph.silhouette(part) for part in full.cores.values()], "capsules": sils(full),
                         "capital": [_morph.silhouette(part) for part in full.capitals.values()], "podium": [_morph.silhouette(full.podium)]}
         self.add(*[shape for shapes in part_sources.values() for shape in shapes if shape not in self.mobjects])
         gathers = [_morph.gather(shapes, badges[key], run_time=1.4) for key, shapes in part_sources.items()]
-        stage("parts", canvas("core"), full, cards, via={"note": [e.FadeOut(current["note"]), *gathers, _morph.morph(_morph.token("", kind="plane", color=COLORS["planes"], size=1.4).move_to(full.get_center()), badges["planes"], run_time=1.4)]}, done=lambda: adopt(cards))
+        stage("parts", canvas("core"), full_display, cards, via={"note": [e.FadeOut(current["note"]), *gathers, _morph.morph(_morph.token("", kind="plane", color=COLORS["planes"], size=1.4).move_to(full.get_center()), badges["planes"], run_time=1.4)]}, done=lambda: adopt(cards))
 
         side = e.ValueTracker(self.B.core_side)
         pitch = e.ValueTracker(self.B.storey_height)
@@ -280,13 +299,20 @@ class Beat3_Tower(_visuals.ClipScene):
             return fit(self.core_axon(shaped))
 
         core_live = self.live(core_study, key=core_key)
-        core_net = self.live(lambda: canvas("core", {"side": core_key()[0], "sh": core_key()[1], "n": 1}), key=core_key)
+        core_net = _keyed.create(lambda: canvas("core", {"side": core_key()[0], "sh": core_key()[1], "n": 1}), core_key, self.camera)
         core_source = _morph.silhouette(list(full.cores.values())[-1])
+        del full
         self.add(core_source)
         stage("core", core_net, core_live, label(g("side × side × storeys × height", "Seite × Seite × Geschosse × Höhe")),
-              via={"drawing": [e.FadeOut(full), _morph.morph(core_source, core_live, run_time=1.8)]})
+              via={"drawing": [e.FadeOut(full_display), _morph.morph(core_source, core_live, run_time=1.8)]})
+        core_display = _keyed.create(lambda: (core_live.update(0), core_live)[1], core_key, self.camera)
+        self.remove(core_live, *core_live.get_family())
+        self.add(core_display)
         self.play(side.animate.set_value(self.B.core_side * 1.12), pitch.animate.set_value(self.B.storey_height * 1.08), run_time=1.5)
         self.play(side.animate.set_value(self.B.core_side), pitch.animate.set_value(self.B.storey_height), run_time=1.5)
+        self.remove(core_display)
+        core_live.update(0)
+        self.add(core_live)
         shaft = fit(self.core_axon(self.B))
         stage("shaft", canvas("core"), shaft, label(g("Walls · landings · lift · services", "Wände · Podeste · Aufzug · Versorgung")),
               via={"drawing": [_morph.morph(core_live, shaft, run_time=1.8)]})
@@ -298,12 +324,16 @@ class Beat3_Tower(_visuals.ClipScene):
         axis_rows = e.VGroup(*[self._axes(reference, self._plane(planes.branch(path)[0]), length=1.1, labels=False, scale=S_T) for path in planes.paths()])
         levels = fit(e.VGroup(reference, axis_rows))
         levels_core = list(levels[0].cores.values())[-1].copy()
+        levels = _tower_display(levels[0], self.camera, levels[1])
+        del reference
         stage("series", canvas("levels"), levels, label(g("One Series elevation per occupied level", "Eine Series-Höhe je belegter Ebene")),
               via={"drawing": [_morph.morph(shaft, levels_core, run_time=1.8), e.FadeIn(levels)]}, done=lambda: settle(levels_core))
         reference = self._tower(high, capital=False)
         first = planes.branch(planes.paths()[0])
         frame_axes = e.VGroup(*[self._axes(reference, self._plane(plane), length=1.0, labels=False, scale=S_T) for plane in first])
         frames = fit(e.VGroup(reference, frame_axes))
+        frames = _tower_display(frames[0], self.camera, frames[1])
+        del reference
         level_source = levels[1][0].copy()
         self.add(level_source)
         stage("facades", canvas("facades"), frames, label(g("Authored origin and handed port-frame axes", "Verfasster Ursprung und gerichtete Port-Achsen")),
@@ -319,29 +349,41 @@ class Beat3_Tower(_visuals.ClipScene):
         port_tokens = [_morph.token("", kind="plane", color=COLORS["planes"], size=.7).move_to(group.get_center()) for _, group in sorted(one_storey.capsules.items())]
         port_source = axes.copy()
         self.add(port_source)
-        stage("items", canvas("stagger"), e.VGroup(one_storey, *port_tokens), label(g(f"Up to {candidate_count} candidate ports per level; authored masks select occupancy", f"Bis zu {candidate_count} Ports je Ebene; verfasste Masken wählen die Belegung")),
-              via={"drawing": [e.FadeOut(axes), e.FadeIn(one_storey), _morph.split(port_source, port_tokens, run_time=1.4)]}, done=lambda: adopt(current["drawing"]))
+        one_display = _snapshot.capture(one_storey, self.camera)
+        del one_storey
+        stage("items", canvas("stagger"), e.Group(one_display, *port_tokens), label(g(f"Up to {candidate_count} candidate ports per level; authored masks select occupancy", f"Bis zu {candidate_count} Ports je Ebene; verfasste Masken wählen die Belegung")),
+              via={"drawing": [e.FadeOut(axes), e.FadeIn(one_display), _morph.split(port_source, port_tokens, run_time=1.4)]}, done=lambda: adopt(current["drawing"]))
         ordered = fit(self._tower(high, capital=False))
+        ordered_display = _snapshot.capture(ordered, self.camera)
         first_storey = shapes(ordered, lambda key: key[2] == 0)
-        stage("orient", canvas("orient"), ordered, label(g("Local door port → reconstructed world door port → body plane", "Lokaler Tür-Port → rekonstruierter Welt-Port → Körper-Ebene")),
-              via={"drawing": [e.FadeOut(current["drawing"]), e.FadeIn(ordered), _morph.scatter(port_tokens, first_storey, run_time=1.4)]}, done=lambda: settle(*first_storey))
+        stage("orient", canvas("orient"), ordered_display, label(g("Local door port → reconstructed world door port → body plane", "Lokaler Tür-Port → rekonstruierter Welt-Port → Körper-Ebene")),
+              via={"drawing": [e.FadeOut(current["drawing"]), e.FadeIn(ordered_display), _morph.scatter(port_tokens, first_storey, run_time=1.4)]}, done=lambda: settle(*first_storey))
         typed = fit(self._tower(high, types=True, capital=False))
+        typed_display = _snapshot.capture(typed, self.camera)
         neutral, coloured = sils(ordered), shapes(typed)
-        stage("types", canvas("orient"), typed, self._type_legend((-2.35, -2.3)),
-              via={"drawing": [e.FadeOut(ordered), e.FadeIn(typed), _morph.scatter(neutral, coloured, lag=.01, path_arc=0, run_time=1.4)]}, done=lambda: settle(*coloured))
+        del ordered
+        stage("types", canvas("orient"), typed_display, self._type_legend((-2.35, -2.3)),
+              via={"drawing": [e.FadeOut(ordered_display), e.FadeIn(typed_display), _morph.scatter(neutral, coloured, lag=.01, path_arc=0, run_time=1.4)]}, done=lambda: settle(*coloured))
 
         count = e.ValueTracker(1)
         shown = lambda: max(1, min(high, int(round(count.get_value()))))
-        growing = self.live(lambda: fit(self._tower(shown(), types=True)), key=shown)
-        growing_net = self.live(lambda: canvas("storeys", {"n": shown()}), key=shown)
+        growing = _keyed.create(lambda: fit(self._tower(shown(), types=True)), shown, self.camera, retain=True)
+        growing_net = _keyed.create(lambda: canvas("storeys", {"n": shown()}), shown, self.camera)
         growing_sum = self.live_label(lambda: f"Σ ({', '.join(map(str, lengths[:shown()]))}) = {sum(lengths[:shown()])}", (-2.35, -2.3), size=22, color=TXT)
         growing_token = self.live_label(lambda: str(sum(lengths[:shown()])), (1.8, -2.3), size=30, color=TXT)
         growing_group = e.VGroup(growing_sum, growing_token)
         stage("count", growing_net, growing, growing_group,
               via={"note": [e.FadeOut(current["note"]), e.FadeIn(growing_sum), _morph.gather(sils(typed), growing_token, run_time=1.6)]}, done=lambda: adopt(growing_group))
+        del typed
+        sum_display = _keyed.create(lambda: (growing_sum.update(0), growing_sum)[1], shown, self.camera)
+        token_display = _keyed.create(lambda: (growing_token.update(0), growing_token)[1], shown, self.camera)
+        self.remove(growing_group, *growing_group.get_family())
+        growing_group = e.Group(sum_display, token_display)
+        self.add(growing_group)
+        current["note"] = growing_group
         self.play(count.animate.set_value(high), run_time=4)
         half = max(1, high // 2)
-        half_tag = _morph.token(str(half), kind="number", color=COLORS["capsules"], size=1.1).move_to(growing.get_top() + np.array([.9, .1, 0.0]))
+        half_tag = _morph.token(str(half), kind="number", color=COLORS["capsules"], size=1.1).move_to(growing._drawing_ref.value.get_top() + np.array([.9, .1, 0.0]))
         half_end = _morph.token(str(half), kind="number", color=COLORS["capsules"], size=1.1).move_to(np.array([.9, -1.85, 0.0]))
         self.step("nowire", count.animate.set_value(half), _morph.morph(half_tag, half_end, path_arc=.5, run_time=1.6), seconds=3)
         self.play(e.FadeOut(half_end), count.animate.set_value(high), run_time=2)
@@ -357,16 +399,20 @@ class Beat3_Tower(_visuals.ClipScene):
         ghosts = _rejected_ghosts(rejected, types, ghost_reference, self._plane)
         flawed = fit(e.VGroup(ghost_reference, ghosts))
         phantoms = [ghost.copy() for ghost in flawed[1]]
-        flawed_all = e.VGroup(flawed[0], *phantoms)
+        flawed_all = _tower_display(flawed[0], self.camera, *phantoms)
+        del flawed, ghost_reference
         candidate_tokens = [_morph.token(str(index), kind="item", color=WARN).move_to(np.array([.6 + .6 * i, -2.3, 0.0])) for i, index in enumerate(rejected_index)]
         stage("mistake", canvas("cull", unmasked), flawed_all, label(g(f"Unmasked candidates: {wrong_count}", f"Unmaskierte Kandidaten: {wrong_count}")),
-              via={"drawing": [e.FadeOut(growing), e.FadeIn(flawed[0]), _morph.scatter(candidate_tokens, phantoms, lag=.2, path_arc=.4, run_time=1.4)]}, done=lambda: adopt(flawed_all))
+              via={"drawing": [e.FadeOut(growing), e.FadeIn(flawed_all[0]), _morph.scatter(candidate_tokens, phantoms, lag=.2, path_arc=.4, run_time=1.4)]}, done=lambda: adopt(flawed_all))
+        _release_drawing(growing)
+        del growing
         fixed = fit(self._tower(high))
+        fixed_display = _snapshot.capture(fixed, self.camera)
         fix_note = label(g(f"Σ documented B levels = {sum(lengths)}", f"Σ belegte B-Ebenen = {sum(lengths)}"))
         cull_tokens = [_morph.token(str(index), kind="item", color=WARN).move_to(np.array([.25 + .6 * i, -2.3, 0.0])) for i, index in enumerate(rejected_index)]
         fix_group = e.VGroup(fix_note, *cull_tokens)
-        stage("fix", canvas("cull"), fixed, fix_group,
-              via={"drawing": [e.FadeOut(flawed_all), e.FadeIn(fixed)],
+        stage("fix", canvas("cull"), fixed_display, fix_group,
+              via={"drawing": [e.FadeOut(flawed_all), e.FadeIn(fixed_display)],
                    "note": [e.FadeOut(current["note"]), e.FadeIn(fix_note), _morph.scatter([_morph.silhouette(phantom) for phantom in phantoms], cull_tokens, lag=.2, path_arc=.4, run_time=1.4)]},
               done=lambda: adopt(fix_group))
 
@@ -376,63 +422,86 @@ class Beat3_Tower(_visuals.ClipScene):
         cap_live = self.live(lambda: fit(self.capital_axon(dataclasses.replace(self.B, capital_overhang=cap_key()[0], capital_height=cap_key()[1]))), key=cap_key)
         cap_net = self.live(lambda: canvas("capital", {"ow": cap_key()[0], "ch": cap_key()[1]}), key=cap_key)
         cap_source = _morph.silhouette(list(fixed.capitals.values())[-1])
+        del fixed
         cap_tags = []
         for slider, value, spot in (("ch", self.B.capital_height, VY + 2.0), ("ow", self.B.capital_overhang, VY + 1.5)):
             text = f"{self.number(value)} m"
             cap_tags.append((_morph.token(text, kind="number", color=COLORS["capital"], size=1.1).move_to(cap_net.obj(slider).get_center()),
                              _morph.token(text, kind="number", color=COLORS["capital"], size=1.1).move_to(np.array([VX + 1.1, spot, 0.0]))))
-        stage("capital", cap_net, cap_live, label(g("Capital: independent height and overhang", "Kopf: unabhängige Höhe und Überstand")),
-              via={"drawing": [e.FadeOut(fixed), _morph.morph(cap_source, cap_live, run_time=1.6), *[_morph.morph(start, end, path_arc=.5, run_time=1.6) for start, end in cap_tags]]},
+        cap_net_display = _keyed.create(lambda: (cap_net.update(0), cap_net)[1], cap_key, self.camera)
+        stage("capital", cap_net_display, cap_live, label(g("Capital: independent height and overhang", "Kopf: unabhängige Höhe und Überstand")),
+              via={"drawing": [e.FadeOut(fixed_display), _morph.morph(cap_source, cap_live, run_time=1.6), *[_morph.morph(start, end, path_arc=.5, run_time=1.6) for start, end in cap_tags]]},
               done=lambda: (self.play(e.FadeOut(e.VGroup(*[end for _, end in cap_tags])), run_time=.4), self.remove(*[end for _, end in cap_tags])))
+        cap_display = _keyed.create(lambda: (cap_live.update(0), cap_live)[1], cap_key, self.camera)
+        self.remove(cap_live, *cap_live.get_family())
+        self.add(cap_display)
         self.play(overhang.animate.set_value(self.B.capital_overhang + .25), cap_height.animate.set_value(self.B.capital_height * 1.15), run_time=1.5)
+        self.remove(cap_display)
+        cap_live.update(0)
+        self.add(cap_live)
         count.set_value(1)
-        rising = self.live(lambda: fit(self._tower(shown())), key=shown)
+        rising = fit(self._tower(shown()))
+        rising_display = _keyed.create(lambda: fit(self._tower(shown())), shown, self.camera, initial=rising, retain=True)
         rising_net = self.live(lambda: canvas("height", {"n": shown()}), key=shown)
         storey_tag = _morph.token(str(shown()), kind="number", color=COLORS["capsules"], size=1.1).move_to(rising_net.obj("n").get_center())
         storey_end = _morph.token(str(shown()), kind="number", color=COLORS["capsules"], size=1.1).move_to(rising.get_top() + np.array([.9, .1, 0.0]))
         rising_head = list(rising.capitals.values())[-1].copy()
-        stage("ontop", rising_net, rising, label(g("The head follows the selected tower height", "Der Kopf folgt der gewählten Turmhöhe")),
-              via={"drawing": [_morph.morph(cap_live, rising_head, run_time=1.6), e.FadeIn(rising), _morph.morph(storey_tag, storey_end, path_arc=.5, run_time=1.6)]},
+        del rising
+        rising_net_display = _keyed.create(lambda: (rising_net.update(0), rising_net)[1], shown, self.camera)
+        stage("ontop", rising_net_display, rising_display, label(g("The head follows the selected tower height", "Der Kopf folgt der gewählten Turmhöhe")),
+              via={"drawing": [_morph.morph(cap_live, rising_head, run_time=1.6), e.FadeIn(rising_display), _morph.morph(storey_tag, storey_end, path_arc=.5, run_time=1.6)]},
               done=lambda: (settle(rising_head), self.play(e.FadeOut(storey_end), run_time=.4), self.remove(storey_end)))
         self.play(count.animate.set_value(high), run_time=3)
         podium = fit(self.podium_axon())
         podium_net = canvas("podium")
         footprint = podium_net.obj("rect").copy()
         stage("podium", podium_net, podium, label(g("Slabs · columns · glazing · entrance", "Decken · Stützen · Verglasung · Eingang")),
-              via={"drawing": [e.FadeOut(rising), _morph.morph(footprint, podium, run_time=1.6)]})
+              via={"drawing": [e.FadeOut(rising_display), _morph.morph(footprint, podium, run_time=1.6)]})
+        _release_drawing(rising_display)
+        del rising_display
         whole = fit(self.tower_axon(types=False))
+        whole_display = _snapshot.capture(whole, self.camera)
         whole_base = whole.podium.copy()
-        stage("why", canvas("orient"), whole, label(g("Shared named assemblies carry detail through every view", "Gemeinsame benannte Baugruppen tragen Details in jede Ansicht")),
-              via={"drawing": [_morph.morph(podium, whole_base, run_time=1.6), e.FadeIn(whole)]}, done=lambda: settle(whole_base))
+        del whole
+        stage("why", canvas("orient"), whole_display, label(g("Shared named assemblies carry detail through every view", "Gemeinsame benannte Baugruppen tragen Details in jede Ansicht")),
+              via={"drawing": [_morph.morph(podium, whole_base, run_time=1.6), e.FadeIn(whole_display)]}, done=lambda: settle(whole_base))
+        del whole_base
 
         per_tower = _nak.totals()["per_tower"]
         tinted = fit(self.tower_axon(types=False, tint={(0, 0): ARCH, (0, 1): WARN}))
+        tinted_display = _snapshot.capture(tinted, self.camera)
         number_a = _morph.token(str(per_tower["A"]["count"]), kind="number", color=ARCH, size=1.3).move_to(np.array([.7, -2.3, 0.0]))
         number_b = _morph.token(str(per_tower["B"]["count"]), kind="number", color=WARN, size=1.3).move_to(np.array([1.7, -2.3, 0.0]))
         towers_note = label(g("A: 76 capsules · B: 64 capsules", "A: 76 Kapseln · B: 64 Kapseln"))
         towers_group = e.VGroup(towers_note, number_a, number_b)
-        stage("towers", canvas("storeys"), tinted, towers_group,
-              via={"drawing": [e.FadeOut(whole), e.FadeIn(tinted)],
+        stage("towers", canvas("storeys"), tinted_display, towers_group,
+              via={"drawing": [e.FadeOut(whole_display), e.FadeIn(tinted_display)],
                    "note": [e.FadeOut(current["note"]), e.FadeIn(towers_note), _morph.gather(sils(tinted, lambda k: k[1] == 0), number_a, run_time=1.6), _morph.gather(sils(tinted, lambda k: k[1] == 1), number_b, run_time=1.6)]},
               done=lambda: adopt(towers_group))
+        del tinted
         plain = fit(self.tower_axon(types=False))
+        plain_display = _snapshot.capture(plain, self.camera)
         lit_a, lit_b = shapes(plain, lambda k: k[1] == 0), shapes(plain, lambda k: k[1] == 1)
         total_note = label(f"{per_tower['A']['count']} + {per_tower['B']['count']} = {total}")
-        stage("total", canvas("cull"), plain, total_note,
-              via={"drawing": [e.FadeOut(tinted), e.FadeIn(plain)],
+        stage("total", canvas("cull"), plain_display, total_note,
+              via={"drawing": [e.FadeOut(tinted_display), e.FadeIn(plain_display)],
                    "note": [e.FadeOut(towers_group), e.FadeIn(total_note), _morph.split(number_a, lit_a, run_time=1.6), _morph.split(number_b, lit_b, run_time=1.6)]},
-              done=lambda: settle(*lit_a, *lit_b))
+              done=lambda: (settle(*lit_a, *lit_b), _retire(self, towers_group)))
+        del lit_a, lit_b
         old_key, new_key = "B", "C"
         programs = self.capsule_axon(types[new_key], at=(VX, VY, 0), scale=.6, cutaway=True, interior="study")
         kind_of = {(s.building, s.tower, s.storey, s.facade, s.item): s.type for s in self._slots}
         pick = lambda letter: next(key for key in sorted(plain.capsules) if kind_of[key] == letter)
         old_source = _morph.silhouette(plain.capsules[pick(old_key)])
+        del pick, plain
         stage("swap", canvas("orient"), programs, label(g("Program B → C; the historical 1.30 m porthole stays", "Programm B → C; das historische Bullauge mit 1,30 m bleibt")),
-              via={"drawing": [e.FadeOut(plain), _morph.morph(old_source, programs, run_time=1.8)]})
+              via={"drawing": [e.FadeOut(plain_display), _morph.morph(old_source, programs, run_time=1.8)]})
         final = fit(self.tower_axon())
+        final_display = _snapshot.capture(final, self.camera)
         cards_end = e.VGroup(*[self.badge(g(*NAMES[key]), (-5.9 + i * 1.7, -2.3), color=COLORS[key], size=18) for i, key in enumerate(GROUP_KEYS)])
         recap_parts = {"planes": [_morph.token("", kind="plane", color=COLORS["planes"], size=1.4).move_to(final.get_center())], "core": [_morph.silhouette(part) for part in final.cores.values()], "capsules": shapes(final),
                        "capital": [_morph.silhouette(part) for part in final.capitals.values()], "podium": [_morph.silhouette(final.podium)]}
+        del final
         splits = [_morph.split(_morph.silhouette(badge), recap_parts[key], run_time=1.6) for key, badge in zip(GROUP_KEYS, cards_end) if key in recap_parts]
-        stage("recap", canvas("orient"), final, cards_end,
-              via={"drawing": [e.FadeOut(programs), e.FadeIn(final), *splits]}, done=lambda: settle(*[shape for shapes_ in recap_parts.values() for shape in shapes_]))
+        stage("recap", canvas("orient"), final_display, cards_end,
+              via={"drawing": [e.FadeOut(programs), e.FadeIn(final_display), *splits]}, done=lambda: settle(*[shape for shapes_ in recap_parts.values() for shape in shapes_]))

@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import {fileURLToPath,pathToFileURL} from "node:url";
 import {createRequire} from "node:module";
-import {accelerateClock,finishTransitions,launchBrowser} from "./🧰️tools.mjs";
+import {accelerateClock,captureNativePaint,paintBarrier,finishIncidentalTransitions,launchBrowser,presentationTransitionStyle} from "./🧰️tools.mjs";
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 const root=process.cwd();
@@ -116,10 +116,12 @@ try{
     try{if(!image)sources.add(local);return route.fulfill({contentType:mime(local),body:await fs.readFile(local)})}catch{return route.abort()}
   });
   await page.goto("http://presentation.local/");
+  await captureNativePaint(page);
   await page.clock.install({time:new Date(0)});
   await page.clock.pauseAt(new Date(1000));
   await accelerateClock(page);
   await page.addStyleTag({content:css});
+  await page.addStyleTag({content:presentationTransitionStyle});
   await page.addScriptTag({content:bundle.outputFiles[0].text});
   await page.evaluate(value=>window.semioPresentation.configure(value),{contract,icons,cursors,cursorSizes,language:batch.language,viewport});
   await page.evaluate(()=>{window.semioPresentation.pointerEvents=[];for(const type of ["pointerdown","pointerup","click"])document.addEventListener(type,event=>{const button=event.target instanceof Element?event.target.closest("button"):null;window.semioPresentation.pointerEvents.push({type,target:button?.id||button?.getAttribute("data-presentation-card")||button?.getAttribute("data-slot")||null,point:[event.clientX,event.clientY]})},true)});
@@ -140,10 +142,12 @@ try{
     if(point)await page.mouse.move(point[0],point[1]);else await page.mouse.move(1610,910);
     if(frame.cursor?.pressed&&!down){await page.mouse.down();down=true}else if(!frame.cursor?.pressed&&down){await page.mouse.up();down=false}
     await page.clock.runFor(frame.transition_elapsed??1000);
-    await finishTransitions(page);
+    await finishIncidentalTransitions(page);
     await page.evaluate(elapsed=>{window.semioPresentation.animationTimes??=new WeakMap();for(const animation of document.getAnimations()){const time=(window.semioPresentation.animationTimes.get(animation)??0)+elapsed;animation.pause();animation.currentTime=time;window.semioPresentation.animationTimes.set(animation,time)}},frame.transition_elapsed??1000);
-    for(let attempt=0;attempt<4&&!await page.evaluate(()=>window.semioPresentation.settled());attempt++)await page.clock.runFor(34);
-    if(!await page.evaluate(()=>window.semioPresentation.settled()))throw Error("Actual semio silhouette did not settle: "+JSON.stringify(await page.evaluate(()=>window.semioPresentation.debugGeometry())));
+    await finishIncidentalTransitions(page);
+    await paintBarrier(page);
+    for(let attempt=0;attempt<60&&!await page.evaluate(()=>window.semioPresentation.settled());attempt++){await finishIncidentalTransitions(page);await page.clock.runFor(34);await paintBarrier(page)}
+    if(!await page.evaluate(()=>window.semioPresentation.settled()))throw Error("Actual semio silhouette did not settle: "+JSON.stringify(await page.evaluate(()=>({geometry:window.semioPresentation.debugGeometry(),roots:[...document.querySelectorAll("[data-shared-border-root]")].map(root=>({pending:root.hasAttribute("data-shared-border-pending")})),pending:[...document.querySelectorAll("[data-window-silhouette-border][data-pending]")].length,animations:document.getAnimations().map(a=>({playState:a.playState,property:a.transitionProperty}))})))+" page errors: "+errors.join("; "));
     if(errors.length)throw Error("Actual semio presentation UI raised: "+errors.join("; "));
     if(!await page.evaluate(()=>document.fonts.check("11.2px Anta")))throw Error("Canonical Anta did not load");
     const actualCursor=await page.evaluate(async({point,scale})=>{
@@ -188,9 +192,12 @@ try{
     info.content_camera=await page.evaluate(value=>window.semioPresentation.contentCamera(value),frame.content_camera??null);
     await page.evaluate(()=>window.dispatchEvent(new Event("resize")));
     const pendingAfterCamera=!await page.evaluate(()=>window.semioPresentation.settled());
-    for(let attempt=0;attempt<4&&!await page.evaluate(()=>window.semioPresentation.settled());attempt++)await page.clock.runFor(34);
-    if(!await page.evaluate(()=>window.semioPresentation.settled()))throw Error("Actual semio silhouette did not settle after content camera: "+JSON.stringify(await page.evaluate(()=>window.semioPresentation.debugGeometry())));
+    await finishIncidentalTransitions(page);
+    await paintBarrier(page);
+    for(let attempt=0;attempt<60&&!await page.evaluate(()=>window.semioPresentation.settled());attempt++){await finishIncidentalTransitions(page);await page.clock.runFor(34);await paintBarrier(page)}
+    if(!await page.evaluate(()=>window.semioPresentation.settled()))throw Error("Actual semio silhouette did not settle after content camera: "+JSON.stringify(await page.evaluate(()=>({geometry:window.semioPresentation.debugGeometry(),roots:[...document.querySelectorAll("[data-shared-border-root]")].map(root=>({pending:root.hasAttribute("data-shared-border-pending")})),pending:[...document.querySelectorAll("[data-window-silhouette-border][data-pending]")].length,animations:document.getAnimations().map(a=>({playState:a.playState,property:a.transitionProperty}))})))+" page errors: "+errors.join("; "));
     info.border_compositor={pending_after_camera:pendingAfterCamera,ready_before_capture:true};
+    info.motion_policy=await page.evaluate(()=>({css_transitions:document.getAnimations().filter(a=>a instanceof CSSTransition).length,keyframe_animations:document.getAnimations().filter(a=>a instanceof CSSAnimation).length}));
     const borders=await page.evaluate(()=>Object.fromEntries([...document.querySelectorAll("[data-presentation-window]")].map(stack=>{const border=stack.querySelector("[data-window-silhouette-border]");return [stack.getAttribute("data-presentation-window"),[...(border?.querySelectorAll("path")??[])].filter(path=>path.getAttribute("d")).map(path=>({path:path.getAttribute("d"),state:path.getAttribute("data-shared-border-state")??border.getAttribute("data-kind"),color:getComputedStyle(path).stroke}))]})));
     for(const window of info.windows)window.border_segments=borders[window.id]??[];
     await fs.mkdir(path.dirname(frame.output),{recursive:true});

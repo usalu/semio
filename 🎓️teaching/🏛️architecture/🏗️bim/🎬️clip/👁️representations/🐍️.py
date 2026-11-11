@@ -925,7 +925,7 @@ class Beat3_SameObject(_visuals.ClipScene):
         x_from, ox, oy = wall["length"] - 2.0, -6.3, 1.0
         strip = self._jamb("body", ox, oy, k, x_from)
         end = ox + k * (wall["length"] - x_from)
-        dims = _engine.VGroup(self._dimension(P((end, oy)), P((end, oy + k * t)), f"{self.quantity(t, 'm')} = {self.number(t * 1000 / 20, 0)} mm" + self._basis("thickness"), offset=-0.16, color=DATA),
+        dims = _engine.VGroup(self._dimension(P((end, oy)), P((end, oy + k * t)), f"{self.quantity(t, 'm')} → {self.number(t * 1000 / 20, 1)} mm" + self._basis("thickness"), offset=-0.16, color=DATA),
                               self._dimension(P((ox + k * (op["end"] - x_from), oy)), P((end, oy)), self.quantity(wall["length"] - op["end"], "m") + self._basis("end"), offset=-0.2, color=DATA))
         glass = self.text(self.tr("glass line", "Glaslinie"), (ox + 0.1, oy + k * t + 0.25, 0), size=S_SMALL, color=GLASS, anchor="l")
         bar = _engine.VGroup(self.text("1:20", (1.4, 2.85, 0), size=S_BODY, color=DATA, anchor="r"), self.scale_bar(P((-6.3, 0.1)), k, 2, steps=2))

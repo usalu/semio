@@ -1,0 +1,20 @@
+{
+  "languages": [
+    "en",
+    "de"
+  ],
+  "ids": [
+    "w",
+    "l",
+    "h",
+    "r",
+    "d",
+    "wu",
+    "bu",
+    "bvl",
+    "bvh"
+  ],
+  "minimum_margin": 0.08,
+  "frame_width": 14.222222222222221,
+  "frame_height": 8
+}

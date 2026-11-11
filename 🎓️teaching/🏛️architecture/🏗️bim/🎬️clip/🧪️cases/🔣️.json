@@ -1906,13 +1906,15 @@
       "value": "4.75"
     },
     {
-      "id": "negative-slab-thickness",
+      "id": "negative-slab-region-thickness",
       "path": [
         "elements",
         {
           "tag": "SL-1"
         },
-        "attributes",
+        "geometry",
+        "regions",
+        0,
         "thickness",
         "value"
       ],

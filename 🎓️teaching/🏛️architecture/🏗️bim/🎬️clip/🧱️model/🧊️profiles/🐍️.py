@@ -160,4 +160,4 @@ def tube_routes(routes: list, exact: bool = False) -> list:
         visiting.remove(key);resolved[key] = points
         return points
     return [{**deepcopy(record),'points':resolve(record['id']) if exact else [[float(v)for v in p]for p in resolve(record['id'])]}for record in routes]
-
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

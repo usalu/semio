@@ -17,6 +17,9 @@ _gh = importlib.import_module("🎓️teaching.🏛️architecture.🦗️grassh
 _nk = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🐍️")
 _drawing = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🐍️")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+_snapshot = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️snapshot")
+_live_scene = importlib.import_module("🎓️teaching.🧰️interop.🎬️scene.🐍️")
+_keyed = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️keyed")
 _canvas = _visuals._canvas
 _art = _visuals._art
 _engine = _visuals._engine
@@ -35,6 +38,13 @@ LABELS = {"Width": ("Width", "Breite"), "Length": ("Length", "Länge"), "Height"
 
 
 NB, NA = (next(t.capsule_storeys for t in _nk.towers() if t.index == index) for index in (1, 0))
+
+
+def _preview_key(state, dimensions):
+    """📦 Track only inputs that change the visible analytical box or fixed capsule."""
+    measured = tuple(round(value, 3) for value in dimensions) if state["visible"] and state["mode"] == "box" else ()
+    return (state["visible"], state["mode"], state["type"], state["window"], state["dims"], state["sun"], state["scale"],
+            state["box"], tuple(sorted((key, repr(value)) for key, value in state["overrides"].items())), measured)
 
 
 def _figures(rows):
@@ -63,7 +73,7 @@ def _at(x, y):
     return SHEET + np.array([x, y, 0.0])
 
 
-class Beat1_Anatomy(_visuals.ClipScene):
+class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
     """🦴 Teach the parts of a Grasshopper script on the parametric Nakagin capsule, then data from item to list to tree."""
 
     TITLE = {"en": "Anatomy of a Grasshopper Script", "de": "Aufbau eines Grasshopper-Skripts"}
@@ -254,6 +264,16 @@ class Beat1_Anatomy(_visuals.ClipScene):
         """⏩ Step an integer tracker through ``sequence`` in equal time slices."""
         return _engine.UpdateFromAlphaFunc(tracker, lambda mob, alpha: mob.set_value(sequence[min(int(alpha * len(sequence)), len(sequence) - 1)]), rate_func=_engine.linear, run_time=seconds)
 
+    def _reveal_then(self, view, animation, seconds):
+        """⏯️ Reveal a live view before changing its tracker."""
+        return _engine.Succession(_engine.FadeIn(view, run_time=0.4), animation, run_time=seconds)
+
+    def _value_sequence(self, *views):
+        """🔢 Reveal value-list views before stepping the selected type."""
+        reveal = _engine.AnimationGroup(*[_engine.FadeIn(view) for view in views], run_time=0.5)
+        advance = _engine.AnimationGroup(self._ramp_index(self.vl_index, (0, 1, 3, 2), 1.9), self._type_follow(1.9), run_time=1.9)
+        return _engine.Succession(reveal, advance)
+
     def _type_follow(self, seconds):
         """🔁 Make the viewport capsule follow the value list index."""
         return _engine.UpdateFromAlphaFunc(_engine.Mobject(), lambda mob, alpha: self.view_state.update(type="ABCD"[int(self.vl_index.get_value())]), run_time=seconds, rate_func=_engine.linear)
@@ -273,12 +293,16 @@ class Beat1_Anatomy(_visuals.ClipScene):
             if state["mode"] == "box":
                 over = {"w": round(self.W.get_value(), 3), "bl": round(self.L.get_value(), 3), "bh": round(self.H.get_value(), 3)}
                 x, y, z = self._dims_of(_gh.evaluate(state["definition"], {**{k: v for k, v in over.items() if k in state["definition"].objects}, **state["overrides"]}), state["box"])
-                shape, diameter = {"dimensional_basis": "physical", "width": x, "length": y, "height": z, "corner_radius": 0.0, "key": "A"}, _nk.capsule_type("A").window_diameter
+                diameter = _nk.capsule_type("A").window_diameter
+                drawing = self.analytical_box_axon(x, y, z, at=VIEW + np.array([-0.2, 0.12, 0.0]), scale=state["scale"], base=_canvas.PREVIEW_FILL,
+                                                   dims=bool(state["dims"]))
+                for name in set(drawing.dims) - set(state["dims"]):
+                    drawing.remove(drawing.dims.pop(name))
             else:
                 shape = _nk.capsule_type(state["type"])
                 diameter = shape.window_diameter
-            drawing = self.capsule_axon(shape, at=VIEW + np.array([-0.2, 0.12, 0.0]), scale=state["scale"], base=_canvas.PREVIEW_FILL, window=state["window"],
-                                        dims=tuple(d for d in state["dims"] if d != "window"), dim_offset=0.4)
+                drawing = self.capsule_axon(shape, at=VIEW + np.array([-0.2, 0.12, 0.0]), scale=state["scale"], base=_canvas.PREVIEW_FILL, window=state["window"],
+                                            dims=tuple(d for d in state["dims"] if d != "window"), dim_offset=0.4)
             for name, group in drawing.dims.items():
                 group.set_color(DIMCOL[name])
             if state["window"] and "window" in state["dims"]:
@@ -290,9 +314,8 @@ class Beat1_Anatomy(_visuals.ClipScene):
                 drawing.add(_engine.Circle(radius=radius * 1.12, stroke_width=0, fill_color="#F08A00", fill_opacity=0.62).move_to(centre))
             return drawing
 
-        key = lambda: (state["visible"], state["mode"], state["type"], state["window"], state["dims"], state["sun"], state["scale"], state["box"], tuple(sorted(state["overrides"])),
-                       round(self.W.get_value(), 3), round(self.L.get_value(), 3), round(self.H.get_value(), 3))
-        return self.live(build, key)
+        key = lambda: _preview_key(state, (self.W.get_value(), self.L.get_value(), self.H.get_value()))
+        return _keyed.create(build, key, self.camera)
 
     def _tower(self):
         """🗼 The live tower in the Rhino viewport with the capsules chosen by ``tower_state["lit"]`` outlined."""
@@ -309,7 +332,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
                 drawing.add(self.leader(spot + np.array([dx - 0.05 * np.sign(dx), dy, 0.0]), spot, None, color=DARK, dot=True), label)
             return drawing
 
-        return self.live(build, lambda: (state["key"](), state["towers"], tuple(m[0] for m in state["marks"]())))
+        return _keyed.create(build, lambda: (state["key"](), state["towers"], tuple(m[0] for m in state["marks"]())), self.camera)
 
     def _frame_rows(self, widget, rows, color):
         """🟨 A translucent band behind the given panel row indices."""
@@ -404,6 +427,13 @@ class Beat1_Anatomy(_visuals.ClipScene):
         self.remove(fixed)
         self.add(new)
 
+    def _strip(self, kinds, slots_n):
+        """🖼️ Capture the fixed type strip once for its opacity-only presentation."""
+        group = _engine.VGroup(*[self.capsule_axon(t, at=_at(-3.0 + 2.0 * i, 0.2), scale=0.2, base=_canvas.PREVIEW_FILL, window=True) for i, t in enumerate(kinds)],
+                               *[self._note(t.key, _at(-3.0 + 2.0 * i, -0.45)) for i, t in enumerate(kinds)],
+                               self._note(self.tr(f"one definition: {len(kinds)} types, {slots_n} placements", f"eine Definition: {len(kinds)} Typen, {slots_n} Plätze"), _at(0.0, -1.0), color=SOFT))
+        return _snapshot.capture(group, self.camera)
+
     def _sweep(self, group):
         """🧹 Remove a staged group and every top-level mobject that is one of its parts."""
         family = {id(m) for m in group.get_family()}
@@ -434,19 +464,19 @@ class Beat1_Anatomy(_visuals.ClipScene):
         first_key = tuple((*authored_slots[0].path, authored_slots[0].item))
         slots_n = len(authored_slots)
         whole = self.tower_axon(**self.gh_building_fit(viewport, towers=(0, 1), podium=True, capital=True), lit=lambda k: k == first_key, segments=1, ground=False, types=False, towers=(0, 1), podium=True)
+        whole_display = _snapshot.capture(whole, self.camera)
         whole_note = self._note(self.tr(f"1 of {slots_n} capsules", f"1 von {slots_n} Kapseln"), VIEW + np.array([VIEW_W / 2 - 0.12, VIEW_H / 2 - 0.24, 0.0]), anchor="r")
-        self.step("hook", _engine.FadeIn(sheet), _engine.FadeIn(ribbon), _engine.FadeIn(viewport), _engine.FadeIn(whole), _engine.FadeIn(whole_note), _engine.FadeIn(model_note), seconds=1.4)
+        self.step("hook", _engine.FadeIn(sheet), _engine.FadeIn(ribbon), _engine.FadeIn(viewport), _engine.FadeIn(whole_display), _engine.FadeIn(whole_note), _engine.FadeIn(model_note), seconds=1.4)
 
         chip = self._tag("Nakagin_Capsule.gh", _at(-3.0, 1.45))
         canvas_tag = self._tag("Canvas", _at(3.6, 1.45))
         frame = _engine.SurroundingRectangle(sheet, buff=0.0, color=_art.P_PRIMARY, stroke_width=3)
         kinds = _nk.capsule_types()
-        strip = _engine.VGroup(*[self.capsule_axon(t, at=_at(-3.0 + 2.0 * i, 0.2), scale=0.2, base=_canvas.PREVIEW_FILL, window=True) for i, t in enumerate(kinds)],
-                               *[self._note(t.key, _at(-3.0 + 2.0 * i, -0.45)) for i, t in enumerate(kinds)],
-                               self._note(self.tr(f"one definition: {len(kinds)} types, {slots_n} placements", f"eine Definition: {len(kinds)} Typen, {slots_n} Plätze"), _at(0.0, -1.0), color=SOFT))
+        strip = self._strip(kinds, slots_n)
         lit_capsule = whole.capsules[first_key].copy().set_z_index(8)
+        del whole
         self.add(lit_capsule)
-        self.step("script", _engine.FadeOut(whole), _engine.FadeOut(whole_note), _engine.FadeIn(preview), lit_capsule.animate.scale(4.0).move_to(WINDOW_AT).set_stroke(color="#F2C200", width=2.5), _engine.Create(frame), _engine.FadeIn(canvas_tag), _engine.FadeIn(strip), _engine.FadeOut(model_note), seconds=1.2)
+        self.step("script", _engine.FadeOut(whole_display), _engine.FadeOut(whole_note), _engine.FadeIn(preview), lit_capsule.animate.scale(4.0).move_to(WINDOW_AT).set_stroke(color="#F2C200", width=2.5), _engine.Create(frame), _engine.FadeIn(canvas_tag), _engine.FadeIn(strip), _engine.FadeOut(model_note), seconds=1.2)
         self.play(_morph.morph(lit_capsule, chip, pairs=_morph.capsule_pairs(lit_capsule, chip), path_arc=0.4, run_time=1.4, dip=0.15), run_time=1.4)
         self.play(_engine.FadeOut(frame), run_time=0.3)
 
@@ -455,8 +485,9 @@ class Beat1_Anatomy(_visuals.ClipScene):
                                self._note(self.tr("Domain 1.0 to 5.0 · one decimal", "Bereich 1,0 bis 5,0 · 1 Dezimalstelle"), _at(SL_X, 0.1)))
         self.view_state["dims"] = ("width",)
         self.W.set_value(settings["w"]["min"])
+        w_slider.update(0)
         hop_w, hop_w_end = self._hop(self.number(settings["w"]["value"], 1), _at(SL_X + 1.3, 1.0), VIEW + np.array([-0.2, -1.1, 0.0]), cw)
-        self.step("slider", _engine.FadeOut(chip), _engine.FadeOut(canvas_tag), _engine.FadeOut(strip), _engine.FadeIn(w_slider), _engine.FadeIn(notes), self._ramp(self.W, settings["w"]["min"], settings["w"]["value"], 1.4), hop_w, seconds=1.4)
+        self.step("slider", _engine.FadeOut(chip), _engine.FadeOut(canvas_tag), _engine.FadeOut(strip), self._reveal_then(w_slider, self._ramp(self.W, settings["w"]["min"], settings["w"]["value"], 1.0), 1.4), _engine.FadeIn(notes), hop_w, seconds=1.4)
         self.play(_engine.FadeOut(hop_w_end), run_time=0.3)
 
         l_slider, h_slider = self._slider("bl", _at(SL_X, 0.2), self.L, color=cl), self._slider("bh", _at(SL_X, -0.6), self.H, color=ch)
@@ -512,7 +543,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
 
         w0, w1 = settings["w"]["value"], settings["w"]["value"] + 0.5
         readout = self.live_label(lambda: f"X = {self.number(self.W.get_value(), 1)} m", _at(0.5, 1.5), size=SMALL, color=cw)
-        self.step("live", _engine.FadeIn(readout), self._ramp(self.W, w0, w1, 2.0), seconds=2.0)
+        self.step("live", self._reveal_then(readout, self._ramp(self.W, w0, w1, 1.6), 2.0), seconds=2.0)
         self.play(self._ramp(self.W, w1, w0, 1.2), run_time=1.2)
 
         vol = self.gh_component("Volume", at=_at(2.0, 0.35))
@@ -592,8 +623,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
         self.vl_index.set_value(0)
         self.view_state.update(window=True, dims=("window",), scale=0.5)
         pick_hop, pick_end = self._hop("C", _at(-1.9, 0.0) + np.array([0.4, 0.0, 0.0]), WINDOW_AT + np.array([-0.2, 0.0, 0.0]), _drawing.type_color("C"), kind="item")
-        self.step("valuelist", pick_hop, _engine.FadeOut(toggle_on), _engine.FadeOut(tg_panel), _engine.FadeOut(tg_wire), _engine.FadeIn(vlist), _engine.FadeIn(vlp), _engine.FadeIn(vl_wire), _engine.FadeIn(vl_note),
-                  _engine.FadeIn(type_note), self._ramp_index(self.vl_index, (0, 1, 3, 2), 2.4), self._type_follow(2.4), seconds=2.4)
+        self.step("valuelist", pick_hop, _engine.FadeOut(toggle_on), _engine.FadeOut(tg_panel), _engine.FadeOut(tg_wire), _engine.FadeIn(vl_wire), self._value_sequence(vlist, vlp, vl_note, type_note), seconds=2.4)
         self.play(_engine.FadeOut(pick_end), run_time=0.3)
         self.view_state.update(window=True, dims=())
 
@@ -626,7 +656,8 @@ class Beat1_Anatomy(_visuals.ClipScene):
         series = self.gh_component("Series", at=_at(0.7, 0.3))
         series_defn = self._sub(("st", "cnt", "se", "sp"), ("st.Number>se.Step", "cnt.Number>se.Count", "se.Series>sp.Stream"))
         count = lambda: int(round(self.cnt.get_value()))
-        list_panel = self.live(lambda: self.gh_panel(None, rows=self._rows(_gh.evaluate(series_defn, {"cnt": count()}).tree("sp"), " m"), at=_at(3.5, 0.0), scale=0.9), count)
+        cnt_display = _keyed.create(lambda: (cnt_slider.update(0), cnt_slider)[1], lambda: round(self.cnt.get_value(), 6), self.camera)
+        list_panel = _keyed.create(lambda: self.gh_panel(None, rows=self._rows(_gh.evaluate(series_defn, {"cnt": count()}).tree("sp"), " m"), at=_at(3.5, 0.0), scale=0.9), count, self.camera)
         wires2 = [self.gh_wire(st_slider.grip_out(), series.grip_in("N")), self.gh_wire(cnt_slider.grip_out(), series.grip_in("C")),
                   self.gh_wire(series.grip_out(), _at(2.95, 0.0), kind="list"),
                   self._note(self.tr("S start 0 · N step · C count", "S Start 0 · N Schritt · C Anzahl"), _at(1.0, -0.55))]
@@ -658,7 +689,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
         item_end = self._bit(first_texts[0], first_points[0], level_color(1, 0), "item")
         item_hop = self._cap_to(level_key(1, 0), (1,), item_end)
         self.step("item", _engine.FadeOut(steps), _engine.FadeOut(arrows), _engine.FadeOut(fine), _engine.FadeOut(sun), _engine.FadeIn(series_ribbon), _engine.FadeIn(st_slider),
-                  _engine.FadeIn(cnt_slider), _engine.FadeIn(series), _engine.FadeIn(list_panel), *[_engine.FadeIn(w) for w in wires2], _engine.FadeOut(preview), _engine.FadeIn(tower), seconds=1.4)
+                  _engine.FadeIn(cnt_display), _engine.FadeIn(series), _engine.FadeIn(list_panel), *[_engine.FadeIn(w) for w in wires2], _engine.FadeOut(preview), _engine.FadeIn(tower), seconds=1.4)
         self.play(item_hop, run_time=1.2)
         self.play(_engine.FadeOut(item_end), run_time=0.3)
 
@@ -704,7 +735,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
             row = tree_panel.parts["rows"][row_indices[chosen_path][i]]
             target = self._bit("", row.get_left() + np.array([-0.14, 0.0, 0.0]), _drawing.type_color(item.tag["type"]), "item")
             leaf_hops.append((self._cap_to(tuple(item.tag["slot"]), (0,), target), target))
-        self.step("tree", _engine.FadeIn(ribbon), *[_engine.FadeOut(m) for m in (st_slider, cnt_slider, series, list_panel, series_ribbon, *wires2)], _engine.FadeIn(t_param), _engine.FadeIn(tree_panel),
+        self.step("tree", _engine.FadeIn(ribbon), *[_engine.FadeOut(m) for m in (st_slider, cnt_display, series, list_panel, series_ribbon, *wires2)], _engine.FadeIn(t_param), _engine.FadeIn(tree_panel),
                   _engine.FadeIn(t_wire), _engine.FadeIn(explain), _engine.FadeIn(band), seconds=1.6)
         self.play(*[a for a, _ in leaf_hops], run_time=1.2)
         self.play(*[_engine.FadeOut(t) for _, t in leaf_hops], run_time=0.3)

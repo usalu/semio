@@ -1,0 +1,18 @@
+{
+  "row_sequences": [
+    {
+      "target": 8,
+      "duration": 4.5
+    },
+    {
+      "target": 9,
+      "duration": 5.0
+    }
+  ],
+  "reveal": 0.5,
+  "handoff": {
+    "old": "#ff0000",
+    "new": "#0000ff",
+    "caption": "#00ff00"
+  }
+}

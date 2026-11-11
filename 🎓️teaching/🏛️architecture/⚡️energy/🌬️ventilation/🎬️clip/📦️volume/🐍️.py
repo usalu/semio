@@ -73,6 +73,7 @@ window_glyph = _manim_module.window_glyph
 open_window = _manim_module.open_window
 window_opening = _manim_module.window_opening
 staffage = _manim_module.staffage
+room_metre = _manim_module.room_metre
 staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
 fitted_staffage = _manim_module.fitted_staffage
@@ -284,9 +285,9 @@ def _room(center, width, height, color=P_WHITE, t: float = 0.16, *,
 
 def _stand(room_c, room_h, x, cast: str = "shared-person-pathlines", rate: float = 1.0, t: float = 0.16):
     """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top."""
-    height = 0.7 * (room_h - t)
+    unit = room_metre(room_h - t)
     floor_y = float(room_c[1]) - room_h / 2 + t / 2
-    return staffage_motion(cast, unit=height / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]), rate=rate)
+    return staffage_motion(cast, unit=unit, anchor=np.array([x, floor_y, 0.0]), rate=rate)
 
 
 def _dim(mob, factor: float, **kwargs):
@@ -350,7 +351,10 @@ def _scale_marks(scale, entries, *, x_text: float, gap: float = 0.08, bottom: fl
     for value, src, color in entries:
         y = scale["y_of"](value)
         dots.append(Dot([x, y, 0], radius=0.075, color=color))
-        labels.append(math_label(src, size=BODY_FONT_SIZE, color=color))
+        label = math_label(src, size=BODY_FONT_SIZE, color=color)
+        if label.width > config.frame_width / 2 - 0.3 - x_text:
+            label.scale_to_fit_width(config.frame_width / 2 - 0.3 - x_text)
+        labels.append(label)
         ys.append(y)
     placed = list(ys)
     order = sorted(range(len(placed)), key=lambda i: -placed[i])
@@ -407,7 +411,7 @@ def _use_glyph(kind: str, color):
         for cast, cx in (("ventilation-volume-crates-low", -0.45), ("ventilation-volume-crates-high", -0.05), ("ventilation-volume-crates-half", 0.35)):
             parts.add(staffage(cast, unit=_USE_UNIT, anchor=np.array([cx, fy, 0.0])))
     elif kind == "passiv":
-        unit = fitted_staffage("shared-mvhr-normal", width=0.5, height=0.24).move_to([-0.2, 0.36, 0])
+        unit = staffage("shared-mvhr-normal", unit=_USE_UNIT).move_to([-0.2, 0.36, 0])
         parts.add(Line(unit.get_left(), [-0.8, 0.36, 0], color=P_BLUE, stroke_width=2.4),
                   Line(unit.get_right(), [0.8, 0.36, 0], color=P_ORANGE, stroke_width=2.4),
                   unit, _use_cast("shared-person-pathlines", 0.35, fy))
@@ -829,7 +833,7 @@ class Beat2_Luftwechselrate(Scene):
         self.play(FadeIn(scale["group"]), house.animate.scale_to_fit_height(1.35).move_to(stage), run_time=1.2)
         self.play(FadeIn(clock["group"]), run_time=0.4)
 
-        entries = [(N_RATE, tr(r"\text{Wohnung} \approx 0.5", r"\text{Wohnung} \approx 0{,}5"), P_ORANGE)] + [
+        entries = [(N_RATE, tr(r"\text{Dwelling} \approx 0.5", r"\text{Wohnung} \approx 0{,}5"), P_ORANGE)] + [
             (n, rf"{tr(_USE_EN[name], name)} \approx {label_number(n, 1) if 0 < n < 1 else label_number(n)}", c) for _k, n, name, c in AIR_CHANGE_USES
         ]
         dots, labels, leaders = _scale_marks(scale, entries, x_text=1.2, bottom=-1.15)

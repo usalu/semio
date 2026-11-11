@@ -1,0 +1,19 @@
+# Native Stage Ownership Audit
+
+Scope: read-only inspection of the nine Grasshopper and Excel lesson sources 120–128 for the specific 122 failure: a parent group fades while its actual children are independently gathered, split, morphed or added to the scene, and an orphan later reappears. Moving-family refresh fixes cached rendering, not scene ownership. Source inspection does not prove every frame or object has been tested.
+
+| Source | Ownership assessment and evidence |
+| --- | --- |
+| GH Anatomy 120 | Selected capsule drawings for morphs are copied semantic parts, separate from the whole-building snapshot. Explicit group/family cleanup addresses a previously reproduced stale presentation. No analogous simultaneous parent-fade/actual-child morph established in this scan. |
+| GH Capsule 121 | Sprite flights retain the selected semantic vector independently. Several staged transitions explicitly remove destinations and solids after use. The energy owner has separate actual-frame tests for changing live controls. This is not a complete proof of every sequence ownership path. |
+| GH Tower 122 | Reproduced: the total-stage group had separately scene-owned children after split; later note transitions resurrected an old note. Source-local family retirement removes the group and its whole family after last use. Permanent actual-source/native-frame and lifetime regressions cover the correction. Fresh render required. |
+| GH Casting 123 | Plane transition and first-stage fade occur in sequential phases with distinct objects; keyed tower presentations retain semantic objects separately. Existing real Cairo tests cover corrected title/control ownership. No equivalent orphan proven by this scan. |
+| GH Trees 124 | Regroup and gather flights use copied capsule vectors or captured sprites; diagram/tower fades do not simultaneously consume actual children of their fading parent. Existing native path-stage frames and scoped lifetime tests cover selected transitions, not all frames. |
+| Excel Anatomy 125 | Capsule flights use copies of original semantic parts, independent of the captured whole-building display. Workbook/capsule handoff is sequential and has actual written-frame tests. Corrected source still needs a fresh full render. |
+| Excel References 126 | Chips explicitly remove capsule/value children before separate scatter/fade; semantic silhouette sources are copies. Existing focused frame tests cover live window/control presentation. No equivalent orphan proven by this scan. |
+| Excel Program 127 | Deferred phases fade old objects independently of distinct token/capsule flight sources; value and floor flights explicitly copy their sources. No parent/actual-child simultaneous morph matching 122 established. Full render remains necessary. |
+| Excel Energy 128 | Counts and four chips share counts children, and compare fades both parent and chips. Scatter instead uses copies of types-row children. A bounded native Manim test using actual counts construction and authored parent/child fade found zero members of the original counts family remaining immediately after fade and after the next play. This tests ownership, not whole-source visual fidelity. |
+
+The 128 diagnostic is in energy-count-ownership.py; it ran with a 1024 MB capacity reservation and actual scene preparation, staggered chip entry and simultaneous counts/chips exit. The initial command without the repository on PYTHONPATH failed before scene construction; the corrected command passed. No production source was edited for this audit.
+
+Historical 122 partial 95 and prior 124 recap are from earlier attempts and must not be used to accept current renders. For all new partial QA compare partial modification time to current attempt start; receipts and full masters require separate freshness and visual checks.

@@ -57,6 +57,91 @@ class MaterialSkin(unittest.TestCase):
             with self.subTest(case=case["id"]):
                 facets=annular_facets(case["annulus"]) if "annulus"in case else [facet for index,bounds in enumerate(case["boxes"])for facet in box_facets(bounds,case.get("materials",["a"]*len(case["boxes"]))[index])]
                 output=self.certify(facets);RESULTS[case["id"]]={"input":len(facets),"output":len(output)}
+    def test_tap_hall_cancelled_seams_node_crossing_edges(self):
+        """🚰 Preserve the real coplanar material opening across canceled tile seams."""
+        path=Path(__file__).with_name("🔣️tap.json")
+        fixture=json.loads(path.read_text(encoding="utf-8"))
+        schema=json.loads(path.with_name("🔣️tap.schema.json").read_text(encoding="utf-8"))
+        Draft202012Validator(schema).validate(fixture)
+        facets=fixture["facets"]
+        positive=unary_union([Polygon([[p[1],p[2]]for p in f["rings"][0]])for f in facets if f["normal"][0]>0])
+        negative=unary_union([Polygon([[p[1],p[2]]for p in f["rings"][0]])for f in facets if f["normal"][0]<0])
+        expected=positive.difference(negative)
+        actual=skin.material_skin(facets)
+        polygons=[Polygon([[p[1],p[2]]for p in f["rings"][0]],[[[p[1],p[2]]for p in ring]for ring in f["rings"][1:]])for f in actual if f["normal"][0]>0]
+        merged=unary_union(polygons)
+        self.assertTrue(all(p.is_valid for p in polygons))
+        self.assertLess(merged.symmetric_difference(expected).area,1e-14)
+        self.assertLess(abs(merged.boundary.length-expected.boundary.length),1e-10)
+
+    def test_actual_beam_projection_crossing_winding_matches_geos(self):
+        """🧱 Preserve the exact captured beam boundary until its final screen conversion."""
+        from fractions import Fraction
+        from shapely.validation import make_valid
+        primitives=importlib.import_module(PARENT+".🎨️visuals.🏛️savoye.🧊️axon.🧩️primitives")
+        path=Path(__file__).with_name("🔣️projection.json")
+        fixture=json.loads(path.read_text(encoding="utf8"))
+        Draft202012Validator(json.loads(path.with_name("🔣️projection.schema.json").read_text(encoding="utf8"))).validate(fixture)
+        facets=fixture["facets"];matrix=fixture["matrix"]
+        lookup={(float(Fraction(*map(int,p[0]))),float(Fraction(*map(int,p[1])))):
+                (Fraction(*map(int,p[0])),Fraction(*map(int,p[1]))) for p in fixture["exact_ring"]}
+        facets[0]["rings"][0]=[[*lookup[tuple(p[:2])],Fraction(p[2])] for p in facets[0]["rings"][0]]
+        original=facets[0]["rings"][0]
+        faces=[primitives._poly(f["rings"],None,"beam") for f in facets]
+        prim=primitives.Prim("beam",{},0,(0,0),faces,skin=tuple(f["material"] for f in facets))
+        self.assertEqual(prim.faces[0][1][0],list(map(tuple,original)))
+        axon=importlib.import_module(PARENT+".🎨️visuals.🏛️savoye.🧊️axon.🐍️")
+        lifted=axon._lift(prim,0.,.5)
+        self.assertEqual(lifted.faces[0][1][0][0],(original[0][0],original[0][1],original[0][2]/2))
+        projected=[{"rings":face[1],"material":material} for face,material in zip(prim.faces,prim.skin)]
+        result=skin.projected_material_regions(projected,matrix)
+        self.assertTrue(result)
+        self.assertTrue(all(isinstance(v,Fraction) for r in result for ring in r["rings"] for point in ring for v in point))
+        def project(ring):
+            return [[sum(float(p[i])*matrix[i][j] for i in range(3)) for j in range(2)] for p in ring]
+        def polys(shape):
+            if shape.geom_type=="Polygon":return [shape]
+            return [p for child in getattr(shape,"geoms",()) for p in polys(child)]
+        expected=unary_union([p for f in facets for p in polys(make_valid(Polygon(project(f["rings"][0]),[project(r) for r in f["rings"][1:]])))])
+        actual=unary_union([p for r in result for p in polys(make_valid(Polygon(r["rings"][0],r["rings"][1:])))])
+        self.assertLess(actual.symmetric_difference(expected).area,1e-10)
+        def cross(a,b,c):
+            return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
+        def on(a,b,p):
+            return cross(a,b,p)==0 and all(min(a[k],b[k])<=p[k]<=max(a[k],b[k]) for k in (0,1))
+        for region in result:
+            for ring in region["rings"]:
+                for i in range(len(ring)):
+                    a,b=ring[i],ring[(i+1)%len(ring)]
+                    for j in range(i+1,len(ring)):
+                        if j-i in (1,len(ring)-1):continue
+                        c,d=ring[j],ring[(j+1)%len(ring)]
+                        self.assertFalse(on(a,b,c) or on(a,b,d) or on(c,d,a) or on(c,d,b))
+                        self.assertFalse(cross(a,b,c)*cross(a,b,d)<0 and cross(c,d,a)*cross(c,d,b)<0)
+
+    def test_material_skin_preserves_exact_intersection_coordinates(self):
+        """📐 Carry exact rational material vertices through the native surface output."""
+        from fractions import Fraction
+        facets=[
+            {"rings":[[[0,0,0],[1,3,0],[0,3,0]]],"normal":[0,0,1],"material":{"id":"x"}},
+            {"rings":[[[0,1,0],[2,1,0],[2,2,0],[0,2,0]]],"normal":[0,0,1],"material":{"id":"x"}},
+        ]
+        actual=skin.material_skin(facets)
+        self.assertTrue(any(p[0]==Fraction(1,3) and isinstance(p[0],Fraction)
+                            for f in actual for ring in f["rings"] for p in ring))
+
+    def test_axon_centres_exact_coordinates_before_screen_conversion(self):
+        """🔭 Preserve a sub-float model offset when centering the view."""
+        from fractions import Fraction
+        axon=importlib.import_module(PARENT+".🎨️visuals.🏛️savoye.🧊️axon.🐍️")
+        view=axon.AxonView((0,0,0),1,(10**16,0,0),0)
+        point=(Fraction(10**16)+Fraction(1,3),Fraction(0),Fraction(0))
+        actual=view.project([point])[0]
+        expected=view.M[0]/3
+        self.assertAlmostEqual(actual[0],expected[0],places=14)
+        self.assertAlmostEqual(actual[1],expected[1],places=14)
+        self.assertTrue((view(*point)==actual).all())
+
     def test_progress_cancellation_and_owned_output(self):
         facets=box_facets([[0,0,0],[1,1,1]]);events=[];one=skin.material_skin(facets,progress=events.append);one[0]["rings"][0][0][0]=900
         self.assertNotEqual(one,skin.material_skin(facets));self.assertTrue(events)
@@ -90,6 +175,7 @@ class MaterialSkin(unittest.TestCase):
 
     def test_actual_painter_inks_only_visible_material_regions_and_reuses_native_boundaries(self):
         import ast,math
+        from fractions import Fraction
         from types import SimpleNamespace
         import numpy as np
         from shapely.geometry import LineString
@@ -110,7 +196,7 @@ class MaterialSkin(unittest.TestCase):
             def facing(self,n):return -n[0]-n[1]+n[2]
             def project(self,ring,dz=0):
                 a=np.asarray(ring);return np.column_stack((.866*(a[:,0]-a[:,1]),.5*(a[:,0]+a[:,1])+a[:,2]+dz,np.zeros(len(a))))
-        namespace={"np":np,"math":math,"_engine":SimpleNamespace(VGroup=Group),"_primitives":primitives,"_multi":multi,"_d":SimpleNamespace(region=region,segments=segments,material_fill=lambda actor:actor),"brightness":lambda n,t:.8}
+        namespace={"np":np,"math":math,"Fraction":Fraction,"_engine":SimpleNamespace(VGroup=Group),"_primitives":primitives,"_multi":multi,"_d":SimpleNamespace(region=region,segments=segments,material_fill=lambda actor:actor),"brightness":lambda n,t:.8}
         exec(compile(ast.Module(body=[body],type_ignores=[]),str(source),"exec"),namespace)
         bounds=[[[0,0,0],[1,1,1]],[[1,0,0],[2,1,1]]];facets=[f for b in bounds for f in box_facets(b)]
         native=skin.material_skin(facets);prim=primitives.Prim("fixture",{},0,(0,0),[("poly",f["rings"],f["normal"],"gravel")for f in native],skin=tuple(f["material"]for f in native))

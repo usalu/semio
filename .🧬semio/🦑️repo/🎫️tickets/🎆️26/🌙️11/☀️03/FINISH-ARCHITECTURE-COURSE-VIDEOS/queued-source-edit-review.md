@@ -1,0 +1,7 @@
+# Queued Source Edit And Publication Review
+
+Read-only runtime review after the BIM116 scale-label finding. render_segment in the canonical runtime computes source_narration and segment_state at each job start, verifies the state after native render and after audio attachment, and writes a success-only receipt. Thus an unstarted queued source can capture a new source version without changing an already running unrelated source, subject to canonical dependency-closure proof.
+
+compose_videos computes logical chapter states before execute_jobs. After all native jobs finish it compares each current logical state to the planned state and fails closed on a changed chapter, retaining reusable successful native segments. A queued116 edit therefore requires a later current-state --concat-only invocation for its chapter/master publication; no old logical state or source receipt may be relabeled. An eventual cohort exit1 can reflect this planned publication hold rather than a native source failure.
+
+At review, source114 and115 are the prior jobs in cohort55275 and source116 is unstarted. The owner must prove both active/earlier source closures exclude the changed116source and any changed aggregator before mutation. The canonical full suite must be stopped before relevant mutation and restarted after the complete new freeze. This review authorizes no patch by itself and is not media acceptance.

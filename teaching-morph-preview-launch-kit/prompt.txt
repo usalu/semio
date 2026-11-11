@@ -1,0 +1,83 @@
+Implement a complete, declarative morph and render-quality system for the teaching clips, end to end. Preserve rich didactic morphing for final rendering and make previews substantially faster. Solve the problems found along the way, including confirmed fundamental issues outside the immediate task.
+
+Read this kit's acceptance.md and fleet.md, the applicable repository instructions, and the existing renderer/scene/staffage architecture before choosing implementation details. Build on established contracts where sound.
+
+1. PARALLEL EXECUTION AND COORDINATION
+
+Use claude-opus-5-5 at medium effort in the main chat for planning, shared decisions, coordination, integration, and acceptance. Use the supplied claude-sonnet-5-5 medium profiles for medium/high-complexity implementation and claude-haiku-5-5 medium profiles for read-only exploration/audits and bounded low-complexity work.
+
+The kit supplies 20 worker profiles: 14 Sonnet implementers, four read-only Haiku auditors, and two Haiku helpers; the main coordinator is additional. Finish as fast as practical by using the largest useful set of independent assignments supported by the dependency graph and available runtime/account resources, up to the configured 20-subagent cap. Dispatch actual background Agent tasks, establish shared invariants early, expand parallel implementation as dependencies clear, and reassign useful remaining work. Retire workers when no substantive task remains. Do not consume resources simply to occupy slots.
+
+Use the named profiles and their configured models/effort, avoiding per-call model overrides or conversation forks that replace them. Workers must not spawn further agents or separate Claude sessions. Track confirmed task IDs, logical ownership, dependencies, statuses, results, and observable overlap. Distinguish configured capacity, dispatched tasks, unfinished tasks, and verified concurrency. Report real model/runtime limitations without inventing execution evidence.
+
+Coordinate expensive local builds, browsers, benchmarks, and renders through one integration owner and a shared queue. On the Steam Deck, start with one heavy verification job or shared browser/dev-server session; increase heavy-job concurrency when measured CPU/RAM/GPU/I/O headroom and independent outputs justify it. Other workers continue analysis, implementation, and audits. Reuse healthy services and caches; avoid duplicate installations, competing benchmark loads, and conflicting writes to build outputs. This queue is a workflow policy unless an actual scheduler enforces it.
+
+Other agents may be editing the same files. Read current changes, agree logical ownership, reread before editing, preserve unrelated work, and reconcile overlapping sections through narrow patches. Continue independent work through conflicts. Do not reset or overwrite other agents' changes, or stop merely because the tree is dirty.
+
+2. INVENTORY AND BASELINE
+
+Trace every relevant teaching clip, semantic transformation, scene schema, morph implementation, staffage resolver, player, authoring interface, preview, thumbnail/poster generator, export job, cache, and worker pipeline. Map each consumer to its current quality behavior, asset sources, expensive work, and required migration.
+
+Capture representative baselines before changing the expensive paths: cold preparation/time to first frame, warm playback frame-time distribution and input responsiveness, render time, retained memory/resources, and full-morph calls. Record the fixture, revision, device, viewport, quality, frame schedule, and warm/cold conditions. Preserve existing concurrent changes; never manufacture a baseline by resetting their work.
+
+3. ONE DECLARATIVE MORPH MODEL
+
+Describe abstraction, concretization, continuation, and transformation as reusable, validated data on one canonical scene/timeline. Declare stable transition IDs and semantic intent; source/target canonical references and revisions; view, authored drawing scale, pose/animation and scenario; live versus snapshot sampling; timing/easing; coordinate spaces, anchors and placement/fit policy; and the correspondence or recipe needed for the full morph.
+
+Keep execution inside shared render infrastructure. Clip definitions must not embed ad hoc geometry copies, renderer instances, resource ownership, imperative animation callbacks, or scattered preview-specific branches. Staffage entities must reference the canonical handcrafted library. Teaching labels, arrows, diagrams, and overlays should also use declarative shared primitives and stay synchronized with the same scene state.
+
+Support the morph families and object relationships actually required by the course, including grouped or one-to-many/many-to-one mappings when present. Define explicit identity/correspondence data for incompatible shapes or topologies. Validate missing references, unsupported combinations, invalid transforms, and incomplete recipes with actionable errors. Extend the shared library and contracts where necessary rather than cloning implementations into clips.
+
+Persist and reload morph definitions through the existing authoring/storage path. Version/migrate the schema where needed. Authoring controls must edit the same data consumed by playback and export.
+
+4. CENTRAL RENDER PROFILES AND STRICT PREVIEW BEHAVIOR
+
+Resolve at least preview and final through one explicit render-policy/planning layer. The same scene data must select different execution strategies, asset detail, and effect budgets without changing teaching semantics, timing, narration, or intended endpoints.
+
+For the preview morph itself, translate and scale the source toward the declared target placement. Keep the source as the sole visible representation until the transition's terminal scheduled sample. At that terminal sample, atomically replace it with the exact target state; afterward retain the target until the next authored event. Do not crossfade, show the target early, overlap both objects, insert a blank frame, or perform shape/path/mesh interpolation, morph-induced rotation, deformation, or material blending in preview. Ordinary source animation may continue only under the explicit live/snapshot sampling contract.
+
+Define "last frame" against the actual canonical timeline/output schedule, not animation-callback count, eased progress, or the browser's delivered frames. For an inclusive interval [firstFrame, terminalFrame], use source for frame < terminalFrame and target for frame >= terminalFrame. Easing affects translation/scale only; overshooting or early-clamped easing must not trigger the swap. Adapt half-open internal ranges once at the shared boundary without accidentally adding time to clips.
+
+Handle zero-duration and one-frame transitions, adjacent/chained morphs, trim/subrange rendering, skipped frames, pauses, reverse playback, direct seeking, loops, and different output rates. Each sampled timestamp has unambiguous ownership. Evaluation must be deterministic from scene data, canonical time, render profile, scenario and seed, with no dependence on previous callbacks or seeks.
+
+Use declared anchors and stable logical bounds in explicit coordinate spaces, including nested transforms. Define fit/uniformity policies and guard zero-size or invalid bounds. Do not derive placement from changing screen-space or reduced-detail mesh bounds. The target must be cheaply ready for the boundary; bounded low-detail preparation is allowed.
+
+Preview jobs must bypass full-morph correspondence construction, high-detail asset decoding/tessellation, expensive interpolation/shaders/simulation, and final-only effects wherever unnecessary. This includes mounting, imports, eager factories, prefetch, workers, and cache population. Hiding expensive output is insufficient. Instrument work by render job/profile so an intentional concurrent final export is not miscounted as preview work.
+
+5. CANONICAL STAFFAGE AND BROADER PREVIEW OPTIMIZATION
+
+Resolve staffage ID/revision, view, authored drawing scale, render LoD, pose/animation state, and thermal/structural scenario through one shared asset pipeline. Keep these independent concepts: viewport zoom, authored print-scale detail, and render LoD must not substitute for one another. Preserve real-world units, physical dimensions, origins, anchors, contact relationships, and required labels across detail variants.
+
+Preview must select genuine lower-LoD representations before expensive decoding or geometry construction. Add missing reusable canonical variants/proxies centrally, with explicit coverage and validation. Do not use clip-local primitive substitutes or build the high-detail model first merely to discard most of it.
+
+Make geometry complexity, curve sampling, texture/heatmap resolution, particles/flow trails, lighting/shadows, postprocessing, antialiasing, device pixel ratio, output resolution, and other applicable costs profile-driven. Use visibility/culling, stable caches, immutable reusable data, bounded work, and allocation reduction where measurements support them. Reduce update frequency only while retaining canonical time and deterministic analytical state.
+
+Preserve the information needed to understand each lesson. Thermal, convection, and structural previews may use cheaper discretization and rendering, but must retain meaningful values, units, source timing, pose attachment, and causal relationships. Set explicit preview performance/resource budgets from the baseline and measured host capability, then optimize until they are met or a concrete limitation is demonstrated.
+
+6. FULL FINAL RENDERS AND QUALITY ISOLATION
+
+Final rendering must execute the authored full morph with correct correspondences, intermediate geometry/states, topology handling, quality, duration, and exact endpoints. Preserve the didactic progression and relationships, not just the first and last picture. Repair missing recipes or report a concrete blocker; never silently label the cheap preview substitution as a final morph.
+
+Make the export job's profile explicit and reproducible. Final exports must not inherit an editor's preview toggle or reuse preview results as final output. Verify independent preview/final contexts sharing the same immutable assets.
+
+Use appropriate cache keys and invalidation for relevant scene/recipe versions, asset revisions, state, view, scale, LoD, profile, sampling, scenario, output settings, and seed. Bound caches by entries/bytes and lifetime; avoid unbounded per-frame caching. Do not mutate shared definitions or cached geometry in place. Record the effective profile in diagnostics or export metadata where useful.
+
+7. NO RESOURCE OR ABSTRACTION LEAKS
+
+Keep render mechanics and quality decisions inside their owning abstractions. Define ownership, sharing, cancellation, and disposal for jobs and resources. Cancel superseded loads, morph preparation, simulations, workers, and exports; stale results must not overwrite a newer clip, state, or quality profile.
+
+Release task-owned animation callbacks, listeners, subscriptions, timers, workers, buffers, GPU resources, decoded media, object URLs, and cache references as applicable. Preserve legitimately shared resources until their last owner releases them. Make cleanup idempotent and correct on cancellation, failure, unmount, and rapid mode changes.
+
+Prove bounded retained resources across repeated open/play/seek/profile-switch/export/close cycles after warm-up. Inspect available resource counts, cache sizes, CPU heap, and GPU/worker indicators; distinguish bounded caching from leaks. Do not infer leak freedom from one memory snapshot.
+
+8. MIGRATE AND VERIFY END TO END
+
+Migrate every discovered consumer and teaching-clip morph to the shared mechanism. Preserve narration, captions, timing, accessibility, physical/analytical meaning, and scene composition. Make preview the inexpensive experience where intended and final quality an explicit render selection. Update authoring controls, saved definitions, registries, live course routes, player, previews, scrubbing, thumbnails/posters, exports, and generated-media references. Regenerate affected derivatives where delivery depends on them.
+
+Use acceptance.md as the minimum verification contract. Test exact terminal boundaries, deterministic seek/reverse/loop behavior, LoD resolution, cancellation, profile isolation, and real final-morph intermediates. Instrument zero full-morph executions/preparation attributable to preview jobs, and positive execution of the real full path in final jobs. Inspect actual application playback and exported media.
+
+Measure before/after performance on equivalent scenes and conditions, separating cold/warm behavior and avoiding competing benchmark loads. Report median/tail frame times, preparation/seek costs, render time, and resource plateau where measurable. Do not invent speedup figures or trade away teaching content to obtain them. Run the relevant build/type/lint and focused regression gates; fix failures rather than weakening assertions.
+
+When you encounter fundamental issues, including ones outside the immediate morph/preview scope, reproduce them, identify the root cause, repair them, and verify the repair. Give these fixes explicit owners and regression evidence; coordinate with agents who own affected systems. This is an authorized repair track, not merely a list of follow-up suggestions. Prioritize the main goal while avoiding an endless backlog of incidental cosmetic changes.
+
+Continue until the integrated result satisfies the acceptance criteria. If a real external dependency or access restriction blocks a step, finish all unblocked work and report the exact remaining requirement and evidence. Finish with the migration/coverage matrix, declarative contract and example usage, effective profile behavior, measured performance results, leak/lifecycle evidence, fundamental fixes, commands run and outcomes, proof media, remaining concrete limitations, and actual agent execution record.

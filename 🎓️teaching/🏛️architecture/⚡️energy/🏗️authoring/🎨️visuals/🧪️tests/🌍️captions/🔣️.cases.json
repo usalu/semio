@@ -1,0 +1,15 @@
+{
+  "clauses": [
+    [
+      "coil",
+      "A heating element warms the air.",
+      "Ein Heizelement erwärmt die Luft."
+    ]
+  ],
+  "expected": {
+    "en": "A heating element warms the air.",
+    "de": "Ein Heizelement erwärmt die Luft."
+  },
+  "readingWordsPerSecond": 1.6,
+  "minimumSeconds": 1.5
+}

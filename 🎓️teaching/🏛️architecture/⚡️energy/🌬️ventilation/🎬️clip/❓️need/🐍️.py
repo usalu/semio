@@ -66,6 +66,7 @@ room_section = _manim_module.room_section
 window_glyph = _manim_module.window_glyph
 window_opening = _manim_module.window_opening
 window_opening = _manim_module.window_opening
+room_metre = _manim_module.room_metre
 staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
 fitted_staffage = _manim_module.fitted_staffage
@@ -135,9 +136,9 @@ def _window(pos, height=1.15, width=0.16, color=P_CYAN, inward=1):
 
 def _stand(room_c, room_h, x, cast: str = "shared-person-pathlines", rate: float = 1.0, t: float = 0.16, mirror: bool = False):
     """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top; ``mirror`` faces the other way."""
-    height = 0.7 * (room_h - t)
+    unit = room_metre(room_h - t)
     floor_y = float(room_c[1]) - room_h / 2 + t / 2
-    return staffage_motion(cast, unit=height / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]), rate=rate, mirror=mirror)
+    return staffage_motion(cast, unit=unit, anchor=np.array([x, floor_y, 0.0]), rate=rate, mirror=mirror)
 
 
 def _streams(streams, rt: float, *, speed: float = 0.5, waves: int = 3, radius: float = 0.065):
@@ -149,7 +150,7 @@ def _room_occupants(room_c, room_h, left_window, right_window, *, count: int = 4
     """🫂 Place full-height occupants clear of both inward window swing envelopes."""
     cast = "shared-person-pathlines"
     height = 0.7 * (room_h - 0.16)
-    gap = 0.12 * height / staffage_height(cast)
+    gap = 0.12 * room_metre(room_h - 0.16)
     body = 0.2 * height
     left = left_window.get_right()[0] + body / 2 + gap
     right = right_window.get_left()[0] - body / 2 - gap
@@ -368,7 +369,7 @@ class Beat1_Lueftungsbedarf(Scene):
         self.play(FadeIn(n_tag), run_time=0.6)
         self.add(v_total)
         for i, (b, t, p) in enumerate(zip(blocks, texts, people)):
-            self.play(FadeIn(b), FadeIn(t), p.animate(rate_func=there_and_back).scale(1.1, about_edge=DOWN), k.animate.set_value(i + 1.0),
+            self.play(FadeIn(b), FadeIn(t), Indicate(p, scale_factor=1.0), k.animate.set_value(i + 1.0),
                       run_time=3.2 / PEOPLE)
         panel = math_panel([
             (None, r"\dot{V}_{\mathrm{Pers}}", AIR_COLOR), (None, "=", P_WHITE), ("n", f"{PEOPLE}", P_ORANGE),

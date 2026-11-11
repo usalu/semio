@@ -27,8 +27,16 @@ const states: readonly BorderState[] = ["normal", "focus", "active", "waiting", 
 const roots = new WeakMap<HTMLElement, { compositor: BorderCompositor; participants: number }>();
 let sequence = 0;
 
-/** 🧱️ Realm-independent element test: observer callbacks can outlive the window global that defined `Element`. */
-const isElement = (node: unknown): node is Element => typeof node === "object" && node !== null && (node as Node).nodeType === 1;
+/** 🕰️ Remove transition tokens whose corresponding live CSS transition has ended or disappeared. */
+export function pruneSharedBorderMotion(motion: Map<Element, Set<string>>): void {
+  for (const [element, properties] of motion) {
+    if (typeof element.getAnimations !== "function") continue;
+    const transitions = element.getAnimations().filter((animation): animation is CSSTransition =>
+      "transitionProperty" in animation && animation.playState !== "finished" && animation.playState !== "idle");
+    for (const property of properties) if (!transitions.some(animation => animation.transitionProperty === property)) properties.delete(property);
+    if (!properties.size) motion.delete(element);
+  }
+}
 
 /** 🛡️ Inline important geometry prevents ancestor icon selectors from shrinking frame paint. */
 export function sizeSharedBorderOverlay(svg: SVGSVGElement | null, width: number, height: number): void {
@@ -56,6 +64,7 @@ export class BorderCompositor {
   private observer: MutationObserver | null = null;
   private resize: ResizeObserver | null = null;
   private hovered: Element | null = null;
+  private hoveredOwners = new Set<Element>();
   private motion = new Map<Element, Set<string>>();
   constructor(readonly root: HTMLElement) {
     root.setAttribute("data-shared-border-root", "");
@@ -78,8 +87,16 @@ export class BorderCompositor {
   }
   private pointer = (event: Event) => {
     const pointer = event as PointerEvent;
-    this.hovered = (event.type === "pointerout" ? pointer.relatedTarget : pointer.target) as Element | null;
-    this.schedule();
+    const next = (event.type === "pointerout" ? pointer.relatedTarget : pointer.target) as Element | null;
+    const owners = new Set<Element>();
+    if (next instanceof Element) {
+      for (const { element } of this.windows.values()) if (element.contains(next)) owners.add(element);
+      for (const element of this.frames.keys()) if (element.contains(next)) owners.add(element);
+    }
+    const changed = owners.size !== this.hoveredOwners.size || [...owners].some(element => !this.hoveredOwners.has(element));
+    this.hovered = next;
+    this.hoveredOwners = owners;
+    if (changed) this.schedule();
   };
   private motionStart = (event: Event) => {
     const property = (event as TransitionEvent).propertyName;
@@ -262,8 +279,9 @@ export class BorderCompositor {
       if (element.getAttribute("data-shared-border-attached") !== sides) element.setAttribute("data-shared-border-attached", sides);
     }
     if (updates.size) flushSync(() => { for (const [entry, segments] of updates) entry.update(segments); });
-    if (!this.frame) this.root.removeAttribute("data-shared-border-pending");
     for (const element of this.motion.keys()) if (!this.root.contains(element)) this.motion.delete(element);
+    pruneSharedBorderMotion(this.motion);
+    if (!this.frame) this.root.removeAttribute("data-shared-border-pending");
     if (this.motion.size) this.schedule();
   };
   dispose() {

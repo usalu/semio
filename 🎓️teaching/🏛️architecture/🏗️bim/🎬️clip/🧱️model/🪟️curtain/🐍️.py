@@ -119,3 +119,4 @@ def physical_geometry(core,model,curtain):
     owned=core._subtract_prisms(owned,[p for filling in fillings for p in filling['parts']])
     displacement=before-sum(core._area(p['outline'])*(p['z1']-p['z0']) for p in owned)
     return {"tag":curtain["tag"],"guid":curtain["guid"],"class":curtain["class"],"storey":curtain["storey"],"paths":paths,"parts":owned,"base":z0,"top":z1,"opening_tags":[e["tag"] for e in openings],"hosted_filling_tags":[f['tag'] for f in fillings],"hosted_filling_displacement_volume":displacement}
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

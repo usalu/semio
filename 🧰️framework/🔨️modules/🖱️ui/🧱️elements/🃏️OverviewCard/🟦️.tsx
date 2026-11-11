@@ -111,13 +111,11 @@ export function OverviewCard(props: OverviewCardProps): React.ReactElement {
       onClick={props.onClick}
       className={cn(
         "pointer-events-auto group w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 text-left outline-none",
-        "transition-transform duration-200 motion-reduce:transition-none",
-        "hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        props.lifted && "-translate-y-0.5",
+        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
       )}
     >
-      {chrome}
+      <div data-overview-card-paint="" className={cn("transition-transform duration-200 motion-reduce:transition-none group-hover:-translate-y-0.5", props.lifted && "-translate-y-0.5")}>{chrome}</div>
     </button>
   );
 }

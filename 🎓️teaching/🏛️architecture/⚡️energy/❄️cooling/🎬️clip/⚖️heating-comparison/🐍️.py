@@ -41,6 +41,7 @@ shine = _manim_module.shine
 pulse_flashes = _manim_module.pulse_flashes
 ripples = _manim_module.ripples
 staffage = _manim_module.staffage
+room_metre = _manim_module.room_metre
 staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
 fitted_staffage = _manim_module.fitted_staffage
@@ -135,7 +136,7 @@ def _internal_gains(house, *, overheated: bool = False):
     """
     floor_y = house["bottom_left"][1]
     mid_y = house["level_1"].get_center()[1]
-    unit = 0.7 * house["w_height"] / 2 / staffage_height("shared-person-winter")
+    unit = room_metre(house["w_height"] / 2)
 
     person = staffage_motion("shared-person-fanning" if overheated
                              else "shared-person-winter", unit=unit,
@@ -202,8 +203,10 @@ def _build_ahu(house: dict):
     win_lo, win_hi = house["windows"]
     wx = win_lo["x"]
     storey = house["w_height"] / 2
-    unit = fitted_staffage("cooling-heating-comparison-cooler", width=0.95, height=0.7, rate=0.0)
-    metres = unit.height / (staffage_height("cooling-heating-comparison-cooler") + 2 * CAST_MARGIN_M)
+    metres = room_metre(storey)
+    ventilator = staffage_motion("ventilation-mechanical-mvhr", unit=room_metre(storey), rate=0.0)
+    coil = staffage("physics-fundamentals-evaporator", unit=metres).next_to(ventilator, RIGHT, buff=0.03 * metres, aligned_edge=DOWN)
+    unit = VGroup(ventilator, coil)
     margin = CAST_MARGIN_M * metres
     unit.shift(np.array([-3.0 - unit.get_left()[0], floor_y + MOUNT_TOP_FRACTION * storey - (unit.get_top()[1] - margin), 0.0]))
     wall_x = unit.get_left()[0] + margin - WALL_GAP
@@ -211,10 +214,10 @@ def _build_ahu(house: dict):
     wall = VGroup(
         Line([wall_x, floor_y, 0], [wall_x, floor_y + storey, 0], color=P_WHITE, stroke_width=3.2),
         Line([wall_x - 0.1, floor_y + storey, 0], [wall_x + 0.28, floor_y + storey, 0], color=P_WHITE, stroke_width=3.2),
-        *[Line([wall_x, y, 0], [wall_x + WALL_GAP + 0.01, y, 0], color=P_WHITE, stroke_width=3.2) for y in (casing_top - 0.08, casing_top - 0.26)],
+        *[Line([wall_x, y, 0], [wall_x + WALL_GAP + 0.01, y, 0], color=P_WHITE, stroke_width=3.2) for y in (casing_top - 0.2 * unit.height, casing_top - 0.8 * unit.height)],
     )
-    fan_center = unit.get_top() + DOWN * 0.1
-    coil_c = unit.get_center() + DOWN * 0.04
+    fan_center = ventilator.get_center()
+    coil_c = coil.get_center()
 
     lo_y, hi_y = win_lo["center"][1], win_hi["center"][1]
     supply_pts = [(-4.75, coil_c[1] - 0.3), (-3.9, coil_c[1] - 0.12), (coil_c[0], coil_c[1]),
@@ -222,8 +225,8 @@ def _build_ahu(house: dict):
     extract_pts = [(wx + 1.4, hi_y - 0.3), (wx + 0.5, hi_y), (wx - 0.45, hi_y), (fan_center[0] + 0.25, fan_center[1] - 0.05),
                    (fan_center[0], fan_center[1] + 0.25), (fan_center[0] - 0.05, fan_center[1] + 0.8),
                    (fan_center[0] + 0.35, fan_center[1] + 1.3)]
-    supply_paths = VGroup(*[smooth_path([np.array([x, y + dy, 0.0]) for x, y in supply_pts]) for dy in (0.0, -0.1)])
-    extract_paths = VGroup(*[smooth_path([np.array([x + dx, y, 0.0]) for x, y in extract_pts]) for dx in (0.0, 0.1)])
+    supply_paths = VGroup(*[smooth_path([np.array([x, y + dy, 0.0]) for x, y in supply_pts]) for dy in (0.0, -0.1 * metres)]).set_stroke(width=1.5)
+    extract_paths = VGroup(*[smooth_path([np.array([x + dx, y, 0.0]) for x, y in extract_pts]) for dx in (0.0, 0.1 * metres)]).set_stroke(width=1.5)
 
     labels = VGroup(
         Text(tr("Outdoor air", "Außenluft"), font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(
@@ -231,12 +234,12 @@ def _build_ahu(house: dict):
         Text(tr("Supply air", "Zuluft"), font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(np.array([wx + 0.75, lo_y + 0.32, 0.0])),
         Text(tr("Extract air", "Abluft"), font_size=LABEL_FONT_SIZE, color=P_RED).move_to(np.array([wx + 0.85, hi_y + 0.3, 0.0])),
         Text(tr("Exhaust air", "Fortluft"), font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(
-            np.array([extract_pts[-1][0], extract_pts[-1][1], 0.0]), LEFT, buff=0.2),
+            np.array([extract_pts[-1][0], extract_pts[-1][1], 0.0]), UP, buff=0.1).shift(LEFT * 0.55),
         wall,
     )
     unit_label = Text(tr("Ventilation unit\nwith cooling coil", "Lüftungsgerät\nmit Kühlregister"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY, line_spacing=0.8)
     unit_label.move_to(np.array([-5.3, unit.get_top()[1] + 0.95, 0.0]))
-    unit_leader = Line(unit_label.get_right() + RIGHT * 0.1, unit.get_corner(UL) + DOWN * 0.08,
+    unit_leader = Line(unit_label.get_right() + RIGHT * 0.1, unit.get_corner(UL) + DOWN * 0.2 * unit.height,
                        color=P_PRIMARY, stroke_width=1.4, stroke_opacity=0.7)
     return {
         "unit": unit, "coil_c": coil_c,

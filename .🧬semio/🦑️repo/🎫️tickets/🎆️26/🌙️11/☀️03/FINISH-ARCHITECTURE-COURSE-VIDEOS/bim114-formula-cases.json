@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "spacing": 4.75,
+      "left": 0.1,
+      "right": 0.2,
+      "clear": 4.45
+    },
+    {
+      "spacing": 5,
+      "left": 0.23,
+      "right": 0.11,
+      "clear": 4.66
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+# Remaining Render Slot Plan
+
+Current checkpoint: 15 of 26 masters accepted. Source 117 is rendering independently in energy canonical session 83538 with a normal 8 GiB reservation and full-slab-v4. The all-ten native v4 gate passed and all 20 inputs remain unchanged. Excel cohort 1851 and both earlier GH producers are deliberately stopped and reaped; their incomplete sources have no acceptance. Sources 120 and 125 were independently published and accepted. Source 121 is frozen at final 138b3f20. Source 126 correction passed its native bilingual regressions and is frozen at 3f31c63d. Source 128 correction passed all six native EN/DE cases and is frozen at 7bdfaf9c. Source 127 has no matching edit-mode path.
+
+The fresh unfiltered test-v9 suite is active in session 22386 at 24 GiB after the final source 128 freeze. Suite v8 was intentionally stopped and reaped exit 1, incomplete. Current owned total is 32 GiB (suite 24 + 117 8), preserving approximately 12 GiB against the current available-memory forecast. Defer a second BIM or GH/Excel producer until measured peaks and actual headroom support it. All six BIM, GH 121/123 and Excel 126/127/128 remain pending. Full preview waits for all 26 fresh masters and a passing fresh suite.
+
+## Historical Scheduling Context
+
+The following earlier checkpoints are superseded by the current paragraph and ACTIVE-RUNS.md.
+
+Current owned forecast is Excel cohort 1851 at 16 GiB, Grasshopper cohort 49488 at 16 GiB, and corrected-model native slab gate 60843 at 8 GiB: 40 GiB total. This is a reservation forecast, not an unconditional safe ceiling: reassess the current approximate non-worker residual and actual headroom before any new admission. The latest rough residual is 19.58 GiB, with shared-page/OS-cache caveats documented in render-capacity.md. All thirteen previously accepted masters were canonically fresh after the shared vehicle model correction. No BIM production or full suite is currently active. The authoritative next unfiltered command is in FULL-SUITE-PLAN.md and uses test-v8/full-slab-v4.
+
+The all-ten v4 gate must pass and its 20-input freeze must match before BIM acceptance or the next full-suite admission. Do not reuse old model-key entries. Gate output must remain until every new consumer finishes. Source 121 English production can run now, but final acceptance still requires the fresh unfiltered EN/DE lifecycle gate.
+
+Drawing owner reports the first new 120/125 native receipts separately from cohort completion. Once a current native receipt is actually written and canonically reusable, root may reshape the serial cohort to free a 16 GiB slot for the 24 GiB suite. Verify exact parent/child argv and receipt freshness before any controlled stop; do not kill a source before its receipt or stop a substantially progressed next source blindly. A deliberately stopped cohort is incomplete, while independently completed sources retain their own valid receipts.
+
+Where useful, publish a completed source with a current-state --concat-only invocation under a small normal capacity reservation before admitting the 24 GiB suite. No source or receipt is relabeled. Prefer independent single-source jobs for remaining queued work so slots release at natural source/publication completion. The suite may coexist with one 16 GiB production job or two 8 GiB BIM jobs within the 40 GiB forecast, subject to actual host headroom.
+
+After the gate, admit new BIM sources 114–119 individually at 8 GiB as slots permit. All six need fresh corrected-model native renders and fresh planners; the former 116 queued-publication hold is superseded because its old parent stopped before the shared-data correction. Once the full suite and GH/Excel finish, up to five 8 GiB BIM jobs fit the same 40 GiB forecast, but only if current memory evidence supports it. Never add jobs from free RAM alone. No estimated completion times are asserted here.
+
+All current code and data remain frozen; new concrete native visual or test failures require red evidence and coordinated edits. Host warning 12 GiB / critical 8 GiB thresholds remain, and only exact owned processes may be controlled. No Git mutations, worktrees, AGENTS edits or dashboard.

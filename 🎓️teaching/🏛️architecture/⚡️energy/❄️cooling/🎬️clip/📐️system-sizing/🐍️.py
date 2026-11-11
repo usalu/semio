@@ -360,7 +360,7 @@ class Beat3_IsolateAirflow(Scene):
          "We size the supply airflow so its cooling capacity matches the solar cooling load through the glazing from the last part.",
          "Wir legen den Zuluftstrom so aus, dass seine Kühlleistung der solaren Kühllast durch die Verglasung entspricht."),
         ("substitute",
-         "Q-dot V = Q-dot S,tr: replace the left side, then isolate q v R. Divide the load by density × heat capacity × Δθ.",
+         "Divide the sensible load by air density, specific heat capacity and the temperature difference to find the required airflow.",
          "Weil Q Punkt V gleich Q Punkt S t r ist, stellen wir um: q v R nach links, die Last geteilt durch Rho a mal c p a mal Delta Theta."),
         ("qvr",
          "The unknown on the left is required airflow q v R in m³/s, previously on the first equation’s right side.",

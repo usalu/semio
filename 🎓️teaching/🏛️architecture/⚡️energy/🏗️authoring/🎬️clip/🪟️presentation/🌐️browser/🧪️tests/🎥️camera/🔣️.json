@@ -1,0 +1,25 @@
+{
+  "scene": "Ventilation_02_Luftmenge",
+  "frames": [
+    {
+      "phase": "focus",
+      "t": 0
+    },
+    {
+      "phase": "focus",
+      "t": 0.5
+    },
+    {
+      "phase": "focus",
+      "t": 1
+    },
+    {
+      "phase": "restore",
+      "t": 0.5
+    }
+  ],
+  "viewport": [
+    854,
+    480
+  ]
+}

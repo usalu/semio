@@ -1,0 +1,16 @@
+{
+  "tower_color": "#3999cc",
+  "initial_window": false,
+  "off_start": 0.35,
+  "off_end": 0.7,
+  "toggle_duration": 2.0,
+  "integer_off_start": 0.3,
+  "integer_off_end": 0.65,
+  "integer_duration": 2.6,
+  "note_lifecycle": {
+    "old": "A: 76 capsules · B: 64 capsules",
+    "total": "76 + 64 = 140",
+    "next": "Program B → C; porthole stays",
+    "target_count": 2
+  }
+}

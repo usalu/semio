@@ -149,3 +149,4 @@ class Plan:
             if isinstance(value,list):return [resolved(item) for item in value]
             return value
         for key,entity,attributes in self.nodes:writer.add(key,entity,*[resolved(value) for value in attributes])
+_BIM_LOADED_MODULE_CODE = __import__("sys")._getframe().f_code

@@ -1,0 +1,16 @@
+{
+  "reveal": 0.1,
+  "grow": 1.1,
+  "radius": 0.6,
+  "zoom": 2,
+  "point": [
+    1.2,
+    1.25,
+    0
+  ],
+  "tolerance": 2,
+  "languages": [
+    "en",
+    "de"
+  ]
+}

@@ -1,4 +1,5 @@
 import { resolveBorderSegments, type BorderPoint, type BorderSegment, type BorderState } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
+import { WINDOW_SILHOUETTE_CHIP_EPSILON } from "./🟦️.tsx";
 
 /** 🔍️ Shares measurement's scale policy: integer offset-size rounding is not a transform. */
 export function sharedBorderAxisScale(painted: number, layout: number): number {
@@ -117,7 +118,9 @@ export function sharedOutlineSegments(owner: string, logical: readonly BorderPoi
   const screen = (point: BorderPoint): BorderPoint => ({ x: Math.round((transform.left + point.x * transform.scaleX) * 64) / 64, y: Math.round((transform.top + point.y * transform.scaleY) * 64) / 64 });
   return logical.flatMap((point, index) => {
     const next = logical[(index + 1) % logical.length]!;
-    const from = screen(point), to = screen(next);
+    const from = screen(point), end = screen(next);
+    const to = { x: Math.abs(point.x - next.x) <= WINDOW_SILHOUETTE_CHIP_EPSILON ? from.x : end.x,
+      y: Math.abs(point.y - next.y) <= WINDOW_SILHOUETTE_CHIP_EPSILON ? from.y : end.y };
     if (from.x === to.x && from.y === to.y) return [];
     return [{ id: `${owner}:${index}`, owner, from, to, state, logicalFrom: from, logicalTo: to, paintFrom: paint[index]!, paintTo: paint[(index + 1) % paint.length]!, transform }];
   });

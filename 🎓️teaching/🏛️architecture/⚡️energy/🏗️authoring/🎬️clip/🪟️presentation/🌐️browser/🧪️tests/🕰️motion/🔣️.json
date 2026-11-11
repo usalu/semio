@@ -1,0 +1,41 @@
+[
+  {
+    "id": "running-retained",
+    "animations": [
+      {
+        "property": "translate",
+        "state": "running"
+      }
+    ],
+    "expected": [
+      "translate"
+    ]
+  },
+  {
+    "id": "paused-retained",
+    "animations": [
+      {
+        "property": "translate",
+        "state": "paused"
+      }
+    ],
+    "expected": [
+      "translate"
+    ]
+  },
+  {
+    "id": "finished-cleared",
+    "animations": [
+      {
+        "property": "translate",
+        "state": "finished"
+      }
+    ],
+    "expected": []
+  },
+  {
+    "id": "removed-cleared",
+    "animations": [],
+    "expected": []
+  }
+]

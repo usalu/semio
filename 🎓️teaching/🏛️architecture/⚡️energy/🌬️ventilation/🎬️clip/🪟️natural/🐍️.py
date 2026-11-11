@@ -79,6 +79,7 @@ room_section = _manim_module.room_section
 window_opening = _manim_module.window_opening
 open_window = _manim_module.open_window
 staffage = _manim_module.staffage
+room_metre = _manim_module.room_metre
 staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
 
@@ -132,9 +133,9 @@ def _window(pos, height=1.15, width=0.16, color=P_CYAN, inward=1):
 
 def _stand(room_c, room_h, x, cast: str = "shared-person-pathlines", t: float = 0.16):
     """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top."""
-    height = 0.7 * (room_h - t)
+    unit = room_metre(room_h - t)
     floor_y = float(room_c[1]) - room_h / 2 + t / 2
-    return staffage_motion(cast, unit=height / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]))
+    return staffage_motion(cast, unit=unit, anchor=np.array([x, floor_y, 0.0]))
 
 
 def _badge(title, value, color=P_PRIMARY):
@@ -1170,7 +1171,7 @@ class Beat4_Auftrieb(Scene):
         high_ring = SurroundingRectangle(outlet, color=P_ORANGE, buff=_theme_module.UI_SPACING,
                                          corner_radius=0, stroke_width=2.5)
         self.play(Create(low_ring), Create(high_ring), *rising(1.0), run_time=1.0)
-        self.play(person.animate(rate_func=there_and_back).scale(1.1, about_edge=DOWN), *rising(0.9), run_time=0.9)
+        self.play(Indicate(person, scale_factor=1.0), *rising(0.9), run_time=0.9)
         hold_for(self, self.NARRATION, "comfort", during=rising)
         dp["fill"].clear_updaters()
         self.play(FadeOut(caption), run_time=0.3)

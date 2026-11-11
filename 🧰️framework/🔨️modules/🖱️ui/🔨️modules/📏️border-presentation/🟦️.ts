@@ -45,7 +45,7 @@ export function resolveBorderSegments(segments: readonly BorderSegment[]): Resol
     if (!id || !owner || ids.has(id) || !Object.hasOwn(borderStatePriority, state)) throw new TypeError("Invalid border identity or state");
     ids.add(id);
     if (![from.x, from.y, to.x, to.y].every(Number.isFinite)) throw new TypeError("Border coordinates must be finite");
-    if (from.x !== to.x && from.y !== to.y) throw new TypeError("Border must be axis-aligned");
+    if (from.x !== to.x && from.y !== to.y) throw new TypeError(`Border must be axis-aligned: ${JSON.stringify({ id, owner, from, to })}`);
     if (from.x === to.x && from.y === to.y) continue;
     const horizontal = from.y === to.y;
     const coordinate = horizontal ? from.y : from.x;

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "required": ["languages", "inputStart", "inputEnd", "length", "labels"],
+  "properties": {
+    "languages": {"type": "array", "items": {"enum": ["en", "de"]}, "minItems": 2},
+    "inputStart": {"type": "number"}, "inputEnd": {"type": "number"}, "length": {"type": "number"},
+    "labels": {"type": "object", "required": ["en", "de"], "additionalProperties": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "string"}}}
+  }, "additionalProperties": false
+}
